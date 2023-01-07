@@ -47,6 +47,8 @@ import cc.alcina.framework.servlet.task.TaskWakeupJobScheduler;
 /**
  *
  * @author Nick Reddel
+ *
+ *         FIXME - jobs - add 'rerun'
  */
 public class JobServlet extends AlcinaServlet {
 	public static String createTaskUrl(String host, Task task) {
@@ -81,11 +83,6 @@ public class JobServlet extends AlcinaServlet {
 		return createTaskUrl(null, task);
 	}
 
-	@Override
-	protected Permission getRequiredPermission() {
-		return Permission.SimplePermissions.getPermission(AccessLevel.ADMIN);
-	}
-
 	public static long invokeAsSystemUser(String taskUrl) {
 		taskUrl += "&return_job_id=true";
 		SimpleHttp query = new SimpleHttp(taskUrl);
@@ -103,6 +100,11 @@ public class JobServlet extends AlcinaServlet {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	protected Permission getRequiredPermission() {
+		return Permission.SimplePermissions.getPermission(AccessLevel.ADMIN);
 	}
 
 	@Override
