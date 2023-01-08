@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.totsp.gwittir.client.validator.ValidationException;
@@ -16,7 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.PropertyNameTags;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.module.support.login.LoginPage.Navigation.PutTo;
+import cc.alcina.framework.gwt.client.module.support.login.LoginPage.Navigation.NavArea;
 import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 
 @Directed(
@@ -33,9 +34,9 @@ public abstract class LoginPage extends Model
 
 	private Object contents;
 
-	private final ProcessStatus processStatus = new ProcessStatus();
+	protected final Navigation navigation = new Navigation();
 
-	private final Navigation navigation = new Navigation();
+	private final ProcessStatus processStatus = new ProcessStatus();
 
 	private Link defaultButton;
 
@@ -111,11 +112,11 @@ public abstract class LoginPage extends Model
 	}
 
 	protected void populateNavigation() {
-		defaultButton = new Link().withText("Next")
+		defaultButton = new Link().withText("Next").withClassName("primary")
 				.withModelEvent(Forward.class);
-		// FIXME - ui2 - definitely want progress here
+		// FIXME - ui2 1x0 - definitely want progress here
 		// .withAsyncTopic(controller.topicCallingRemote);
-		navigation.put(defaultButton, PutTo.NEXT);
+		navigation.put(defaultButton, NavArea.NEXT);
 	}
 
 	protected boolean validate() {
@@ -132,6 +133,8 @@ public abstract class LoginPage extends Model
 	@Directed
 	@PropertyNameTags
 	public static class HeadingArea extends Model {
+		private final Object logo = LeafRenderer.OBJECT_INSTANCE;
+
 		private final String heading;
 
 		private final String subHeading;
@@ -146,17 +149,27 @@ public abstract class LoginPage extends Model
 			return this.heading;
 		}
 
+		@Directed(tag = "logo")
+		public Object getLogo() {
+			return this.logo;
+		}
+
 		@Directed(renderer = LeafRenderer.Html.class)
 		public String getSubHeading() {
 			return this.subHeading;
 		}
 	}
 
+	/**
+	 * <p>
+	 * Populated by {@link LoginPage#populateNavigation()}
+	 *
+	 */
 	@Directed
 	public static class Navigation extends Model {
 		private Link back;
 
-		private List<Link> options;
+		private List<Link> options = new ArrayList<>();
 
 		private Link next;
 
@@ -175,8 +188,8 @@ public abstract class LoginPage extends Model
 			return this.options;
 		}
 
-		public void put(Link link, PutTo putTo) {
-			switch (putTo) {
+		public void put(Link link, NavArea toNavArea) {
+			switch (toNavArea) {
 			case BACK:
 				setBack(link);
 				break;
@@ -210,7 +223,7 @@ public abstract class LoginPage extends Model
 					options);
 		}
 
-		public enum PutTo {
+		public enum NavArea {
 			BACK, OPTIONS, NEXT
 		}
 	}

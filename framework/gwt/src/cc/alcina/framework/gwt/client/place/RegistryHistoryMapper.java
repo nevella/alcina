@@ -60,6 +60,9 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 				.getModelClass();
 	}
 
+	/**
+	 * Throws a UnparseablePlaceException runtimeexception if not parseable
+	 */
 	@Override
 	public Place getPlace(String token) {
 		return getPlace(token, false);

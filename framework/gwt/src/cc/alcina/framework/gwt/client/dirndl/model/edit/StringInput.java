@@ -54,7 +54,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 	bindings = { @Binding(type = Type.PROPERTY, from = "value"),
 			@Binding(type = Type.PROPERTY, from = "placeholder"),
 			@Binding(type = Type.PROPERTY, from = "type"),
-			@Binding(type = Type.PROPERTY, from = "spellcheck") },
+			@Binding(type = Type.PROPERTY, from = "spellcheck"),
+			@Binding(type = Type.PROPERTY, from = "autocomplete") },
 	receives = { DomEvents.Change.class, DomEvents.Input.class })
 public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 		DomEvents.Change.Handler, DomEvents.Input.Handler {
@@ -63,6 +64,8 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 	private String currentValue;
 
 	private String placeholder;
+
+	private String autocomplete;
 
 	private String type = "text";
 
@@ -73,6 +76,10 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 	private boolean selectAllOnBind;
 
 	private String spellcheck;
+
+	public String getAutocomplete() {
+		return this.autocomplete;
+	}
 
 	public String getCurrentValue() {
 		if (currentValue == null) {
@@ -139,6 +146,10 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 	@Override
 	public String provideTag() {
 		return getTag();
+	}
+
+	public void setAutocomplete(String autocomplete) {
+		this.autocomplete = autocomplete;
 	}
 
 	public void setFocusOnBind(boolean focusOnBind) {

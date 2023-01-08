@@ -1,22 +1,34 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
+import com.google.gwt.user.client.History;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.gwittir.validator.EmailAddressValidator;
 import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Cancelled;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
-public class LoginPageUsername extends LoginPage {
+@Directed(receives = ModelEvents.Cancelled.class)
+public class LoginPageUsername extends LoginPage
+		implements ModelEvents.Cancelled.Handler {
 	protected StringInput input;
 
 	public LoginPageUsername(LoginConsort loginConsort) {
 		super(loginConsort);
 		input = new StringInput();
 		input.setFocusOnBind(true);
+		input.setAutocomplete("username");
 		input.setPlaceholder(getEmailAddress());
 		setContents(input);
+	}
+
+	@Override
+	public void onCancelled(Cancelled event) {
+		History.back();
 	}
 
 	protected String getEmailAddress() {

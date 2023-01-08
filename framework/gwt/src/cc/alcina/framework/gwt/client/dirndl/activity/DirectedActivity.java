@@ -11,6 +11,7 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry.MultipleImplementationsException;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.action.PlaceAction;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -70,8 +71,13 @@ public class DirectedActivity<P extends BasePlace> extends Model
 							DirectedCategoryActivity.class, place.getClass());
 				}
 			} else {
-				directedActivity = Registry.impl(DirectedActivity.class,
-						place.getClass());
+				try {
+					directedActivity = Registry.impl(DirectedActivity.class,
+							place.getClass());
+				} catch (MultipleImplementationsException e) {
+					// no activity
+					return null;
+				}
 			}
 		}
 		directedActivity.setPlace((BasePlace) place);

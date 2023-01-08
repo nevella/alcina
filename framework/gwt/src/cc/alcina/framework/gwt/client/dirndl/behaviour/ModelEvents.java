@@ -223,6 +223,22 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Login extends ModelEvent<Object, Login.Handler> {
+		@Override
+		public void dispatch(Login.Handler handler) {
+			handler.onLogin(this);
+		}
+
+		@Override
+		public Class<Login.Handler> getHandlerClass() {
+			return Login.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onLogin(Login event);
+		}
+	}
+
 	public static class Logout extends ModelEvent<Object, Logout.Handler> {
 		@Override
 		public void dispatch(Logout.Handler handler) {

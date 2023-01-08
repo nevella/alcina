@@ -225,6 +225,17 @@ public class Registry {
 		}
 	}
 
+	public static class MultipleImplementationsException
+			extends IllegalStateException {
+		public MultipleImplementationsException() {
+			super();
+		}
+
+		public MultipleImplementationsException(String s) {
+			super(s);
+		}
+	}
+
 	public class Query<V> {
 		Class<V> type;
 
@@ -459,13 +470,15 @@ public class Registry {
 											"Duplicate registration of same class (probably fragment/split issue):\n{}",
 											located);
 								} else {
-									throw new IllegalStateException(Ax.format(
-											"Query: %s - resolved keys: %s - equal top priorities: \n%s",
-											query, ascent.keys,
-											located.stream().sorted()
-													.map(Object::toString)
-													.collect(Collectors
-															.joining("\n"))));
+									throw new MultipleImplementationsException(
+											Ax.format(
+													"Query: %s - resolved keys: %s - equal top priorities: \n%s",
+													query, ascent.keys,
+													located.stream().sorted()
+															.map(Object::toString)
+															.collect(Collectors
+																	.joining(
+																			"\n"))));
 								}
 							}
 						}

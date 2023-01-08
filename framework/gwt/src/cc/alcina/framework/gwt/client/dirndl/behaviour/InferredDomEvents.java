@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
@@ -16,6 +19,7 @@ import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyEvent;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
@@ -205,8 +209,13 @@ public class InferredDomEvents {
 	 * FIXME - dirndl 1x2 - even better, wrap the input in a form and intercept
 	 * submit
 	 */
-	public static class InputEnterCommit extends
-			NodeEvent<InputEnterCommit.Handler> implements ChangeHandler {
+	public static class InputEnterCommit
+			extends NodeEvent<InputEnterCommit.Handler>
+			implements ChangeHandler, KeyDownHandler {
+		private boolean enterReceived = false;
+
+		private boolean changeWhileFocusReceived = false;
+
 		@Override
 		public void dispatch(InputEnterCommit.Handler handler) {
 			handler.onInputEnterCommit(this);
@@ -219,26 +228,46 @@ public class InferredDomEvents {
 
 		@Override
 		public void onChange(ChangeEvent event) {
-			handleEvent(event);
+			handleChangeEvent(event);
 		}
 
-		private void handleEvent(ChangeEvent event) {
+		@Override
+		public void onKeyDown(KeyDownEvent event) {
+			enterReceived |= event.getNativeKeyCode() == KeyCodes.KEY_ENTER;
+			checkFire(event);
+		}
+
+		private void checkFire(GwtEvent event) {
+			if (changeWhileFocusReceived && enterReceived) {
+				fireEvent(event);
+			}
+		}
+
+		private void handleChangeEvent(ChangeEvent event) {
 			// if the document focus is still the source element, and it's
 			// <input type='text'>, its value was cxommitted via [enter]
+			//
+			// except if set by autocomplete. but in that case, an *input*
+			// eventwill never have been fired on the element
 			EventTarget eventTarget = event.getNativeEvent().getEventTarget();
 			if (Element.is(eventTarget)) {
 				Element focussedElement = WidgetUtils
 						.getFocussedDocumentElement();
 				if (Element.as(eventTarget) == focussedElement) {
-					fireEvent(event);
+					changeWhileFocusReceived = true;
+					checkFire(event);
 				}
 			}
 		}
 
 		@Override
 		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::handleEvent,
-					ChangeEvent.getType());
+			MultiHandlerRegistration multiHandlerRegistration = new MultiHandlerRegistration();
+			multiHandlerRegistration.add(widget.addDomHandler(this::onChange,
+					ChangeEvent.getType()));
+			multiHandlerRegistration.add(widget.addDomHandler(this::onKeyDown,
+					KeyDownEvent.getType()));
+			return multiHandlerRegistration;
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -426,6 +455,20 @@ public class InferredDomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onMouseUpOutside(MouseUpOutside event);
+		}
+	}
+
+	public static class MultiHandlerRegistration
+			implements HandlerRegistration {
+		List<HandlerRegistration> registrations = new ArrayList<>();
+
+		public void add(HandlerRegistration registration) {
+			registrations.add(registration);
+		}
+
+		@Override
+		public void removeHandler() {
+			registrations.forEach(HandlerRegistration::removeHandler);
 		}
 	}
 

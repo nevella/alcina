@@ -13,6 +13,7 @@ public class LoginPagePassword extends LoginPage {
 		input = new StringInput();
 		input.setFocusOnBind(true);
 		input.setType("password");
+		input.setAutocomplete("current-password");
 		input.setPlaceholder("Password");
 		setContents(input);
 		// TODO
