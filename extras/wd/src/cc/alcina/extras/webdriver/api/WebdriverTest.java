@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.openqa.selenium.WebDriver;
 
 import cc.alcina.extras.webdriver.WDToken;
+import cc.alcina.extras.webdriver.WDUtils;
 import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -51,7 +52,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return LooseContext.get(CONTEXT_CURRENT_TEST);
 	}
 
-	private static String addGwtClientUrl(String url) {
+	protected static String addGwtClientUrl(String url) {
 		if (Configuration.key(ADD_GWT_CLIENT_SUFFIX).is()) {
 			url += "?gwt.codesvr=127.0.0.1:9997";
 		}
@@ -174,6 +175,17 @@ public abstract class WebdriverTest implements Registration.Ensure {
 				() -> new WebdriverTest.TestException(this));
 	}
 
+	public String pathToUrl(String path) {
+		if (!path.startsWith("/")) {
+			path = "/" + path;
+		}
+		String curr = driver().getCurrentUrl();
+		String hostAndProtocol = curr.replaceFirst("(http.?://[^/]+).*", "$1");
+		String url = hostAndProtocol + path;
+		url = addGwtClientUrl(url);
+		return url;
+	}
+
 	public void predelay(int level) {
 		try {
 			int predelayMs = token.getConfiguration().predelayMs;
@@ -256,17 +268,6 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 	}
 
-	private String pathToUrl(String path) {
-		if (!path.startsWith("/")) {
-			path = "/" + path;
-		}
-		String curr = driver().getCurrentUrl();
-		String hostAndProtocol = curr.replaceFirst("(http.?://[^/]+).*", "$1");
-		String url = hostAndProtocol + path;
-		url = addGwtClientUrl(url);
-		return url;
-	}
-
 	private TestResult process0(int level, TestResult parent) throws Exception {
 		this.myLevel = level;
 		String oldThreadName = Thread.currentThread().getName();
@@ -280,6 +281,9 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		token.getWriter().write(
 				Ax.format("Test: %s - \n", getClass().getSimpleName()), level);
 		if (parent == null) {
+			if (Configuration.is("activateOsxChromeOnRootTestStart")) {
+				WDUtils.activateOsxChrome();
+			}
 			token.setRootResult(result);
 			result.setRootResult(true);
 			predelay(level + 1);

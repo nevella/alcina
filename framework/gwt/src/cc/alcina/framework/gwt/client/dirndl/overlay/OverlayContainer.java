@@ -29,7 +29,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
 				to = "visibility",
 				transform = Binding.VisibilityVisibleHidden.class,
 				type = Type.STYLE_ATTRIBUTE) })
-// FIXME - 2022 - move preview etc handling to overlay (this is just the glass)
+// FIXME - dirndl 1x1d - 1 - move preview etc handling to overlay (this is just
+// the glass)
 // - in fact, to an inferred dom event ('actionoutside') that is either dropped
 // or causes close(), depending on modality
 //
