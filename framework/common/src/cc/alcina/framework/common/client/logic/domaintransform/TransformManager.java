@@ -333,6 +333,45 @@ public abstract class TransformManager
 		return result;
 	}
 
+	/**
+	 *
+	 * <p>
+	 * Non-relational objects are -mostly- set-once - this method adds more
+	 * support for mutable non-relationals Further support would involve an
+	 * abstract base 'MutableNonRelational' class, which would receive
+	 * propertychange events and fire this method on the NonRelational's owning
+	 * entity
+	 *
+	 * <p>
+	 * But....that would remove developer control over how often the
+	 * NonRelational was serialized - which may not be desirable
+	 */
+	public static void updateSerialized(Entity entity) {
+		Reflections.at(entity.getClass()).properties().forEach(property -> {
+			if (property.has(DomainProperty.class)
+					&& property.annotation(DomainProperty.class).serialize()) {
+				// same logic as #handleCascadedPropertyChange
+				SerializablePropertyGroup serializablePropertyGroup = new SerializablePropertyGroup(
+						property);
+				try {
+					LooseContext.pushWithTrue(
+							CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
+					boolean hasClassNameProperty = serializablePropertyGroup.className != null;
+					Object value = property.get(entity);
+					serializablePropertyGroup.serialized.set(entity,
+							serialize(value, hasClassNameProperty));
+					if (hasClassNameProperty) {
+						serializablePropertyGroup.className.set(entity,
+								value == null ? null
+										: value.getClass().getName());
+					}
+				} finally {
+					LooseContext.pop();
+				}
+			}
+		});
+	}
+
 	private static <V> V resolveMaybeDeserialize(V existing, String serialized,
 			V defaultValue, Class<V> clazz, Function<String, V> deserializer) {
 		if (existing != null) {
@@ -1680,74 +1719,58 @@ public abstract class TransformManager
 		return provisionalObjects.keySet();
 	}
 
+	/**
+	 * @return true if transform should not be persisted
+	 */
 	protected boolean
 			handleCascadedSerializationChange(PropertyChangeEvent event) {
+		Property property = Reflections.at(event.getSource().getClass())
+				.property(event.getPropertyName());
+		SerializablePropertyGroup serializablePropertyGroup = new SerializablePropertyGroup(
+				property);
 		Entity entity = (Entity) event.getSource();
-		boolean serializedPropertyChange = false;
-		boolean toSerializePropertyChange = false;
-		Property toSerializeProperty = null;
-		Property serializedProperty = null;
-		Class<?> entityClass = entity.entityClass();
-		ClassReflector classReflector = Reflections.at(entityClass);
-		String propertyName = event.getPropertyName();
-		if (propertyName.matches("(.+)Serialized")) {
-			String sourcePropertyname = propertyName
-					.replaceFirst("(.+)Serialized", "$1");
-			toSerializeProperty = classReflector.property(sourcePropertyname);
-			serializedProperty = classReflector.property(propertyName);
-			serializedPropertyChange = toSerializeProperty != null
-					&& toSerializeProperty.has(DomainProperty.class)
-					&& toSerializeProperty.annotation(DomainProperty.class)
-							.serialize();
-		} else {
-			toSerializeProperty = classReflector.property(propertyName);
-			toSerializePropertyChange = toSerializeProperty != null
-					&& toSerializeProperty.has(DomainProperty.class)
-					&& toSerializeProperty.annotation(DomainProperty.class)
-							.serialize();
-			if (toSerializePropertyChange) {
-				serializedProperty = classReflector
-						.property(propertyName + "Serialized");
-			}
-		}
 		/*
 		 * If the serialized version is being changed, null the toSerialize
 		 * version *unless* this is called from setToSerialize (to preserve
 		 * object refs)
 		 */
-		if (serializedPropertyChange) {
+		switch (serializablePropertyGroup.type) {
+		case NOT:
+			break;
+		// property xxxSerialized has changed
+		case SERIALIZED: {
 			if (LooseContext.is(CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE)) {
 				// setting this serialized value from a non-serialized setter
 				// call -
-				// store the transform but do not propagate
+				// store the transform but do not propagate to the corresponding
+				// property xxx
 			} else {
 				try {
 					LooseContext.pushWithTrue(
 							CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
-					toSerializeProperty.set(entity, null);
+					serializablePropertyGroup.serializable.set(entity, null);
 				} finally {
 					LooseContext.pop();
 				}
 			}
+			break;
 		}
-		if (toSerializePropertyChange) {
+		// property xxx has changed
+		case SERIALIZABLE: {
 			if (LooseContext.is(CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE)) {
-				// setting this value to null to force a refresh - do not
+				// property xxx was set to null (by the preceding switch case)
+				// to force a refresh - do not
 				// propagate
 				return true;
 			}
 			try {
 				LooseContext.pushWithTrue(
 						CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
-				String classNamePropertyName = propertyName + "ClassName";
-				boolean hasClassNameProperty = classReflector
-						.hasProperty(classNamePropertyName);
-				serializedProperty.set(entity,
+				boolean hasClassNameProperty = serializablePropertyGroup.className != null;
+				serializablePropertyGroup.serialized.set(entity,
 						serialize(event.getNewValue(), hasClassNameProperty));
 				if (hasClassNameProperty) {
-					Property serializedClassNameReflector = classReflector
-							.property(classNamePropertyName);
-					serializedClassNameReflector.set(entity,
+					serializablePropertyGroup.className.set(entity,
 							event.getNewValue() == null ? null
 									: event.getNewValue().getClass().getName());
 				}
@@ -1756,6 +1779,7 @@ public abstract class TransformManager
 			} finally {
 				LooseContext.pop();
 			}
+		}
 		}
 		return false;
 	}
@@ -2215,6 +2239,63 @@ public abstract class TransformManager
 		Property property() {
 			return Reflections.at(object.entityClass())
 					.property(event.getPropertyName());
+		}
+	}
+
+	static class SerializablePropertyGroup {
+		// property 'xxx'
+		Property serializable;
+
+		// property 'xxxSerialized'
+		Property serialized;
+
+		// property 'xxxClassName'
+		Property className;
+
+		String propertyName;
+
+		Type type = Type.NOT;
+
+		public SerializablePropertyGroup(Property property) {
+			boolean serializedPropertyChange = false;
+			boolean toSerializePropertyChange = false;
+			ClassReflector classReflector = Reflections
+					.at(property.getOwningType());
+			String propertyName = property.getName();
+			if (propertyName.matches("(.+)Serialized")) {
+				String sourcePropertyname = propertyName
+						.replaceFirst("(.+)Serialized", "$1");
+				serializable = classReflector.property(sourcePropertyname);
+				serialized = classReflector.property(propertyName);
+				serializedPropertyChange = serializable != null
+						&& serializable.has(DomainProperty.class)
+						&& serializable.annotation(DomainProperty.class)
+								.serialize();
+				if (serializedPropertyChange) {
+					type = Type.SERIALIZED;
+				}
+			} else {
+				serializable = classReflector.property(propertyName);
+				toSerializePropertyChange = serializable != null
+						&& serializable.has(DomainProperty.class)
+						&& serializable.annotation(DomainProperty.class)
+								.serialize();
+				if (toSerializePropertyChange) {
+					serialized = classReflector
+							.property(propertyName + "Serialized");
+					className = classReflector
+							.property(propertyName + "ClassName");
+					type = Type.SERIALIZABLE;
+				}
+			}
+		}
+
+		boolean is() {
+			return type != Type.NOT;
+		}
+
+		enum Type {
+			NOT, SERIALIZED, SERIALIZABLE;
 		}
 	}
 }

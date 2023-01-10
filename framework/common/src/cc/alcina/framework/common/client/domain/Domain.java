@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -137,6 +138,12 @@ public class Domain {
 
 	public static <V extends Entity> boolean isDomainVersion(V v) {
 		return v == null ? false : handler.isDomainVersion(v);
+	}
+
+	// development aid, most recently created Entity of type V
+	public static <V extends Entity> V last(Class<V> clazz) {
+		return stream(clazz).sorted(EntityComparator.REVERSED_INSTANCE)
+				.findFirst().get();
 	}
 
 	public static <V extends Entity> List<V> listByProperty(Class<V> clazz,
