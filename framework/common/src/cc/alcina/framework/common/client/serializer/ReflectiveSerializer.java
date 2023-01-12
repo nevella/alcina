@@ -105,6 +105,14 @@ import elemental.json.JsonValue;
  * <li>Don't serialize non-projected entities - use an {@link EntityLocator}
  * </ul>
  *
+ * <p>
+ * FIXME - speed - low - serialization to json should/could be custom (don't use
+ * elemental)(write directly to outputstream)
+ *
+ * <p>
+ * FIXME - speed - medium - serialization - get client/server metrics and a
+ * baseline
+ *
  * @author nick@alcina.cc
  */
 @SuppressWarnings("deprecation")
