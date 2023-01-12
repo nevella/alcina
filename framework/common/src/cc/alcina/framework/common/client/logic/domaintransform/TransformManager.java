@@ -41,6 +41,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
@@ -1724,7 +1725,8 @@ public abstract class TransformManager
 	 */
 	protected boolean
 			handleCascadedSerializationChange(PropertyChangeEvent event) {
-		Property property = Reflections.at(event.getSource().getClass())
+		Property property = Reflections
+				.at(Domain.resolveEntityClass(event.getSource().getClass()))
 				.property(event.getPropertyName());
 		SerializablePropertyGroup serializablePropertyGroup = new SerializablePropertyGroup(
 				property);
