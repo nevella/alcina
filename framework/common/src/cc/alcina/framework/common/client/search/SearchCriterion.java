@@ -67,6 +67,10 @@ public abstract class SearchCriterion extends Bindable
 		this.displayName = displayName;
 	}
 
+	public void addToCriteriaGroup(CriteriaGroup group) {
+		group.addCriterion(this);
+	}
+
 	public void addToSoleCriteriaGroup(SearchDefinition def) {
 		def.addCriterionToSoleCriteriaGroup(this);
 	}

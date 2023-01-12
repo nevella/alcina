@@ -165,7 +165,7 @@ public class FormatBuilder {
 		String toString = value == null ? null : value.toString();
 		if (Ax.notBlank(toString)) {
 			append(key);
-			sb.append(": ");
+			sb.append(":");
 			sb.append(toString);
 		}
 		return this;
