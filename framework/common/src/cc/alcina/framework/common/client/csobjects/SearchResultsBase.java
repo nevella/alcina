@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -96,6 +97,13 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 
 	public int getTotalResultCount() {
 		return this.totalResultCount;
+	}
+
+	// debug aid
+	public void logIds() {
+		List<String> list = getResults().stream().map(SearchResult::provideId)
+				.collect(Collectors.toList());
+		System.out.println(list);
 	}
 
 	public int pageCount() {
