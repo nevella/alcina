@@ -107,6 +107,11 @@ public interface PersistentObjectCache<T> {
 			return value;
 		}
 
+		public void invalidate() {
+			value = null;
+			get();
+		}
+
 		public synchronized void persist() {
 			Preconditions.checkState(value != null);
 			delegate.persist(getPath(), value);
