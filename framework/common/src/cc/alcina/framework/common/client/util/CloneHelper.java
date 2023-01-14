@@ -67,7 +67,7 @@ public class CloneHelper {
 	 */
 	public void copyBeanProperties(Object source, Object target,
 			Set<String> excludeProperties) {
-		for (Property property : Reflections.at(source.getClass())
+		for (Property property : Reflections.at(source)
 				.properties()) {
 			if (property.isReadOnly() || property.isWriteOnly()) {
 				continue;
@@ -93,7 +93,7 @@ public class CloneHelper {
 		}
 		T ret = newInstance(o);
 		createdMap.put(o, ret);
-		for (Property property : Reflections.at(ret.getClass()).properties()) {
+		for (Property property : Reflections.at(ret).properties()) {
 			if (property.isReadOnly() || property.has(AlcinaTransient.class)) {
 				continue;
 			}

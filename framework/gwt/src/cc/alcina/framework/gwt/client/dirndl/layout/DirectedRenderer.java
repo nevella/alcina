@@ -287,7 +287,7 @@ public abstract class DirectedRenderer {
 
 	interface GeneratesPropertyInputs {
 		default void generatePropertyInputs(RendererInput input) {
-			List<Property> properties = Reflections.at((input.model.getClass()))
+			List<Property> properties = Reflections.at((input.model))
 					.properties();
 			properties = properties.stream().collect(Collectors.toList());
 			for (Property property : properties) {

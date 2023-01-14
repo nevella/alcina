@@ -1830,7 +1830,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				widget = col.getCellProvider().get();
 			} else {
 				widget = (BoundWidget) this.factory
-						.getWidgetProvider(Reflections.at(target.getClass())
+						.getWidgetProvider(Reflections.at(target)
 								.property(col.getPropertyName()).getType())
 						.get();
 				// TODO Figure out some way to make this read only.

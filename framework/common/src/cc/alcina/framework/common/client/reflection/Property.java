@@ -136,12 +136,12 @@ public class Property implements HasAnnotations {
 
 	protected Method resolveGetter(Object bean) {
 		return bean.getClass() == owningType ? getter
-				: Reflections.at(bean.getClass()).property(name).getter;
+				: Reflections.at(bean).property(name).getter;
 	}
 
 	protected Method resolveSetter(Object bean) {
 		return bean.getClass() == owningType ? setter
-				: Reflections.at(bean.getClass()).property(name).setter;
+				: Reflections.at(bean).property(name).setter;
 	}
 
 	public static class NameComparator implements Comparator<Property> {

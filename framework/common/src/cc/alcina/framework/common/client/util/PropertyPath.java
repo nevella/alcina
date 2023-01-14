@@ -90,7 +90,7 @@ public class PropertyPath {
 		System.arraycopy(this.accessors, 0, accessors, 0,
 				this.accessors.length);
 		this.accessors = accessors;
-		Property property = Reflections.at(obj.getClass()).property(path);
+		Property property = Reflections.at(obj).property(path);
 		if (property == null) {
 			throw new NoSuchElementException(
 					Ax.format("No such element for path '%s' at index %s [%s]",

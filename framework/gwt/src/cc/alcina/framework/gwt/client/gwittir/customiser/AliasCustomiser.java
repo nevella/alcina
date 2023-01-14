@@ -58,7 +58,7 @@ public class AliasCustomiser implements Customiser {
 
 		@Override
 		public String render(Object o) {
-			return (String) Reflections.at(label.getModel().getClass())
+			return (String) Reflections.at(label.getModel())
 					.property(propertyName).get(label.getModel());
 		}
 	}

@@ -323,7 +323,7 @@ public class FlatTreeSerializer {
 			state = new State();
 			state.serializerOptions = options;
 			Node node = new Node(null, object,
-					Reflections.at(object.getClass()).templateInstance());
+					Reflections.at(object).templateInstance());
 			state.serializationSupport = SerializationSupport
 					.serializationInstance();
 			state.pending.add(node);
@@ -860,7 +860,7 @@ public class FlatTreeSerializer {
 						// }
 						// }
 						if (defaultValue == null) {
-							defaultValue = Reflections.at(childValue.getClass())
+							defaultValue = Reflections.at(childValue)
 									.templateInstance();
 						}
 					} else {

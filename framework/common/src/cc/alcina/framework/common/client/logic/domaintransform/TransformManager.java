@@ -348,7 +348,7 @@ public abstract class TransformManager
 	 * NonRelational was serialized - which may not be desirable
 	 */
 	public static void updateSerialized(Entity entity) {
-		Reflections.at(entity.getClass()).properties().forEach(property -> {
+		Reflections.at(entity).properties().forEach(property -> {
 			if (property.has(DomainProperty.class)
 					&& property.annotation(DomainProperty.class).serialize()) {
 				// same logic as #handleCascadedPropertyChange
@@ -1059,7 +1059,7 @@ public abstract class TransformManager
 	public void modifyCollectionProperty(Object objectWithCollection,
 			String collectionPropertyName, Object delta,
 			CollectionModificationType modificationType) {
-		Property property = Reflections.at(objectWithCollection.getClass())
+		Property property = Reflections.at(objectWithCollection)
 				.property(collectionPropertyName);
 		Collection old = (Collection) property.get(objectWithCollection);
 		if (!(delta instanceof Collection)) {
@@ -2010,7 +2010,7 @@ public abstract class TransformManager
 			return;
 		}
 		associated = (Entity) ensureEndpointWriteable(associated);
-		Property associatedProperty = Reflections.at(associated.getClass())
+		Property associatedProperty = Reflections.at(associated)
 				.property(association.propertyName());
 		Object associatedExistingValue = associatedProperty.get(associated);
 		associatedExistingValue = ensureEndpointInTransformGraph(

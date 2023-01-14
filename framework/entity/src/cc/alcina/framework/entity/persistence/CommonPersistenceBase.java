@@ -238,7 +238,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			AppPersistenceBase.checkNotReadOnly();
 			T instance = Reflections.newInstance(clazz);
 			getEntityManager().persist(instance);
-			Reflections.at(instance.getClass()).property(key).set(instance,
+			Reflections.at(instance).property(key).set(instance,
 					value);
 			return instance;
 		} else {

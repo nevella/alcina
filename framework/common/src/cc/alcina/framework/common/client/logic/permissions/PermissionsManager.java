@@ -670,7 +670,7 @@ public class PermissionsManager implements DomainTransformListener {
 		if (object instanceof Permissible) {
 			return isPermitted((Permissible) object);
 		}
-		Permission permission = Reflections.at(object.getClass())
+		Permission permission = Reflections.at(object)
 				.annotation(Permission.class);
 		return isPermitted(permission != null ? permission : defaultPermission);
 	}

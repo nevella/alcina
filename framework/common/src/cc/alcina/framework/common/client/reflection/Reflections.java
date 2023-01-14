@@ -13,10 +13,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class Reflections {
 	private static Reflections theInstance;
 
-	// FIXME - dirndl 1x1d - add at(Object) and remove most calls to this...
 	public static <T> ClassReflector<T> at(Class<T> clazz) {
 		return get().reflectors.computeIfAbsent(clazz,
 				c -> ClassReflectorProvider.getClassReflector(clazz));
+	}
+
+	public static <T> ClassReflector<T> at(T instance) {
+		return (ClassReflector<T>) at(instance.getClass());
 	}
 
 	public static <T> Class<T> forName(String fqn) {

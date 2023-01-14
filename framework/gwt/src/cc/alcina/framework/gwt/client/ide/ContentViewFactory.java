@@ -319,7 +319,7 @@ public class ContentViewFactory {
 			bean = new CloneHelper().shallowishBeanClone(bean);
 			cloned = true;
 		}
-		if (!Reflections.at(bean.getClass()).provideIsReflective()) {
+		if (!Reflections.at(bean).provideIsReflective()) {
 			throw new RuntimeException(
 					"Unviewable bean type: " + bean.getClass());
 		}
@@ -432,15 +432,15 @@ public class ContentViewFactory {
 	}
 
 	public Widget createExtraActionsWidget(final Object bean) {
-		ClassReflector<? extends Object> reflector = Reflections
-				.at(bean.getClass());
+		ClassReflector<? extends Object> reflector = Reflections.at(bean);
 		if (!reflector.provideIsReflective()) {
 			return null;
 		}
 		FlowPanel fp = null;
 		ExpandableListPanel elp = null;
 		for (Class<? extends PermissibleAction> c : getBeanActions(bean)) {
-			final PermissibleAction v = Reflections.at(c).templateInstance();
+			final PermissibleAction v = Reflections.at(c)
+					.templateInstance();
 			if (v instanceof NonstandardObjectAction) {
 				if (fp == null) {
 					fp = new FlowPanel();
@@ -772,7 +772,7 @@ public class ContentViewFactory {
 	private List<Class<? extends PermissibleAction>>
 			getBeanActions(Object bean) {
 		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
-		ObjectActions actions = Reflections.at(bean.getClass())
+		ObjectActions actions = Reflections.at(bean)
 				.annotation(ObjectActions.class);
 		if (actions != null) {
 			for (Action action : actions.value()) {
@@ -1398,8 +1398,7 @@ public class ContentViewFactory {
 					int r = 0;
 					for (Binding b : grid.getBinding().getChildren()) {
 						BindingInstance right = b.getRight();
-						Property rightProperty = Reflections
-								.at(right.object.getClass())
+						Property rightProperty = Reflections.at(right.object)
 								.property(right.property.getName());
 						Display display = rightProperty
 								.annotation(Display.class);

@@ -523,8 +523,8 @@ public class Binding {
 			parents.add(object);
 			try {
 				propertyNames.add(pname);
-				object = (SourcesPropertyChangeEvents) Reflections
-						.at(object.getClass()).property(pname).get(object);
+				object = (SourcesPropertyChangeEvents) Reflections.at(object)
+						.property(pname).get(object);
 			} catch (ClassCastException cce) {
 				throw new RuntimeException(
 						"Nonbindable sub property: " + object + " . " + pname,
@@ -542,8 +542,7 @@ public class Binding {
 		}
 		instance.object = object;
 		try {
-			instance.property = Reflections.at(object.getClass())
-					.property(propertyName);
+			instance.property = Reflections.at(object).property(propertyName);
 			if (instance.property == null) {
 				throw new NullPointerException("Property Not Found.");
 			}

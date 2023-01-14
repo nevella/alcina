@@ -48,9 +48,9 @@ public class ListSorter {
 			for (int j = i + 1; j < list.size(); j++) {
 				Object o1 = list.get(i);
 				Object o2 = list.get(j);
-				Comparable oc1 = (Comparable) Reflections.at(o1.getClass())
+				Comparable oc1 = (Comparable) Reflections.at(o1)
 						.property(propertyName).get(o1);
-				Comparable oc2 = (Comparable) Reflections.at(o2.getClass())
+				Comparable oc2 = (Comparable) Reflections.at(o2)
 						.property(propertyName).get(o2);
 				if (ascending) {
 					if ((oc1 != oc2) && ((oc2 == null) || ((oc1 != null)

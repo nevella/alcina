@@ -52,8 +52,7 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	public Entity ensureEditable(Entity<?> entity) {
-		if (Reflections.at(entity.getClass())
-				.has(NonDomainTransformPersistable.class)) {
+		if (Reflections.at(entity).has(NonDomainTransformPersistable.class)) {
 			Entity editable = (Entity) Reflections
 					.newInstance(entity.entityClass());
 			new CloneHelper().copyBeanProperties(entity, editable, null);
@@ -94,7 +93,7 @@ public abstract class ClientTransformManager extends TransformManager {
 			boolean afterCreation, boolean forEditing) {
 		List children = new ArrayList();
 		ClassReflector<? extends Entity> classReflector = Reflections
-				.at(domainObject.getClass());
+				.at(domainObject);
 		if (!classReflector.provideIsReflective()) {
 			return children;
 		}

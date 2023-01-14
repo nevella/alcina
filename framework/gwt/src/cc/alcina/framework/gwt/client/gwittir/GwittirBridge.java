@@ -191,10 +191,8 @@ public class GwittirBridge {
 		if (field.getCellProvider() != null) {
 			widget = field.getCellProvider().get();
 		} else {
-			widget = SIMPLE_FACTORY
-					.getWidgetProvider(Reflections.at(target.getClass())
-							.property(field.getPropertyName()).getType())
-					.get();
+			widget = SIMPLE_FACTORY.getWidgetProvider(Reflections.at(target)
+					.property(field.getPropertyName()).getType()).get();
 		}
 		binding = new Binding(widget, "value", field.getValidator(),
 				field.getFeedback(), target, field.getPropertyName(), null,
@@ -284,7 +282,8 @@ public class GwittirBridge {
 		factory.add(Date.class, new DateBoxProvider());
 		List<Field> fields = new ArrayList<Field>();
 		Class<? extends Object> clazz = obj.getClass();
-		ClassReflector<? extends Object> classReflector = Reflections.at(clazz);
+		ClassReflector<? extends Object> classReflector = Reflections
+				.at(clazz);
 		Bean beanInfo = classReflector.annotation(Bean.class);
 		classReflector.properties().stream().map(property -> {
 			String pn = property.getName();
@@ -320,8 +319,7 @@ public class GwittirBridge {
 	public Object findObjectWithPropertyInCollection(Collection c,
 			String propertyName, Object value) {
 		for (Object o : c) {
-			Object pv = Reflections.at(o.getClass()).property(propertyName)
-					.get(o);
+			Object pv = Reflections.at(o).property(propertyName).get(o);
 			if (pv != null && pv.equals(value)) {
 				return o;
 			}
@@ -534,8 +532,7 @@ public class GwittirBridge {
 	}
 
 	public Field getFieldToFocus(Object bean, Field[] fields) {
-		ClassReflector<? extends Object> classReflector = Reflections
-				.at(bean.getClass());
+		ClassReflector<? extends Object> classReflector = Reflections.at(bean);
 		return Arrays.stream(fields).filter(f -> {
 			Property p = classReflector.property(f.getPropertyName());
 			return p != null && p.has(Display.class)
@@ -549,8 +546,7 @@ public class GwittirBridge {
 
 	public Validator getValidator(Class<?> clazz, Object obj,
 			String propertyName, ValidationFeedback validationFeedback) {
-		ClassReflector<? extends Object> classReflector = Reflections
-				.at(obj.getClass());
+		ClassReflector<? extends Object> classReflector = Reflections.at(obj);
 		Property property = classReflector.property(propertyName);
 		List<cc.alcina.framework.common.client.logic.reflection.Validator> validators = new ArrayList<>();
 		cc.alcina.framework.common.client.logic.reflection.Validators validatorsAnn = property == null

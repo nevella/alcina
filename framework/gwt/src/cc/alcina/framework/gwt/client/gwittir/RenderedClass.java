@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class RenderedClass {
 	public static List<String> allInterestingProperties(Object bean) {
-		return Reflections.at(bean.getClass()).properties().stream()
+		return Reflections.at(bean).properties().stream()
 				.filter(Property::isWriteable).map(p -> p.getName())
 				.collect(Collectors.toList());
 	}

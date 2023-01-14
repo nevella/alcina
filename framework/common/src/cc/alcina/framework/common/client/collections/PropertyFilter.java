@@ -93,7 +93,7 @@ public class PropertyFilter<T> implements Predicate<T> {
 
 	@Override
 	public boolean test(T o) {
-		Object propertyValue = Reflections.at(o.getClass())
+		Object propertyValue = Reflections.at(o)
 				.property(condition.propertyName).get(o);
 		boolean match = matchesValue(propertyValue);
 		return match;

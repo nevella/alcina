@@ -439,7 +439,7 @@ public class FormModel extends Model
 			} else {
 				if (state.presentationModel != null) {
 					ObjectActions actions = Reflections
-							.at(state.presentationModel.getClass())
+							.at(state.presentationModel)
 							.annotation(ObjectActions.class);
 					if (actions != null) {
 						Arrays.stream(actions.value()).map(Action::actionClass)
@@ -561,7 +561,7 @@ public class FormModel extends Model
 			state.expectsModel = true;
 			if (action instanceof PermissibleEntityAction) {
 				Entity entity = ((PermissibleEntityAction) action).getEntity();
-				ObjectPermissions op = Reflections.at(entity.getClass())
+				ObjectPermissions op = Reflections.at(entity)
 						.annotation(ObjectPermissions.class);
 				op = op == null
 						? PermissionsManager.get().getDefaultObjectPermissions()

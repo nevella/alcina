@@ -22,7 +22,7 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			ObjectPermissions objectPermissions = Reflections.at(e.getClass())
+			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
 			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.create()));
@@ -34,7 +34,7 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			ObjectPermissions objectPermissions = Reflections.at(e.getClass())
+			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
 			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.delete()));
@@ -65,7 +65,7 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			ObjectPermissions objectPermissions = Reflections.at(e.getClass())
+			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
 			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.read()));
@@ -77,7 +77,7 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			ObjectPermissions objectPermissions = Reflections.at(e.getClass())
+			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
 			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.write()));

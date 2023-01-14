@@ -33,7 +33,7 @@ public class FieldEquivalenceValidator
 		if (value == null) {
 			return value;
 		}
-		Object otherValue = Reflections.at(bindable.getClass())
+		Object otherValue = Reflections.at(bindable)
 				.property(otherFieldName).get(bindable);
 		if (otherValue == null) {
 			return value;

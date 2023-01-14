@@ -40,9 +40,9 @@ public class PropertyComparator implements Comparator {
 			return 1;
 		}
 		try {
-			Object pv1 = Reflections.at(o1.getClass()).property(propertyName)
+			Object pv1 = Reflections.at(o1).property(propertyName)
 					.get(o1);
-			Object pv2 = Reflections.at(o2.getClass()).property(propertyName)
+			Object pv2 = Reflections.at(o2).property(propertyName)
 					.get(o2);
 			return CommonUtils.compareWithNullMinusOne((Comparable) pv1,
 					(Comparable) pv2);

@@ -101,12 +101,12 @@ public class Tables {
 					this.columnNames = Collections.emptyList();
 				} else {
 					Model template = rows.iterator().next();
-					columnNames = Reflections.at(template.getClass())
+					columnNames = Reflections.at(template)
 							.properties().stream()
 							.filter(Property::provideRenderable)
 							.map(Property::getName)
 							.collect(Collectors.toList());
-					gridTemplateColumns = Reflections.at(template.getClass())
+					gridTemplateColumns = Reflections.at(template)
 							.properties().stream()
 							.filter(Property::provideRenderable).map(p -> {
 								ColumnWidth columnWidth = p
@@ -162,7 +162,7 @@ public class Tables {
 		public static class IntermediateModel extends Model {
 			public static IntermediateModel ofBindable(Bindable model) {
 				IntermediateModel result = new IntermediateModel();
-				List<Property> properties = Reflections.at(model.getClass())
+				List<Property> properties = Reflections.at(model)
 						.properties();
 				result.rows = properties.stream()
 						.filter(Property::provideNotDefaultIgnoreable)

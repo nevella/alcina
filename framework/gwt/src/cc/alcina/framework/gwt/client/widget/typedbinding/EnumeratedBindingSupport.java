@@ -50,7 +50,7 @@ public class EnumeratedBindingSupport {
 		if (related == null) {
 			return null;
 		}
-		return (T) Reflections.at(related.getClass())
+		return (T) Reflections.at(related)
 				.property(enumeratedBinding.getBoundPath()).get(related);
 	}
 
@@ -80,7 +80,7 @@ public class EnumeratedBindingSupport {
 			throw new IllegalStateException(
 					"binding should not be exposed for null object");
 		}
-		Reflections.at(related.getClass())
+		Reflections.at(related)
 				.property(enumeratedBinding.getBoundPath()).set(related, value);
 	}
 

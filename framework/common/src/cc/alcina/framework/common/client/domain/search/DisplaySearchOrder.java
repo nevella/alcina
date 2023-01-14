@@ -34,7 +34,7 @@ public class DisplaySearchOrder extends SearchOrder {
 		if (source == null) {
 			return null;
 		}
-		Object t = Reflections.at(source.getClass()).property(fieldName)
+		Object t = Reflections.at(source).property(fieldName)
 				.get(source);
 		if (t == null) {
 			return null;

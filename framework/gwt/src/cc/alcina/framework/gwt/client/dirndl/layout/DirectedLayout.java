@@ -856,7 +856,7 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 
 			void set() {
-				Property property = Reflections.at(model.getClass())
+				Property property = Reflections.at(model)
 						.property(binding.from());
 				Object value = binding.from().length() > 0 ? property.get(model)
 						: binding.literal();
