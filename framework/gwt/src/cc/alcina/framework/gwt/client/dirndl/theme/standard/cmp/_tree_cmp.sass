@@ -16,7 +16,7 @@
     &.root-hidden>.node
       >label
         display: none
-      >div
+      >nodes
         padding-left: 0
     .node
       >label
@@ -54,10 +54,10 @@
         visibility: hidden
       &.selected>label
         background-color: theme.$tree-selected-background-color
-      >div
+      >nodes
         padding-left: 20px
         display: none
-      &.open>div
+      &.open>nodes
         display: block
 
   .flat-tree

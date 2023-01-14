@@ -260,7 +260,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 		private boolean selected;
 
-		@Directed.Wrap("div")
+		@Directed.Wrap("nodes")
 		public List<TreeNode<NM>> getChildren() {
 			return this.children;
 		}

@@ -19,6 +19,8 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
 
 public abstract class DomainViewTree extends Tree<DomainViewNode> {
@@ -274,8 +276,14 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 		}
 	}
 
+	/*
+	 *
+	 * Implements hasTag to allow a self tag of 'node' rather than
+	 * 'domain-view-node' - but otherwise respecting subclass name
+	 *
+	 */
 	public static class DomainViewNode
-			extends Tree.AbstractPathNode<DomainViewNode> {
+			extends Tree.AbstractPathNode<DomainViewNode> implements HasTag {
 		private DomainViewNodeContent<?> node;
 
 		private LabelGenerator labelGenerator;
@@ -332,6 +340,16 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 				cursor = (DomainViewNode) Ax.last(cursor.getChildren());
 			}
 			return cursor.getTreePath().toString();
+		}
+
+		@Override
+		public String provideTag() {
+			Class<? extends DomainViewNode> clazz = getClass();
+			if (clazz == DomainViewNode.class) {
+				return "node";
+			} else {
+				return DirectedRenderer.tagName(clazz);
+			}
 		}
 
 		public void removeFromParent() {

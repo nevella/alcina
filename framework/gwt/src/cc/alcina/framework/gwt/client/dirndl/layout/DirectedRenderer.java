@@ -41,6 +41,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensit
  */
 @Reflected
 public abstract class DirectedRenderer {
+	public static String tagName(Class clazz) {
+		return Ax.cssify(clazz.getSimpleName());
+	}
+
 	protected void applyCssClass(Node node, Widget widget) {
 		if (node.directed.cssClass().length() > 0) {
 			widget.addStyleName(node.directed.cssClass());
@@ -66,8 +70,7 @@ public abstract class DirectedRenderer {
 		if (Ax.notBlank(defaultTag)) {
 			return defaultTag;
 		}
-		return Ax.blankTo(tag,
-				Ax.cssify(node.model.getClass().getSimpleName()));
+		return Ax.blankTo(tag, tagName(node.model.getClass()));
 	}
 
 	protected abstract void render(DirectedLayout.RendererInput input);
