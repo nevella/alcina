@@ -80,7 +80,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	@Override
 	public synchronized String getToken(Place place) {
-		if (place == null || tokenizersByPlace.isEmpty()) {
+		if (place == null || tokenizersByPlace.isEmpty()
+				|| place == Place.NOWHERE) {
 			return "";
 		}
 		String token = tokenizersByPlace.get(place.getClass()).mutableInstance()
