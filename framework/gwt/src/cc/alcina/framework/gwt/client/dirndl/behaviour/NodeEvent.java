@@ -39,7 +39,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
  */
 /*
  * FIXME - dirndl 1x1d - events - don't like the interplay between NodeEvent,
- * BehaviourBinding and NodeEventReceiver...
+ * BehaviourBinding and NodeEventReceiver... see https://github.com/nevella/alcina/issues/24
+ *
+ * (later) - factor out into 'eventsource' - which only exists for gwt events
  *
  * but...maybe...it's right? It's an event fired on a node, so as long as
  * there's one nodeevent per logical 'event', per node, maybe it's right...?
