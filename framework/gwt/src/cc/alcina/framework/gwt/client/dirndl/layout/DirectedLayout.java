@@ -47,12 +47,12 @@ import cc.alcina.framework.common.client.util.traversal.Traversable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
+import cc.alcina.framework.gwt.client.dirndl.event.BehaviourPackageAccess;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.BehaviourPackageAccess;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 
 /**

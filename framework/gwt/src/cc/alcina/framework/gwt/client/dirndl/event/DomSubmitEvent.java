@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.gwt.client.dirndl.behaviour;
+package cc.alcina.framework.gwt.client.dirndl.event;
 
 import com.google.gwt.event.dom.client.DomEvent;
 

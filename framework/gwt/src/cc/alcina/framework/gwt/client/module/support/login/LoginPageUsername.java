@@ -8,8 +8,8 @@ import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.gwittir.validator.EmailAddressValidator;
 import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Cancelled;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancelled;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 @Directed(receives = ModelEvents.Cancelled.class)

@@ -5,7 +5,7 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
 
 public abstract class DomBinding<E extends NodeEvent> implements EventHandler {

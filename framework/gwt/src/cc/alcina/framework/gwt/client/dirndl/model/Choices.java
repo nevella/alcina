@@ -14,11 +14,11 @@ import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Selected;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 
 @Directed(tag = "choices", receives = ModelEvents.Selected.class)
 /*

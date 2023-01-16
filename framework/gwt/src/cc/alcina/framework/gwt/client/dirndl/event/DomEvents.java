@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.dirndl.behaviour;
+package cc.alcina.framework.gwt.client.dirndl.event;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;

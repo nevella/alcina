@@ -17,9 +17,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents.BeforeRender;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 
 /**

@@ -12,7 +12,7 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;

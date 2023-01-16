@@ -5,9 +5,9 @@ import com.google.gwt.event.dom.client.ClickEvent;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.DropdownButtonClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.InsideDropdownClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.OutsideDropdownClicked;

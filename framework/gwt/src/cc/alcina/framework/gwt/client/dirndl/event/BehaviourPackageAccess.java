@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.dirndl.behaviour;
+package cc.alcina.framework.gwt.client.dirndl.event;
 
 import java.util.function.BiConsumer;
 

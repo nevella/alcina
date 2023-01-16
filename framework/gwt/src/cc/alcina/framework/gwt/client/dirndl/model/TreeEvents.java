@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
-import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 
 public class TreeEvents {
 	public static class NodeLabelClicked
