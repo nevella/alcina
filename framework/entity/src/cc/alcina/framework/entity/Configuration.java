@@ -82,19 +82,29 @@ public class Configuration {
 			return Configuration.get(clazz, keyPart);
 		}
 
+		public int intValue() {
+			String value = get();
+			return Integer.valueOf(value);
+		}
+
 		public boolean is() {
 			String value = get();
 			return Boolean.valueOf(value);
 		}
 
-		public Key withContextOverride(boolean contextOverride) {
-			this.contextOverride = contextOverride;
-			return this;
+		public long longValue() {
+			String value = get();
+			return Long.valueOf(value);
 		}
 
 		public void set(String value) {
 			String key = Ax.format("%s.%s", clazz.getSimpleName(), keyPart);
 			LooseContext.set(key, value);
+		}
+
+		public Key withContextOverride(boolean contextOverride) {
+			this.contextOverride = contextOverride;
+			return this;
 		}
 	}
 }
