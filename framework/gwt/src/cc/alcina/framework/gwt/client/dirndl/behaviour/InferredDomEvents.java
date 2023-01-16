@@ -14,11 +14,8 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyDownEvent;
-import com.google.gwt.event.dom.client.KeyDownHandler;
-import com.google.gwt.event.dom.client.KeyEvent;
-import com.google.gwt.event.dom.client.KeyPressEvent;
-import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
@@ -26,13 +23,12 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class InferredDomEvents {
-	public static class ClickOutside extends NodeEvent<ClickOutside.Handler>
-			implements NativePreviewHandler {
-		private Widget widget;
-
+	public static class ClickOutside extends NodeEvent<ClickOutside.Handler> {
 		@Override
 		public void dispatch(ClickOutside.Handler handler) {
 			handler.onClickOutside(this);
@@ -43,40 +39,41 @@ public class InferredDomEvents {
 			return ClickOutside.Handler.class;
 		}
 
-		@Override
-		public void onPreviewNativeEvent(NativePreviewEvent event) {
-			if (Event.as(event.getNativeEvent())
-					.getTypeInt() != Event.ONCLICK) {
-				return;
-			}
-			if (!eventTargetsWidget(event)) {
-				// could do some jiggery-pokery to get
-				// DomEvent.fireNativeEvent to get us a
-				// clickEvent...if
-				// needed
-				Scheduler.get().scheduleDeferred(() -> {
-					fireEvent(null);
-				});
-			}
-		}
+		@Registration({ DomBinding.class, ClickOutside.class })
+		public static class BindingImpl extends DomBinding
+				implements NativePreviewHandler {
+			private Widget widget;
 
-		private boolean eventTargetsWidget(NativePreviewEvent event) {
-			EventTarget target = event.getNativeEvent().getEventTarget();
-			if (Element.is(target)) {
-				return widget.getElement().isOrHasChild(Element.as(target));
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				this.widget = widget;
+				return Event.addNativePreviewHandler(this);
 			}
-			return false;
-		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			this.widget = widget;
-			widget.addAttachHandler(evt -> {
-				if (!evt.isAttached()) {
-					unbind();
+			@Override
+			public void onPreviewNativeEvent(NativePreviewEvent event) {
+				if (Event.as(event.getNativeEvent())
+						.getTypeInt() != Event.ONCLICK) {
+					return;
 				}
-			});
-			return Event.addNativePreviewHandler(this);
+				if (!eventTargetsWidget(event)) {
+					// could do some jiggery-pokery to get
+					// DomEvent.fireNativeEvent to get us a
+					// clickEvent...if
+					// needed
+					Scheduler.get().scheduleDeferred(() -> {
+						fireEvent(null);
+					});
+				}
+			}
+
+			private boolean eventTargetsWidget(NativePreviewEvent event) {
+				EventTarget target = event.getNativeEvent().getEventTarget();
+				if (Element.is(target)) {
+					return widget.getElement().isOrHasChild(Element.as(target));
+				}
+				return false;
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -84,8 +81,8 @@ public class InferredDomEvents {
 		}
 	}
 
-	public static class CtrlEnterPressed extends
-			NodeEvent<CtrlEnterPressed.Handler> implements KeyDownHandler {
+	public static class CtrlEnterPressed
+			extends NodeEvent<CtrlEnterPressed.Handler> {
 		@Override
 		public void dispatch(CtrlEnterPressed.Handler handler) {
 			handler.onCtrlEnterPressed(this);
@@ -96,28 +93,24 @@ public class InferredDomEvents {
 			return CtrlEnterPressed.Handler.class;
 		}
 
-		@Override
-		public void onKeyDown(KeyDownEvent event) {
-			handleEvent(event);
-		}
+		@Registration({ DomBinding.class, CtrlEnterPressed.class })
+		public static class BindingImpl extends DomBinding
+				implements KeyUpHandler {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::onKeyUp,
+						KeyUpEvent.getType());
+			}
 
-		private void handleEvent(KeyEvent event) {
-			char charCode = event instanceof KeyPressEvent
-					? ((KeyPressEvent) event).getCharCode()
-					: '0';
-			int keyCode = event.getNativeEvent().getKeyCode();
-			if (charCode == KeyCodes.KEY_ENTER
-					|| keyCode == KeyCodes.KEY_ENTER) {
-				if (event.isControlKeyDown() || event.isMetaKeyDown()) {
-					fireEvent(event);
+			@Override
+			public void onKeyUp(KeyUpEvent event) {
+				int keyCode = event.getNativeEvent().getKeyCode();
+				if (keyCode == KeyCodes.KEY_ENTER) {
+					if (event.isControlKeyDown() || event.isMetaKeyDown()) {
+						fireEvent(event);
+					}
 				}
 			}
-		}
-
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::handleEvent,
-					KeyDownEvent.getType());
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -125,8 +118,7 @@ public class InferredDomEvents {
 		}
 	}
 
-	public static class EnterPressed extends NodeEvent<EnterPressed.Handler>
-			implements KeyPressHandler {
+	public static class EnterPressed extends NodeEvent<EnterPressed.Handler> {
 		@Override
 		public void dispatch(EnterPressed.Handler handler) {
 			handler.onEnterPressed(this);
@@ -137,26 +129,24 @@ public class InferredDomEvents {
 			return EnterPressed.Handler.class;
 		}
 
-		@Override
-		public void onKeyPress(KeyPressEvent event) {
-			handleEvent(event);
-		}
-
-		private void handleEvent(KeyEvent event) {
-			char charCode = event instanceof KeyPressEvent
-					? ((KeyPressEvent) event).getCharCode()
-					: '0';
-			int keyCode = event.getNativeEvent().getKeyCode();
-			if (charCode == KeyCodes.KEY_ENTER
-					|| keyCode == KeyCodes.KEY_ENTER) {
-				fireEvent(event);
+		@Registration({ DomBinding.class, EnterPressed.class })
+		public static class BindingImpl extends DomBinding
+				implements KeyUpHandler {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::onKeyUp,
+						KeyUpEvent.getType());
 			}
-		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::handleEvent,
-					KeyPressEvent.getType());
+			@Override
+			public void onKeyUp(KeyUpEvent event) {
+				int keyCode = event.getNativeEvent().getKeyCode();
+				if (keyCode == KeyCodes.KEY_ENTER) {
+					if (!event.isControlKeyDown() && !event.isMetaKeyDown()) {
+						fireEvent(event);
+					}
+				}
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -164,8 +154,7 @@ public class InferredDomEvents {
 		}
 	}
 
-	public static class EscapePressed extends NodeEvent<EscapePressed.Handler>
-			implements KeyDownHandler {
+	public static class EscapePressed extends NodeEvent<EscapePressed.Handler> {
 		@Override
 		public void dispatch(EscapePressed.Handler handler) {
 			handler.onEscapePressed(this);
@@ -176,26 +165,22 @@ public class InferredDomEvents {
 			return EscapePressed.Handler.class;
 		}
 
-		@Override
-		public void onKeyDown(KeyDownEvent event) {
-			handleEvent(event);
-		}
-
-		private void handleEvent(KeyEvent event) {
-			char charCode = event instanceof KeyPressEvent
-					? ((KeyPressEvent) event).getCharCode()
-					: '0';
-			int keyCode = event.getNativeEvent().getKeyCode();
-			if (charCode == KeyCodes.KEY_ESCAPE
-					|| keyCode == KeyCodes.KEY_ESCAPE) {
-				fireEvent(event);
+		@Registration({ DomBinding.class, EscapePressed.class })
+		public static class BindingImpl extends DomBinding
+				implements KeyUpHandler {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::onKeyUp,
+						KeyUpEvent.getType());
 			}
-		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::handleEvent,
-					KeyDownEvent.getType());
+			@Override
+			public void onKeyUp(KeyUpEvent event) {
+				int keyCode = event.getNativeEvent().getKeyCode();
+				if (keyCode == KeyCodes.KEY_ESCAPE) {
+					fireEvent(event);
+				}
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -210,12 +195,7 @@ public class InferredDomEvents {
 	 * submit
 	 */
 	public static class InputEnterCommit
-			extends NodeEvent<InputEnterCommit.Handler>
-			implements ChangeHandler, KeyDownHandler {
-		private boolean enterReceived = false;
-
-		private boolean changeWhileFocusReceived = false;
-
+			extends NodeEvent<InputEnterCommit.Handler> {
 		@Override
 		public void dispatch(InputEnterCommit.Handler handler) {
 			handler.onInputEnterCommit(this);
@@ -226,48 +206,57 @@ public class InferredDomEvents {
 			return InputEnterCommit.Handler.class;
 		}
 
-		@Override
-		public void onChange(ChangeEvent event) {
-			handleChangeEvent(event);
-		}
+		@Registration({ DomBinding.class, InputEnterCommit.class })
+		public static class BindingImpl extends DomBinding
+				implements ChangeHandler, KeyUpHandler {
+			private boolean enterReceived = false;
 
-		@Override
-		public void onKeyDown(KeyDownEvent event) {
-			enterReceived |= event.getNativeKeyCode() == KeyCodes.KEY_ENTER;
-			checkFire(event);
-		}
+			private boolean changeReceivedWhileFocussedElement = false;
 
-		private void checkFire(GwtEvent event) {
-			if (changeWhileFocusReceived && enterReceived) {
-				fireEvent(event);
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				MultiHandlerRegistration multiHandlerRegistration = new MultiHandlerRegistration();
+				multiHandlerRegistration.add(widget
+						.addDomHandler(this::onChange, ChangeEvent.getType()));
+				multiHandlerRegistration.add(widget.addDomHandler(this::onKeyUp,
+						KeyUpEvent.getType()));
+				return multiHandlerRegistration;
 			}
-		}
 
-		private void handleChangeEvent(ChangeEvent event) {
-			// if the document focus is still the source element, and it's
-			// <input type='text'>, its value was cxommitted via [enter]
-			//
-			// except if set by autocomplete. but in that case, an *input*
-			// eventwill never have been fired on the element
-			EventTarget eventTarget = event.getNativeEvent().getEventTarget();
-			if (Element.is(eventTarget)) {
-				Element focussedElement = WidgetUtils
-						.getFocussedDocumentElement();
-				if (Element.as(eventTarget) == focussedElement) {
-					changeWhileFocusReceived = true;
-					checkFire(event);
+			@Override
+			public void onChange(ChangeEvent event) {
+				handleChangeEvent(event);
+			}
+
+			@Override
+			public void onKeyUp(KeyUpEvent event) {
+				enterReceived |= event.getNativeKeyCode() == KeyCodes.KEY_ENTER;
+				checkFire(event);
+			}
+
+			private void checkFire(GwtEvent event) {
+				if (changeReceivedWhileFocussedElement && enterReceived) {
+					fireEvent(event);
 				}
 			}
-		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			MultiHandlerRegistration multiHandlerRegistration = new MultiHandlerRegistration();
-			multiHandlerRegistration.add(widget.addDomHandler(this::onChange,
-					ChangeEvent.getType()));
-			multiHandlerRegistration.add(widget.addDomHandler(this::onKeyDown,
-					KeyDownEvent.getType()));
-			return multiHandlerRegistration;
+			private void handleChangeEvent(ChangeEvent event) {
+				// if the document focus is still the source element, and it's
+				// <input type='text'>, its value was cxommitted via [enter]
+				//
+				// except if set by autocomplete. but in that case, an *input*
+				// eventwill never have been fired on the element
+				EventTarget eventTarget = event.getNativeEvent()
+						.getEventTarget();
+				if (Element.is(eventTarget)) {
+					Element focussedElement = WidgetUtils
+							.getFocussedDocumentElement();
+					if (Element.as(eventTarget) == focussedElement) {
+						changeReceivedWhileFocussedElement = true;
+						checkFire(event);
+					}
+				}
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -277,19 +266,11 @@ public class InferredDomEvents {
 
 	public static class IntersectionObserved
 			extends NodeEvent<IntersectionObserved.Handler> {
-		private IntersectionObserver intersectionObserver;
-
 		private boolean intersecting;
 
 		@Override
 		public void dispatch(Handler handler) {
 			handler.onIntersectionObserved(this);
-		}
-
-		public void fireEvent(boolean visible) {
-			IntersectionObserved event = new IntersectionObserved();
-			event.setIntersecting(visible);
-			super.fireEvent(event);
 		}
 
 		@Override
@@ -306,63 +287,73 @@ public class InferredDomEvents {
 			this.intersecting = intersecting;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			widget.addAttachHandler(evt -> {
-				if (evt.isAttached()) {
-					intersectionObserver = IntersectionObserver.observerFor(
-							this,
-							widget.getElement().implAccess().ensureRemote());
-				} else {
-					intersectionObserver.disconnect();
+		@Registration({ DomBinding.class, IntersectionObserved.class })
+		public static class BindingImpl extends DomBinding {
+			private IntersectionObserver intersectionObserver;
+
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				widget.addAttachHandler(evt -> {
+					if (evt.isAttached()) {
+						intersectionObserver = IntersectionObserver
+								.observerFor(this, widget.getElement()
+										.implAccess().ensureRemote());
+					} else {
+						intersectionObserver.disconnect();
+					}
+				});
+				return null;
+			}
+
+			public void fireEvent(boolean visible) {
+				IntersectionObserved event = new IntersectionObserved();
+				event.setIntersecting(visible);
+				super.fireEvent(event);
+			}
+
+			public static final class IntersectionObserver
+					extends JavaScriptObject {
+				public static final native IntersectionObserver observerFor(
+						IntersectionObserved.BindingImpl intersectionObserved,
+						ElementRemote elt) /*-{
+          var callback = $entry(function(entries, observer) {
+            for ( var k in entries) {
+              intersectionObserved.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.IntersectionObserved.BindingImpl::fireEvent(Z)(entries[k].isIntersecting);
+            }
+          });
+          var scrollCursor = elt;
+          while (scrollCursor != document.body) {
+            var style = $wnd.getComputedStyle(scrollCursor);
+            if (style.overflow == 'scroll' || style.overflowX == 'scroll'
+                || style.overflowY == 'scroll') {
+              break;
+            }
+            scrollCursor = scrollCursor.parentElement;
+          }
+          var observer = new IntersectionObserver(callback, {
+            root : scrollCursor,
+            //fire as soon as 1 pixel is visible
+            threshold : 0.0
+          });
+          observer.observe(elt);
+          return observer;
+				}-*/;
+
+				protected IntersectionObserver() {
 				}
-			});
-			return null;
+
+				final native void disconnect() /*-{
+          this.disconnect();
+				}-*/;
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
 			void onIntersectionObserved(IntersectionObserved event);
 		}
-
-		public static final class IntersectionObserver
-				extends JavaScriptObject {
-			public static final native IntersectionObserver observerFor(
-					IntersectionObserved intersectionObserved,
-					ElementRemote elt) /*-{
-        var callback = $entry(function(entries, observer) {
-          for ( var k in entries) {
-            intersectionObserved.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.IntersectionObserved::fireEvent(Z)(entries[k].isIntersecting);
-          }
-        });
-        var scrollCursor = elt;
-        while (scrollCursor != document.body) {
-          var style = $wnd.getComputedStyle(scrollCursor);
-          if (style.overflow == 'scroll' || style.overflowX == 'scroll'
-              || style.overflowY == 'scroll') {
-            break;
-          }
-          scrollCursor = scrollCursor.parentElement;
-        }
-        var observer = new IntersectionObserver(callback, {
-          root : scrollCursor,
-          //fire as soon as 1 pixel is visible
-          threshold : 0.0
-        });
-        observer.observe(elt);
-        return observer;
-			}-*/;
-
-			protected IntersectionObserver() {
-			}
-
-			final native void disconnect() /*-{
-        this.disconnect();
-			}-*/;
-		}
 	}
 
-	public static class LeftClick extends NodeEvent<LeftClick.Handler>
-			implements ClickHandler {
+	public static class LeftClick extends NodeEvent<LeftClick.Handler> {
 		@Override
 		public void dispatch(LeftClick.Handler handler) {
 			handler.onLeftClick(this);
@@ -373,28 +364,28 @@ public class InferredDomEvents {
 			return LeftClick.Handler.class;
 		}
 
-		@Override
-		public void onClick(ClickEvent event) {
-			handleEvent(event);
-		}
-
-		private void handleEvent(ClickEvent event) {
-			int nativeButton = event.getNativeButton();
-			switch (nativeButton) {
-			case NativeEvent.BUTTON_MIDDLE:
-			case NativeEvent.BUTTON_RIGHT:
-				break;
-			default:
-				// fire on touch as well
-				fireEvent(event);
-				break;
+		@Registration({ DomBinding.class, LeftClick.class })
+		public static class BindingImpl extends DomBinding
+				implements ClickHandler {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::onClick,
+						ClickEvent.getType());
 			}
-		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::handleEvent,
-					ClickEvent.getType());
+			@Override
+			public void onClick(ClickEvent event) {
+				int nativeButton = event.getNativeButton();
+				switch (nativeButton) {
+				case NativeEvent.BUTTON_MIDDLE:
+				case NativeEvent.BUTTON_RIGHT:
+					break;
+				default:
+					// fire on touch as well
+					fireEvent(event);
+					break;
+				}
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -403,10 +394,8 @@ public class InferredDomEvents {
 	}
 
 	// as per clickoutside
-	public static class MouseUpOutside extends NodeEvent<MouseUpOutside.Handler>
-			implements NativePreviewHandler {
-		private Widget widget;
-
+	public static class MouseUpOutside
+			extends NodeEvent<MouseUpOutside.Handler> {
 		@Override
 		public void dispatch(MouseUpOutside.Handler handler) {
 			handler.onMouseUpOutside(this);
@@ -417,40 +406,43 @@ public class InferredDomEvents {
 			return MouseUpOutside.Handler.class;
 		}
 
-		@Override
-		public void onPreviewNativeEvent(NativePreviewEvent event) {
-			if (Event.as(event.getNativeEvent())
-					.getTypeInt() != Event.ONMOUSEUP) {
-				return;
-			}
-			if (!eventTargetsWidget(event)) {
-				// could do some jiggery-pokery to get
-				// DomEvent.fireNativeEvent to get us a
-				// mouseUpEvent...if
-				// needed
-				Scheduler.get().scheduleDeferred(() -> {
-					fireEvent(null);
-				});
-			}
-		}
+		@Registration({ DomBinding.class, MouseUpOutside.class })
+		public static class BindingImpl extends DomBinding
+				implements NativePreviewHandler {
+			private Widget widget;
 
-		private boolean eventTargetsWidget(NativePreviewEvent event) {
-			EventTarget target = event.getNativeEvent().getEventTarget();
-			if (Element.is(target)) {
-				return widget.getElement().isOrHasChild(Element.as(target));
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				this.widget = widget;
+				return Event.addNativePreviewHandler(this);
 			}
-			return false;
-		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			this.widget = widget;
-			widget.addAttachHandler(evt -> {
-				if (!evt.isAttached()) {
-					unbind();
+			@Override
+			public void onPreviewNativeEvent(NativePreviewEvent event) {
+				if (Event.as(event.getNativeEvent())
+						.getTypeInt() != Event.ONMOUSEUP) {
+					return;
 				}
-			});
-			return Event.addNativePreviewHandler(this);
+				if (!eventTargetsWidget(event)) {
+					// could do some jiggery-pokery to get
+					// DomEvent.fireNativeEvent to get us a
+					// mouseUpEvent...if
+					// needed
+					//
+					// FIXME - can we scheduleFinally, not deferred?
+					Scheduler.get().scheduleDeferred(() -> {
+						fireEvent(null);
+					});
+				}
+			}
+
+			private boolean eventTargetsWidget(NativePreviewEvent event) {
+				EventTarget target = event.getNativeEvent().getEventTarget();
+				if (Element.is(target)) {
+					return widget.getElement().isOrHasChild(Element.as(target));
+				}
+				return false;
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -481,16 +473,9 @@ public class InferredDomEvents {
 	 */
 	public static class ResizeObserved
 			extends NodeEvent<ResizeObserved.Handler> {
-		private ResizeObserver resizeObserver;
-
 		@Override
 		public void dispatch(Handler handler) {
 			handler.onResizeObserved(this);
-		}
-
-		public void fireEvent() {
-			ResizeObserved event = new ResizeObserved();
-			super.fireEvent(event);
 		}
 
 		@Override
@@ -498,17 +483,26 @@ public class InferredDomEvents {
 			return ResizeObserved.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			widget.addAttachHandler(evt -> {
-				if (evt.isAttached()) {
-					resizeObserver = ResizeObserver.observerFor(this,
-							widget.getElement().implAccess().ensureRemote());
-				} else {
-					resizeObserver.disconnect();
-				}
-			});
-			return null;
+		@Registration({ DomBinding.class, ResizeObserved.class })
+		public static class BindingImpl extends DomBinding {
+			private ResizeObserver resizeObserver;
+
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				widget.addAttachHandler(evt -> {
+					if (evt.isAttached()) {
+						resizeObserver = ResizeObserver.observerFor(this, widget
+								.getElement().implAccess().ensureRemote());
+					} else {
+						resizeObserver.disconnect();
+					}
+				});
+				return null;
+			}
+
+			public void fireEvent() {
+				super.fireEvent(null);
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -516,21 +510,25 @@ public class InferredDomEvents {
 		}
 
 		public static class RequestAnimation extends ResizeObserved {
-			private RequestAnimationFrameGate gate = new RequestAnimationFrameGate();
+			@Registration({ DomBinding.class, RequestAnimation.class })
+			public static class BindingImpl extends ResizeObserved.BindingImpl {
+				private RequestAnimationFrameGate gate = new RequestAnimationFrameGate();
 
-			@Override
-			public void fireEvent() {
-				gate.schedule(super::fireEvent);
+				@Override
+				protected void fireEvent(GwtEvent gwtEvent) {
+					gate.schedule(super::fireEvent);
+				}
 			}
 		}
 
 		public static final class ResizeObserver extends JavaScriptObject {
 			public static final native ResizeObserver observerFor(
-					ResizeObserved resizeObserved, ElementRemote elt) /*-{
+					ResizeObserved.BindingImpl resizeObserved,
+					ElementRemote elt) /*-{
         var callback = $entry(function(entries, observer) {
           for ( var k in entries) {
             //there's info in the entry (a contentBox or contentRect, browser-dependent) - but not interested
-            resizeObserved.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.ResizeObserved::fireEvent()();
+            resizeObserved.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.ResizeObserved.BindingImpl::fireEvent()();
           }
         });
         var observer = new ResizeObserver(callback);

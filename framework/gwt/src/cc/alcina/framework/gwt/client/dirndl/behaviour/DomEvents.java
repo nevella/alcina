@@ -19,6 +19,9 @@ import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
+
 public class DomEvents {
 	public static class Blur extends NodeEvent<Blur.Handler> {
 		@Override
@@ -31,9 +34,13 @@ public class DomEvents {
 			return Blur.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent, BlurEvent.getType());
+		@Registration({ DomBinding.class, Blur.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						BlurEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -59,9 +66,13 @@ public class DomEvents {
 			return Change.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent, ChangeEvent.getType());
+		@Registration({ DomBinding.class, Change.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						ChangeEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -87,9 +98,13 @@ public class DomEvents {
 			return Click.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent, ClickEvent.getType());
+		@Registration({ DomBinding.class, Click.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						ClickEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -108,9 +123,13 @@ public class DomEvents {
 			return Focus.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent, FocusEvent.getType());
+		@Registration({ DomBinding.class, Focus.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						FocusEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -129,10 +148,13 @@ public class DomEvents {
 			return Focusin.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent,
-					FocusinEvent.getType());
+		@Registration({ DomBinding.class, Focusin.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						FocusinEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -151,10 +173,13 @@ public class DomEvents {
 			return Focusout.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent,
-					FocusoutEvent.getType());
+		@Registration({ DomBinding.class, Focusout.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						FocusoutEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -192,9 +217,13 @@ public class DomEvents {
 			return this.value;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent, InputEvent.getType());
+		@Registration({ DomBinding.class, Input.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						InputEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -213,10 +242,13 @@ public class DomEvents {
 			return KeyDown.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent,
-					KeyDownEvent.getType());
+		@Registration({ DomBinding.class, KeyDown.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						KeyDownEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -235,9 +267,13 @@ public class DomEvents {
 			return KeyUp.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent, KeyUpEvent.getType());
+		@Registration({ DomBinding.class, KeyUp.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						KeyUpEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -256,10 +292,13 @@ public class DomEvents {
 			return MouseUp.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent,
-					MouseUpEvent.getType());
+		@Registration({ DomBinding.class, MouseUp.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						MouseUpEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -278,9 +317,13 @@ public class DomEvents {
 			return Scroll.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent, ScrollEvent.getType());
+		@Registration({ DomBinding.class, Scroll.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						ScrollEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -304,12 +347,15 @@ public class DomEvents {
 			return Submit.Handler.class;
 		}
 
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			// required since form submit doesn't propagate
-			LocalDom.flush();
-			return widget.addBitlessDomHandler(this::fireEvent,
-					DomSubmitEvent.getType());
+		@Registration({ DomBinding.class, Submit.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			public HandlerRegistration bind0(Widget widget) {
+				// required since form submit doesn't propagate
+				LocalDom.flush();
+				return widget.addBitlessDomHandler(this::fireEvent,
+						DomSubmitEvent.getType());
+			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {

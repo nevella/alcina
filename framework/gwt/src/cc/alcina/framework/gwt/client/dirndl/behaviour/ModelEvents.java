@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
-
 /*
  * A collection of standard logical events
  */

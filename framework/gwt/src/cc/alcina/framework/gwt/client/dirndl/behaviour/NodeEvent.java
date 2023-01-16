@@ -4,17 +4,12 @@ import java.lang.annotation.Annotation;
 
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
-import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.NodeEventReceiver;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 
-@Reflected
 /**
  * <p>
  * Event system notes
@@ -72,29 +67,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
  * @formatter:on
  *
  */
+@Reflected
 public abstract class NodeEvent<H extends NodeEvent.Handler>
 		extends GwtEvent<H> {
-	private NodeEventReceiver eventReceiver;
-
-	protected HandlerRegistration handlerRegistration;
-
 	private Context context;
 
 	protected Object model;
-
-	public void bind(Widget widget, boolean bind) {
-		if (!bind) {
-			if (handlerRegistration != null) {
-				handlerRegistration.removeHandler();
-				handlerRegistration = null;
-			}
-		} else {
-			if (handlerRegistration != null) {
-				return;
-			}
-			handlerRegistration = bind0(widget);
-		}
-	}
 
 	@Override
 	/*
@@ -117,10 +95,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		this.context = context;
 	}
 
-	public void setEventReceiver(NodeEventReceiver eventReceiver) {
-		this.eventReceiver = eventReceiver;
-	}
-
 	public void setModel(Object model) {
 		this.model = model;
 	}
@@ -130,14 +104,9 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		return Ax.format("%s : %s", getClass().getSimpleName(), model);
 	}
 
-	protected abstract HandlerRegistration bind0(Widget widget);
-
 	protected void fireEvent(GwtEvent gwtEvent) {
-		eventReceiver.onEvent(gwtEvent);
-	}
-
-	protected void unbind() {
-		bind(null, false);
+		int debug = 3;
+		// eventReceiver.onEvent(gwtEvent);
 	}
 
 	public static class Context {
@@ -188,7 +157,11 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 		// Fluent event emission
 		public void fire(Class<? extends ModelEvent> modelEvent) {
-			ModelEvent.fire(this, modelEvent, null);
+			fire(modelEvent, null);
+		}
+
+		public void fire(Class<? extends ModelEvent> modelEvent, Object model) {
+			ModelEvent.fire(this, modelEvent, model);
 		}
 
 		public NodeEvent getNodeEvent() {
@@ -229,5 +202,9 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		public Class<H> getHandlerClass() {
 			return this.handlerClass;
 		}
+	}
+
+	// Marker interface - otherwise a Registry-supplied DomBinding is expected
+	public interface WithoutDomBinding {
 	}
 }

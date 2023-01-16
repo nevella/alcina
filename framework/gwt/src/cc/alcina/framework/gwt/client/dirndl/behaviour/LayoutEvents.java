@@ -1,8 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
-import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.ui.Widget;
-
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 
 public class LayoutEvents {
@@ -85,19 +82,15 @@ public class LayoutEvents {
 	}
 
 	/**
-	 * Handlers do not need configure binding via @Directed(receives) - the
-	 * respective Handler methods are called directly during layout. Note that
-	 * getContext() only provides the Node corresponding to the model
+	 * Handlers do not need to configure binding event receipt
+	 * via @Directed(receives) - the respective Handler methods are called
+	 * directly during layout. Note that getContext() only provides the Node
+	 * corresponding to the model
 	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
 	public static abstract class LayoutEvent<H extends NodeEvent.Handler>
-			extends NodeEvent<H> {
-		@Override
-		// does not bind
-		protected HandlerRegistration bind0(Widget widget) {
-			return null;
-		}
+			extends NodeEvent<H> implements NodeEvent.WithoutDomBinding {
 	}
 }

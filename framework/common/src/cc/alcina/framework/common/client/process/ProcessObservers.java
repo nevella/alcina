@@ -15,6 +15,12 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * A low-consumption pub/sub registry for process events. By default (non-debug
  * mode, essentially), event publication results in just a null check
  *
+ * <p>
+ * Observers can either be context-based - call observe/publish methods on
+ * {@code ProcessObservers.context()} (useful when modelling an isolated process
+ * messages and message handling) or global - call methods on
+ * {@code ProcessModel}
+ *
  * @author nick@alcina.cc
  *
  */

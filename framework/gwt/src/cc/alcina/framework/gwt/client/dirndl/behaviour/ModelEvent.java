@@ -1,14 +1,10 @@
-package cc.alcina.framework.gwt.client.dirndl.layout;
+package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
 import java.util.Optional;
-
-import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 
@@ -26,7 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
  * @param <H>
  */
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
-		extends NodeEvent<H> {
+		extends NodeEvent<H> implements NodeEvent.WithoutDomBinding {
 	// FIXME - dirndl 1x1h - fire on GWT/Scheduler event pump? nope, explain why
 	// not
 	public static void fire(Context context, Class<? extends ModelEvent> type,
@@ -34,14 +30,8 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		ModelEvent modelEvent = Reflections.newInstance(type);
 		context.setNodeEvent(modelEvent);
 		modelEvent.setModel(model);
-		/*
-		 * Bubble
-		 */
-		Node cursor = context.node;
-		while (cursor != null && !modelEvent.handled) {
-			cursor.fireEvent(modelEvent);
-			cursor = cursor.parent;
-		}
+		BehaviourPackageAccess.fireModelEventInvoker.accept(context.node,
+				modelEvent);
 		if (!modelEvent.handled) {
 			Optional<TopLevelHandler> handler = Registry
 					.optional(TopLevelHandler.class, type);
@@ -75,20 +65,6 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public boolean wasReemitted(Node node) {
 		return getContext().previous != null
 				&& getContext().previous.node == node;
-	}
-
-	@Override
-	// FIXME - dirndl 1x1d - events - model vs widget bindings. Look at the
-	// guarantees of
-	// model binding, but I *think* we can move this into layout events. Also
-	// pretty sure bind/unbind is a noop for model events - in fact,
-	//
-	protected HandlerRegistration bind0(Widget widget) {
-		return widget.addAttachHandler(evt -> {
-			if (!evt.isAttached()) {
-				unbind();
-			}
-		});
 	}
 
 	/**

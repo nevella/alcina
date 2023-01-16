@@ -32,9 +32,9 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActi
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;

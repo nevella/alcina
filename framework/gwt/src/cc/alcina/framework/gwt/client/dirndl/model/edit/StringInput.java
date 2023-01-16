@@ -77,6 +77,13 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 
 	private String spellcheck;
 
+	public StringInput() {
+	}
+
+	public StringInput(String value) {
+		setValue(value);
+	}
+
 	public String getAutocomplete() {
 		return this.autocomplete;
 	}

@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
@@ -33,6 +34,8 @@ import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
+import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -45,7 +48,9 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.BehaviourPackageAccess;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
@@ -144,11 +149,23 @@ public class DirectedLayout implements AlcinaProcess {
 	static Logger logger = LoggerFactory.getLogger(DirectedLayout.class);
 	static {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.INFO);
+		BehaviourPackageAccess.fireModelEventInvoker = DirectedLayout::fireModelEvent0;
 	}
 
 	// FIXME - dirndl 1x2 - remove (required until decoupling from
 	// RnederContext)
 	public static Node current = null;
+
+	private static void fireModelEvent0(Node node, ModelEvent modelEvent) {
+		/*
+		 * Bubble until event is handled or reached the top of the node tree
+		 */
+		Node cursor = node;
+		while (cursor != null && !modelEvent.isHandled()) {
+			cursor.fireEvent(modelEvent);
+			cursor = cursor.parent;
+		}
+	}
 
 	private Node root = null;
 
@@ -278,6 +295,31 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 		return Reflections.newInstance(rendererClass);
+	}
+
+	public static class EventObservable implements ProcessObservable {
+		Class<? extends NodeEvent> type;
+
+		Context context;
+
+		Object model;
+
+		public EventObservable(Class<? extends NodeEvent> type, Context context,
+				Object model) {
+			this.type = type;
+			this.context = context;
+			this.model = model;
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder fb = new FormatBuilder().separator("\n");
+			fb.append("EVENT\n=============");
+			fb.append(type.getSimpleName());
+			fb.append(context.node.toParentStack());
+			fb.append("");
+			return fb.toString();
+		}
 	}
 
 	/**
@@ -511,6 +553,9 @@ public class DirectedLayout implements AlcinaProcess {
 				replacementListener.unbind();
 				replacementListener = null;
 			}
+			if (eventBindings != null) {
+				eventBindings.forEach(NodeEventBinding::unbind);
+			}
 			if (propertyBindings != null) {
 				propertyBindings.unbind();
 			}
@@ -719,9 +764,8 @@ public class DirectedLayout implements AlcinaProcess {
 		 * TODO - should these in fact be two different bindings - say a base
 		 * class and subclass?
 		 */
-		class NodeEventBinding implements NodeEventReceiver {
+		class NodeEventBinding {
 			Class<? extends NodeEvent> type;
-
 			// FIXME - dirndl 1x1d - why binding? why not bound event?
 			// also .... shouldn't we create these events on demand, and just
 			// use type? or call it 'template'?
@@ -729,20 +773,21 @@ public class DirectedLayout implements AlcinaProcess {
 			// Actually, the event provides access to - essentially - metadata
 			// about the event. So that'd need to either go elsewhere, or keep
 			// the current behaviour (with maybe more specific naming)
-			NodeEvent<? extends EventHandler> eventInstance;
+			// NodeEvent<? extends EventHandler> eventInstance;
 
 			private int receiverIndex;
+
+			DomBinding domBinding;
 
 			public NodeEventBinding(Class<? extends NodeEvent> type, int idx) {
 				this.type = type;
 				this.receiverIndex = idx;
 			}
 
-			@Override
 			public void onEvent(GwtEvent event) {
 				Context context = new NodeEvent.Context();
 				context.gwtEvent = event;
-				fireEvent(context, Node.this.getModel());
+				dispatchEvent(context, Node.this.getModel());
 			}
 
 			@Override
@@ -751,28 +796,42 @@ public class DirectedLayout implements AlcinaProcess {
 						model.getClass().getSimpleName(), type);
 			}
 
-			private void bindEvent(boolean bind) {
-				if (bind) {
-					if (eventInstance == null) {
-						eventInstance = Reflections.newInstance(type);
-						eventInstance.setEventReceiver(this);
+			// this method contains devmode checks that a binding exists (if the
+			// type does not implement WithoutDomBinding), and that the
+			// DomBinding subclass is an inner class of the NodeEvent subclass
+			private void bind() {
+				Optional<DomBinding> bindingOptional = Registry
+						.optional(DomBinding.class, type);
+				// FIXME - dirndl 1x1d - events - check binding is an
+				// innerclass of type, and that exists (if not modelevent
+				// subclass)
+				if (!bindingOptional.isPresent()) {
+					if (!GWT.isScript()) {
+						Preconditions.checkState(Reflections.isAssignableFrom(
+								NodeEvent.WithoutDomBinding.class, type));
 					}
-					// only bind to the widget if binding a non-model event
-					if (!Reflections.isAssignableFrom(ModelEvent.class, type)) {
-						eventInstance.bind(getBindingWidget(), true);
-					}
-				} else {
-					eventInstance.bind(null, false);
+					return;
 				}
+				domBinding = bindingOptional.get();
+				if (!GWT.isScript()) {
+					Preconditions.checkState(domBinding.getClass().getName()
+							.indexOf(type.getName()) == 0);
+				}
+				domBinding.nodeEventBinding = this;
+				domBinding.bind(getBindingWidget(), true);
 			}
 
-			private void fireEvent(Context context, Object model) {
+			// FIXME - dirndl 1x1d - events - difference between 'dispatch' and
+			// 'fire' -- fire == to the bus, dispatch == call handlers
+			private void dispatchEvent(Context context, Object model) {
 				NodeEvent nodeEvent = Reflections.newInstance(type);
 				context.setNodeEvent(nodeEvent);
 				nodeEvent.setModel(model);
 				context.node = Node.this;
-				Class<? extends EventHandler> handlerClass = eventInstance
-						.getHandlerClass();
+				ProcessObservers.publish(EventObservable.class,
+						() -> new EventObservable(type, context, model));
+				Class<? extends EventHandler> handlerClass = Reflections
+						.at(type).templateInstance().getHandlerClass();
 				NodeEvent.Handler handler = null;
 				if (Reflections.isAssignableFrom(handlerClass,
 						context.node.model.getClass())) {
@@ -792,8 +851,10 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 
-			void bind() {
-				bindEvent(true);
+			private void unbind() {
+				if (domBinding != null) {
+					domBinding.bind(null, false);
+				}
 			}
 
 			Widget getBindingWidget() {
@@ -807,7 +868,7 @@ public class DirectedLayout implements AlcinaProcess {
 					// set before we dispatch to the handler, so the handler can
 					// unset
 					event.setHandled(true);
-					fireEvent(context, event.getModel());
+					dispatchEvent(context, event.getModel());
 				}
 			}
 		}
@@ -958,10 +1019,6 @@ public class DirectedLayout implements AlcinaProcess {
 				bindings.forEach(PropertyBinding::unbind);
 			}
 		}
-	}
-
-	public interface NodeEventReceiver {
-		public void onEvent(GwtEvent event);
 	}
 
 	/**

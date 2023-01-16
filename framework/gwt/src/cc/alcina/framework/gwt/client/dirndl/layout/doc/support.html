@@ -4,5 +4,18 @@
 </head>
 <body class="doc-body">
 	<h2>Dirndl - support</h2>
+	<h3>Debugging</h3>
+	<p>Event lifecyles can be traced using a ProcessObserver - as an example:
+	<div>
+		<pre>
+		<code-box type='java'>
+//...debug every observed DOM or model event (including node stack)
+
+ProcessObservers.observe(DirectedLayout.EventObservable.class,
+	Ax::out, true);
+
+
+</code-box>
+</pre></div>
 </body>
 </html>
