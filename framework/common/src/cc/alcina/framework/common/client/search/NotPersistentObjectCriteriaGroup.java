@@ -30,7 +30,9 @@ public class NotPersistentObjectCriteriaGroup
 	public EqlWithParameters eql() {
 		EqlWithParameters ewp = super.eql();
 		if (ewp.eql.length() > 0) {
-			ewp.eql = Ax.format("not (%s OR %s)", ewp.eql,
+			ewp.eql = Ax.format(
+					"(NOT (%s) AND (t.valueClassRef.id IS NULL OR (%s)))",
+					ewp.eql,
 					ewp.eql.replace("objectClassRef", "valueClassRef"));
 			// duplicate parameters
 			ewp.parameters = (List) Stream

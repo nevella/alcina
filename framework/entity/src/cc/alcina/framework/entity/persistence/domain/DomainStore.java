@@ -1261,6 +1261,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public synchronized void deregister(DomainStore store) {
+			store.close();
 			descriptorMap.remove(store.domainDescriptor);
 		}
 
@@ -2127,5 +2128,9 @@ public class DomainStore implements IDomainStore {
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
 		}
+	}
+
+	public void close() {
+		loader.close();
 	}
 }

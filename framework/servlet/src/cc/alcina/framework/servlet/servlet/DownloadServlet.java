@@ -136,7 +136,9 @@ public class DownloadServlet extends HttpServlet {
 		final File f = new File(item.tmpFileName);
 		if (request.getParameter("noheaders") == null) {
 			response.setContentType(item.mimeType);
-			response.setContentLength((int) f.length());
+			if (f.length() < Integer.MAX_VALUE / 2) {
+				response.setContentLength((int) f.length());
+			}
 			if (item.fileName != null) {
 				String fixedFileName = item.fileName
 						.replaceAll("[^\\x20-\\x7e]", "");
