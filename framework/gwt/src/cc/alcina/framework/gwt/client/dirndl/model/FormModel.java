@@ -608,7 +608,7 @@ public class FormModel extends Model
 				Class<? extends ModelEvent> type = emitsType.get().value();
 				Context context = NodeEvent.Context.newModelContext(event,
 						node);
-				ModelEvent.fire(context, type, formModel);
+				ModelEvent.dispatch(context, type, formModel);
 			}
 		}
 	}

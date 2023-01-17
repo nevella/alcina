@@ -318,7 +318,7 @@ public class InferredDomEvents {
 						ElementRemote elt) /*-{
           var callback = $entry(function(entries, observer) {
             for ( var k in entries) {
-              intersectionObserved.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.IntersectionObserved.BindingImpl::fireEvent(Z)(entries[k].isIntersecting);
+              intersectionObserved.@cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.IntersectionObserved.BindingImpl::fireEvent(Z)(entries[k].isIntersecting);
             }
           });
           var scrollCursor = elt;
@@ -528,7 +528,7 @@ public class InferredDomEvents {
         var callback = $entry(function(entries, observer) {
           for ( var k in entries) {
             //there's info in the entry (a contentBox or contentRect, browser-dependent) - but not interested
-            resizeObserved.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.ResizeObserved.BindingImpl::fireEvent()();
+            resizeObserved.@cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.ResizeObserved.BindingImpl::fireEvent()();
           }
         });
         var observer = new ResizeObserver(callback);

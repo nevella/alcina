@@ -109,6 +109,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		// eventReceiver.onEvent(gwtEvent);
 	}
 
+	//FIXME - dirndl 1x1d - don't allow a context to be refired (by checking last fired) - require one of the newXxx builders
 	public static class Context {
 		public static Context newModelContext(Context previous, Node node) {
 			Context context = new Context();
@@ -161,7 +162,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		}
 
 		public void fire(Class<? extends ModelEvent> modelEvent, Object model) {
-			ModelEvent.fire(this, modelEvent, model);
+			ModelEvent.dispatch(this, modelEvent, model);
 		}
 
 		public NodeEvent getNodeEvent() {

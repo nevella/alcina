@@ -1,10 +1,16 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import java.util.List;
 import java.util.Optional;
+
+import com.google.gwt.event.shared.EventHandler;
+import com.google.web.bindery.event.shared.SimpleEventBus;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 
@@ -23,19 +29,21 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
  */
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent<H> implements NodeEvent.WithoutDomBinding {
-	// FIXME - dirndl 1x1h - fire on GWT/Scheduler event pump? nope, explain why
+	// FIXME - dirndl 1x1d - fire on GWT/Scheduler event pump? nope, explain why
 	// not
-	public static void fire(Context context, Class<? extends ModelEvent> type,
+	public static void dispatch(Context context, Class<? extends ModelEvent> type,
 			Object model) {
 		ModelEvent modelEvent = Reflections.newInstance(type);
 		context.setNodeEvent(modelEvent);
 		modelEvent.setModel(model);
-		BehaviourPackageAccess.fireModelEventInvoker.accept(context.node,
-				modelEvent);
+		DirectedLayout.dispatchModelEvent(modelEvent);
 		if (!modelEvent.handled) {
 			Optional<TopLevelHandler> handler = Registry
 					.optional(TopLevelHandler.class, type);
 			if (handler.isPresent()) {
+				((SimpleEventBus) Client.get().getEventBus())
+						.fireEventFromSource(modelEvent, context.node,
+								List.of(handler));
 				handler.get().handle(modelEvent);
 			}
 		}
@@ -75,7 +83,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	 * @author nick@alcina.cc
 	 *
 	 */
-	public static interface TopLevelHandler {
+	public static interface TopLevelHandler extends EventHandler {
 		void handle(ModelEvent unhandledEvent);
 	}
 }

@@ -26,6 +26,7 @@ import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.InsertPanel.ForIsWidget;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.web.bindery.event.shared.SimpleEventBus;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -44,15 +45,15 @@ import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
-import cc.alcina.framework.gwt.client.dirndl.event.BehaviourPackageAccess;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 
 /**
@@ -149,20 +150,19 @@ public class DirectedLayout implements AlcinaProcess {
 	static Logger logger = LoggerFactory.getLogger(DirectedLayout.class);
 	static {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.INFO);
-		BehaviourPackageAccess.fireModelEventInvoker = DirectedLayout::fireModelEvent0;
 	}
 
 	// FIXME - dirndl 1x2 - remove (required until decoupling from
 	// RnederContext)
 	public static Node current = null;
 
-	private static void fireModelEvent0(Node node, ModelEvent modelEvent) {
+	public static void dispatchModelEvent(ModelEvent modelEvent) {
 		/*
 		 * Bubble until event is handled or reached the top of the node tree
 		 */
-		Node cursor = node;
+		Node cursor = modelEvent.getContext().node;
 		while (cursor != null && !modelEvent.isHandled()) {
-			cursor.fireEvent(modelEvent);
+			cursor.dispatchEvent(modelEvent);
 			cursor = cursor.parent;
 		}
 	}
@@ -395,9 +395,9 @@ public class DirectedLayout implements AlcinaProcess {
 			return null;
 		}
 
-		public void fireEvent(ModelEvent modelEvent) {
+		public void dispatchEvent(ModelEvent modelEvent) {
 			if (eventBindings != null) {
-				eventBindings.forEach(bb -> bb.onModelEvent(modelEvent));
+				eventBindings.forEach(bb -> bb.dispatchEventIfType(modelEvent));
 			}
 		}
 
@@ -822,7 +822,14 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 
 			// FIXME - dirndl 1x1d - events - difference between 'dispatch' and
-			// 'fire' -- fire == to the bus, dispatch == call handlers
+			// 'fire' -- dispatch == to the bus, fire == call handlers
+			//
+			// FIXME - dirndl 1x1h - receive/reemit merging - document how to
+			// reemit from StringInput (annotation merge should fail if
+			// receive/reemit pair - instead, add just receipt and manually
+			// reemit)
+			//
+			//
 			private void dispatchEvent(Context context, Object model) {
 				NodeEvent nodeEvent = Reflections.newInstance(type);
 				context.setNodeEvent(nodeEvent);
@@ -836,17 +843,20 @@ public class DirectedLayout implements AlcinaProcess {
 				if (Reflections.isAssignableFrom(handlerClass,
 						context.node.model.getClass())) {
 					handler = (NodeEvent.Handler) context.node.model;
-					nodeEvent.dispatch(handler);
+					((SimpleEventBus) Client.get().getEventBus())
+							.fireEventFromSource(nodeEvent, context.node,
+									List.of(handler));
 				} else {
-					// fire a ModelEvent, based on correspondence
-					// between Directed.reemits and receives
+					// dispatch a new ModelEvent, compute its type from the
+					// correspondence between elements of @Directed.reemits and
+					// receives
 					Context eventContext = NodeEvent.Context
 							.newModelContext(context, Node.this);
 					Preconditions.checkState(directed
 							.receives().length == directed.reemits().length);
 					Class<? extends ModelEvent> emitType = (Class<? extends ModelEvent>) directed
 							.reemits()[receiverIndex];
-					ModelEvent.fire(eventContext, emitType,
+					ModelEvent.dispatch(eventContext, emitType,
 							Node.this.getModel());
 				}
 			}
@@ -857,11 +867,7 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 
-			Widget getBindingWidget() {
-				return verifySingleWidget();
-			}
-
-			void onModelEvent(ModelEvent event) {
+			void dispatchEventIfType(ModelEvent event) {
 				if (event.getClass() == type) {
 					Context context = NodeEvent.Context
 							.newModelContext(event.getContext(), Node.this);
@@ -870,6 +876,10 @@ public class DirectedLayout implements AlcinaProcess {
 					event.setHandled(true);
 					dispatchEvent(context, event.getModel());
 				}
+			}
+
+			Widget getBindingWidget() {
+				return verifySingleWidget();
 			}
 		}
 

@@ -38,8 +38,6 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.impl.DOMImpl;
 import com.google.gwt.user.client.ui.FlexTable;
 
-import cc.alcina.framework.common.client.util.Ax;
-
 /**
  * This class provides a set of static methods that allow you to manipulate the
  * browser's Document Object Model (DOM). It contains methods for manipulating
@@ -1729,11 +1727,6 @@ public class DOM {
 			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
 				eventCurrentTarget = entry.getKey();
 				EventListener eventListener = entry.getValue();
-				if (lcType.contains("click") || lcType.contains("mousedown")) {
-					String message = Ax.format("dispatch mouse event - %s - %s",
-							lcType, eventListener.getClass().getName());
-					LocalDom.log(LocalDomDebug.DOM_MOUSE_EVENT, message);
-				}
 				eventListener.onBrowserEvent(event);
 				if (LocalDom.isStopPropagation(event)) {
 					return;

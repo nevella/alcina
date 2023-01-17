@@ -62,7 +62,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		selectedNodeModel.setSelected(true);
 		Context context = NodeEvent.Context.newModelContext(event.getContext(),
 				null);
-		ModelEvent.fire(context, SelectionChanged.class, model);
+		ModelEvent.dispatch(context, SelectionChanged.class, model);
 	}
 
 	@Override
@@ -176,7 +176,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 				fired = true;
 				Context context = NodeEvent.Context
 						.newModelContext(event.getContext(), null);
-				ModelEvent.fire(context, PaginatorVisible.class, null);
+				ModelEvent.dispatch(context, PaginatorVisible.class, null);
 			}
 		}
 

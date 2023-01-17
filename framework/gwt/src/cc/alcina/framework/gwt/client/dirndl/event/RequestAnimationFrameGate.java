@@ -29,7 +29,7 @@ public class RequestAnimationFrameGate {
           try {
             runnable.@java.lang.Runnable::run()();
           } finally {
-            $ctx.@cc.alcina.framework.gwt.client.dirndl.behaviour.RequestAnimationFrameGate::clearScheduled(Ljava/lang/Runnable;)(runnable);
+            $ctx.@cc.alcina.framework.gwt.client.dirndl.event.RequestAnimationFrameGate::clearScheduled(Ljava/lang/Runnable;)(runnable);
           }
         }));
 
