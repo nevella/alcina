@@ -41,7 +41,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 			Optional<TopLevelHandler> handler = Registry
 					.optional(TopLevelHandler.class, type);
 			if (handler.isPresent()) {
-				((SimpleEventBus) Client.get().getEventBus())
+				((SimpleEventBus) Client.eventBus())
 						.fireEventFromSource(modelEvent, context.node,
 								List.of(handler));
 				handler.get().handle(modelEvent);

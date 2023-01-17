@@ -38,7 +38,7 @@ public @interface Binding {
 	@Reflected
 	public enum Type {
 		PROPERTY, INNER_HTML, INNER_TEXT, CSS_CLASS, STYLE_ATTRIBUTE,
-		SWITCH_CSS_CLASS;
+		SWITCH_CSS_CLASS, PANEL_CHANGED;
 	}
 
 	@Reflected

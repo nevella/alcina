@@ -79,7 +79,7 @@ public class SubwidgetActivitySupport
 			if (activityManager == null) {
 				activityMapper = activityMapperSupplier.get();
 				activityManager = new ActivityManager(activityMapper,
-						Client.get().getEventBus());
+						Client.eventBus());
 			}
 			if (!receivingEvents) {
 				receivingEvents = true;

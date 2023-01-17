@@ -2,9 +2,27 @@
 
 <!-- @javadoc-include -->
 
-## Todo
+## Leading with an example:
 
-add a simple example to start with
+This code renders an html element containing 'Hello', and shows an alert "World" when "hello" is clicked.
+
+```
+@Directed(receives = DomEvents.Click.class)
+public static class HelloWorld extends Model
+		implements DomEvents.Click.Handler {
+	@Directed
+	public String getHello() {
+		return "hello";
+	}
+
+	@Override
+	public void onClick(Click event) {
+		Window.alert("World");
+	}
+}
+```
+
+(TODO) - list the parts of the example. Name them, explain them
 
 ## Goals
 
@@ -13,11 +31,10 @@ application model. To achieve this:
 
 * Dirndl events should, where possible, occur in the 'model space' - event listeners are methods on {@link DirectedLayout.Node.model} 
   models, not Node instances or (horrors) DOM Element instances
-* To move from the DOM event spsace(Click, KeyUp etc) to the model space, have a simple mechanism to translate to DOM events
+* To move from the DOM event space(Click, KeyUp etc) to the model space, have a simple mechanism to translate DOM events
 * Event listeners should be registered declaratively
 * Events should only bubble up to containing models, not down (or in any other direction)
-* Dirndl events should fire on the GWT event pump (for consistency with the existing event *firing* model). Their dispatch/propagation
-  model is what separates them from vanilla GWT events
+* Dirndl events should be dispatched by the GWT event pump (for consistency with the existing event *dispatch* model). Their dispatch/propagation model is what separates them from vanilla GWT/DOM events
   
 ## Notes
 
@@ -30,7 +47,15 @@ application model. To achieve this:
 
 * Explain goals against examples
 
-* Advanced - the event dispatch sequence
+
+
+## Comparison :: react
+
+## Comparison :: flutter
+
+## Comparison :: gwt/dom
+
+## Advanced - the event dispatch sequence
 
 ### Event bus use
 
@@ -40,37 +65,33 @@ it'd be necessary to handle propagation differently (i.e. not via dispatch), whi
 have to either dispatch via the event bus if *not* in an event dispatch frame, or propagate without dispatch if in an event dispatch frame. 
 Otherwise there'd need to be a callback to handle further propagation post-dispatch
 
-## Example - a click event
+## Example - event transformation
+
+This is a fairly contrived example - the benefits of transformation are more apparent when the receiver (in ths case a Container model) 
+is more than one level away from the source (TagTextModel model instance in this example). 
 
 **TODO** - @include
 
 ```
-@Directed(
-	tag = "div",
-	receives = ModelEvents.Selected.class,
-	bindings = @Binding(
-		type = Type.PROPERTY,
-		to = "style",
-		literal = "background: green; padding: 1em; margin: 2em; font-size:3em;text-align:center"))
+@Directed(tag = "div", receives = ModelEvents.Filter.class)
 public static class Container extends Model
-		implements ModelEvents.Selected.Handler {
-	private final TagTextModel string = new TagTextModel("div",
-			"some text");
-
+		implements ModelEvents.Filter.Handler {
+	private final TagTextModel string = new TagTextModel("filter",
+			"[Filter]");
 
 	@Directed(
 		receives = DomEvents.Click.class,
-		reemits = ModelEvents.Selected.class)
+		reemits = ModelEvents.Filter.class)
 	public TagTextModel getString() {
 		return this.string;
 	}
 
 	@Override
-	public void onSelected(Selected event) {
-		ClientNotifications.get()
-				.log(event.getModel().getClass().getName());
+	public void onFilter(Filter event) {
+		ClientNotifications.get().log("Activate filter");
 	}
 }
+
 ```
 
 **TODO** - 

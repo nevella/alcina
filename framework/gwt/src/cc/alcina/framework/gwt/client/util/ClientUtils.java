@@ -22,8 +22,6 @@ import java.util.function.Predicate;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsArrayString;
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
@@ -54,7 +52,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -83,9 +80,6 @@ public class ClientUtils {
 	private static final String CSS_TEXT_PROPERTY = "cssText";
 
 	private static HandlerRegistration uiActionInterceptorRegistration;
-
-	private static Map<Class, ScheduledOnceWrapper> scheduledFinallyOnce = AlcinaCollections
-			.newHashMap();
 
 	public static EditContentViewWidgets createEditContentViewWidgets(
 			final PermissibleActionListener pal, String caption,
@@ -386,13 +380,6 @@ public class ClientUtils {
 		}.schedule(delayMillis);
 	}
 
-	public static void scheduleFinallyOnce(Runnable runnable) {
-		if (!scheduledFinallyOnce.containsKey(runnable.getClass())) {
-			ScheduledOnceWrapper wrapper = new ScheduledOnceWrapper(runnable);
-			Scheduler.get().scheduleFinally(wrapper);
-		}
-	}
-
 	public static native boolean setCssTextViaCssTextProperty(Element elem,
 			String css) /*-{
     var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
@@ -616,20 +603,6 @@ public class ClientUtils {
 				GlassDialogBox gdb) {
 			this.wrapper = wrapper;
 			this.gdb = gdb;
-		}
-	}
-
-	private static class ScheduledOnceWrapper implements ScheduledCommand {
-		private Runnable runnable;
-
-		public ScheduledOnceWrapper(Runnable runnable) {
-			this.runnable = runnable;
-		}
-
-		@Override
-		public void execute() {
-			scheduledFinallyOnce.remove(runnable.getClass());
-			runnable.run();
 		}
 	}
 }

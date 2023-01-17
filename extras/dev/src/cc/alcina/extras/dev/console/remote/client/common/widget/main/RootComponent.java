@@ -18,7 +18,7 @@ public class RootComponent extends Composite implements AcceptsOneWidget {
 		initWidget(sp);
 		ActivityMapper activityMapper = Registry.impl(ActivityMapper.class);
 		ActivityManager activityManager = new ActivityManager(activityMapper,
-				Client.get().getEventBus());
+				Client.eventBus());
 		activityManager.setDisplay(this);
 	}
 

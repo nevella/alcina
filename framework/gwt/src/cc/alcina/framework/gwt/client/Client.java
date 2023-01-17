@@ -7,8 +7,6 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
-import com.google.web.bindery.event.shared.EventBus;
-import com.google.web.bindery.event.shared.SimpleEventBus;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
@@ -23,6 +21,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -39,6 +38,10 @@ public abstract class Client {
 
 	public static <P extends Place> P currentPlace() {
 		return (P) get().getPlaceController().getWhere();
+	}
+
+	public static VariableDispatchEventBus eventBus() {
+		return get().eventBus;
 	}
 
 	public static void flushAndRefresh() {
@@ -66,6 +69,13 @@ public abstract class Client {
 				|| PermissionsManager.isDeveloper();
 	}
 
+	public static void refreshCurrentPlace() {
+		BasePlace place = (BasePlace) currentPlace();
+		place.setRefreshed(true);
+		place = place.copy();
+		goTo(place);
+	}
+
 	public static void refreshOrGoTo(Place place) {
 		if (isCurrentPlace(place)) {
 			refreshCurrentPlace();
@@ -74,18 +84,11 @@ public abstract class Client {
 		}
 	}
 
-	public static void refreshCurrentPlace() {
-		BasePlace place = (BasePlace) currentPlace();
-		place.setRefreshed(true);
-		place = place.copy();
-		goTo(place);
-	}
-
 	public static SearchRemoteServiceAsync searchRemoteService() {
 		return Registry.impl(SearchRemoteServiceAsync.class);
 	}
 
-	protected final EventBus eventBus = new SimpleEventBus();
+	protected final VariableDispatchEventBus eventBus = new VariableDispatchEventBus();
 
 	protected PlaceController placeController;
 
@@ -95,10 +98,6 @@ public abstract class Client {
 
 	public Client() {
 		createPlaceController();
-	}
-
-	public EventBus getEventBus() {
-		return eventBus;
 	}
 
 	public PlaceController getPlaceController() {

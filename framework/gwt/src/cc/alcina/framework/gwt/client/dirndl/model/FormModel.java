@@ -194,7 +194,7 @@ public class FormModel extends Model
 
 	private void checkDirty(Bind event) {
 		if (event.isBound()) {
-			registrations.put(this, Client.get().getEventBus()
+			registrations.put(this, Client.eventBus()
 					.addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
 		} else {
 			// if we're navigating away, and dirty

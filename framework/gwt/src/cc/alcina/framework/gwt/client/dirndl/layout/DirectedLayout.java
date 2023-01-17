@@ -844,7 +844,7 @@ public class DirectedLayout implements AlcinaProcess {
 				if (Reflections.isAssignableFrom(handlerClass,
 						context.node.model.getClass())) {
 					handler = (NodeEvent.Handler) context.node.model;
-					((SimpleEventBus) Client.get().getEventBus())
+					((SimpleEventBus) Client.eventBus())
 							.fireEventFromSource(nodeEvent, context.node,
 									List.of(handler));
 				} else {
