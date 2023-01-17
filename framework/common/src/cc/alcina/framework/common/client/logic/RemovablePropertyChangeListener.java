@@ -16,7 +16,8 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * @author nick@alcina.cc
  *
  */
-public class RemovablePropertyChangeListener implements PropertyChangeListener {
+public class RemovablePropertyChangeListener
+		implements PropertyChangeListener, ListenerReference {
 	private SourcesPropertyChangeEvents source;
 
 	protected String propertyName;
@@ -55,6 +56,16 @@ public class RemovablePropertyChangeListener implements PropertyChangeListener {
 		handler.accept(evt);
 	}
 
+	@Override
+	public void remove() {
+		unbind();
+	}
+
+	@Override
+	public void removeOnFire() {
+		throw new UnsupportedOperationException();
+	}
+
 	public void unbind() {
 		if (bound) {
 			if (propertyName == null) {
@@ -67,8 +78,7 @@ public class RemovablePropertyChangeListener implements PropertyChangeListener {
 		}
 	}
 
-	public static class Typed<T> extends RemovablePropertyChangeListener
-			implements ListenerReference {
+	public static class Typed<T> extends RemovablePropertyChangeListener {
 		private TopicListener<T> typedHandler;
 
 		public Typed(SourcesPropertyChangeEvents bound, Object propertyName,
@@ -82,16 +92,6 @@ public class RemovablePropertyChangeListener implements PropertyChangeListener {
 			// either typedHandler is non-null or this is over-ridden
 			Preconditions.checkNotNull(typedHandler);
 			typedHandler.topicPublished((T) evt.getNewValue());
-		}
-
-		@Override
-		public void remove() {
-			unbind();
-		}
-
-		@Override
-		public void removeOnFire() {
-			throw new UnsupportedOperationException();
 		}
 	}
 }
