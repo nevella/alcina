@@ -11,32 +11,41 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.TopicListener;
 
+/**
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class RemovablePropertyChangeListener implements PropertyChangeListener {
-	private SourcesPropertyChangeEvents bound;
+	private SourcesPropertyChangeEvents source;
 
 	protected String propertyName;
 
 	protected Consumer<PropertyChangeEvent> handler;
 
-	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents bound,
+	private boolean bound;
+
+	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents source,
 			Object propertyName) {
-		this(bound, propertyName, null);
+		this(source, propertyName, null);
 	}
 
-	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents bound,
+	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents source,
 			Object propertyName, Consumer<PropertyChangeEvent> handler) {
-		this.bound = bound;
+		this.source = source;
 		this.propertyName = PropertyEnum.asPropertyName(propertyName);
 		this.handler = handler;
-		bind();
 	}
 
-	public void bind() {
+	public RemovablePropertyChangeListener bind() {
+		Preconditions.checkState(!bound);
+		bound = true;
 		if (propertyName == null) {
-			bound.addPropertyChangeListener(this);
+			source.addPropertyChangeListener(this);
 		} else {
-			bound.addPropertyChangeListener(propertyName, this);
+			source.addPropertyChangeListener(propertyName, this);
 		}
+		return this;
 	}
 
 	@Override
@@ -47,14 +56,15 @@ public class RemovablePropertyChangeListener implements PropertyChangeListener {
 	}
 
 	public void unbind() {
-		if (bound != null) {
+		if (bound) {
 			if (propertyName == null) {
-				bound.removePropertyChangeListener(this);
+				source.removePropertyChangeListener(this);
 			} else {
-				bound.removePropertyChangeListener(propertyName, this);
+				source.removePropertyChangeListener(propertyName, this);
 			}
+			bound = false;
+			source = null;
 		}
-		bound = null;
 	}
 
 	public static class Typed<T> extends RemovablePropertyChangeListener

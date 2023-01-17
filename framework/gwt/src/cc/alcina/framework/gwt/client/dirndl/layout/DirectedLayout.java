@@ -508,6 +508,7 @@ public class DirectedLayout implements AlcinaProcess {
 			// bean setterless I reckon)(so I reckon no, but check performance)
 			replacementListener = new ChildReplacer((Bindable) parent.model,
 					property.getName());
+			replacementListener.bind();
 		}
 
 		private Widget provideWidgetOrLastDescendantChildWidget() {
@@ -922,6 +923,7 @@ public class DirectedLayout implements AlcinaProcess {
 				if (binding.from().length() > 0 && model instanceof Bindable) {
 					this.listener = new RemovablePropertyChangeListener(
 							(Bindable) model, binding.from(), evt -> set());
+					this.listener.bind();
 				}
 				set();
 			}
