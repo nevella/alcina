@@ -73,7 +73,17 @@ public class WDToken {
 	}
 
 	public boolean hasUIState(Enum e) {
-		return e.equals(getUiStates().get(e.getDeclaringClass()));
+		Enum perClassState = getUiStates().get(e.getDeclaringClass());
+		if (perClassState != null) {
+			if (e.equals(perClassState)) {
+				return true;
+			}
+			if (e instanceof SatisfiesState) {
+				return ((SatisfiesState) perClassState)
+						.satisfiesState((SatisfiesState) e);
+			}
+		}
+		return false;
 	}
 
 	public void setConfiguration(WDConfiguration configuration) {
