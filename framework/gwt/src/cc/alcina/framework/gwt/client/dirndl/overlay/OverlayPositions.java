@@ -18,7 +18,7 @@ public class OverlayPositions {
 		return Registry.impl(OverlayPositions.class);
 	}
 
-	Map<Model, Widget> openOverlays = AlcinaCollections.newHashMap();
+	Map<Model, Widget> openOverlays = AlcinaCollections.newUnqiueMap();
 
 	void hide(Overlay model) {
 		openOverlays.get(model).removeFromParent();
