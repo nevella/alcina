@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
@@ -69,6 +70,8 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
 
 	private DecoratedRelativePopupPanel advancedDropdownPanel;
 
+	private TopicListener<Void> modelChangedListener = v -> onModelChanged();
+
 	@Override
 	public VM getModel() {
 		return model;
@@ -88,13 +91,18 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
 		}
 	}
 
+	public void onModelChanged() {
+	}
+
 	@Override
 	public void setModel(VM model) {
 		if (this.model != null) {
 			this.model.removePropertyChangeListener(this);
+			this.model.topicChanged().remove(modelChangedListener);
 		}
 		this.model = model;
-		model.addPropertyChangeListener(this);
+		this.model.addPropertyChangeListener(this);
+		this.model.topicChanged().add(modelChangedListener);
 	}
 
 	public void updateToolbar() {

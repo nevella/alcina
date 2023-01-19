@@ -4,14 +4,18 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.view.client.HasData;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.csobjects.HasChanges;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 
 @TypeSerialization(reflectiveSerializable = false)
-public class ViewModel<P extends Place> extends Bindable {
+public class ViewModel<P extends Place> extends Bindable implements HasChanges {
 	private boolean active;
+
+	private Topic<Void> topicChanged = Topic.create();
 
 	private boolean updated;
 
@@ -69,6 +73,11 @@ public class ViewModel<P extends Place> extends Bindable {
 		this.updated = updated;
 		propertyChangeSupport().firePropertyChange("updated", old_updated,
 				updated);
+	}
+
+	@Override
+	public Topic<Void> topicChanged() {
+		return topicChanged;
 	}
 
 	public static class DetailViewModel<P extends Place, T extends Entity>

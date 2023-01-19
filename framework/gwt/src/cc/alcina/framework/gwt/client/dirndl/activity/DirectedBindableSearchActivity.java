@@ -46,7 +46,7 @@ public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends 
 		Registry.impl(SearchRemoteServiceAsync.class).searchModel(place.def,
 				AsyncCallbackStd.<ModelSearchResults> consumerForm(results -> {
 					setSearchResults(results);
-					fireUpdated();
+					topicChanged().signal();
 				}));
 		super.start(panel, eventBus);
 	}

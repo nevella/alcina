@@ -110,24 +110,6 @@ public class BaseSourcesPropertyChangeEvents
 		this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
 				newValue);
 	}
-	
-	/**
-	 * Indicates that the object has changed. May be interpreted as "re-render
-	 * the whole object"
-	 */
-	public void fireUnspecifiedPropertyChange(Object propagationId) {
-		((LazyPropertyChangeSupport) this.propertyChangeSupport())
-				.fireUnspecifiedPropertyChange(propagationId);
-	}
-
-	/**
-	 * Useful for collection listeners - a "check the kids" thing. In a UI
-	 * context, better handled with a ModelEvent
-	 */
-	public void fireUnspecifiedPropertyChange(String name) {
-		((LazyPropertyChangeSupport) this.propertyChangeSupport())
-				.fireUnspecifiedPropertyChange(name);
-	}
 
 	@Override
 	@Transient

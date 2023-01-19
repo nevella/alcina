@@ -12,11 +12,13 @@ import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.csobjects.HasChanges;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
@@ -24,18 +26,35 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 
 /**
  * <p>
+ * Dirndl UI models are mostly composed of subclasses of this class - they're
+ * abstract (Java Beans + extra sauce).
+ *
+ * <h3>Notes</h3>
+ *
+ *
+ * <p>
  * Thoughts on binding :: particularly in the case of UI bindings, a.b->c.d is
  * _sometimes_ better handled via "listen to major updates on a" - this
  * simplifies the handling of "a changed" vs "a.b changed".
  *
  * <p>
- * This is the motivation for the fireUpdated() method, see particularly
- * DirectedSingleEntityActivity
- *
+ * This is the motivation for - for instance - {@link DirectedActivity}
+ * implementing {@link HasChanges}. Originally model itself provided a 'whole
+ * object changed' event support' - but it's rarely used, so moved to the
+ * subclasses that need it.
  * <p>
- * Note - this should only be used when model events are not available
- * (generally where the orginating model is transformed in an unspecified way,
- * not its UI representation). FIXME - dirndl 1x1d - revisit (again) -
+ * Normally standard propertychange events will work to update a UI (or - in
+ * general - a model transformation) when the model changes, but that breaks
+ * down when the transformation is more than one layer deep - an example would
+ * be a dirndl @Transform model transformation of say a User object to a
+ * UserView model - say User.firstName changes and UserView.name is
+ * (firstName-space-lastName), how should that change flow be observed in a way
+ * that causes the UserView to change? One simplistic answer is to have UserView
+ * implement HasChanges, and fire topicChanged().signal() on UserView whenever
+ * an input change (e.g. any property of User) is observed. That's a blunt
+ * instrument, but in the absence of more granular (propertychange) binding
+ * possibilities, it's reasonable.
+ *
  *
  * @author nick@alcina.cc
  *
@@ -45,12 +64,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 	write = @Permission(access = AccessLevel.EVERYONE))
 public abstract class Model extends Bindable
 		implements LayoutEvents.Bind.Handler {
-	public static final transient Object MODEL_UPDATED = new Object();
-
-	public void fireUpdated() {
-		fireUnspecifiedPropertyChange(MODEL_UPDATED);
-	}
-
 	@Override
 	/**
 	 * Note that subclasses must call super.onBind(Bind) if overriding this

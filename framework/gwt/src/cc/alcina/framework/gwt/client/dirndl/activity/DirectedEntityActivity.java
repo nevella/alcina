@@ -24,19 +24,12 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 
 	private boolean entityNotFound;
 
-	public boolean isEntityNotFound() {
-		return this.entityNotFound;
-	}
-
-	public void setEntityNotFound(boolean entityNotFound) {
-		boolean old_entityNotFound = this.entityNotFound;
-		this.entityNotFound = entityNotFound;
-		propertyChangeSupport().firePropertyChange("entityNotFound",
-				old_entityNotFound, entityNotFound);
-	}
-
 	public E getEntity() {
 		return this.entity;
+	}
+
+	public boolean isEntityNotFound() {
+		return this.entityNotFound;
 	}
 
 	public void setEntity(E entity) {
@@ -44,6 +37,13 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 		this.entity = entity;
 		propertyChangeSupport().firePropertyChange("entity", old_entity,
 				entity);
+	}
+
+	public void setEntityNotFound(boolean entityNotFound) {
+		boolean old_entityNotFound = this.entityNotFound;
+		this.entityNotFound = entityNotFound;
+		propertyChangeSupport().firePropertyChange("entityNotFound",
+				old_entityNotFound, entityNotFound);
 	}
 
 	@Override
@@ -54,7 +54,7 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 				if (e == null) {
 					setEntityNotFound(true);
 				}
-				fireUpdated();
+				topicChanged().signal();
 			};
 			if (provideIsCreate()) {
 				onCreate(e, postCreate);
@@ -86,11 +86,11 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 		postCreate.run();
 	}
 
-	private boolean provideIsCreate() {
-		return place.getAction() == EntityAction.CREATE;
-	}
-
 	private Class<? extends Entity> provideDomainClass() {
 		return getPlace().provideEntityClass();
+	}
+
+	private boolean provideIsCreate() {
+		return place.getAction() == EntityAction.CREATE;
 	}
 }
