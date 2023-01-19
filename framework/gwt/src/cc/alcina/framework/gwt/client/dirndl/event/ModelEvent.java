@@ -29,10 +29,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
  */
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent<H> implements NodeEvent.WithoutDomBinding {
-	// FIXME - dirndl 1x1d - fire on GWT/Scheduler event pump? nope, explain why
-	// not
-	public static void dispatch(Context context, Class<? extends ModelEvent> type,
-			Object model) {
+	public static void dispatch(Context context,
+			Class<? extends ModelEvent> type, Object model) {
 		ModelEvent modelEvent = Reflections.newInstance(type);
 		context.setNodeEvent(modelEvent);
 		modelEvent.setModel(model);
@@ -41,9 +39,8 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 			Optional<TopLevelHandler> handler = Registry
 					.optional(TopLevelHandler.class, type);
 			if (handler.isPresent()) {
-				((SimpleEventBus) Client.eventBus())
-						.fireEventFromSource(modelEvent, context.node,
-								List.of(handler));
+				((SimpleEventBus) Client.eventBus()).fireEventFromSource(
+						modelEvent, context.node, List.of(handler));
 				handler.get().handle(modelEvent);
 			}
 		}
@@ -71,8 +68,8 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	}
 
 	public boolean wasReemitted(Node node) {
-		return getContext().previous != null
-				&& getContext().previous.node == node;
+		return getContext().getPrevious() != null
+				&& getContext().getPrevious().node == node;
 	}
 
 	/**

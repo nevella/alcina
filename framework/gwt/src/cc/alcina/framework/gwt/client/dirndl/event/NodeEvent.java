@@ -2,67 +2,17 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 
 import java.lang.annotation.Annotation;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 /**
  * <p>
- * Event system notes
- *
- * <ul>
- * <li>Events do not bubble by design - once handled, unless explicitly
- * instructed to continue up the Node ancestor tree by
- * markCauseEventAsNotHandled(), they stop.
- * <li>Events are a 'recasting' of an existing point-in-time event, so an
- * EventBus is not used. This seems to be a better choice - (explain)
- *
- * <p>
- * FIXME - dirndl 1x1d - events - issue with 'Don't like' below is that
- * NodeEvent does too much. There should be an DomBinding nested class which
- * handles the nodeevent -> dom relation, not populated for ModelEvent [Note re
- * FIXME - pretty sure it's already implemented. Current TODO is give examples,
- * clean up docs.
- *
- * @author nick@alcina.cc
- *
- * @param <H>
- */
-/*
- * FIXME - dirndl 1x1d - events - don't like the interplay between NodeEvent,
- * BehaviourBinding and NodeEventReceiver... see https://github.com/nevella/alcina/issues/24
- *
- * (later) - factor out into 'eventsource' - which only exists for gwt events
- *
- * but...maybe...it's right? It's an event fired on a node, so as long as
- * there's one nodeevent per logical 'event', per node, maybe it's right...?
- * weird...
- *
- * Actually (TODO: document better) - this is totally correct - and feature, not
- * bug - dirndl node events always only have one receiver (the node) -
- * event bubbling generates new events at the receiver node
- *
- * Implementation - extend nodeevent (to future-proof against using the gwt
- * event bus) but, because our propagation model is differnt, don't implement
- * the dispatch/TYPE mechanism
- *
- * 20220918 - Yes, correct. Although the ancestor propagation of NodeEvents
- * doesn't (and shouldn't) use the GWT event bus, events with no GWT event bus
- * root cause *may* want to be scheduled on that bus - but possibly just
- * schedule() on that bus is enough
- *
- * TODO: document the nodeevent bind/fire/unbind lifecycle.
- *
- * @formatter:off
- *
- * Sketch of current sequence:
- * ===========================
- *
- * - rendering algorithm in DirectedLayout renders Node
+ * See dirndl-events.md in this folder for the Dirndl event system overview
  *
  * @formatter:on
  *
@@ -75,9 +25,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	protected Object model;
 
 	@Override
-	/*
-	 * Not (yet) dispatching via gwt event bus - so force public
-	 */
 	public abstract void dispatch(H handler);
 
 	@Override
@@ -109,47 +56,45 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		// eventReceiver.onEvent(gwtEvent);
 	}
 
-	//FIXME - dirndl 1x1d - don't allow a context to be refired (by checking last fired) - require one of the newXxx builders
+	//
 	public static class Context {
 		public static Context newModelContext(Context previous, Node node) {
-			Context context = new Context();
+			Context context = new Context(node == null ? previous.node : node);
 			context.previous = previous;
-			context.node = node == null ? previous.node : node;
 			return context;
 		}
 
 		public static Context newModelContext(GwtEvent event, Node node) {
-			Context context = new Context();
+			Context context = new Context(node);
 			context.gwtEvent = event;
-			context.node = node;
 			return context;
 		}
 
 		public static Context newModelContext(String hint, Node node) {
-			Context context = new Context();
+			Context context = new Context(node);
 			context.hint = hint;
-			context.node = node;
 			return context;
 		}
 
 		public static Context newNodeContext(Node node) {
-			Context context = new Context();
-			context.node = node;
+			Context context = new Context(node);
 			return context;
 		}
 
 		// informational/debugging
-		String hint;
+		@SuppressWarnings("unused")
+		private String hint;
 
-		public Context previous;
+		private Context previous;
 
-		public DirectedLayout.Node node;
+		public final Node node;
 
 		private NodeEvent nodeEvent;
 
-		public GwtEvent gwtEvent;
+		private GwtEvent gwtEvent;
 
-		public Context() {
+		public Context(Node node) {
+			this.node = node;
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
@@ -165,25 +110,34 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			ModelEvent.dispatch(this, modelEvent, model);
 		}
 
+		public GwtEvent getGwtEvent() {
+			return gwtEvent;
+		}
+
 		public NodeEvent getNodeEvent() {
 			return nodeEvent;
+		}
+
+		public Context getPrevious() {
+			return previous;
 		}
 
 		public boolean hasPrevious(Class<? extends NodeEvent> eventClass) {
 			if (eventClass == nodeEvent.getClass()) {
 				return true;
 			}
-			if (previous == null) {
+			if (getPrevious() == null) {
 				return false;
 			}
-			return previous.hasPrevious(eventClass);
+			return getPrevious().hasPrevious(eventClass);
 		}
 
 		public void markCauseEventAsNotHandled() {
-			((ModelEvent) previous.getNodeEvent()).setHandled(false);
+			((ModelEvent) getPrevious().getNodeEvent()).setHandled(false);
 		}
 
 		public void setNodeEvent(NodeEvent nodeEvent) {
+			Preconditions.checkState(this.nodeEvent == null);
 			this.nodeEvent = nodeEvent;
 			nodeEvent.context = this;
 		}

@@ -126,7 +126,7 @@ public class FormModel extends Model
 
 	@Override
 	public void onKeyDown(KeyDown event) {
-		KeyDownEvent domEvent = (KeyDownEvent) event.getContext().gwtEvent;
+		KeyDownEvent domEvent = (KeyDownEvent) event.getContext().getGwtEvent();
 		if (domEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
 			domEvent.preventDefault();
 			domEvent.stopPropagation();

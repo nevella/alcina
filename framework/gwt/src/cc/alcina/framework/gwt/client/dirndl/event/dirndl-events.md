@@ -47,7 +47,12 @@ application model. To achieve this:
 
 * Explain goals against examples
 
+* Terminology:
+ :: 'dispatch' - route event to a bus (including 'bubbling' - a very simple bus)
+ :: 'fire' - call an event handler, passing the event
 
+## See also
+* ModelEvent javadoc
 
 ## Comparison :: react
 

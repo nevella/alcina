@@ -280,7 +280,7 @@ public class InferredDomEvents {
 
 		public boolean isIntersecting() {
 			return getContext() == null ? this.intersecting
-					: ((IntersectionObserved) getContext().gwtEvent).intersecting;
+					: ((IntersectionObserved) getContext().getGwtEvent()).intersecting;
 		}
 
 		public void setIntersecting(boolean intersecting) {

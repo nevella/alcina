@@ -33,9 +33,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
  * DirectedSingleEntityActivity
  *
  * <p>
- * Note - above comments were early dirndl days - almost certainly that
- * mechanism can be replaced by a ModelEvent (possibly causing Model
- * replacement) - at which point remove. FIXME - dirndl 1x1d - model
+ * Note - this should only be used when model events are not available
+ * (generally where the orginating model is transformed in an unspecified way,
+ * not its UI representation). FIXME - dirndl 1x1d - revisit (again) -
  *
  * @author nick@alcina.cc
  *

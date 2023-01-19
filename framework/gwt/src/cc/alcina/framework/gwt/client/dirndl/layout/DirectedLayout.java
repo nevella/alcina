@@ -158,7 +158,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 	public static void dispatchModelEvent(ModelEvent modelEvent) {
 		/*
-		 * Bubble until event is handled or reached the top of the node tree
+		 * Bubble until event is handled or we've reached the top of the node
+		 * tree
 		 */
 		Node cursor = modelEvent.getContext().node;
 		while (cursor != null && !modelEvent.isHandled()) {
@@ -786,8 +787,8 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 
 			public void onEvent(GwtEvent event) {
-				Context context = new NodeEvent.Context();
-				context.gwtEvent = event;
+				Context context = NodeEvent.Context.newModelContext(event,
+						Node.this);
 				dispatchEvent(context, Node.this.getModel());
 			}
 
@@ -803,9 +804,6 @@ public class DirectedLayout implements AlcinaProcess {
 			private void bind() {
 				Optional<DomBinding> bindingOptional = Registry
 						.optional(DomBinding.class, type);
-				// FIXME - dirndl 1x1d - events - check binding is an
-				// innerclass of type, and that exists (if not modelevent
-				// subclass)
 				if (!bindingOptional.isPresent()) {
 					if (!GWT.isScript()) {
 						Preconditions.checkState(Reflections.isAssignableFrom(
@@ -822,9 +820,6 @@ public class DirectedLayout implements AlcinaProcess {
 				domBinding.bind(getBindingWidget(), true);
 			}
 
-			// FIXME - dirndl 1x1d - events - difference between 'dispatch' and
-			// 'fire' -- dispatch == to the bus, fire == call handlers
-			//
 			// FIXME - dirndl 1x1h - receive/reemit merging - document how to
 			// reemit from StringInput (annotation merge should fail if
 			// receive/reemit pair - instead, add just receipt and manually
@@ -835,7 +830,6 @@ public class DirectedLayout implements AlcinaProcess {
 				NodeEvent nodeEvent = Reflections.newInstance(type);
 				context.setNodeEvent(nodeEvent);
 				nodeEvent.setModel(model);
-				context.node = Node.this;
 				ProcessObservers.publish(EventObservable.class,
 						() -> new EventObservable(type, context, model));
 				Class<? extends EventHandler> handlerClass = Reflections
@@ -844,9 +838,8 @@ public class DirectedLayout implements AlcinaProcess {
 				if (Reflections.isAssignableFrom(handlerClass,
 						context.node.model.getClass())) {
 					handler = (NodeEvent.Handler) context.node.model;
-					((SimpleEventBus) Client.eventBus())
-							.fireEventFromSource(nodeEvent, context.node,
-									List.of(handler));
+					((SimpleEventBus) Client.eventBus()).fireEventFromSource(
+							nodeEvent, context.node, List.of(handler));
 				} else {
 					// dispatch a new ModelEvent, compute its type from the
 					// correspondence between elements of @Directed.reemits and

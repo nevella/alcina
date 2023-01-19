@@ -136,7 +136,7 @@ public class Link extends Model.WithNode
 
 	@Override
 	public void onClick(Click event) {
-		ClickEvent gwtEvent = (ClickEvent) event.getContext().gwtEvent;
+		ClickEvent gwtEvent = (ClickEvent) event.getContext().getGwtEvent();
 		if (gwtEvent.getNativeButton() == NativeEvent.BUTTON_LEFT) {
 			if (modelEvent != null) {
 				WidgetUtils.squelchCurrentEvent();

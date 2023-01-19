@@ -35,7 +35,7 @@ public class GwtEvents {
 		}
 
 		public boolean isAttached() {
-			return ((AttachEvent) getContext().gwtEvent).isAttached();
+			return ((AttachEvent) getContext().getGwtEvent()).isAttached();
 		}
 
 		public interface Handler extends NodeEvent.Handler {

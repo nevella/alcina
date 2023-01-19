@@ -65,7 +65,7 @@ public class Dropdown<D extends Model> extends Model
 	@Override
 	public void onInsideDropdownClicked(InsideDropdownClicked event) {
 		ClickEvent click = (ClickEvent) event
-				.getContext().previous.previous.gwtEvent;
+				.getContext().getPrevious().getPrevious().getGwtEvent();
 		Element element = Element.as(click.getNativeEvent().getEventTarget());
 		if (!element.getTagName().equalsIgnoreCase("a")
 				|| element.getAttribute("href").isEmpty()) {
