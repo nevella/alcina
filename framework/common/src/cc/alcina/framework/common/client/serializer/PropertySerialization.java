@@ -36,6 +36,9 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
  * Not necessary if the containing type has one property with
  * non-TreeSerializable child types (that will automatically be registered as
  * the default)
+ *
+ * DOC - Note that collection properties serialized by reflective serializers
+ * must be non-null
  */
 public @interface PropertySerialization {
 	/*
