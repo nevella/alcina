@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.publication.request.ContentRequestBase.
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.entity.MetricLogging;
@@ -42,7 +43,11 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDeliveryEmail;
 import cc.alcina.framework.servlet.servlet.AlcinaServlet;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 
+// FIXME - API - use a jax-ws endpoint, ensure internal-only
 public class ControlServlet extends AlcinaServlet {
+	public static final String CONTEXT_HTTP_REQUEST_USE_GZIP = ControlServlet.class
+			.getName() + ".CONTEXT_HTTP_REQUEST_USE_GZIP";
+
 	public static String createTaskUrl(Task task) {
 		StringMap queryParameters = new StringMap();
 		queryParameters.put("cmd", "perform-task");
@@ -73,8 +78,9 @@ public class ControlServlet extends AlcinaServlet {
 		queryParameters.put("taskClassName", task.getClass().getName());
 		queryParameters.put("taskJson",
 				JacksonUtils.serializeWithDefaultsAndTypes(task));
+		boolean gzip = LooseContext.is(CONTEXT_HTTP_REQUEST_USE_GZIP);
 		try {
-			return new SimpleHttp(url)
+			return new SimpleHttp(url).withGzip(gzip).withDecodeGz(gzip)
 					.withQueryStringParameters(queryParameters).asString();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -161,7 +167,7 @@ public class ControlServlet extends AlcinaServlet {
 					true, null);
 			String message = invokeTask(req, executionType);
 			message = Ax.blankTo(message, "<No log>");
-			logger.info(message);
+			logger.info(CommonUtils.trimToWsChars(message, 5000));
 			String regex = "(?s).*(<\\?xml|<html.*)";
 			if (message.matches(regex)) {
 				response.setContentType("text/html");
@@ -210,9 +216,10 @@ public class ControlServlet extends AlcinaServlet {
 						Job job = task.perform();
 						return String.valueOf(job.getId());
 					}
-					case WAIT_RETURN_LARGE_OBJECT_SERIALIZED:{
+					case WAIT_RETURN_LARGE_OBJECT_SERIALIZED: {
 						Job job = task.perform();
-						return job.domain().ensurePopulated().getLargeResultSerialized();
+						return job.domain().ensurePopulated()
+								.getLargeResultSerialized();
 					}
 					default:
 						throw new UnsupportedOperationException();
@@ -297,7 +304,8 @@ public class ControlServlet extends AlcinaServlet {
 	}
 
 	public enum TaskExecutionType {
-		WAIT_RETURN_LOG, WAIT_RETURN_ID,WAIT_RETURN_LARGE_OBJECT_SERIALIZED, SCHEDULE_RETURN_ID;
+		WAIT_RETURN_LOG, WAIT_RETURN_ID, WAIT_RETURN_LARGE_OBJECT_SERIALIZED,
+		SCHEDULE_RETURN_ID;
 
 		public static TaskExecutionType defaultForWait(boolean wait) {
 			return wait ? WAIT_RETURN_LOG : SCHEDULE_RETURN_ID;
