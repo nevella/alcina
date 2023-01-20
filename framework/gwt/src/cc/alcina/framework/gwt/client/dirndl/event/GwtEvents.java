@@ -61,7 +61,7 @@ public class GwtEvents {
 		@Registration({ DomBinding.class, ValueChange.class })
 		public static class BindingImpl extends DomBinding {
 			@Override
-			public HandlerRegistration bind0(Widget widget) {
+			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addHandler(this::fireEvent,
 						ValueChangeEvent.getType());
 			}

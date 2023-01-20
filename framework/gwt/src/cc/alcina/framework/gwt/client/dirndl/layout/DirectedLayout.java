@@ -137,6 +137,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *   1x1f reflectiveserializer: integrate into GWT serializer framework
  *   1x1g performance (possibly before 1x1e)
  *   1x1h docs (ditto)
+ *   1x1j overlay/preview events redux
  *   1x2 switch table/form rendering to pure model - adjunct transformmanager
  *   1x3 low priority fixmes
  *   1x4 consider removing widget entirely (localdom)
@@ -817,7 +818,7 @@ public class DirectedLayout implements AlcinaProcess {
 							.indexOf(type.getName()) == 0);
 				}
 				domBinding.nodeEventBinding = this;
-				domBinding.bind(getBindingWidget(), true);
+				domBinding.bind(getBindingWidget(), model, true);
 			}
 
 			// FIXME - dirndl 1x1h - receive/reemit merging - document how to
@@ -857,7 +858,7 @@ public class DirectedLayout implements AlcinaProcess {
 
 			private void unbind() {
 				if (domBinding != null) {
-					domBinding.bind(null, false);
+					domBinding.bind(null, null, false);
 				}
 			}
 

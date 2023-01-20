@@ -27,7 +27,7 @@ public class OverlayPositions {
 	void show(Overlay model, ContainerOptions containerOptions) {
 		Preconditions.checkState(!openOverlays.containsKey(model));
 		Widget rendered = new DirectedLayout()
-				.render(new OverlayContainer(this, model, containerOptions));
+				.render(new OverlayContainer(model, containerOptions));
 		openOverlays.put(model, rendered);
 		RootPanel.get().add(rendered);
 	}
