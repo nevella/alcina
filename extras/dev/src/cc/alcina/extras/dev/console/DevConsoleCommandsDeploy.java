@@ -18,13 +18,19 @@ public class DevConsoleCommandsDeploy {
 	}
 
 	public static String invokeRemoteTask(Task task, boolean wait) {
+		return invokeRemoteTask(task,
+				ControlServlet.TaskExecutionType.defaultForWait(wait));
+	}
+
+	public static String invokeRemoteTask(Task task,
+			ControlServlet.TaskExecutionType executionType) {
 		String targetContainerControlServletPath = getControlServletPath();
 		String targetContainerControlServletKey = Configuration
 				.get("targetContainerControlServletKey");
 		Ax.out("\n****************\n****************\n** Executing **\n****************\n****************\n\n");
 		String response = ControlServlet.invokeTask(task,
 				targetContainerControlServletPath,
-				targetContainerControlServletKey, wait);
+				targetContainerControlServletKey, executionType);
 		return response;
 	}
 

@@ -61,14 +61,14 @@ public class ControlServlet extends AlcinaServlet {
 	}
 
 	public static String invokeTask(Task task, String url, String apiKey) {
-		return invokeTask(task, url, apiKey, true);
+		return invokeTask(task, url, apiKey, TaskExecutionType.WAIT_RETURN_LOG);
 	}
 
 	public static String invokeTask(Task task, String url, String apiKey,
-			boolean wait) {
+			TaskExecutionType executionType) {
 		StringMap queryParameters = new StringMap();
-		String verb = wait ? "perform-task" : "schedule-task";
-		queryParameters.put("cmd", verb);
+		queryParameters.put("cmd", "perform-task");
+		queryParameters.put("executionType", Ax.friendly(executionType));
 		queryParameters.put("apiKey", apiKey);
 		queryParameters.put("taskClassName", task.getClass().getName());
 		queryParameters.put("taskJson",
@@ -155,13 +155,11 @@ public class ControlServlet extends AlcinaServlet {
 			writeAndClose(message, response);
 			break;
 		}
-		case SCHEDULE_TASK: {
-			String jobId = invokeTask(req, false);
-			writeAndClose(jobId, response);
-			break;
-		}
 		case PERFORM_TASK: {
-			String message = invokeTask(req, true);
+			TaskExecutionType executionType = CommonUtils.getEnumValueOrNull(
+					TaskExecutionType.class, req.getParameter("executionType"),
+					true, null);
+			String message = invokeTask(req, executionType);
 			message = Ax.blankTo(message, "<No log>");
 			logger.info(message);
 			String regex = "(?s).*(<\\?xml|<html.*)";
@@ -177,7 +175,8 @@ public class ControlServlet extends AlcinaServlet {
 		}
 	}
 
-	private String invokeTask(HttpServletRequest req, boolean wait) {
+	private String invokeTask(HttpServletRequest req,
+			TaskExecutionType executionType) {
 		if (Ax.notBlank(req.getHeader("X-Forwarded-Server"))) {
 			throw new RuntimeException("Internal/non-proxied access only");
 		}
@@ -197,12 +196,26 @@ public class ControlServlet extends AlcinaServlet {
 						task = (Task) JacksonUtils.deserialize(taskJson,
 								Class.forName(taskClassName));
 					}
-					if (wait) {
-						return JobRegistry.get().perform(task).getLog();
-					} else {
+					switch (executionType) {
+					case SCHEDULE_RETURN_ID: {
 						Job job = task.schedule();
 						Transaction.commit();
 						return String.valueOf(job.getId());
+					}
+					case WAIT_RETURN_ID: {
+						Job job = task.perform();
+						return job.getLog();
+					}
+					case WAIT_RETURN_LOG: {
+						Job job = task.perform();
+						return String.valueOf(job.getId());
+					}
+					case WAIT_RETURN_LARGE_OBJECT_SERIALIZED:{
+						Job job = task.perform();
+						return job.domain().ensurePopulated().getLargeResultSerialized();
+					}
+					default:
+						throw new UnsupportedOperationException();
 					}
 				});
 	}
@@ -280,6 +293,14 @@ public class ControlServlet extends AlcinaServlet {
 	public class InformException extends Exception {
 		public InformException(String message) {
 			super(message);
+		}
+	}
+
+	public enum TaskExecutionType {
+		WAIT_RETURN_LOG, WAIT_RETURN_ID,WAIT_RETURN_LARGE_OBJECT_SERIALIZED, SCHEDULE_RETURN_ID;
+
+		public static TaskExecutionType defaultForWait(boolean wait) {
+			return wait ? WAIT_RETURN_LOG : SCHEDULE_RETURN_ID;
 		}
 	}
 }
