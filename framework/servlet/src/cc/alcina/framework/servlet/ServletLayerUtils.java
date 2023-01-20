@@ -1,8 +1,10 @@
 package cc.alcina.framework.servlet;
 
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -11,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class ServletLayerUtils {
@@ -24,6 +26,19 @@ public class ServletLayerUtils {
 
 	public static boolean checkForBrokenClientPipe(Exception e) {
 		return SEUtilities.getFullExceptionMessage(e).contains("Broken pipe");
+	}
+
+	/*
+	 * Clean unhelpful intermediate proxies (e.g. AWS network load balancers...)
+	 */
+	public static String cleanForwardedFor(String forwardedFor) {
+		String cleanRegex = Configuration.get("cleanFromForwardedFor");
+		if (Ax.notBlank(cleanRegex)) {
+			forwardedFor = Arrays.stream(forwardedFor.split(", ?"))
+					.filter(part -> !part.matches(cleanRegex))
+					.collect(Collectors.joining(", "));
+		}
+		return forwardedFor;
 	}
 
 	public static String generateRequestStr(HttpServletRequest request) {
@@ -91,9 +106,9 @@ public class ServletLayerUtils {
 		if (request == null) {
 			return null;
 		}
-		String forwarded = request.getHeader("X-Forwarded-For");
-		return CommonUtils.isNotNullOrEmpty(forwarded) ? forwarded
-				: request.getRemoteAddr();
+		String forwardedFOr = cleanForwardedFor(
+				request.getHeader("X-Forwarded-For"));
+		return Ax.blankTo(forwardedFOr, request::getRemoteAddr);
 	}
 
 	public static String
