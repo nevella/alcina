@@ -32,6 +32,9 @@ public class ServletLayerUtils {
 	 * Clean unhelpful intermediate proxies (e.g. AWS network load balancers...)
 	 */
 	public static String cleanForwardedFor(String forwardedFor) {
+		if (Ax.isBlank(forwardedFor)) {
+			return forwardedFor;
+		}
 		String cleanRegex = Configuration.get("cleanFromForwardedFor");
 		if (Ax.notBlank(cleanRegex)) {
 			forwardedFor = Arrays.stream(forwardedFor.split(", ?"))
