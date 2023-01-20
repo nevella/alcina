@@ -77,7 +77,7 @@ public class DevConsoleCommandsDeploy {
 			String fromPath = Ax.format("%s/%s", servletPackageBase,
 					packagePath);
 			String toPath = Ax.format("/tmp/dev/deploy/%s", packagePath);
-			exec(Ax.format("mkdir -p %s", toPath));
+			execRemote(Ax.format("mkdir -p %s", toPath));
 			String rsync = Ax.format(
 					"rsync -avz --rsh \"/usr/bin/ssh -i %s -o StrictHostKeychecking=no -p 22\""
 							+ " %s/ %s@%s:%s/",
@@ -89,7 +89,7 @@ public class DevConsoleCommandsDeploy {
 					"/opt/jboss/wildfly/standalone/deployments/%s/WEB-INF/classes/%s",
 					targetContainerExplodedDeployment,
 					packagePath.replaceFirst("(.+)/.+", "$1"));
-			exec(Ax.format(
+			execRemote(Ax.format(
 					"PATH=$PATH:/usr/local/bin && docker exec %s /bin/mkdir -p %s "
 							+ " && docker cp %s %s:%s"
 							+ " && docker exec -u 0 %s chown -R 1000:1000 %s &&  docker exec -u 0 %s chmod -R 777 %s",
@@ -99,7 +99,7 @@ public class DevConsoleCommandsDeploy {
 			return "ok";
 		}
 
-		private void exec(String cmd) throws Exception {
+		private void execRemote(String cmd) throws Exception {
 			String targetContainerName = ResourceUtilities
 					.get(DevConsoleCommandsDeploy.class, "targetContainerName");
 			String targetDockerHostName = ResourceUtilities.get(
