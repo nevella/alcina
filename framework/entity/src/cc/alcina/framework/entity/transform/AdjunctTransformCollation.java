@@ -48,7 +48,7 @@ public class AdjunctTransformCollation extends TransformCollation {
 	/*
 	 * Note that there's a chance some of these requests have already applied -
 	 * but that's harmless, as long as we drop the creation events
-	 * 
+	 *
 	 * TODO - make this package-private; only expose ensureCurrent
 	 */
 	public AdjunctTransformCollation ensureApplied() {
@@ -117,6 +117,19 @@ public class AdjunctTransformCollation extends TransformCollation {
 	}
 
 	public void removeNonPersistentTransforms() {
+		boolean perf = false;
+		if (perf) {
+			for (int idx = 0; idx < 1000; idx++) {
+				perClass = null;
+				perLocator = null;
+				removeNonPersistentTransforms0();
+			}
+		} else {
+			removeNonPersistentTransforms0();
+		}
+	}
+
+	public void removeNonPersistentTransforms0() {
 		ensureLookups();
 		AtomicBoolean modified = new AtomicBoolean();
 		allEntityCollations().forEach(ec -> {

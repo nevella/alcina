@@ -30,7 +30,7 @@ public class TransformCollation {
 	private static transient Class<? extends UserProperty> userPropertyPersistableImpl;
 
 	// class/locator/collation
-	private MultikeyMap<EntityCollation> perClass;
+	protected MultikeyMap<EntityCollation> perClass;
 
 	protected List<DomainTransformEvent> allEvents;
 

@@ -69,7 +69,13 @@ public class Registry {
 	}
 
 	public static <V> V impl(Class<V> type) {
-		return get().query0(type).impl();
+		// fast path
+		Registry instance = get();
+		V singleton = (V) instance.singletons.byClass.get(type);
+		if (singleton != null) {
+			return singleton;
+		}
+		return instance.query0(type).impl();
 	}
 
 	public static <V> V impl(Class<V> type, Class... keys) {

@@ -137,6 +137,7 @@ public class SerializationSignatureListener
 						serializedSignatureProperty.set(
 								entityCollation.getEntity(), ensureSignature());
 						collation.ensureCurrent();
+						int debug = 3;
 					}
 				}
 			}
