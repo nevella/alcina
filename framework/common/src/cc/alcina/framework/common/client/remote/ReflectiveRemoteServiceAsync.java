@@ -12,7 +12,9 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.Transi
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.AsyncSerializableTypes;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializationException;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /*
@@ -27,9 +29,18 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * - still, for versioning, we can tie gwt app hash (xor of modules) > server serialization hash
  * - this will let us see the server serialization diff, which is a superset of the client serialization diff
  *
- * @formatter:om
+ * @formatter:on
  */
 public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
+	/*
+	 * To short-circuit normal (asynccallback) handling of these exceptions -
+	 * which are probably best handled globally with an app refresh - queue a
+	 * [diaplay notification ui + refresh task] async throw an exception (sync)
+	 * in the topic handler
+	 */
+	public static Topic<SerializationException> topicDeserializationException = Topic
+			.create();
+
 	protected <T> void call(String methodName, Class[] methodArgumentTypes,
 			AsyncCallback callback, Object... methodArguments) {
 		try {
@@ -42,9 +53,9 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 				AlcinaTransient.Support
 						.setTransienceContexts(TransienceContext.RPC);
 				serializedPayload = ReflectiveSerializer.serialize(payload);
-				if(!GWT.isScript()){
+				if (!GWT.isScript()) {
 					try {
-						//test
+						// test
 						ReflectiveSerializer.deserialize(serializedPayload);
 					} catch (RuntimeException e) {
 						throw e;
@@ -60,6 +71,10 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 					.callRpc(serializedPayload, new AsyncCallback<String>() {
 						@Override
 						public void onFailure(Throwable caught) {
+							if (caught instanceof SerializationException) {
+								topicDeserializationException.publish(
+										(SerializationException) caught);
+							}
 							callback.onFailure(caught);
 						}
 

@@ -52,17 +52,22 @@ public class Overlay extends Model.WithNode implements
 
 	private boolean removeOnMouseDownOutside;
 
+	private boolean allowCloseWithoutCommit = true;
+
 	private Overlay(Builder builder) {
 		contents = builder.contents;
 		position = builder.position;
 		actions = builder.actions;
 		modal = builder.modal;
 		closeHandler = builder.closeHandler;
+		allowCloseWithoutCommit = builder.allowCloseWithoutCommit;
 		removeOnMouseDownOutside = builder.removeOnMouseDownOutside;
 	}
 
-	public void close() {
-		if (closeHandler != null) {
+	public void close(boolean commit) {
+		if (!commit && !allowCloseWithoutCommit) {
+		}
+		if (closeHandler != null && commit) {
 			// force commit of focussed element (textarea, input) if it is a
 			// child of this closing dialog.
 			Element focus = WidgetUtils.getFocussedDocumentElement();
@@ -91,25 +96,25 @@ public class Overlay extends Model.WithNode implements
 
 	@Override
 	public void onClose(Close event) {
-		close();
+		close(true);
 	}
 
 	@Override
 	public void onCtrlEnterPressed(CtrlEnterPressed event) {
 		// TODO - probably better to route via an internal form, which then
 		// fires submit, and close on that
-		close();
+		close(true);
 	}
 
 	@Override
 	public void onEscapePressed(EscapePressed event) {
-		close();
+		close(false);
 	}
 
 	@Override
 	public void onMouseDownOutside(MouseDownOutside event) {
 		if (removeOnMouseDownOutside) {
-			close();
+			close(false);
 		}
 	}
 
@@ -119,21 +124,36 @@ public class Overlay extends Model.WithNode implements
 		OverlayPositions.get().show(this, options);
 	}
 
-	public static class Actions implements HasLinks {
+	public static class Actions extends Model implements HasLinks {
 		public static Actions close() {
 			return new Actions().withClose();
 		}
 
-		private List<Link> actions = new ArrayList<>();
+		public static Actions ok() {
+			return new Actions().withOk();
+		}
+
+		private final List<Link> actions = new ArrayList<>();
 
 		@Override
 		public void add(Link link) {
 			actions.add(link);
 		}
 
+		@Directed
+		public List<Link> getActions() {
+			return this.actions;
+		}
+
 		public Actions withClose() {
 			add(new Link().withModelEvent(ModelEvents.Close.class)
 					.withText("Close"));
+			return this;
+		}
+
+		public Actions withOk() {
+			add(new Link().withModelEvent(ModelEvents.Close.class)
+					.withText("OK"));
 			return this;
 		}
 	}
@@ -150,6 +170,8 @@ public class Overlay extends Model.WithNode implements
 		private boolean modal;
 
 		boolean removeOnMouseDownOutside = true;
+
+		boolean allowCloseWithoutCommit = true;
 
 		public Overlay build() {
 			return new Overlay(this);
@@ -171,6 +193,12 @@ public class Overlay extends Model.WithNode implements
 			return this;
 		}
 
+		public Builder
+				withAllowCloseWithoutCommit(boolean allowCloseWithoutCommit) {
+			this.allowCloseWithoutCommit = allowCloseWithoutCommit;
+			return this;
+		}
+
 		public Builder withClose() {
 			actions = Actions.close();
 			return this;
@@ -189,6 +217,11 @@ public class Overlay extends Model.WithNode implements
 
 		public Builder withModal(boolean modal) {
 			this.modal = modal;
+			return this;
+		}
+
+		public Builder withOk() {
+			actions = Actions.ok();
 			return this;
 		}
 

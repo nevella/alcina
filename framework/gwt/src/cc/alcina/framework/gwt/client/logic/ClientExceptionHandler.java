@@ -7,18 +7,27 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.event.shared.UmbrellaException;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.Window.ClosingEvent;
+import com.google.gwt.user.client.Window.ClosingHandler;
 
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
-public class ClientExceptionHandler implements UncaughtExceptionHandler {
+public class ClientExceptionHandler
+		implements UncaughtExceptionHandler, ClosingHandler {
 	public static final String PRE_STACKTRACE_MARKER = "\n\t-----\n";
+
+	public static ClientExceptionHandler get() {
+		return Registry.impl(ClientExceptionHandler.class);
+	}
 
 	public static void unrollUmbrella(Throwable e, StringBuilder errorBuffer) {
 		if (e instanceof UmbrellaException) {
@@ -43,7 +52,16 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 		}
 	}
 
+	protected boolean windowClosing = false;
+
 	private Stack<UncaughtExceptionHandler> handlerStack = new Stack<GWT.UncaughtExceptionHandler>();
+
+	protected Set<Class<? extends Exception>> muteExceptionsOfClass = AlcinaCollections
+			.newUniqueSet();
+
+	public ClientExceptionHandler() {
+		Window.addWindowClosingHandler(this);
+	}
 
 	public String extraInfoForExceptionText() {
 		ClientInstance clientInstance = PermissionsManager.get()
@@ -70,10 +88,23 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 		return false;
 	}
 
+	public boolean isWindowClosing() {
+		return this.windowClosing;
+	}
+
+	public void muteExceptionsOfClass(Class<? extends Exception> clazz) {
+		muteExceptionsOfClass.add(clazz);
+	}
+
 	@Override
 	public void onUncaughtException(Throwable e) {
 		GWT.log("Uncaught exception escaped", e);
 		Registry.impl(ClientNotifications.class).showError(e);
+	}
+
+	@Override
+	public void onWindowClosing(ClosingEvent event) {
+		windowClosing = true;
 	}
 
 	public void pop() {
@@ -83,6 +114,10 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	public void push(UncaughtExceptionHandler handler) {
 		handlerStack.push(GWT.getUncaughtExceptionHandler());
 		GWT.setUncaughtExceptionHandler(handler);
+	}
+
+	public void setWindowClosing(boolean windowClosing) {
+		this.windowClosing = windowClosing;
 	}
 
 	public Throwable wrapException(Throwable e) {

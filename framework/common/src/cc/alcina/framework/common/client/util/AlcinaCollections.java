@@ -6,6 +6,7 @@ import java.util.Set;
 import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*
@@ -19,6 +20,10 @@ public class AlcinaCollections {
 
 	public static <T> Set<T> newHashSet() {
 		return Registry.impl(CollectionCreators.HashSetCreator.class).create();
+	}
+
+	public static <T> Set<T> newUniqueSet() {
+		return GWT.isScript() ? JsUniqueSet.create() : newHashSet();
 	}
 
 	public static <K, V> Map<K, V> newUnqiueMap() {

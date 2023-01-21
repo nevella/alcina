@@ -1,4 +1,5 @@
 @use '../../theme/theme'
+@use '../../theme/colour'
 
 body > .overlay-container
   position: absolute
@@ -7,6 +8,28 @@ body > .overlay-container
   top: 0
   left: 0
   display: inline-block
+
+  > overlay
+    display: flex
+    flex-direction: column
+    gap: 1rem
+
+    > actions
+      display: flex
+      justify-content: center
+      gap: 1rem
+
+      &:not(:empty)
+        margin-bottom: 1rem
+
+      > a
+        cursor: pointer
+        color: colour.$primary-color
+        //FIXME - sass - theme
+        &:hover
+          color: colour.$primary-hover-color
+
+
 
 body > overlay-container-modal
   display: block
@@ -21,3 +44,10 @@ body > overlay-container-modal
       top: 50%
       left: 50%
       transform: translate(-50%, -50%)
+
+  > overlay
+
+    //FIXME - sass - theme
+    background-color: white
+    
+
