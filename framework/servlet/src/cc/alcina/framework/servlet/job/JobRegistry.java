@@ -224,6 +224,8 @@ public class JobRegistry {
 		}
 	}
 
+	private ConcurrentHashMap<Job, InMemoryResult> inMemoryResults = new ConcurrentHashMap<>();
+
 	private Map<Job, JobContext> activeJobs = new ConcurrentHashMap<>();
 
 	private Map<Job, List<JobResource>> jobResources = new ConcurrentHashMap<>();
@@ -328,6 +330,10 @@ public class JobRegistry {
 
 	public Timestamp getJobMetadataLockTimestamp(String path) {
 		return jobExecutors.getJobMetadataLockTimestamp(path);
+	}
+
+	public String getLargeResult(Job job) {
+		return inMemoryResults.remove(job).result;
 	}
 
 	public Job getLaunchedFromControlServlet() {
@@ -1061,6 +1067,21 @@ public class JobRegistry {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	static class InMemoryResult {
+		String result;
+
+		Job job;
+
+		InMemoryResult(String result, Job job) {
+			this.result = result;
+			this.job = job;
+		}
+
+		void record() {
+			get().inMemoryResults.put(job, this);
 		}
 	}
 

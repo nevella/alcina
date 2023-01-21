@@ -218,8 +218,7 @@ public class ControlServlet extends AlcinaServlet {
 					}
 					case WAIT_RETURN_LARGE_OBJECT_SERIALIZED: {
 						Job job = task.perform();
-						return job.domain().ensurePopulated()
-								.getLargeResultSerialized();
+						return JobRegistry.get().getLargeResult(job);
 					}
 					default:
 						throw new UnsupportedOperationException();

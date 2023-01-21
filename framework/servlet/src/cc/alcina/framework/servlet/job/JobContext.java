@@ -328,6 +328,11 @@ public class JobContext {
 		e.printStackTrace();
 	}
 
+	public void recordLargeInMemoryResult(String largeSerializedResult) {
+		new JobRegistry.InMemoryResult(largeSerializedResult, getJob())
+				.record();
+	}
+
 	public void remove() {
 		LooseContext.remove(CONTEXT_CURRENT);
 	}
