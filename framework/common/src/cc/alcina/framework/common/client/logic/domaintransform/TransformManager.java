@@ -2264,7 +2264,7 @@ public abstract class TransformManager
 			ClassReflector classReflector = Reflections
 					.at(property.getOwningType());
 			String propertyName = property.getName();
-			if (propertyName.matches("(.+)Serialized")) {
+			if (propertyName.endsWith("Serialized")) {
 				String sourcePropertyname = propertyName
 						.replaceFirst("(.+)Serialized", "$1");
 				serializable = classReflector.property(sourcePropertyname);
