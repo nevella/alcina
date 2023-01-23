@@ -22,9 +22,6 @@
 	margin-bottom: 1em;
 	position: relative;
 }
-/*
-FIXME
-*/
 .gwittir-ValidationPopup {
 	color: var(- -error-color);
 	font-size: 12px;

@@ -38,6 +38,7 @@ import org.apache.log4j.PatternLayout;
 
 import com.google.gwt.core.shared.GWT;
 
+import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -101,6 +102,18 @@ import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 import elemental.json.impl.JsonUtil;
 
+/**
+ * <p>
+ * Base applifecycle controller for Alcina webapps. Currently does a moderately
+ * hard-coded startup sequence, goal is to convert that to a dependency
+ * resolution (consort) process, {@link DevConsole} is already somewhat there
+ * <p>
+ * FIXME - ops - fix webapp (and dev mode?) retaining refs to prior
+ * app/classloader
+ *
+ * @author nick@alcina.cc
+ *
+ */
 @SuppressWarnings("deprecation")
 @Registration.Singleton
 public abstract class AppLifecycleServletBase extends GenericServlet {
