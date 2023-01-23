@@ -38,6 +38,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 	public abstract Class<H> getHandlerClass();
 
+	public <O extends ModelEvent> void reemitAs(Class<O> clazz) {
+		NodeEvent.Context.newModelContext(this, this.context.node).fire(clazz);
+	}
+
 	public void setContext(Context context) {
 		this.context = context;
 	}

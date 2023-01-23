@@ -35,6 +35,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.util.GwtDomUtils;
 
 /**
@@ -399,14 +400,17 @@ public class Binding {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder("[Binding property ")
-				.append(left.property).append(" on ").append(left.object)
-				.append(" to ").append(right.property).append(" on ")
-				.append(right.object).append(" ] with children :");
-		for (Binding b : this.getChildren()) {
-			sb.append("\n" + b.toString());
+		FormatBuilder fb = new FormatBuilder().separator("\n");
+		if (left != null) {
+			fb.append("[Binding property ").append(left.property).append(" on ")
+					.append(left.object).append(" to ").append(right.property)
+					.append(" on ").append(right.object)
+					.append(" ] with children :");
 		}
-		return sb.toString();
+		for (Binding b : this.getChildren()) {
+			fb.append(b.toString());
+		}
+		return fb.toString();
 	}
 
 	/**
@@ -542,7 +546,13 @@ public class Binding {
 		}
 		instance.object = object;
 		try {
-			instance.property = Reflections.at(object).property(propertyName);
+			if (object instanceof DefinesProperties) {
+				instance.property = ((DefinesProperties) object)
+						.provideProperty(propertyName);
+			} else {
+				instance.property = Reflections.at(object)
+						.property(propertyName);
+			}
 			if (instance.property == null) {
 				throw new NullPointerException("Property Not Found.");
 			}
@@ -591,6 +601,13 @@ public class Binding {
 		private BindingInstance() {
 			super();
 		}
+	}
+
+	public interface DefinesProperties {
+		public Property provideProperty(String propertyName);
+	}
+
+	public interface PropertyMap {
 	}
 
 	private class NestedPropertyChangeListener

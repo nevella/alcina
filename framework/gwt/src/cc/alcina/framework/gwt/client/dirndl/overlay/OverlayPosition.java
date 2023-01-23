@@ -35,9 +35,9 @@ public class OverlayPosition {
 		constraints.add(new Constraint(direction, from, to, px));
 	}
 
-	public void centerDropdown(DomRect rect) {
+	public void dropdown(Position xalign, DomRect rect) {
 		fromRect(rect);
-		addConstraint(Direction.X_AXIS, Position.CENTER, Position.CENTER, 0);
+		addConstraint(Direction.X_AXIS, xalign, xalign, 0);
 		addConstraint(Direction.Y_AXIS, Position.END, Position.START, 6);
 	}
 
@@ -65,6 +65,10 @@ public class OverlayPosition {
 		Preconditions.checkState(fromRect != null);
 		toRect = toElement.getBoundingClientRect();
 		constraints.forEach(Constraint::apply);
+	}
+
+	public enum Position {
+		START, CENTER, END
 	}
 
 	class Constraint {
@@ -132,9 +136,5 @@ public class OverlayPosition {
 
 	enum Direction {
 		X_AXIS, Y_AXIS
-	}
-
-	enum Position {
-		START, CENTER, END
 	}
 }

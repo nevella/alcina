@@ -22,6 +22,12 @@ public class Property implements HasAnnotations {
 
 	private final Class declaringType;
 
+	public Property(Property property) {
+		this(property.name, property.getter, property.setter, property.type,
+				property.owningType, property.declaringType,
+				property.annotationResolver);
+	}
+
 	public Property(String name, Method getter, Method setter,
 			Class propertyType, Class owningType, Class declaringType,
 			AnnotationProvider annotationResolver) {

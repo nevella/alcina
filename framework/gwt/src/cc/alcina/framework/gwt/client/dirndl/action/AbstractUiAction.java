@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 
 @Reflected
 public abstract class AbstractUiAction<U extends AbstractUiAction>
@@ -14,7 +15,11 @@ public abstract class AbstractUiAction<U extends AbstractUiAction>
 	}
 
 	public ActionIcon<U> asIconAction() {
-		return new ActionIcon<U>((U) this);
+		return asIconAction(null);
+	}
+
+	public ActionIcon<U> asIconAction(Click.Handler clickHandler) {
+		return new ActionIcon<U>((U) this, clickHandler);
 	}
 
 	public String getDescription() {

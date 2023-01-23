@@ -768,6 +768,11 @@ public class DirectedLayout implements AlcinaProcess {
 		 * class and subclass?
 		 */
 		class NodeEventBinding {
+			/*
+			 * This may be a superclass of the event type (see ActionEvent).
+			 * TODO - Doc (it makes event binding slightly more complicated, but
+			 * allows a really useful inversion for one-off event handling
+			 */
 			Class<? extends NodeEvent> type;
 			// FIXME - dirndl 1x1d - why binding? why not bound event?
 			// also .... shouldn't we create these events on demand, and just
@@ -790,7 +795,7 @@ public class DirectedLayout implements AlcinaProcess {
 			public void onEvent(GwtEvent event) {
 				Context context = NodeEvent.Context.newModelContext(event,
 						Node.this);
-				dispatchEvent(context, Node.this.getModel());
+				dispatchEvent(type, context, Node.this.getModel());
 			}
 
 			@Override
@@ -827,14 +832,18 @@ public class DirectedLayout implements AlcinaProcess {
 			// reemit)
 			//
 			//
-			private void dispatchEvent(Context context, Object model) {
-				NodeEvent nodeEvent = Reflections.newInstance(type);
+			private void dispatchEvent(
+					Class<? extends NodeEvent> actualEventType, Context context,
+					Object model) {
+				NodeEvent nodeEvent = Reflections.newInstance(actualEventType);
 				context.setNodeEvent(nodeEvent);
 				nodeEvent.setModel(model);
 				ProcessObservers.publish(EventObservable.class,
-						() -> new EventObservable(type, context, model));
+						() -> new EventObservable(actualEventType, context,
+								model));
 				Class<? extends EventHandler> handlerClass = Reflections
-						.at(type).templateInstance().getHandlerClass();
+						.at(actualEventType).templateInstance()
+						.getHandlerClass();
 				NodeEvent.Handler handler = null;
 				if (Reflections.isAssignableFrom(handlerClass,
 						context.node.model.getClass())) {
@@ -863,13 +872,13 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 
 			void dispatchEventIfType(ModelEvent event) {
-				if (event.getClass() == type) {
+				if (event.getReceiverType() == type) {
 					Context context = NodeEvent.Context
 							.newModelContext(event.getContext(), Node.this);
 					// set before we dispatch to the handler, so the handler can
 					// unset
 					event.setHandled(true);
-					dispatchEvent(context, event.getModel());
+					dispatchEvent(event.getClass(), context, event.getModel());
 				}
 			}
 

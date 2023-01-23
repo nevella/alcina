@@ -13,17 +13,24 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.EscapePress
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.MouseDownOutside;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Close;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Close.Handler;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.model.HasLinks;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
+ * <p>
  * Does not use standard HTML dialog support (Safari 15.4 required)
  *
+ * <p>
  * Models all popups + dialogs
+ *
+ * <p>
+ * CloseHandler fires on any close (including say [esc] key, mousedown outside)
+ * - CommitHandler fires on [OK], [Ctrl-Enter]
  *
  * @author nick@alcina.cc
  *
@@ -46,7 +53,9 @@ public class Overlay extends Model.WithNode implements
 
 	private final Actions actions;
 
-	private Handler closeHandler;
+	private Close.Handler closeHandler;
+
+	private Commit.Handler commitHandler;
 
 	private boolean modal;
 
@@ -54,20 +63,28 @@ public class Overlay extends Model.WithNode implements
 
 	private boolean allowCloseWithoutCommit = true;
 
+	private boolean open;
+
 	private Overlay(Builder builder) {
 		contents = builder.contents;
 		position = builder.position;
 		actions = builder.actions;
 		modal = builder.modal;
 		closeHandler = builder.closeHandler;
+		commitHandler = builder.commitHandler;
 		allowCloseWithoutCommit = builder.allowCloseWithoutCommit;
 		removeOnMouseDownOutside = builder.removeOnMouseDownOutside;
 	}
 
 	public void close(boolean commit) {
-		if (!commit && !allowCloseWithoutCommit) {
+		if (!open) {
+			return;
 		}
-		if (closeHandler != null && commit) {
+		if (!commit && !allowCloseWithoutCommit) {
+			return;
+		}
+		open = false;
+		if (commitHandler != null && commit) {
 			// force commit of focussed element (textarea, input) if it is a
 			// child of this closing dialog.
 			Element focus = WidgetUtils.getFocussedDocumentElement();
@@ -75,6 +92,9 @@ public class Overlay extends Model.WithNode implements
 					&& provideElement().provideIsAncestorOf(focus, true)) {
 				WidgetUtils.clearFocussedDocumentElement();
 			}
+			commitHandler.onCommit(null);
+		}
+		if (closeHandler != null) {
 			closeHandler.onClose(null);
 		}
 		OverlayPositions.get().hide(this);
@@ -122,6 +142,7 @@ public class Overlay extends Model.WithNode implements
 		ContainerOptions options = new ContainerOptions().withModal(modal)
 				.withPosition(position);
 		OverlayPositions.get().show(this, options);
+		open = true;
 	}
 
 	public static class Actions extends Model implements HasLinks {
@@ -167,6 +188,8 @@ public class Overlay extends Model.WithNode implements
 
 		private ModelEvents.Close.Handler closeHandler;
 
+		private ModelEvents.Commit.Handler commitHandler;
+
 		private boolean modal;
 
 		boolean removeOnMouseDownOutside = true;
@@ -178,7 +201,12 @@ public class Overlay extends Model.WithNode implements
 		}
 
 		public Builder centerDropdown(DomRect rect, Model model) {
-			position.centerDropdown(rect);
+			return dropdown(Position.CENTER, rect, model);
+		}
+
+		public Builder dropdown(OverlayPosition.Position xalign, DomRect rect,
+				Model model) {
+			position.dropdown(xalign, rect);
 			withContents(model);
 			withRemoveOnMouseDownOutside(true);
 			return this;
@@ -207,6 +235,12 @@ public class Overlay extends Model.WithNode implements
 		public Builder
 				withCloseHandler(ModelEvents.Close.Handler closeHandler) {
 			this.closeHandler = closeHandler;
+			return this;
+		}
+
+		public Builder
+				withCommitHandler(ModelEvents.Commit.Handler commitHandler) {
+			this.commitHandler = commitHandler;
 			return this;
 		}
 

@@ -74,7 +74,8 @@ public class StandardModels {
 		 */
 		public static class BoundToPageCssClass extends HeaderContent {
 			public BoundToPageCssClass() {
-				addBinding("className", PageCssClass.get(), "pageClassName");
+				bindings().add("className", PageCssClass.get(),
+						"pageClassName");
 			}
 		}
 

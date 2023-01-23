@@ -101,6 +101,22 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Commit extends ModelEvent<Object, Commit.Handler> {
+		@Override
+		public void dispatch(Commit.Handler handler) {
+			handler.onCommit(this);
+		}
+
+		@Override
+		public Class<Commit.Handler> getHandlerClass() {
+			return Commit.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCommit(Commit event);
+		}
+	}
+
 	public static class Delete extends ModelEvent<Object, Delete.Handler> {
 		@Override
 		public void dispatch(Delete.Handler handler) {

@@ -59,6 +59,10 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		return Ax.friendly(getClass().getSimpleName());
 	}
 
+	public Class<? extends ModelEvent> getReceiverType() {
+		return getClass();
+	}
+
 	public boolean isHandled() {
 		return handled;
 	}

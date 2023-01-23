@@ -1,36 +1,47 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.event.dom.client.ClickEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.DropdownButtonClicked;
-import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.InsideDropdownClicked;
-import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.OutsideDropdownClicked;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Builder;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 
+/**
+ * Presents the dropdown with an aboslute positioned overlay
+ *
+ * @author nick@alcina.cc
+ *
+ * @param <D>
+ */
 @Directed(
 	bindings = @Binding(from = "open", type = Type.CSS_CLASS),
-	receives = { DropdownEvents.DropdownButtonClicked.class,
-			DropdownEvents.OutsideDropdownClicked.class,
-			DropdownEvents.InsideDropdownClicked.class })
-public class Dropdown<D extends Model> extends Model
-		implements DropdownButtonClicked.Handler,
-		OutsideDropdownClicked.Handler, InsideDropdownClicked.Handler {
+	receives = { DropdownEvents.DropdownButtonClicked.class })
+public class Dropdown extends Model.WithNode
+		implements DropdownButtonClicked.Handler {
 	private boolean open;
 
 	private Model button;
 
-	private D dropdown;
+	private Model dropdown;
 
-	private D visibleDropdown;
+	private Overlay overlay;
 
-	public Dropdown(Model button, D dropdown) {
+	private OverlayPosition.Position xalign = Position.CENTER;
+
+	private List<Model> dropdownStack = new ArrayList<>();
+
+	public Dropdown(Model button, Model dropdown) {
 		this.button = button;
-		this.dropdown = dropdown;
+		setDropdown(dropdown);
 	}
 
 	@Directed(
@@ -40,17 +51,12 @@ public class Dropdown<D extends Model> extends Model
 		return this.button;
 	}
 
-	public D getDropdown() {
+	public Model getDropdown() {
 		return this.dropdown;
 	}
 
-	@Directed(
-		receives = { InferredDomEvents.ClickOutside.class,
-				DomEvents.Click.class },
-		reemits = { DropdownEvents.OutsideDropdownClicked.class,
-				DropdownEvents.InsideDropdownClicked.class })
-	public D getVisibleDropdown() {
-		return this.visibleDropdown;
+	public OverlayPosition.Position getXalign() {
+		return this.xalign;
 	}
 
 	public boolean isOpen() {
@@ -62,45 +68,54 @@ public class Dropdown<D extends Model> extends Model
 		setOpen(!isOpen());
 	}
 
-	@Override
-	public void onInsideDropdownClicked(InsideDropdownClicked event) {
-		ClickEvent click = (ClickEvent) event
-				.getContext().getPrevious().getPrevious().getGwtEvent();
-		Element element = Element.as(click.getNativeEvent().getEventTarget());
-		if (!element.getTagName().equalsIgnoreCase("a")
-				|| element.getAttribute("href").isEmpty()) {
-			return;
-		}
-		setOpen(false);
-	}
-
-	@Override
-	public void onOutsideDropdownClicked(OutsideDropdownClicked event) {
-		setOpen(false);
+	public void pushDropdown(Model model) {
+		Preconditions.checkState(!open);
+		dropdownStack.add(model);
+		dropdown = model;
 	}
 
 	public void setButton(Model button) {
 		this.button = button;
 	}
 
-	public void setDropdown(D dropdown) {
+	public void setDropdown(Model dropdown) {
 		this.dropdown = dropdown;
-		if (open) {
-			setVisibleDropdown(dropdown);
+		if (dropdownStack.isEmpty()) {
+			dropdownStack.add(dropdown);
 		}
 	}
 
 	public void setOpen(boolean open) {
-		setVisibleDropdown(open ? dropdown : null);
 		boolean old_open = this.open;
 		this.open = open;
 		propertyChangeSupport().firePropertyChange("open", old_open, open);
+		if (open && !old_open) {
+			showDropdown(true);
+		}
+		if (old_open && !open) {
+			showDropdown(false);
+		}
 	}
 
-	public void setVisibleDropdown(D visibleDropdown) {
-		D old_visibleDropdown = this.visibleDropdown;
-		this.visibleDropdown = visibleDropdown;
-		propertyChangeSupport().firePropertyChange("visibleDropdown",
-				old_visibleDropdown, visibleDropdown);
+	public void setXalign(OverlayPosition.Position xalign) {
+		this.xalign = xalign;
+	}
+
+	private void showDropdown(boolean show) {
+		if (show) {
+			Builder builder = Overlay.builder();
+			overlay = builder
+					.dropdown(getXalign(),
+							provideElement().getBoundingClientRect(), dropdown)
+					.withCloseHandler(evt -> setOpen(false)).build();
+			overlay.open();
+		} else {
+			overlay.close(false);
+			overlay = null;
+			if (dropdownStack.size() > 1) {
+				dropdownStack.remove(dropdownStack.size() - 1);
+				dropdown = dropdownStack.get(dropdownStack.size() - 1);
+			}
+		}
 	}
 }
