@@ -87,7 +87,7 @@
 	<classpathentry kind="lib" path="lib/extras/webdriver/commonmark-ext-gfm-tables-0.18.1-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.ws.rs-api-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jol-core-0.17-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/slf4j-reload4j-1.7.36.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/slf4j-reload4j-1.7.36.jar" sourcepath="/g/minor/slf4j"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-generators-3.24.9.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-metamodel-generator-3.24.9.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-serialization-3.24.9.jar"/>

@@ -220,10 +220,10 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 						}
 						if (CommonUtils.extractCauseOfClass(e,
 								ConnectException.class) != null) {
-							Ax.err("ClassMetaServer not reachable");
+							logger.warn("ClassMetaServer not reachable");
 						} else if (CommonUtils.extractCauseOfClass(e,
 								FileNotFoundException.class) != null) {
-							Ax.err("No cache found, creating");
+							logger.info("No cache found, creating");
 						}
 						return new ClassMetadataCache();
 					}
