@@ -4,7 +4,14 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.dirndl.model.Link;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagClassModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.PropertyNameTags;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * <p>
@@ -24,23 +31,8 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 		return AccessLevel.EVERYONE;
 	}
 
-	public Link asIconLink() {
-		return asIconLink(false);
-	}
-
-	public Link asIconLink(boolean withText) {
-		String cssClassName = Ax
-				.cssify(getClass().getSimpleName().replace("-event", ""));
-		return asLink("icon " + cssClassName, withText);
-	}
-
-	public Link asLink() {
-		return asLink(null, true);
-	}
-
-	public Link asLink(String cssClassName, boolean withText) {
-		return new Link().withTag("action").withModelEvent(getClass())
-				.withText(withText ? name() : null).withClassName(cssClassName);
+	public Action asAction() {
+		return new Action(this);
 	}
 
 	@Override
@@ -63,20 +55,74 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 	}
 
 	public String name() {
-		return getClass().getSimpleName();
+		String cssClassName = Ax
+				.cssify(getClass().getSimpleName().replace("-event", ""));
+		return cssClassName;
 	}
 
-	protected abstract void handle(T t);
+	protected abstract void handle(T actionContext);
+
+	/**
+	 * <p>
+	 * Presents an action as icon - text
+	 */
+	@Directed(
+		bindings = @Binding(from = "title", type = Binding.Type.PROPERTY),
+		receives = DomEvents.Click.class)
+	@PropertyNameTags
+	public static class Action extends Model
+			implements DomEvents.Click.Handler {
+		private final TagClassModel icon;
+
+		private final String label;
+
+		private ActionEvent event;
+
+		public Action(ActionEvent event) {
+			this.event = event;
+			this.label = CommonUtils.capitaliseFirst(event.name());
+			String className = Ax.format("icon %s", event.name());
+			this.icon = new TagClassModel("icon", className);
+		}
+
+		@Directed
+		public TagClassModel getIcon() {
+			return icon;
+		}
+
+		@Directed
+		public String getLabel() {
+			return label;
+		}
+
+		public String getTitle() {
+			return event.getDescription();
+		}
+
+		@Override
+		public void onClick(Click event) {
+			WidgetUtils.squelchCurrentEvent();
+			event.reemitAs(this.event.getClass());
+		}
+	}
+
+	public static class ActionTransform
+			extends AbstractModelTransform<ActionEvent, Action> {
+		@Override
+		public Action apply(ActionEvent t) {
+			return t.asAction();
+		}
+	}
 
 	public static interface ContextProvider<T> {
-		public T provideActionEventContext();
+		public T provideActionContext();
 	}
 
 	public interface Handler<T> extends NodeEvent.Handler {
 		default void onActionEvent(ActionEvent event) {
 			Object instance = null;
 			if (this instanceof ContextProvider) {
-				instance = ((ContextProvider) this).provideActionEventContext();
+				instance = ((ContextProvider) this).provideActionContext();
 			} else {
 				instance = this;
 			}
