@@ -21,7 +21,7 @@ import java.util.Collection;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 
 /**
  * A {@link com.google.gwt.user.client.ui.SuggestOracle} can be used to create
@@ -104,7 +104,7 @@ public abstract class SuggestOracle {
 	/**
 	 * A {@link com.google.gwt.user.client.ui.SuggestOracle} request.
 	 */
-	public static class Request extends Model implements IsSerializable {
+	public static class Request extends Bindable implements IsSerializable {
 		private int limit = 20;
 
 		private String query;
@@ -194,9 +194,7 @@ public abstract class SuggestOracle {
 	 * <p>
 	 * <code>response.setMoreSuggestionsCount(102);</code>
 	 */
-	// FIXME - dirndl 1x1d - no need to extend model, add @Bean via annotation
-	// resolution (ditto BoundSuggestOracleSuggestion, Request)
-	public static class Response extends Model implements IsSerializable {
+	public static class Response extends Bindable implements IsSerializable {
 		private Collection<? extends Suggestion> suggestions;
 
 		/**

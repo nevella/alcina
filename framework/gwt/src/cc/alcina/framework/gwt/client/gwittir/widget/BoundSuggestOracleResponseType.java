@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 public interface BoundSuggestOracleResponseType {
@@ -23,7 +23,7 @@ public interface BoundSuggestOracleResponseType {
 			implements BoundSuggestOracleModel {
 	}
 
-	public static class BoundSuggestOracleSuggestion extends Model
+	public static class BoundSuggestOracleSuggestion extends Bindable
 			implements Suggestion, Serializable {
 		public static Object nullSuggestion() {
 			BoundSuggestOracleSuggestion suggestion = new BoundSuggestOracleSuggestion();

@@ -77,7 +77,7 @@ public abstract class DirectedRenderer {
 
 	/**
 	 * Renders a container widget for the Bindable instance and layout nodes for
-	 * the
+	 * the properties
 	 *
 	 * @author nick@alcina.cc
 	 *
@@ -119,28 +119,36 @@ public abstract class DirectedRenderer {
 				// @Directed :: the element's merged hierarchy @Directed)
 				AnnotationLocation location = input.location
 						.copyWithClassLocationOf(transformedModel);
-				// FIXME - dirndl 1x1d - phase - *definitely* optimise. Possibly
-				// Directed.Impl should
-				// be only one instance per attribute permutation
-				//
-				// in 1x1d, finalise the handling of resolved annotations etc -
-				// optimise (possibly with per-resolver Type/Property nodes) in
-				// 1x1g if necessary
-				//
-				// what we really want is to pass a consumed/modified arg here
-				//
-				// note that input.soleDirected() is really merge
-				// (last(location.propertyDirected),
-				// last(collectionClass.classDirected))
-				//
-				// but for a collection its class annotations (listeners etc)
-				// should
-				// be on the wrapper - in fact, probably just disallow @Directed
-				// on Collection subclasses
-				//
-				// actually no - but we'll need Directed.transformPhase
-				//
-				// probably get it working, step back and fix
+				/*
+				 * FIXME - dirndl 1x1g - phase - *definitely* optimise. Possibly
+				 * Directed.Impl should be only one instance per attribute
+				 * permutation
+				 *
+				 * in 1x3, finalise the handling of resolved annotations etc -
+				 * see AnnotationLocation.ResolutionState. Honestly, might want
+				 * to check with a profiler that performance is *that* bad - the
+				 * resolution code is executed for every collection member, but
+				 * it's not that vast (that said, check with a 5,000 element
+				 * collection...)
+				 *
+				 * optimise (possibly with per-resolver Type/Property nodes) in
+				 * 1x1g if necessary
+				 *
+				 * what we really want is to pass a consumed/modified arg here
+				 *
+				 * note that input.soleDirected() is really merge
+				 * (last(location.propertyDirected),
+				 * last(collectionClass.classDirected))
+				 *
+				 * but for a collection its class annotations (listeners etc)
+				 * should be on the wrapper - in fact, probably just
+				 * disallow @Directed on Collection subclasses
+				 *
+				 * actually no - but we'll need Directed.transformPhase
+				 *
+				 * probably get it working, step back and fix
+				 *
+				 */
 				location.resolutionState.resolvedPropertyAnnotations = Arrays
 						.asList(input.soleDirected());
 				// inelegant, but works to avoid double-transform
@@ -203,7 +211,7 @@ public abstract class DirectedRenderer {
 	 *
 	 */
 	/*
-	 * Note the difference to cDirectedRenderer.Collection is really that by
+	 * Note the difference to DirectedRenderer.Collection is really that by
 	 * default the @Directed generated for each collection element is *all* of
 	 * the incoming directed (tag, class, bindings, evetns), wheras for
 	 * TransformRenderer:

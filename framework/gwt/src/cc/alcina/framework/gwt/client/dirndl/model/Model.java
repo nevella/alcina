@@ -35,6 +35,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
  * Dirndl UI models are mostly composed of subclasses of this class - they're
  * abstract (Java Beans + extra sauce).
  *
+ *
+ *
  * <h3>Notes</h3>
  *
  *

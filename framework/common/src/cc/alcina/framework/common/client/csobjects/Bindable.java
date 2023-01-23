@@ -18,6 +18,11 @@ import java.io.Serializable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 /**
+ * <p>
+ * Generally use this as the base class for java beans that are used by
+ * ReflectedSerializer (it's not strictly necessary to extend
+ * BaseSourcesPropertyChangeEvents, but the @Bean is required and Serializable
+ * is advisable)
  *
  * @author Nick Reddel
  *

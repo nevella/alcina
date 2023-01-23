@@ -73,7 +73,7 @@ public class HtmlParser {
 
 	private String attrValue;
 
-	// FIXME - dirndl 1x1d - optimise (a jsmap would probably be faster in
+	// FIXME - dirndl 1x1g - optimise (a jsmap would probably be faster in
 	// script land)
 	private LightMap<String, String> attributes = new LightMap();
 
@@ -370,8 +370,9 @@ public class HtmlParser {
 				}
 				break;
 			case EXPECTING_COMMENT:
-				// FIXME - dirndl 1x1d - optimise end-of-builder checks (with
-				// some sort of buffering builder)
+				// FIXME - dirndl 1x1g - optimise end-of-builder checks (with
+				// some sort of buffering builder) - lowish priority since the
+				// node types that use this check are rare
 				if (c == '>' && builder.toString().endsWith("--")) {
 					builder.setLength(builder.length() - 2);
 					emitComment(builder.toString());
