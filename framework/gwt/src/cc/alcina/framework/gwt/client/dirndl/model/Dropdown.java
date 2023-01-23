@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 
@@ -16,7 +17,15 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 
 /**
+ * <p>
  * Presents the dropdown with an aboslute positioned overlay
+ *
+ * <p>
+ * Has a few features: a dropdown supplier can be passed (to regenerate the
+ * dropdown before display); also a replacement dropdown can be pushed if an
+ * action causes another (but different) dropdown to be displayed at the same
+ * logical application level - e.g. a dropdown shows a "color" action, the color
+ * selector could be displayed as a pushed dropdown
  *
  * @author nick@alcina.cc
  *
@@ -39,9 +48,19 @@ public class Dropdown extends Model.WithNode
 
 	private List<Model> dropdownStack = new ArrayList<>();
 
+	private Supplier<Model> dropdownSupplier;
+
 	public Dropdown(Model button, Model dropdown) {
 		this.button = button;
 		setDropdown(dropdown);
+	}
+
+	public Dropdown(Model button, Supplier<Model> dropdownSupplier) {
+		this.button = button;
+		this.dropdownSupplier = dropdownSupplier;
+		// the dropdown will be regenerated on show, this instnce acts as a
+		// placeholder for the dropdown stack
+		setDropdown(dropdownSupplier.get());
 	}
 
 	@Directed(
@@ -103,6 +122,10 @@ public class Dropdown extends Model.WithNode
 
 	private void showDropdown(boolean show) {
 		if (show) {
+			if (dropdownSupplier != null && dropdownStack.size() == 1) {
+				dropdownStack.clear();
+				setDropdown(dropdownSupplier.get());
+			}
 			Builder builder = Overlay.builder();
 			overlay = builder
 					.dropdown(getXalign(),

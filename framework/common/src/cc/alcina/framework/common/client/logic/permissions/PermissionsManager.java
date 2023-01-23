@@ -44,6 +44,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StackDebug;
 import cc.alcina.framework.common.client.util.Topic;
@@ -874,13 +875,6 @@ public class PermissionsManager implements DomainTransformListener {
 	}
 
 	@Reflected
-	@Registration(PermissionsExtensionForClass.class)
-	public static abstract class PermissionsExtensionForClass<C>
-			implements PermissionsExtension {
-		public abstract Class<C> getGenericClass();
-	}
-
-	@Reflected
 	@Registration(PermissionsExtensionForRule.class)
 	public static abstract class PermissionsExtensionForRule
 			implements PermissionsExtension {
@@ -939,35 +933,42 @@ public class PermissionsManager implements DomainTransformListener {
 	 */
 	public static class RegistryPermissionsExtension
 			implements PermissionsExtension {
-		Map<Class, PermissionsExtensionForClass> extensionMapForClass = new HashMap<Class, PermissionsExtensionForClass>();
+		Map<String, PermissionsExtensionForRule> perNameRules = AlcinaCollections
+				.newUnqiueMap();
 
-		Map<String, PermissionsExtensionForRule> extensionMapForRule = new HashMap<String, PermissionsExtensionForRule>();
+		Map<Class<? extends Permissible>, Rule> perClassRules = AlcinaCollections
+				.newUnqiueMap();
 
 		public RegistryPermissionsExtension() {
-			Registry.query(PermissionsExtensionForClass.class).implementations()
-					.forEach(ext -> extensionMapForClass
-							.put(ext.getGenericClass(), ext));
 			Registry.query(PermissionsExtensionForRule.class).implementations()
 					.forEach(this::register);
 		}
 
 		public PermissionsExtensionForRule getExtension(String ruleName) {
-			return extensionMapForRule.get(ruleName);
+			return perNameRules.get(ruleName);
 		}
 
 		@Override
-		public Boolean isPermitted(Object o, Object assigningTo,
+		public Boolean isPermitted(Object target, Object assigningTo,
 				Permissible p) {
-			Class<? extends Object> clazz = o == null ? null : o.getClass();
+			Class<? extends Object> targetClass = target == null ? null
+					: target.getClass();
 			String ruleName = p != null ? p.rule() : "";
-			if (extensionMapForClass.containsKey(clazz)) {
-				return extensionMapForClass.get(clazz).isPermitted(o,
-						assigningTo, p);
+			Class<? extends Permissible> permissibleClass = p != null
+					? p.getClass()
+					: null;
+			if (permissibleClass != null) {
+				Rule rule = perClassRules.computeIfAbsent(permissibleClass,
+						clazz -> Registry.optional(Rule.class, permissibleClass)
+								.orElse(null));
+				if (rule != null) {
+					return rule.isPermittedTyped(target, assigningTo, p);
+				}
 			}
-			if (extensionMapForRule.containsKey(ruleName)) {
-				PermissionsExtensionForRule extension = extensionMapForRule
+			if (perNameRules.containsKey(ruleName)) {
+				PermissionsExtensionForRule extension = perNameRules
 						.get(ruleName);
-				return extension.isPermitted(o, assigningTo, p);
+				return extension.isPermitted(target, assigningTo, p);
 			}
 			return null;
 		}
@@ -978,7 +979,7 @@ public class PermissionsManager implements DomainTransformListener {
 		}
 
 		public void register(PermissionsExtensionForRule ext) {
-			extensionMapForRule.put(ext.getRuleName(), ext);
+			perNameRules.put(ext.getRuleName(), ext);
 		}
 	}
 }

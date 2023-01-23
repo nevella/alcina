@@ -26,6 +26,9 @@ public class AlcinaCollections {
 		return GWT.isScript() ? JsUniqueSet.create() : newHashSet();
 	}
 
+	// can be implemented by a js map js.client side (object identity keys, not
+	// equals() based) - note that a hashmap will still work, although it should
+	// be an identityhashmap (non js.client)
 	public static <K, V> Map<K, V> newUnqiueMap() {
 		return GWT.isScript() ? JsUniqueMap.create() : newHashMap();
 	}
