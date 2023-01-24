@@ -332,17 +332,15 @@ public class ImplementClassLiteralsAsFields {
 					}
 				}
 				if (generateAnonymousCall) {
-					// Class.createForAnonymousClass(packageName,
-					// runtimeTypeReference,superclassliteral)
+					// Class.createForAnonymousClass(superclassliteral,
+					// runtimeTypeReference)
 					JMethodCall call = new JMethodCall(info, null,
 							program.getIndexedMethod(
 									RuntimeConstants.CLASS_CREATE_FOR_ANONYMOUS_CLASS));
-					call.addArg(program.getStringLiteral(info,
-							type.getPackageName()));
+					call.addArg(superclassLiteral);
 					call.addArg(new JRuntimeTypeReference(info,
 							program.getTypeJavaLangObject(),
 							(JReferenceType) type));
-					call.addArg(superclassLiteral);
 					return call;
 				} else {
 					// Class.createForClass(packageName, typeName,
