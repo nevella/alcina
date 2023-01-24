@@ -102,7 +102,7 @@ class Vacuum {
 			if (debugLevelLogging) {
 				logger.debug("vacuum: end");
 			}
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 			logger.warn("DEVEX-1 - Vacuum exception", new MvccException(e));
 		} finally {

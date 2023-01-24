@@ -28,16 +28,24 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 /**
+ * <p>
  * FIXME - dirndl 1x1e - Refactoring needs - there's a lot of semi-duplication
  * in the 'link remote to localdom' models - i.e. puts to remoteLookup
  *
+ * <p>
  * Probably need just one true path
  *
+ * <p>
  * Notes re gc => we maintain a map of remote (browser dom) nodes to local
  * nodes, but that's weak. Strong refs are via node.remote fields
  *
+ * <p>
  * Notes re issues with ex-gwt mutations - FIXME - dirndl 1x1e -
  * https://github.com/nevella/alcina/issues/23
+ *
+ * <p>
+ * FIXME - dirndl - 1x3 - move all init out of statics if possible (to avoid
+ * clinit)
  *
  * Does not support IE<11
  */
