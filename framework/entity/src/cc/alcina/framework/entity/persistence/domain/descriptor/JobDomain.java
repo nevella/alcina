@@ -53,6 +53,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
+import cc.alcina.framework.entity.persistence.mvcc.BaseProjectionSupportMvcc.TreeMapCreatorImpl;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalMultiset;
@@ -1163,8 +1164,28 @@ public class JobDomain {
 			}
 		}
 
+		/**
+		 * <p>
+		 * FIXME - mvcc.5
+		 * <p>
+		 * Note that this collection is slightly degenerate - *all* the
+		 * processed jobs are right at the front of the sorted-by-id list, so as
+		 * they're processed they're marked as removed (but not removed since
+		 * generally they'll be in the txmap base) - which means iteration has
+		 * to traverse a bunch before getting to the first
+		 *
+		 * <p>
+		 * So... rather than doing some fairly hard work on
+		 * transactionalmap/iterator, mandate that the second map (in
+		 * createLookup) be a pure-concurrent map
+		 *
+		 * @author nick@alcina.cc
+		 *
+		 */
 		private class FutureConsistencyPriorityProjection
 				extends BaseProjection<Job> {
+			long projectionStart;
+
 			private FutureConsistencyPriorityProjection() {
 				super(String.class,
 						new Class[] { Long.class, (Class<Job>) jobImplClass });
@@ -1206,6 +1227,18 @@ public class JobDomain {
 				return true;
 			}
 
+			@Override
+			public void onAddValues(boolean post) {
+				Transaction.current().setPopulatingPureTransactional(!post);
+				if (post) {
+					String key = getClass().getSimpleName() + "-addvalues";
+					Ax.out("Future projection load :: %s ms",
+							System.currentTimeMillis() - projectionStart);
+				} else {
+					projectionStart = System.currentTimeMillis();
+				}
+			}
+
 			private Collection valueCollection(String consistencyPriority) {
 				return getLookup().asMapEnsure(true, consistencyPriority)
 						.delegate().values();
@@ -1225,8 +1258,8 @@ public class JobDomain {
 										CollectionCreators.TreeMapCreator.class)
 										.withTypes(Arrays.asList(String.class,
 												Object.class)),
-								Registry.impl(
-										CollectionCreators.TreeMapCreator.class)
+								new TreeMapCreatorImpl()
+										.withPureTransactional(true)
 										.withTypes(Arrays.asList(Long.class,
 												Object.class)) })
 						.createMultikeyMap();

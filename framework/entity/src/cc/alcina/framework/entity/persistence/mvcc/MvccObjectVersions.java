@@ -158,7 +158,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		ObjectVersion<T> version = new ObjectVersion<>();
 		version.transaction = initialTransaction;
 		domainIdentity = t;
-		visibleAllTransactions = initialAllTransactionsValueFor(t);
+		setVisibleAllTransactions(initialAllTransactionsValueFor(t,
+				initialTransaction.isBaseTransaction()));
 		initialTransactionId = initialTransaction.getId();
 		if (initialObjectIsWriteable) {
 			this.initialWriteableTransaction = initialTransaction;
@@ -327,7 +328,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		return this.size.get();
 	}
 
-	protected T initialAllTransactionsValueFor(T t) {
+	protected T initialAllTransactionsValueFor(T t, boolean baseTransaction) {
 		return null;
 	}
 
@@ -382,7 +383,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		ObjectVersion<T> version = versions().get(tx);
 		if (version != null) {
 			if (tx.isToDomainCommitted() && vacuum) {
-				visibleAllTransactions = version.object;
+				setVisibleAllTransactions(version.object);
 			}
 			versions().remove(tx);
 			cachedResolution = null;
@@ -390,6 +391,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			checkIntercept(Type.VERSION_REMOVAL, tx.getId(), null,
 					version.writeable);
 		}
+	}
+
+	protected void setVisibleAllTransactions(T value) {
+		visibleAllTransactions = value;
 	}
 
 	protected void updateCached(Transaction transaction, T resolved,
@@ -551,6 +556,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	T resolveWithoutSync(Transaction transaction, boolean writeableVersion) {
 		if (writeableVersion && transaction.isReadonly()
 				&& !TransformManager.get().isIgnorePropertyChanges()) {
+			if (transaction.isBaseTransaction()) {
+				if (transaction.isPopulatingPureTransactional()) {
+					return visibleAllTransactions;
+				}
+			}
 			throw new MvccException("Writing within a readonly transaction");
 		}
 		// try cached
@@ -710,7 +720,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				// both with initialObjectIsWriteable) or resolve( with
 				// false)(from a visible object with no mvccobjectversions i.e.
 				// visible to all txs)
-				visibleAllTransactions = domainIdentity;
+				setVisibleAllTransactions(domainIdentity);
 			}
 		}
 

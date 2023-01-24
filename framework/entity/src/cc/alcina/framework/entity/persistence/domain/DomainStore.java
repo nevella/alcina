@@ -326,6 +326,10 @@ public class DomainStore implements IDomainStore {
 		return loader.checkTransformRequestExists(id);
 	}
 
+	public void close() {
+		loader.close();
+	}
+
 	public void enableAndAddValues(DomainListener listener) {
 		listener.setEnabled(true);
 		addValues(listener);
@@ -705,7 +709,12 @@ public class DomainStore implements IDomainStore {
 	}
 
 	void addValues(DomainListener listener) {
-		cache.stream(listener.getListenedClass()).forEach(listener::insert);
+		try {
+			listener.onAddValues(false);
+			cache.stream(listener.getListenedClass()).forEach(listener::insert);
+		} finally {
+			listener.onAddValues(true);
+		}
 	}
 
 	Entity ensureEntity(Class<? extends Entity> clazz, long id, long localId) {
@@ -2128,9 +2137,5 @@ public class DomainStore implements IDomainStore {
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
 		}
-	}
-
-	public void close() {
-		loader.close();
 	}
 }

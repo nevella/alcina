@@ -109,11 +109,20 @@ public class BaseProjectionSupportMvcc {
 		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class TreeMapCreatorImpl
 			extends CollectionCreators.TreeMapCreator {
+		private boolean pureTransactional;
+
 		@Override
 		public Map get() {
 			return new TransactionalTreeMap(types.get(0), types.get(1),
 					new NullFriendlyComparatorWrapper(
-							Comparator.naturalOrder()));
+							Comparator.naturalOrder()))
+									.withPureTransactional(pureTransactional);
+		}
+
+		public TreeMapCreatorImpl
+				withPureTransactional(boolean pureTransactional) {
+			this.pureTransactional = pureTransactional;
+			return this;
 		}
 	}
 

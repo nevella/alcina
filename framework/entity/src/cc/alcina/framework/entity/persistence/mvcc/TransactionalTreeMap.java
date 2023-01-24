@@ -11,6 +11,18 @@ import it.unimi.dsi.fastutil.longs.Long2BooleanAVLTreeMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 
+/**
+ * <p>
+ * Performance note - if deleting from the head of a large TxTmap, this can be
+ * non-performant unless 'puretransactional' - to test, create say 10,000 jobs,
+ * project with such a map, delete first 5000 and repeat
+ * 'projection.stream().findFirst() say 1000 times
+ *
+ * @author nick@alcina.cc
+ *
+ * @param <K>
+ * @param <V>
+ */
 public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 		implements NavigableMap<K, V> {
 	public TransactionalTreeMap(Class<K> keyClass, Class<V> valueClass,
@@ -142,6 +154,12 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 	@Override
 	public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
 		throw new UnsupportedOperationException();
+	}
+
+	public TransactionalTreeMap<K, V>
+			withPureTransactional(boolean pureTransactional) {
+		this.pureTransactional = pureTransactional;
+		return this;
 	}
 
 	@Override

@@ -379,6 +379,12 @@ public class Transaction implements Comparable<Transaction> {
 
 	private DomainTransformCommitPosition commitPosition;
 
+	/**
+	 * Rare case, when a map should be purely transactional for iterator/remove
+	 * reasons - during warmup, set this to true while populating
+	 */
+	private boolean populatingPureTransactional;
+
 	private Transaction(TransactionPhase initialPhase,
 			Transaction copyVisibleTransactionsFrom) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
@@ -469,6 +475,10 @@ public class Transaction implements Comparable<Transaction> {
 		return this.ended;
 	}
 
+	public boolean isPopulatingPureTransactional() {
+		return this.populatingPureTransactional;
+	}
+
 	public boolean isPreCommit() {
 		return phase == TransactionPhase.TO_DB_PREPARING;
 	}
@@ -504,6 +514,11 @@ public class Transaction implements Comparable<Transaction> {
 	 */
 	public void setBaseTransaction(boolean baseTransaction) {
 		this.baseTransaction = baseTransaction;
+	}
+
+	public void setPopulatingPureTransactional(
+			boolean populatingPureTransactional) {
+		this.populatingPureTransactional = populatingPureTransactional;
 	}
 
 	public void setTimeout(long timeout) {

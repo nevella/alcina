@@ -60,6 +60,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	Comparator<K> keyComparator;
 
+	boolean pureTransactional;
+
 	private int hash = 0;
 
 	/*
@@ -210,7 +212,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				|| valueClass.isAssignableFrom(value.getClass()));
 		V existing = get(key);
 		Transaction currentTransaction = Transaction.current();
-		if (currentTransaction.isBaseTransaction()) {
+		if (applyToBase(currentTransaction)) {
 			nonConcurrent.put(key, value);
 		} else {
 			// note this is transactional (as is size)
@@ -249,7 +251,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 		V existing = get(key);
 		Transaction currentTransaction = Transaction.current();
-		if (currentTransaction.isBaseTransaction()) {
+		if (applyToBase(currentTransaction)) {
 			nonConcurrent.remove(key);
 		} else {
 			ensureConcurrent(currentTransaction);
@@ -314,6 +316,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	private K unwrapTransactionalKey(Object key) {
 		return key == NULL_KEY_MARKER ? null : (K) key;
+	}
+
+	protected boolean applyToBase(Transaction currentTransaction) {
+		return !pureTransactional && currentTransaction.isBaseTransaction();
 	}
 
 	protected Map createConcurrentMap() {
@@ -574,15 +580,33 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				boolean inTransactionalIteratorPhase = layerIterator
 						.getCurrentIterator()
 						.getSource() == transactionalIterator;
+				// initial value not used
+				boolean visible = false;
 				if (transactionalValue != null) {
-					return inTransactionalIteratorPhase
-							&& transactionalValue.isNotRemoved();
+					if (inTransactionalIteratorPhase) {
+						boolean removed = transactionalValue.isRemoved();
+						visible = !removed;
+					} else {
+						// not visible during nonTransactionalPhase (since the
+						// 'real' value visible to this tx is the value
+						// reachable
+						// via field 'concurrent'
+						visible = false;
+					}
 				} else {
-					/*
-					 * if null and in tx iterator phase, the key was vacuumed
-					 */
-					return !inTransactionalIteratorPhase;
+					if (inTransactionalIteratorPhase) {
+						/*
+						 * if null and in tx iterator phase, the key was
+						 * vacuumed (during iteration over field 'concurrent')
+						 */
+						visible = false;
+					} else {
+						// most cases (created during domain warmup, unmodified)
+						// branch here
+						visible = true;
+					}
 				}
+				return visible;
 			};
 			return new FilteringIterator<>(layerIterator, notVisibleFilter);
 		}
@@ -649,7 +673,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	class SizeMetadata extends MvccObjectVersions<AtomicInteger> {
 		SizeMetadata(AtomicInteger t, Transaction initialTransaction) {
-			super(t, initialTransaction, false);
+			super(t, initialTransaction, pureTransactional);
 		}
 
 		public int delta(int delta) {
@@ -668,12 +692,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		protected AtomicInteger
-				initialAllTransactionsValueFor(AtomicInteger t) {
+		protected AtomicInteger initialAllTransactionsValueFor(AtomicInteger t,
+				boolean baseTransaction) {
 			/*
 			 * All txs begin with the size of the nonconcurrent map
 			 */
-			return new AtomicInteger(t.get());
+			return baseTransaction ? domainIdentity
+					: new AtomicInteger(t.get());
 		}
 
 		@Override
@@ -763,13 +788,18 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		/*
-		 * because possibly visible before version creation, the base must be
-		 * marked as 'removed'
-		 */
-		protected ObjectWrapper
-				initialAllTransactionsValueFor(ObjectWrapper t) {
-			return ObjectWrapper.of(REMOVED_VALUE_MARKER);
+		protected ObjectWrapper initialAllTransactionsValueFor(ObjectWrapper t,
+				boolean baseTransaction) {
+			// (if in baseTransaction/pureTransaction mode)
+			if (baseTransaction) {
+				return domainIdentity;
+			} else {
+				/*
+				 * because possibly visible before version creation, the base
+				 * must be marked as 'removed'
+				 */
+				return ObjectWrapper.of(REMOVED_VALUE_MARKER);
+			}
 		}
 
 		@Override
@@ -811,6 +841,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 						key));
 			}
 			return (V) version.get().object.get();
+		}
+
+		boolean isRemoved() {
+			return !isNotRemoved();
 		}
 
 		boolean isRemovedValueMarker(ObjectWrapper o) {

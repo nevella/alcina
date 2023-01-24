@@ -1,13 +1,17 @@
 package cc.alcina.framework.common.client.domain;
 
 public interface DomainListener<E> {
-	public abstract Class<? extends E> getListenedClass();
+	abstract Class<? extends E> getListenedClass();
 
-	public abstract void insert(E o);
+	abstract void insert(E o);
 
-	public boolean isEnabled();
+	boolean isEnabled();
 
-	public abstract void remove(E o);
+	default void onAddValues(boolean post) {
+		// debugging for specific metrics, rather than handling
+	}
 
-	public void setEnabled(boolean enabled);
+	abstract void remove(E o);
+
+	void setEnabled(boolean enabled);
 }

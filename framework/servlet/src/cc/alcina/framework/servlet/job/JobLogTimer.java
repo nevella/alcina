@@ -1,8 +1,11 @@
 package cc.alcina.framework.servlet.job;
 
+import java.util.Optional;
+
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.QueryResult;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -50,9 +53,13 @@ public class JobLogTimer implements DomainTransformPersistenceListener {
 			Class<? extends Job> jobImplClass = PersistentImpl
 					.getImplementation(Job.class);
 			if (collation.has(jobImplClass)) {
-				Job job = collation.query(jobImplClass).stream().findFirst()
-						.get().<Job> getEntity();
-				timer.triggerEventOccurred(job);
+				Optional<QueryResult> firstEntity = collation
+						.query(jobImplClass).stream()
+						.filter(QueryResult::hasNoDeleteTransform).findFirst();
+				firstEntity.ifPresent(qr -> {
+					Job job = qr.getEntity();
+					timer.triggerEventOccurred(job);
+				});
 			}
 		}
 		}
