@@ -24,6 +24,23 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
+/**
+ * <p>
+ * FIXME - dirndl 1x1e - stability + robustness
+ *
+ * <p>
+ * Two things can make this fail - confusing dom changes during mutation
+ * observation, or unobserved mutations during the gwt event loop
+ *
+ * <p>
+ * The first can be at least worked on with stress testing (and fixing
+ * attribute/cdata mods) - the latter is tricky. Possibly code review (all code
+ * that invokes external/nonlocaldom dom modifying js should be private except
+ * for public dispatch methods which just call inside LocalDom.invokeExternal
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class LocalDomMutations {
 	public static LogLevel logLevel = LogLevel.NONE;
 

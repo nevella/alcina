@@ -91,10 +91,10 @@ public class LocalDom {
 	public static void invokeExternal(Runnable runnable) {
 		flush();
 		try {
-			mutations.setDisabled(false);
+			mutations.startObserving();
 			runnable.run();
 		} finally {
-			mutations.setDisabled(true);
+			mutations.stopObserving();
 		}
 	}
 

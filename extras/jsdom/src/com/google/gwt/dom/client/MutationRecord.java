@@ -7,42 +7,42 @@ public class MutationRecord extends JavaScriptObject {
 	}
 
 	public final native NodeListRemote<Node> getAddedNodes() /*-{
-																return this.addedNodes;
-																}-*/;
+    return this.addedNodes;
+	}-*/;
 
 	public final native String getAttributeName() /*-{
-													return this.attributeName;
-													}-*/;
+    return this.attributeName;
+	}-*/;
 
 	public final native String getAttributeNamespace() /*-{
-														return this.attributeNamespace;
-														}-*/;
+    return this.attributeNamespace;
+	}-*/;
 
 	public final MutationRecordType getMutationRecordType() {
 		return MutationRecordType.valueOf(getType());
 	}
 
 	public final native NodeRemote getNextSibling() /*-{
-													return this.nextSibling;
-													}-*/;
+    return this.nextSibling;
+	}-*/;
 
 	public final native String getOldValue() /*-{
-												return this.oldValue;
-												}-*/;
+    return this.oldValue;
+	}-*/;
 
 	public final native NodeRemote getPreviousSibling() /*-{
-														return this.previousSibling;
-														}-*/;
+    return this.previousSibling;
+	}-*/;
 
 	public final native NodeListRemote<Node> getRemovedNodes() /*-{
-																return this.removedNodes;
-																}-*/;
+    return this.removedNodes;
+	}-*/;
 
 	public final native NodeRemote getTarget() /*-{
-												return this.target;
-												}-*/;
+    return this.target;
+	}-*/;
 
 	public final native String getType() /*-{
-											return this.type;
-											}-*/;
+    return this.type;
+	}-*/;
 }
