@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
  * All 'static' classes are a workaround for jsos not allowing default methods
- * 
+ *
  * @author nick@alcina.cc
  *
  */
@@ -87,7 +87,7 @@ class DomNodeStatic {
 					.valueOf(((LocalDomNode) node).node().remote().hashCode());
 		}
 		return Ax
-				.format("%s%s%s%s%s", "    ",
+				.format("%s%s%s%s%s%s", "    ",
 						CommonUtils.padStringRight(node.getNodeName(), 12, ' '),
 						"  ",
 						CommonUtils.padStringRight(

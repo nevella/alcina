@@ -64,6 +64,8 @@ public class LocalDom {
 
 	public static final Topic<String> topicUnableToParse = Topic.create();
 
+	private static boolean logParseAndMutationIssues = false;
+
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
 	}
@@ -125,6 +127,15 @@ public class LocalDom {
 
 	public static <T extends Node> T nodeFor(NodeRemote remote) {
 		return (T) get().nodeFor0(remote);
+	}
+
+	public static void onRelatedException(RuntimeException e) {
+		if (logParseAndMutationIssues) {
+			throw e;
+		} else {
+			// devmode only
+			Ax.simpleExceptionOut(e);
+		}
 	}
 
 	public static void register(Document doc) {
@@ -594,6 +605,9 @@ public class LocalDom {
 		if (!remote.provideIsElement()) {
 			return null;// say, shadowroot...
 		}
+		if (remote.getNodeName().equalsIgnoreCase("iframe")) {
+			return null;// SEP
+		}
 		ElementRemote elem = (ElementRemote) remote;
 		// if (elem.getTagNameRemote().equalsIgnoreCase("iframe")) {
 		// return null;// don't handle iframes
@@ -845,7 +859,6 @@ public class LocalDom {
 			return;
 		}
 		resolveCommand = null;
-		log(LocalDomDebug.RESOLVE, "**resolve**");
 		try {
 			resolving = true;
 			if (resolutionEventIdDirty) {

@@ -38,8 +38,23 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  * that invokes external/nonlocaldom dom modifying js should be private except
  * for public dispatch methods which just call inside LocalDom.invokeExternal
  *
+ * <p>
+ * There's also the complication of events in an iframe - crossframe scripting
+ * issues caused by focus transfer...drift [https://www.drift.com/] widgets are
+ * an example there.
+ *
  * @author nick@alcina.cc
  *
+ */
+/*
+ * @formatter:off
+ * stability plan (for an alcina ticket)
+    * full recording mode (don't disconnect - mark mutations as either expected or not, depending on whether within a
+      com.google.gwt.dom.client.Node call or not (direct calls to NodeRemote may need to be fixed)
+    * everything controlled by clientproperties
+    * tools replay (in jvm)
+    * (sky) possibly denote areas we care about, ignore outside - and get all <head> and <body> remotes on localdom connect
+ * @formatter:on
  */
 public class LocalDomMutations {
 	public static LogLevel logLevel = LogLevel.NONE;
@@ -111,7 +126,11 @@ public class LocalDomMutations {
 			return;
 		}
 		disconnectObserver();
-		checkReceivedRecords();
+		try {
+			checkReceivedRecords();
+		} catch (RuntimeException e) {
+			LocalDom.onRelatedException(e);
+		}
 		inGwtEventCycle = true;
 	}
 
@@ -138,11 +157,16 @@ public class LocalDomMutations {
     if (this.@LocalDomMutations::debugEntry
         || this.@LocalDomMutations::firstTimeConnect) {
       this.@LocalDomMutations::firstTimeConnect = false;
-      console.log("Mutation observer :: connected");
-      //      console.log($doc.documentElement.outerHTML);
+      this.@LocalDomMutations::logString(Ljava/lang/String;)("Mutation observer :: connected");
     }
     //clear the buffer and discard
-    this.@LocalDomMutations::observer.takeRecords();
+    var mutationsList = this.@LocalDomMutations::observer.takeRecords();
+    if (mutationsList.length > 0) {
+      console
+          .error("Warning - mutation observer :: had records (was not disconnected?)");
+          this.@LocalDomMutations::logWarning(Ljava/lang/String;)
+          ("Warning - mutation observer :: had records (was not disconnected?)");
+    }
     this.@LocalDomMutations::records = [];
 
     var config = {
@@ -156,15 +180,21 @@ public class LocalDomMutations {
 
 	private native void disconnectObserver() /*-{
     var mutationsList = this.@LocalDomMutations::observer.takeRecords();
-    if (mutationsList.length) {
-      //      console.log(mutationsList);
-    }
     this.@LocalDomMutations::records = this.@LocalDomMutations::records
         .concat(mutationsList);
-    if (!this.@LocalDomMutations::debugEntry) {
-      this.@LocalDomMutations::observerConnected = false;
-      this.@LocalDomMutations::observer.disconnect();
+    if (this.@LocalDomMutations::debugEntry) {
+      var hadMutations = mutationsList.length > 0 ? "t" : "f";
+      this.@LocalDomMutations::logString(Ljava/lang/String;)(
+          "Mutation observer :: disconnected  - mutations: " + hadMutations);
     }
+    if (!this.@LocalDomMutations::observerConnected
+        && !this.@LocalDomMutations::firstTimeConnect) {
+        	console.error("Mutation observer :: warning  - was not connected ");
+      this.@LocalDomMutations::logWarning(Ljava/lang/String;)(
+          "Mutation observer :: warning  - was not connected ");
+    }
+    this.@LocalDomMutations::observerConnected = false;
+    this.@LocalDomMutations::observer.disconnect();
 	}-*/;
 
 	private void log(Supplier<String> messageSupplier) {
@@ -177,9 +207,17 @@ public class LocalDomMutations {
 			break;
 		case ALL:
 			System.out.println(messageSupplier.get());
-			LocalDom.consoleLog(messageSupplier.get());
+			LocalDom.consoleLog0(messageSupplier.get());
 			break;
 		}
+	}
+
+	private void logString(String jsMessage) {
+		log(() -> jsMessage);
+	}
+
+	private void logWarning(String jsMessage) {
+		Ax.err(jsMessage);
 	}
 
 	private native void setupObserver() /*-{
@@ -190,12 +228,8 @@ public class LocalDomMutations {
       return;
     }
     this.@LocalDomMutations::documentElement = $doc.documentElement;
-    //console.log(this.@LocalDomMutations::documentElement);
     var _this = this;
     var callback = function(mutationsList, observer) {
-      if (mutationsList.length) {
-        //        console.log(mutationsList);
-      }
       _this.@LocalDomMutations::records = _this.@LocalDomMutations::records
           .concat(mutationsList);
     };
@@ -208,7 +242,6 @@ public class LocalDomMutations {
 	void handleMutations(JsArray<MutationRecord> records) {
 		try {
 			handleMutations0(records);
-			// LocalDom.consoleLog(Document.get().getDocumentElement().dump(true));
 		} catch (Throwable e) {
 			GWT.log("Exception in handleMutations", e);
 			e.printStackTrace();
@@ -216,6 +249,14 @@ public class LocalDomMutations {
 		}
 	}
 
+	/**
+	 * <p>
+	 * THe grouping of operations into the modifiedContainers structure is key.
+	 * We can't just iterate through transforms because the nodes they apply to
+	 * may not even exist (in the initial localdom) - so we must iterate on
+	 * *final* node location. If that node is attached, we write, otherwise
+	 * not...
+	 */
 	void handleMutations0(JsArray<MutationRecord> records) {
 		log(() -> Ax.format("Jv records: %s", records.length()));
 		String outerHtml = Document.get().typedRemote().getDocumentElement0()
@@ -234,8 +275,8 @@ public class LocalDomMutations {
 		Multimap<NodeRemote, List<MutationRecord>> modifiedContainers = new Multimap<>();
 		List<MutationRecord> typedRecords = ClientUtils
 				.jsArrayToTypedArray(records);
-		// String combinedLogString = new ChildModificationHistory(null,
-		// typedRecords).toLogString();
+		String combinedLogString = new ChildModificationHistory(null,
+				typedRecords).toLogString();
 		typedRecords.forEach(record -> {
 			{
 				modifiedContainers.add(record.getTarget(), record);
@@ -349,6 +390,7 @@ public class LocalDomMutations {
 							.shortLog(history.preObservedState().children)));
 			log(() -> Ax.format("Mutations:\n%s", history.toLogString()));
 			if (insertionPointLocalChildrenSize != preObservedSize) {
+				log(() -> "...insertionPointLocalChildrenSize != preObservedSize :: throw. possible missed mutations");
 				Preconditions.checkState(
 						insertionPointLocalChildrenSize == preObservedSize);
 			}
