@@ -729,7 +729,14 @@ public class DomainStore implements IDomainStore {
 			if (visible != null) {
 				return visible;
 			}
-			Entity existing = cache.getAnyTransaction(clazz, id);
+			Entity existing = null;
+			try {
+				existing = cache.getAnyTransaction(clazz, id);
+			} catch (RuntimeException e) {
+				logger.warn("Exception in ensureEntity :: {}/{}/{}",
+						clazz.getSimpleName(), id, localId);
+				throw e;
+			}
 			// the Transactions.resolve calls force a visible version
 			if (existing != null) {
 				Transactions.resolve(existing, ResolvedVersionState.WRITE,
