@@ -549,6 +549,10 @@ public class Transactions {
 	}
 
 	public class TransactionsStats {
+		public void debugVacuum() {
+			vacuum.debug();
+		}
+
 		public String describeTransactions() {
 			FormatBuilder fb = new FormatBuilder();
 			synchronized (transactionMetadataLock) {
@@ -578,6 +582,10 @@ public class Transactions {
 			}
 		}
 
+		public Thread getActiveVacuumThread() {
+			return vacuum.getActiveThread();
+		}
+
 		public long getOldestTxStartTime() {
 			synchronized (transactionMetadataLock) {
 				return committedTransactions.isEmpty() ? 0L
@@ -598,10 +606,6 @@ public class Transactions {
 
 		public long getVacuumQueueLength() {
 			return vacuum.vacuumables.size();
-		}
-
-		public Thread getVacuumThread() {
-			return vacuum.getVacuumThread();
 		}
 	}
 }

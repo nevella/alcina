@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.SEUtilities;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -38,6 +39,8 @@ class Vacuum {
 
 	private Thread vacuumThread = null;
 
+	private Thread activeThread = null;
+
 	volatile boolean finished = false;
 
 	public Vacuum() {
@@ -49,8 +52,13 @@ class Vacuum {
 		events.add(transaction);
 	}
 
+	public Thread getActiveThread() {
+		return this.activeThread;
+	}
+
 	/*
-	 * synchronized semantic - only called from single-thread executor
+	 * synchronized is purely semantic - since this is only called from
+	 * single-thread executor anyway
 	 */
 	private synchronized void vacuum() {
 		while (paused) {
@@ -63,7 +71,7 @@ class Vacuum {
 		try {
 			Transaction.begin(TransactionPhase.VACUUM_BEGIN);
 			Transaction.reapUnreferencedTransactions();
-			vacuumThread = Thread.currentThread();
+			activeThread = Thread.currentThread();
 			vacuumStarted = System.currentTimeMillis();
 			boolean debugLevelLogging = vacuumables.size() > 0;
 			if (debugLevelLogging) {
@@ -100,11 +108,13 @@ class Vacuum {
 			Transaction.current().toVacuumEnded(vacuumableTransactionList);
 			// TMP - log long-running
 			if (System.currentTimeMillis() - vacuumStarted > 500) {
-				logger.warn("Long-running vacuum - {} transactions; {} objects",
-						vacuumableTransactionList.size(), toVacuum.size());
+				logger.warn(
+						"Long-running vacuum - {} transactions; {} objects; thread {}",
+						vacuumableTransactionList.size(), toVacuum.size(),
+						activeThread);
 			}
 			vacuumStarted = 0;
-			vacuumThread = null;
+			activeThread = null;
 			if (debugLevelLogging) {
 				logger.debug("vacuum: end");
 			}
@@ -127,12 +137,17 @@ class Vacuum {
 				.add(vacuumable);
 	}
 
-	long getVacuumStarted() {
-		return this.vacuumStarted;
+	void debug() {
+		try {
+			logger.warn("debug missing active vacuum thread");
+			Ax.out(SEUtilities.getFullStacktrace(vacuumThread));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
-	Thread getVacuumThread() {
-		return this.vacuumThread;
+	long getVacuumStarted() {
+		return this.vacuumStarted;
 	}
 
 	void shutdown() {

@@ -1227,12 +1227,17 @@ public class DomainStore implements IDomainStore {
 
 		public long getTimeInVacuum() {
 			long time = Transactions.stats().getTimeInVacuum();
-			Thread vacuumThread = Transactions.stats().getVacuumThread();
-			if (time > 100 && vacuumThread != null) {
-				logger.info("Long vacuum time - {} ms - {}\n{}\n\n", time,
-						vacuumThread,
-						SEUtilities.getStacktraceSlice(vacuumThread,
-								LONG_POST_PROCESS_TRACE_LENGTH, 0));
+			Thread vacuumThread = Transactions.stats().getActiveVacuumThread();
+			if (time > 100) {
+				if (vacuumThread != null) {
+					logger.info("Long vacuum time - {} ms - {}\n{}\n\n", time,
+							vacuumThread,
+							SEUtilities.getStacktraceSlice(vacuumThread,
+									LONG_POST_PROCESS_TRACE_LENGTH, 0));
+				} else {
+					// very unlikely this is null...wazzup?
+					Transactions.stats().debugVacuum();
+				}
 			}
 			return time;
 		}

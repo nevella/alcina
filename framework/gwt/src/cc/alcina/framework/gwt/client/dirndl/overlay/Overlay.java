@@ -154,7 +154,11 @@ public class Overlay extends Model.WithNode implements
 			return new Actions().withOk();
 		}
 
-		private final List<Link> actions = new ArrayList<>();
+		/*
+		 * Removed final to avoid GWT serialization warnings - for the moment
+		 */
+		// private final List<Link> actions = new ArrayList<>();
+		private List<Link> actions = new ArrayList<>();
 
 		@Override
 		public void add(Link link) {
