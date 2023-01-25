@@ -125,6 +125,8 @@ public class CommonUtils {
 					Void.class)
 			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
+	private static DateAdjustment dateAdjustment;
+
 	public static void addIfNotNull(List l, Object o) {
 		if (o != null) {
 			l.add(o);
@@ -661,6 +663,10 @@ public class CommonUtils {
 		if (date == null) {
 			return nullMarker;
 		}
+		DateAdjustment dateAdjustment = getDateAdjustment();
+		if (dateAdjustment != null) {
+			date = dateAdjustment.adjust(date);
+		}
 		switch (style) {
 		case AU_DATE_SLASH:
 			return format("%s/%s/%s", padTwo(date.getDate()),
@@ -817,6 +823,10 @@ public class CommonUtils {
 			}
 		}
 		return null;
+	}
+
+	public static DateAdjustment getDateAdjustment() {
+		return dateAdjustment;
 	}
 
 	public static Class<? extends Enum> getEnumType(Enum e) {
@@ -1605,6 +1615,14 @@ public class CommonUtils {
 		}
 	}
 
+	/*
+	 * This controls how dates are *rendered* (including in editors) - not their
+	 * general representation
+	 */
+	public static void setDateAdjustment(DateAdjustment dateAdjustment) {
+		CommonUtils.dateAdjustment = dateAdjustment;
+	}
+
 	public static <T> Set<T> setOf(T... values) {
 		return new LinkedHashSet<T>(Arrays.asList(values));
 	}
@@ -2117,6 +2135,23 @@ public class CommonUtils {
 		}
 	}
 
+	public static class DateAdjustment {
+		public TimezoneData localData;
+
+		public TimezoneData adjustToData;
+
+		public DateAdjustment(TimezoneData adjustToData) {
+			this.adjustToData = adjustToData;
+			localData = new TimezoneData();
+		}
+
+		public Date adjust(Date date) {
+			return new Date(date.getTime()
+					+ localData.utcMinutes * TimeConstants.ONE_MINUTE_MS
+					- adjustToData.utcMinutes * TimeConstants.ONE_MINUTE_MS);
+		}
+	}
+
 	public enum DateStyle {
 		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
 		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
@@ -2187,6 +2222,19 @@ public class CommonUtils {
 		public String toString() {
 			return format("First: %s\nBoth: %s\nSecond: %s", firstOnly,
 					intersection, secondOnly);
+		}
+	}
+
+	public static class TimezoneData {
+		public String timeZone;
+
+		public int utcMinutes;
+
+		@SuppressWarnings("deprecation")
+		public TimezoneData() {
+			utcMinutes = new Date().getTimezoneOffset();
+			// FIXME
+			timeZone = "local";
 		}
 	}
 
