@@ -44,7 +44,7 @@ public class LoginRequest extends Bindable {
 		return this.recoverPassword;
 	}
 
-	@Display()
+	@Display
 	public boolean isRememberMe() {
 		return this.rememberMe;
 	}

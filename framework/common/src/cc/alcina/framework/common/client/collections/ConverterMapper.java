@@ -96,7 +96,7 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 						+ propertyName.substring(1).replace("ID", "Id"));
 	}
 
-	public class BidiConverterAdapter extends BidiConverter<A, B> {
+	public class BidiConverterAdapter implements BidiConverter<A, B> {
 		@Override
 		public B leftToRight(A a) {
 			return convert(a);
