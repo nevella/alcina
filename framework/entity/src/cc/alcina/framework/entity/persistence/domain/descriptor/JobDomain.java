@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -347,6 +349,10 @@ public class JobDomain {
 
 	public void removeAllocationQueue(Job job) {
 		AllocationQueue queue = queues.remove(job);
+	}
+
+	public Map<Class<? extends Task>, Integer> taskCountByTaskClass() {
+		return jobDescriptor.futureTaskProjection.taskCountByTaskClass();
 	}
 
 	private void cleanupQueues() {
@@ -1354,6 +1360,18 @@ public class JobDomain {
 			protected Object[] project(Job job) {
 				return new Object[] { job.getTaskClassName(),
 						job.getTaskSerialized(), job.getId(), job };
+			}
+
+			Map<Class<? extends Task>, Integer> taskCountByTaskClass() {
+				Map<Class<? extends Task>, Integer> result = new LinkedHashMap<>();
+				getLookup().typedKeySet(String.class).stream().sorted()
+						.forEach(className -> {
+							Class<? extends Task> taskClass = Reflections
+									.forName(className);
+							result.put(taskClass,
+									getLookup().keys(className).size());
+						});
+				return result;
 			}
 		}
 	}

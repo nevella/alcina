@@ -70,14 +70,6 @@ class TowardsAMoreDesirableSituation {
 		events.add(new Event(Type.SCHEDULER_EVENT));
 	}
 
-	private boolean canAllocate() {
-		return activeJobs.size() < JobRegistry.get().jobExecutors
-				.getMaxConsistencyJobCount()
-				&& JobRegistry.get().getActiveJobCount() < ResourceUtilities
-						.getInteger(TowardsAMoreDesirableSituation.class,
-								"maxVmActiveJobCount");
-	}
-
 	private void futureToPending(Optional<Job> next) {
 		Timestamp entryRequiredTimestamp = JobRegistry.get()
 				.getJobMetadataLockTimestamp(getClass().getSimpleName());
@@ -128,29 +120,7 @@ class TowardsAMoreDesirableSituation {
 		if (!ResourceUtilities.is("enabled")) {
 			return;
 		}
-		activeJobs.removeIf(
-				j -> j.domain().wasRemoved() || j.provideIsSequenceComplete());
-		boolean delta = false;
-		while (canAllocate()) {
-			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
-					.isPresent()) {
-				JobRegistry.get()
-						.withJobMetadataLock(getClass().getSimpleName(), () -> {
-							// allocate in bulk while holding lock
-							while (canAllocate()) {
-								Optional<Job> next = JobDomain.get()
-										.getFutureConsistencyJobs().findFirst();
-								if (next.isPresent()) {
-									futureToPending(next);
-								} else {
-									break;
-								}
-							}
-						});
-			} else {
-				break;
-			}
-		}
+		new TendPass().execute();
 	}
 
 	public class ProcessorThread extends Thread {
@@ -190,6 +160,65 @@ class TowardsAMoreDesirableSituation {
 
 		public Event(Type type) {
 			this.type = type;
+		}
+	}
+
+	class TendPass {
+		long start;
+
+		int activeJobsRemoved;
+
+		long canAllocateTime;
+
+		long lockAcquisititionTime;
+
+		int loopCount;
+
+		private boolean canAllocate() {
+			long start = System.nanoTime();
+			try {
+				return activeJobs.size() < JobRegistry.get().jobExecutors
+						.getMaxConsistencyJobCount()
+						&& JobRegistry.get()
+								.getActiveJobCount() < ResourceUtilities
+										.getInteger(
+												TowardsAMoreDesirableSituation.class,
+												"maxVmActiveJobCount");
+			} finally {
+				canAllocateTime += (System.nanoTime() - start);
+			}
+		}
+
+		void execute() {
+			start = System.currentTimeMillis();
+			activeJobsRemoved = activeJobs.size();
+			activeJobs.removeIf(j -> j.domain().wasRemoved()
+					|| j.provideIsSequenceComplete());
+			activeJobsRemoved -= activeJobs.size();
+			boolean delta = false;
+			while (canAllocate()) {
+				long start = System.nanoTime();
+				if (JobDomain.get().getFutureConsistencyJobs().findFirst()
+						.isPresent()) {
+					canAllocateTime += (System.nanoTime() - start);
+					JobRegistry.get().withJobMetadataLock(
+							getClass().getSimpleName(), () -> {
+								// allocate in bulk while holding lock
+								while (canAllocate()) {
+									Optional<Job> next = JobDomain.get()
+											.getFutureConsistencyJobs()
+											.findFirst();
+									if (next.isPresent()) {
+										futureToPending(next);
+									} else {
+										break;
+									}
+								}
+							});
+				} else {
+					break;
+				}
+			}
 		}
 	}
 
