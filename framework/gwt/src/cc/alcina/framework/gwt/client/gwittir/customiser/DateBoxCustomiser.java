@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -45,55 +45,6 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 
 	private boolean editable;
 
-	public static class UtcDateRenderer implements Renderer<Date, String> {
-		@Override
-		public String render(Date date) {
-			return date == null ? "" : render0(date.getTime());
-		}
-
-		public static final native String render0(double millis) /*-{
-																	var jsDate = new Date(millis);
-																	function pad(n) {
-																	return n < 10 ? '0' + n : '' + n;
-																	}
-																	return jsDate.getUTCFullYear() + "-" + pad(jsDate.getUTCMonth() + 1)
-																	+ "-" + pad(jsDate.getUTCDate());
-																	
-																	}-*/;
-	}
-
-	@Reflected
-	public static class ISO_8601_DateRenderer
-			implements Renderer<Date, String> {
-		@Override
-		public String render(Date date) {
-			return date == null ? ""
-					: DateTimeFormat.getFormat(PredefinedFormat.ISO_8601)
-							.format(date);
-		}
-	}
-
-	public static class UtcLocalDateTranslator
-			extends BidiConverter<Date, Date> {
-		@Override
-		public Date leftToRight(Date a) {
-			if (a == null) {
-				return null;
-			}
-			int tzOffsetMinutes = ClientUtils.getDateTzOffsetMinutes();
-			return new Date(a.getTime() + tzOffsetMinutes * 60 * 1000);
-		}
-
-		@Override
-		public Date rightToLeft(Date b) {
-			if (b == null) {
-				return null;
-			}
-			int tzOffsetMinutes = ClientUtils.getDateTzOffsetMinutes();
-			return new Date(b.getTime() - tzOffsetMinutes * 60 * 1000);
-		}
-	}
-
 	@Override
 	public BoundWidget get() {
 		if (utc) {
@@ -123,6 +74,7 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 		}
 	}
 
+	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		this.editable = editable;
@@ -130,5 +82,54 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 		iso8601 = NamedParameter.Support.booleanValue(info.parameters(),
 				ISO_8601);
 		return this;
+	}
+
+	@Reflected
+	public static class ISO_8601_DateRenderer
+			implements Renderer<Date, String> {
+		@Override
+		public String render(Date date) {
+			return date == null ? ""
+					: DateTimeFormat.getFormat(PredefinedFormat.ISO_8601)
+							.format(date);
+		}
+	}
+
+	public static class UtcDateRenderer implements Renderer<Date, String> {
+		public static final native String render0(double millis) /*-{
+      var jsDate = new Date(millis);
+      function pad(n) {
+        return n < 10 ? '0' + n : '' + n;
+      }
+      return jsDate.getUTCFullYear() + "-" + pad(jsDate.getUTCMonth() + 1)
+          + "-" + pad(jsDate.getUTCDate());
+
+		}-*/;
+
+		@Override
+		public String render(Date date) {
+			return date == null ? "" : render0(date.getTime());
+		}
+	}
+
+	public static class UtcLocalDateTranslator
+			implements BidiConverter<Date, Date> {
+		@Override
+		public Date leftToRight(Date a) {
+			if (a == null) {
+				return null;
+			}
+			int tzOffsetMinutes = ClientUtils.getDateTzOffsetMinutes();
+			return new Date(a.getTime() + tzOffsetMinutes * 60 * 1000);
+		}
+
+		@Override
+		public Date rightToLeft(Date b) {
+			if (b == null) {
+				return null;
+			}
+			int tzOffsetMinutes = ClientUtils.getDateTzOffsetMinutes();
+			return new Date(b.getTime() - tzOffsetMinutes * 60 * 1000);
+		}
 	}
 }

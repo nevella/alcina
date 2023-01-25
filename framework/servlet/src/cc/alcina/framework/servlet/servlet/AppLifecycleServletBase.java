@@ -11,11 +11,14 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -54,6 +57,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.TimezoneData;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -653,6 +657,21 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected boolean usesJobs() {
 		return true;
+	}
+
+	public static class TimezoneDataProviderServlet
+			implements TimezoneData.Provider {
+		@Override
+		public TimezoneData getTimezoneData() {
+			TimezoneData localData = new TimezoneData();
+			TimeZone tz = TimeZone.getDefault();
+			Calendar cal = GregorianCalendar.getInstance(tz);
+			// minus normalises to how .js defines it
+			int offsetInMillis = -tz.getOffset(cal.getTimeInMillis());
+			localData.setTimeZone(tz.getDisplayName());
+			localData.setUtcMinutes(offsetInMillis / 60 / 1000);
+			return localData;
+		}
 	}
 
 	/*

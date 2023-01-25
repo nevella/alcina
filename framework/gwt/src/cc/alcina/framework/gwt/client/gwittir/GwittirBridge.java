@@ -92,6 +92,8 @@ public class GwittirBridge {
 
 	public static final String HINT_DATE_WITH_TIME_TITLE = "HINT_DATE_WITH_TIME_TITLE";
 
+	public static final String HINT_DATE_WITH_TIME_TITLE_TZ = "HINT_DATE_WITH_TIME_TITLE_TZ";
+
 	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY = new BoundWidgetTypeFactorySimpleGenerator();
 
 	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY_NO_NULLS = new BoundWidgetTypeFactorySimpleGenerator(
@@ -145,12 +147,32 @@ public class GwittirBridge {
 		}
 	};
 
+	public static final BoundWidgetProvider AU_DATE_TIME_TITLE_PROVIDER_TZ = new BoundWidgetProvider() {
+		@Override
+		public BoundWidget get() {
+			RenderingLabel label = new RenderingLabel();
+			label.setWordWrap(false);
+			label.setRenderer(DATE_SLASH_RENDERER_WITH_NULL);
+			label.setTitleRenderer(DATE_TIME_RENDERER_TZ);
+			return label;
+		}
+	};
+
 	public static final Renderer DATE_TIME_RENDERER = new Renderer() {
 		@Override
 		public Object render(Object o) {
 			Date d = (Date) o;
 			return d == null ? ""
 					: CommonUtils.formatDate(d, DateStyle.AU_DATE_TIME);
+		}
+	};
+
+	public static final Renderer DATE_TIME_RENDERER_TZ = new Renderer() {
+		@Override
+		public Object render(Object o) {
+			Date d = (Date) o;
+			return d == null ? ""
+					: CommonUtils.formatDate(d, DateStyle.AU_DATE_TIME_TZ);
 		}
 	};
 
@@ -183,6 +205,8 @@ public class GwittirBridge {
 	};
 
 	public static final BoundWidgetProvider FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE = new FriendlyEnumLabelProvider();
+
+	private static boolean renderDatesWithTimezoneTitle;
 
 	public static BoundWidget createWidget(Binding parent, Field field,
 			SourcesPropertyChangeEvents target, Object model) {
@@ -246,6 +270,15 @@ public class GwittirBridge {
 		return null;
 	}
 
+	public static boolean isRenderDatesWithTimezoneTitle() {
+		return renderDatesWithTimezoneTitle;
+	}
+
+	public static void setRenderDatesWithTimezoneTitle(
+			boolean renderDatesWithTimezoneTitle) {
+		GwittirBridge.renderDatesWithTimezoneTitle = renderDatesWithTimezoneTitle;
+	}
+
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
 	{
 		validatorMap.put(Integer.class, IntegerValidator.INSTANCE);
@@ -282,8 +315,7 @@ public class GwittirBridge {
 		factory.add(Date.class, new DateBoxProvider());
 		List<Field> fields = new ArrayList<Field>();
 		Class<? extends Object> clazz = obj.getClass();
-		ClassReflector<? extends Object> classReflector = Reflections
-				.at(clazz);
+		ClassReflector<? extends Object> classReflector = Reflections.at(clazz);
 		Bean beanInfo = classReflector.annotation(Bean.class);
 		classReflector.properties().stream().map(property -> {
 			String pn = property.getName();
@@ -747,10 +779,16 @@ public class GwittirBridge {
 
 	public static class GwittirDateRendererProvider {
 		public BoundWidgetProvider getRenderer(Display display) {
-			if (display.rendererHint().equals(HINT_DATE_WITH_TIME_TITLE)) {
+			String rendererHint = display.rendererHint();
+			switch (display.rendererHint()) {
+			case HINT_DATE_WITH_TIME_TITLE:
 				return AU_DATE_TIME_TITLE_PROVIDER;
-			} else {
-				return AU_DATE_PROVIDER;
+			case HINT_DATE_WITH_TIME_TITLE_TZ:
+				return AU_DATE_TIME_TITLE_PROVIDER_TZ;
+			default:
+				return renderDatesWithTimezoneTitle
+						? AU_DATE_TIME_TITLE_PROVIDER_TZ
+						: AU_DATE_PROVIDER;
 			}
 		}
 	}

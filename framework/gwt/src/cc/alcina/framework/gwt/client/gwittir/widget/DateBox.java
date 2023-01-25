@@ -28,6 +28,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.collections.BidiConverter;
 import cc.alcina.framework.common.client.collections.BidiConverter.BidiIdentityConverter;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateAdjustment;
 
 /**
  * This class is a bit hacked, to support Gwittir validation. It requires an
@@ -157,7 +159,12 @@ public class DateBox extends AbstractBoundWidget<Date>
 	public static class DateBoxProvider implements BoundWidgetProvider {
 		@Override
 		public DateBox get() {
-			return new DateBox();
+			DateBox dateBox = new DateBox();
+			DateAdjustment dateAdjustment = CommonUtils.getDateAdjustment();
+			if (dateAdjustment != null) {
+				dateBox.setDateTranslator(dateAdjustment);
+			}
+			return dateBox;
 		}
 	}
 }

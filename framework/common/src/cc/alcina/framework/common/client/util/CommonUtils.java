@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.BidiConverter;
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
@@ -657,110 +658,9 @@ public class CommonUtils {
 		return formatDate(date, style, " ");
 	}
 
-	@SuppressWarnings("deprecation")
 	public static String formatDate(Date date, DateStyle style,
 			String nullMarker) {
-		if (date == null) {
-			return nullMarker;
-		}
-		DateAdjustment dateAdjustment = getDateAdjustment();
-		if (dateAdjustment != null) {
-			date = dateAdjustment.adjust(date);
-		}
-		switch (style) {
-		case AU_DATE_SLASH:
-			return format("%s/%s/%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
-		case US_DATE_SLASH:
-			return format("%s/%s/%s", padTwo(date.getMonth() + 1),
-					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
-		case AU_DATE_SLASH_MONTH:
-			return format("%s/%s", padTwo(date.getMonth() + 1),
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_DOT:
-			return format("%s.%s.%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
-		case AU_DATE_TIME:
-			return format("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()));
-		case AU_DATE_TIME_HUMAN:
-			return formatDate(date, DateStyle.AU_LONG_DAY) + format(
-					" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1),
-					padTwo(date.getMinutes()),
-					date.getHours() < 12 ? "AM" : "PM");
-		case NAMED_MONTH_DATE_TIME_HUMAN:
-			return formatDate(date, DateStyle.NAMED_MONTH_DAY) + format(
-					" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1),
-					padTwo(date.getMinutes()),
-					date.getHours() < 12 ? "AM" : "PM");
-		case NAMED_MONTH_DAY:
-			return format("%s, %s %s %s", DAY_NAMES[date.getDay()],
-					MONTH_NAMES[date.getMonth() + 1], padTwo(date.getDate()),
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_TIME_MS:
-			return format("%s/%s/%s - %s:%s:%s:%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()), date.getTime() % 1000);
-		case AU_DATE_MONTH:
-			return format("%s %s %s", padTwo(date.getDate()),
-					MONTH_NAMES[date.getMonth() + 1],
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_MONTH_NO_PAD_DAY:
-			return format("%s %s %s", date.getDate(),
-					MONTH_NAMES[date.getMonth() + 1],
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_MONTH_DAY:
-			return format("%s %s, %s", MONTH_NAMES[date.getMonth() + 1],
-					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
-		case AU_SHORT_MONTH:
-			return format("%s %s %s", date.getDate(),
-					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
-					padTwo(date.getYear() + 1900));
-		case AU_SHORT_MONTH_SLASH:
-			return format("%s/%s/%s", padTwo(date.getDate()),
-					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
-					padTwo(date.getYear() + 1900));
-		case AU_SHORT_DAY:
-			return format("%s - %s.%s.%s",
-					DAY_NAMES[date.getDay()].substring(0, 3),
-					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
-					padTwo(date.getYear() + 1900));
-		case AU_LONG_DAY:
-			return format("%s, %s.%s.%s", DAY_NAMES[date.getDay()],
-					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
-					padTwo(date.getYear() + 1900));
-		case TIMESTAMP:
-			return format("%s%s%s_%s%s%s_%s", padTwo(date.getYear() + 1900),
-					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()),
-					padThree((int) (date.getTime() % 1000)));
-		case TIMESTAMP_HUMAN:
-			return format("%s.%s.%s %s:%s:%s", padTwo(date.getYear() + 1900),
-					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()));
-		case TIMESTAMP_NO_DAY:
-			return format("%s:%s:%s,%s", padTwo(date.getHours()),
-					padTwo(date.getMinutes()), padTwo(date.getSeconds()),
-					padThree((int) (date.getTime() % 1000)));
-		case AU_SHORT_MONTH_NO_DAY:
-			return format("%s %s",
-					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_TIME_SHORT:
-			return format("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()));
-		case DATESTAMP_HUMAN:
-			return format("%s.%s.%s", padTwo(date.getYear() + 1900),
-					padTwo(date.getMonth() + 1), padTwo(date.getDate()));
-		}
-		return date.toString();
+		return formatDate(date, style, nullMarker, null);
 	}
 
 	public static String formatNumbered(String source, Object... args) {
@@ -2073,6 +1973,134 @@ public class CommonUtils {
 		return id != null && id == 0 ? null : id;
 	}
 
+	@SuppressWarnings("deprecation")
+	private static String formatDate(Date date, DateStyle style,
+			String nullMarker, DateAdjustmentModifier dateAdjustmentModifier) {
+		if (date == null) {
+			return nullMarker;
+		}
+		DateAdjustment dateAdjustment = getDateAdjustment();
+		if (dateAdjustment != null
+				&& dateAdjustmentModifier != DateAdjustmentModifier.LOCAL_TZ) {
+			switch (style) {
+			case AU_DATE_TIME_TZ:
+				if (dateAdjustmentModifier == null) {
+					String local = formatDate(date, style, nullMarker,
+							DateAdjustmentModifier.LOCAL_TZ);
+					String adjustTo = formatDate(date, style, nullMarker,
+							DateAdjustmentModifier.ADJUST_TO_TZ);
+					return Ax.format("%s <-- local: %s", adjustTo, local);
+				}
+			default:
+				break;
+			}
+			date = dateAdjustment.adjust(date, true);
+		}
+		switch (style) {
+		case AU_DATE_SLASH:
+			return format("%s/%s/%s", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
+		case US_DATE_SLASH:
+			return format("%s/%s/%s", padTwo(date.getMonth() + 1),
+					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
+		case AU_DATE_SLASH_MONTH:
+			return format("%s/%s", padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900));
+		case AU_DATE_DOT:
+			return format("%s.%s.%s", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
+		case AU_DATE_TIME:
+			return format("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
+					padTwo(date.getHours()), padTwo(date.getMinutes()),
+					padTwo(date.getSeconds()));
+		case AU_DATE_TIME_TZ: {
+			String formatted = format("%s/%s/%s - %s:%s:%s",
+					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900), padTwo(date.getHours()),
+					padTwo(date.getMinutes()), padTwo(date.getSeconds()));
+			String suffix = dateAdjustment == null ? ""
+					: dateAdjustment.toSuffix(dateAdjustmentModifier);
+			return formatted + suffix;
+		}
+		case AU_DATE_TIME_HUMAN:
+			return formatDate(date, DateStyle.AU_LONG_DAY) + format(
+					" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1),
+					padTwo(date.getMinutes()),
+					date.getHours() < 12 ? "AM" : "PM");
+		case NAMED_MONTH_DATE_TIME_HUMAN:
+			return formatDate(date, DateStyle.NAMED_MONTH_DAY) + format(
+					" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1),
+					padTwo(date.getMinutes()),
+					date.getHours() < 12 ? "AM" : "PM");
+		case NAMED_MONTH_DAY:
+			return format("%s, %s %s %s", DAY_NAMES[date.getDay()],
+					MONTH_NAMES[date.getMonth() + 1], padTwo(date.getDate()),
+					padTwo(date.getYear() + 1900));
+		case AU_DATE_TIME_MS:
+			return format("%s/%s/%s - %s:%s:%s:%s", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
+					padTwo(date.getHours()), padTwo(date.getMinutes()),
+					padTwo(date.getSeconds()), date.getTime() % 1000);
+		case AU_DATE_MONTH:
+			return format("%s %s %s", padTwo(date.getDate()),
+					MONTH_NAMES[date.getMonth() + 1],
+					padTwo(date.getYear() + 1900));
+		case AU_DATE_MONTH_NO_PAD_DAY:
+			return format("%s %s %s", date.getDate(),
+					MONTH_NAMES[date.getMonth() + 1],
+					padTwo(date.getYear() + 1900));
+		case AU_DATE_MONTH_DAY:
+			return format("%s %s, %s", MONTH_NAMES[date.getMonth() + 1],
+					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
+		case AU_SHORT_MONTH:
+			return format("%s %s %s", date.getDate(),
+					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
+					padTwo(date.getYear() + 1900));
+		case AU_SHORT_MONTH_SLASH:
+			return format("%s/%s/%s", padTwo(date.getDate()),
+					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
+					padTwo(date.getYear() + 1900));
+		case AU_SHORT_DAY:
+			return format("%s - %s.%s.%s",
+					DAY_NAMES[date.getDay()].substring(0, 3),
+					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900));
+		case AU_LONG_DAY:
+			return format("%s, %s.%s.%s", DAY_NAMES[date.getDay()],
+					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900));
+		case TIMESTAMP:
+			return format("%s%s%s_%s%s%s_%s", padTwo(date.getYear() + 1900),
+					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
+					padTwo(date.getHours()), padTwo(date.getMinutes()),
+					padTwo(date.getSeconds()),
+					padThree((int) (date.getTime() % 1000)));
+		case TIMESTAMP_HUMAN:
+			return format("%s.%s.%s %s:%s:%s", padTwo(date.getYear() + 1900),
+					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
+					padTwo(date.getHours()), padTwo(date.getMinutes()),
+					padTwo(date.getSeconds()));
+		case TIMESTAMP_NO_DAY:
+			return format("%s:%s:%s,%s", padTwo(date.getHours()),
+					padTwo(date.getMinutes()), padTwo(date.getSeconds()),
+					padThree((int) (date.getTime() % 1000)));
+		case AU_SHORT_MONTH_NO_DAY:
+			return format("%s %s",
+					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
+					padTwo(date.getYear() + 1900));
+		case AU_DATE_TIME_SHORT:
+			return format("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
+					padTwo(date.getHours()), padTwo(date.getMinutes()),
+					padTwo(date.getSeconds()));
+		case DATESTAMP_HUMAN:
+			return format("%s.%s.%s", padTwo(date.getYear() + 1900),
+					padTwo(date.getMonth() + 1), padTwo(date.getDate()));
+		}
+		return date.toString();
+	}
+
 	private static String getNumericSubstring(String toParse) {
 		if (toParse == null) {
 			return null;
@@ -2135,20 +2163,62 @@ public class CommonUtils {
 		}
 	}
 
-	public static class DateAdjustment {
+	public static class DateAdjustment implements BidiConverter<Date, Date> {
 		public TimezoneData localData;
 
 		public TimezoneData adjustToData;
 
-		public DateAdjustment(TimezoneData adjustToData) {
+		public DateAdjustment(TimezoneData localData,
+				TimezoneData adjustToData) {
+			this.localData = localData;
 			this.adjustToData = adjustToData;
-			localData = new TimezoneData();
 		}
 
-		public Date adjust(Date date) {
-			return new Date(date.getTime()
-					+ localData.utcMinutes * TimeConstants.ONE_MINUTE_MS
-					- adjustToData.utcMinutes * TimeConstants.ONE_MINUTE_MS);
+		public Date adjust(Date date, boolean toAdjustTz) {
+			return toAdjustTz
+					? new Date(date.getTime()
+							+ localData.getUtcMinutes()
+									* TimeConstants.ONE_MINUTE_MS
+							- adjustToData.getUtcMinutes()
+									* TimeConstants.ONE_MINUTE_MS)
+					: new Date(date.getTime()
+							- localData.getUtcMinutes()
+									* TimeConstants.ONE_MINUTE_MS
+							+ adjustToData.getUtcMinutes()
+									* TimeConstants.ONE_MINUTE_MS);
+		}
+
+		@Override
+		public Date leftToRight(Date date) {
+			return adjust(date, true);
+		}
+
+		@Override
+		public Date rightToLeft(Date date) {
+			return adjust(date, false);
+		}
+
+		public String toSuffix(DateAdjustmentModifier dateAdjustmentModifier) {
+			if (dateAdjustmentModifier == null) {
+				return "";
+			}
+			switch (dateAdjustmentModifier) {
+			case LOCAL_TZ:
+				return Ax.format(" (local: %s)", localData);
+			case ADJUST_TO_TZ:
+				return Ax.format(" (adjusted to: %s)", adjustToData);
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		public String toUiIndicatorLabel() {
+			return Ax.format("TZ: %s", adjustToData.getTimeZone());
+		}
+
+		public String toUiIndicatorTitle() {
+			return Ax.format("Current time :: %s",
+					formatDate(new Date(), DateStyle.AU_DATE_TIME_TZ));
 		}
 	}
 
@@ -2158,7 +2228,8 @@ public class CommonUtils {
 		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
 		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
 		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY,
-		AU_DATE_MONTH_NO_PAD_DAY, AU_DATE_TIME_SHORT, DATESTAMP_HUMAN
+		AU_DATE_MONTH_NO_PAD_DAY, AU_DATE_TIME_SHORT, DATESTAMP_HUMAN,
+		AU_DATE_TIME_TZ
 	}
 
 	public static class DeduplicatePredicate<C, K> implements Predicate<C> {
@@ -2225,20 +2296,11 @@ public class CommonUtils {
 		}
 	}
 
-	public static class TimezoneData {
-		public String timeZone;
-
-		public int utcMinutes;
-
-		@SuppressWarnings("deprecation")
-		public TimezoneData() {
-			utcMinutes = new Date().getTimezoneOffset();
-			// FIXME
-			timeZone = "local";
-		}
-	}
-
 	public static interface YearResolver {
 		int getYear(Date d);
+	}
+
+	enum DateAdjustmentModifier {
+		LOCAL_TZ, ADJUST_TO_TZ
 	}
 }

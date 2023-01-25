@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.TimezoneData;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 @Bean
@@ -38,7 +39,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 @Registrations({ @Registration(JaxbContextRegistration.class),
 		@Registration(PerUserProperties.class) })
 public class GeneralProperties extends Bindable
-		implements UserPropertyPersistable {
+		implements UserPropertyPersistable, TimezoneData.Provider {
 	public static final transient int DEFAULT_FILTER_DELAY = 500;
 
 	public static final transient String PROPERTY_TRANSIENT_CSS = "transientCss";
@@ -62,6 +63,8 @@ public class GeneralProperties extends Bindable
 	private String clientProperties;
 
 	private boolean allowAdminInvalidObjectWrite = true;
+
+	private TimezoneData timezoneData;
 
 	public GeneralProperties() {
 	}
@@ -94,6 +97,11 @@ public class GeneralProperties extends Bindable
 	@Custom(customiserClass = TextAreaCustomiser.class)
 	public String getPersistentCss() {
 		return this.persistentCss;
+	}
+
+	@Override
+	public TimezoneData getTimezoneData() {
+		return this.timezoneData;
 	}
 
 	@Display(
@@ -173,6 +181,10 @@ public class GeneralProperties extends Bindable
 		this.persistentCss = persistentCss;
 		propertyChangeSupport().firePropertyChange("persistentCss",
 				old_persistentCss, persistentCss);
+	}
+
+	public void setTimezoneData(TimezoneData timezoneData) {
+		this.timezoneData = timezoneData;
 	}
 
 	public void setTransientCss(String transientCss) {
