@@ -12,6 +12,7 @@ import com.google.gwt.regexp.shared.RegExp;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class SelectionFilter extends Model implements TreeSerializable {
@@ -87,7 +88,7 @@ public class SelectionFilter extends Model implements TreeSerializable {
 
 		private transient Logger logger = LoggerFactory.getLogger(getClass());
 
-		private boolean log;
+		private int logCount;
 
 		public GenerationEntry() {
 		}
@@ -105,8 +106,8 @@ public class SelectionFilter extends Model implements TreeSerializable {
 			return this.generation;
 		}
 
-		public boolean isLog() {
-			return this.log;
+		public int getLogCount() {
+			return this.logCount;
 		}
 
 		public boolean matches(List<String> list) {
@@ -117,9 +118,12 @@ public class SelectionFilter extends Model implements TreeSerializable {
 					break;
 				}
 			}
-			if (log) {
-				logger.info("Generation filter: {} : {} : {}", generation, list,
-						result);
+			synchronized (this) {
+				if (logCount != 0) {
+					logCount--;
+					logger.info("Generation filter: {} : {} : {}", generation,
+							list, result);
+				}
 			}
 			return result;
 		}
@@ -132,8 +136,14 @@ public class SelectionFilter extends Model implements TreeSerializable {
 			this.generation = generation;
 		}
 
-		public void setLog(boolean log) {
-			this.log = log;
+		public void setLogCount(int logCount) {
+			this.logCount = logCount;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Filter entry :: %s :: %s", generation,
+					filterRegex);
 		}
 
 		void prepareToFilter() {
