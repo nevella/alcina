@@ -80,6 +80,7 @@ class Vacuum {
 			List<Transaction> withVacuumableObjectsList = new ArrayList<>(
 					vacuumableTransactionList);
 			withVacuumableObjectsList.retainAll(vacuumables.keySet());
+			int vacuumableObjectCount = 0;
 			for (Transaction transaction : withVacuumableObjectsList) {
 				String dtrIdClause = transaction.getTransformRequestId() == 0
 						? ""
@@ -97,6 +98,11 @@ class Vacuum {
 			toVacuum.forEach(v -> this.vacuum(v, vacuumableTransactions));
 			vacuumableTransactionList.forEach(vacuumables::remove);
 			Transaction.current().toVacuumEnded(vacuumableTransactionList);
+			// TMP - log long-running
+			if (System.currentTimeMillis() - vacuumStarted > 500) {
+				logger.warn("Long-running vacuum - {} transactions; {} objects",
+						vacuumableTransactionList.size(), toVacuum.size());
+			}
 			vacuumStarted = 0;
 			vacuumThread = null;
 			if (debugLevelLogging) {
