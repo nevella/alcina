@@ -89,6 +89,14 @@ public class Multimap<K, V extends List>
 		}
 	}
 
+	public V allFirstItems() {
+		List result = new ArrayList();
+		for (V v : values()) {
+			result.add(v.get(0));
+		}
+		return (V) result;
+	}
+
 	public V allNonFirstItems() {
 		List result = new ArrayList();
 		for (V v : values()) {

@@ -167,9 +167,11 @@ public class ControlServlet extends AlcinaServlet {
 					true, null);
 			String message = invokeTask(req, executionType);
 			message = Ax.blankTo(message, "<No log>");
-			logger.info(CommonUtils.trimToWsChars(message, 5000));
-			String regex = "(?s).*(<\\?xml|<html.*)";
-			if (message.matches(regex)) {
+			String trimmedMessage = CommonUtils.trimToWsChars(message, 5000);
+			logger.info(trimmedMessage);
+			String regex = "(?s).*(<\\?xml|<html).*";
+			// if response is huge, regex will be non-performant
+			if (trimmedMessage.matches(regex)) {
 				response.setContentType("text/html");
 				response.getWriter().write(message.replaceFirst(regex, "$1"));
 				response.getWriter().close();

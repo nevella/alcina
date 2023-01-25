@@ -170,10 +170,15 @@ public class JobScheduler {
 	public Stream<Job> getToAbortOrReassign(
 			List<ClientInstance> activeInstances, String visibleInstanceRegex,
 			Date cutoff) {
+		Date consistencyCutoff = SEUtilities
+				.toOldDate(LocalDateTime.now().minusMinutes(120));
 		return JobDomain.get().getIncompleteJobs()
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> job.getCreator().toString()
 						.matches(visibleInstanceRegex))
+				.filter(job -> job.getConsistencyPriority() == null
+						|| (job.getStartTime() != null && job.getStartTime()
+								.before(consistencyCutoff)))
 				.filter(job -> (job.getPerformer() == null
 						&& !activeInstances.contains(job.getCreator())
 						&& /*
