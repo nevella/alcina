@@ -6,11 +6,27 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @TypeSerialization(flatSerializable = false)
 public class PersistentObjectCriterion extends SearchCriterion {
 	private ClassRef classRef;
+
+	private String propertyName;
+
+	public String getPropertyName() {
+		return this.propertyName;
+	}
+
+	public void setPropertyName(String propertyName) {
+		this.propertyName = propertyName;
+	}
+
+	public PersistentObjectCriterion withPropertyName(String propertyName) {
+		this.propertyName = propertyName;
+		return this;
+	}
 
 	public PersistentObjectCriterion() {
 	}
@@ -25,8 +41,15 @@ public class PersistentObjectCriterion extends SearchCriterion {
 		if (classRef == null) {
 			return result;
 		}
-		result.eql = targetPropertyNameWithTable() + ".id = ?";
-		result.parameters.add(classRef.getId());
+		if (propertyName == null) {
+			result.eql = targetPropertyNameWithTable() + ".id = ?";
+			result.parameters.add(classRef.getId());
+		} else {
+			result.eql = Ax.format("(%s.id = ? AND t.propertyName = ?)",
+					targetPropertyNameWithTable());
+			result.parameters.add(classRef.getId());
+			result.parameters.add(propertyName);
+		}
 		return result;
 	}
 
