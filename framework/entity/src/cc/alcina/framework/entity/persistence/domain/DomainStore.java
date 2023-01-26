@@ -1216,7 +1216,7 @@ public class DomainStore implements IDomainStore {
 			Thread postProcessThread2 = postProcessThread;
 			if (time > 100 && postProcessThread2 != null) {
 				String prefix = time > 5000 ? "Very " : "";
-				logger.info(
+				logger.warn(
 						"{}Long postprocess time - {} ms - {}\n{}\n\n{}\n\n",
 						prefix, time, postProcessThread2, postProcessTransform2,
 						SEUtilities.getStacktraceSlice(postProcessThread2,
@@ -1230,7 +1230,7 @@ public class DomainStore implements IDomainStore {
 			Thread vacuumThread = Transactions.stats().getActiveVacuumThread();
 			if (time > 100) {
 				if (vacuumThread != null) {
-					logger.info("Long vacuum time - {} ms - {}\n{}\n\n", time,
+					logger.warn("Long vacuum time - {} ms - {}\n{}\n\n", time,
 							vacuumThread,
 							SEUtilities.getStacktraceSlice(vacuumThread,
 									LONG_POST_PROCESS_TRACE_LENGTH, 0));
