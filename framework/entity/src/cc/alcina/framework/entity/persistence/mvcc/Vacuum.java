@@ -12,6 +12,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,8 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
 class Vacuum {
+	public static final int MAX_DEBUG_EVENTS = 500000;
+
 	/*
 	 * The per-transaction vacuumables will only be accessed during write by the
 	 * transaction thread
@@ -62,6 +65,11 @@ class Vacuum {
 
 	private void emitDebugEvent(String message) {
 		synchronized (debugEvents) {
+			if (debugEvents.size() > MAX_DEBUG_EVENTS) {
+				debugEvents = debugEvents.stream()
+						.skip(MAX_DEBUG_EVENTS - MAX_DEBUG_EVENTS / 2)
+						.collect(Collectors.toList());
+			}
 			debugEvents.add(new DebugEvent(message));
 		}
 	}
