@@ -85,8 +85,8 @@ class Vacuum {
 			boolean hasVacuumables = vacuumables.size() > 0;
 			if (hasVacuumables) {
 				String message = Ax.format(
-						"vacuum: transactions with vacuumables: %s : %s",
-						vacuumables.size(), vacuumables.keySet());
+						"vacuum: transactions with vacuumables: %s",
+						vacuumables.size());
 				emitDebugEvent(message);
 			} else {
 				logger.trace("vacuum: removing txs without vacuumables");
@@ -190,8 +190,16 @@ class Vacuum {
 
 		long time;
 
+		long txId;
+
 		public DebugEvent(String message) {
 			time = System.currentTimeMillis();
+			txId = -1;
+			try {
+				txId = Transaction.current().getId().id;
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
 			this.message = message;
 			this.activeThreadId = activeThread == null ? -1
 					: activeThread.getId();
@@ -203,8 +211,8 @@ class Vacuum {
 			String messageFormatted = message.contains("\n")
 					? "\n" + CommonUtils.tabify(message, 60, 1) + "\n"
 					: message;
-			return String.format("%12s %12s %12s %s", time, activeThreadId,
-					vacuumStarted, messageFormatted);
+			return String.format("%12s %12s %12s %12s %s", time, activeThreadId,
+					txId, vacuumStarted, messageFormatted);
 		}
 	}
 
