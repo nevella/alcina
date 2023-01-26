@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class PersistentObjectCriterion extends SearchCriterion {
 	private ClassRef classRef;
 
-	private String propertyName;
+	private transient String propertyName;
 
 	public String getPropertyName() {
 		return this.propertyName;
