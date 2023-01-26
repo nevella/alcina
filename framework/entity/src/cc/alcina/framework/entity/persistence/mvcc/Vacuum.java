@@ -217,7 +217,7 @@ class Vacuum {
 					if (tx != null) {
 						vacuum();
 					}
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					logger.warn("DEVEX::0 - vacuum issue");
 					e.printStackTrace();
 				}

@@ -311,7 +311,7 @@ public class Transactions {
 
 	private Set<TransactionId> committedTransactionIds = new ObjectOpenHashSet<>();
 
-	public Transactions() {
+	private Transactions() {
 		ResourceUtilities.propertiesInvalidated
 				.add(this::configurationInvalidated);
 		this.configurationInvalidated();
