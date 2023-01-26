@@ -210,11 +210,11 @@ public class ControlServlet extends AlcinaServlet {
 						Transaction.commit();
 						return String.valueOf(job.getId());
 					}
-					case WAIT_RETURN_ID: {
+					case WAIT_RETURN_LOG: {
 						Job job = task.perform();
 						return job.getLog();
 					}
-					case WAIT_RETURN_LOG: {
+					case WAIT_RETURN_ID: {
 						Job job = task.perform();
 						return String.valueOf(job.getId());
 					}

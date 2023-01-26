@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -35,13 +36,16 @@ class Vacuum {
 
 	boolean paused = false;
 
-	private long vacuumStarted = 0;
+	private volatile long vacuumStarted = 0;
 
 	private Thread vacuumThread = null;
 
 	private Thread activeThread = null;
 
 	volatile boolean finished = false;
+
+	// synchronize on this for access, since multiple threads can access
+	List<DebugEvent> debugEvents = new ArrayList<>();
 
 	public Vacuum() {
 		vacuumThread = new Thread(new EventHandler(),
@@ -54,6 +58,12 @@ class Vacuum {
 
 	public Thread getActiveThread() {
 		return this.activeThread;
+	}
+
+	private void emitDebugEvent(String message) {
+		synchronized (debugEvents) {
+			debugEvents.add(new DebugEvent(message));
+		}
 	}
 
 	/*
@@ -71,12 +81,13 @@ class Vacuum {
 		try {
 			Transaction.begin(TransactionPhase.VACUUM_BEGIN);
 			Transaction.reapUnreferencedTransactions();
-			activeThread = Thread.currentThread();
-			vacuumStarted = System.currentTimeMillis();
-			boolean debugLevelLogging = vacuumables.size() > 0;
-			if (debugLevelLogging) {
-				logger.debug("vacuum: transactions with vacuumables: {} : {}",
+			setActiveThread(Thread.currentThread());
+			boolean hasVacuumables = vacuumables.size() > 0;
+			if (hasVacuumables) {
+				String message = Ax.format(
+						"vacuum: transactions with vacuumables: %s : %s",
 						vacuumables.size(), vacuumables.keySet());
+				emitDebugEvent(message);
 			} else {
 				logger.trace("vacuum: removing txs without vacuumables");
 			}
@@ -106,19 +117,17 @@ class Vacuum {
 			toVacuum.forEach(v -> this.vacuum(v, vacuumableTransactions));
 			vacuumableTransactionList.forEach(vacuumables::remove);
 			Transaction.current().toVacuumEnded(vacuumableTransactionList);
-			// TMP - log long-running
 			if (System.currentTimeMillis() - vacuumStarted > 500) {
-				logger.warn(
-						"Long-running vacuum - {} transactions; {} objects; thread {}",
+				String message = Ax.format(
+						"Long-running vacuum - %s transactions; %s objects; thread %s",
 						vacuumableTransactionList.size(), toVacuum.size(),
 						activeThread);
+				emitDebugEvent(message);
+				logger.warn(message);
 			}
-			vacuumStarted = 0;
-			activeThread = null;
-			if (debugLevelLogging) {
-				logger.debug("vacuum: end");
-			}
+			setActiveThread(null);
 		} catch (Throwable e) {
+			emitDebugEvent(SEUtilities.getFullExceptionMessage(e));
 			e.printStackTrace();
 			logger.warn("DEVEX-1 - Vacuum exception", new MvccException(e));
 		} finally {
@@ -141,6 +150,11 @@ class Vacuum {
 		try {
 			logger.warn("debug missing active vacuum thread");
 			Ax.out(SEUtilities.getFullStacktrace(vacuumThread));
+			Ax.out("-----------------------------");
+			synchronized (debugEvents) {
+				debugEvents.forEach(Ax::out);
+				debugEvents.clear();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -148,6 +162,12 @@ class Vacuum {
 
 	long getVacuumStarted() {
 		return this.vacuumStarted;
+	}
+
+	void setActiveThread(Thread thread) {
+		activeThread = thread;
+		vacuumStarted = thread == null ? 0 : System.currentTimeMillis();
+		emitDebugEvent("active thread changed");
 	}
 
 	void shutdown() {
@@ -159,6 +179,33 @@ class Vacuum {
 
 	void start() {
 		vacuumThread.start();
+	}
+
+	class DebugEvent {
+		String message;
+
+		long activeThreadId;
+
+		long vacuumStarted;
+
+		long time;
+
+		public DebugEvent(String message) {
+			time = System.currentTimeMillis();
+			this.message = message;
+			this.activeThreadId = activeThread == null ? -1
+					: activeThread.getId();
+			this.vacuumStarted = Vacuum.this.vacuumStarted;
+		}
+
+		@Override
+		public String toString() {
+			String messageFormatted = message.contains("\n")
+					? "\n" + CommonUtils.tabify(message, 60, 1) + "\n"
+					: message;
+			return String.format("%12s %12s %12s %s", time, activeThreadId,
+					vacuumStarted, messageFormatted);
+		}
 	}
 
 	class EventHandler implements Runnable {

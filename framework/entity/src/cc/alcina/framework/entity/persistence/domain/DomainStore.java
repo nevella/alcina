@@ -903,7 +903,6 @@ public class DomainStore implements IDomainStore {
 					});
 			TransformManager.get().setIgnorePropertyChanges(true);
 			postProcessStart = System.currentTimeMillis();
-			MetricLogging.get().start("post-process");
 			Transaction.ensureEnded();
 			Transaction.beginDomainPreparing();
 			Date transactionCommitTime = persistenceEvent
@@ -1023,7 +1022,6 @@ public class DomainStore implements IDomainStore {
 					- postProcessStart;
 			health.domainStoreMaxPostProcessTime = Math
 					.max(health.domainStoreMaxPostProcessTime, postProcessTime);
-			MetricLogging.get().end("post-process", metricLogger);
 			Transaction.endAndBeginNew();
 			try {
 				if (warnBuilder.length() > 0) {
@@ -1235,6 +1233,9 @@ public class DomainStore implements IDomainStore {
 							SEUtilities.getStacktraceSlice(vacuumThread,
 									LONG_POST_PROCESS_TRACE_LENGTH, 0));
 				} else {
+					logger.warn(
+							"Long vacuum time - no thread - {} ms - no thread",
+							time);
 					// very unlikely this is null...wazzup?
 					Transactions.stats().debugVacuum();
 				}

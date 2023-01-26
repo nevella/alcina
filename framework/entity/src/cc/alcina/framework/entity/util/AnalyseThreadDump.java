@@ -37,6 +37,10 @@ public class AnalyseThreadDump {
 		if (matches) {
 			boolean notMatches = SEUtilities.normalizeWhitespace(joined)
 					.matches("(?is).*(cc.alcina).*");
+			if (joined.contains("AlcinaParallel")) {
+				// really want this one
+				matches = false;
+			}
 			// if (notMatches) {
 			//// return false;
 			// }

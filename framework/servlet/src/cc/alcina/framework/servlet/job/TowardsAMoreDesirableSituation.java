@@ -136,6 +136,7 @@ class TowardsAMoreDesirableSituation {
 					.isPresent()) {
 				JobRegistry.get()
 						.withJobMetadataLock(getClass().getSimpleName(), () -> {
+							Transaction.endAndBeginNew();
 							// allocate in bulk while holding lock
 							while (canAllocate()) {
 								Optional<Job> next = JobDomain.get()
