@@ -50,6 +50,8 @@ public class Dropdown extends Model.WithNode
 
 	private Supplier<Model> dropdownSupplier;
 
+	private Supplier<String> dropdownCssClassSupplier;
+
 	public Dropdown(Model button, Model dropdown) {
 		this.button = button;
 		setDropdown(dropdown);
@@ -72,6 +74,10 @@ public class Dropdown extends Model.WithNode
 
 	public Model getDropdown() {
 		return this.dropdown;
+	}
+
+	public Supplier<String> getDropdownCssClassSupplier() {
+		return this.dropdownCssClassSupplier;
 	}
 
 	public OverlayPosition.Position getXalign() {
@@ -104,6 +110,11 @@ public class Dropdown extends Model.WithNode
 		}
 	}
 
+	public void setDropdownCssClassSupplier(
+			Supplier<String> dropdownCssClassSupplier) {
+		this.dropdownCssClassSupplier = dropdownCssClassSupplier;
+	}
+
 	public void setOpen(boolean open) {
 		boolean old_open = this.open;
 		this.open = open;
@@ -120,6 +131,11 @@ public class Dropdown extends Model.WithNode
 		this.xalign = xalign;
 	}
 
+	public Dropdown withDropdownCssClass(String dropdownCssClass) {
+		setDropdownCssClassSupplier(() -> dropdownCssClass);
+		return this;
+	}
+
 	private void showDropdown(boolean show) {
 		if (show) {
 			if (dropdownSupplier != null && dropdownStack.size() == 1) {
@@ -127,10 +143,13 @@ public class Dropdown extends Model.WithNode
 				setDropdown(dropdownSupplier.get());
 			}
 			Builder builder = Overlay.builder();
-			overlay = builder
-					.dropdown(getXalign(),
-							provideElement().getBoundingClientRect(), dropdown)
-					.withCloseHandler(evt -> setOpen(false)).build();
+			builder.dropdown(getXalign(),
+					provideElement().getBoundingClientRect(), dropdown)
+					.withPeer(this).withCloseHandler(evt -> setOpen(false));
+			if (dropdownStack.size() == 1 && dropdownCssClassSupplier != null) {
+				builder.withCssClass(dropdownCssClassSupplier.get());
+			}
+			overlay = builder.build();
 			overlay.open();
 		} else {
 			overlay.close(false);

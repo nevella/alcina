@@ -3,9 +3,16 @@ package cc.alcina.framework.gwt.client.dirndl.overlay;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.event.dom.client.HasNativeEvent;
+import com.google.gwt.event.shared.GwtEvent;
 
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.CtrlEnterPressed;
@@ -14,6 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.MouseDownOu
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Close;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.model.HasElement;
 import cc.alcina.framework.gwt.client.dirndl.model.HasLinks;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -38,7 +46,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 @Directed(
 	receives = { ModelEvents.Close.class, InferredDomEvents.EscapePressed.class,
 			InferredDomEvents.CtrlEnterPressed.class,
-			InferredDomEvents.MouseDownOutside.class })
+			InferredDomEvents.MouseDownOutside.class },
+	bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
 public class Overlay extends Model.WithNode implements
 		ModelEvents.Close.Handler, InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
@@ -65,6 +74,10 @@ public class Overlay extends Model.WithNode implements
 
 	private boolean open;
 
+	private String cssClass;
+
+	private HasElement peer;
+
 	private Overlay(Builder builder) {
 		contents = builder.contents;
 		position = builder.position;
@@ -74,6 +87,9 @@ public class Overlay extends Model.WithNode implements
 		commitHandler = builder.commitHandler;
 		allowCloseWithoutCommit = builder.allowCloseWithoutCommit;
 		removeOnMouseDownOutside = builder.removeOnMouseDownOutside;
+		peer = builder.peer;
+		Preconditions.checkState(peer == null || !modal);
+		cssClass = builder.cssClass;
 	}
 
 	public void close(boolean commit) {
@@ -110,6 +126,10 @@ public class Overlay extends Model.WithNode implements
 		return this.contents;
 	}
 
+	public String getCssClass() {
+		return this.cssClass;
+	}
+
 	public OverlayPosition getPosition() {
 		return this.position;
 	}
@@ -134,6 +154,18 @@ public class Overlay extends Model.WithNode implements
 	@Override
 	public void onMouseDownOutside(MouseDownOutside event) {
 		if (removeOnMouseDownOutside) {
+			GwtEvent gwtEvent = event.getContext().getOriginatingGwtEvent();
+			if (peer != null && gwtEvent instanceof HasNativeEvent) {
+				NativeEvent nativeEvent = ((HasNativeEvent) gwtEvent)
+						.getNativeEvent();
+				EventTarget eventTarget = nativeEvent.getEventTarget();
+				if (eventTarget.isElement()) {
+					if (peer.provideElement().provideIsAncestorOf(
+							eventTarget.asElement(), true)) {
+						return;
+					}
+				}
+			}
 			close(false);
 		}
 	}
@@ -200,6 +232,10 @@ public class Overlay extends Model.WithNode implements
 
 		boolean allowCloseWithoutCommit = true;
 
+		private String cssClass;
+
+		private HasElement peer;
+
 		public Overlay build() {
 			return new Overlay(this);
 		}
@@ -253,6 +289,11 @@ public class Overlay extends Model.WithNode implements
 			return this;
 		}
 
+		public Builder withCssClass(String cssClass) {
+			this.cssClass = cssClass;
+			return this;
+		}
+
 		public Builder withModal(boolean modal) {
 			this.modal = modal;
 			return this;
@@ -260,6 +301,14 @@ public class Overlay extends Model.WithNode implements
 
 		public Builder withOk() {
 			actions = Actions.ok();
+			return this;
+		}
+
+		/**
+		 * Don't close if this is an event target (requires non-model)
+		 */
+		public Builder withPeer(HasElement peer) {
+			this.peer = peer;
 			return this;
 		}
 

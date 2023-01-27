@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 
 import cc.alcina.framework.common.client.util.DoublePair;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 
 /**
  * Models a set of positioning constraints between a DomRect and an element (or
@@ -51,6 +52,12 @@ public class OverlayPosition {
 		return this;
 	}
 
+	@Override
+	public String toString() {
+		return FormatBuilder.keyValues("viewportCentered", viewportCentered,
+				"constraints", constraints);
+	}
+
 	public OverlayPosition viewportCentered(boolean viewportCentered) {
 		this.viewportCentered = viewportCentered;
 		return this;
@@ -85,6 +92,12 @@ public class OverlayPosition {
 			this.from = from;
 			this.to = to;
 			this.px = px;
+		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("direction", direction, "px", px,
+					"from", from, "to", to);
 		}
 
 		private DoublePair line(DomRect rect) {
