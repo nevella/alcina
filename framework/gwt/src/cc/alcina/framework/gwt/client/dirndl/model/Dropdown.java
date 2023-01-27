@@ -48,9 +48,9 @@ public class Dropdown extends Model.WithNode
 
 	private List<Model> dropdownStack = new ArrayList<>();
 
-	private Supplier<Model> dropdownSupplier;
+	private transient Supplier<Model> dropdownSupplier;
 
-	private Supplier<String> dropdownCssClassSupplier;
+	private transient Supplier<String> dropdownCssClassSupplier;
 
 	public Dropdown(Model button, Model dropdown) {
 		this.button = button;
@@ -74,10 +74,6 @@ public class Dropdown extends Model.WithNode
 
 	public Model getDropdown() {
 		return this.dropdown;
-	}
-
-	public Supplier<String> getDropdownCssClassSupplier() {
-		return this.dropdownCssClassSupplier;
 	}
 
 	public OverlayPosition.Position getXalign() {
@@ -110,11 +106,6 @@ public class Dropdown extends Model.WithNode
 		}
 	}
 
-	public void setDropdownCssClassSupplier(
-			Supplier<String> dropdownCssClassSupplier) {
-		this.dropdownCssClassSupplier = dropdownCssClassSupplier;
-	}
-
 	public void setOpen(boolean open) {
 		boolean old_open = this.open;
 		this.open = open;
@@ -132,7 +123,12 @@ public class Dropdown extends Model.WithNode
 	}
 
 	public Dropdown withDropdownCssClass(String dropdownCssClass) {
-		setDropdownCssClassSupplier(() -> dropdownCssClass);
+		return withDropdownCssClassSupplier(() -> dropdownCssClass);
+	}
+
+	public Dropdown withDropdownCssClassSupplier(
+			Supplier<String> dropdownCssClassSupplier) {
+		this.dropdownCssClassSupplier = dropdownCssClassSupplier;
 		return this;
 	}
 
