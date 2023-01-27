@@ -594,8 +594,9 @@ public class Transactions {
 		}
 
 		public long getTimeInVacuum() {
-			return vacuum.getVacuumStarted() == 0 ? 0
-					: System.currentTimeMillis() - vacuum.getVacuumStarted();
+			long vacuumStarted = vacuum.getVacuumStarted();
+			return vacuumStarted == 0 ? 0
+					: System.currentTimeMillis() - vacuumStarted;
 		}
 
 		public long getUncollectedTxCount() {
