@@ -119,7 +119,7 @@ public abstract class Model extends Bindable
 	 * @author nick@alcina.cc
 	 *
 	 */
-	public static class WithNode extends Model {
+	public static class WithNode extends Model implements HasElement {
 		protected DirectedLayout.Node node;
 
 		@Override
@@ -132,6 +132,7 @@ public abstract class Model extends Bindable
 			super.onBind(event);
 		}
 
+		@Override
 		public Element provideElement() {
 			return node.getWidget().getElement();
 		}
@@ -285,7 +286,7 @@ public abstract class Model extends Bindable
 
 	// No mixins sez Java (so this effectively mixes WithNode + WithBinding)
 	public static class WithPropertyBindingAndNode
-			extends Model.WithPropertyBinding {
+			extends Model.WithPropertyBinding implements HasElement {
 		protected DirectedLayout.Node node;
 
 		@Override
@@ -298,6 +299,7 @@ public abstract class Model extends Bindable
 			super.onBind(event);
 		}
 
+		@Override
 		public Element provideElement() {
 			return node.getWidget().getElement();
 		}

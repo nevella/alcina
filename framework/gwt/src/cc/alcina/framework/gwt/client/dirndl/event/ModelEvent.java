@@ -40,7 +40,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 					.optional(TopLevelHandler.class, type);
 			if (handler.isPresent()) {
 				((SimpleEventBus) Client.eventBus()).fireEventFromSource(
-						modelEvent, context.node, List.of(handler));
+						modelEvent, context.node, List.of(handler.get()));
 				handler.get().handle(modelEvent);
 			}
 		}

@@ -15,8 +15,7 @@ public class StandardModels {
 		tag = "page",
 		bindings = @Binding(
 			from = "className",
-			type = Type.PROPERTY,
-			to = "class",
+			type = Type.CLASS_PROPERTY,
 			transform = ToStringFunction.ExplicitIdentity.class))
 	@TypeSerialization(reflectiveSerializable = false)
 	public static class HeaderContent extends Model.WithPropertyBinding {

@@ -146,10 +146,7 @@ public class LeafModel {
 	}
 
 	@Directed(
-		bindings = @Binding(
-			from = "className",
-			type = Type.PROPERTY,
-			to = "class"))
+		bindings = @Binding(from = "className", type = Type.CLASS_PROPERTY))
 	public static class TagClassModel extends Model implements HasTag {
 		private String className;
 

@@ -8,8 +8,8 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @Directed
@@ -76,7 +76,7 @@ public class ProcessStatus extends Model {
 
 	@Directed(
 		bindings = { @Binding(from = "text", type = Type.INNER_TEXT),
-				@Binding(from = "type", type = Type.PROPERTY, to = "class") })
+				@Binding(from = "type", type = Type.CLASS_PROPERTY) })
 	public static class Message extends Model {
 		private final String text;
 

@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
@@ -956,9 +957,11 @@ public class DirectedLayout implements AlcinaProcess {
 					}
 					break;
 				case PROPERTY:
-					String propertyName = binding.to().isEmpty()
-							? binding.from()
-							: binding.to();
+				case CLASS_PROPERTY: {
+					String propertyName = binding.type() == Type.CLASS_PROPERTY
+							? "class"
+							: binding.to().isEmpty() ? binding.from()
+									: binding.to();
 					if (value == null || (value instanceof Boolean
 							&& !((Boolean) value).booleanValue())) {
 						element.removeAttribute(propertyName);
@@ -966,6 +969,7 @@ public class DirectedLayout implements AlcinaProcess {
 						element.setAttribute(propertyName, stringValue);
 					}
 					break;
+				}
 				case CSS_CLASS: {
 					if (hasTransform) {
 						// only place we need to store the last value

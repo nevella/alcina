@@ -29,7 +29,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 @Directed(
 	receives = DomEvents.Click.class,
 	bindings = { @Binding(from = "href", type = Type.PROPERTY),
-			@Binding(from = "className", to = "class", type = Type.PROPERTY),
+			@Binding(from = "className", type = Type.CLASS_PROPERTY),
 			@Binding(from = "innerHtml", type = Type.INNER_HTML),
 			@Binding(from = "text", type = Type.INNER_TEXT),
 			@Binding(from = "target", type = Type.PROPERTY),

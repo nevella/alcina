@@ -106,12 +106,13 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		}
 
 		// Fluent event emission
-		public void fire(Class<? extends ModelEvent> modelEvent) {
-			fire(modelEvent, null);
+		public void fire(Class<? extends ModelEvent> modelEventClass) {
+			fire(modelEventClass, null);
 		}
 
-		public void fire(Class<? extends ModelEvent> modelEvent, Object model) {
-			ModelEvent.dispatch(this, modelEvent, model);
+		public void fire(Class<? extends ModelEvent> modelEventClass,
+				Object model) {
+			ModelEvent.dispatch(this, modelEventClass, model);
 		}
 
 		public GwtEvent getGwtEvent() {
@@ -120,6 +121,14 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 		public NodeEvent getNodeEvent() {
 			return nodeEvent;
+		}
+
+		public GwtEvent getOriginatingGwtEvent() {
+			Context cursor = this;
+			while (cursor.previous != null) {
+				cursor = cursor.previous;
+			}
+			return cursor.gwtEvent;
 		}
 
 		public Context getPrevious() {

@@ -14,6 +14,7 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.HasNativeEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
@@ -434,6 +435,35 @@ public class InferredDomEvents {
 		}
 	}
 
+	public static class NativePreviewEventAsync
+			extends NodeEvent<NativePreviewEventAsync.Handler>
+			implements HasNativeEvent {
+		private final NativeEvent nativeEvent;
+
+		public NativePreviewEventAsync(NativeEvent nativeEvent) {
+			this.nativeEvent = nativeEvent;
+		}
+
+		@Override
+		public void dispatch(NativePreviewEventAsync.Handler handler) {
+			handler.onNativePreviewEventAsync(this);
+		}
+
+		@Override
+		public Class<NativePreviewEventAsync.Handler> getHandlerClass() {
+			return NativePreviewEventAsync.Handler.class;
+		}
+
+		@Override
+		public NativeEvent getNativeEvent() {
+			return this.nativeEvent;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onNativePreviewEventAsync(NativePreviewEventAsync event);
+		}
+	}
+
 	/**
 	 * Unless it's guaranteed that the callback will be inexpensive, use the
 	 * RequestAnimation subclass, which ensures smoothness
@@ -558,10 +588,12 @@ public class InferredDomEvents {
 			// return;
 			// }
 			boolean eventTargetsWidget = eventTargetsWidget(event);
+			// copy from NativePreviewEvent singleton
+			NativeEvent nativeEvent = event.getNativeEvent();
 			boolean fire = eventTargetsWidget ^ fireIfOutside();
 			if (fire) {
 				Scheduler.get().scheduleDeferred(() -> {
-					fireEvent(event);
+					fireEvent(new NativePreviewEventAsync(nativeEvent));
 				});
 			}
 		}
