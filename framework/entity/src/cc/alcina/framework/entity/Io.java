@@ -29,15 +29,12 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities.DisposableByteArrayOutputStream;
 
 public class Io {
-	public static void logToFile(String content, String fileName) {
-		try {
-			new File("/tmp/log").mkdirs();
-			String path = "/tmp/log/" + fileName;
-			Write.writeStringToFile(content, path);
-			Ax.out("Logged to: %s ", path);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	public static LogOp log() {
+		return new LogOp();
+	}
+
+	public static ReadOp read() {
+		return new ReadOp();
 	}
 
 	private static InputStream getResourceAsStream(Class clazz, String path) {
@@ -49,11 +46,7 @@ public class Io {
 		return stream;
 	}
 
-	public LogOperation log() {
-		return new LogOperation();
-	}
-
-	public static class LogOperation {
+	public static class LogOp {
 		private String content;
 
 		public void toFile(String content) {
@@ -75,7 +68,7 @@ public class Io {
 		}
 	}
 
-	public static class Read {
+	public static class ReadOp {
 		public static String read(Class clazz, String path) {
 			return readClassPathResourceAsString(clazz, path);
 		}
@@ -403,7 +396,7 @@ public class Io {
 				writeStringToFile(content, path);
 				return;
 			}
-			String current = Read.readFileToString(path);
+			String current = ReadOp.readFileToString(path);
 			if (!current.equals(content)) {
 				writeStringToFile(content, path);
 			}
