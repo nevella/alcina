@@ -83,7 +83,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 	public void scan(ClassMetadataCache cache, EntityManager entityManager)
 			throws Exception {
 		String cachePath = getHomeDir().getPath() + File.separator
-				+ getClass().getSimpleName() + "-cache.ser";
+				+ "classref-scanner-cache.ser";
 		persistableClasses = new LinkedHashSet<Class>();
 		persistableClasses.addAll(Arrays.asList(new Class[] { Long.class,
 				Double.class, Float.class, Integer.class, Short.class,

@@ -438,7 +438,7 @@ public abstract class DevHelper {
 					Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
 							.getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					"dev-helper");
+					"console");
 			long t2 = System.currentTimeMillis();
 			Ax.out("STARTUP\t registry: scan: %s ms", (t2 - t1));
 		} catch (Exception e) {
