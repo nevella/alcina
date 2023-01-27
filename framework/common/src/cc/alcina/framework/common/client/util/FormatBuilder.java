@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 /**
  * <li>Helper class based on StringBuilder to create strings with variable
  * substituions (similar to `String.format()`)</li>
@@ -13,6 +15,11 @@ import java.util.stream.Stream;
  * and add consistent indentation</li>
  */
 public class FormatBuilder {
+	public static String keyValues(Object... args) {
+		return new FormatBuilder().separator("; ").appendKeyValues(args)
+				.toString();
+	}
+
 	/**
 	 * Internal string bugger
 	 */
@@ -167,6 +174,16 @@ public class FormatBuilder {
 			append(key);
 			sb.append(":");
 			sb.append(toString);
+		}
+		return this;
+	}
+
+	public FormatBuilder appendKeyValues(Object... objects) {
+		Preconditions.checkState(objects.length % 2 == 0);
+		for (int idx = 0; idx < objects.length; idx += 2) {
+			String key = (String) objects[idx];
+			Object value = objects[idx + 1];
+			appendIfNotBlankKv(key, value);
 		}
 		return this;
 	}
