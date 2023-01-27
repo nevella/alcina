@@ -1207,11 +1207,13 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public long getTimeInDomainStoreWriter() {
-			long time = domainStorePostProcessStartTime == 0 ? 0
-					: System.currentTimeMillis()
-							- domainStorePostProcessStartTime;
 			DomainTransformEventPersistent postProcessTransform2 = postProcessTransform;
 			Thread postProcessThread2 = postProcessThread;
+			long postProcessStart = domainStorePostProcessStartTime;
+			long time = postProcessStart == 0 ? 0
+					: System.currentTimeMillis() - postProcessStart;
+			// t/unsafe - if time > 100, the earlier copies are sure to be
+			// correct
 			if (time > 100 && postProcessThread2 != null) {
 				String prefix = time > 5000 ? "Very " : "";
 				logger.warn(

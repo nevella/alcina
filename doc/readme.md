@@ -2,11 +2,11 @@
 
 Named for an opera by the baroque composer Georg Friederich Händel, Alcina is an integrated set of 
 software components that collectively implement a generative-process, semi-declarative client/server programming idiom 
-which guides application design towards processing streams .
+which guides application design towards processing streams of changes.
 
 *Generative-process* - several complex-ish application problems are tackled by Alcina with "generative" algorithms - algorithms 
 that generate later stages of the algorithm during algorithm processing, rather than with up-front (imperative) specification. 
-The problems are: UI modelling (Dirndl), rich website modelling (Selection Traversal), document transformation (Selection Traversal) and dependency resolution (Consort).
+The problems are: UI modelling (Dirndl), deep website modelling (Selection Traversal), document transformation (Selection Traversal) and dependency resolution (Consort).
 
 *Semi-declarative* code is an attempt to reconcile the virtues of declarative and imperative programming - 
 the basic philosophy being "declarative for composition" - say, composing a UI from an annotated object tree 
