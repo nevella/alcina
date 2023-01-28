@@ -208,7 +208,7 @@ public class TableModel extends Model {
 			} else {
 				searchOrders.putFirstOrder(order);
 			}
-			Client.goTo(place);
+			place.go();
 		}
 	}
 

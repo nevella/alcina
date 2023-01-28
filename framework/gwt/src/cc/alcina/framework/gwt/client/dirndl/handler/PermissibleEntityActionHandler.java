@@ -22,7 +22,7 @@ public class PermissibleEntityActionHandler
 			CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
 					.copy();
 			categoryNamePlace.nodeName = null;
-			Client.goTo(categoryNamePlace);
+			categoryNamePlace.go();
 		}
 	}
 }

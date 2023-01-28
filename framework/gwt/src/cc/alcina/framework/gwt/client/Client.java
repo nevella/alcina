@@ -55,6 +55,7 @@ public abstract class Client {
 		return Registry.impl(Client.class);
 	}
 
+	// prefer place.go
 	public static void goTo(Place place) {
 		Runnable runnable = () -> get().placeController.goTo(place);
 		CommitToStorageTransformListener.flushAndRun(runnable);
@@ -73,7 +74,7 @@ public abstract class Client {
 		BasePlace place = (BasePlace) currentPlace();
 		place.setRefreshed(true);
 		place = place.copy();
-		goTo(place);
+		place.go();
 	}
 
 	public static void refreshOrGoTo(Place place) {
@@ -153,7 +154,7 @@ public abstract class Client {
 	public static class PlaceNavigatorImpl implements PlaceNavigator {
 		@Override
 		public void go(Place place) {
-			Client.goTo(place);
+			goTo(place);
 		}
 	}
 

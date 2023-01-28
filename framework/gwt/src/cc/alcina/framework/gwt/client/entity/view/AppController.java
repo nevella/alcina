@@ -57,7 +57,7 @@ public class AppController {
 		EntityPlace target = (EntityPlace) RegistryHistoryMapper.get()
 				.getPlaceByModelClass(clazz);
 		target.action = EntityAction.CREATE;
-		Client.goTo(target);
+		target.go();
 	}
 
 	public boolean doDelete(VersionableEntity object) {
@@ -76,7 +76,7 @@ public class AppController {
 				.getPlaceByModelClass(object.getClass());
 		target.action = EntityAction.EDIT;
 		target.id = object.getId();
-		Client.goTo(target);
+		target.go();
 	}
 
 	public void doSearch(Class<? extends Entity> clazz, String text) {
@@ -84,7 +84,7 @@ public class AppController {
 				.getPlaceByModelClass(clazz);
 		target.getSearchDefinition().toTextSearch(text);
 		target.action = EntityAction.VIEW;
-		Client.goTo(target);
+		target.go();
 	}
 
 	public void doSearch(EntitySearchDefinition def) {
@@ -95,7 +95,7 @@ public class AppController {
 				.getPlaceByModelClass(def.queriedEntityClass());
 		target.action = EntityAction.VIEW;
 		target.def = def;
-		Client.goTo(target);
+		target.go();
 	}
 
 	public void doView(VersionableEntity object) {
@@ -106,7 +106,7 @@ public class AppController {
 		if (Event.getCurrentEvent() != null && WidgetUtils.isNewTabModifier()) {
 			Window.open(target.toAbsoluteHrefString(), "_blank", "");
 		} else {
-			Client.goTo(target);
+			target.go();
 		}
 	}
 
@@ -115,7 +115,7 @@ public class AppController {
 				.getPlaceByModelClass(clazz);
 		target.action = EntityAction.VIEW;
 		target.id = objectId;
-		Client.goTo(target);
+		target.go();
 	}
 
 	public void export(DomainStoreDataProvider dataProvider,

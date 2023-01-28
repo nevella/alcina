@@ -57,7 +57,7 @@ public interface GroupedCellTableView<VM extends ViewModel> extends IsWidget {
 					} else {
 						def.setGroupingParameters(null);
 					}
-					Client.goTo(copy);
+					copy.go();
 				}).dialog().noGlass().caption("Edit grouping")
 				.okButtonName("Group results").cancelButtonName("No grouping")
 				.show();

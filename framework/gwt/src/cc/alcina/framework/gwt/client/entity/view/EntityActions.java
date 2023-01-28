@@ -35,7 +35,7 @@ public class EntityActions {
 			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
 					.copy();
 			entityPlace.action = EntityAction.EDIT;
-			Client.goTo(entityPlace);
+			entityPlace.go();
 		}
 	}
 
@@ -100,7 +100,7 @@ public class EntityActions {
 			}
 			entityPlace.action = EntityAction.CREATE;
 			entityPlace.withId(0);
-			Client.goTo(entityPlace);
+			entityPlace.go();
 		}
 	}
 
@@ -111,7 +111,7 @@ public class EntityActions {
 			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
 					.copy();
 			entityPlace.action = EntityAction.VIEW;
-			Client.goTo(entityPlace);
+			entityPlace.go();
 		}
 	}
 

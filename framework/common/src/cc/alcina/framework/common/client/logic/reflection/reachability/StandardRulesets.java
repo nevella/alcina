@@ -141,6 +141,7 @@ public class StandardRulesets {
 			cc.alcina.framework.common.client.util.TopicListener.class,
 			cc.alcina.framework.common.client.util.TopicPublisher.class,
 			cc.alcina.framework.gwt.client.Client.class,
+			cc.alcina.framework.gwt.client.Client.PlaceNavigatorImpl.class,
 			cc.alcina.framework.gwt.client.ClientState.class,
 			cc.alcina.framework.gwt.client.dirndl.RenderContext.class,
 			cc.alcina.framework.gwt.client.dirndl.model.Model.class,

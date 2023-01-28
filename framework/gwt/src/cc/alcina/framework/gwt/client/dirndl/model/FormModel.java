@@ -163,12 +163,12 @@ public class FormModel extends Model
 						entityPlace.id = currentEntityPlace.action == EntityAction.CREATE
 								? createdLocator.id
 								: currentEntityPlace.id;
-						Client.goTo(entityPlace);
+						entityPlace.go();
 					}
 					EntityPlace entityPlace = ((EntityPlace) Client
 							.currentPlace()).copy();
 					entityPlace.action = EntityAction.VIEW;
-					Client.goTo(entityPlace);
+					entityPlace.go();
 				};
 				CommitToStorageTransformListener
 						.flushAndRunWithFirstCreationConsumer(callback);
@@ -277,13 +277,13 @@ public class FormModel extends Model
 					EntityPlace entityPlace = (EntityPlace) Reflections
 							.newInstance(currentPlace.getClass());
 					entityPlace.id = currentEntityPlace.id;
-					Client.goTo(entityPlace);
+					entityPlace.go();
 				}
 			} else if (currentPlace instanceof CategoryNamePlace) {
 				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
 						.copy();
 				categoryNamePlace.nodeName = null;
-				Client.goTo(categoryNamePlace);
+				categoryNamePlace.go();
 			}
 		}
 	}
