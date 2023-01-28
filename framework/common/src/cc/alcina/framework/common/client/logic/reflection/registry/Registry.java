@@ -407,7 +407,6 @@ public class Registry {
 							"Registering %s at key %s - existing registration",
 							implementation, typeKey));
 				}
-				Preconditions.checkState(!implementations.exists(typeKey));
 				registrations.clear(typeKey);
 				Implementation implementationType = implementation instanceof RegistryFactory
 						? Implementation.FACTORY
@@ -415,6 +414,9 @@ public class Registry {
 				add(registryKeys.get(implementation.getClass()),
 						Collections.singletonList(typeKey), implementationType,
 						Priority.APP);
+				// a previous singleton may have been registered at type - but
+				// has not yet been requested (via impl) -- clear it
+				singletons.remove(type);
 				singletons.put(implementation);
 			}
 		}
@@ -430,6 +432,11 @@ public class Registry {
 		Registry getRegistry();
 	}
 
+	/*
+	 * The internal cache of resolved implementations - takes a query (a list of
+	 * classes), returns the ImplementationData instance or list at that point
+	 * in the lookup tree
+	 */
 	class Implementations {
 		LookupTree<ImplementationData> lookup = new LookupTree<>();
 
@@ -813,6 +820,10 @@ public class Registry {
 				}
 				byClass.put(clazz, implementation);
 			}
+		}
+
+		void remove(Class singletonImplementationType) {
+			byClass.remove(singletonImplementationType);
 		}
 	}
 }
