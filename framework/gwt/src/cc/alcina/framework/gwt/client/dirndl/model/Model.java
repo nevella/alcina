@@ -134,7 +134,7 @@ public abstract class Model extends Bindable
 
 		@Override
 		public Element provideElement() {
-			return node.getWidget().getElement();
+			return node == null ? null : node.getWidget().getElement();
 		}
 	}
 
@@ -301,7 +301,7 @@ public abstract class Model extends Bindable
 
 		@Override
 		public Element provideElement() {
-			return node.getWidget().getElement();
+			return node == null ? null : node.getWidget().getElement();
 		}
 	}
 }

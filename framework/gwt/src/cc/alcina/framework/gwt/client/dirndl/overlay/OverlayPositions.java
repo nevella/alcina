@@ -39,13 +39,6 @@ public class OverlayPositions {
 
 		boolean removeOnClickOutside;
 
-		private String cssClass;
-
-		public ContainerOptions withCssClass(String cssClass) {
-			this.cssClass = cssClass;
-			return this;
-		}
-
 		ContainerOptions withModal(boolean modal) {
 			this.modal = modal;
 			return this;
