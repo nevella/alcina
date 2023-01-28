@@ -132,9 +132,18 @@ public abstract class Model extends Bindable
 			super.onBind(event);
 		}
 
+		/*
+		 * This could null-check node - but it's better for callers to check
+		 * provideIsBound if unsure
+		 */
 		@Override
 		public Element provideElement() {
-			return node == null ? null : node.getWidget().getElement();
+			return node.getWidget().getElement();
+		}
+
+		@Override
+		public boolean provideIsBound() {
+			return node != null;
 		}
 	}
 
@@ -301,7 +310,12 @@ public abstract class Model extends Bindable
 
 		@Override
 		public Element provideElement() {
-			return node == null ? null : node.getWidget().getElement();
+			return node.getWidget().getElement();
+		}
+
+		@Override
+		public boolean provideIsBound() {
+			return node != null;
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.util.Ax;
@@ -96,7 +98,9 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 		}
 
 		public String getTitle() {
-			return event.getDescription();
+			String description = event.getDescription();
+			// only display if != text
+			return Objects.equals(description, getLabel()) ? null : description;
 		}
 
 		@Override

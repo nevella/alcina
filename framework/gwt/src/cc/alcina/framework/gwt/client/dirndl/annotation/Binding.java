@@ -37,8 +37,24 @@ public @interface Binding {
 
 	@Reflected
 	public enum Type {
-		PROPERTY, INNER_HTML, INNER_TEXT, CSS_CLASS, STYLE_ATTRIBUTE,
-		SWITCH_CSS_CLASS, PANEL_CHANGED,
+		PROPERTY, INNER_HTML, INNER_TEXT,
+		/*
+		 * applies to boolean properties, adds a css class of name css-ified
+		 * propertyName to the element if property is true
+		 *
+		 * e.g. @Binding(type = Type.CSS_CLASS, from = "selected") -- if
+		 * property 'selected' is true, will render as <x class="selected"/>
+		 */
+		CSS_CLASS,
+		/*
+		 * applies to String properties, adds a style attributed of name
+		 * css-ified propertyName to the element if property is non-null
+		 *
+		 * e.g. @Binding(type = Type.STYLE_ATTRIBUTE, from = "backgroundColor")
+		 * -- property backgroundColor="#99cccc" will render as <x
+		 * style="background-color: #99cccc;"/>
+		 */
+		STYLE_ATTRIBUTE, SWITCH_CSS_CLASS,
 		// sugar for type=PROPERTY,to="class" -- because we can't have a source
 		// property named 'class', natch
 		CLASS_PROPERTY;

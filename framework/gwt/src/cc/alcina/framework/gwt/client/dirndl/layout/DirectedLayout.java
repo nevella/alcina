@@ -960,7 +960,7 @@ public class DirectedLayout implements AlcinaProcess {
 				case CLASS_PROPERTY: {
 					String propertyName = binding.type() == Type.CLASS_PROPERTY
 							? "class"
-							: binding.to().isEmpty() ? binding.from()
+							: binding.to().isEmpty() ? Ax.cssify(binding.from())
 									: binding.to();
 					if (value == null || (value instanceof Boolean
 							&& !((Boolean) value).booleanValue())) {

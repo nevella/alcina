@@ -32,31 +32,16 @@ public class Topic<T> {
 		return add(runnable, false);
 	}
 
-	public ListenerReference add(Runnable runnable,
-			boolean fireIfWasPublished) {
-		return add(new TopicListener() {
-			@Override
-			public void topicPublished(Object message) {
-				runnable.run();
-			}
-		}, fireIfWasPublished);
-	}
-
 	public ListenerReference add(TopicListener<T> listener) {
 		return add(listener, false);
 	}
 
-	public ListenerReference add(TopicListener<T> listener,
-			boolean fireIfWasPublished) {
-		delta(listener, true);
-		if (wasPublished && fireIfWasPublished) {
-			// note - we don't keep a ref to the last published object -
-			// this assumes the caller knows how to get it. Useful for
-			// adding async one-off listeners when the event may have
-			// already occurred
-			listener.topicPublished(null);
-		}
-		return new Topic.Reference(this, listener);
+	public ListenerReference addWithPublishedCheck(Runnable runnable) {
+		return add(runnable, true);
+	}
+
+	public ListenerReference addWithPublishedCheck(TopicListener<T> listener) {
+		return add(listener, true);
 	}
 
 	public void clearListeners() {
@@ -82,6 +67,29 @@ public class Topic<T> {
 
 	public void signal() {
 		publish(null);
+	}
+
+	private ListenerReference add(Runnable runnable,
+			boolean fireIfWasPublished) {
+		return add(new TopicListener() {
+			@Override
+			public void topicPublished(Object message) {
+				runnable.run();
+			}
+		}, fireIfWasPublished);
+	}
+
+	private ListenerReference add(TopicListener<T> listener,
+			boolean fireIfWasPublished) {
+		delta(listener, true);
+		if (wasPublished && fireIfWasPublished) {
+			// note - we don't keep a ref to the last published object -
+			// this assumes the caller knows how to get it. Useful for
+			// adding async one-off listeners when the event may have
+			// already occurred
+			listener.topicPublished(null);
+		}
+		return new Topic.Reference(this, listener);
 	}
 
 	public static class MultichannelTopics<TC> {

@@ -155,7 +155,7 @@ public class Overlay extends Model.WithNode implements
 	public void onMouseDownOutside(MouseDownOutside event) {
 		if (removeOnMouseDownOutside) {
 			GwtEvent gwtEvent = event.getContext().getOriginatingGwtEvent();
-			if (peer != null && peer.provideElement() != null
+			if (peer != null && peer.provideIsBound()
 					&& gwtEvent instanceof HasNativeEvent) {
 				NativeEvent nativeEvent = ((HasNativeEvent) gwtEvent)
 						.getNativeEvent();

@@ -4,4 +4,6 @@ import com.google.gwt.dom.client.Element;
 
 public interface HasElement {
 	Element provideElement();
+
+	boolean provideIsBound();
 }

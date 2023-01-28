@@ -52,7 +52,7 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 		public void dispatch() {
 			Preconditions.checkState(topic != null ^ runnable != null);
 			if (distinct) {
-				if (distinctQueue.contains(this)) {
+				if (!distinctQueue.add(this)) {
 					return;
 				}
 			}
