@@ -549,10 +549,6 @@ public class Transactions {
 	}
 
 	public class TransactionsStats {
-		public void debugVacuum() {
-			vacuum.debug();
-		}
-
 		public String describeTransactions() {
 			FormatBuilder fb = new FormatBuilder();
 			synchronized (transactionMetadataLock) {

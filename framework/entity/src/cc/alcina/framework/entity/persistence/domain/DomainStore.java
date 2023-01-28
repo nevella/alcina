@@ -1239,7 +1239,6 @@ public class DomainStore implements IDomainStore {
 							"Long vacuum time - no thread - {} ms - no thread",
 							time);
 					// very unlikely this is null...wazzup?
-					Transactions.stats().debugVacuum();
 				}
 			}
 			return time;

@@ -12,13 +12,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -47,9 +45,6 @@ class Vacuum {
 
 	volatile boolean finished = false;
 
-	// synchronize on this for access, since multiple threads can access
-	List<DebugEvent> debugEvents = new ArrayList<>();
-
 	public Vacuum() {
 		vacuumThread = new Thread(new EventHandler(),
 				"domainstore-mvcc-vacuum");
@@ -64,14 +59,7 @@ class Vacuum {
 	}
 
 	private void emitDebugEvent(String message) {
-		synchronized (debugEvents) {
-			if (debugEvents.size() > MAX_DEBUG_EVENTS) {
-				debugEvents = debugEvents.stream()
-						.skip(MAX_DEBUG_EVENTS - MAX_DEBUG_EVENTS / 2)
-						.collect(Collectors.toList());
-			}
-			debugEvents.add(new DebugEvent(message));
-		}
+		// noop - but there's support in the file history
 	}
 
 	/*
@@ -154,20 +142,6 @@ class Vacuum {
 				.add(vacuumable);
 	}
 
-	void debug() {
-		try {
-			logger.warn("debug missing active vacuum thread");
-			Ax.out(SEUtilities.getFullStacktrace(vacuumThread));
-			Ax.out("-----------------------------");
-			synchronized (debugEvents) {
-				debugEvents.forEach(Ax::out);
-				debugEvents.clear();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	long getVacuumStarted() {
 		return this.vacuumStarted;
 	}
@@ -187,41 +161,6 @@ class Vacuum {
 
 	void start() {
 		vacuumThread.start();
-	}
-
-	class DebugEvent {
-		String message;
-
-		long activeThreadId;
-
-		long vacuumStarted;
-
-		long time;
-
-		long txId;
-
-		public DebugEvent(String message) {
-			time = System.currentTimeMillis();
-			txId = -1;
-			try {
-				txId = Transaction.current().getId().id;
-			} catch (Exception e) {
-				Ax.simpleExceptionOut(e);
-			}
-			this.message = message;
-			this.activeThreadId = activeThread == null ? -1
-					: activeThread.getId();
-			this.vacuumStarted = Vacuum.this.vacuumStarted;
-		}
-
-		@Override
-		public String toString() {
-			String messageFormatted = message.contains("\n")
-					? "\n" + CommonUtils.tabify(message, 60, 1) + "\n"
-					: message;
-			return String.format("%12s %12s %12s %12s %s", time, activeThreadId,
-					txId, vacuumStarted, messageFormatted);
-		}
 	}
 
 	class EventHandler implements Runnable {
