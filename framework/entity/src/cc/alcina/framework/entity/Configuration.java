@@ -1,7 +1,10 @@
 package cc.alcina.framework.entity;
 
+import java.util.Optional;
+
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.projection.GraphProjection;
 
 /*
  * Replacement for system configuration portion of ResourceUtilities
@@ -72,6 +75,10 @@ public class Configuration {
 			this.keyPart = keyPart;
 		}
 
+		public boolean definedAndIs() {
+			return has() && is();
+		}
+
 		public String get() {
 			if (contextOverride) {
 				String key = Ax.format("%s.%s", clazz.getSimpleName(), keyPart);
@@ -80,6 +87,17 @@ public class Configuration {
 				}
 			}
 			return Configuration.get(clazz, keyPart);
+		}
+
+		public boolean has() {
+			if (contextOverride) {
+				String key = Ax.format("%s.%s", clazz.getSimpleName(), keyPart);
+				if (LooseContext.has(key)) {
+					return true;
+				}
+			}
+			return ResourceUtilities.isDefined(Ax.format("%s.%s",
+					GraphProjection.classSimpleName(clazz), keyPart));
 		}
 
 		public int intValue() {
@@ -95,6 +113,10 @@ public class Configuration {
 		public long longValue() {
 			String value = get();
 			return Long.valueOf(value);
+		}
+
+		public Optional<Key> optional() {
+			return has() ? Optional.of(this) : Optional.empty();
 		}
 
 		public void set(String value) {

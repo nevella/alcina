@@ -16,6 +16,8 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ProcessContextProvider;
+import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -223,6 +225,8 @@ public class SelectionTraversal
 		select(firstGeneration.generation, rootSelection);
 		for (GenerationTraversal generationTraversal : generations.values()) {
 			currentGeneration = generationTraversal.generation;
+			ProcessObservers.publish(GenerationEntry.class,
+					() -> new GenerationEntry());
 			nextGeneration = Ax.next(generations.keySet(), currentGeneration);
 			// this logic (looping on the current generation until there's a
 			// pass with no submitted tasks) allows selectors to add to the
@@ -259,6 +263,8 @@ public class SelectionTraversal
 				}
 				selectorPass++;
 			}
+			ProcessObservers.publish(GenerationExit.class,
+					() -> new GenerationExit());
 		}
 	}
 
@@ -372,6 +378,30 @@ public class SelectionTraversal
      *
      */
 	public interface Generation {
+	}
+
+	public class GenerationEntry implements ProcessObservable {
+		public Generation getGeneration() {
+			return currentGeneration;
+		}
+
+		@Override
+		public String toString() {
+			return currentGeneration.getClass().getName() + "::"
+					+ currentGeneration.toString();
+		}
+	}
+
+	public class GenerationExit implements ProcessObservable {
+		public Generation getGeneration() {
+			return currentGeneration;
+		}
+
+		@Override
+		public String toString() {
+			return currentGeneration.getClass().getName() + "::"
+					+ currentGeneration.toString();
+		}
 	}
 
 	public class GenerationTraversal {
