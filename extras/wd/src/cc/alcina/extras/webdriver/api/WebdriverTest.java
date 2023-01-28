@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -54,9 +55,11 @@ public abstract class WebdriverTest implements Registration.Ensure {
 
 	protected static String addGwtClientUrl(String url) {
 		if (Configuration.key(ADD_GWT_CLIENT_SUFFIX).is()) {
-			url += "?gwt.codesvr=127.0.0.1:9997";
+			String suffix = "?gwt.codesvr=127.0.0.1:9997";
+			return url.contains(suffix) ? url : url + suffix;
+		} else {
+			return url;
 		}
-		return url;
 	}
 
 	protected int myLevel;
@@ -69,6 +72,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 
 	protected transient WdExec exec;
 
+	// -->dependent tests
 	public Class<? extends WebdriverTest>[] childTests() {
 		return new Class[0];
 	}
@@ -86,7 +90,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			String url = pathToUrl(path);
 			String curr = driver().getCurrentUrl();
 			if (!Objects.equals(curr, url)) {
-				driver().get(url);
+				goToUri(url);
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -96,7 +100,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	public void getAndLog(String uri) {
 		String key = "Load: " + uri;
 		MetricLogging.get().start(key);
-		driver().get(uri);
+		goToUri(uri);
 		token.setLoadedUrl(uri);
 		MetricLogging.get().end(key);
 	}
@@ -150,7 +154,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		try {
 			String curr = driver().getCurrentUrl();
 			curr = String.format("%s#%s", curr.replaceFirst("#.*", ""), hash);
-			driver().get(curr);
+			goToUri(curr);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -159,7 +163,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	public void goToPath(String path) {
 		try {
 			String url = pathToUrl(path);
-			driver().get(url);
+			goToUri(url);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -268,6 +272,11 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 	}
 
+	private void goToUri(String url) {
+		Ax.out(" --> " + url);
+		driver().get(url);
+	}
+
 	private TestResult process0(int level, TestResult parent) throws Exception {
 		this.myLevel = level;
 		String oldThreadName = Thread.currentThread().getName();
@@ -336,8 +345,15 @@ public abstract class WebdriverTest implements Registration.Ensure {
 				try {
 					result.setStartTimeExcludingDependent(
 							System.currentTimeMillis());
-					System.err.println(
-							"running test - " + getClass().getSimpleName());
+					String message = "running test - "
+							+ getClass().getSimpleName();
+					if (level == 0) {
+						System.err.println(message);
+					} else {
+						System.out.println(
+								CommonUtils.padStringLeft("", level, " ")
+										+ message);
+					}
 					run();
 					uiStateChange(providesUIState());
 					uiStateChange(returnsUIState());

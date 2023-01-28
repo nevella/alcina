@@ -88,7 +88,7 @@ public class WDManager {
 							.computeTreeResultType() != TestResultType.ERROR
 							|| config.closeOnError) {
 						if (ResourceUtilities.is("allowCloseBrowser")) {
-							Ax.err("...closeAndCleanup");
+							// Ax.err("...closeAndCleanup");
 							try {
 								token.getDriverHandler().closeAndCleanup();
 							} catch (Exception e) {

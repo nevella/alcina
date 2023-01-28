@@ -18,31 +18,39 @@ public class WDWriter {
 
 	private boolean statsOnly;
 
-	public Writer getStorageWriter() {
-		return this.storageWriter;
-	}
-
-	public void setStorageWriter(Writer storageWriter) {
-		this.storageWriter = storageWriter;
+	public WDWriter() {
 	}
 
 	public PrintStream getConsoleWriter() {
 		return this.consoleWriter;
 	}
 
-	public void setConsoleWriter(PrintStream consoleWriter) {
-		this.consoleWriter = consoleWriter;
-	}
-
 	public HttpServletResponse getResp() {
 		return this.resp;
+	}
+
+	public Writer getStorageWriter() {
+		return this.storageWriter;
+	}
+
+	public boolean isStatsOnly() {
+		return statsOnly;
+	}
+
+	public void setConsoleWriter(PrintStream consoleWriter) {
+		this.consoleWriter = consoleWriter;
 	}
 
 	public void setResp(HttpServletResponse resp) {
 		this.resp = resp;
 	}
 
-	public WDWriter() {
+	public void setStatsOnly(boolean statsOnly) {
+		this.statsOnly = statsOnly;
+	}
+
+	public void setStorageWriter(Writer storageWriter) {
+		this.storageWriter = storageWriter;
 	}
 
 	public void write(String s, int level) {
@@ -71,13 +79,5 @@ public class WDWriter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public void setStatsOnly(boolean statsOnly) {
-		this.statsOnly = statsOnly;
-	}
-
-	public boolean isStatsOnly() {
-		return statsOnly;
 	}
 }

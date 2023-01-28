@@ -190,6 +190,12 @@ public class WdExec {
 		return false;
 	}
 
+	public boolean immediateTest(String... paths) {
+		return Arrays.stream(paths).anyMatch(path -> {
+			return xpath(path).immediateTest();
+		});
+	}
+
 	public WdExec index(int index) {
 		this.index = index;
 		return this;
