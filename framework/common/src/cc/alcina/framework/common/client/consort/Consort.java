@@ -360,7 +360,7 @@ public class Consort<D> implements AlcinaProcess {
 		wasPlayed(player, resultantStates, true);
 	}
 
-	// FIXME - 2023 - applifecycle.consort - cleanup - this works - unless we
+	// FIXME - consort - applifecycle.consort - cleanup - this works - unless we
 	// want some
 	// sort of threaded
 	// queue/consumer model - but it ain't so pretty
@@ -378,9 +378,8 @@ public class Consort<D> implements AlcinaProcess {
 		playedCount++;
 		assert playing.contains(player);
 		playing.remove(player);
-		// FIXME - 2023 - applifecycle.consort - warn if resultantstates >1 and
-		// a
-		// non-parallel consort?
+		// FIXME - consort - applifecycle.consort - warn if resultantstates >1
+		// and a non-parallel consort?
 		modifyStates(resultantStates, true);
 		metricLogger.debug(Ax.format("%s     %s: %s ms",
 				CommonUtils.padStringLeft("", depth(), '\t'),

@@ -177,7 +177,7 @@ class TowardsAMoreDesirableSituation {
 						if (TransformManager.get() == null) {
 							// shutting down
 						} else {
-							// FIXME - 2023 - DEVEX.0
+							logger.warn("DEVEX::0 - unknown", e);
 							e.printStackTrace();
 						}
 					}

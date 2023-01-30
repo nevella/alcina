@@ -141,6 +141,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *   1x1j overlay/preview events redux
  *   1x2 switch table/form rendering to pure model - adjunct transformmanager
  *   1x3 low priority fixmes
+ *   1x3a consider consort rework
  *   1x4 consider removing widget entirely (localdom)
  *   1x5 non-critical but desirable larger refactorings
  *

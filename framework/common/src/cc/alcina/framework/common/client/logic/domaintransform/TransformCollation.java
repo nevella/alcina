@@ -129,8 +129,6 @@ public class TransformCollation {
 		if (!has(userPropertyPersistableImpl)) {
 			return false;
 		}
-		// FIXME - 2023 - doesn't handle deletions, but that is in fact hard
-		// (since non-transactional)
 		Set<Class> modifiedPersistableClasses = query(
 				userPropertyPersistableImpl).stream()
 						.filter(QueryResult::hasNoDeleteTransform)
