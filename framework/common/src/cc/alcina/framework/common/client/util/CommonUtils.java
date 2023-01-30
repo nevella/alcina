@@ -1984,7 +1984,7 @@ public class CommonUtils {
 							DateAdjustmentModifier.LOCAL_TZ);
 					String adjustTo = formatDate(date, style, nullMarker,
 							DateAdjustmentModifier.ADJUST_TO_TZ);
-					return Ax.format("%s <-- local: %s", adjustTo, local);
+					return Ax.format("%s\n%s", adjustTo, local);
 				}
 			default:
 				break;
@@ -2016,7 +2016,9 @@ public class CommonUtils {
 					padTwo(date.getMinutes()), padTwo(date.getSeconds()));
 			String suffix = dateAdjustment == null ? ""
 					: dateAdjustment.toSuffix(dateAdjustmentModifier);
-			return formatted + suffix;
+			String prefix = dateAdjustment == null ? ""
+					: dateAdjustment.toPrefix(dateAdjustmentModifier);
+			return prefix + formatted + suffix;
 		}
 		case AU_DATE_TIME_HUMAN:
 			return formatDate(date, DateStyle.AU_LONG_DAY) + format(
@@ -2193,15 +2195,29 @@ public class CommonUtils {
 			return adjust(date, false);
 		}
 
+		public String toPrefix(DateAdjustmentModifier dateAdjustmentModifier) {
+			if (dateAdjustmentModifier == null) {
+				return "";
+			}
+			switch (dateAdjustmentModifier) {
+			case LOCAL_TZ:
+				return Ax.format("local: ", localData);
+			case ADJUST_TO_TZ:
+				return Ax.format("server: ", adjustToData);
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
 		public String toSuffix(DateAdjustmentModifier dateAdjustmentModifier) {
 			if (dateAdjustmentModifier == null) {
 				return "";
 			}
 			switch (dateAdjustmentModifier) {
 			case LOCAL_TZ:
-				return Ax.format(" (local: %s)", localData);
+				return Ax.format(" (%s)", localData);
 			case ADJUST_TO_TZ:
-				return Ax.format(" (adjusted to: %s)", adjustToData);
+				return Ax.format(" (%s)", adjustToData);
 			default:
 				throw new UnsupportedOperationException();
 			}
