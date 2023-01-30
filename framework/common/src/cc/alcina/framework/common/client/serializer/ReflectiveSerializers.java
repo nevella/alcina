@@ -440,7 +440,7 @@ public class ReflectiveSerializers {
 		@Override
 		protected BasePlace fromJson(Class clazz, JsonValue value) {
 			return (BasePlace) RegistryHistoryMapper.get()
-					.getPlace(value.asString());
+					.getPlaceOrThrow(value.asString());
 		}
 	}
 

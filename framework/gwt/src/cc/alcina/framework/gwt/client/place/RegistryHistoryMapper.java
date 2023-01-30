@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -17,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.gwt.client.ClientTopics;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
 
@@ -47,7 +49,12 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	public <T extends Place> T copyPlace(T place) {
 		String token = getToken(place);
-		return (T) getPlace(token, true);
+		try {
+			// should never throw
+			return (T) getPlace(token);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	public boolean equalPlaces(Place place1, Place place2) {
@@ -61,11 +68,12 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	/**
-	 * Throws a UnparseablePlaceException runtimeexception if not parseable
+	 * Call this if the token (serialized form) is not trusted (e.g. a browser
+	 * url, say) and thus quite possibly will throw
 	 */
 	@Override
-	public Place getPlace(String token) {
-		return getPlace(token, false);
+	public Place getPlace(String token) throws UnparseablePlaceException {
+		return parseAndReturnPlace(token);
 	}
 
 	public synchronized Place getPlaceByModelClass(Class<?> clazz) {
@@ -76,6 +84,28 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	public synchronized BasePlace getPlaceBySubPlace(Enum value) {
 		return placesBySubPlace.get(value).copy();
+	}
+
+	public Optional<Place> getPlaceIfParseable(String token) {
+		try {
+			return Optional.ofNullable(parseAndReturnPlace(token));
+		} catch (UnparseablePlaceException e) {
+			new ClientTopics.DevMessage("unparesable place", token).publish();
+			return Optional.empty();
+		}
+	}
+
+	/**
+	 * Call this if the token (serialized form) is trusted (not a browser url,
+	 * say) and thus not expected to throw - *or* if an unparseable place is
+	 * broken (e.g. during deserialization)
+	 */
+	public Place getPlaceOrThrow(String token) {
+		try {
+			return getPlace(token);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	@Override
@@ -156,15 +186,23 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return "";
 	}
 
+	protected Stream<BasePlace> listPlaces() {
+		return Registry.query(BasePlace.class).implementations();
+	}
+
+	protected Stream<BasePlaceTokenizer> listTokenizers() {
+		return Registry.query(BasePlaceTokenizer.class).implementations();
+	}
+
 	/**
 	 * On startup, apps should catch the UnparseablePlaceException and sub null.
 	 * But generally it's better to force the app to explicitly handle
 	 * unparseable places than just 'null'
 	 *
-	 * FIXME - 2023 - throw checked exception (this is one place where they
-	 * actually make total sense since there's generally a clear recovery path)
+	 * @throws UnparseablePlaceException
 	 */
-	protected synchronized Place getPlace(String o_token, boolean copy) {
+	protected synchronized Place parseAndReturnPlace(String o_token)
+			throws UnparseablePlaceException {
 		String token = cleanGwtCodesvr(
 				removeAppPrefixAndLeadingSlashes(o_token));
 		String[] split = token.split("/");
@@ -195,13 +233,5 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			// lastPlace = place;
 		}
 		return place;
-	}
-
-	protected Stream<BasePlace> listPlaces() {
-		return Registry.query(BasePlace.class).implementations();
-	}
-
-	protected Stream<BasePlaceTokenizer> listTokenizers() {
-		return Registry.query(BasePlaceTokenizer.class).implementations();
 	}
 }

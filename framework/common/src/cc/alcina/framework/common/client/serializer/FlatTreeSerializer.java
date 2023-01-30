@@ -1488,7 +1488,7 @@ public class FlatTreeSerializer {
 						true, null);
 			}
 			if (Reflections.isAssignableFrom(BasePlace.class, valueClass)) {
-				return RegistryHistoryMapper.get().getPlace(stringValue);
+				return RegistryHistoryMapper.get().getPlaceOrThrow(stringValue);
 			}
 			if (Reflections.isAssignableFrom(ExtensibleEnum.class,
 					valueClass)) {

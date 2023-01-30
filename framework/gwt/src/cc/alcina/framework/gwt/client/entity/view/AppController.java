@@ -148,15 +148,6 @@ public class AppController {
 		return target;
 	}
 
-	public void goToCurrentPlace() {
-		Place place = Client.get().getPlaceController().getWhere();
-		if (place != null) {
-			String token = RegistryHistoryMapper.get().getToken(place);
-			place = RegistryHistoryMapper.get().getPlace(token);
-			goToPlace(place);
-		}
-	}
-
 	public void goToPlace(Place place) {
 		goToPlace(place, true);
 	}

@@ -68,7 +68,7 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 	private void onCreate(Entity e, Runnable postCreate) {
 		if (place.fromId != 0 && place.fromClass != null) {
 			EntityPlace fromPlace = (EntityPlace) RegistryHistoryMapper.get()
-					.getPlace(place.fromClass);
+					.getPlaceOrThrow(place.fromClass);
 			Class implementationClass = fromPlace.provideEntityClass();
 			Optional<Property> ownerReflector = Entity.Ownership
 					.getOwnerReflectors(e.entityClass())

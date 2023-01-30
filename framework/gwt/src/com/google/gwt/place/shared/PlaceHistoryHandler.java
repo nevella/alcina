@@ -170,11 +170,9 @@ public class PlaceHistoryHandler {
 			try {
 				newPlace = mapper.getPlace(token);
 			} catch (UnparseablePlaceException e) {
-				if (onStartup) {
-					// permitted
-				} else {
-					throw e;
-				}
+				// let the ClientTopics message throw if in dev - in general
+				// case, ignore (since we totally can't control the incoming
+				// url/token // )
 			}
 		}
 		if (newPlace == null) {

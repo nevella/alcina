@@ -141,7 +141,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		}
 		if (CommonUtils.isOrHasSuperClass(type, BasePlace.class)) {
 			return RegistryHistoryMapper.get()
-					.getPlace(jsonValue.isString().stringValue());
+					.getPlaceOrThrow(jsonValue.isString().stringValue());
 		}
 		return deserializeObject(jsonValue.isObject());
 	}

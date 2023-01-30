@@ -139,7 +139,7 @@ public class AlcinaBeanSerializerCElemental extends AlcinaBeanSerializer {
 			return m;
 		}
 		if (CommonUtils.isOrHasSuperClass(type, BasePlace.class)) {
-			return RegistryHistoryMapper.get().getPlace(jsonValue.asString());
+			RegistryHistoryMapper.get().getPlaceOrThrow(jsonValue.asString());
 		}
 		return deserializeObject((JsonObject) jsonValue);
 	}
