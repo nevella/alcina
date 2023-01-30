@@ -177,11 +177,6 @@ public class CommonUtils {
 		return s.substring(0, 1).toUpperCase() + s.substring(1);
 	}
 
-	// FIXME - 2023 - remove (GWT Class has this)
-	public static String classSimpleName(Class c) {
-		return c.getName().substring(c.getName().lastIndexOf('.') + 1);
-	}
-
 	public static Date cloneDate(Date date) {
 		return date == null ? null : new Date(date.getTime());
 	}

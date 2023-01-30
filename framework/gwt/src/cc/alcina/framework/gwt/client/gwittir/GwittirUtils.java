@@ -22,13 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.user.client.ui.Focusable;
-import com.google.gwt.user.client.ui.HasEnabled;
-import com.google.gwt.user.client.ui.HasWidgets;
-import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RadioButton;
-import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -40,13 +35,11 @@ import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  *
@@ -57,32 +50,6 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 public class GwittirUtils {
 	public static void commitAllTextBoxes(Binding binding) {
 		refreshTextBoxes(binding, null, false, false, true);
-	}
-
-	public static Collection convertCollection(Collection source,
-			Converter converter) {
-		ArrayList result = new ArrayList();
-		for (Object object : source) {
-			result.add(converter.convert(object));
-		}
-		return result;
-	}
-
-	public static void disableChildren(HasWidgets w) {
-		List<Widget> allChildren = WidgetUtils.allChildren(w);
-		for (Widget widget : allChildren) {
-			System.out.println(CommonUtils.classSimpleName(widget.getClass()));
-			if (widget instanceof HasEnabled) {
-				HasEnabled he = (HasEnabled) widget;
-				he.setEnabled(false);
-				System.out.println("---disabled");
-			}
-			if (widget instanceof ListBox) {
-				ListBox lb = (ListBox) widget;
-				lb.setEnabled(false);
-				System.out.println("---disabled");
-			}
-		}
 	}
 
 	public static void focusFirstInput(Binding binding) {
@@ -116,17 +83,6 @@ public class GwittirUtils {
 			}
 		}
 		return vList;
-	}
-
-	public static int getFieldIndex(Field[] fields, String propertyName) {
-		int i = 0;
-		for (Field f : fields) {
-			if (f.getPropertyName().equals(propertyName)) {
-				return i;
-			}
-			i++;
-		}
-		return -1;
 	}
 
 	public static SetBasedListBox getForEnumAndRenderer(
@@ -169,14 +125,7 @@ public class GwittirUtils {
 	}
 
 	public static boolean isIntrospectable(Class clazz) {
-		while (clazz != null && clazz != Object.class) {
-			ClassReflector classReflector = Reflections.at(clazz);
-			if (classReflector.has(Bean.class)) {
-				return true;
-			}
-			clazz = clazz.getSuperclass();
-		}
-		return false;
+		return Reflections.at(clazz).has(Bean.class);
 	}
 
 	public static void refreshAllTextBoxes(Binding binding) {

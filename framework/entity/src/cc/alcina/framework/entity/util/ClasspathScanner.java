@@ -417,7 +417,8 @@ public class ClasspathScanner {
 			// because this occurs very early, it doesn't seem parallel() helps
 			// (since UnixFile.toString() is a big hit, either way)
 			//
-			// FIXME - 2023 - possibly check with GraalVM/a precompiler?
+			// FIXME - console - perf - possibly check with GraalVM/a
+			// precompiler?
 			urls.collect(Collectors.toList()).stream()
 					// .parallel()
 					.forEach(url -> invokeHandler(url));

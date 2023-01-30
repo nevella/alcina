@@ -156,10 +156,9 @@ public class FlatTreeSerializer {
 	public static final String CONTEXT_THROW_ON_SERIALIZATION_FAILURE = FlatTreeSerializer.class
 			.getName() + ".CONTEXT_THROW_ON_SERIALIZATION_FAILURE";
 
-	// FIXME - 2023 - this would collide with the string __fts_NULL__ - right?
-	// Check if there's an escape sequence that would be impossible for a
-	// serialized string
 	private static String NULL_MARKER = "__fts_NULL__";
+
+	private static String NULL_MARKER_ESCAPED = "%5F_fts_NULL__";
 
 	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = Registry
 			.impl(ConcurrentMapCreator.class).create();
@@ -1580,8 +1579,11 @@ public class FlatTreeSerializer {
 				return NULL_MARKER;
 			} else {
 				String stringValue0 = toStringValue0();
-				Preconditions.checkArgument(!NULL_MARKER.equals(stringValue0));
-				return stringValue0;
+				if (Objects.equals(NULL_MARKER, stringValue0)) {
+					return NULL_MARKER_ESCAPED;
+				} else {
+					return stringValue0;
+				}
 			}
 		}
 	}

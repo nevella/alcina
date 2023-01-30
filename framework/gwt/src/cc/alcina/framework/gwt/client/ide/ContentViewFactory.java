@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -248,7 +249,7 @@ public class ContentViewFactory {
 		return this;
 	}
 
-	public ActionTableHolder createActionTable(Collection beans,
+	public ActionTableHolder createActionTable(Collection<?> beans,
 			Class beanClass, Converter converter,
 			Collection<PermissibleAction> actions,
 			PermissibleActionListener listener, boolean withObjectActions,
@@ -256,7 +257,8 @@ public class ContentViewFactory {
 		ActionTableHolder holder = new ActionTableHolder();
 		FlowPanel fp = holder.fp;
 		if (converter != null) {
-			beans = GwittirUtils.convertCollection(beans, converter);
+			beans = (Collection<?>) beans.stream().map(converter)
+					.collect(Collectors.toList());
 		}
 		Object bean = Reflections.at(beanClass).templateInstance();
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
@@ -439,8 +441,7 @@ public class ContentViewFactory {
 		FlowPanel fp = null;
 		ExpandableListPanel elp = null;
 		for (Class<? extends PermissibleAction> c : getBeanActions(bean)) {
-			final PermissibleAction v = Reflections.at(c)
-					.templateInstance();
+			final PermissibleAction v = Reflections.at(c).templateInstance();
 			if (v instanceof NonstandardObjectAction) {
 				if (fp == null) {
 					fp = new FlowPanel();
