@@ -164,4 +164,10 @@ public class CollectionCreators {
 			return new LinkedHashMap<>();
 		}
 	}
+
+	@Reflected
+	@Registration.Singleton(CollectionCreators.WeakMapCreator.class)
+	public abstract static class WeakMapCreator {
+		public abstract <K, V> Map<K, V> create();
+	}
 }

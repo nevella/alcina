@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.util;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -12,6 +13,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCrea
 import cc.alcina.framework.common.client.util.CollectionCreators.HashMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.HashSetCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator;
+import cc.alcina.framework.common.client.util.CollectionCreators.WeakMapCreator;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
@@ -80,6 +82,17 @@ public class CollectionCreatorsJvm {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new Object2ObjectLinkedOpenHashMap<>();
+		}
+	}
+
+	@Reflected
+	@Registration.Singleton(
+		value = CollectionCreators.WeakMapCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class WeakMapCreatorJvm extends WeakMapCreator {
+		@Override
+		public <K, V> Map<K, V> create() {
+			return new WeakHashMap<>();
 		}
 	}
 }

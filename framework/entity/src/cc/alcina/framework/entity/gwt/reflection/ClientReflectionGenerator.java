@@ -1105,7 +1105,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	//
 	//
-	// FIXME - 2023 - write only changed classreflectors (although this gets us
+	// FIXME - speed - gwt - write only changed classreflectors (although this
+	// gets us
 	// 90% of possible speedup)
 	static class IncrementalSupport implements Serializable {
 		Map<String, Long> writeableTimes;

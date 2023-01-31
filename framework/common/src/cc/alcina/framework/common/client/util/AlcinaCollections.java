@@ -32,4 +32,9 @@ public class AlcinaCollections {
 	public static <K, V> Map<K, V> newUnqiueMap() {
 		return GWT.isScript() ? JsUniqueMap.create() : newHashMap();
 	}
+
+	// currently no GWT implementation - but will use es6 WeakMap
+	public static <K, V> Map<K, V> newWeakMap() {
+		return Registry.impl(CollectionCreators.WeakMapCreator.class).create();
+	}
 }
