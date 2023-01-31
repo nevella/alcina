@@ -149,6 +149,22 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Expand extends ModelEvent<Object, Expand.Handler> {
+		@Override
+		public void dispatch(Expand.Handler handler) {
+			handler.onExpand(this);
+		}
+
+		@Override
+		public Class<Expand.Handler> getHandlerClass() {
+			return Expand.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onExpand(Expand event);
+		}
+	}
+
 	public static class Filter extends ModelEvent<Object, Filter.Handler> {
 		@Override
 		public void dispatch(Filter.Handler handler) {

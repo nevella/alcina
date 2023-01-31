@@ -7,13 +7,15 @@ import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
@@ -55,10 +57,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 			@Binding(type = Type.PROPERTY, from = "placeholder"),
 			@Binding(type = Type.PROPERTY, from = "type"),
 			@Binding(type = Type.PROPERTY, from = "spellcheck"),
-			@Binding(type = Type.PROPERTY, from = "autocomplete") },
+			@Binding(type = Type.PROPERTY, from = "autocomplete"),
+			@Binding(type = Type.INNER_TEXT, from = "innerText") },
 	receives = { DomEvents.Change.class, DomEvents.Input.class })
-public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
-		DomEvents.Change.Handler, DomEvents.Input.Handler {
+public class StringInput extends Model.WithNode
+		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
+		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler {
 	private String value;
 
 	private String currentValue;
@@ -77,6 +81,9 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 
 	private String spellcheck;
 
+	// used for element population if element is a textarea (dom quirk, really)
+	private String innerText;
+
 	public StringInput() {
 	}
 
@@ -93,6 +100,10 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 			currentValue = elementValue();
 		}
 		return this.currentValue;
+	}
+
+	public String getInnerText() {
+		return this.innerText;
 	}
 
 	public String getPlaceholder() {
@@ -122,6 +133,13 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 
 	public boolean isSelectAllOnBind() {
 		return this.selectAllOnBind;
+	}
+
+	@Override
+	public void onBeforeRender(BeforeRender event) {
+		if (tag.equals("textarea") && innerText == null) {
+			innerText = value;
+		}
 	}
 
 	@Override
