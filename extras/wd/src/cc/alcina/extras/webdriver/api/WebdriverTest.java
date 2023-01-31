@@ -388,6 +388,9 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 		token.getWriter().write(result.toString(), level);
 		Thread.currentThread().setName(oldThreadName);
+		if (!result.providePassed()) {
+			throw new CancelParentsException();
+		}
 		return result;
 	}
 
@@ -434,6 +437,9 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		if (configuration != null) {
 			LooseContext.getContext().addProperties(configuration, false);
 		}
+	}
+
+	public static class CancelParentsException extends RuntimeException {
 	}
 
 	public static class TestException implements ProcessObservable {
