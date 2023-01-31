@@ -144,7 +144,7 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			}
 			// access gwt contexts via reflection to get the image file.
 			//
-			// FIXME - 2024 - there's probably an easier way...
+			// FIXME - speed - gwt - there's probably an easier way...
 			StandardGeneratorContext generatorContext = (StandardGeneratorContext) context
 					.getGeneratorContext();
 			Field compilerContextField = StandardGeneratorContext.class

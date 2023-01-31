@@ -159,6 +159,11 @@ public abstract class Model extends Bindable
 	 * FIXME - dirndl 1x1h - document/exemplify binding types (field-backed,
 	 * non-field-backed)
 	 *
+	 * <p>
+	 * When to setup the bindings? Either in the constructor or the subclass
+	 * onBeforeRender handler *before* the super call. First time they're used
+	 * is in this class's {@code onBeforeRender} method
+	 *
 	 * @author nick@alcina.cc
 	 *
 	 */

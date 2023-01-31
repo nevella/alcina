@@ -17,10 +17,14 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * <p>
- * Intended as an inversion of control helper. All subclasses are handled by the
- * nested handler class, which defaults to calling event.handle(T) where T is
- * the container - so essentially the *handler* code is in the event and the
- * *target* is the container
+ * Intended as an inversion of control/variance helper. All subclasses are
+ * handled by the nested handler class, which defaults to calling
+ * event.handle(T) where T is the container - so essentially the *handler* code
+ * is in the event and the *target* is the container
+ *
+ * <p>
+ * TODO - Doc - an example or two. This is particularly useful with multiple
+ * handlers (e.g. a context menu)
  *
  * @author nick@alcina.cc
  *
