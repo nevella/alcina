@@ -147,15 +147,15 @@ public class LeafModel {
 
 	@Directed(
 		bindings = @Binding(from = "className", type = Type.CLASS_PROPERTY))
-	public static class TagClassModel extends Model implements HasTag {
+	public static class TagClass extends Model implements HasTag {
 		private String className;
 
 		private String tag;
 
-		public TagClassModel() {
+		public TagClass() {
 		}
 
-		public TagClassModel(String tag, String className) {
+		public TagClass(String tag, String className) {
 			this.tag = tag;
 			this.className = className;
 		}

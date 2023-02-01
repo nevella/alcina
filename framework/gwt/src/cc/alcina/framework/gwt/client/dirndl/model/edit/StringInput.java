@@ -79,7 +79,7 @@ public class StringInput extends Model.WithNode
 
 	private boolean selectAllOnBind;
 
-	private String spellcheck;
+	private String spellcheck = "false";
 
 	// used for element population if element is a textarea (dom quirk, really)
 	private String innerText;

@@ -192,6 +192,10 @@ public class WidgetUtils {
 		to.setSize(from.getOffsetWidth() + "px", from.getOffsetHeight() + "px");
 	}
 
+	public static native void copyString(String value) /*-{
+    $wnd.navigator.clipboard.writeText(value);
+	}-*/;
+
 	public static void copyTextToClipboard(String text) {
 		try {
 			copyTextToClipboard0(text);

@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
-import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagClassModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagClass;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.PropertyNameTags;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -78,7 +78,7 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 	@PropertyNameTags
 	public static class Action extends Model
 			implements DomEvents.Click.Handler {
-		private final TagClassModel icon;
+		private final TagClass icon;
 
 		private final String label;
 
@@ -88,11 +88,11 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 			this.event = event;
 			this.label = CommonUtils.capitaliseFirst(event.name());
 			String className = Ax.format("icon %s", event.name());
-			this.icon = new TagClassModel("icon", className);
+			this.icon = new TagClass("icon", className);
 		}
 
 		@Directed
-		public TagClassModel getIcon() {
+		public TagClass getIcon() {
 			return icon;
 		}
 
