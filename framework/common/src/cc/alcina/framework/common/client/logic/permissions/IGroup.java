@@ -72,17 +72,12 @@ public interface IGroup extends IVersionable, HasDisplayName.Settable {
 	 * Note - does not descend
 	 */
 	default <IU extends IUser> boolean containsUser(IU user) {
-		if (getName().equals("Developers")) {
-			int debug = 3;
-		}
 		return getMemberUsers().contains(user);
 	}
 
 	default <IU extends IUser> boolean
 			containsUserOrMemberGroupContainsUser(IU user) {
-		boolean forAnyMemberGroups = forAnyMemberGroups(
-				group -> group.containsUser(user));
-		return forAnyMemberGroups;
+		return forAnyMemberGroup(group -> group.containsUser(user));
 	}
 
 	@Override
@@ -90,7 +85,7 @@ public interface IGroup extends IVersionable, HasDisplayName.Settable {
 		return Ax.blankTo(getName(), "(null)");
 	}
 
-	default boolean forAnyMemberGroups(Predicate<IGroup> predicate) {
+	default boolean forAnyMemberGroup(Predicate<IGroup> predicate) {
 		Set<IGroup> queued = new HashSet<>();
 		Stack<IGroup> toTraverse = new Stack<>();
 		toTraverse.add(this);
@@ -99,14 +94,14 @@ public interface IGroup extends IVersionable, HasDisplayName.Settable {
 			if (predicate.test(cursor)) {
 				return true;
 			}
-			cursor.getMemberOfGroups().stream().filter(queued::add)
+			cursor.getMemberGroups().stream().filter(queued::add)
 					.forEach(toTraverse::add);
 		}
 		return false;
 	}
 
 	default boolean provideIsMemberOf(IGroup otherGroup) {
-		return forAnyMemberGroups(group -> Objects.equals(group, otherGroup));
+		return forAnyMemberGroup(group -> Objects.equals(group, otherGroup));
 	}
 
 	@Override
