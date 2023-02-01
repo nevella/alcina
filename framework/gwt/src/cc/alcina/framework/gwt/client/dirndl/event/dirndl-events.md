@@ -52,7 +52,7 @@ application model. To achieve this:
  :: 'fire' - call an event handler, passing the event
 
 ## See also
-* ModelEvent javadoc
+* ModelEvent javadoc (gotchas re event reemission)
 
 ## Comparison :: react
 

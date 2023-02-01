@@ -1,0 +1,84 @@
+@use '../../theme/theme'
+
+/*
+  copied from suggestor FIXME actions should be split out into buttons
+
+    TODO - move some/most to dropdown
+  */
+$box-shadow-bottom: 0 16px 24px 2px rgb(0 0 0 / 9%), 0 6px 30px 5px rgb(0 0 0 / 2%), 0 8px 10px -5px rgb(0 0 0 / 1%)
+
+@mixin dropdown()
+  background: white
+  user-select: none
+  padding: 1rem 0
+  border: solid 1px #ccc
+  box-shadow: $box-shadow-bottom
+
+
+@mixin dropdown-list()
+  @include dropdown
+  border-radius: 4px
+  display: flex
+  flex-direction: column
+
+@mixin dropdown-list-item()
+  padding: 0 1rem
+  line-height: 2
+  cursor: pointer
+
+  &:hover
+    background-color: rgba(42, 42, 129, 0.1)
+
+@mixin dropdown-choices()
+  @include dropdown-list
+  
+  > choice
+    @include dropdown-list-item
+
+@mixin context-menu()
+  @include dropdown-list
+
+  > action
+    @include dropdown-list-item
+    display: grid
+    grid-template-columns: 15px 1fr
+    gap: 8px
+    align-items: baseline
+
+    > icon
+      width: 15px
+      height: 15px
+      display: inline-block
+      background-repeat: no-repeat
+      background-position-y: 1px
+
+@mixin context-menu-icons-only()
+  padding: 0.4rem 0.7rem
+  border-radius: 0
+  flex-direction: row
+  gap: 10px
+
+  &:not(:last-child)
+    margin-right: 10px
+
+  > action
+    display: inline-block
+    line-height: 1
+    padding: 0
+
+    > icon
+      width: 20px
+      height: 20px
+
+    > label
+      display: none
+
+@mixin context-menu-text-only()
+  padding: 0.5rem 0
+
+  > action
+    padding: 0 1.5rem
+    grid-template-columns: 1fr
+
+    > icon
+      display: none

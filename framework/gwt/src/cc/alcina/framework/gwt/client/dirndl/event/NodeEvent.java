@@ -39,7 +39,13 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	public abstract Class<H> getHandlerClass();
 
 	public <O extends ModelEvent> void reemitAs(Class<O> clazz) {
-		NodeEvent.Context.newModelContext(this, this.context.node).fire(clazz);
+		reemitAs(clazz, null);
+	}
+
+	public <O extends ModelEvent> void reemitAs(Class<O> clazz,
+			Object eventModel) {
+		NodeEvent.Context.newModelContext(this, this.context.node).fire(clazz,
+				eventModel);
 	}
 
 	public void setContext(Context context) {
@@ -53,11 +59,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	@Override
 	public String toString() {
 		return Ax.format("%s : %s", getClass().getSimpleName(), model);
-	}
-
-	protected void fireEvent(GwtEvent gwtEvent) {
-		int debug = 3;
-		// eventReceiver.onEvent(gwtEvent);
 	}
 
 	//

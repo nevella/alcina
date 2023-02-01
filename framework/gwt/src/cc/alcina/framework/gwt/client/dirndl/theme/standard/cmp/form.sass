@@ -1,0 +1,30 @@
+@use '../../theme/theme'
+@use '../../theme/colour'
+
+@mixin focus-placeholder
+  &::-webkit-input-placeholder
+    color: transparent
+
+  &:focus::-webkit-input-placeholder
+    color: #aaa
+    font-style: italic
+
+@mixin fancy-input
+  @include focus-placeholder
+  font-size: 16px
+  color: #666
+  width: 100%
+  background-color: transparent
+  border: solid 1px transparent
+  font-family: theme.$sans-font-stack
+  resize: none
+  padding: 0.4rem 0.2rem
+  box-sizing: border-box
+
+  &:hover
+    border-color: #aaa
+    background-color: colour.$light_alpha_20
+
+  &:focus
+    border-color: #555
+    background-color: colour.$white

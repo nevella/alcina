@@ -55,7 +55,8 @@ public @interface Directed {
 
 	/**
 	 * Informative only (not required for a node/model to emit the corresponding
-	 * event)
+	 * event). Concrete implementations of interfaces <i>should</i> emit events
+	 * if they're specified in the interface's {@code Directed.emits()}.
 	 */
 	public Class<? extends NodeEvent>[] emits() default {};
 

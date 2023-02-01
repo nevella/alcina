@@ -210,6 +210,13 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			initialiseContext();
 			beforeProcess();
 			return process0(level, parent);
+		} catch (Exception e) {
+			if (level == 0 && e instanceof CancelParentsException) {
+				// result will be in error state due to descendant exception
+				return result;
+			} else {
+				throw e;
+			}
 		} finally {
 			afterProcess();
 			LooseContext.pop();

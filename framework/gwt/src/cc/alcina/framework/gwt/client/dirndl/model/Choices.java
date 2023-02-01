@@ -14,11 +14,11 @@ import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 
 @Directed(tag = "choices", receives = ModelEvents.Selected.class)
 /*
@@ -30,7 +30,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
  * SelectionTraversal) - so 'Choices+Selection' are the names we have.
  */
 public abstract class Choices<T> extends Model.WithNode
-		implements ModelEvents.Selected.Handler {
+		implements ModelEvents.Selected.Handler, HasSelectedValue {
 	protected List<Choices.Choice<T>> choices;
 
 	private List<T> values;
@@ -139,6 +139,11 @@ public abstract class Choices<T> extends Model.WithNode
 			setSelectedValues(updatedValues);
 		}
 
+		@Override
+		public Object provideSelectedValue() {
+			return getSelectedValues();
+		}
+
 		public void setSelectedValues(List<T> values) {
 			List<T> oldValues = getSelectedValues();
 			Set valuesSet = new HashSet(values);
@@ -221,6 +226,11 @@ public abstract class Choices<T> extends Model.WithNode
 			}
 		}
 
+		@Override
+		public Object provideSelectedValue() {
+			return getSelectedValue();
+		}
+
 		public void setChangeOnSelectionEvent(boolean changeOnSelectionEvent) {
 			this.changeOnSelectionEvent = changeOnSelectionEvent;
 		}
@@ -254,6 +264,13 @@ public abstract class Choices<T> extends Model.WithNode
 				setSelectedValue(null);
 			} else {
 				setSelectedValue(choice.getValue());
+			}
+		}
+
+		@Directed.Delegating
+		public static class Delegating<T> extends Single<T> {
+			public Delegating(List<T> values) {
+				super(values);
 			}
 		}
 	}

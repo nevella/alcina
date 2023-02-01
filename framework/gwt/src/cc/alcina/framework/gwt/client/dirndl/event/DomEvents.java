@@ -196,8 +196,8 @@ public class DomEvents {
 		public void dispatch(Input.Handler handler) {
 			if (!populated) {
 				populated = true;
-				EventTarget eventTarget = ((InputEvent) getContext().getGwtEvent())
-						.getNativeEvent().getEventTarget();
+				EventTarget eventTarget = ((InputEvent) getContext()
+						.getGwtEvent()).getNativeEvent().getEventTarget();
 				Element element = Element.as(eventTarget);
 				if (element.getTagName().equals("input")) {
 					value = ((InputElement) element).getValue();

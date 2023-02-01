@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public interface IGroup extends IVersionable, HasDisplayName.Settable {
@@ -52,12 +52,12 @@ public interface IGroup extends IVersionable, HasDisplayName.Settable {
 
 	public void setMemberUsers(Set<? extends IUser> memberUsers);
 
-	default <IU extends Entity & IUser> void addMemberUser(IU user) {
-		((Entity) this).domain().addToProperty("memberUsers", user);
-	}
-
 	default <IG extends Entity & IGroup> void addMemberGroup(IG group) {
 		((Entity) this).domain().addToProperty("memberGroups", group);
+	}
+
+	default <IU extends Entity & IUser> void addMemberUser(IU user) {
+		((Entity) this).domain().addToProperty("memberUsers", user);
 	}
 
 	default <IU extends IUser> boolean containsCurrentUser() {
@@ -72,12 +72,17 @@ public interface IGroup extends IVersionable, HasDisplayName.Settable {
 	 * Note - does not descend
 	 */
 	default <IU extends IUser> boolean containsUser(IU user) {
+		if (getName().equals("Developers")) {
+			int debug = 3;
+		}
 		return getMemberUsers().contains(user);
 	}
 
 	default <IU extends IUser> boolean
 			containsUserOrMemberGroupContainsUser(IU user) {
-		return forAllMemberGroups(group -> group.containsUser(user));
+		boolean forAnyMemberGroups = forAnyMemberGroups(
+				group -> group.containsUser(user));
+		return forAnyMemberGroups;
 	}
 
 	@Override
@@ -85,7 +90,7 @@ public interface IGroup extends IVersionable, HasDisplayName.Settable {
 		return Ax.blankTo(getName(), "(null)");
 	}
 
-	default boolean forAllMemberGroups(Predicate<IGroup> predicate) {
+	default boolean forAnyMemberGroups(Predicate<IGroup> predicate) {
 		Set<IGroup> queued = new HashSet<>();
 		Stack<IGroup> toTraverse = new Stack<>();
 		toTraverse.add(this);
@@ -101,7 +106,7 @@ public interface IGroup extends IVersionable, HasDisplayName.Settable {
 	}
 
 	default boolean provideIsMemberOf(IGroup otherGroup) {
-		return forAllMemberGroups(group -> Objects.equals(group, otherGroup));
+		return forAnyMemberGroups(group -> Objects.equals(group, otherGroup));
 	}
 
 	@Override

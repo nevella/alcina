@@ -1,0 +1,25 @@
+@use '../../theme/theme'
+@use 'form'
+@use 'context-menu'
+
+@mixin suggestor
+  display: block
+
+  > editor
+    display: block
+
+    > input
+      width: 100%
+      border: none
+      box-sizing: border-box
+      outline: none
+
+@mixin fancy
+  @include suggestor
+
+  > editor > input
+    @include form.fancy-input
+
+@mixin default-suggestions
+  > overlay-container > overlay.suggestion-choices
+    @include context-menu.dropdown-choices

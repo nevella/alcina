@@ -264,7 +264,8 @@ public class BiPrintStream extends PrintStream {
 	private void debugPrint(Object obj) {
 		if (debugMarker != null) {
 			String s = String.valueOf(obj);
-			if (s != null && s.matches(debugMarker)) {
+			if (s != null
+					&& (s.matches(debugMarker) || s.contains(debugMarker))) {
 				int debug = 4;
 			}
 		}

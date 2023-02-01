@@ -317,6 +317,12 @@ public class ModelEvents {
 		}
 	}
 
+	/**
+	 * Emitted by single-item selection sources, such as {@code Choices.Single}
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static class Selected extends ModelEvent<Object, Selected.Handler> {
 		@Override
 		public void dispatch(Selected.Handler handler) {
@@ -333,6 +339,13 @@ public class ModelEvents {
 		}
 	}
 
+	/**
+	 * Emitted by multiple-item and single-item selection sources, such as
+	 * {@code Choices.Multiple}, {@code Choices.Single}) .
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static class SelectionChanged
 			extends ModelEvent<Object, SelectionChanged.Handler> {
 		@Override

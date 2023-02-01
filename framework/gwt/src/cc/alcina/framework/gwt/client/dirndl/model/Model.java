@@ -122,6 +122,9 @@ public abstract class Model extends Bindable
 	public static class WithNode extends Model implements HasElement {
 		protected DirectedLayout.Node node;
 
+		/**
+		 * Ahoy subclasses! Don't forget to call {@code super.onBind(event)}
+		 */
 		@Override
 		public void onBind(Bind event) {
 			if (event.isBound()) {
@@ -213,13 +216,27 @@ public abstract class Model extends Bindable
 					Converter leftToRightConverter,
 					SourcesPropertyChangeEvents right, Object rightPropertyName,
 					Converter rightToLeftConverter) {
+				SourcesPropertyChangeEvents left = fieldless
+						? propertyChangeSource
+						: WithPropertyBinding.this;
+				add(left, leftPropertyName, leftToRightConverter, right,
+						rightPropertyName, rightToLeftConverter);
+			}
+
+			public void add(Object leftPropertyName,
+					SourcesPropertyChangeEvents right,
+					Object rightPropertyName) {
+				add(leftPropertyName, null, right, rightPropertyName, null);
+			}
+
+			public void add(SourcesPropertyChangeEvents left,
+					Object leftPropertyName, Converter leftToRightConverter,
+					SourcesPropertyChangeEvents right, Object rightPropertyName,
+					Converter rightToLeftConverter) {
 				String leftPropertyNameString = PropertyEnum
 						.asPropertyName(leftPropertyName);
 				String rightPropertyNameString = PropertyEnum
 						.asPropertyName(rightPropertyName);
-				SourcesPropertyChangeEvents left = fieldless
-						? propertyChangeSource
-						: WithPropertyBinding.this;
 				Binding child = BindingBuilder.bind(left)
 						.onLeftProperty(leftPropertyNameString)
 						.convertLeftWith(leftToRightConverter).toRight(right)
@@ -228,10 +245,11 @@ public abstract class Model extends Bindable
 				binding.getChildren().add(child);
 			}
 
-			public void add(Object leftPropertyName,
-					SourcesPropertyChangeEvents right,
+			public void add(SourcesPropertyChangeEvents left,
+					Object leftPropertyName, SourcesPropertyChangeEvents right,
 					Object rightPropertyName) {
-				add(leftPropertyName, null, right, rightPropertyName, null);
+				add(left, leftPropertyName, null, right, rightPropertyName,
+						null);
 			}
 
 			public <I, O> void addOneway(Object leftPropertyName,

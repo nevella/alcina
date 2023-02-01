@@ -85,8 +85,22 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  * interface events than dealing directly with native (DOM) events
  * </ul>
  *
+ * <p>
+ * <b>Note - ProcessObservers</b> Dirndl currently emits one observable, before
+ * a received event is dispatched - here's an example of how to log those to
+ * devmode stdout:
+ *
+ * <pre>
+ * <code>
+ *
+ ProcessObservers.observe(DirectedLayout.EventObservable.class, Ax::out, true);
+	</code>
+ * </pre>
+ *
+ * <p>
  * FIXME - dirndl 1xg - performance
  *
+ * <p>
  * Minimise annotation resolution by caching an intermediate renderer object
  * which itself caches property/class annotation tuples (very similar to
  * reflective serializer typenode/propertynode implementation), scoped to
