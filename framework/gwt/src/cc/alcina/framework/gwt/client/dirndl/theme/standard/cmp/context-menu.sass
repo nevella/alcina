@@ -1,4 +1,5 @@
 @use '../../theme/theme'
+@use '../../theme/colour'
 
 /*
   copied from suggestor FIXME actions should be split out into buttons
@@ -22,12 +23,12 @@ $box-shadow-bottom: 0 16px 24px 2px rgb(0 0 0 / 9%), 0 6px 30px 5px rgb(0 0 0 / 
   flex-direction: column
 
 @mixin dropdown-list-item()
-  padding: 0 1rem
+  padding: 0.4rem 1rem
   line-height: 2
   cursor: pointer
 
   &:hover
-    background-color: rgba(42, 42, 129, 0.1)
+    background-color: colour.$dark_alpha_10
 
 @mixin dropdown-choices()
   @include dropdown-list
@@ -42,7 +43,7 @@ $box-shadow-bottom: 0 16px 24px 2px rgb(0 0 0 / 9%), 0 6px 30px 5px rgb(0 0 0 / 
     @include dropdown-list-item
     display: grid
     grid-template-columns: 15px 1fr
-    gap: 8px
+    padding: 4px 0
     align-items: baseline
 
     > icon
