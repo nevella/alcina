@@ -49,6 +49,16 @@ public class RemovablePropertyChangeListener
 		return this;
 	}
 
+	public RemovablePropertyChangeListener changeBoundState(boolean to) {
+		Preconditions.checkArgument(bound != to);
+		if (to) {
+			bind();
+		} else {
+			unbind();
+		}
+		return this;
+	}
+
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		// either handler is non-null or this is over-ridden

@@ -29,6 +29,17 @@ public class SuggestionChoices implements Suggestor.Suggestions {
 			return;
 		}
 		choices = new Choices.Single.Delegating<>(answers.getSuggestions());
+		// FIXME - dirndl 1x1d - much better - route the modelevents to the
+		// suggestor - via Overlay.setEventParent() (and Overly instanceof
+		// HasEventParent)
+		//
+		// Also enforce overlay styles via css-ification of associated marker
+		// classes (preferably node.model hierarchy)
+		choices.subscribeSelectionChanged(() -> {
+			suggestor.setChosenSuggestions(choices.provideSelectedValue());
+			// single-only
+			overlay.close(false);
+		});
 		contents.setModel(choices);
 	}
 

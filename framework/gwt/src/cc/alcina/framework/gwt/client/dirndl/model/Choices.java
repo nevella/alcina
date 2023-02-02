@@ -28,6 +28,9 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
  *
  * But 'selection' is very heavily used in the codebase (including
  * SelectionTraversal) - so 'Choices+Selection' are the names we have.
+ *
+ * Also - possibly the wrapping with Choice could be done reflectively/more
+ * elegantly
  */
 public abstract class Choices<T> extends Model.WithNode
 		implements ModelEvents.Selected.Handler, HasSelectedValue {
@@ -172,7 +175,7 @@ public abstract class Choices<T> extends Model.WithNode
 
 		/*
 		 * Use ModelEvents by preference - this allows ex-hierarchy observation
-		 * of changes if required
+		 * of changes if required (currently required for Overlay observation)
 		 */
 		private Topic<Void> selectionChanged = Topic.create();
 

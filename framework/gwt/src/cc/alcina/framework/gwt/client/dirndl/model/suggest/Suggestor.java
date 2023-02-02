@@ -5,14 +5,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -74,6 +75,12 @@ public class Suggestor extends Model.WithNode
 	public void onBind(LayoutEvents.Bind event) {
 		if (!event.isBound()) {
 			suggestions.toState(State.UNBOUND);
+		} else {
+			if (configuration.isSuggestOnBind()) {
+				Client.eventBus().queued().lambda(() -> editor.emitAsk())
+						.dispatch();
+				;
+			}
 		}
 		super.onBind(event);
 	}
@@ -91,13 +98,24 @@ public class Suggestor extends Model.WithNode
 			event.getContext().markCauseEventAsNotHandled();
 			return;
 		}
-		setValue(suggestions.provideSelectedValue());
+		setChosenSuggestions(suggestions.provideSelectedValue());
 		event.reemitAs(SelectionChanged.class);
 	}
 
 	@Override
 	public Object provideSelectedValue() {
 		return getValue();
+	}
+
+	public void setChosenSuggestions(Object value) {
+		if (value == null) {
+			setValue(null);
+		} else if (value instanceof Suggestion) {
+			setValue(((Suggestion) value).getModel());
+		} else {
+			setValue(((List<Suggestion>) value).stream()
+					.map(Suggestion::getModel).collect(Collectors.toList()));
+		}
 	}
 
 	public void setValue(Object value) {
@@ -181,6 +199,8 @@ public class Suggestor extends Model.WithNode
 
 		private OverlayPosition.Position suggestionXAlign = Position.START;
 
+		private boolean suggestOnBind;
+
 		public Answer getAnswer() {
 			return this.answer;
 		}
@@ -203,6 +223,10 @@ public class Suggestor extends Model.WithNode
 
 		public boolean isSelectAllOnBind() {
 			return this.selectAllOnBind;
+		}
+
+		public boolean isSuggestOnBind() {
+			return this.suggestOnBind;
 		}
 
 		public Configuration withAnswer(Answer answer) {
@@ -236,6 +260,11 @@ public class Suggestor extends Model.WithNode
 			this.suggestionXAlign = suggestionXAlign;
 			return this;
 		}
+
+		public Configuration withSuggestOnBind(boolean suggestOnBind) {
+			this.suggestOnBind = suggestOnBind;
+			return this;
+		}
 	}
 
 	/*
@@ -246,6 +275,7 @@ public class Suggestor extends Model.WithNode
 	 */
 	@Directed(emits = EditorAsk.class)
 	public interface Editor {
+		void emitAsk();
 	}
 
 	public enum Property implements PropertyEnum {
@@ -364,9 +394,14 @@ public class Suggestor extends Model.WithNode
 
 					private String string;
 
+					boolean emptyMatch = false;
+
 					public MarkupMatch(String string, String value) {
 						this.string = string;
-						Preconditions.checkArgument(value.length() > 0);
+						if (value.isEmpty()) {
+							emptyMatch = true;
+							return;
+						}
 						String matchString = string.toLowerCase();
 						String matchValue = value.toLowerCase();
 						int idx = 0;
@@ -383,7 +418,7 @@ public class Suggestor extends Model.WithNode
 					}
 
 					boolean hasMatches() {
-						return matches.size() > 0;
+						return emptyMatch || matches.size() > 0;
 					}
 
 					String toMarkup() {

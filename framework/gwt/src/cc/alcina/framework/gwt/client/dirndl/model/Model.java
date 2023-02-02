@@ -196,6 +196,8 @@ public abstract class Model extends Bindable
 		public class BoundValues {
 			private Binding binding = new Binding();
 
+			public DetachList detachList = new DetachList();
+
 			private Map<String, Object> values = AlcinaCollections
 					.newUnqiueMap();
 
@@ -216,11 +218,26 @@ public abstract class Model extends Bindable
 					Converter leftToRightConverter,
 					SourcesPropertyChangeEvents right, Object rightPropertyName,
 					Converter rightToLeftConverter) {
-				SourcesPropertyChangeEvents left = fieldless
-						? propertyChangeSource
-						: WithPropertyBinding.this;
+				SourcesPropertyChangeEvents left = getSource();
 				add(left, leftPropertyName, leftToRightConverter, right,
 						rightPropertyName, rightToLeftConverter);
+			}
+
+			/*
+			 * Recomputes on any property change
+			 */
+			public void add(Object leftPropertyName,
+					SourcesPropertyChangeEvents right) {
+				BaseSourcesPropertyChangeEvents source = (BaseSourcesPropertyChangeEvents) getSource();
+				RemovablePropertyChangeListener listener = new RemovablePropertyChangeListener(
+						right, null, evt -> {
+							source.firePropertyChange(null, evt.getOldValue(),
+									evt.getNewValue());
+						});
+				// FIXME - dirndl 1x1d - route everything via detachlist /
+				// hasbind
+				listener.bind();
+				detachList.add(listener);
 			}
 
 			public void add(Object leftPropertyName,
@@ -277,12 +294,20 @@ public abstract class Model extends Bindable
 
 			public void unbind() {
 				binding.unbind();
+				detachList.detach();
 			}
 
 			public <T> T value(Object propertyName) {
 				String propertyNameString = PropertyEnum
 						.asPropertyName(propertyName);
 				return (T) values.get(propertyNameString);
+			}
+
+			private SourcesPropertyChangeEvents getSource() {
+				SourcesPropertyChangeEvents left = fieldless
+						? propertyChangeSource
+						: WithPropertyBinding.this;
+				return left;
 			}
 
 			public class MapBackedProperty extends Property {
