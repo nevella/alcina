@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.util.JaxbUtils;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.servlet.publication.FormatConverter.FormatConversionModel;
 
@@ -101,7 +102,9 @@ public class PublicationContext {
 						deliveryModel.getClass().getSimpleName(),
 						JaxbUtils.xmlSerialize(deliveryModel).length());
 			}
-			modelString = deliveryModel.toString();
+			modelString = MethodContext.instance().withWrappingTransaction()
+					.call(() -> deliveryModel.toString());
+			
 		} catch (Exception e2) {
 			e2.printStackTrace();
 		}
