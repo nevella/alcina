@@ -564,13 +564,13 @@ public class LocalDom {
 		return nodeFor0(remote, false);
 	}
 
-	private <T extends Node> T nodeFor0(NodeRemote remote,
-			boolean postReparse) {
+	private <T extends Node> T nodeFor0(NodeRemote remote, boolean postReparse)
+			throws LocalDomException {
 		try {
 			return nodeFor1(remote, postReparse);
 		} catch (RuntimeException re) {
 			topicException.publish(re);
-			throw re;
+			throw new LocalDomException(re);
 		}
 	}
 
