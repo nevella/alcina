@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -20,6 +20,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -48,7 +49,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 	 * dispatcher supplied for an event, the default dispatcher is used.
 	 * <p>
 	 * Example usage:
-	 * 
+	 *
 	 * <pre>
 	 * static {
 	 *   DOMImplStandard.addBitlessEventDispatchers(getMyCustomDispatchers());
@@ -79,7 +80,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 	 * Adds custom capture event dispatchers to GWT.
 	 * <p>
 	 * Example usage:
-	 * 
+	 *
 	 * <pre>
 	 * static {
 	 *   if (isIE10Plus())) {
@@ -231,7 +232,9 @@ public abstract class DOMImplStandard extends DOMImpl {
 			return evt.getEventTarget().cast();
 		}
 		if (evt.getType().equals(BrowserEvents.MOUSEOUT)) {
-			return evt.getRelatedEventTarget().cast();
+			EventTarget relatedEventTarget = evt.getRelatedEventTarget();
+			return relatedEventTarget == null ? null
+					: relatedEventTarget.cast();
 		}
 		return null;
 	}

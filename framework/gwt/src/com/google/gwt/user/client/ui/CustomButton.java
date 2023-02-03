@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -28,69 +28,69 @@ import com.google.gwt.user.client.Event;
 /**
  * CustomButton is a base button class with built in support for a set number of
  * button faces.
- * 
+ *
  * Each face has its own style modifier. For example, the state for down and
  * hovering is assigned the CSS modifier <i>down-hovering</i>. So, if the
  * button's overall style name is <i>gwt-PushButton</i> then when showing the
  * <code>down-hovering</code> face, the button's style is <i>
  * gwt-PushButton-down-hovering</i>. The overall style name can be used to
  * change the style of the button irrespective of the current face.
- * 
+ *
  * <p>
  * Each button face can be assigned is own image, text, or html contents. If no
  * content is defined for a face, then the face will use the contents of another
  * face. For example, if <code>down-hovering</code> does not have defined
  * contents, it will use the contents defined by the <code>down</code> face.
  * </p>
- * 
+ *
  * <p>
  * The supported faces are defined below:
  * </p>
  * <p>
  * <table border="4">
  * <tr>
- * 
+ *
  * <td><b>CSS style name</b></td>
  * <td><b>Getter method</b></td>
  * <td><b>description of face</b></td>
  * <td><b>defaults to contents of face</b></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td>up</td>
  * <td>{@link #getUpFace()}</td>
  * <td>face shown when button is up</td>
  * <td>none</td>
  * </tr>
- * 
+ *
  * <tr>
  * <td>down</td>
  * <td>{@link #getDownFace()}</td>
  * <td>face shown when button is down</td>
  * <td>up</td>
  * </tr>
- * 
+ *
  * <tr>
  * <td>up-hovering</td>
  * <td>{@link #getUpHoveringFace()}</td>
  * <td>face shown when button is up and hovering</td>
  * <td>up</td>
  * </tr>
- * 
+ *
  * <tr>
  * <td>up-disabled</td>
  * <td>{@link #getUpDisabledFace()}</td>
  * <td>face shown when button is up and disabled</td>
  * <td>up</td>
  * </tr>
- * 
+ *
  * <tr>
  * <td>down-hovering</td>
  * <td>{@link #getDownHoveringFace()}</td>
  * <td>face shown when button is down and hovering</td>
  * <td>down</td>
  * </tr>
- * 
+ *
  * <tr>
  * <td>down-disabled</td>
  * <td>{@link #getDownDisabledFace()}</td>
@@ -99,9 +99,9 @@ import com.google.gwt.user.client.Event;
  * </tr>
  * </table>
  * </p>
- * 
+ *
  * <h3>Use in UiBinder Templates</h3>
- * 
+ *
  * When working with CustomButton subclasses in
  * {@link com.google.gwt.uibinder.client.UiBinder UiBinder} templates, you can
  * set text and assign ImageResources for their various faces via child
@@ -115,13 +115,13 @@ import com.google.gwt.user.client.Event;
  * <dt>&lt;g:upDisabledFace>
  * <dt>&lt;g:downDisabledFace>
  * </dl>
- * 
+ *
  * Each face element can take an optional <code>image</code> attribute and an
  * html body. For example:
- * 
+ *
  * <pre>
  * &lt;ui:image field='downButton'/> &lt;!-- define an {@link com.google.gwt.resources.client.ImageResource ImageResource} -->
- * 
+ *
  * &lt;g:PushButton ui:field='pushButton' enabled='true'>
  *   &lt;g:upFace>
  *     &lt;b>click me&lt;/b>
@@ -129,7 +129,7 @@ import com.google.gwt.user.client.Event;
  *   &lt;g:upHoveringFace>
  *     &lt;b>Click ME!&lt;/b>
  *   &lt;/gwt:upHoveringFace>
- *   
+ *
  *   &lt;g:downFace image='{downButton}'/>
  *   &lt;g:downHoveringFace image='{downButton}'/>
  * &lt;/g:PushButton>
@@ -245,7 +245,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upImage
 	 *            image for the default (up) face of the button
 	 */
@@ -256,7 +256,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upImage
 	 *            image for the default (up) face of the button
 	 * @param handler
@@ -269,7 +269,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upImage
 	 *            image for the default (up) face of the button
 	 * @param listener
@@ -284,7 +284,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upImage
 	 *            image for the default (up) face of the button
 	 * @param downImage
@@ -297,7 +297,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upImage
 	 *            image for the default (up) face of the button
 	 * @param downImage
@@ -312,7 +312,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upImage
 	 *            image for the default (up) face of the button
 	 * @param downImage
@@ -330,7 +330,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upText
 	 *            the text for the default (up) face of the button
 	 */
@@ -341,7 +341,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upText
 	 *            the text for the default (up) face of the button
 	 * @param handler
@@ -354,7 +354,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upText
 	 *            the text for the default (up) face of the button
 	 * @param listener
@@ -369,7 +369,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upText
 	 *            the text for the default (up) face of the button
 	 * @param downText
@@ -382,7 +382,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upText
 	 *            the text for the default (up) face of the button
 	 * @param downText
@@ -397,7 +397,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Constructor for <code>CustomButton</code>.
-	 * 
+	 *
 	 * @param upText
 	 *            the text for the default (up) face of the button
 	 * @param downText
@@ -432,7 +432,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Gets the downDisabled face of the button.
-	 * 
+	 *
 	 * @return the downDisabled face
 	 */
 	public final Face getDownDisabledFace() {
@@ -445,7 +445,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Gets the down face of the button.
-	 * 
+	 *
 	 * @return the down face
 	 */
 	public final Face getDownFace() {
@@ -457,7 +457,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Gets the downHovering face of the button.
-	 * 
+	 *
 	 * @return the downHovering face
 	 */
 	public final Face getDownHoveringFace() {
@@ -470,7 +470,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Gets the current face's html.
-	 * 
+	 *
 	 * @return current face's html
 	 */
 	@Override
@@ -485,7 +485,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Gets the current face's text.
-	 * 
+	 *
 	 * @return current face's text
 	 */
 	@Override
@@ -495,7 +495,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Gets the upDisabled face of the button.
-	 * 
+	 *
 	 * @return the upDisabled face
 	 */
 	public final Face getUpDisabledFace() {
@@ -508,7 +508,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Gets the up face of the button.
-	 * 
+	 *
 	 * @return the up face
 	 */
 	public final Face getUpFace() {
@@ -517,7 +517,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Gets the upHovering face of the button.
-	 * 
+	 *
 	 * @return the upHovering face
 	 */
 	public final Face getUpHoveringFace() {
@@ -574,7 +574,8 @@ public abstract class CustomButton extends ButtonBase {
 			break;
 		case Event.ONMOUSEOUT:
 			Element to = DOM.eventGetToElement(event);
-			if (DOM.isOrHasChild(getElement(), DOM.eventGetTarget(event))
+			if (to != null
+					&& DOM.isOrHasChild(getElement(), DOM.eventGetTarget(event))
 					&& (to == null || !DOM.isOrHasChild(getElement(), to))) {
 				if (isCapturing) {
 					onClickCancel();
@@ -638,7 +639,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets whether this button is enabled.
-	 * 
+	 *
 	 * @param enabled
 	 *            <code>true</code> to enable the button, <code>false</code> to
 	 *            disable it
@@ -674,7 +675,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets the current face's html.
-	 * 
+	 *
 	 * @param html
 	 *            html to set
 	 */
@@ -690,7 +691,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets the current face's text.
-	 * 
+	 *
 	 * @param text
 	 *            text to set
 	 */
@@ -754,7 +755,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets the current face based on the faceID.
-	 * 
+	 *
 	 * @param faceID
 	 *            sets the new face of the button
 	 */
@@ -775,7 +776,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets the downDisabled face of the button.
-	 * 
+	 *
 	 * @param downDisabled
 	 *            downDisabled face
 	 */
@@ -785,7 +786,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets the down face of the button.
-	 * 
+	 *
 	 * @param down
 	 *            the down face
 	 */
@@ -795,7 +796,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets the downHovering face of the button.
-	 * 
+	 *
 	 * @param downHovering
 	 *            hoverDown face
 	 */
@@ -805,7 +806,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets the upDisabled face of the button.
-	 * 
+	 *
 	 * @param upDisabled
 	 *            upDisabled face
 	 */
@@ -815,7 +816,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets the up face of the button.
-	 * 
+	 *
 	 * @param up
 	 *            up face
 	 */
@@ -825,7 +826,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets the upHovering face of the button.
-	 * 
+	 *
 	 * @param upHovering
 	 *            upHovering face
 	 */
@@ -858,7 +859,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Is this button down?
-	 * 
+	 *
 	 * @return <code>true</code> if the button is down
 	 */
 	protected boolean isDown() {
@@ -924,7 +925,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets whether this button is down.
-	 * 
+	 *
 	 * @param down
 	 *            <code>true</code> to press the button, <code>false</code>
 	 *            otherwise
@@ -953,7 +954,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Gets the current face of the button.
-	 * 
+	 *
 	 * @return the current face
 	 */
 	Face getCurrentFace() {
@@ -967,7 +968,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Is the mouse hovering over this button?
-	 * 
+	 *
 	 * @return <code>true</code> if the mouse is hovering
 	 */
 	final boolean isHovering() {
@@ -993,7 +994,7 @@ public abstract class CustomButton extends ButtonBase {
 
 	/**
 	 * Sets whether this button is hovering.
-	 * 
+	 *
 	 * @param hovering
 	 *            is this button hovering?
 	 */
@@ -1025,7 +1026,7 @@ public abstract class CustomButton extends ButtonBase {
 		/**
 		 * Constructor for <code>Face</code>. Creates a new face that delegates
 		 * to the supplied face.
-		 * 
+		 *
 		 * @param delegateTo
 		 *            default content provider
 		 */
@@ -1035,9 +1036,9 @@ public abstract class CustomButton extends ButtonBase {
 
 		/**
 		 * Gets the face's contents as html.
-		 * 
+		 *
 		 * @return face's contents as html
-		 * 
+		 *
 		 */
 		@Override
 		public String getHTML() {
@@ -1046,9 +1047,9 @@ public abstract class CustomButton extends ButtonBase {
 
 		/**
 		 * Gets the face's contents as text.
-		 * 
+		 *
 		 * @return face's contents as text
-		 * 
+		 *
 		 */
 		@Override
 		public String getText() {
@@ -1057,7 +1058,7 @@ public abstract class CustomButton extends ButtonBase {
 
 		/**
 		 * Set the face's contents as html.
-		 * 
+		 *
 		 * @param html
 		 *            html to set as face's contents html
 		 */
@@ -1068,10 +1069,10 @@ public abstract class CustomButton extends ButtonBase {
 
 		/**
 		 * Set the face's contents as html.
-		 * 
+		 *
 		 * @param html
 		 *            html to set as face's contents html
-		 * 
+		 *
 		 */
 		@Override
 		public void setHTML(String html) {
@@ -1083,7 +1084,7 @@ public abstract class CustomButton extends ButtonBase {
 
 		/**
 		 * Set the face's contents as an image.
-		 * 
+		 *
 		 * @param image
 		 *            image to set as face contents
 		 */
@@ -1094,7 +1095,7 @@ public abstract class CustomButton extends ButtonBase {
 
 		/**
 		 * Sets the face's contents as text.
-		 * 
+		 *
 		 * @param text
 		 *            text to set as face's contents
 		 */
@@ -1147,7 +1148,7 @@ public abstract class CustomButton extends ButtonBase {
 		 * For instance, if the <code>CustomButton</code> style is
 		 * "gwt-PushButton" and the face name is "up", then the CSS class name
 		 * will be "gwt-PushButton-up".
-		 * 
+		 *
 		 * @return the face's name
 		 */
 		abstract String getName();
