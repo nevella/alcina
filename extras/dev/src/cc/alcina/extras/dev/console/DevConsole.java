@@ -91,6 +91,7 @@ import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener
 Command line opts:
 
 - --no-http
+- --no-exit
 - (command string)
  * @formatter:on
 

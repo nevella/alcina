@@ -52,6 +52,11 @@ towards resolving inexplicable exceptions in hosted or script compilations.
 | hosted              | `<war-path>/../gwt-unitCache`                                                 |
 | script              | ditto, but effectively `<app-servlet-code-path/gwt-unitCache`                 |
 
+### GWT serialization caches
+
+(Legacy - just for pre-reflectiveserializer serialization issues):
+`/var/local/gwt/rpclog/`
+
 ### Javadoc/Code
 See GWT `PersistentUnitCacheDir`
 
