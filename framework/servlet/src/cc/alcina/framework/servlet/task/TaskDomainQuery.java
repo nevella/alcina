@@ -36,6 +36,8 @@ public class TaskDomainQuery extends ServerTask {
 
 	private transient PathSegments pathSegments;
 
+	private boolean withEntityToString;
+
 	public EntityLocator getFrom() {
 		return this.from;
 	}
@@ -53,6 +55,10 @@ public class TaskDomainQuery extends ServerTask {
 		return this.resultPaths;
 	}
 
+	public boolean isWithEntityToString() {
+		return this.withEntityToString;
+	}
+
 	public void setFrom(EntityLocator from) {
 		this.from = from;
 	}
@@ -67,6 +73,10 @@ public class TaskDomainQuery extends ServerTask {
 
 	public void setResultPaths(List<String> resultPaths) {
 		this.resultPaths = resultPaths;
+	}
+
+	public void setWithEntityToString(boolean withEntityToString) {
+		this.withEntityToString = withEntityToString;
 	}
 
 	public TaskDomainQuery withFrom(Class clazz, long id) {
@@ -111,7 +121,10 @@ public class TaskDomainQuery extends ServerTask {
 			return "(null)";
 		}
 		if (object instanceof Entity) {
-			return String.valueOf(((Entity) object).getId());
+			Entity entity = (Entity) object;
+			return isWithEntityToString()
+					? Ax.format("%s :: %s", entity.getId(), entity)
+					: String.valueOf(entity.getId());
 		}
 		if (object instanceof Collection) {
 			Collection collection = (Collection) object;

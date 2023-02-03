@@ -555,6 +555,10 @@ public abstract class Job extends VersionableEntity<Job>
 		return resolveState() == JobState.FUTURE;
 	}
 
+	public boolean provideIsFutureConsistency() {
+		return resolveState() == JobState.FUTURE_CONSISTENCY;
+	}
+
 	public boolean provideIsInCompletedQueue() {
 		Optional<Job> parent = provideFirstInSequence().provideParent();
 		if (parent.isPresent() && parent.get().provideIsNotComplete()) {
