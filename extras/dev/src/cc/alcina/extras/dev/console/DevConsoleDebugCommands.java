@@ -111,10 +111,12 @@ public class DevConsoleDebugCommands {
 			FilterArgvFlag flag = new FilterArgvFlag(argv, "--no-exclusions");
 			argv = flag.argv;
 			if (!flag.contains) {
-				logRecords.removeIf(
-						lr -> excludePatterns.matchesPatternKeys(lr.getText())
-								|| excludePatterns.matchesPatternKeys(
-										lr.getComponentKey()));
+				Ax.out("Applying filter 1");
+				logRecords = logRecords.stream().parallel().filter(lr -> {
+					return !(excludePatterns.matchesPatternKeys(lr.getText())
+							|| excludePatterns
+									.matchesPatternKeys(lr.getComponentKey()));
+				}).collect(Collectors.toList());
 			}
 			if (logRecords.size() < size) {
 				logger.info(Ax.format("Exclude patterns removed %s records",
@@ -141,6 +143,7 @@ public class DevConsoleDebugCommands {
 			if (componentKey != null) {
 				logRecords = filterByComponent(logRecords, componentKey);
 			}
+			Ax.out("Applying filter 2");
 			Predicate<ILogRecord> customFilter = new Predicate<ILogRecord>() {
 				Pattern p = Pattern.compile(
 						"(Citables initialization failed|CitablesSingletonHolder|Citable\\.root)",
@@ -152,7 +155,7 @@ public class DevConsoleDebugCommands {
 					return !matches;
 				}
 			};
-			logRecords = logRecords.stream().filter(customFilter)
+			logRecords = logRecords.stream().parallel().filter(customFilter)
 					.collect(Collectors.toList());
 			filterArgvResult = new FilterArgvParam(argv, "-u");
 			argv = filterArgvResult.argv;
@@ -1014,19 +1017,20 @@ public class DevConsoleDebugCommands {
 						: Ax.format(" limit %s", filterArgvParam.value);
 				String sqlFromEtc = String.format(
 						"from logging l inner join users u on l.user_id=u.id "
-								+ "where l.created_on>? %s %s and "
+								+ "where  l.created_on>? %s %s and "
 								+ " not (l.component_key in %s) and length(l.text)<%s"
 								+ " order by random() %s",
 						exceptionFilter, gtOnlyFilter, ckFilter,
 						maxRecordLength, limitClause);
 				int size = 0;
+				Calendar c = Calendar.getInstance();
+				c.add(Calendar.DATE, -days);
+				Date d = c.getTime();
+				java.sql.Date cutoffSqlDate = new java.sql.Date(d.getTime());
 				{
 					String sql = "select count(l.id) " + sqlFromEtc;
 					PreparedStatement ps = conn.prepareStatement(sql);
-					Calendar c = Calendar.getInstance();
-					c.add(Calendar.DATE, -days);
-					Date d = c.getTime();
-					ps.setDate(1, new java.sql.Date(d.getTime()));
+					ps.setDate(1, cutoffSqlDate);
 					ResultSet rs = ps.executeQuery();
 					if (rs.next()) {
 						size += rs.getLong(1);
@@ -1037,10 +1041,7 @@ public class DevConsoleDebugCommands {
 				{
 					String sql = "select l.*,u.username " + sqlFromEtc;
 					PreparedStatement ps = conn.prepareStatement(sql);
-					Calendar c = Calendar.getInstance();
-					c.add(Calendar.DATE, -days);
-					Date d = c.getTime();
-					ps.setDate(1, new java.sql.Date(d.getTime()));
+					ps.setDate(1, cutoffSqlDate);
 					ResultSet rs = ps.executeQuery();
 					console.state.logRecords = new ArrayList<ILogRecord>();
 					List<IL> logRecords = (List<IL>) (List<?>) console.state.logRecords;

@@ -11,7 +11,8 @@ public class SystemoutCounter {
 	public static SystemoutCounter standardJobCounter(Collection collection,
 			Object caller) {
 		return standardJobCounter(collection.size(),
-				caller.getClass().getSimpleName());
+				caller instanceof String ? caller.toString()
+						: caller.getClass().getSimpleName());
 	}
 
 	public static SystemoutCounter standardJobCounter(int size, String name) {
