@@ -304,14 +304,12 @@ public class GroupedResult extends Model {
 			return section;
 		}
 
-		public List<Cell> setCells(List<Cell> cells) {
+		public void setCells(List<Cell> cells) {
 			this.cells = cells;
-			return cells;
 		}
 
-		public GroupKey setKey(GroupKey key) {
+		public void setKey(GroupKey key) {
 			this.key = key;
-			return key;
 		}
 
 		public void setSection(String section) {
