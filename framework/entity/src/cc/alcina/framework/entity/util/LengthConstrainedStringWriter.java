@@ -6,14 +6,19 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 public class LengthConstrainedStringWriter extends StringWriter {
+	public static final String CONTEXT_MAX_LENGTH = LengthConstrainedStringWriter.class
+			.getName() + ".CONTEXT_MAX_LENGTH";
+
 	private int maxLength;
 
 	private boolean truncateAtMaxLength;
 
 	public LengthConstrainedStringWriter() {
-		this(10000000, false);
+		this(LooseContext.<Integer> optional(CONTEXT_MAX_LENGTH)
+				.orElse(10000000), false);
 	}
 
 	public LengthConstrainedStringWriter(int maxLength,

@@ -115,6 +115,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+import cc.alcina.framework.entity.util.LengthConstrainedStringBuilder;
 import cc.alcina.framework.entity.util.LengthConstrainedStringWriter;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
@@ -248,6 +249,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			try {
 				MetricLogging.get().start(key);
 				Object result = method.invoke(handler, methodArguments);
+				LooseContext.set(
+						LengthConstrainedStringBuilder.CONTEXT_MAX_LENGTH,
+						40000000);
 				return ReflectiveRemoteServiceHandler
 						.serializeForClient(result);
 			} catch (LengthConstrainedStringWriter.OverflowException e) {
