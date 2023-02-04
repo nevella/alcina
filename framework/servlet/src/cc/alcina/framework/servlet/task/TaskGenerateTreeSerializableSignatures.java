@@ -36,6 +36,28 @@ import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
+/**
+ * <p>
+ * Generates the runtime signature of the reachable serializable objects, with
+ * awareness of what will be serialized (i.e. not pure-client classes which
+ * aren't, although they implement say {@code Model})
+ *
+ *
+ *
+ *
+ * @author nick@alcina.cc
+ *
+ */
+/*
+ * @formatter:off
+ *
+- only shared (client/server) paths
+- remove unneeded typeserialization
+- ditto remove unneeded @Bean, @Reflected
+- TaskGenerateReflectiveSerializerSignatures annotations
+
+ * @formatter:on
+ */
 public class TaskGenerateTreeSerializableSignatures extends ServerTask {
 	public transient TreeSerializableSignatures signatures = new TreeSerializableSignatures();
 

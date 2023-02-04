@@ -113,6 +113,9 @@ import elemental.json.JsonValue;
  * FIXME - speed - medium - serialization - get client/server metrics and a
  * baseline
  *
+ * <p>
+ * FIXME - dirndl 1x1d - use a ringbuffer (and fix ringbuffer rotation)
+ *
  * @author nick@alcina.cc
  */
 @SuppressWarnings("deprecation")
