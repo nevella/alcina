@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.repository.RepositoryConnection;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
@@ -54,16 +55,16 @@ public interface DeliveryModel extends TreeSerializable {
 
 	public Map<String, String> getProperties();
 
+	public RepositoryConnection getRepositoryConnection();
+
 	/**
 	 * FIXME - refactor - pubs - split 'suggestedfilename' (client) (suggestion)
 	 * from 'path' (server) (required)
-	 * 
+	 *
 	 * Also - possibly - get rid of (simplify) extensibleenum (-&gt; subclass
 	 * enum) - use class constants, not instances
 	 */
 	public String getSuggestedFileName();
-
-	public RepositoryConnection getRepositoryConnection();
 
 	public String getSystemEmailAddressOfRequestor();
 
@@ -130,8 +131,9 @@ public interface DeliveryModel extends TreeSerializable {
 
 		public String dataSourceMimeType;
 	}
-	// Parameters for ContentDeliveryType_MULTIPLE
 
+	// Parameters for ContentDeliveryType_MULTIPLE
+	@Bean
 	public static class MultipleDeliveryEntry implements TreeSerializable {
 		private String emailSubject;
 

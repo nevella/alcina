@@ -1273,6 +1273,15 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.hasAnnotation(Registration.class);
 		}
 
+		private boolean isReflectable(JClassType t) {
+			return filter.isWhitelistReflectable(t) || has(t, Reflected.class)
+					|| has(t, Bean.class) || hasRegistrations(t)
+					// the annotations themselves
+					|| t.isAnnotationPresent(ClientVisible.class)
+					|| isReflectableJavaCoreClass(t)
+					|| isReflectableJavaCollectionClass(t);
+		}
+
 		private void writeMethodDefinition(String accessModifier,
 				String returnType, String methodName, String methodArguments,
 				String methodIndex) {
@@ -1320,12 +1329,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		List<JClassType> computeReachableTypes() {
 			return Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> (has(t, Reflected.class) || has(t, Bean.class)
-							|| hasRegistrations(t)
-							// the annotations themselves
-							|| t.isAnnotationPresent(ClientVisible.class)
-							|| isReflectableJavaCoreClass(t)
-							|| isReflectableJavaCollectionClass(t)))
+					.filter(t -> isReflectable(t))
 					.map(JClassType::getFlattenedSupertypeHierarchy)
 					.flatMap(Collection::stream)
 					.map(ClientReflectionGenerator::erase).distinct()
@@ -1338,12 +1342,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					subtypes);
 			Multiset<JClassType, Set<JClassType>> settableTypes = computeSettableTypes();
 			return Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> (has(t, Reflected.class) || has(t, Bean.class)
-							|| hasRegistrations(t)
-							// the annotations themselves
-							|| t.isAnnotationPresent(ClientVisible.class)
-							|| isReflectableJavaCoreClass(t)
-							|| isReflectableJavaCollectionClass(t)))
+					.filter(t -> isReflectable(t))
 					.map(JClassType::getFlattenedSupertypeHierarchy)
 					.flatMap(Collection::stream)
 					.map(ClientReflectionGenerator::erase).distinct()

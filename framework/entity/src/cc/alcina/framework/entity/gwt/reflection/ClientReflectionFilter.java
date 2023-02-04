@@ -18,6 +18,8 @@ public interface ClientReflectionFilter {
 
 	boolean emitType(JClassType type);
 
+	boolean isWhitelistReflectable(JClassType t);
+
 	void onGenerationComplete(AppImplRegistrations registrations,
 			AppReflectableTypes reflectableTypes, Stream<JClassType> stream,
 			String emitMessage) throws UnableToCompleteException;

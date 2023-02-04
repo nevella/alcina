@@ -1,7 +1,9 @@
 package cc.alcina.framework.common.client.util;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
+@Bean
 public class TimezoneData implements TreeSerializable {
 	private String timeZone;
 

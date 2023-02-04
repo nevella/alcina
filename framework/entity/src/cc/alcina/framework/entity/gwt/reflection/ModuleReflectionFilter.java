@@ -87,6 +87,11 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 	}
 
 	@Override
+	public boolean isWhitelistReflectable(JClassType t) {
+		return peer.isWhitelistReflectable(t);
+	}
+
+	@Override
 	public void onGenerationComplete(AppImplRegistrations registrations,
 			AppReflectableTypes reflectableTypes,
 			Stream<JClassType> compilationTypes, String emitMessage)

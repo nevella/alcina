@@ -52,6 +52,10 @@ public interface ClientReflectionFilterPeer {
 		}
 	}
 
+	default boolean isWhitelistReflectable(JClassType t) {
+		return false;
+	}
+
 	public static class Default implements ClientReflectionFilterPeer {
 	}
 }

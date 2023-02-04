@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.remote;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -14,6 +15,11 @@ public class ReflectiveLoginRemoteServiceAsync
 		extends ReflectiveRemoteServiceAsync {
 	public static ReflectiveLoginRemoteServiceAsync get() {
 		return Registry.impl(ReflectiveLoginRemoteServiceAsync.class);
+	}
+
+	public void login(LoginBean request,
+			AsyncCallback<LoginResponse> callback) {
+		call("login", new Class[] { LoginBean.class }, callback, request);
 	}
 
 	public void login(LoginRequest request,

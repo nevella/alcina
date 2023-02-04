@@ -39,12 +39,14 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	@Override
 	public void getLogsForAction(RemoteAction action, Integer count,
 			AsyncCallback<List<JobTracker>> callback) {
-		throw new UnsupportedOperationException();
+		call("getLogsForAction",
+				new Class[] { RemoteAction.class, Integer.class }, callback,
+				action, count);
 	}
 
 	@Override
 	public void hello(AsyncCallback callback) {
-		throw new UnsupportedOperationException();
+		call("hello", new Class[] {}, callback);
 	}
 
 	@Override
@@ -118,13 +120,14 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	@Override
 	public void pollJobStatus(String id, boolean cancel,
 			AsyncCallback<JobTracker> callback) {
-		throw new UnsupportedOperationException();
+		call("pollJobStatus", new Class[] { String.class, boolean.class },
+				callback, id, cancel);
 	}
 
 	@Override
 	public void search(SearchDefinition def,
 			AsyncCallback<SearchResultsBase> callback) {
-		throw new UnsupportedOperationException();
+		call("search", new Class[] { SearchDefinition.class }, callback, def);
 	}
 
 	public void submitPublication(
