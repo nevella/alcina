@@ -311,6 +311,11 @@ public abstract class TransformManager
 		return serialize(object, false);
 	}
 
+	public static String serialize(Object object,
+			boolean hasClassNameProperty) {
+		return Serializer.get().serialize(object, hasClassNameProperty);
+	}
+
 	public static String stringId(Entity entity) {
 		return entity.getId() != 0 ? entity.getId() + ""
 				: entity.getLocalId() + "L";
@@ -383,11 +388,6 @@ public abstract class TransformManager
 			return defaultValue;
 		}
 		return deserializer.apply(serialized);
-	}
-
-	protected static String serialize(Object object,
-			boolean hasClassNameProperty) {
-		return Serializer.get().serialize(object, hasClassNameProperty);
 	}
 
 	private boolean useCreatedLocals = true;
