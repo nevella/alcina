@@ -92,6 +92,9 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		} catch (UnparseablePlaceException e) {
 			new ClientTopics.DevMessage("unparesable place", token).publish();
 			return Optional.empty();
+		} catch (Exception e) {
+			new ClientTopics.DevMessage("unparesable place", token).publish();
+			return Optional.empty();
 		}
 	}
 
