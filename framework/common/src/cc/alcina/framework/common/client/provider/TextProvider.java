@@ -13,8 +13,6 @@
  */
 package cc.alcina.framework.common.client.provider;
 
-import java.util.function.Function;
-
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 
@@ -24,7 +22,6 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.HasDisplayName;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  * Support for localisations. Defaults to a simple provider
@@ -38,10 +35,6 @@ public class TextProvider {
 	protected static final int TRIMMED_LENGTH = 60;
 
 	private static TextProvider instance;
-
-	// FIXME - 2024 - remove once all usages removed
-	public static final String CONTEXT_NAME_TRANSLATOR = TextProvider.class
-			.getName() + ".CONTEXT_NAME_TRANSLATOR";
 
 	public static TextProvider get() {
 		if (instance == null) {
@@ -79,11 +72,6 @@ public class TextProvider {
 		Display display = location.getAnnotation(Display.class);
 		String rawName = display == null ? location.property.getName()
 				: Display.Support.name(location.property, display);
-		if (LooseContext.has(CONTEXT_NAME_TRANSLATOR)) {
-			rawName = ((Function<String, String>) LooseContext
-					.get(CONTEXT_NAME_TRANSLATOR))
-							.apply(location.property.getName());
-		}
 		return rawName;
 	}
 
