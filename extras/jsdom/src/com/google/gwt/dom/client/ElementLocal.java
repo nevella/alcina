@@ -662,6 +662,8 @@ public class ElementLocal extends NodeLocal
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		if (eventBits != 0) {
+			// FIXME - dirndl 1x1e - can probably get the local element very
+			// quickly from [remote-index-in-parent] -- so remove (with LDM2)
 			ensureId();
 		}
 		builder.appendHtmlConstantNoCheck("<");

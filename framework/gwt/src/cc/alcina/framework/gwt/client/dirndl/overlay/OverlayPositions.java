@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -21,7 +22,14 @@ public class OverlayPositions {
 	Map<Model, Widget> openOverlays = AlcinaCollections.newUnqiueMap();
 
 	void hide(Overlay model) {
-		openOverlays.get(model).removeFromParent();
+		Widget overlay = openOverlays.remove(model);
+		if (overlay != null) {
+			overlay.removeFromParent();
+		} else {
+			// FIXME - devex
+			Ax.err("Removing previously removed overlay - %s",
+					model.getContents());
+		}
 	}
 
 	void show(Overlay model, ContainerOptions containerOptions) {

@@ -32,6 +32,10 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * This class mostly acts to coordinate interactions between the {@code Input}
  * and the {@code Suggestions} children - including routing keyboard events.
  *
+ * <p>
+ * TODO - there's probably a better general way of handling the perennial "is
+ * {@code value} a collection of T or a T" question
+ *
  * @author nick@alcina.cc
  *
  */

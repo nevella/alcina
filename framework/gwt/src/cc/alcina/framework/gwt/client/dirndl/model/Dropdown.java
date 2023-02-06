@@ -140,8 +140,8 @@ public class Dropdown extends Model.WithNode
 			}
 			Builder builder = Overlay.builder();
 			builder.dropdown(getXalign(),
-					provideElement().getBoundingClientRect(), dropdown)
-					.withPeer(this).withCloseHandler(evt -> setOpen(false));
+					provideElement().getBoundingClientRect(), this, dropdown)
+					.withCloseHandler(evt -> setOpen(false));
 			if (dropdownStack.size() == 1 && dropdownCssClassSupplier != null) {
 				builder.withCssClass(dropdownCssClassSupplier.get());
 			}

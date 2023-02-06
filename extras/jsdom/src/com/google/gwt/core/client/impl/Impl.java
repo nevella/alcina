@@ -27,7 +27,7 @@ import com.google.gwt.dom.client.LocalDom;
  * Private implementation class for GWT core. This API is should not be
  * considered public or stable.
  *
- * Alcina - not updated from 2.8.0 rc3. FIXME - dirndl 1.2 - revisit and merge
+ * Alcina - not updated from 2.8.0 rc3. FIXME - dirndl 1x1e - revisit and merge
  */
 public final class Impl {
     static {

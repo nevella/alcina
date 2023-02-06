@@ -89,8 +89,7 @@ public class SuggestionChoices implements Suggestor.Suggestions {
 								SuggestionChoices.class.getSimpleName()));
 				builder.dropdown(suggestor.configuration.getSuggestionXAlign(),
 						suggestor.provideElement().getBoundingClientRect(),
-						contents).withCssClass(dropdownCssClassName)
-						.withPeer(suggestor);
+						suggestor, contents).withCssClass(dropdownCssClassName);
 				overlay = builder.build();
 				overlay.open();
 			}
