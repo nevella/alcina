@@ -2172,6 +2172,10 @@ public class CommonUtils {
 		}
 
 		public Date adjust(Date date, boolean toAdjustTz) {
+			// Null dates adjust to null dates
+			if (date == null) {
+				return null;
+			}
 			return toAdjustTz
 					? new Date(date.getTime()
 							+ localData.getUtcMinutes()
