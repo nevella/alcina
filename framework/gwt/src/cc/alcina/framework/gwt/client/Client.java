@@ -133,7 +133,7 @@ public abstract class Client {
 		public static void preRegistry() {
 			startTime = System.currentTimeMillis();
 			CommonUtils.setSupplier = () -> new LightSet();
-			LocalDom.mutations.setDisabled(true);
+			LocalDom.getMutations().setEnabled(false);
 			if (GWT.isScript()) {
 				Registry.Internals
 						.setDelegateCreator(new JsRegistryDelegateCreator());

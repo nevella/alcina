@@ -15,6 +15,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
+import com.google.gwt.dom.client.mutations.LocalDomMutations2;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.DOM;
@@ -50,29 +51,26 @@ import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
  * Does not support IE<11
  */
 public class LocalDom {
-	private static LocalDom instance = new LocalDom();
+	private static LocalDom instance;
 
 	private static LocalDomCollections collections;
 
 	private static Map<String, String> declarativeCssNames;
 
-	public static boolean fastRemoveAll = true;
+	public static boolean fastRemoveAll;
 
-	private static boolean useRemoteDom = GWT.isClient();
-
-	private static boolean disableRemoteWrite = !GWT.isClient();
-
-	static boolean ie9;
+	private static boolean disableRemoteWrite;
 
 	static boolean emitCommentPisAsText;
 
-	public static LocalDomMutations mutations;
+	static LocalDomMutations2 mutations;
 
-	public static final Topic<Exception> topicException = Topic.create();
+	public static Topic<Exception> topicException;
 
-	public static final Topic<String> topicUnableToParse = Topic.create();
+	public static Topic<String> topicUnableToParse;
 
-	private static boolean logParseAndMutationIssues = false;
+	// FIXME - localdom - remove
+	private static boolean logParseAndMutationIssues;
 
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
@@ -98,13 +96,26 @@ public class LocalDom {
 		get().resolve0();
 	}
 
+	public static LocalDomMutations2 getMutations() {
+		return mutations;
+	}
+
+	public static void initalize() {
+		Preconditions.checkState(instance == null);
+		instance = new LocalDom();
+		fastRemoveAll = true;
+		disableRemoteWrite = !GWT.isClient();
+		topicException = Topic.create();
+		topicUnableToParse = Topic.create();
+	}
+
 	public static void invokeExternal(Runnable runnable) {
 		flush();
 		try {
 			mutations.startObserving();
 			runnable.run();
 		} finally {
-			mutations.stopObserving();
+			mutations.syncMutationsAndstopObserving();
 		}
 	}
 
@@ -118,10 +129,6 @@ public class LocalDom {
 
 	public static boolean isStopPropagation(NativeEvent evt) {
 		return get().isStopPropagation0(evt);
-	}
-
-	public static boolean isUseRemoteDom() {
-		return useRemoteDom;
 	}
 
 	public static void log(LocalDomDebug channel, String message,
@@ -147,10 +154,10 @@ public class LocalDom {
 	}
 
 	public static void register(Document doc) {
-		if (useRemoteDom) {
+		if (isUseRemoteDom()) {
+			initalize();
 			get().linkRemote(doc.typedRemote(), doc);
 			get().nodeFor0(doc.typedRemote().getDocumentElement0());
-			mutations.startObservingIfNotInEventCycle();
 		}
 	}
 
@@ -160,10 +167,6 @@ public class LocalDom {
 
 	public static void setDisableRemoteWrite(boolean disableRemoteWrite) {
 		LocalDom.disableRemoteWrite = disableRemoteWrite;
-	}
-
-	public static void setUseRemoteDom(boolean useRemoteDom) {
-		LocalDom.useRemoteDom = useRemoteDom;
 	}
 
 	public static void syncToRemote(Element element) {
@@ -229,6 +232,10 @@ public class LocalDom {
 		return get().remoteLookup.containsKey(remote);
 	}
 
+	static boolean isUseRemoteDom() {
+		return GWT.isClient();
+	}
+
 	static Node nodeForNoResolve(NodeRemote nodeRemote) {
 		return get().remoteLookup.get(nodeRemote);
 	}
@@ -267,14 +274,15 @@ public class LocalDom {
 
 	private boolean useBuiltHtmlValidation;
 
-	public LocalDom() {
+	private LocalDom() {
 		if (GWT.isScript()) {
 			remoteLookup = JsUniqueMap.createWeakMap();
 		} else {
 			remoteLookup = new LinkedHashMap<>();
 		}
-		ie9 = GWT.isClient() ? BrowserMod.isIE9() : false;
-		LocalDom.mutations = GWT.isClient() ? new LocalDomMutations() : null;
+		LocalDom.mutations = GWT.isClient()
+				? new LocalDomMutations2(new MutationsAccess())
+				: null;
 		useBuiltHtmlValidation = GWT.isClient()
 				? BrowserMod.isInternetExplorer()
 				: false;
@@ -516,20 +524,7 @@ public class LocalDom {
 	private void localToRemote(Element element, ElementRemote remote,
 			DomElement local) {
 		String innerHTML = local.getInnerHTML();
-		if (ie9) {
-			switch (element.getTagName()) {
-			case "table":
-				remote = writeIe9Table((TableElement) element, remote);
-				break;
-			case "tr":
-				remote = writeIe9Tr((TableRowElement) element, remote);
-				break;
-			default:
-				remote.setInnerHTML(innerHTML);
-			}
-		} else {
-			remote.setInnerHTML(innerHTML);
-		}
+		remote.setInnerHTML(innerHTML);
 		log(LocalDomDebug.RESOLVE, "%s - uiobj: %s - \n%s",
 				element.getTagName(),
 				Optional.ofNullable(element.uiObject)
@@ -832,29 +827,6 @@ public class LocalDom {
 		resolutionEventIdDirty = true;
 	}
 
-	private ElementRemote writeIe9Table(TableElement elem,
-			ElementRemote remote) {
-		String outer = elem.local().getOuterHtml();
-		remoteLookup.remove(remote);
-		remote = Document.get().typedRemote().generateFromOuterHtml(outer);
-		elem.replaceRemote(remote);
-		return remote;
-	}
-
-	private ElementRemote writeIe9Tr(TableRowElement elem,
-			ElementRemote remote) {
-		Preconditions.checkArgument(elem.getChildNodes().stream()
-				.allMatch(n -> n.getNodeName().equals("td")));
-		int idx = 0;
-		for (Node node : elem.getChildNodes()) {
-			Element child = (Element) node;
-			ElementRemote remoteCell = elem.insertCellRemote(idx);
-			localToRemote(child, remoteCell, child.local());
-			idx++;
-		}
-		return remote;
-	}
-
 	void resolve0() {
 		resolve0(false);
 	}
@@ -902,5 +874,8 @@ public class LocalDom {
 		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
 			return JsUniqueMap.create();
 		}
+	}
+
+	public class MutationsAccess {
 	}
 }

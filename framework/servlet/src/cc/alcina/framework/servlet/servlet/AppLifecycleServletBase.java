@@ -40,6 +40,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -361,6 +362,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 		GWT.setBridge(new GWTBridgeHeadless());
 		JsonUtil.FAST_STRINGIFY = true;
+		LocalDom.initalize();
 	}
 
 	protected abstract void initContainerBridge();

@@ -1,145 +1,174 @@
 package com.google.gwt.dom.client.mutations;
 
-/**
- * <h3>Goals</h3>
- * <ul>
- * <li>Completely correct NodeLocal structure at all time
- * <ul>
- * <li>Track all mutations outside blessed ({@code LocalDom.flush},
- * {@code NodeRemote.mutate()}} methods.
- * <li>Optionally: LocalDom.invokeExternal becomes a no-op (if trackAllMutations
- * is on)
- * <li>Create an in-client verifier that will generate nodetree dumps - a
- * nodetree being an object tree modelling the dom that can be compared, used
- * for debugging etc
- * </ul>
- * <li>Model mutations nicely
- * <ul>
- * <li>MutationRecord jso -&gt; MutationRecordRemote
- * <li>Java wrapper has a nice tostring
- * <li>Java wrapper is for tracking the 'apply to local' algorithm
- * </ul>
- * <li>Cleanup remote mutation
- * <ul>
- * <li>Probably each op should call through a pipeline/router ('appendChild'
- * calls 'mutate(()->appendChild)' - can ignore if in mutation replay mode
- * </ul>
- * <li>Mutation application sketch: (assume mutations are of type childList)
- * </ul>
- *
- * <pre>
- * <code>
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArray;
+import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.LocalDom.MutationsAccess;
+import com.google.gwt.dom.client.MutationRecord;
 
- Notation:
+import cc.alcina.framework.common.client.util.Ax;
 
- S0 - state before mutation 0
- SN - state after mutation n (end of mutation list)
-
- R(a...z) - Remote nodes (at any time in the mutation sequence)
- L(0...9) - Local nodes (at S0)
- L(Ra)    - Local node corresponding to Ra
-
- I(a...z)     - Invert node (see below) corresponding to Ra
-
- M[op{A,R},node,parent,predecessor] - a mutation
- Inv[M] - the inverse mutation
-
- Goal: apply mutations to the graph of NodeLocal nodes (the local dom)
-
- Required: for transform T0 := M[Ra,Rb,Rc] at S0, what the nodes L(Ra), L(Rb), L(Rc)
-
- Assume: no knowledge of any correspondence between any Lx and Rx at S0
-
- -----------------------
-
- Step 1: Build a 'InverseTree' of "InverseNodes' by iterating over the childlist mutations in reverse order, reversing the operation
- *and including knowledge of parents and siblings*
-
- This builds one or more disjunct subtrees modelling the 'state of the R nodes' at S0. It won't be a complete model of the
- subtree, but it *will* be internally consistent. An example:
-
-         L0::Ra   [Ra's parent does not change, so the L0 :: Ra correspondence is trivially computable post-mutation]
-          /  \
-         /    \
-      L1::Rb  L2::Rc
-       /  \
-      /    \
- L3::Rd    L4::Re
-
-Mutations:
-M0 - [R,Re,Rb,Rd]
-M1 - [R,Rb,Ra,--]
-
-Build inverse tree:
-
-I[M1] ::
-	  E[Ra]
-	    |
-	    |
-	  E[Rb]
-
-I[M0] ::
-          E[Ra]
-          /  \
-         /    \
-      E[Rb]   ?? (could determine from M0.successor but don't think it's needed
-       /  \
-      /    \
- E[Rd]    E[Re]
-
-Step 2: Descending from known correspondences (L0::Ra in the example), determine L0::R? correspondence
-
-For node E[Rb]:
-
-Case 1: (satisfied in the example) If E[Rb] has no predecessor, then Rb corresponds to the first child of L0, i.e. L1
-
-Case 2: Say we removed Rc instead - so E[Rc] had a predecessor, say E[Rb]. What was the child index of Rc in R0 at S0?
-(We don't know that Rb had no predecessor)
-
-Form the InverseFinalList of children of Ra at Sn:
-
-Ria Rib Ric...Riz
-
-Form the InverseStartList (partial) of children of Ra at S0 (node that sequences may not be in order):
-
-?? - {E[Rb] - E[Rc]} - ??
-
-Goal is to form the RemoteStartList (Rja...Rjz) of remote children of Ra at S0. Begin by making it a copy of the InverseFinalList
-
-LocalStartList (Lka...Lky) is the list of local children of L0 at S0
-
-Any nodes R that were mutated during M, are children of Ra at SN but *not* in the InverseStartList
- were *not* children of Ra at S0 :: remove from the RemoteStartList.
-
-Length of the RemoteStartList should now equal the length of the LocalStartList.
-
-Now all that remains is to order RemoteStartList. Note that the relative positions of the ?? nodes did not change during mutation.
-
-So iterate through the RemoteStartList. For node Rjx ::
-
-- Is it in (does it correspond to) the inversestartlist? If so, order it relative to its position in the partial
-- Otherwise leave unchanged
-
-The rest is just induction
-
-m
-*
-*
-*
-
-
-
-
- * </code
- * </pre>
- *
- *
- * <p>
- * Endfile
- * </p>
- *
- * @author nick@alcina.cc
- *
- */
 public class LocalDomMutations2 {
+	private MutationsAccess localDom;
+
+	private JavaScriptObject observer = null;
+
+	private JavaScriptObject records;
+
+	private ElementRemote documentElement;
+
+	private boolean observerConnected = false;
+
+	boolean enabled = true;
+
+	public LocalDomMutations2(LocalDom.MutationsAccess localDom) {
+		this.localDom = localDom;
+	}
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public void startObserving() {
+		if (!this.enabled) {
+			return;
+		}
+		if (this.observer == null) {
+			setupObserver();
+		}
+		if (!observerConnected) {
+			connectObserver();
+			observerConnected = true;
+		} else {
+			throw new IllegalStateException();
+		}
+	}
+
+	public void syncMutationsAndstopObserving() {
+		if (!this.enabled) {
+			return;
+		}
+		if (this.observer == null) {
+			return;
+		}
+		disconnectObserver();
+		try {
+			checkReceivedRecords();
+		} catch (RuntimeException e) {
+			LocalDom.onRelatedException(e);
+		}
+	}
+
+	private native void checkReceivedRecords() /*-{
+    if (this.@LocalDomMutations2::records.length == 0) {
+      return;
+    }
+    var records = this.@LocalDomMutations2::records;
+    this.@LocalDomMutations2::records = [];
+    this.@LocalDomMutations2::syncMutations(*)(records);
+	}-*/;
+
+	private native void connectObserver() /*-{
+    if (!this.@LocalDomMutations2::enabled) {
+      var message = "Mutation tracking not defined";
+      this.@LocalDomMutations2::log(Ljava/lang/String;Z)(message,true);
+      return;
+    }
+
+    //clear the buffer and discard
+    var mutationsList = this.@LocalDomMutations2::observer.takeRecords();
+    if (mutationsList.length > 0) {
+      var message = "Warning - mutation observer :: had records (was not disconnected?)";
+      this.@LocalDomMutations2::log(Ljava/lang/String;Z)(message,true);
+      throw message;
+    }
+    this.@LocalDomMutations2::records = [];
+
+    var config = {
+      childList : true,
+      //FIXME - lcaoldom - also monitor attribute changes...maybe? wouldn't hurt for conpleteness n pretty darn easy
+      subtree : true
+    };
+    this.@LocalDomMutations2::observer.observe(
+        this.@LocalDomMutations2::documentElement, config);
+    this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: connected ",false);
+	}-*/;
+
+	private native void consoleLog(String message, boolean error) /*-{
+    if (error) {
+      console.error(message);
+    } else {
+      console.log(message);
+    }
+	}-*/;
+
+	private native void disconnectObserver() /*-{
+    if (this.@LocalDomMutations2::observer == null) {
+      return;
+    }
+    var mutationsList = this.@LocalDomMutations2::observer.takeRecords();
+    var records = this.@LocalDomMutations2::records;
+    mutationsList.forEach(function(mutation) {
+      records.push(mutation);
+    });
+    if (!this.@LocalDomMutations2::observerConnected) {
+      this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: warning  - was not connected ",false);
+    }
+    this.@LocalDomMutations2::observerConnected = false;
+    this.@LocalDomMutations2::observer.disconnect();
+    this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: disconnected ",false);
+	}-*/;
+
+	private native void setupObserver() /*-{
+    this.@LocalDomMutations2::enabled = this.@LocalDomMutations2::enabled
+        && !(typeof MutationObserver == "undefined");
+    if (!this.@LocalDomMutations2::enabled) {
+      var message = "Mutation tracking not defined";
+      this.@LocalDomMutations2::log(Ljava/lang/String;Z)(message,false);
+      return;
+    }
+
+    this.@LocalDomMutations2::documentElement = $doc.documentElement;
+    var _this = this;
+    var callback = function(mutationsList, observer) {
+      var records = _this.@LocalDomMutations2::records;
+      mutationsList.forEach(function(mutation) {
+        records.push(mutation);
+      });
+    };
+    this.@LocalDomMutations2::observer = new MutationObserver(callback);
+    var message = "Tracking remote dom mutations :: ok";
+    this.@LocalDomMutations2::log(Ljava/lang/String;Z)(message,false);
+	}-*/;
+
+	private void syncMutations0(JsArray<MutationRecord> records) {
+		log(Ax.format("%s records", records.length()), false);
+	}
+
+	void log(String message, boolean error) {
+		if (error) {
+			Ax.err(message);
+		} else {
+			Ax.out(message);
+		}
+		consoleLog(message, error);
+	}
+
+	// this is called at a tricky place in the GWT event loop, so make sure we
+	// log exceptions
+	void syncMutations(JsArray<MutationRecord> records) {
+		try {
+			syncMutations0(records);
+		} catch (Throwable e) {
+			GWT.log("Exception in handleMutations", e);
+			e.printStackTrace();
+			throw e;
+		}
+	}
 }

@@ -281,7 +281,7 @@ public final class Impl {
         boolean initialEntry = enter();
         try {
             if (initialEntry) {
-                LocalDom.mutations.stopObserving();
+            	LocalDom.getMutations().syncMutationsAndstopObserving();
             }
             /*
              * Always invoke the UCE if we have one so that the exception never
@@ -311,7 +311,7 @@ public final class Impl {
         } finally {
             exit(initialEntry);
             if (initialEntry) {
-                LocalDom.mutations.startObserving();
+            	LocalDom.getMutations().startObserving();
             }
         }
     }
