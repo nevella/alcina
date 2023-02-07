@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -35,11 +34,11 @@ public class SuggestionChoices implements Suggestor.Suggestions {
 		//
 		// Also enforce overlay styles via css-ification of associated marker
 		// classes (preferably node.model hierarchy)
-		choices.subscribeSelectionChanged(() -> {
-			suggestor.setChosenSuggestions(choices.provideSelectedValue());
-			// single-only
-			overlay.close(false);
-		});
+		// choices.subscribeSelectionChanged(() -> {
+		// suggestor.setChosenSuggestions(choices.provideSelectedValue());
+		// // single-only
+		// overlay.close(null, false);
+		// });
 		contents.setModel(choices);
 	}
 
@@ -83,19 +82,16 @@ public class SuggestionChoices implements Suggestor.Suggestions {
 		if (ensure) {
 			if (overlay == null) {
 				Builder builder = Overlay.builder();
-				String dropdownCssClassName = Ax.blankTo(
-						suggestor.configuration.getSuggestionCssClassName(),
-						() -> Ax.cssify(
-								SuggestionChoices.class.getSimpleName()));
 				builder.dropdown(suggestor.configuration.getSuggestionXAlign(),
 						suggestor.provideElement().getBoundingClientRect(),
-						suggestor, contents).withCssClass(dropdownCssClassName);
+						suggestor, contents).withLogicalAncestors(
+								suggestor.configuration.getLogicalAncestors());
 				overlay = builder.build();
 				overlay.open();
 			}
 		} else {
 			if (overlay != null) {
-				overlay.close(false);
+				overlay.close(null, false);
 				overlay = null;
 			}
 		}

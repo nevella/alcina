@@ -10,6 +10,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.DropdownButtonClicked;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Builder;
@@ -33,9 +35,10 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  */
 @Directed(
 	bindings = @Binding(from = "open", type = Type.CSS_CLASS),
-	receives = { DropdownEvents.DropdownButtonClicked.class })
+	receives = { DropdownEvents.DropdownButtonClicked.class,
+			ModelEvents.Closed.class })
 public class Dropdown extends Model.WithNode
-		implements DropdownButtonClicked.Handler {
+		implements DropdownButtonClicked.Handler, ModelEvents.Closed.Handler {
 	private boolean open;
 
 	private Model button;
@@ -50,7 +53,7 @@ public class Dropdown extends Model.WithNode
 
 	private transient Supplier<Model> dropdownSupplier;
 
-	private transient Supplier<String> dropdownCssClassSupplier;
+	private Supplier<List<Class<? extends Model>>> logicalAncestorsSupplier;
 
 	public Dropdown(Model button, Model dropdown) {
 		this.button = button;
@@ -82,6 +85,12 @@ public class Dropdown extends Model.WithNode
 
 	public boolean isOpen() {
 		return this.open;
+	}
+
+	@Override
+	public void onClosed(Closed event) {
+		// the popup closed, so change the corresponding state
+		setOpen(false);
 	}
 
 	@Override
@@ -122,13 +131,14 @@ public class Dropdown extends Model.WithNode
 		this.xalign = xalign;
 	}
 
-	public Dropdown withDropdownCssClass(String dropdownCssClass) {
-		return withDropdownCssClassSupplier(() -> dropdownCssClass);
+	public Dropdown withLogicalAncestors(
+			List<Class<? extends Model>> logicalAncestors) {
+		return withLogicalAncestorsSupplier(() -> logicalAncestors);
 	}
 
-	public Dropdown withDropdownCssClassSupplier(
-			Supplier<String> dropdownCssClassSupplier) {
-		this.dropdownCssClassSupplier = dropdownCssClassSupplier;
+	public Dropdown withLogicalAncestorsSupplier(
+			Supplier<List<Class<? extends Model>>> logicalAncestorsSupplier) {
+		this.logicalAncestorsSupplier = logicalAncestorsSupplier;
 		return this;
 	}
 
@@ -140,15 +150,14 @@ public class Dropdown extends Model.WithNode
 			}
 			Builder builder = Overlay.builder();
 			builder.dropdown(getXalign(),
-					provideElement().getBoundingClientRect(), this, dropdown)
-					.withCloseHandler(evt -> setOpen(false));
-			if (dropdownStack.size() == 1 && dropdownCssClassSupplier != null) {
-				builder.withCssClass(dropdownCssClassSupplier.get());
+					provideElement().getBoundingClientRect(), this, dropdown);
+			if (dropdownStack.size() == 1 && logicalAncestorsSupplier != null) {
+				builder.withLogicalAncestors(logicalAncestorsSupplier.get());
 			}
 			overlay = builder.build();
 			overlay.open();
 		} else {
-			overlay.close(false);
+			overlay.close(null, false);
 			overlay = null;
 			if (dropdownStack.size() > 1) {
 				dropdownStack.remove(dropdownStack.size() - 1);

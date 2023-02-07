@@ -177,6 +177,10 @@ public class CommonUtils {
 		return s.substring(0, 1).toUpperCase() + s.substring(1);
 	}
 
+	public static Class classOrSelf(Object o) {
+		return o instanceof Class ? (Class) o : o.getClass();
+	}
+
 	public static Date cloneDate(Date date) {
 		return date == null ? null : new Date(date.getTime());
 	}

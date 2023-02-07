@@ -615,7 +615,7 @@ public class FormModel extends Model
 
 	@Ref("submit")
 	@ActionRefHandler(SubmitHandler.class)
-	@EmitsModelEvent(value = ModelEvents.Submitted.class, hasValidation = true)
+	@EmitsModelEvent(value = ModelEvents.Submit.class, hasValidation = true)
 	public static class SubmitRef extends ActionRef {
 	}
 

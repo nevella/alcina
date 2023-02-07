@@ -181,8 +181,11 @@ public class DirectedLayout implements AlcinaProcess {
 		 * tree
 		 */
 		Node cursor = modelEvent.getContext().node;
-		while (cursor != null && !modelEvent.isHandled()) {
+		while (cursor != null) {
 			cursor.dispatchEvent(modelEvent);
+			if (modelEvent.isHandled()) {
+				break;
+			}
 			boolean rerouted = false;
 			{
 				/*

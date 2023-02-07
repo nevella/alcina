@@ -90,7 +90,7 @@ public class OverlayContainer extends Model.WithNode implements HasTag {
 
 	void onResize(ResizeEvent event) {
 		if (!modal) {
-			contents.close(false);
+			contents.close(event, false);
 		} else {
 			// FIXME - dirndl 1x1j - reposition in with an animation
 			// gate

@@ -98,28 +98,16 @@ public class Suggestor extends Model.WithNode
 
 	@Override
 	public void onSelectionChanged(SelectionChanged event) {
-		if (event.wasReemitted(node)) {
-			event.getContext().markCauseEventAsNotHandled();
+		if (event.checkReemitted(node)) {
 			return;
 		}
 		setChosenSuggestions(suggestions.provideSelectedValue());
-		event.reemitAs(SelectionChanged.class);
+		event.reemit();
 	}
 
 	@Override
 	public Object provideSelectedValue() {
 		return getValue();
-	}
-
-	public void setChosenSuggestions(Object value) {
-		if (value == null) {
-			setValue(null);
-		} else if (value instanceof Suggestion) {
-			setValue(((Suggestion) value).getModel());
-		} else {
-			setValue(((List<Suggestion>) value).stream()
-					.map(Suggestion::getModel).collect(Collectors.toList()));
-		}
 	}
 
 	public void setValue(Object value) {
@@ -141,6 +129,17 @@ public class Suggestor extends Model.WithNode
 	protected void onAskException(Throwable throwsable) {
 		suggestions.toState(State.EXCEPTION);
 		suggestions.onAskException(throwsable);
+	}
+
+	void setChosenSuggestions(Object value) {
+		if (value == null) {
+			setValue(null);
+		} else if (value instanceof Suggestion) {
+			setValue(((Suggestion) value).getModel());
+		} else {
+			setValue(((List<Suggestion>) value).stream()
+					.map(Suggestion::getModel).collect(Collectors.toList()));
+		}
 	}
 
 	// FIXME - dirndl 1x1e - add a default impl, which routes via a Debounce
@@ -193,7 +192,7 @@ public class Suggestor extends Model.WithNode
 	public static class Configuration {
 		private String inputPrompt;
 
-		private String suggestionCssClassName;
+		List<Class<? extends Model>> logicalAncestors = List.of();
 
 		private boolean focusOnBind;
 
@@ -213,8 +212,8 @@ public class Suggestor extends Model.WithNode
 			return this.inputPrompt;
 		}
 
-		public String getSuggestionCssClassName() {
-			return this.suggestionCssClassName;
+		public List<Class<? extends Model>> getLogicalAncestors() {
+			return this.logicalAncestors;
 		}
 
 		public OverlayPosition.Position getSuggestionXAlign() {
@@ -248,14 +247,14 @@ public class Suggestor extends Model.WithNode
 			return this;
 		}
 
-		public Configuration withSelectAllOnBind(boolean selectAllOnBind) {
-			this.selectAllOnBind = selectAllOnBind;
+		public Configuration withLogicalAncestors(
+				List<Class<? extends Model>> logicalAncestors) {
+			this.logicalAncestors = logicalAncestors;
 			return this;
 		}
 
-		public Configuration
-				withSuggestionCssClassName(String suggestionCssClassName) {
-			this.suggestionCssClassName = suggestionCssClassName;
+		public Configuration withSelectAllOnBind(boolean selectAllOnBind) {
+			this.selectAllOnBind = selectAllOnBind;
 			return this;
 		}
 
