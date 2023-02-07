@@ -36,6 +36,21 @@ public class TimeConstants {
 		return new Date(System.currentTimeMillis() - days * ONE_DAY_MS);
 	}
 
+	public static String toDurationString(long millis) {
+		if (millis < ONE_SECOND_MS) {
+			return Ax.format("%sms", millis);
+		}
+		if (millis < ONE_HOUR_MS) {
+			return Ax.format("%ss",
+					Ax.fourPlaces(((double) millis) / ONE_SECOND_MS));
+		}
+		if (millis < ONE_DAY_MS) {
+			return Ax.format("%sh",
+					Ax.fourPlaces(((double) millis) / ONE_HOUR_MS));
+		}
+		return Ax.format("%sd", Ax.fourPlaces(((double) millis) / ONE_DAY_MS));
+	}
+
 	public static boolean within(long time, long delta) {
 		return (System.currentTimeMillis() - time) < delta;
 	}
