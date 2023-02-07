@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.transform;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 
@@ -12,6 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformCollatio
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.ThrowingConsumer;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 
@@ -39,6 +41,33 @@ public class AdjunctTransformCollation extends TransformCollation {
 			} else {
 				return callable.call();
 			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	/**
+	 * <li>Call a consumer function with a value from before the original transaction.</li>
+	 * 
+	 * <li>No entity modifications should be made in the preEntityCallable, as this is a 
+	 * snapshot transaction.</li>
+	 * @param <E> Entity type that was transformed
+	 * @param <U> Value type to extract from pre-transaction entity
+	 * @param result QueryResult containing entity
+	 * @param preEntityCallable Function to extract value from pre-transaction entity
+	 * @param callable Function to consume extracted value
+	 */
+	public <E extends Entity, U> void callWithPreEntityValue(
+			QueryResult result, Function<E, U> preEntityValueSupplier, ThrowingConsumer<U> callable) {
+		try {
+			// Get value from original entity by calling 
+			// preEntityValueSupplier inside a snapshot transaction
+			U preEntityValue = Transaction
+				.callInSnapshotTransaction(() -> {
+					return preEntityValueSupplier.apply(result.getEntity());
+				});
+			// Call callable with returned value
+			callable.accept(preEntityValue);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
