@@ -1,15 +1,16 @@
 package cc.alcina.framework.common.client.traversal;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
-
 /*
  * Simple caches can be represented as a kv map with the string keys forming a
  * path tree. This class enables simple cache area differentiation via the regex
  * field, with an associated maxAge (ms)
  */
-public class CacheBranch extends Bindable {
+
+public class CacheBranch extends Bindable implements TreeSerializable {
 	private long maxAge;
 
 	private String regex;
