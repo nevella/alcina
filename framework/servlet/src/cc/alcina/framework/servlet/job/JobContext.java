@@ -212,9 +212,12 @@ public class JobContext {
 	}
 
 	public static void warn(String template, Object... args) {
+		String formatted = Ax.format(template.replace("{}", "%s"), args);
+		if (Ax.isTest()) {
+			Ax.err("[WARN] - %s", formatted);
+		}
 		if (get() == null) {
-			Ax.err("Called JobContext.warn() outside job - %s %s", template,
-					Arrays.asList(args));
+			Ax.err("Called JobContext.warn() outside job - %s", formatted);
 		} else {
 			get().getLogger().warn(template, args);
 		}

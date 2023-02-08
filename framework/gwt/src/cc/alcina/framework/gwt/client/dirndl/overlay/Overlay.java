@@ -2,8 +2,10 @@ package cc.alcina.framework.gwt.client.dirndl.overlay;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
@@ -11,6 +13,8 @@ import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.HasNativeEvent;
 import com.google.gwt.event.shared.GwtEvent;
 
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -18,11 +22,16 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.CtrlEnterPressed;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.EscapePressed;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.MouseDownOutside;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Close;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
-import cc.alcina.framework.gwt.client.dirndl.model.HasElement;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Submit;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirndlAccess;
 import cc.alcina.framework.gwt.client.dirndl.model.HasLinks;
+import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
@@ -38,20 +47,41 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  *
  * <p>
  * CloseHandler fires on any close (including say [esc] key, mousedown outside)
- * - CommitHandler fires on [OK], [Ctrl-Enter]
+ * - SubmitHandler fires on [OK], [Ctrl-Enter]
+ *
+ * <p>
+ * Event routing: because an overlay is outside the dom (and dirndl node)
+ * stucture of the originating dirndl node, but is most easily managed by the
+ * originating node's model, dirndl routes events that bubble out of the overlay
+ * to the originating node's model (since the placement of the overlay in the
+ * node tree is due to constraints of HTML absolute positioning and z-order, not
+ * the underlying containment logic). Note that only model (not gwt/dom) events
+ * are thus rerouted.
+ * <p>
+ * FIXME - doc - this goes in dirndl events as an edge case
+ * <p>
+ * FIXME - dirndl 1x1d.0 - enforce overlay styles via css-ification of logical
+ * parent and optional logical ancestor classes (and doc). Basically,
+ * class="cssify(logicalParent.class) cssify(logicalAncestor0.class) etc"
+ *
+ * FIXME - dirndl 1x1d - check all preview etc listeners are really being
+ * removed on unbind
  *
  * @author nick@alcina.cc
  *
  */
 @Directed(
+	emits = { ModelEvents.Closed.class, ModelEvents.Submit.class },
 	receives = { ModelEvents.Close.class, InferredDomEvents.EscapePressed.class,
 			InferredDomEvents.CtrlEnterPressed.class,
-			InferredDomEvents.MouseDownOutside.class },
+			InferredDomEvents.MouseDownOutside.class, ModelEvents.Closed.class,
+			ModelEvents.Submit.class },
 	bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
 public class Overlay extends Model.WithNode implements
 		ModelEvents.Close.Handler, InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
-		InferredDomEvents.MouseDownOutside.Handler {
+		InferredDomEvents.MouseDownOutside.Handler, Model.RerouteBubbledEvents,
+		ModelEvents.Submit.Handler, ModelEvents.Closed.Handler {
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -62,58 +92,74 @@ public class Overlay extends Model.WithNode implements
 
 	private final Actions actions;
 
-	private Close.Handler closeHandler;
-
-	private Commit.Handler commitHandler;
-
 	private boolean modal;
 
 	private boolean removeOnMouseDownOutside;
 
-	private boolean allowCloseWithoutCommit = true;
+	private boolean allowCloseWithoutSubmit = true;
 
 	private boolean open;
 
 	private String cssClass;
 
-	private HasElement peer;
+	private Model logicalParent;
+
+	private List<Class<? extends Model>> logicalAncestors;
+
+	private ModelEvents.Submit.Handler modalSubmitHandler;
+
+	private ModelEvents.Closed.Handler modalClosedHandler;
+
+	/*
+	 * Don't close this overlay if the child is the event target
+	 */
+	private Overlay childOverlay;
 
 	private Overlay(Builder builder) {
 		contents = builder.contents;
 		position = builder.position;
 		actions = builder.actions;
 		modal = builder.modal;
-		closeHandler = builder.closeHandler;
-		commitHandler = builder.commitHandler;
-		allowCloseWithoutCommit = builder.allowCloseWithoutCommit;
+		allowCloseWithoutSubmit = builder.allowCloseWithoutSubmit;
 		removeOnMouseDownOutside = builder.removeOnMouseDownOutside;
-		peer = builder.peer;
-		Preconditions.checkState(peer == null || !modal);
-		cssClass = builder.cssClass;
+		logicalParent = builder.logicalParent;
+		logicalAncestors = builder.logicalAncestors;
+		modalSubmitHandler = builder.modalSubmitHandler;
+		modalClosedHandler = builder.modalClosedHandler;
+		computeCssClass();
 	}
 
-	public void close(boolean commit) {
+	/**
+	 * @return true if closed
+	 */
+	public boolean close(GwtEvent from, boolean submit) {
 		if (!open) {
-			return;
+			return true;
 		}
-		if (!commit && !allowCloseWithoutCommit) {
-			return;
+		if (!submit && !allowCloseWithoutSubmit) {
+			return false;
+		}
+		if (childOverlay != null) {
+			if (!childOverlay.close(from, submit)) {
+				return false;
+			}
 		}
 		open = false;
-		if (commitHandler != null && commit) {
-			// force commit of focussed element (textarea, input) if it is a
-			// child of this closing dialog.
+		if (submit) {
+			// force commit of focussed element changes (textarea, input) if it
+			// is a child of this closing dialog.
 			Element focus = WidgetUtils.getFocussedDocumentElement();
 			if (focus != null
 					&& provideElement().provideIsAncestorOf(focus, true)) {
 				WidgetUtils.clearFocussedDocumentElement();
 			}
-			commitHandler.onCommit(null);
-		}
-		if (closeHandler != null) {
-			closeHandler.onClose(null);
+			NodeEvent.Context.newModelContext(from, node)
+					.fire(ModelEvents.Submit.class);
 		}
 		OverlayPositions.get().hide(this);
+		NodeEvent.Context.newModelContext(from, node)
+				.fire(ModelEvents.Closed.class);
+		return true;
 	}
 
 	@Directed
@@ -135,40 +181,93 @@ public class Overlay extends Model.WithNode implements
 	}
 
 	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (logicalParent != null && logicalParent instanceof HasNode) {
+			Node sourceNode = ((HasNode) logicalParent).provideNode();
+			Overlay ancestorOverlay = DirndlAccess.ComponentAncestorAccess
+					.getAncestor(sourceNode, this);
+			if (ancestorOverlay != null) {
+				ancestorOverlay.setChildOverlay(event.isBound() ? this : null);
+				// and inherit logical ancestry for styling. order is (ancestor)
+				// ancestors > parent > overlay > contents
+				if (logicalAncestors.isEmpty()) {
+					logicalAncestors = Stream
+							.concat(ancestorOverlay.logicalAncestors.stream(),
+									Stream.of(
+											ancestorOverlay.logicalParent
+													.getClass(),
+											ancestorOverlay.getClass(),
+											ancestorOverlay.contents
+													.getClass()))
+							.collect(Collectors.toList());
+					computeCssClass();
+				}
+			}
+		}
+	}
+
+	@Override
 	public void onClose(Close event) {
-		close(true);
+		close(event, true);
+	}
+
+	@Override
+	public void onClosed(Closed event) {
+		if (event.getContext().node != node) {
+			// child overlay
+			return;
+		}
+		if (event.checkReemitted(node)) {
+			return;
+		}
+		if (modalClosedHandler != null) {
+			modalClosedHandler.onClosed(event);
+		}
+		event.reemit();
 	}
 
 	@Override
 	public void onCtrlEnterPressed(CtrlEnterPressed event) {
 		// TODO - probably better to route via an internal form, which then
 		// fires submit, and close on that
-		close(true);
+		close(event, true);
 	}
 
 	@Override
 	public void onEscapePressed(EscapePressed event) {
-		close(false);
+		close(event, false);
 	}
 
 	@Override
 	public void onMouseDownOutside(MouseDownOutside event) {
 		if (removeOnMouseDownOutside) {
 			GwtEvent gwtEvent = event.getContext().getOriginatingGwtEvent();
-			if (peer != null && peer.provideIsBound()
-					&& gwtEvent instanceof HasNativeEvent) {
+			// don't close if a descendant overlay received the event
+			if (gwtEvent instanceof HasNativeEvent) {
 				NativeEvent nativeEvent = ((HasNativeEvent) gwtEvent)
 						.getNativeEvent();
 				EventTarget eventTarget = nativeEvent.getEventTarget();
 				if (eventTarget.isElement()) {
-					if (peer.provideElement().provideIsAncestorOf(
-							eventTarget.asElement(), true)) {
+					Element element = eventTarget.asElement();
+					if (selfOrDescendantOverlayContains(element)) {
 						return;
 					}
 				}
 			}
-			close(false);
+			close(event, false);
 		}
+	}
+
+	@Override
+	public void onSubmit(Submit event) {
+		if (event.checkReemitted(node)) {
+			return;
+		}
+		if (modalSubmitHandler != null) {
+			modalSubmitHandler.onSubmit(event);
+		}
+		event.reemit();
 	}
 
 	public void open() {
@@ -176,6 +275,61 @@ public class Overlay extends Model.WithNode implements
 				.withPosition(position);
 		OverlayPositions.get().show(this, options);
 		open = true;
+	}
+
+	@Override
+	public Model rerouteBubbledEventsTo() {
+		return logicalParent;
+	}
+
+	public void setCssClass(String cssClass) {
+		String old_cssClass = this.cssClass;
+		this.cssClass = cssClass;
+		propertyChangeSupport().firePropertyChange("cssClass", old_cssClass,
+				cssClass);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format(
+				"Overlay:\n\tcontents:     %s\n\tlogicalParent: %s\n\tchildOverlay: %s",
+				contents, logicalParent, childOverlay);
+	}
+
+	/*
+	 * Compute the overlay class based on logical ancestors + contents
+	 */
+	private void computeCssClass() {
+		// deliberately does not try to access @Directed(cssClass) - since
+		// overlay creation is imperative and the caller has essentially full
+		// control of the class selector (via logicalAncestors)...this is good
+		// enough, I think
+		String cssClass = Stream
+				.concat(logicalAncestors.stream(),
+						Stream.of(logicalParent, this, contents))
+				.filter(Objects::nonNull).map(CommonUtils::classOrSelf)
+				.map(Class::getSimpleName).map(Ax::cssify)
+				.collect(Collectors.joining(" "));
+		setCssClass(cssClass);
+	}
+
+	private boolean selfOrDescendantOverlayContains(Element element) {
+		if (provideElement().provideIsAncestorOf(element, true)) {
+			return true;
+		}
+		if (childOverlay != null
+				&& childOverlay.selfOrDescendantOverlayContains(element)) {
+			return true;
+		}
+		return false;
+	}
+
+	protected Overlay getChildOverlay() {
+		return this.childOverlay;
+	}
+
+	protected void setChildOverlay(Overlay childOverlay) {
+		this.childOverlay = childOverlay;
 	}
 
 	public static class Actions extends Model implements HasLinks {
@@ -217,40 +371,45 @@ public class Overlay extends Model.WithNode implements
 	}
 
 	public static class Builder {
+		List<Class<? extends Model>> logicalAncestors = List.of();
+
 		private Model contents;
 
 		private OverlayPosition position = new OverlayPosition();
 
 		private Actions actions;
 
-		private ModelEvents.Close.Handler closeHandler;
-
-		private ModelEvents.Commit.Handler commitHandler;
-
 		private boolean modal;
 
 		boolean removeOnMouseDownOutside = true;
 
-		boolean allowCloseWithoutCommit = true;
+		boolean allowCloseWithoutSubmit = true;
 
-		private String cssClass;
+		private Model logicalParent;
 
-		private HasElement peer;
+		ModelEvents.Submit.Handler modalSubmitHandler;
+
+		ModelEvents.Closed.Handler modalClosedHandler;
 
 		public Overlay build() {
 			return new Overlay(this);
 		}
 
 		public Builder centerDropdown(DomRect rect, Model model) {
-			return dropdown(Position.CENTER, rect, model);
+			return dropdown(Position.CENTER, rect, null, model);
 		}
 
 		public Builder dropdown(OverlayPosition.Position xalign, DomRect rect,
-				Model model) {
+				Model logicalParent, Model contents) {
 			position.dropdown(xalign, rect);
-			withContents(model);
+			withLogicalParent(logicalParent);
+			withContents(contents);
 			withRemoveOnMouseDownOutside(true);
 			return this;
+		}
+
+		public Model getLogicalParent() {
+			return this.logicalParent;
 		}
 
 		public OverlayPosition getPosition() {
@@ -263,8 +422,8 @@ public class Overlay extends Model.WithNode implements
 		}
 
 		public Builder
-				withAllowCloseWithoutCommit(boolean allowCloseWithoutCommit) {
-			this.allowCloseWithoutCommit = allowCloseWithoutCommit;
+				withAllowCloseWithoutSubmit(boolean allowCloseWithoutSubmit) {
+			this.allowCloseWithoutSubmit = allowCloseWithoutSubmit;
 			return this;
 		}
 
@@ -273,25 +432,23 @@ public class Overlay extends Model.WithNode implements
 			return this;
 		}
 
-		public Builder
-				withCloseHandler(ModelEvents.Close.Handler closeHandler) {
-			this.closeHandler = closeHandler;
-			return this;
-		}
-
-		public Builder
-				withCommitHandler(ModelEvents.Commit.Handler commitHandler) {
-			this.commitHandler = commitHandler;
-			return this;
-		}
-
 		public Builder withContents(Model contents) {
 			this.contents = contents;
 			return this;
 		}
 
-		public Builder withCssClass(String cssClass) {
-			this.cssClass = cssClass;
+		public Builder withLogicalAncestors(
+				List<Class<? extends Model>> logicalAncestors) {
+			this.logicalAncestors = logicalAncestors;
+			return this;
+		}
+
+		/*
+		 * Will be used as both an event bubbler and a link to the parent
+		 * overlay (if any)
+		 */
+		public Builder withLogicalParent(Model logicalParent) {
+			this.logicalParent = logicalParent;
 			return this;
 		}
 
@@ -300,16 +457,20 @@ public class Overlay extends Model.WithNode implements
 			return this;
 		}
 
-		public Builder withOk() {
-			actions = Actions.ok();
+		public Builder withModalClosedHandler(
+				ModelEvents.Closed.Handler modalClosedHandler) {
+			this.modalClosedHandler = modalClosedHandler;
 			return this;
 		}
 
-		/**
-		 * Don't close if this is an event target (requires non-model)
-		 */
-		public Builder withPeer(HasElement peer) {
-			this.peer = peer;
+		public Builder withModalSubmitHandler(
+				ModelEvents.Submit.Handler modalSubmitHandler) {
+			this.modalSubmitHandler = modalSubmitHandler;
+			return this;
+		}
+
+		public Builder withOk() {
+			actions = Actions.ok();
 			return this;
 		}
 

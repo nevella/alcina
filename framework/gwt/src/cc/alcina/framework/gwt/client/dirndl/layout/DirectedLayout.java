@@ -56,6 +56,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
+import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
  *
@@ -179,9 +181,36 @@ public class DirectedLayout implements AlcinaProcess {
 		 * tree
 		 */
 		Node cursor = modelEvent.getContext().node;
-		while (cursor != null && !modelEvent.isHandled()) {
+		while (cursor != null) {
 			cursor.dispatchEvent(modelEvent);
-			cursor = cursor.parent;
+			if (modelEvent.isHandled()) {
+				break;
+			}
+			boolean rerouted = false;
+			{
+				/*
+				 * this logic supports the DOM requirement that popups
+				 * (overlays) be outside the dom containment of the parent (in
+				 * general) - while maintining the event bubbling relationship
+				 * of a popup model to its logical model parent
+				 *
+				 */
+				if (cursor.model instanceof Model.RerouteBubbledEvents) {
+					Model rerouteTo = ((Model.RerouteBubbledEvents) cursor.model)
+							.rerouteBubbledEventsTo();
+					if (rerouteTo != null && rerouteTo instanceof HasNode) {
+						Node rerouteToNode = ((HasNode) rerouteTo)
+								.provideNode();
+						if (rerouteToNode != null) {
+							cursor = rerouteToNode;
+							rerouted = true;
+						}
+					}
+				}
+			}
+			if (!rerouted) {
+				cursor = cursor.parent;
+			}
 		}
 	}
 
@@ -355,6 +384,12 @@ public class DirectedLayout implements AlcinaProcess {
 	 * most optimisation is probably already done/implicit (see childreplacer) -
 	 * if fields are never set (e.g. simple leaves), .js compilers will emit
 	 * simpler objects anyway
+	 *
+	 * <p>
+	 * Style note - *try* not to access this class from outside this package. An
+	 * example of a reasonable usage (because it requires access to the overlay
+	 * context) is the retrieval of the ancestor Overlay in
+	 * {@code Overlay.onBind()}
 	 */
 	public static class Node {
 		// not necessarily unchanged during the Node's lifetime - the renderer

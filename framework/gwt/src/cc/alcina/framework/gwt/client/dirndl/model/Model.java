@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.totsp.gwittir.client.beans.Binding;
@@ -29,6 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 /**
  * <p>
@@ -111,6 +111,10 @@ public abstract class Model extends Bindable
 		}
 	}
 
+	public interface RerouteBubbledEvents {
+		Model rerouteBubbledEventsTo();
+	}
+
 	/**
 	 * This extension of Model exposes the corresponding Node in the dirdnl
 	 * layout tree. It's mostly used to provide access to the rendered DOM for
@@ -119,7 +123,7 @@ public abstract class Model extends Bindable
 	 * @author nick@alcina.cc
 	 *
 	 */
-	public static class WithNode extends Model implements HasElement {
+	public static class WithNode extends Model implements HasNode {
 		protected DirectedLayout.Node node;
 
 		/**
@@ -135,18 +139,9 @@ public abstract class Model extends Bindable
 			super.onBind(event);
 		}
 
-		/*
-		 * This could null-check node - but it's better for callers to check
-		 * provideIsBound if unsure
-		 */
 		@Override
-		public Element provideElement() {
-			return node.getWidget().getElement();
-		}
-
-		@Override
-		public boolean provideIsBound() {
-			return node != null;
+		public Node provideNode() {
+			return node;
 		}
 	}
 
@@ -343,7 +338,7 @@ public abstract class Model extends Bindable
 
 	// No mixins sez Java (so this effectively mixes WithNode + WithBinding)
 	public static class WithPropertyBindingAndNode
-			extends Model.WithPropertyBinding implements HasElement {
+			extends Model.WithPropertyBinding implements HasNode {
 		protected DirectedLayout.Node node;
 
 		@Override
@@ -357,13 +352,8 @@ public abstract class Model extends Bindable
 		}
 
 		@Override
-		public Element provideElement() {
-			return node.getWidget().getElement();
-		}
-
-		@Override
-		public boolean provideIsBound() {
-			return node != null;
+		public Node provideNode() {
+			return node;
 		}
 	}
 }

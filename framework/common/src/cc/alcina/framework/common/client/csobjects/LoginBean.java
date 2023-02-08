@@ -18,11 +18,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.ObfuscateOnLog;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 /**
  * 
  * @author Nick Reddel
  */
+@Bean
 public class LoginBean implements Serializable {
 	private String userName;
 

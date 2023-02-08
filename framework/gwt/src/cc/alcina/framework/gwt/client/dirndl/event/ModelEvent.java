@@ -22,6 +22,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
  * it must check for reemission to avoid an infinite loop with a call to
  * {@link ModelEvent#wasReemitted}. See {@link Choices.Single#onSelected}
  *
+ * <p>
+ * Naming note. Use present/imperative when the event is "a command UI gesture
+ * was made" - e.g. clicking on the 'x' button somewhere commands 'Close', so
+ * emit a {@code CloseEvent}. But when a UI <i>change</i> event occurs - such as
+ * 'the popup closed', use the past simple - {@code ClosedEvent}.
+ *
  * @author nick@alcina.cc
  *
  * @param <T>
@@ -51,6 +57,15 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public ModelEvent() {
 	}
 
+	public boolean checkReemitted(Node node) {
+		if (wasReemitted(node)) {
+			getContext().markCauseEventAsNotHandled();
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	public <T0 extends T> T0 getModel() {
 		return (T0) this.model;
 	}
@@ -71,9 +86,10 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		this.handled = handled;
 	}
 
+	// normally call checkreemitted, since there's not much else to do
 	public boolean wasReemitted(Node node) {
 		return getContext().getPrevious() != null
-				&& getContext().getPrevious().node == node;
+				&& getContext().getPrevious().reemission == node;
 	}
 
 	/**

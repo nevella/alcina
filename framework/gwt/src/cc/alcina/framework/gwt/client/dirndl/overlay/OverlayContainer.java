@@ -13,6 +13,17 @@ import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
 
+/**
+ * <p>
+ * Essentially unused if the overlay is non-modal, a glass (event interceptor)
+ * if it is modal
+ * <p>
+ * Note - this *must not* receive model events, since model events will be
+ * routed to the Overlay.logicalParent (if any), not this
+ *
+ * @author nick@alcina.cc
+ *
+ */
 @Directed(
 	cssClass = "overlay-container",
 	bindings = { @Binding(from = "viewportCentered", type = Type.CSS_CLASS),
@@ -79,7 +90,7 @@ public class OverlayContainer extends Model.WithNode implements HasTag {
 
 	void onResize(ResizeEvent event) {
 		if (!modal) {
-			contents.close(false);
+			contents.close(event, false);
 		} else {
 			// FIXME - dirndl 1x1j - reposition in with an animation
 			// gate

@@ -81,14 +81,6 @@ public class Io {
 			}
 		}
 
-		public static String read(String path) {
-			try {
-				return readFileToString(path);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
 		public static byte[] readClassPathResourceAsByteArray(Class clazz,
 				String path) {
 			try {
@@ -300,6 +292,14 @@ public class Io {
 				StringMap headers) throws Exception {
 			byte[] bytes = readUrlAsBytesWithPut(strUrl, body, headers);
 			return new String(bytes, StandardCharsets.UTF_8);
+		}
+
+		public String read(String path) {
+			try {
+				return readFileToString(path);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 

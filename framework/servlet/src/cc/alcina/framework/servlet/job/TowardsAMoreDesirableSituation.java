@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -132,6 +133,7 @@ class TowardsAMoreDesirableSituation {
 				j -> j.domain().wasRemoved() || j.provideIsSequenceComplete());
 		boolean delta = false;
 		while (canAllocate()) {
+			ObjectWrapper<Boolean> filtered = ObjectWrapper.of(false);
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
 				JobRegistry.get()
@@ -139,15 +141,28 @@ class TowardsAMoreDesirableSituation {
 							Transaction.endAndBeginNew();
 							// allocate in bulk while holding lock
 							while (canAllocate()) {
-								Optional<Job> next = JobDomain.get()
-										.getFutureConsistencyJobs().findFirst();
+								Stream<Job> stream = JobDomain.get()
+										.getFutureConsistencyJobs();
+								ConsistencyJobFilter filter = ConsistencyJobFilter
+										.get();
+								Optional<Job> next = stream.filter(filter)
+										.findFirst();
 								if (next.isPresent()) {
 									futureToPending(next);
 								} else {
+									filtered.set(true);
 									break;
 								}
 							}
 						});
+				if (filtered.get()) {
+					try {
+						// let other cluster instances true
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
 			} else {
 				break;
 			}

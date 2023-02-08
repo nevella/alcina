@@ -177,6 +177,10 @@ public class CommonUtils {
 		return s.substring(0, 1).toUpperCase() + s.substring(1);
 	}
 
+	public static Class classOrSelf(Object o) {
+		return o instanceof Class ? (Class) o : o.getClass();
+	}
+
 	public static Date cloneDate(Date date) {
 		return date == null ? null : new Date(date.getTime());
 	}
@@ -2038,7 +2042,8 @@ public class CommonUtils {
 			return format("%s/%s/%s - %s:%s:%s:%s", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
 					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()), date.getTime() % 1000);
+					padTwo(date.getSeconds()),
+					padThree((int) (date.getTime() % 1000)));
 		case AU_DATE_MONTH:
 			return format("%s %s %s", padTwo(date.getDate()),
 					MONTH_NAMES[date.getMonth() + 1],
@@ -2172,6 +2177,10 @@ public class CommonUtils {
 		}
 
 		public Date adjust(Date date, boolean toAdjustTz) {
+			// Null dates adjust to null dates
+			if (date == null) {
+				return null;
+			}
 			return toAdjustTz
 					? new Date(date.getTime()
 							+ localData.getUtcMinutes()

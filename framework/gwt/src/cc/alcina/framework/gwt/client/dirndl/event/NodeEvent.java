@@ -38,6 +38,12 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 	public abstract Class<H> getHandlerClass();
 
+	// special case when re-emitting an event from its handler - marks the event
+	// as reemitted (from the node) so as to not loop
+	public void reemit() {
+		context.reemit();
+	}
+
 	public <O extends ModelEvent> void reemitAs(Class<O> clazz) {
 		reemitAs(clazz, null);
 	}
@@ -71,7 +77,12 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 		public static Context newModelContext(GwtEvent event, Node node) {
 			Context context = new Context(node);
-			context.gwtEvent = event;
+			if (event instanceof NodeEvent
+					&& ((NodeEvent) event).context != null) {
+				context.previous = ((NodeEvent) event).context;
+			} else {
+				context.gwtEvent = event;
+			}
 			return context;
 		}
 
@@ -97,6 +108,8 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		private NodeEvent nodeEvent;
 
 		private GwtEvent gwtEvent;
+
+		Node reemission;
 
 		public Context(Node node) {
 			this.node = node;
@@ -154,6 +167,13 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			Preconditions.checkState(this.nodeEvent == null);
 			this.nodeEvent = nodeEvent;
 			nodeEvent.context = this;
+		}
+
+		void reemit() {
+			Context newContext = newModelContext(this, null);
+			newContext.reemission = node;
+			newContext.fire((Class<? extends ModelEvent>) nodeEvent.getClass(),
+					null);
 		}
 	}
 

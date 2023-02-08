@@ -31,6 +31,9 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
  *
  * Also - possibly the wrapping with Choice could be done reflectively/more
  * elegantly
+ *
+ * FIXME - dirndl 1x1e - Now that overlay events are routed to logical parents,
+ * it may be possible to cleanup event handling in this class
  */
 public abstract class Choices<T> extends Model.WithNode
 		implements ModelEvents.Selected.Handler, HasSelectedValue {
@@ -211,8 +214,7 @@ public abstract class Choices<T> extends Model.WithNode
 
 		@Override
 		public void onSelected(Selected event) {
-			if (event.wasReemitted(node)) {
-				event.getContext().markCauseEventAsNotHandled();
+			if (event.checkReemitted(node)) {
 				return;
 			}
 			Choices.Choice<T> choice = event == null ? null : event.getModel();
@@ -221,8 +223,7 @@ public abstract class Choices<T> extends Model.WithNode
 				value = null;
 			}
 			provisionalValue = value;
-			NodeEvent.Context.newModelContext(event.getContext(), node)
-					.fire(Selected.class);
+			event.reemit();
 			valueSelected.signal();
 			if (changeOnSelectionEvent) {
 				setSelectedValue(value);

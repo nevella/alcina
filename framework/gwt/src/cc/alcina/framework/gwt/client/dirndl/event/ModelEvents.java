@@ -1,7 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
-/*
- * A collection of standard logical events
+/**
+ * <p>
+ * A collection of standard logical events. See naming notes in
+ * {@code ModelEvents} - note that I have no idea when to use {@code Commit} vs
+ * {@code Submit}, working on it...at the moment, rule of thumb is "Submit if
+ * there's likely to be a form involved".
  */
 public class ModelEvents {
 	public static class Add extends ModelEvent<Object, Add.Handler> {
@@ -98,6 +102,22 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onClose(Close event);
+		}
+	}
+
+	public static class Closed extends ModelEvent<Object, Closed.Handler> {
+		@Override
+		public void dispatch(Closed.Handler handler) {
+			handler.onClosed(this);
+		}
+
+		@Override
+		public Class<Closed.Handler> getHandlerClass() {
+			return Closed.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onClosed(Closed event);
 		}
 	}
 
@@ -379,21 +399,19 @@ public class ModelEvents {
 		}
 	}
 
-	// FIXME - to 'submit'
-	public static class Submitted
-			extends ModelEvent<Object, Submitted.Handler> {
+	public static class Submit extends ModelEvent<Object, Submit.Handler> {
 		@Override
-		public void dispatch(Submitted.Handler handler) {
-			handler.onSubmitted(this);
+		public void dispatch(Submit.Handler handler) {
+			handler.onSubmit(this);
 		}
 
 		@Override
-		public Class<Submitted.Handler> getHandlerClass() {
-			return Submitted.Handler.class;
+		public Class<Submit.Handler> getHandlerClass() {
+			return Submit.Handler.class;
 		}
 
 		public interface Handler extends NodeEvent.Handler {
-			void onSubmitted(Submitted event);
+			void onSubmit(Submit event);
 		}
 	}
 
