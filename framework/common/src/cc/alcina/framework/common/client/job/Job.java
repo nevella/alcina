@@ -132,6 +132,15 @@ public abstract class Job extends VersionableEntity<Job>
 	@GwtTransient
 	private String consistencyPriority;
 
+	/**
+	 * creatorInstanceId.creationLocalId
+	 */
+	@GwtTransient
+	private String uuid;
+
+	@GwtTransient
+	private String cause;
+
 	public Job() {
 	}
 
@@ -256,6 +265,10 @@ public abstract class Job extends VersionableEntity<Job>
 			}
 		}
 		return getProcessState();
+	}
+
+	public String getCause() {
+		return this.cause;
 	}
 
 	public double getCompletion() {
@@ -394,6 +407,10 @@ public abstract class Job extends VersionableEntity<Job>
 
 	@Transient
 	public abstract Set<? extends JobRelation> getToRelations();
+
+	public String getUuid() {
+		return this.uuid;
+	}
 
 	public boolean hasSelfOrAncestorTask(Class<? extends Task> taskClass) {
 		if (provideIsTaskClass(taskClass)) {
@@ -748,6 +765,12 @@ public abstract class Job extends VersionableEntity<Job>
 		return provideParent().map(Job::root).orElse(domainIdentity());
 	}
 
+	public void setCause(String cause) {
+		String old_cause = this.cause;
+		this.cause = cause;
+		propertyChangeSupport().firePropertyChange("cause", old_cause, cause);
+	}
+
 	public void setCompletion(double completion) {
 		double old_completion = this.completion;
 		this.completion = completion;
@@ -919,6 +942,12 @@ public abstract class Job extends VersionableEntity<Job>
 				old_taskSignature, taskSignature);
 	}
 
+	public void setUuid(String uuid) {
+		String old_uuid = this.uuid;
+		this.uuid = uuid;
+		propertyChangeSupport().firePropertyChange("uuid", old_uuid, uuid);
+	}
+
 	public void throwIfException() {
 		if (getResultType() == JobResultType.EXCEPTION) {
 			throw new JobException(getLog());
@@ -1021,8 +1050,9 @@ public abstract class Job extends VersionableEntity<Job>
 					toLocator().toRecoverableNumericString());
 		}
 		if (provideCanDeserializeTask()) {
-			return Ax.format("%s::%s", task.getName(),
-					toLocator().toRecoverableNumericString());
+			// of interest
+			return Ax.format("%s::%s::%s", task.getName(),
+					toLocator().toRecoverableNumericString(), uuid);
 		} else {
 			return Ax.format("%s::%s",
 					getTaskClassName().replaceFirst(".+\\.(.+)", "$1"),

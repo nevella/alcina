@@ -116,7 +116,7 @@ public class RemoteInvocation {
 				params.clientInstanceAuth = clientInstance.getAuth();
 			}
 			params.context = new LinkedHashMap<>();
-			LooseContext.getContext().properties.forEach((k, v) -> {
+			LooseContext.getContext().getProperties().forEach((k, v) -> {
 				if (v == null || GraphProjection
 						.isPrimitiveOrDataClass(v.getClass())) {
 					params.context.put(k, v);

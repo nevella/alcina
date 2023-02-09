@@ -9,6 +9,8 @@ import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
  * <p>
@@ -33,6 +35,8 @@ public class CacheTrace {
 
 	private final String name;
 
+	public boolean hit;
+
 	public CacheTrace(String name, boolean enabled) {
 		this.name = name;
 		this.enabled = enabled;
@@ -56,8 +60,8 @@ public class CacheTrace {
 	@Override
 	public String toString() {
 		return enabled
-				? Ax.format("Name: %s\nTraces:\n\t%s", name,
-						traces.stream().collect(Collectors.joining("\n\t")))
+				? Ax.format("Name: %s\nTraces:\n  %s\n", name,
+						traces.stream().collect(Collectors.joining("\n  ")))
 				: "<disabled>";
 	}
 
@@ -68,9 +72,19 @@ public class CacheTrace {
 					.publish(new CacheEvent(template, argSuppliers));
 		}
 
+		public static void publishHit() {
+			ProcessObservers.context().publish(new CacheEvent(true));
+		}
+
 		private String template;
 
 		private Supplier<?>[] argSuppliers;
+
+		boolean hit;
+
+		public CacheEvent(boolean hit) {
+			this.hit = hit;
+		}
 
 		public CacheEvent(String template, Supplier<?>... argSuppliers) {
 			this.template = template;
@@ -78,9 +92,13 @@ public class CacheTrace {
 		}
 	}
 
-	public static class CacheEventObserver
-			implements ProcessObserver<CacheEvent> {
+	public static class CacheEventObserver implements
+			ProcessObserver<CacheEvent>, TopicListener.HandlesSubscription {
 		private CacheTrace trace;
+
+		// for observer registries, it's simplest to watch for unsubscription,
+		// since that's context-driven
+		public Topic<Void> topicUnsubscribed = Topic.create();
 
 		public CacheEventObserver(CacheTrace trace) {
 			this.trace = trace;
@@ -92,8 +110,19 @@ public class CacheTrace {
 		}
 
 		@Override
+		public void onSubscription(boolean subscribed) {
+			if (!subscribed) {
+				topicUnsubscribed.signal();
+			}
+		}
+
+		@Override
 		public void topicPublished(CacheEvent event) {
-			trace.info(event.template, event.argSuppliers);
+			if (event.hit) {
+				trace.hit = true;
+			} else {
+				trace.info(event.template, event.argSuppliers);
+			}
 		}
 	}
 }

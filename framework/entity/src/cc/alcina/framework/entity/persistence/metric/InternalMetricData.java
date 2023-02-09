@@ -116,8 +116,8 @@ public class InternalMetricData {
 			long activeDomainStoreLockTime, long domainStoreWaitTime,
 			DomainStoreLockState domainStoreLockState,
 			DomainStoreWaitStats waitStats) {
-		int maxStackLines = type == InternalMetricTypeAlcina.health ? 100 : 300;
-		int maxFrames = type == InternalMetricTypeAlcina.health ? 2000 : 50;
+		int maxStackLines = type.maxStackLines();
+		int maxFrames = type.maxFrames();
 		threadHistory.addElement(info, stackTrace, activeDomainStoreLockTime,
 				domainStoreWaitTime, domainStoreLockState, maxStackLines,
 				maxFrames, waitStats);

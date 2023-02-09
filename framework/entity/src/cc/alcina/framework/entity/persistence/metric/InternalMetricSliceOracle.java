@@ -38,7 +38,7 @@ public class InternalMetricSliceOracle {
 		if (deadlockedThreadIds.contains(imd.thread.getId())) {
 			return true;
 		}
-		if (imd.type == InternalMetricTypeAlcina.client) {
+		if (imd.type == InternalMetricTypeAlcina.client && imd.type.shouldSlice()) {
 			long initialClientDelay = ResourceUtilities.getLong(
 					InternalMetricSliceOracle.class, "initialClientDelay");
 			int sliceCount = imd.sliceCount();
@@ -53,23 +53,8 @@ public class InternalMetricSliceOracle {
 					return timeSinceLastSlice > initialClientDelay * 2;
 				}
 			}
-		} else if (imd.type == InternalMetricTypeAlcina.service) {
-			return false;
-		} else if (imd.type == InternalMetricTypeAlcina.health) {
-			return true;
-		} else if (imd.type == InternalMetricTypeAlcina.api) {
-			return true;
-		} else if (imd.type == InternalMetricTypeAlcina.remote_invocation) {
-			return true;
-		} else if (imd.type == InternalMetricTypeAlcina.job) {
-			return true;
-		} else if (imd.type == InternalMetricTypeAlcina.servlet) {
-			return true;
-		} else if (imd.type == InternalMetricTypeAlcina.tranche) {
-			return true;
 		} else {
-			Ax.err("Internal metric type not supported: %s", imd.type);
-			return false;
+			return imd.type.shouldSlice();
 		}
 	}
 }

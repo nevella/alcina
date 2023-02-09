@@ -164,6 +164,8 @@ public class JobRegistry {
 
 	static Logger logger = LoggerFactory.getLogger(JobRegistry.class);
 
+	public static final int MAX_CAUSE_LENGTH = 240;
+
 	public static Builder createBuilder() {
 		return new Builder();
 	}
@@ -779,6 +781,8 @@ public class JobRegistry {
 
 		private boolean awaiter;
 
+		private String cause;
+
 		public Job addSibling(Task task) {
 			// only run to add a sibling to a child job - otherwise use
 			// followWith()
@@ -788,6 +792,10 @@ public class JobRegistry {
 			return create();
 		}
 
+		/**
+		 * This should be the only route for the creation of persistent jobs
+		 * (i.e. don't call {@code PersistentImpl.create(Job.class) elsewhere}
+		 */
 		public Job create() {
 			checkAnnotatedPermissions(task);
 			Job job = PersistentImpl.create(Job.class);
@@ -801,8 +809,12 @@ public class JobRegistry {
 			} finally {
 				LooseContext.pop();
 			}
-			job.setCreator(
-					EntityLayerObjects.get().getServerAsClientInstance());
+			ClientInstance selfInstance = ClientInstance.self();
+			job.setCreator(selfInstance);
+			// very useful for job cascade/trigger debugging
+			job.setUuid(
+					Ax.format("%s.%s", selfInstance.getId(), job.getLocalId()));
+			job.setCause(cause);
 			if (runAt != null) {
 				Preconditions.checkArgument(initialState == JobState.FUTURE);
 			}
@@ -823,8 +835,7 @@ public class JobRegistry {
 			 */
 			if (initialState == JobState.PENDING && (related == null
 					|| relationType == JobRelationType.RESUBMIT)) {
-				job.setPerformer(
-						EntityLayerObjects.get().getServerAsClientInstance());
+				job.setPerformer(selfInstance);
 			}
 			if (awaiter) {
 				JobRegistry.get().ensureAwaiter(job);
@@ -906,6 +917,13 @@ public class JobRegistry {
 
 		public Builder withAwaiter() {
 			awaiter = true;
+			return this;
+		}
+
+		public Builder withCause(String cause) {
+			// will be persisted to a varchar
+			Preconditions.checkArgument(cause.length() < MAX_CAUSE_LENGTH);
+			this.cause = cause;
 			return this;
 		}
 
@@ -1023,7 +1041,7 @@ public class JobRegistry {
 			//
 			// instead, all tasks for which runAsRoot returns false must
 			// implement iuser
-			copyContext.putAll(LooseContext.getContext().properties);
+			copyContext.putAll(LooseContext.getContext().getProperties());
 		}
 
 		public void await(long maxTime) {
@@ -1104,7 +1122,7 @@ public class JobRegistry {
 			Thread currentThread = Thread.currentThread();
 			launchingThreadId = currentThread.getId();
 			launchingThreadName = currentThread.getName();
-			copyContext.putAll(LooseContext.getContext().properties);
+			copyContext.putAll(LooseContext.getContext().getProperties());
 			contextClassLoader = currentThread.getContextClassLoader();
 		}
 

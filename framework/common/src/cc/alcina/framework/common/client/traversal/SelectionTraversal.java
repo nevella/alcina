@@ -613,16 +613,13 @@ public class SelectionTraversal
 			}
 
 			public Object getKey() {
-				NestedNameProvider nestedNameProvider = NestedNameProvider
-						.get();
 				if (rootSelection != null) {
-					return Ax.format("[%s]", nestedNameProvider
-							.getNestedSimpleName(rootSelection.getClass()));
+					return Ax.format("[%s]",
+							NestedNameProvider.get(rootSelection.getClass()));
 				} else if (selector == null) {
 					return traversal.generation;
 				} else {
-					return "  " + nestedNameProvider
-							.getNestedSimpleName(selector.getClass());
+					return "  " + NestedNameProvider.get(selector.getClass());
 				}
 			}
 

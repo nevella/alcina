@@ -9,13 +9,15 @@ import java.util.Stack;
 public class LooseContextInstance {
 	public static StackDebug stackDebug = new StackDebug("LooseContext");
 
-	public Map<String, Object> properties = CollectionCreators.Bootstrap
-			.getHashMapCreator().create();
+	private Map<String, Object> properties;
 
-	private Stack<Map<String, Object>> stack = new Stack<Map<String, Object>>();
+	private Stack<Frame> stack = new Stack<>();
+
+	// the current frame
+	private Frame frame;
 
 	public LooseContextInstance() {
-		super();
+		createFrame();
 	}
 
 	public void addProperties(Map<String, String> propertyMap) {
@@ -67,6 +69,10 @@ public class LooseContextInstance {
 		return (Float) get(key);
 	}
 
+	public Frame getFrame() {
+		return this.frame;
+	}
+
 	public Integer getInteger(String key) {
 		Object obj = get(key);
 		if (obj instanceof String) {
@@ -83,29 +89,24 @@ public class LooseContextInstance {
 		return containsKey(key) ? getInteger(key) : defaultValue;
 	}
 
+	public Map<String, Object> getProperties() {
+		return properties;
+	}
+
 	public String getString(String key) {
 		return (String) get(key);
 	}
 
 	public void pop() {
 		stackDebug.maybeDebugStack(stack, false);
-		properties = stack.pop();
+		frame = stack.pop();
+		properties = frame.properties;
 	}
 
 	public void push() {
 		stackDebug.maybeDebugStack(stack, true);
-		stack.push(properties);
-		properties = CollectionCreators.Bootstrap.getHashMapCreator()
-				.copy(properties);
-	}
-
-	/*
-	 * (Only used by rendercontext)
-	 */
-	public void pushContext(LooseContextInstance renderContext) {
-		stack.push(properties);
-		properties = new HashMap<String, Object>(properties);
-		properties.putAll(renderContext.properties);
+		stack.push(frame);
+		createFrame();
 	}
 
 	public void pushWithKey(String key, Object value) {
@@ -116,9 +117,7 @@ public class LooseContextInstance {
 	}
 
 	public void putSnapshotProperties(LooseContextInstance snapshot) {
-		for (String key : snapshot.properties.keySet()) {
-			set(key, snapshot.get(key));
-		}
+		snapshot.properties.forEach((k, v) -> set(k, v));
 	}
 
 	public <T> T remove(String key) {
@@ -156,6 +155,22 @@ public class LooseContextInstance {
 		return sm.toPropertyString();
 	}
 
+	private void createFrame() {
+		Frame current = frame;
+		frame = new Frame();
+		// FIXME - dirndl 1x1g - uniquemap (for script) - but need to also
+		// support copy constructor in push()
+		if (current == null) {
+			frame.properties = CollectionCreators.Bootstrap.getHashMapCreator()
+					.create();
+		} else {
+			frame.properties = CollectionCreators.Bootstrap.getHashMapCreator()
+					.copy(current.properties);
+		}
+		frame.depth = stack.size();
+		properties = frame.properties;
+	}
+
 	protected void allowUnbalancedFrameRemoval(Class clazz,
 			String pushMethodName) {
 	}
@@ -167,6 +182,16 @@ public class LooseContextInstance {
 	void clearStack() {
 		while (!stack.isEmpty()) {
 			pop();
+		}
+	}
+
+	public class Frame {
+		Map<String, Object> properties;
+
+		int depth;
+
+		public boolean isActive() {
+			return frame == this || stack.contains(this);
 		}
 	}
 }

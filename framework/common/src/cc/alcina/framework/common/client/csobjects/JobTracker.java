@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -95,7 +94,6 @@ public class JobTracker extends Model implements TreeSerializable {
 		return this.jobResultType;
 	}
 
-	@AlcinaTransient
 	public String getLog() {
 		return this.log;
 	}

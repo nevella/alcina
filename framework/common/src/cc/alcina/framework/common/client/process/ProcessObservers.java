@@ -1,12 +1,18 @@
 package cc.alcina.framework.common.client.process;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.common.client.util.LooseContextInstance.Frame;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -28,8 +34,7 @@ public class ProcessObservers {
 	private static ProcessObservers instance = new ProcessObservers();
 
 	public static ContextObservers context() {
-		return ContextObservers.has() ? LooseContext.get(ContextObservers.key())
-				: new ContextObservers();
+		return ContextObservers.get();
 	}
 
 	public static <O extends ProcessObservable> void observe(
@@ -86,6 +91,8 @@ public class ProcessObservers {
 	 *
 	 * Used for context-based control, as well as observation of a process. See
 	 * e.g. TreeSync.Preparer
+	 *
+	 * Thread-safe - due to the co
 	 */
 	public static class ContextObservers {
 		public static boolean has() {
@@ -96,20 +103,46 @@ public class ProcessObservers {
 			return ContextObservers.class.getName();
 		}
 
-		private ProcessObservers instance = new ProcessObservers();
-
-		ContextObservers() {
+		static ContextObservers get() {
+			return has() ? LooseContext.get(key()) : new ContextObservers();
 		}
 
-		// deregistration is handled by the context going out of scope
+		private ProcessObservers instance = new ProcessObservers();
+
+		private Multimap<LooseContextInstance.Frame, List<ProcessObserver>> observers = new Multimap<>();
+
+		private ContextObservers() {
+		}
+
+		// this is a relatively complex use of context, since listeners can be
+		// added to the (one) ContextObservers at various depths. So validate on
+		// publish.
 		public void observe(ProcessObserver o) {
+			// only ensure a ContextObservers exists in the context here
 			if (!has()) {
 				LooseContext.set(key(), this);
 			}
 			instance.observe0(o.getObservableClass(), o, true);
+			LooseContextInstance.Frame frame = LooseContext.getContext()
+					.getFrame();
+			observers.add(frame, o);
 		}
 
 		public <O extends ProcessObservable> void publish(O observable) {
+			if (observers.size() > 0) {
+				// validate observer frames
+				Iterator<Entry<Frame, List<ProcessObserver>>> itr = observers
+						.entrySet().iterator();
+				while (itr.hasNext()) {
+					Entry<Frame, List<ProcessObserver>> entry = itr.next();
+					LooseContextInstance.Frame frame = entry.getKey();
+					if (!frame.isActive()) {
+						entry.getValue().forEach(o -> instance
+								.observe0(o.getObservableClass(), o, false));
+						itr.remove();
+					}
+				}
+			}
 			instance.publish0((Class<O>) observable.getClass(),
 					() -> observable);
 		}

@@ -262,30 +262,30 @@ public class JobDomain {
 	}
 
 	public Optional<Job> getFutureConsistencyJob(Task task) {
-		return jobDescriptor.futureTaskProjection
+		return jobDescriptor.futureConsistencyTaskProjection
 				.getExistingConsistencyJobForTask(task);
 	}
 
 	public Stream<Job> getFutureConsistencyJobs() {
-		return jobDescriptor.futurePriorityProjection.getJobs();
+		return jobDescriptor.futureConsistencyPriorityProjection.getJobs();
 	}
 
 	public Stream<Job> getFutureConsistencyJobs(String consistencyPriority) {
-		return jobDescriptor.futurePriorityProjection
+		return jobDescriptor.futureConsistencyPriorityProjection
 				.getJobs(consistencyPriority);
 	}
 
 	public long getFutureConsistencyJobsCount() {
-		return jobDescriptor.futurePriorityProjection.getJobsCount();
+		return jobDescriptor.futureConsistencyPriorityProjection.getJobsCount();
 	}
 
 	public long getFutureConsistencyJobsCount(String consistencyPriority) {
-		return jobDescriptor.futurePriorityProjection
+		return jobDescriptor.futureConsistencyPriorityProjection
 				.getJobsCount(consistencyPriority);
 	}
 
 	public Stream<Job> getFutureConsistencyJobsEquivalentTo(Job job) {
-		return jobDescriptor.futureTaskProjection.getEquivalentTo(job.getTask())
+		return jobDescriptor.futureConsistencyTaskProjection.getEquivalentTo(job.getTask())
 				.filter(j -> j != job);
 	}
 
@@ -351,8 +351,8 @@ public class JobDomain {
 		AllocationQueue queue = queues.remove(job);
 	}
 
-	public Map<Class<? extends Task>, Integer> taskCountByTaskClass() {
-		return jobDescriptor.futureTaskProjection.taskCountByTaskClass();
+	public Map<Class<? extends Task>, Integer> getFutureConsistencyTaskCountByTaskClass() {
+		return jobDescriptor.futureConsistencyTaskProjection.taskCountByTaskClass();
 	}
 
 	private void cleanupQueues() {
@@ -1097,9 +1097,9 @@ public class JobDomain {
 
 		private CompletedReverseDateProjection reverseDateCompletedTopLevelProjection;
 
-		private FutureConsistencyPriorityProjection futurePriorityProjection;
+		private FutureConsistencyPriorityProjection futureConsistencyPriorityProjection;
 
-		private FutureConsistencyTaskProjection futureTaskProjection;
+		private FutureConsistencyTaskProjection futureConsistencyTaskProjection;
 
 		private CompletedReverseDateProjection reverseDateCompletedChildProjection;
 
@@ -1126,10 +1126,10 @@ public class JobDomain {
 			reverseDateCompletedChildProjection = new CompletedReverseDateProjection(
 					false);
 			projections.add(reverseDateCompletedChildProjection);
-			futurePriorityProjection = new FutureConsistencyPriorityProjection();
-			projections.add(futurePriorityProjection);
-			futureTaskProjection = new FutureConsistencyTaskProjection();
-			projections.add(futureTaskProjection);
+			futureConsistencyPriorityProjection = new FutureConsistencyPriorityProjection();
+			projections.add(futureConsistencyPriorityProjection);
+			futureConsistencyTaskProjection = new FutureConsistencyTaskProjection();
+			projections.add(futureConsistencyTaskProjection);
 		}
 
 		private class CompletedReverseDateProjection
