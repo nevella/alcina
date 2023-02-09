@@ -2,8 +2,8 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public class MutationRecord extends JavaScriptObject {
-	protected MutationRecord() {
+public class MutationRecordJso extends JavaScriptObject {
+	protected MutationRecordJso() {
 	}
 
 	public final native NodeListRemote<Node> getAddedNodes() /*-{

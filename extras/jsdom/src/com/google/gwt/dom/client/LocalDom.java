@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -877,5 +878,12 @@ public class LocalDom {
 	}
 
 	public class MutationsAccess {
+		public Stream<NodeRemote> streamChildren(NodeRemote node) {
+			return node.getChildNodes0().streamRemote();
+		}
+
+		public NodeRemote typedRemote(Node n) {
+			return n.typedRemote();
+		}
 	}
 }

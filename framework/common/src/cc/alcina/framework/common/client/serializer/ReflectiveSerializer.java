@@ -432,6 +432,10 @@ public class ReflectiveSerializer {
 
 		boolean topLevelTypeInfo = true;
 
+		boolean typeInfo = true;
+
+		boolean pretty;
+
 		Set<Class> elideTypeInfo = Collections.emptySet();
 
 		public SerializerOptions withElideDefaults(boolean elideDefaults) {
@@ -444,14 +448,24 @@ public class ReflectiveSerializer {
 			return this;
 		}
 
+		public SerializerOptions withPretty(boolean pretty) {
+			this.pretty = pretty;
+			return this;
+		}
+
 		public SerializerOptions
 				withTopLevelTypeInfo(boolean topLevelTypeInfo) {
 			this.topLevelTypeInfo = topLevelTypeInfo;
 			return this;
 		}
 
+		public SerializerOptions withTypeInfo(boolean typeInfo) {
+			this.typeInfo = typeInfo;
+			return this;
+		}
+
 		boolean elideTypeInfo(Class<? extends Object> clazz) {
-			return elideTypeInfo.contains(clazz);
+			return !typeInfo || elideTypeInfo.contains(clazz);
 		}
 	}
 

@@ -239,7 +239,7 @@ public class LocalDomMutations {
 
 	// this is called at a tricky place in the GWT event loop, so make sure we
 	// log exceptions
-	void handleMutations(JsArray<MutationRecord> records) {
+	void handleMutations(JsArray<MutationRecordJso> records) {
 		try {
 			handleMutations0(records);
 		} catch (Throwable e) {
@@ -257,7 +257,7 @@ public class LocalDomMutations {
 	 * *final* node location. If that node is attached, we write, otherwise
 	 * not...
 	 */
-	void handleMutations0(JsArray<MutationRecord> records) {
+	void handleMutations0(JsArray<MutationRecordJso> records) {
 		log(() -> Ax.format("Jv records: %s", records.length()));
 		String outerHtml = Document.get().typedRemote().getDocumentElement0()
 				.getOuterHtml();
@@ -272,8 +272,8 @@ public class LocalDomMutations {
 		 * Run the localdom deltas against these modfified containers
 		 *
 		 */
-		Multimap<NodeRemote, List<MutationRecord>> modifiedContainers = new Multimap<>();
-		List<MutationRecord> typedRecords = ClientUtils
+		Multimap<NodeRemote, List<MutationRecordJso>> modifiedContainers = new Multimap<>();
+		List<MutationRecordJso> typedRecords = ClientUtils
 				.jsArrayToTypedArray(records);
 		String combinedLogString = new ChildModificationHistory(null,
 				typedRecords).toLogString();
@@ -316,7 +316,7 @@ public class LocalDomMutations {
 				.collect(Collectors.toList());
 		for (NodeRemote childNodesModifiedRemote : orderedNormalisedModifiedContainers) {
 			ElementRemote elementRemote = (ElementRemote) childNodesModifiedRemote;
-			List<MutationRecord> mutationRecords = modifiedContainers
+			List<MutationRecordJso> mutationRecords = modifiedContainers
 					.get(childNodesModifiedRemote).stream()
 					.collect(Collectors.toList());
 			// String logString = new ChildModificationHistory(null,
@@ -478,10 +478,10 @@ public class LocalDomMutations {
 
 		List<ChildModificationHistoryState> states = new ArrayList<>();
 
-		private List<MutationRecord> mutationRecords;
+		private List<MutationRecordJso> mutationRecords;
 
 		public ChildModificationHistory(Element insertionPoint,
-				List<MutationRecord> mutationRecords) {
+				List<MutationRecordJso> mutationRecords) {
 			this.insertionPoint = insertionPoint;
 			this.mutationRecords = mutationRecords;
 		}
@@ -490,10 +490,10 @@ public class LocalDomMutations {
 			ChildModificationHistoryState currentState = ChildModificationHistoryState
 					.fromCurrentState(insertionPoint.typedRemote());
 			states.add(currentState);
-			List<MutationRecord> reverseMutations = mutationRecords.stream()
+			List<MutationRecordJso> reverseMutations = mutationRecords.stream()
 					.collect(Collectors.toList());
 			Collections.reverse(reverseMutations);
-			for (MutationRecord mutationRecord : reverseMutations) {
+			for (MutationRecordJso mutationRecord : reverseMutations) {
 				currentState = currentState.undo(mutationRecord);
 				states.add(currentState);
 			}
@@ -502,7 +502,7 @@ public class LocalDomMutations {
 		public String toLogString() {
 			FormatBuilder formatBuilder = new FormatBuilder();
 			int idx = 0;
-			for (MutationRecord mutationRecord : mutationRecords) {
+			for (MutationRecordJso mutationRecord : mutationRecords) {
 				formatBuilder.line(
 						"  Mutation record %s #%s %s:\n   target %s\n   pr-sib %s",
 						idx++, mutationRecord.getType(),
@@ -535,13 +535,13 @@ public class LocalDomMutations {
 			return state;
 		}
 
-		MutationRecord beforeRecord;
+		MutationRecordJso beforeRecord;
 
 		List<NodeRemote> children = new ArrayList<>();
 
 		ElementRemote elementRemote;
 
-		public ChildModificationHistoryState undo(MutationRecord record) {
+		public ChildModificationHistoryState undo(MutationRecordJso record) {
 			ChildModificationHistoryState undone = new ChildModificationHistoryState();
 			undone.elementRemote = elementRemote;
 			undone.beforeRecord = record;

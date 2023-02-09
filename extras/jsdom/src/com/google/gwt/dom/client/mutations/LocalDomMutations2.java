@@ -1,17 +1,20 @@
 package com.google.gwt.dom.client.mutations;
 
+import java.util.List;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
-import com.google.gwt.dom.client.MutationRecord;
+import com.google.gwt.dom.client.MutationRecordJso;
+import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 
 import cc.alcina.framework.common.client.util.Ax;
 
 public class LocalDomMutations2 {
-	private MutationsAccess localDom;
+	MutationsAccess mutationsAccess;
 
 	private JavaScriptObject observer = null;
 
@@ -23,8 +26,18 @@ public class LocalDomMutations2 {
 
 	boolean enabled = true;
 
-	public LocalDomMutations2(LocalDom.MutationsAccess localDom) {
-		this.localDom = localDom;
+	MutationHistory history;
+
+	Configuration configuration;
+
+	public LocalDomMutations2(LocalDom.MutationsAccess mutationsAccess) {
+		this.mutationsAccess = mutationsAccess;
+		configuration = new Configuration();
+		history = new MutationHistory(this);
+	}
+
+	public void dumpHistory() {
+		history.dump();
 	}
 
 	public boolean isEnabled() {
@@ -44,6 +57,7 @@ public class LocalDomMutations2 {
 		}
 		if (!observerConnected) {
 			connectObserver();
+			MutationHistory.Event.publish(Type.INIT, List.of());
 			observerConnected = true;
 		} else {
 			throw new IllegalStateException();
@@ -92,12 +106,15 @@ public class LocalDomMutations2 {
 
     var config = {
       childList : true,
-      //FIXME - lcaoldom - also monitor attribute changes...maybe? wouldn't hurt for conpleteness n pretty darn easy
-      subtree : true
+      subtree : true,
+      attributes : true,
+      attributeOldValue : true,
+      characterData : true,
+      characterDataOldValue : true
     };
     this.@LocalDomMutations2::observer.observe(
         this.@LocalDomMutations2::documentElement, config);
-    this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: connected ",false);
+    //    this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: connected ",false);
 	}-*/;
 
 	private native void consoleLog(String message, boolean error) /*-{
@@ -122,7 +139,7 @@ public class LocalDomMutations2 {
     }
     this.@LocalDomMutations2::observerConnected = false;
     this.@LocalDomMutations2::observer.disconnect();
-    this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: disconnected ",false);
+    //    this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: disconnected ",false);
 	}-*/;
 
 	private native void setupObserver() /*-{
@@ -147,7 +164,8 @@ public class LocalDomMutations2 {
     this.@LocalDomMutations2::log(Ljava/lang/String;Z)(message,false);
 	}-*/;
 
-	private void syncMutations0(JsArray<MutationRecord> records) {
+	private void syncMutations0(JsArray<MutationRecordJso> records) {
+		new SyncMutations(mutationsAccess).sync(records);
 		log(Ax.format("%s records", records.length()), false);
 	}
 
@@ -162,13 +180,26 @@ public class LocalDomMutations2 {
 
 	// this is called at a tricky place in the GWT event loop, so make sure we
 	// log exceptions
-	void syncMutations(JsArray<MutationRecord> records) {
+	void syncMutations(JsArray<MutationRecordJso> records) {
 		try {
 			syncMutations0(records);
 		} catch (Throwable e) {
 			GWT.log("Exception in handleMutations", e);
 			e.printStackTrace();
 			throw e;
+		}
+	}
+
+	public static class Configuration {
+		boolean logDoms = true;
+
+		boolean logEvents = true;
+
+		public Configuration() {
+		}
+
+		public boolean provideIsObserveHistory() {
+			return logDoms || logEvents;
 		}
 	}
 }
