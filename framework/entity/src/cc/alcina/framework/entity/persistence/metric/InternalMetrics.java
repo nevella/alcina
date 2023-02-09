@@ -659,10 +659,62 @@ public class InternalMetrics {
 	}
 
 	public interface InternalMetricType {
+
+		public boolean shouldSlice();
+
+		public int maxStackLines();
+
+		public int maxFrames();
+
 	}
 
 	public enum InternalMetricTypeAlcina implements InternalMetricType {
-		client, service, health, api, servlet, job, remote_invocation, tranche
+		client, service, health, api, servlet, job, remote_invocation, tranche;
+
+		@Override
+		public boolean shouldSlice() {
+			switch (this) {
+			case client:
+				return true;
+			case service:
+				return false;
+			case health:
+				return true;
+			case api:
+				return true;
+			case remote_invocation:
+				return true;
+			case job:
+				return true;
+			case servlet:
+				return true;
+			case tranche:
+				return true;
+			default:
+				Ax.out("Unsupported metrics type: %s", this);
+				return false;
+			}
+		}
+
+		@Override
+		public int maxStackLines() {
+			switch (this) {
+			case health:
+				return 100;
+			default:
+				return 300;
+			}
+		}
+
+		@Override
+		public int maxFrames() {
+			switch (this) {
+			case health:
+				return 2000;
+			default:
+				return 50;
+			}
+		}
 	}
 
 	public enum MetricType {
