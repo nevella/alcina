@@ -8,6 +8,9 @@ import cc.alcina.framework.common.client.util.TimeConstants;
  * Simple caches can be represented as a kv map with the string keys forming a
  * path tree. This class enables simple cache area differentiation via the regex
  * field, with an associated maxAge (ms)
+ *
+ * Currently doesn't distingusih between http operations (GET|POST), but would
+ * be easy to add
  */
 
 public class CacheBranch extends Bindable implements TreeSerializable {
