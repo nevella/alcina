@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -42,12 +43,22 @@ public class TaskListJobs extends AbstractTaskPerformer
 
 	private transient Pattern filterPattern;
 
+	private boolean listConsistencyJobs;
+
 	public String getFilter() {
 		return this.filter;
 	}
 
+	public boolean isListConsistencyJobs() {
+		return this.listConsistencyJobs;
+	}
+
 	public void setFilter(String filter) {
 		this.filter = filter;
+	}
+
+	public void setListConsistencyJobs(boolean listConsistencyJobs) {
+		this.listConsistencyJobs = listConsistencyJobs;
 	}
 
 	private void addConsistency(DomDocument doc) {
@@ -58,19 +69,58 @@ public class TaskListJobs extends AbstractTaskPerformer
 		});
 		doc.html().body().builder().tag("h2").text("Consistency job stats")
 				.append();
-		DomNodeHtmlTableBuilder builder = doc.html().body().html()
-				.tableBuilder();
-		Map<Class<? extends Task>, Integer> counts = JobDomain.get()
-				.taskCountByTaskClass();
-		builder.row().cell("Task").cell("Count").accept(Utils::numericRight);
-		counts.forEach((taskClass, count) -> {
-			builder.row().cell(taskClass.getSimpleName()).cell(count)
+		{
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			Map<Class<? extends Task>, Integer> counts = JobDomain.get()
+					.getFutureConsistencyTaskCountByTaskClass();
+			builder.row().cell("Task").cell("Count")
 					.accept(Utils::numericRight);
-		});
-		builder.row().cell("Total")
-				.cell(counts.values().stream()
-						.collect(Collectors.summingInt(i -> i)))
-				.accept(Utils::numericRight);
+			counts.forEach((taskClass, count) -> {
+				builder.row().cell(taskClass.getSimpleName()).cell(count)
+						.accept(Utils::numericRight);
+			});
+			builder.row().cell("Total")
+					.cell(counts.values().stream()
+							.collect(Collectors.summingInt(i -> i)))
+					.accept(Utils::numericRight);
+		}
+		if (listConsistencyJobs) {
+			doc.html().body().builder().tag("h2")
+					.text("Pending consistency jobs").append();
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
+					.accept(Utils::large).cell("Cause").accept(Utils::large)
+					.cell("Links").accept(Utils::links);
+			CountingMap<Class<? extends Task>> loggedCountsByTaskClass = new CountingMap<>();
+			Stream<Job> futureConsistencyJobs = JobDomain.get()
+					.getFutureConsistencyJobs();
+			futureConsistencyJobs.forEach(job -> {
+				Class<? extends Task> taskClass = job.provideTaskClass();
+				int count = loggedCountsByTaskClass.add(taskClass);
+				if (count > 10) {
+					return;
+				}
+				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+						.cell(String.valueOf(job.getId()))
+						.cell(job.provideName()).accept(Utils::large)
+						.cell(job.getCause()).accept(Utils::large);
+				DomNode td = cellBuilder.append();
+				{
+					String href = JobServlet
+							.createTaskUrl(new TaskLogJobDetails()
+									.withValue(String.valueOf(job.getId())));
+					td.html().addLink("Details", href, "_blank");
+				}
+				td.builder().text(" - ").tag("span").append();
+				{
+					String href = JobServlet.createTaskUrl(new TaskCancelJob()
+							.withValue(String.valueOf(job.getId())));
+					td.html().addLink("Cancel", href, "_blank");
+				}
+			});
+		}
 	}
 
 	private DomNodeHtmlTableCellBuilder applyCompletedResultStyle(
