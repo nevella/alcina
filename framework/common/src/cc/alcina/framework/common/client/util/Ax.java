@@ -34,6 +34,16 @@ public class Ax {
 		return blankTo(string, "");
 	}
 
+	public static String clip(String string, int maxLength) {
+		if (string == null) {
+			return null;
+		}
+		if (string.length() <= maxLength) {
+			return string;
+		}
+		return string.substring(0, maxLength);
+	}
+
 	public static Date cloneDate(Date date) {
 		return date == null ? null : new Date(date.getTime());
 	}
@@ -41,6 +51,20 @@ public class Ax {
 	public static String commaJoin(Collection collection) {
 		return (String) collection.stream().map(Object::toString)
 				.collect(Collectors.joining(", "));
+	}
+
+	public static String cssify(String s) {
+		if (CommonUtils.isNullOrEmpty(s)) {
+			return s;
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(s.substring(0, 1).toLowerCase());
+		for (int i = 1; i < s.length(); i++) {
+			String c = s.substring(i, i + 1);
+			builder.append(c.toUpperCase().equals(c) ? "-" : "");
+			builder.append(c.toLowerCase());
+		}
+		return builder.toString();
 	}
 
 	public static String dateSlash(Date date) {
@@ -237,20 +261,6 @@ public class Ax {
 
 	public static double twoPlaces(double d) {
 		return CommonUtils.roundNumeric(d, 2);
-	}
-
-	public static String cssify(String s) {
-		if (CommonUtils.isNullOrEmpty(s)) {
-			return s;
-		}
-		StringBuilder builder = new StringBuilder();
-		builder.append(s.substring(0, 1).toLowerCase());
-		for (int i = 1; i < s.length(); i++) {
-			String c = s.substring(i, i + 1);
-			builder.append(c.toUpperCase().equals(c) ? "-" : "");
-			builder.append(c.toLowerCase());
-		}
-		return builder.toString();
 	}
 
 	private static class ReversedListIterator<E> implements Iterator<E> {

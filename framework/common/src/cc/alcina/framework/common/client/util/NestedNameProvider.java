@@ -5,7 +5,11 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @Registration.Singleton
 public class NestedNameProvider {
-	public static NestedNameProvider get() {
+	public static String get(Class clazz) {
+		return get().getNestedSimpleName(clazz);
+	}
+
+	private static NestedNameProvider get() {
 		return Registry.impl(NestedNameProvider.class);
 	}
 

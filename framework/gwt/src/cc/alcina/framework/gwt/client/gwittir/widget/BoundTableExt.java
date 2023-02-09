@@ -826,7 +826,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	public boolean renderCheck() {
 		try {
-			RenderContext.get().pushContext(renderContext);
+			RenderContext.get().push();
+			RenderContext.get().putSnapshotProperties(renderContext);
 			if (this.value == null || this.value.isEmpty()) {
 				this.clear();
 				HTML l = new HTML(inChunk
@@ -1893,7 +1894,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			return;
 		}
 		try {
-			RenderContext.get().pushContext(renderContext);
+			RenderContext.get().push();
+			RenderContext.get().putSnapshotProperties(renderContext);
 			renderTop();
 			renderRows(Integer.MAX_VALUE);
 			renderBottom();

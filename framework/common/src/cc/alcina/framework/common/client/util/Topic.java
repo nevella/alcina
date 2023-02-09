@@ -135,6 +135,10 @@ public class Topic<T> {
 				List<TopicListener> list = lookup == null ? new ArrayList<>()
 						: new ArrayList<>(lookup);
 				list.add(listener);
+				if (listener instanceof TopicListener.HandlesSubscription) {
+					((TopicListener.HandlesSubscription) listener)
+							.onSubscription(true);
+				}
 				lookup = list;
 			}
 		}
@@ -171,7 +175,13 @@ public class Topic<T> {
 					return;
 				}
 				List<TopicListener> list = new ArrayList<>(lookup);
-				list.remove(listener);
+				boolean removed = list.remove(listener);
+				if (removed) {
+					if (listener instanceof TopicListener.HandlesSubscription) {
+						((TopicListener.HandlesSubscription) listener)
+								.onSubscription(false);
+					}
+				}
 				lookup = list;
 			}
 		}
