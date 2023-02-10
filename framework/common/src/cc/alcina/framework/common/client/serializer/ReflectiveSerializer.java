@@ -54,6 +54,7 @@ import elemental.json.JsonObject;
 import elemental.json.JsonString;
 import elemental.json.JsonType;
 import elemental.json.JsonValue;
+import elemental.json.impl.JsonUtil;
 
 /**
  * <p>
@@ -203,7 +204,7 @@ public class ReflectiveSerializer {
 		if (!options.topLevelTypeInfo) {
 			out = root.getChild(1);
 		}
-		return out.toJson();
+		return out.toJson(options.pretty);
 	}
 
 	static TypeSerializerLocation resolveSerializer(Class clazz) {
@@ -294,13 +295,17 @@ public class ReflectiveSerializer {
 	private void serialize0() {
 		do {
 			GraphNode node = state.pending.peek();
-			node.ensureValueWritten();
-			Iterator<GraphNode> itr = node.iterator;
-			if (itr != null && itr.hasNext()) {
-				GraphNode next = itr.next();
-				state.pending.push(next);
-			} else {
-				state.pending.pop();
+			try {
+				node.ensureValueWritten();
+				Iterator<GraphNode> itr = node.iterator;
+				if (itr != null && itr.hasNext()) {
+					GraphNode next = itr.next();
+					state.pending.push(next);
+				} else {
+					state.pending.pop();
+				}
+			} catch (RuntimeException e) {
+				throw new SerializationException(node, e);
 			}
 		} while (state.pending.size() > 0);
 	}
@@ -866,13 +871,14 @@ public class ReflectiveSerializer {
 		}
 
 		@Override
-		public String toJson() {
-			return jsonValue.toJson();
+		public String toJson(boolean pretty) {
+			return pretty ? JsonUtil.stringify(jsonValue, 2)
+					: jsonValue.toJson();
 		}
 
 		@Override
 		public String toString() {
-			return toJson();
+			return toJson(true);
 		}
 
 		@Override
@@ -1023,7 +1029,7 @@ public class ReflectiveSerializer {
 
 		Object readValue(GraphNode node);
 
-		String toJson();
+		String toJson(boolean pretty);
 
 		void write(GraphNode node, Object value);
 

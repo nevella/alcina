@@ -41,7 +41,8 @@ class SerializationSupport {
 					}
 				}
 			}
-			return f1.getName().compareTo(f2.getName());
+			// prserve order
+			return 0;
 		}
 	};
 

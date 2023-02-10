@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.w3c.dom.NodeList;
 
@@ -17,6 +16,7 @@ import com.google.gwt.dom.client.NodeRemote;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.HasEquivalence;
 
 /**
  * <p>
@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
  * Also used as the serialization form for local/remote dom-as-json dumps
  */
 @Bean
-public class MutationNode {
+public class MutationNode implements HasEquivalence<MutationNode> {
 	DomNode domNode;
 
 	short nodeType;
@@ -42,6 +42,10 @@ public class MutationNode {
 	Map<String, String> attributes;
 
 	List<MutationNode> childNodes;
+
+	MutationNode parent;
+
+	int ordinal;
 
 	int id;
 
@@ -63,24 +67,43 @@ public class MutationNode {
 			// avoid wrap-in-LD-node if remote
 			childNodes = new ArrayList<>();
 			if (node instanceof NodeRemote) {
-				Stream<NodeRemote> stream = access
-						.streamChildren((NodeRemote) node);
-				childNodes = stream.map(
-						n -> new MutationNode(n, sync, access, withChildren))
+				List<NodeRemote> list = access.streamChildren((NodeRemote) node)
 						.collect(Collectors.toList());
+				int length = list.size();
+				for (int idx = 0; idx < length; idx++) {
+					DomNode item = list.get(idx);
+					MutationNode child = new MutationNode(item, sync, access,
+							withChildren);
+					child.ordinal = childNodes.size();
+					child.parent = this;
+					childNodes.add(child);
+				}
 			} else {
 				NodeList nodeList = node.getChildNodes();
 				int length = nodeList.getLength();
 				for (int idx = 0; idx < length; idx++) {
 					DomNode item = (DomNode) nodeList.item(idx);
-					childNodes.add(
-							new MutationNode(item, sync, access, withChildren));
+					MutationNode child = new MutationNode(item, sync, access,
+							withChildren);
+					child.ordinal = childNodes.size();
+					child.parent = this;
+					childNodes.add(child);
 				}
 			}
 		}
 		if (sync != null) {
 			this.id = sync.mutationNodes.size();
 		}
+	}
+
+	@Override
+	public int equivalenceHash() {
+		return 0;
+	}
+
+	@Override
+	public boolean equivalentTo(MutationNode other) {
+		return false;
 	}
 
 	public Map<String, String> getAttributes() {
@@ -107,10 +130,6 @@ public class MutationNode {
 		return this.nodeValue;
 	}
 
-	public SyncMutations getSync() {
-		return this.sync;
-	}
-
 	public void setAttributes(Map<String, String> attributes) {
 		this.attributes = attributes;
 	}
@@ -133,10 +152,6 @@ public class MutationNode {
 
 	public void setNodeValue(String nodeValue) {
 		this.nodeValue = nodeValue;
-	}
-
-	public void setSync(SyncMutations sync) {
-		this.sync = sync;
 	}
 
 	@Override

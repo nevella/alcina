@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client.mutations;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -57,7 +57,7 @@ public class LocalDomMutations2 {
 		}
 		if (!observerConnected) {
 			connectObserver();
-			MutationHistory.Event.publish(Type.INIT, List.of());
+			MutationHistory.Event.publish(Type.INIT, new ArrayList<>());
 			observerConnected = true;
 		} else {
 			throw new IllegalStateException();

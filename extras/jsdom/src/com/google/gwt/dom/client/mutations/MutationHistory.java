@@ -48,9 +48,17 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		Ax.out(string);
 	}
 
+	public List<MutationHistory.Event> getEvents() {
+		return this.events;
+	}
+
 	@Override
 	public Class<MutationHistory.Event> getObservableClass() {
 		return MutationHistory.Event.class;
+	}
+
+	public void setEvents(List<MutationHistory.Event> events) {
+		this.events = events;
 	}
 
 	@Override
@@ -62,6 +70,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			event.remoteDom = new MutationNode(
 					mutations.mutationsAccess.typedRemote(documentElement),
 					null, mutations.mutationsAccess, true);
+			event.identicalDoms = event.localDom.equivalentTo(event.remoteDom);
 		}
 		events.add(event);
 	}
@@ -77,6 +86,8 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		private Type type;
 
 		private List<MutationRecord> records;
+
+		private boolean identicalDoms = true;
 
 		private MutationNode localDom;
 
@@ -104,6 +115,14 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 		public Type getType() {
 			return this.type;
+		}
+
+		public boolean isIdenticalDoms() {
+			return this.identicalDoms;
+		}
+
+		public void setIdenticalDoms(boolean identicalDoms) {
+			this.identicalDoms = identicalDoms;
 		}
 
 		public void setLocalDom(MutationNode localDom) {
