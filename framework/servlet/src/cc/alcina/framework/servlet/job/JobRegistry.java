@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -849,6 +850,21 @@ public class JobRegistry {
 			}
 			task.onJobCreate(job);
 			lastCreated = job;
+			LogCreation logCreation = LogCreation.valueOf(
+					Configuration.get(JobRegistry.class, "logJobCreation"));
+			switch (logCreation) {
+			case NONE:
+				break;
+			case JOB:
+				logger.info("Job created: {}", job);
+				break;
+			case STACK:
+				logger.info("Job created: {}", job);
+				new Exception().printStackTrace();
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
 			return job;
 		}
 
@@ -1015,6 +1031,10 @@ public class JobRegistry {
 		public boolean isHighestBuildNumberInCluster() {
 			return true;
 		}
+	}
+
+	public enum LogCreation {
+		NONE, JOB, STACK
 	}
 
 	@Registration.Singleton(Task.Performer.class)
