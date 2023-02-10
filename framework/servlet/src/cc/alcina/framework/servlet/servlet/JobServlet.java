@@ -126,6 +126,8 @@ public class JobServlet extends AlcinaServlet {
 		case list:
 			TaskListJobs logJobs = new TaskListJobs();
 			logJobs.setFilter(filter);
+			logJobs.setListConsistencyJobs(
+					Boolean.valueOf(request.getParameter("list-consistency")));
 			job = logJobs.perform();
 			break;
 		case detail:
