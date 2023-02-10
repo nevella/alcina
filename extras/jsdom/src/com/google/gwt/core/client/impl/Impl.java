@@ -21,6 +21,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
 
 /**
@@ -59,6 +60,8 @@ public final class Impl {
      * exceptions.
      */
     private static UncaughtExceptionHandler uncaughtExceptionHandlerForTest;
+
+    private static boolean firstTimeClient=true;
 
     /**
      * This method should be used whenever GWT code is entered from a JS context
@@ -272,7 +275,6 @@ public final class Impl {
         }
         return false;
     }
-
     /**
      * Implements {@link #entry(JavaScriptObject)}.
      */
@@ -281,7 +283,19 @@ public final class Impl {
         boolean initialEntry = enter();
         try {
             if (initialEntry) {
-            	LocalDom.getMutations().syncMutationsAndstopObserving();
+            	if(firstTimeClient){
+            		if(GWT.isScript()){
+            		//force LocalDom init prior to mutations check
+            			try {
+                            Document.get();
+                        } catch (Throwable t) {
+                            reportUncaughtException(t);
+                            return undefined();
+                        }
+            		}
+            		firstTimeClient=false;
+            	}
+            	LocalDom.getMutations().syncMutationsAndStopObserving();
             }
             /*
              * Always invoke the UCE if we have one so that the exception never

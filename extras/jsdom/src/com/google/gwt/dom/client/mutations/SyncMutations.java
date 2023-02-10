@@ -26,7 +26,8 @@ class SyncMutations {
 	public MutationNode mutationNode(NodeRemote nodeRemote) {
 		return nodeRemote == null ? null
 				: mutationNodes.computeIfAbsent(nodeRemote,
-						n -> new MutationNode(n, this, mutationsAccess, false));
+						n -> new MutationNode(n, this, mutationsAccess, false,
+								null));
 	}
 
 	public void sync(JsArray<MutationRecordJso> records) {

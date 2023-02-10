@@ -872,7 +872,9 @@ public class ReflectiveSerializer {
 
 		@Override
 		public String toJson(boolean pretty) {
-			return pretty ? JsonUtil.stringify(jsonValue, 2)
+			// FIXME - dirndl 1x2 - extend jsonValue.toJson, remove GWT.isScript
+			// check
+			return pretty && !GWT.isScript() ? JsonUtil.stringify(jsonValue, 2)
 					: jsonValue.toJson();
 		}
 

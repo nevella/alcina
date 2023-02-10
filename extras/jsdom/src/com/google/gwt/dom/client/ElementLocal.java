@@ -246,7 +246,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public String getNodeValue() {
-		return getTagName();
+		return null;
 	}
 
 	@Override
@@ -640,12 +640,41 @@ public class ElementLocal extends NodeLocal
 
 	private void appendChildContents(UnsafeHtmlBuilder builder) {
 		if (containsUnescapedText()) {
+			checkSplitTextNodesForBrowserCompatibility();
 			getChildren().stream().forEach(
 					node -> ((TextLocal) node).appendUnescaped(builder));
 		} else {
 			getChildren().stream()
 					.forEach(child -> child.appendOuterHtml(builder));
 		}
+	}
+
+	private void checkSplitTextNodesForBrowserCompatibility() {
+		if (getChildren().stream().noneMatch(t -> t.getNodeValue()
+				.length() > LocalDom.maxCharsPerTextNode)) {
+			return;
+		}
+		List<NodeLocal> toReplace = new ArrayList<>(getChildren());
+		for (int idx = toReplace.size() - 1; idx >= 0; idx--) {
+			element.getChild(idx).removeFromParent();
+		}
+		List<TextLocal> out = new ArrayList<>();
+		// copied from HtmlParser.emitText
+		toReplace.forEach(n -> {
+			String string = n.getNodeValue();
+			int idx = 0;
+			int length = string.length();
+			while (idx < length) {
+				int segmentLength = length - idx;
+				segmentLength = Math.min(segmentLength,
+						LocalDom.maxCharsPerTextNode);
+				String segment = idx == 0 && segmentLength == length ? string
+						: string.substring(idx, idx + segmentLength);
+				Text text = Document.get().createTextNode(segment);
+				element.appendChild(text);
+				idx += segmentLength;
+			}
+		});
 	}
 
 	private boolean containsUnescapedText() {

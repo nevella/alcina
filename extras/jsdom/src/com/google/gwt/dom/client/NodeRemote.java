@@ -254,18 +254,6 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	}-*/;
 
 	/**
-	 * Adds the node newChild to the end of the list of children of this node.
-	 * If the newChild is already in the tree, it is first removed.
-	 *
-	 * @param newChild
-	 *            The node to add
-	 * @return The node added
-	 */
-	private final native NodeRemote appendChild0(NodeRemote newChild) /*-{
-    return this.appendChild(newChild);
-	}-*/;
-
-	/**
 	 * The last child of this node. If there is no such node, this returns null.
 	 */
 	private final native NodeRemote getLastChild0() /*-{
@@ -353,6 +341,18 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 			}
 		}
 	}
+
+	/**
+	 * Adds the node newChild to the end of the list of children of this node.
+	 * If the newChild is already in the tree, it is first removed.
+	 *
+	 * @param newChild
+	 *            The node to add
+	 * @return The node added
+	 */
+	final native NodeRemote appendChild0(NodeRemote newChild) /*-{
+    return this.appendChild(newChild);
+	}-*/;
 
 	/**
 	 * Returns a duplicate of this node, i.e., serves as a generic copy

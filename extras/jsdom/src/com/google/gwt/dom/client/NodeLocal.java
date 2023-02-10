@@ -24,7 +24,8 @@ public abstract class NodeLocal implements LocalDomNode {
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
-		getChildren().add(newChild.local());
+		NodeLocal local = newChild.local();
+		getChildren().add(local);
 		((NodeLocal) newChild.local()).setParentNode(this);
 		return newChild;
 	}

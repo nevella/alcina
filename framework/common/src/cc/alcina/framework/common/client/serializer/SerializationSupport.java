@@ -15,36 +15,12 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 
 class SerializationSupport {
 	private static Map<Class, Class> solePossibleImplementation = Registry
 			.impl(ConcurrentMapCreator.class).create();
-
-	public static final Comparator<Property> PROPERTY_COMPARATOR = new Comparator<Property>() {
-		@Override
-		public int compare(Property f1, Property f2) {
-			if (f1.isReadable()) {
-				boolean entityType = Reflections.isAssignableFrom(Entity.class,
-						f1.getOwningType());
-				if (entityType) {
-					/*
-					 * serialize id, localid, other - to ensure population
-					 * before hash
-					 */
-					int idx1 = f1.getName().equals("id") ? 0
-							: f1.getName().equals("localId") ? 1 : 2;
-					int idx2 = f2.getName().equals("id") ? 0
-							: f2.getName().equals("localId") ? 1 : 2;
-					if (idx1 != idx2) {
-						return idx1 - idx2;
-					}
-				}
-			}
-			// prserve order
-			return 0;
-		}
-	};
 
 	// Optimisation: share support for all deserializers - they don't use
 	// context transience.
@@ -131,7 +107,8 @@ class SerializationSupport {
 		return serializationProperties.computeIfAbsent(clazz, valueClass -> {
 			ClassReflector<?> classReflector = Reflections.at(valueClass);
 			return classReflector.properties().stream()
-					.sorted(PROPERTY_COMPARATOR).filter(property -> {
+					.sorted(new PropertyComparator(classReflector))
+					.filter(property -> {
 						if (property.isReadOnly()) {
 							return false;
 						}
@@ -160,5 +137,42 @@ class SerializationSupport {
 
 	List<Property> getProperties(Class type) {
 		return getProperties0(type);
+	}
+
+	static final class PropertyComparator implements Comparator<Property> {
+		TypeSerialization.PropertyOrder order;
+
+		public PropertyComparator(ClassReflector<?> classReflector) {
+			TypeSerialization typeSerialization = classReflector
+					.annotation(TypeSerialization.class);
+			order = typeSerialization == null ? PropertyOrder.NAME
+					: typeSerialization.propertyOrder();
+		}
+
+		@Override
+		public int compare(Property f1, Property f2) {
+			if (f1.isReadable()) {
+				boolean entityType = Reflections.isAssignableFrom(Entity.class,
+						f1.getOwningType());
+				if (entityType) {
+					/*
+					 * serialize id, localid, other - to ensure population
+					 * before hash
+					 */
+					int idx1 = f1.getName().equals("id") ? 0
+							: f1.getName().equals("localId") ? 1 : 2;
+					int idx2 = f2.getName().equals("id") ? 0
+							: f2.getName().equals("localId") ? 1 : 2;
+					if (idx1 != idx2) {
+						return idx1 - idx2;
+					}
+				}
+			}
+			return order == PropertyOrder.NAME
+					? f1.getName().compareTo(f2.getName())
+					:
+					// prserve order (original order will be field)
+					0;
+		}
 	}
 }

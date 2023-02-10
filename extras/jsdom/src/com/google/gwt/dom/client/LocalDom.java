@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
@@ -17,8 +18,6 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
 import com.google.gwt.dom.client.mutations.LocalDomMutations2;
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.LocalDomDebug;
 
@@ -26,8 +25,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.Javascript
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 /**
  * <p>
@@ -62,10 +61,6 @@ public class LocalDom {
 
 	private static boolean disableRemoteWrite;
 
-	static boolean emitCommentPisAsText;
-
-	static LocalDomMutations2 mutations;
-
 	public static Topic<Exception> topicException;
 
 	public static Topic<String> topicUnableToParse;
@@ -73,9 +68,11 @@ public class LocalDom {
 	// FIXME - localdom - remove
 	private static boolean logParseAndMutationIssues;
 
+	public static int maxCharsPerTextNode = 65536;
+
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
-	}
+	};
 
 	public static void ensureRemote(Node node) {
 		get().ensureRemote0(node);
@@ -98,26 +95,20 @@ public class LocalDom {
 	}
 
 	public static LocalDomMutations2 getMutations() {
-		return mutations;
+		return get().mutations;
 	}
 
 	public static void initalize() {
 		Preconditions.checkState(instance == null);
-		instance = new LocalDom();
 		fastRemoveAll = true;
 		disableRemoteWrite = !GWT.isClient();
 		topicException = Topic.create();
 		topicUnableToParse = Topic.create();
+		instance = new LocalDom();
 	}
 
 	public static void invokeExternal(Runnable runnable) {
-		flush();
-		try {
-			mutations.startObserving();
-			runnable.run();
-		} finally {
-			mutations.syncMutationsAndstopObserving();
-		}
+		get().invokeExternal0(runnable);
 	}
 
 	public static boolean isDisableRemoteWrite() {
@@ -130,6 +121,17 @@ public class LocalDom {
 
 	public static boolean isStopPropagation(NativeEvent evt) {
 		return get().isStopPropagation0(evt);
+	}
+
+	public static void log(Level level, String template, Object... args) {
+		String message = Ax.format(template, args);
+		boolean error = level.intValue() > Level.INFO.intValue();
+		if (error) {
+			Ax.err(message);
+		} else {
+			Ax.out(message);
+		}
+		consoleLog(message, error);
 	}
 
 	public static void log(LocalDomDebug channel, String message,
@@ -157,8 +159,7 @@ public class LocalDom {
 	public static void register(Document doc) {
 		if (isUseRemoteDom()) {
 			initalize();
-			get().linkRemote(doc.typedRemote(), doc);
-			get().nodeFor0(doc.typedRemote().getDocumentElement0());
+			get().initalizeSync(doc);
 		}
 	}
 
@@ -178,6 +179,14 @@ public class LocalDom {
 	public static String validateHtml(String html) {
 		return get().validateHtml0(html);
 	}
+
+	private static native void consoleLog(String message, boolean error) /*-{
+    if (error) {
+      console.error(message);
+    } else {
+      console.log(message);
+    }
+	}-*/;
 
 	private static LocalDom get() {
 		return instance;
@@ -255,6 +264,14 @@ public class LocalDom {
 		get().wasResolved0(elem);
 	}
 
+	LocalDomMutations2 mutations;
+
+	private Configuration configuration;
+
+	public BrowserBehaviour browserBehaviour;
+
+	private DocumentRemote docRemote;
+
 	LocalDomDebugImpl debugImpl = new LocalDomDebugImpl();
 
 	private Map<NodeRemote, Node> remoteLookup;
@@ -273,21 +290,12 @@ public class LocalDom {
 
 	private boolean resolving;
 
-	private boolean useBuiltHtmlValidation;
-
 	private LocalDom() {
 		if (GWT.isScript()) {
 			remoteLookup = JsUniqueMap.createWeakMap();
 		} else {
 			remoteLookup = new LinkedHashMap<>();
 		}
-		LocalDom.mutations = GWT.isClient()
-				? new LocalDomMutations2(new MutationsAccess())
-				: null;
-		useBuiltHtmlValidation = GWT.isClient()
-				? BrowserMod.isInternetExplorer()
-				: false;
-		emitCommentPisAsText = true;
 		if (collections == null) {
 			initStatics();
 		}
@@ -422,6 +430,19 @@ public class LocalDom {
 		eventMods.get(evt).add(eventName);
 	}
 
+	private void initalizeSync(Document doc) {
+		docRemote = doc.typedRemote();
+		linkRemote(docRemote, doc);
+		nodeFor0(docRemote.getDocumentElement0());
+		configuration = new Configuration();
+		browserBehaviour = new BrowserBehaviour();
+		browserBehaviour.test();
+		mutations = GWT.isClient()
+				? new LocalDomMutations2(new MutationsAccess(),
+						configuration.asMutationsConfiguration())
+				: null;
+	}
+
 	private void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
 		elementCreators.put(SpanElement.TAG, () -> new SpanElement());
@@ -504,6 +525,16 @@ public class LocalDom {
 		declarativeCssNames = collections.createStringMap();
 		elementCreators = collections.createIdentityEqualsMap(String.class);
 		initElementCreators();
+	}
+
+	private void invokeExternal0(Runnable runnable) {
+		flush();
+		try {
+			mutations.startObserving();
+			runnable.run();
+		} finally {
+			mutations.syncMutationsAndStopObserving();
+		}
 	}
 
 	private boolean isPending0(NodeRemote nodeRemote) {
@@ -809,14 +840,7 @@ public class LocalDom {
 		ElementRemote typedRemote = div.implAccess().typedRemote();
 		typedRemote.setInnerHTML(html);
 		try {
-			if (useBuiltHtmlValidation) {
-				String outerHtml = typedRemote.buildOuterHtml();
-				RegExp regexp = RegExp.compile("^<div>(.+)</div>$", "i");
-				MatchResult exec = regexp.exec(outerHtml);
-				return exec.getGroup(1);
-			} else {
-				return typedRemote.getInnerHTML0();
-			}
+			return typedRemote.getInnerHTML0();
 		} catch (Exception e) {
 			topicException.publish(e);
 			return html;
@@ -857,6 +881,61 @@ public class LocalDom {
 		} finally {
 			resolutionEventIdDirty = false;
 			resolving = false;
+		}
+	}
+
+	public class BrowserBehaviour {
+		public int maxCharsPerTextNode = 65536;
+
+		/*
+		 * Try up to 2^20 chars
+		 */
+		public void test() {
+			// 16 chars
+			String seed = "0test1test2test3";
+			String lengthTest = seed;
+			int test = 1 << 20;
+			while (lengthTest.length() < test) {
+				lengthTest = lengthTest + lengthTest;
+			}
+			FormatBuilder format = new FormatBuilder();
+			ElementRemote div = docRemote.createElementNode0("div");
+			TextRemote text = docRemote.createTextNode0(lengthTest);
+			div.appendChild0(text);
+			int childNodesLengthNodeOperation = div.getChildNodes0()
+					.getLength();
+			div.setInnerHTML(lengthTest);
+			int childNodesLengthHtmlOperation = div.getChildNodes0()
+					.getLength();
+			if (childNodesLengthHtmlOperation == 1) {
+				maxCharsPerTextNode = Integer.MAX_VALUE;
+			} else {
+				maxCharsPerTextNode = div.getChildNodes0().getItem(0)
+						.getNodeValue().length();
+			}
+			log(Level.INFO,
+					"test text length: %s\n\tchildNodesLengthNodeOperation: %s"
+							+ "\n\tchildNodesLengthHtmlOperation: %s\n\tmaxCharsPerTextNode: %s",
+					lengthTest.length(), childNodesLengthNodeOperation,
+					childNodesLengthHtmlOperation, maxCharsPerTextNode);
+		}
+	}
+
+	public static class Configuration {
+		public boolean mutationLogDoms = true;
+
+		public boolean mutationLogEvents = true;
+
+		public boolean logEvents = true;
+
+		public Configuration() {
+		}
+
+		public LocalDomMutations2.Configuration asMutationsConfiguration() {
+			LocalDomMutations2.Configuration result = new LocalDomMutations2.Configuration();
+			result.logDoms = mutationLogDoms;
+			result.logEvents = mutationLogEvents;
+			return result;
 		}
 	}
 

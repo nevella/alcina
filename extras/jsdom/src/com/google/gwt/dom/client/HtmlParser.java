@@ -50,6 +50,11 @@ public class HtmlParser {
 	 * See https://developer.mozilla.org/en-US/docs/Web/API/CDATASection
 	 *
 	 * Emit processing instruction, cdata nodes as comments
+	 *
+	 * Also splits #text nodes at 65536 chars - this may be FF behaviour, is
+	 * certainly chromeium
+	 *
+	 * FIXME - LDM2 - live test in the browser
 	 */
 	private boolean emitBrowserCompatibleDom = true;
 
@@ -257,8 +262,20 @@ public class HtmlParser {
 		if (string.isEmpty()) {
 			return;
 		}
-		Text text = Document.get().createTextNode(string);
-		cursor.appendChild(text);
+		int idx = 0;
+		int length = string.length();
+		// will not emit a zero-length text node (but that won't be parseable
+		// anyway, although can be programatically created)
+		while (idx < length) {
+			int segmentLength = length - idx;
+			segmentLength = Math.min(segmentLength,
+					LocalDom.maxCharsPerTextNode);
+			String segment = idx == 0 && segmentLength == length ? string
+					: string.substring(idx, idx + segmentLength);
+			Text text = Document.get().createTextNode(segment);
+			cursor.appendChild(text);
+			idx += segmentLength;
+		}
 		if (debugCursor) {
 			Ax.out("  tx: %s", CommonUtils.trimToWsChars(
 					TextUtils.normalizeWhitespaceAndTrim(string), 50, true));

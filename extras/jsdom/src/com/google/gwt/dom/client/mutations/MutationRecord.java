@@ -7,9 +7,12 @@ import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.NodeRemote;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 @Bean
+@TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 public class MutationRecord {
 	MutationRecordJso jso;
 

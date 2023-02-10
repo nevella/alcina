@@ -2,9 +2,13 @@ package com.google.gwt.dom.client.mutations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.mutations.MutationNode.EquivalenceTest;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -13,7 +17,10 @@ import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializerOptions;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 
 /*
  * @formatter:off
@@ -43,7 +50,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 	public void dump() {
 		SerializerOptions options = new ReflectiveSerializer.SerializerOptions()
-				.withTypeInfo(false).withPretty(true);
+				.withElideDefaults(true).withTypeInfo(false).withPretty(true);
 		String string = ReflectiveSerializer.serialize(this, options);
 		Ax.out(string);
 	}
@@ -66,16 +73,33 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		if (mutations.configuration.logDoms) {
 			Element documentElement = Document.get().getDocumentElement();
 			event.localDom = new MutationNode(documentElement, null,
-					mutations.mutationsAccess, true);
+					mutations.mutationsAccess, true, null);
 			event.remoteDom = new MutationNode(
 					mutations.mutationsAccess.typedRemote(documentElement),
-					null, mutations.mutationsAccess, true);
-			event.identicalDoms = event.localDom.equivalentTo(event.remoteDom);
+					null, mutations.mutationsAccess, true, null);
+			EquivalenceTest equivalenceTest = event.localDom
+					.testEquivalence(event.remoteDom);
+			event.equivalenceTest = equivalenceTest.toString();
+			if (equivalenceTest.firstInequivalent != null) {
+				FormatBuilder issue = new FormatBuilder().separator("\n");
+				issue.append("-----------------------------------");
+				issue.append(event.equivalenceTest);
+				issue.append("-----------------------------------");
+				issue.append("");
+				LocalDom.log(Level.WARNING, issue.toString());
+				Scheduler.get().scheduleDeferred(() -> {
+					throw new IllegalStateException(event.equivalenceTest);
+				});
+			} else {
+				LocalDom.log(Level.INFO, "mutation event %s - verified correct",
+						events.size());
+			}
 		}
 		events.add(event);
 	}
 
 	@Bean
+	@TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 	public static class Event implements ProcessObservable {
 		public static void publish(Event.Type type,
 				List<MutationRecord> records) {
@@ -87,7 +111,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 		private List<MutationRecord> records;
 
-		private boolean identicalDoms = true;
+		private String equivalenceTest;
 
 		private MutationNode localDom;
 
@@ -99,6 +123,10 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		public Event(Event.Type type, List<MutationRecord> records) {
 			this.type = type;
 			this.records = records;
+		}
+
+		public String getEquivalenceTest() {
+			return this.equivalenceTest;
 		}
 
 		public MutationNode getLocalDom() {
@@ -117,12 +145,8 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			return this.type;
 		}
 
-		public boolean isIdenticalDoms() {
-			return this.identicalDoms;
-		}
-
-		public void setIdenticalDoms(boolean identicalDoms) {
-			this.identicalDoms = identicalDoms;
+		public void setEquivalenceTest(String equivalenceTest) {
+			this.equivalenceTest = equivalenceTest;
 		}
 
 		public void setLocalDom(MutationNode localDom) {

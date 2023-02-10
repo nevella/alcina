@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client.mutations;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -30,9 +31,10 @@ public class LocalDomMutations2 {
 
 	Configuration configuration;
 
-	public LocalDomMutations2(LocalDom.MutationsAccess mutationsAccess) {
+	public LocalDomMutations2(LocalDom.MutationsAccess mutationsAccess,
+			Configuration configuration) {
 		this.mutationsAccess = mutationsAccess;
-		configuration = new Configuration();
+		this.configuration = configuration;
 		history = new MutationHistory(this);
 	}
 
@@ -54,17 +56,17 @@ public class LocalDomMutations2 {
 		}
 		if (this.observer == null) {
 			setupObserver();
+			MutationHistory.Event.publish(Type.INIT, new ArrayList<>());
 		}
 		if (!observerConnected) {
 			connectObserver();
-			MutationHistory.Event.publish(Type.INIT, new ArrayList<>());
 			observerConnected = true;
 		} else {
 			throw new IllegalStateException();
 		}
 	}
 
-	public void syncMutationsAndstopObserving() {
+	public void syncMutationsAndStopObserving() {
 		if (!this.enabled) {
 			return;
 		}
@@ -117,14 +119,6 @@ public class LocalDomMutations2 {
     //    this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: connected ",false);
 	}-*/;
 
-	private native void consoleLog(String message, boolean error) /*-{
-    if (error) {
-      console.error(message);
-    } else {
-      console.log(message);
-    }
-	}-*/;
-
 	private native void disconnectObserver() /*-{
     if (this.@LocalDomMutations2::observer == null) {
       return;
@@ -170,12 +164,7 @@ public class LocalDomMutations2 {
 	}
 
 	void log(String message, boolean error) {
-		if (error) {
-			Ax.err(message);
-		} else {
-			Ax.out(message);
-		}
-		consoleLog(message, error);
+		LocalDom.log(error ? Level.WARNING : Level.INFO, message);
 	}
 
 	// this is called at a tricky place in the GWT event loop, so make sure we
@@ -191,9 +180,9 @@ public class LocalDomMutations2 {
 	}
 
 	public static class Configuration {
-		boolean logDoms = true;
+		public boolean logDoms = true;
 
-		boolean logEvents = true;
+		public boolean logEvents = true;
 
 		public Configuration() {
 		}

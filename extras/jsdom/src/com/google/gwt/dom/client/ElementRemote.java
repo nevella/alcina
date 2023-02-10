@@ -846,10 +846,6 @@ public class ElementRemote extends NodeRemote implements DomElement {
     return this.scrollWidth || 0;
 	}-*/;
 
-	final native void appendChild0(ElementRemote newChild)/*-{
-    this.appendChild(newChild);
-	}-*/;
-
 	/**
 	 * Explicitly build html by traversing with javascript (cos we can't trust
 	 * IE11, although we can webkit and probably FF)

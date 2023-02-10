@@ -21,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 /**
  *
@@ -42,6 +43,8 @@ public @interface TypeSerialization {
 
 	PropertySerialization[] properties() default {};
 
+	PropertyOrder propertyOrder() default PropertyOrder.NAME;
+
 	boolean reflectiveSerializable() default true;
 
 	/*
@@ -49,4 +52,9 @@ public @interface TypeSerialization {
 	 * root types
 	 */
 	String value() default "";
+
+	@Reflected
+	public enum PropertyOrder {
+		NAME, FIELD
+	}
 }

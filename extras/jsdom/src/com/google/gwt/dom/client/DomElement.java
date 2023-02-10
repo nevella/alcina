@@ -85,6 +85,9 @@ public interface DomElement extends DomNode {
 
 	/**
 	 * All of the markup and content within a given element.
+	 *
+	 * Currently, for local nodes, this may split text nodes to preserve
+	 * local/remote structural equality
 	 */
 	String getInnerHTML();
 
@@ -135,7 +138,7 @@ public interface DomElement extends DomNode {
 
 	/**
 	 * The number of pixels that an element's content is scrolled from the left.
-	 * 
+	 *
 	 * <p>
 	 * If the element is in RTL mode, this method will return a negative value
 	 * of the number of pixels scrolled from the right.
@@ -149,9 +152,9 @@ public interface DomElement extends DomNode {
 
 	/**
 	 * Gets a string representation of this element (as outer HTML).
-	 * 
+	 *
 	 * We do not override ; because it is final in ;.
-	 * 
+	 *
 	 * @return the string representation of this element
 	 */
 	String getString();
@@ -160,7 +163,7 @@ public interface DomElement extends DomNode {
 
 	/**
 	 * The index that represents the element's position in the tabbing order.
-	 * 
+	 *
 	 * @see <a href=
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-tabindex">
 	 *      W3C HTML Specification</a>
@@ -170,7 +173,7 @@ public interface DomElement extends DomNode {
 	/**
 	 * Gets the element's full tag name, including the namespace-prefix if
 	 * present.
-	 * 
+	 *
 	 * @return the element's tag name
 	 */
 	String getTagName();
@@ -184,7 +187,7 @@ public interface DomElement extends DomNode {
 	 * Note that IE, prior to version 8, will return false-positives for names
 	 * that collide with element properties (e.g., style, width, and so forth).
 	 * </p>
-	 * 
+	 *
 	 * @param name
 	 *            the name of the attribute
 	 * @return <code>true</code> if this element has the specified attribute
@@ -202,7 +205,7 @@ public interface DomElement extends DomNode {
 
 	/**
 	 * Determines whether this element has the given tag name.
-	 * 
+	 *
 	 * @param tagName
 	 *            the tag name, including namespace-prefix (if present)
 	 * @return <code>true</code> if the element has the given tag name
@@ -214,7 +217,7 @@ public interface DomElement extends DomNode {
 	/**
 	 * Removes a name from this element's class property. If the name is not
 	 * present, this method has no effect.
-	 * 
+	 *
 	 * @param className
 	 *            the class name to be removed
 	 * @return <code>true</code> if this element had the specified class name
@@ -234,7 +237,7 @@ public interface DomElement extends DomNode {
 
 	/**
 	 * Scrolls this element into view.
-	 * 
+	 *
 	 * <p>
 	 * This method crawls up the DOM hierarchy, adjusting the scrollLeft and
 	 * scrollTop properties of each scrollable element to ensure that the
@@ -252,7 +255,7 @@ public interface DomElement extends DomNode {
 
 	/**
 	 * Changes the draggable attribute to one of ;, ;, or ;.
-	 * 
+	 *
 	 * @param draggable
 	 *            a String constants
 	 */

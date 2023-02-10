@@ -965,6 +965,10 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
     return this.createComment(data);
 	}-*/;
 
+	native final ElementRemote createElementNode0(String tagName) /*-{
+    return this.createElement(tagName);
+	}-*/;
+
 	native final TextRemote createTextNode0(String data) /*-{
     return this.createTextNode(data);
 	}-*/;
