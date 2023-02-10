@@ -461,6 +461,9 @@ public class PermissionsManager implements DomainTransformListener {
 		return this.authenticatedClientInstanceId;
 	}
 
+	/**
+	 * @see cc.alcina.framework.common.client.logic.domaintransform.ClientInstance.self()
+	 */
 	public ClientInstance getClientInstance() {
 		return this.clientInstance;
 	}

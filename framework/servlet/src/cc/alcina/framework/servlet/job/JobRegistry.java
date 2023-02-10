@@ -809,11 +809,15 @@ public class JobRegistry {
 			} finally {
 				LooseContext.pop();
 			}
-			ClientInstance selfInstance = ClientInstance.self();
-			job.setCreator(selfInstance);
+			// NOTE - not (!!) ClientInstance.self(), which would be the browser
+			// instance if the job call were initiated remotely. The job system
+			// cares about the server creator/performer, not the client.
+			ClientInstance serverInstance = EntityLayerObjects.get()
+					.getServerAsClientInstance();
+			job.setCreator(serverInstance);
 			// very useful for job cascade/trigger debugging
-			job.setUuid(
-					Ax.format("%s.%s", selfInstance.getId(), job.getLocalId()));
+			job.setUuid(Ax.format("%s.%s", serverInstance.getId(),
+					job.getLocalId()));
 			job.setCause(cause);
 			if (runAt != null) {
 				Preconditions.checkArgument(initialState == JobState.FUTURE);
@@ -835,7 +839,7 @@ public class JobRegistry {
 			 */
 			if (initialState == JobState.PENDING && (related == null
 					|| relationType == JobRelationType.RESUBMIT)) {
-				job.setPerformer(selfInstance);
+				job.setPerformer(serverInstance);
 			}
 			if (awaiter) {
 				JobRegistry.get().ensureAwaiter(job);
