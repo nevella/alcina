@@ -41,6 +41,12 @@ import cc.alcina.framework.common.client.util.Ax;
 public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	public static final transient String SERVLET_PREFIX = "servlet:";
 
+	/**
+	 * Be careful using this in a server context, since it will return a remote
+	 * browser instance if within a normal user permissions context frame, but
+	 * the server-as-client instance if within a (possibly pushed) root/server
+	 * permissions context frame.
+	 */
 	public static ClientInstance self() {
 		return PermissionsManager.get().getClientInstance();
 	}
