@@ -14,7 +14,7 @@ public class SimpleEditor extends Model.WithNode
 		implements Suggestor.Editor, DomEvents.Input.Handler {
 	private final StringInput input;
 
-	public SimpleEditor(Suggestor.Configuration configuration) {
+	public SimpleEditor(Suggestor.SuggestorConfiguration configuration) {
 		input = new StringInput();
 		input.setPlaceholder(configuration.getInputPrompt());
 		input.setFocusOnBind(configuration.isFocusOnBind());
