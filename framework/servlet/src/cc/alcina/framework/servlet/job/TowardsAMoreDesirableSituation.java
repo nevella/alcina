@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,7 +19,6 @@ import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -133,7 +133,7 @@ class TowardsAMoreDesirableSituation {
 				j -> j.domain().wasRemoved() || j.provideIsSequenceComplete());
 		boolean delta = false;
 		while (canAllocate()) {
-			ObjectWrapper<Boolean> filtered = ObjectWrapper.of(false);
+			AtomicInteger skipCount = new AtomicInteger();
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
 				JobRegistry.get()
@@ -148,16 +148,21 @@ class TowardsAMoreDesirableSituation {
 								Optional<Job> next = stream.filter(filter)
 										.findFirst();
 								if (next.isPresent()) {
+									if (skipCount.get() > 0) {
+										logger.info(
+												"Allocating (future -> pending) after {} skips",
+												skipCount);
+									}
 									futureToPending(next);
-								} else {
-									filtered.set(true);
 									break;
+								} else {
+									skipCount.incrementAndGet();
 								}
 							}
 						});
-				if (filtered.get()) {
+				if (skipCount.get() > 0) {
 					try {
-						// let other cluster instances true
+						// let other cluster instances try
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
