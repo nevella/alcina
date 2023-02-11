@@ -56,6 +56,8 @@ class TowardsAMoreDesirableSituation {
 
 	private BlockingQueue<Event> events = new LinkedBlockingQueue<>();
 
+	private ConsistencyJobFilter filter;
+
 	public TowardsAMoreDesirableSituation(JobScheduler scheduler) {
 		this.scheduler = scheduler;
 	}
@@ -119,6 +121,8 @@ class TowardsAMoreDesirableSituation {
 		thread = new ProcessorThread();
 		thread.start();
 		scheduler.eventOcurred.add(v -> addSchedulerEvent());
+		filter = ConsistencyJobFilter.get();
+		filter.setLocallyEnqueuedConsistencyJobs(activeJobs);
 	}
 
 	void stopService() {
@@ -132,8 +136,8 @@ class TowardsAMoreDesirableSituation {
 		activeJobs.removeIf(
 				j -> j.domain().wasRemoved() || j.provideIsSequenceComplete());
 		boolean delta = false;
+		AtomicInteger skipCount = filter.getSkipCount();
 		while (canAllocate()) {
-			AtomicInteger skipCount = new AtomicInteger();
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
 				JobRegistry.get()
@@ -143,8 +147,7 @@ class TowardsAMoreDesirableSituation {
 							while (canAllocate()) {
 								Stream<Job> stream = JobDomain.get()
 										.getFutureConsistencyJobs();
-								ConsistencyJobFilter filter = ConsistencyJobFilter
-										.get();
+								skipCount.set(0);
 								Optional<Job> next = stream.filter(filter)
 										.findFirst();
 								if (next.isPresent()) {
