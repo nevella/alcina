@@ -40,6 +40,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -96,6 +97,7 @@ import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
+import cc.alcina.framework.servlet.impl.DocumentContextProviderImpl;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
@@ -362,6 +364,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 		GWT.setBridge(new GWTBridgeHeadless());
 		JsonUtil.FAST_STRINGIFY = true;
+		Document.registerContextProvider(DocumentContextProviderImpl.get());
 		LocalDom.initalize();
 	}
 

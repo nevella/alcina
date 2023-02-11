@@ -987,8 +987,8 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	protected void putRemote(NodeRemote remote, boolean resolved) {
 		if (!GWT.isScript()) {
 			String nodeName = remote.getNodeName();
-			Preconditions.checkState(
-					nodeName.equalsIgnoreCase(local.getNodeName()));
+			Preconditions
+					.checkState(nodeName.equalsIgnoreCase(local.getNodeName()));
 		}
 		Preconditions.checkState(wasResolved() == resolved);
 		Preconditions.checkState(

@@ -244,6 +244,9 @@ public class DirectedLayout implements AlcinaProcess {
 	 * widget
 	 */
 	public Widget render(ContextResolver resolver, Object model) {
+		if (resolver == null) {
+			resolver = ContextResolver.Default.get().createResolver();
+		}
 		resolver.layout = this;
 		AnnotationLocation location = new AnnotationLocation(model.getClass(),
 				null);
@@ -253,7 +256,7 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	public Widget render(Object model) {
-		return render(ContextResolver.Default.get().createResolver(), model);
+		return render(null, model);
 	}
 
 	/*

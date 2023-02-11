@@ -87,7 +87,7 @@ public abstract class Node
 		validateInsert(newChild);
 		doPreTreeResolution(newChild);
 		T node = local().appendChild(newChild);
-		remote().appendChild(newChild);
+		sync(() -> remote().appendChild(newChild));
 		return node;
 	}
 
@@ -245,7 +245,7 @@ public abstract class Node
 			doPreTreeResolution(newChild);
 			doPreTreeResolution(refChild);
 			Node result = local().insertBefore(newChild, refChild);
-			remote().insertBefore(newChild, refChild);
+			sync(() -> remote().insertBefore(newChild, refChild));
 			return result;
 		} catch (Exception e) {
 			throw new LocalDomException(e);
@@ -328,7 +328,7 @@ public abstract class Node
 	public Node removeChild(Node oldChild) {
 		doPreTreeResolution(oldChild);
 		Node result = local().removeChild(oldChild);
-		remote().removeChild(oldChild);
+		sync(() -> remote().removeChild(oldChild));
 		return result;
 	}
 
@@ -341,7 +341,7 @@ public abstract class Node
 	@Override
 	public void removeFromParent() {
 		ensureRemoteCheck();
-		remote().removeFromParent();
+		sync(() -> remote().removeFromParent());
 		local().removeFromParent();
 	}
 
@@ -349,7 +349,7 @@ public abstract class Node
 	public Node replaceChild(Node newChild, Node oldChild) {
 		doPreTreeResolution(oldChild);
 		doPreTreeResolution(newChild);
-		remote().replaceChild(newChild, oldChild);
+		sync(() -> remote().replaceChild(newChild, oldChild));
 		Node result = local().replaceChild(newChild, oldChild);
 		return result;
 	}
@@ -375,7 +375,7 @@ public abstract class Node
 	public void setNodeValue(String nodeValue) {
 		ensureRemoteCheck();
 		local().setNodeValue(nodeValue);
-		remote().setNodeValue(nodeValue);
+		sync(() -> remote().setNodeValue(nodeValue));
 	}
 
 	@Override
@@ -468,6 +468,18 @@ public abstract class Node
 	}
 
 	protected abstract void resetRemote0();
+
+	protected void sync(Runnable runnable) {
+		if (remote() instanceof NodeLocalNull) {
+			return;
+		}
+		try {
+			LocalDom.setSyncing(true);
+			runnable.run();
+		} finally {
+			LocalDom.setSyncing(false);
+		}
+	}
 
 	protected abstract NodeRemote typedRemote();
 

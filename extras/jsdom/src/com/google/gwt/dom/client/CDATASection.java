@@ -57,7 +57,7 @@ public class CDATASection extends Node
 	@Override
 	public void deleteData(int offset, int length) {
 		local().deleteData(offset, length);
-		remote().deleteData(offset, length);
+		sync(() -> remote().deleteData(offset, length));
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public class CDATASection extends Node
 	public void insertData(int offset, String data) {
 		ensureRemoteCheck();
 		local().insertData(offset, data);
-		remote().insertData(offset, data);
+		sync(() -> remote().insertData(offset, data));
 	}
 
 	@Override
@@ -105,7 +105,7 @@ public class CDATASection extends Node
 	public void replaceData(int offset, int length, String data) {
 		ensureRemoteCheck();
 		local().replaceData(offset, length, data);
-		remote().replaceData(offset, length, data);
+		sync(() -> remote().replaceData(offset, length, data));
 	}
 
 	@Override
@@ -119,7 +119,7 @@ public class CDATASection extends Node
 	public void setData(String data) {
 		ensureRemoteCheck();
 		local().setData(data);
-		remote().setData(data);
+		sync(() -> remote().setData(data));
 	}
 
 	@Override

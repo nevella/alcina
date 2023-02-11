@@ -27,13 +27,19 @@ import org.w3c.dom.traversal.NodeIterator;
 import org.w3c.dom.traversal.TreeWalker;
 
 /**
+ * <p>
  * A Document is the root of the HTML hierarchy and holds the entire content.
  * Besides providing access to the hierarchy, it also provides some convenience
  * methods for accessing certain sets of information from the document.
+ *
+ * <p>
+ * Server-side, {@code Document.get()} returns a context-dependent instance
  */
 public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 		org.w3c.dom.traversal.DocumentTraversal {
 	private static Document doc;
+
+	private static DocumentContextProvider contextProvider;
 
 	public static Document create(DocumentLocal local) {
 		Document doc = new Document();
@@ -51,13 +57,32 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	 * @return the default document
 	 */
 	public static Document get() {
-		// No need to be MT-safe. Single-threaded JS code.
 		if (doc == null) {
-			DocumentLocal local = new DocumentLocal();
-			doc = create(local);
-			local.document = doc;
-			LocalDom.register(doc);
+			if (contextProvider == null) {
+				doc = createDocumentInstance();
+				LocalDom.register(doc);
+			} else {
+				Document doc = contextProvider.contextDocument();
+				if (doc == null) {
+					doc = createDocumentInstance();
+					contextProvider.registerCreatedDocument(doc);
+					LocalDom.register(doc);
+				}
+				return doc;
+			}
 		}
+		return doc;
+	}
+
+	public static void
+			registerContextProvider(DocumentContextProvider contextProvider) {
+		Document.contextProvider = contextProvider;
+	}
+
+	private static Document createDocumentInstance() {
+		DocumentLocal local = new DocumentLocal();
+		Document doc = create(local);
+		local.document = doc;
 		return doc;
 	}
 
@@ -1036,6 +1061,12 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	@Override
 	protected void resetRemote0() {
 		throw new UnsupportedOperationException();
+	}
+
+	public interface DocumentContextProvider {
+		Document contextDocument();
+
+		void registerCreatedDocument(Document document);
 	}
 
 	class TreeWalkerImpl implements TreeWalker {

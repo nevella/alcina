@@ -37,6 +37,8 @@ import org.apache.log4j.WriterAppender;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWTBridge;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -83,6 +85,7 @@ import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.impl.DocumentContextProviderImpl;
 import elemental.json.impl.JsonUtil;
 
 @SuppressWarnings("deprecation")
@@ -332,6 +335,8 @@ public abstract class DevHelper {
 		initDataFolder();
 		ClassMetadata.USE_MD5_CHANGE_CHECK = true;
 		scanRegistry();
+		Document.registerContextProvider(DocumentContextProviderImpl.get());
+		LocalDom.initalize();
 		initDummyServices();
 		TransformManager.register(createTransformManager());
 		initCustomServicesFirstHalf();

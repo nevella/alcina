@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 /*
@@ -48,13 +47,6 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		}
 	}
 
-	public void dump() {
-		SerializerOptions options = new ReflectiveSerializer.SerializerOptions()
-				.withElideDefaults(true).withTypeInfo(false).withPretty(true);
-		String string = ReflectiveSerializer.serialize(this, options);
-		Ax.out(string);
-	}
-
 	public List<MutationHistory.Event> getEvents() {
 		return this.events;
 	}
@@ -62,6 +54,12 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 	@Override
 	public Class<MutationHistory.Event> getObservableClass() {
 		return MutationHistory.Event.class;
+	}
+
+	public String serialize() {
+		SerializerOptions options = new ReflectiveSerializer.SerializerOptions()
+				.withElideDefaults(true).withTypeInfo(false).withPretty(true);
+		return ReflectiveSerializer.serialize(this, options);
 	}
 
 	public void setEvents(List<MutationHistory.Event> events) {
@@ -88,7 +86,8 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 				issue.append("");
 				LocalDom.log(Level.WARNING, issue.toString());
 				Scheduler.get().scheduleDeferred(() -> {
-					throw new IllegalStateException(event.equivalenceTest);
+					mutations.mutationsAccess
+							.reportException(new InequivalentDomException());
 				});
 			} else {
 				LocalDom.log(Level.INFO, "mutation event %s - verified correct",
@@ -169,5 +168,8 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		public enum Type {
 			INIT, MUTATIONS
 		}
+	}
+
+	public static class InequivalentDomException extends Exception {
 	}
 }

@@ -38,12 +38,12 @@ public class LocalDomMutations2 {
 		history = new MutationHistory(this);
 	}
 
-	public void dumpHistory() {
-		history.dump();
-	}
-
 	public boolean isEnabled() {
 		return this.enabled;
+	}
+
+	public String serializeHistory() {
+		return history.serialize();
 	}
 
 	public void setEnabled(boolean enabled) {

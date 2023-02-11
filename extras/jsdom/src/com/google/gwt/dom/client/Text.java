@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -56,7 +56,7 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 	@Override
 	public void deleteData(int offset, int length) {
 		local().deleteData(offset, length);
-		remote().deleteData(offset, length);
+		sync(() -> remote().deleteData(offset, length));
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 	public void insertData(int offset, String data) {
 		ensureRemoteCheck();
 		local().insertData(offset, data);
-		remote().insertData(offset, data);
+		sync(() -> remote().insertData(offset, data));
 	}
 
 	@Override
@@ -104,7 +104,7 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 	public void replaceData(int offset, int length, String data) {
 		ensureRemoteCheck();
 		local().replaceData(offset, length, data);
-		remote().replaceData(offset, length, data);
+		sync(() -> remote().replaceData(offset, length, data));
 	}
 
 	@Override
@@ -116,7 +116,7 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 	public void setData(String data) {
 		ensureRemoteCheck();
 		local().setData(data);
-		remote().setData(data);
+		sync(() -> remote().setData(data));
 	}
 
 	@Override

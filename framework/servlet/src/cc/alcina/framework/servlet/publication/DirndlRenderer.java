@@ -8,9 +8,12 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.impl.DocumentContextProviderImpl;
 
 public class DirndlRenderer {
 	public static DirndlRenderer instance() {
@@ -21,6 +24,8 @@ public class DirndlRenderer {
 
 	private Model renderable;
 
+	private ContextResolver contextResolver;
+
 	public DirndlRenderer addStyleFile(Class<?> styleRelativeClass,
 			String styleRelativeFilename) {
 		stylePaths
@@ -29,7 +34,28 @@ public class DirndlRenderer {
 	}
 
 	public DomDocument render() {
-		Widget widget = new DirectedLayout().render(renderable);
+		try {
+			LooseContext.push();
+			DocumentContextProviderImpl.get().registerContextFrame();
+			return render0();
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	public DirndlRenderer withRenderable(Model renderable) {
+		this.renderable = renderable;
+		return this;
+	}
+
+	public DirndlRenderer withResolver(ContextResolver contextResolver) {
+		this.contextResolver = contextResolver;
+		return this;
+	}
+
+	private DomDocument render0() {
+		Widget widget = new DirectedLayout().render(contextResolver,
+				renderable);
 		String outerHtml = widget.getElement().getOuterHtml();
 		DomDocument doc = DomDocument.basicHtmlDoc();
 		DomNode div = doc.html().body().builder().tag("div").append();
@@ -42,11 +68,6 @@ public class DirndlRenderer {
 			}
 		});
 		return doc;
-	}
-
-	public DirndlRenderer withRenderable(Model renderable) {
-		this.renderable = renderable;
-		return this;
 	}
 
 	static class StylePath {

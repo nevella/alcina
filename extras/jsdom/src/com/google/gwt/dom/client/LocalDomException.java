@@ -8,4 +8,8 @@ public class LocalDomException extends RuntimeException {
 	public LocalDomException(Throwable cause) {
 		super(cause);
 	}
+
+	public LocalDomException(Throwable cause, String message) {
+		super(message, cause);
+	}
 }

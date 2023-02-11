@@ -50,301 +50,301 @@ public class Style implements DomStyle {
 	@Override
 	public void clearBackgroundColor() {
 		local().clearBackgroundColor();
-		remote().clearBackgroundColor();
+		sync(() -> remote().clearBackgroundColor());
 	}
 
 	@Override
 	public void clearBackgroundImage() {
 		local().clearBackgroundImage();
-		remote().clearBackgroundImage();
+		sync(() -> remote().clearBackgroundImage());
 	}
 
 	@Override
 	public void clearBorderColor() {
 		local().clearBorderColor();
-		remote().clearBorderColor();
+		sync(() -> remote().clearBorderColor());
 	}
 
 	@Override
 	public void clearBorderStyle() {
 		local().clearBorderStyle();
-		remote().clearBorderStyle();
+		sync(() -> remote().clearBorderStyle());
 	}
 
 	@Override
 	public void clearBorderWidth() {
 		local().clearBorderWidth();
-		remote().clearBorderWidth();
+		sync(() -> remote().clearBorderWidth());
 	}
 
 	@Override
 	public void clearBottom() {
 		local().clearBottom();
-		remote().clearBottom();
+		sync(() -> remote().clearBottom());
 	}
 
 	@Override
 	public void clearClear() {
 		local().clearClear();
-		remote().clearClear();
+		sync(() -> remote().clearClear());
 	}
 
 	@Override
 	public void clearColor() {
 		local().clearColor();
-		remote().clearColor();
+		sync(() -> remote().clearColor());
 	}
 
 	@Override
 	public void clearCursor() {
 		local().clearCursor();
-		remote().clearCursor();
+		sync(() -> remote().clearCursor());
 	}
 
 	@Override
 	public void clearDisplay() {
 		local().clearDisplay();
-		remote().clearDisplay();
+		sync(() -> remote().clearDisplay());
 	}
 
 	@Override
 	public void clearFloat() {
 		local().clearFloat();
-		remote().clearFloat();
+		sync(() -> remote().clearFloat());
 	}
 
 	@Override
 	public void clearFontSize() {
 		local().clearFontSize();
-		remote().clearFontSize();
+		sync(() -> remote().clearFontSize());
 	}
 
 	@Override
 	public void clearFontStyle() {
 		local().clearFontStyle();
-		remote().clearFontStyle();
+		sync(() -> remote().clearFontStyle());
 	}
 
 	@Override
 	public void clearFontWeight() {
 		local().clearFontWeight();
-		remote().clearFontWeight();
+		sync(() -> remote().clearFontWeight());
 	}
 
 	@Override
 	public void clearHeight() {
 		local().clearHeight();
-		remote().clearHeight();
+		sync(() -> remote().clearHeight());
 	}
 
 	@Override
 	public void clearLeft() {
 		local().clearLeft();
-		remote().clearLeft();
+		sync(() -> remote().clearLeft());
 	}
 
 	@Override
 	public void clearLineHeight() {
 		local().clearLineHeight();
-		remote().clearLineHeight();
+		sync(() -> remote().clearLineHeight());
 	}
 
 	@Override
 	public void clearListStyleType() {
 		local().clearListStyleType();
-		remote().clearListStyleType();
+		sync(() -> remote().clearListStyleType());
 	}
 
 	@Override
 	public void clearMargin() {
 		local().clearMargin();
-		remote().clearMargin();
+		sync(() -> remote().clearMargin());
 	}
 
 	@Override
 	public void clearMarginBottom() {
 		local().clearMarginBottom();
-		remote().clearMarginBottom();
+		sync(() -> remote().clearMarginBottom());
 	}
 
 	@Override
 	public void clearMarginLeft() {
 		local().clearMarginLeft();
-		remote().clearMarginLeft();
+		sync(() -> remote().clearMarginLeft());
 	}
 
 	@Override
 	public void clearMarginRight() {
 		local().clearMarginRight();
-		remote().clearMarginRight();
+		sync(() -> remote().clearMarginRight());
 	}
 
 	@Override
 	public void clearMarginTop() {
 		local().clearMarginTop();
-		remote().clearMarginTop();
+		sync(() -> remote().clearMarginTop());
 	}
 
 	@Override
 	public void clearOpacity() {
 		local().clearOpacity();
-		remote().clearOpacity();
+		sync(() -> remote().clearOpacity());
 	}
 
 	@Override
 	public void clearOutlineColor() {
 		local().clearOutlineColor();
-		remote().clearOutlineColor();
+		sync(() -> remote().clearOutlineColor());
 	}
 
 	@Override
 	public void clearOutlineStyle() {
 		local().clearOutlineStyle();
-		remote().clearOutlineStyle();
+		sync(() -> remote().clearOutlineStyle());
 	}
 
 	@Override
 	public void clearOutlineWidth() {
 		local().clearOutlineWidth();
-		remote().clearOutlineWidth();
+		sync(() -> remote().clearOutlineWidth());
 	}
 
 	@Override
 	public void clearOverflow() {
 		local().clearOverflow();
-		remote().clearOverflow();
+		sync(() -> remote().clearOverflow());
 	}
 
 	@Override
 	public void clearOverflowX() {
 		local().clearOverflowX();
-		remote().clearOverflowX();
+		sync(() -> remote().clearOverflowX());
 	}
 
 	@Override
 	public void clearOverflowY() {
 		local().clearOverflowY();
-		remote().clearOverflowY();
+		sync(() -> remote().clearOverflowY());
 	}
 
 	@Override
 	public void clearPadding() {
 		local().clearPadding();
-		remote().clearPadding();
+		sync(() -> remote().clearPadding());
 	}
 
 	@Override
 	public void clearPaddingBottom() {
 		local().clearPaddingBottom();
-		remote().clearPaddingBottom();
+		sync(() -> remote().clearPaddingBottom());
 	}
 
 	@Override
 	public void clearPaddingLeft() {
 		local().clearPaddingLeft();
-		remote().clearPaddingLeft();
+		sync(() -> remote().clearPaddingLeft());
 	}
 
 	@Override
 	public void clearPaddingRight() {
 		local().clearPaddingRight();
-		remote().clearPaddingRight();
+		sync(() -> remote().clearPaddingRight());
 	}
 
 	@Override
 	public void clearPaddingTop() {
 		local().clearPaddingTop();
-		remote().clearPaddingTop();
+		sync(() -> remote().clearPaddingTop());
 	}
 
 	@Override
 	public void clearPosition() {
 		local().clearPosition();
-		remote().clearPosition();
+		sync(() -> remote().clearPosition());
 	}
 
 	@Override
 	public void clearProperty(String name) {
 		local().clearProperty(name);
-		remote().clearProperty(name);
+		sync(() -> remote().clearProperty(name));
 	}
 
 	@Override
 	public void clearRight() {
 		local().clearRight();
-		remote().clearRight();
+		sync(() -> remote().clearRight());
 	}
 
 	@Override
 	public void clearTableLayout() {
 		local().clearTableLayout();
-		remote().clearTableLayout();
+		sync(() -> remote().clearTableLayout());
 	}
 
 	@Override
 	public void clearTextAlign() {
 		local().clearTextAlign();
-		remote().clearTextAlign();
+		sync(() -> remote().clearTextAlign());
 	}
 
 	@Override
 	public void clearTextDecoration() {
 		local().clearTextDecoration();
-		remote().clearTextDecoration();
+		sync(() -> remote().clearTextDecoration());
 	}
 
 	@Override
 	public void clearTextIndent() {
 		local().clearTextIndent();
-		remote().clearTextIndent();
+		sync(() -> remote().clearTextIndent());
 	}
 
 	@Override
 	public void clearTextJustify() {
 		local().clearTextJustify();
-		remote().clearTextJustify();
+		sync(() -> remote().clearTextJustify());
 	}
 
 	@Override
 	public void clearTextOverflow() {
 		local().clearTextOverflow();
-		remote().clearTextOverflow();
+		sync(() -> remote().clearTextOverflow());
 	}
 
 	@Override
 	public void clearTextTransform() {
 		local().clearTextTransform();
-		remote().clearTextTransform();
+		sync(() -> remote().clearTextTransform());
 	}
 
 	@Override
 	public void clearTop() {
 		local().clearTop();
-		remote().clearTop();
+		sync(() -> remote().clearTop());
 	}
 
 	@Override
 	public void clearVisibility() {
 		local().clearVisibility();
-		remote().clearVisibility();
+		sync(() -> remote().clearVisibility());
 	}
 
 	@Override
 	public void clearWhiteSpace() {
 		local().clearWhiteSpace();
-		remote().clearWhiteSpace();
+		sync(() -> remote().clearWhiteSpace());
 	}
 
 	@Override
 	public void clearWidth() {
 		local().clearWidth();
-		remote().clearWidth();
+		sync(() -> remote().clearWidth());
 	}
 
 	@Override
 	public void clearZIndex() {
 		local().clearZIndex();
-		remote().clearZIndex();
+		sync(() -> remote().clearZIndex());
 	}
 
 	public void cloneStyleFrom(DomStyle domStyle) {
@@ -609,229 +609,229 @@ public class Style implements DomStyle {
 
 	public void removePropertyImpl(String name) {
 		local().setProperty(name, "");
-		remote().setProperty(name, "");
+		sync(() -> remote().setProperty(name, ""));
 	}
 
 	@Override
 	public void setBackgroundColor(String value) {
 		local().setBackgroundColor(value);
-		remote().setBackgroundColor(value);
+		sync(() -> remote().setBackgroundColor(value));
 	}
 
 	@Override
 	public void setBackgroundImage(String value) {
 		local().setBackgroundImage(value);
-		remote().setBackgroundImage(value);
+		sync(() -> remote().setBackgroundImage(value));
 	}
 
 	@Override
 	public void setBorderColor(String value) {
 		local().setBorderColor(value);
-		remote().setBorderColor(value);
+		sync(() -> remote().setBorderColor(value));
 	}
 
 	@Override
 	public void setBorderStyle(BorderStyle value) {
 		local().setBorderStyle(value);
-		remote().setBorderStyle(value);
+		sync(() -> remote().setBorderStyle(value));
 	}
 
 	@Override
 	public void setBorderWidth(double value, Unit unit) {
 		local().setBorderWidth(value, unit);
-		remote().setBorderWidth(value, unit);
+		sync(() -> remote().setBorderWidth(value, unit));
 	}
 
 	@Override
 	public void setBottom(double value, Unit unit) {
 		local().setBottom(value, unit);
-		remote().setBottom(value, unit);
+		sync(() -> remote().setBottom(value, unit));
 	}
 
 	@Override
 	public void setClear(Clear value) {
 		local().setClear(value);
-		remote().setClear(value);
+		sync(() -> remote().setClear(value));
 	}
 
 	@Override
 	public void setColor(String value) {
 		local().setColor(value);
-		remote().setColor(value);
+		sync(() -> remote().setColor(value));
 	}
 
 	@Override
 	public void setCursor(Cursor value) {
 		local().setCursor(value);
-		remote().setCursor(value);
+		sync(() -> remote().setCursor(value));
 	}
 
 	@Override
 	public void setDisplay(Display value) {
 		local().setDisplay(value);
-		remote().setDisplay(value);
+		sync(() -> remote().setDisplay(value));
 	}
 
 	@Override
 	public void setFloat(Float value) {
 		local().setFloat(value);
-		remote().setFloat(value);
+		sync(() -> remote().setFloat(value));
 	}
 
 	@Override
 	public void setFontSize(double value, Unit unit) {
 		local().setFontSize(value, unit);
-		remote().setFontSize(value, unit);
+		sync(() -> remote().setFontSize(value, unit));
 	}
 
 	@Override
 	public void setFontStyle(FontStyle value) {
 		local().setFontStyle(value);
-		remote().setFontStyle(value);
+		sync(() -> remote().setFontStyle(value));
 	}
 
 	@Override
 	public void setFontWeight(FontWeight value) {
 		local().setFontWeight(value);
-		remote().setFontWeight(value);
+		sync(() -> remote().setFontWeight(value));
 	}
 
 	@Override
 	public void setHeight(double value, Unit unit) {
 		local().setHeight(value, unit);
-		remote().setHeight(value, unit);
+		sync(() -> remote().setHeight(value, unit));
 	}
 
 	@Override
 	public void setLeft(double value, Unit unit) {
 		local().setLeft(value, unit);
-		remote().setLeft(value, unit);
+		sync(() -> remote().setLeft(value, unit));
 	}
 
 	@Override
 	public void setLineHeight(double value, Unit unit) {
 		local().setLineHeight(value, unit);
-		remote().setLineHeight(value, unit);
+		sync(() -> remote().setLineHeight(value, unit));
 	}
 
 	@Override
 	public void setListStyleType(ListStyleType value) {
 		local().setListStyleType(value);
-		remote().setListStyleType(value);
+		sync(() -> remote().setListStyleType(value));
 	}
 
 	@Override
 	public void setMargin(double value, Unit unit) {
 		local().setMargin(value, unit);
-		remote().setMargin(value, unit);
+		sync(() -> remote().setMargin(value, unit));
 	}
 
 	@Override
 	public void setMarginBottom(double value, Unit unit) {
 		local().setMarginBottom(value, unit);
-		remote().setMarginBottom(value, unit);
+		sync(() -> remote().setMarginBottom(value, unit));
 	}
 
 	@Override
 	public void setMarginLeft(double value, Unit unit) {
 		local().setMarginLeft(value, unit);
-		remote().setMarginLeft(value, unit);
+		sync(() -> remote().setMarginLeft(value, unit));
 	}
 
 	@Override
 	public void setMarginRight(double value, Unit unit) {
 		local().setMarginRight(value, unit);
-		remote().setMarginRight(value, unit);
+		sync(() -> remote().setMarginRight(value, unit));
 	}
 
 	@Override
 	public void setMarginTop(double value, Unit unit) {
 		local().setMarginTop(value, unit);
-		remote().setMarginTop(value, unit);
+		sync(() -> remote().setMarginTop(value, unit));
 	}
 
 	@Override
 	public void setOpacity(double value) {
 		local().setOpacity(value);
-		remote().setOpacity(value);
+		sync(() -> remote().setOpacity(value));
 	}
 
 	@Override
 	public void setOutlineColor(String value) {
 		local().setOutlineColor(value);
-		remote().setOutlineColor(value);
+		sync(() -> remote().setOutlineColor(value));
 	}
 
 	@Override
 	public void setOutlineStyle(OutlineStyle value) {
 		local().setOutlineStyle(value);
-		remote().setOutlineStyle(value);
+		sync(() -> remote().setOutlineStyle(value));
 	}
 
 	@Override
 	public void setOutlineWidth(double value, Unit unit) {
 		local().setOutlineWidth(value, unit);
-		remote().setOutlineWidth(value, unit);
+		sync(() -> remote().setOutlineWidth(value, unit));
 	}
 
 	@Override
 	public void setOverflow(Overflow value) {
 		local().setOverflow(value);
-		remote().setOverflow(value);
+		sync(() -> remote().setOverflow(value));
 	}
 
 	@Override
 	public void setOverflowX(Overflow value) {
 		local().setOverflowX(value);
-		remote().setOverflowX(value);
+		sync(() -> remote().setOverflowX(value));
 	}
 
 	@Override
 	public void setOverflowY(Overflow value) {
 		local().setOverflowY(value);
-		remote().setOverflowY(value);
+		sync(() -> remote().setOverflowY(value));
 	}
 
 	@Override
 	public void setPadding(double value, Unit unit) {
 		local().setPadding(value, unit);
-		remote().setPadding(value, unit);
+		sync(() -> remote().setPadding(value, unit));
 	}
 
 	@Override
 	public void setPaddingBottom(double value, Unit unit) {
 		local().setPaddingBottom(value, unit);
-		remote().setPaddingBottom(value, unit);
+		sync(() -> remote().setPaddingBottom(value, unit));
 	}
 
 	@Override
 	public void setPaddingLeft(double value, Unit unit) {
 		local().setPaddingLeft(value, unit);
-		remote().setPaddingLeft(value, unit);
+		sync(() -> remote().setPaddingLeft(value, unit));
 	}
 
 	@Override
 	public void setPaddingRight(double value, Unit unit) {
 		local().setPaddingRight(value, unit);
-		remote().setPaddingRight(value, unit);
+		sync(() -> remote().setPaddingRight(value, unit));
 	}
 
 	@Override
 	public void setPaddingTop(double value, Unit unit) {
 		local().setPaddingTop(value, unit);
-		remote().setPaddingTop(value, unit);
+		sync(() -> remote().setPaddingTop(value, unit));
 	}
 
 	@Override
 	public void setPosition(Position value) {
 		local().setPosition(value);
-		remote().setPosition(value);
+		sync(() -> remote().setPosition(value));
 	}
 
 	@Override
 	public void setProperty(String name, double value, Unit unit) {
 		local().setProperty(name, value, unit);
-		remote().setProperty(name, value, unit);
+		sync(() -> remote().setProperty(name, value, unit));
 	}
 
 	@Override
@@ -848,7 +848,7 @@ public class Style implements DomStyle {
 		if (Objects.equals(current, value)) {
 		} else {
 			local().setProperty(name, value);
-			remote().setProperty(name, value);
+			sync(() -> remote().setProperty(name, value));
 		}
 	}
 
@@ -858,7 +858,7 @@ public class Style implements DomStyle {
 		if (Objects.equals(current, value)) {
 		} else {
 			local().setPropertyImpl(name, value);
-			remote().setPropertyImpl(name, value);
+			sync(() -> remote().setPropertyImpl(name, value));
 		}
 	}
 
@@ -868,100 +868,100 @@ public class Style implements DomStyle {
 		if (Objects.equals(current, String.valueOf(value))) {
 		} else {
 			local().setPropertyPx(name, value);
-			remote().setPropertyPx(name, value);
+			sync(() -> remote().setPropertyPx(name, value));
 		}
 		local().setPropertyPx(name, value);
-		remote().setPropertyPx(name, value);
+		sync(() -> remote().setPropertyPx(name, value));
 	}
 
 	@Override
 	public void setRight(double value, Unit unit) {
 		local().setRight(value, unit);
-		remote().setRight(value, unit);
+		sync(() -> remote().setRight(value, unit));
 	}
 
 	@Override
 	public void setTableLayout(TableLayout value) {
 		local().setTableLayout(value);
-		remote().setTableLayout(value);
+		sync(() -> remote().setTableLayout(value));
 	}
 
 	@Override
 	public void setTextAlign(TextAlign value) {
 		local().setTextAlign(value);
-		remote().setTextAlign(value);
+		sync(() -> remote().setTextAlign(value));
 	}
 
 	@Override
 	public void setTextDecoration(TextDecoration value) {
 		local().setTextDecoration(value);
-		remote().setTextDecoration(value);
+		sync(() -> remote().setTextDecoration(value));
 	}
 
 	@Override
 	public void setTextIndent(double value, Unit unit) {
 		local().setTextIndent(value, unit);
-		remote().setTextIndent(value, unit);
+		sync(() -> remote().setTextIndent(value, unit));
 	}
 
 	@Override
 	public void setTextJustify(TextJustify value) {
 		local().setTextJustify(value);
-		remote().setTextJustify(value);
+		sync(() -> remote().setTextJustify(value));
 	}
 
 	@Override
 	public void setTextOverflow(TextOverflow value) {
 		local().setTextOverflow(value);
-		remote().setTextOverflow(value);
+		sync(() -> remote().setTextOverflow(value));
 	}
 
 	@Override
 	public void setTextTransform(TextTransform value) {
 		local().setTextTransform(value);
-		remote().setTextTransform(value);
+		sync(() -> remote().setTextTransform(value));
 	}
 
 	@Override
 	public void setTop(double value, Unit unit) {
 		local().setTop(value, unit);
-		remote().setTop(value, unit);
+		sync(() -> remote().setTop(value, unit));
 	}
 
 	@Override
 	public void setVerticalAlign(double value, Unit unit) {
 		local().setVerticalAlign(value, unit);
-		remote().setVerticalAlign(value, unit);
+		sync(() -> remote().setVerticalAlign(value, unit));
 	}
 
 	@Override
 	public void setVerticalAlign(VerticalAlign value) {
 		local().setVerticalAlign(value);
-		remote().setVerticalAlign(value);
+		sync(() -> remote().setVerticalAlign(value));
 	}
 
 	@Override
 	public void setVisibility(Visibility value) {
 		local().setVisibility(value);
-		remote().setVisibility(value);
+		sync(() -> remote().setVisibility(value));
 	}
 
 	@Override
 	public void setWhiteSpace(WhiteSpace value) {
 		local().setWhiteSpace(value);
-		remote().setWhiteSpace(value);
+		sync(() -> remote().setWhiteSpace(value));
 	}
 
 	@Override
 	public void setWidth(double value, Unit unit) {
 		local().setWidth(value, unit);
-		remote().setWidth(value, unit);
+		sync(() -> remote().setWidth(value, unit));
 	}
 
 	@Override
 	public void setZIndex(int value) {
 		local().setZIndex(value);
-		remote().setZIndex(value);
+		sync(() -> remote().setZIndex(value));
 	}
 
 	@Override
@@ -980,6 +980,18 @@ public class Style implements DomStyle {
 			remote = element.typedRemote().getStyleRemote();
 		}
 		return remote;
+	}
+
+	protected void sync(Runnable runnable) {
+		if (remote() instanceof StyleNull) {
+			return;
+		}
+		try {
+			LocalDom.setSyncing(true);
+			runnable.run();
+		} finally {
+			LocalDom.setSyncing(false);
+		}
 	}
 
 	void detachFromRemote() {

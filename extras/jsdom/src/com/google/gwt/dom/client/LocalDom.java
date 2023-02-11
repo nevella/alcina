@@ -61,7 +61,9 @@ public class LocalDom {
 
 	private static boolean disableRemoteWrite;
 
-	public static Topic<Exception> topicException;
+	public static Topic<Exception> topicPublishException;
+
+	static Topic<Exception> topicReportException;
 
 	public static Topic<String> topicUnableToParse;
 
@@ -102,7 +104,8 @@ public class LocalDom {
 		Preconditions.checkState(instance == null);
 		fastRemoveAll = true;
 		disableRemoteWrite = !GWT.isClient();
-		topicException = Topic.create();
+		topicPublishException = Topic.create();
+		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
 		instance = new LocalDom();
 	}
@@ -169,6 +172,10 @@ public class LocalDom {
 
 	public static void setDisableRemoteWrite(boolean disableRemoteWrite) {
 		LocalDom.disableRemoteWrite = disableRemoteWrite;
+	}
+
+	public static void setSyncing(boolean syncing) {
+		get().syncing = syncing;
 	}
 
 	public static void syncToRemote(Element element) {
@@ -290,6 +297,8 @@ public class LocalDom {
 
 	private boolean resolving;
 
+	boolean syncing;
+
 	private LocalDom() {
 		if (GWT.isScript()) {
 			remoteLookup = JsUniqueMap.createWeakMap();
@@ -299,6 +308,7 @@ public class LocalDom {
 		if (collections == null) {
 			initStatics();
 		}
+		topicReportException.add(this::handleReportedException);
 	}
 
 	public void ensurePendingResolved(Node node) {
@@ -596,7 +606,7 @@ public class LocalDom {
 		try {
 			return nodeFor1(remote, postReparse);
 		} catch (RuntimeException re) {
-			topicException.publish(re);
+			topicReportException.publish(re);
 			throw new LocalDomException(re);
 		}
 	}
@@ -842,7 +852,7 @@ public class LocalDom {
 		try {
 			return typedRemote.getInnerHTML0();
 		} catch (Exception e) {
-			topicException.publish(e);
+			topicReportException.publish(e);
 			return html;
 		}
 	}
@@ -850,6 +860,17 @@ public class LocalDom {
 	private void wasResolved0(Element elem) {
 		elem.local().walk(nl -> nl.node().resolved(resolutionEventId));
 		resolutionEventIdDirty = true;
+	}
+
+	void handleReportedException(Exception exception) {
+		String message = null;
+		if (configuration.logHistoryOnEception) {
+			message = mutations.serializeHistory();
+		}
+		log(Level.WARNING, "local dom :: %s",
+				CommonUtils.toSimpleExceptionMessage(exception));
+		topicPublishException
+				.publish(new LocalDomException(exception, message));
 	}
 
 	void resolve0() {
@@ -876,7 +897,7 @@ public class LocalDom {
 				resolutionEventId++;
 			}
 		} catch (RuntimeException re) {
-			topicException.publish(re);
+			topicReportException.publish(re);
 			throw re;
 		} finally {
 			resolutionEventIdDirty = false;
@@ -928,6 +949,8 @@ public class LocalDom {
 
 		public boolean logEvents = true;
 
+		public boolean logHistoryOnEception = true;
+
 		public Configuration() {
 		}
 
@@ -957,6 +980,10 @@ public class LocalDom {
 	}
 
 	public class MutationsAccess {
+		public void reportException(Exception exception) {
+			topicReportException.publish(exception);
+		}
+
 		public Stream<NodeRemote> streamChildren(NodeRemote node) {
 			return node.getChildNodes0().streamRemote();
 		}

@@ -9,10 +9,10 @@
  * etc so that writes have no effect on browser dom (and are thus fast).
  * Traversal and attribute checking are performed on the local node. The objects
  * which
- * 
- * 
+ *
+ *
  * </p>
- * 
+ *
  * <p>
  * For most logical purposes, the system requires that the trees be in sync. The
  * mechanisms used are:
@@ -35,8 +35,12 @@
  * 'text document'-centric html approach documented elsewhere). Can also be
  * preemptively validated via Element.setInnerHTMLWithValidation
  * </p>
- * 
- * 
- * 
+ * <p>
+ * TODO - rename DomDocument etc to ClientDomDocument - the interfaces aren't
+ * used outside this package, and they may be removable with changes to the
+ * devmode jso/wrapper generator
+ *
+ *
+ *
  */
 package com.google.gwt.dom.client;
