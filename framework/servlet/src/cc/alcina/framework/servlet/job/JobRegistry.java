@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -849,6 +850,22 @@ public class JobRegistry {
 			}
 			task.onJobCreate(job);
 			lastCreated = job;
+			LogCreation logCreation = LogCreation.valueOf(
+					Configuration.get(JobRegistry.class, "logJobCreation"));
+			switch (logCreation) {
+			case NONE:
+				break;
+			case JOB:
+				logger.info("Job created: {}", job);
+				break;
+			case STACK:
+				logger.info("Job created: {}", job);
+				logger.info("Creation thread: \n{}\n\n",
+						SEUtilities.getFullStacktrace(Thread.currentThread()));
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
 			return job;
 		}
 
@@ -857,21 +874,25 @@ public class JobRegistry {
 			return this;
 		}
 
-		public void ensureConsistency(Object futureConsistencyPriority) {
+		/**
+		 * @return the job if job is created in this method call, otherwise null
+		 */
+		public Job ensureConsistency(Object futureConsistencyPriority) {
 			Optional<Job> existing = JobDomain.get()
 					.getFutureConsistencyJob(task);
 			if (existing.isPresent()) {
 				if (futureConsistencyPriority != JobDomain.DefaultConsistencyPriorities._default) {
 					existing.get().setConsistencyPriority(
 							futureConsistencyPriority.toString());
-					return;
 				}
+				return null;
 			} else {
 				Job job = withInitialState(JobState.FUTURE_CONSISTENCY)
 						.create();
 				job.setConsistencyPriority(
 						futureConsistencyPriority.toString());
 				logger.info("created-future-consistency - {}", job);
+				return job;
 			}
 		}
 
@@ -1015,6 +1036,10 @@ public class JobRegistry {
 		public boolean isHighestBuildNumberInCluster() {
 			return true;
 		}
+	}
+
+	public enum LogCreation {
+		NONE, JOB, STACK
 	}
 
 	@Registration.Singleton(Task.Performer.class)

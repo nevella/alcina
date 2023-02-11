@@ -50,11 +50,11 @@ public class Suggestor extends Model.WithNode
 
 	protected Suggestions suggestions;
 
-	protected Configuration configuration;
+	protected SuggestorConfiguration configuration;
 
 	private Object value;
 
-	public Suggestor(Configuration configuration) {
+	public Suggestor(SuggestorConfiguration configuration) {
 		this.configuration = configuration;
 		initFields();
 	}
@@ -189,7 +189,7 @@ public class Suggestor extends Model.WithNode
 		IntPair getResultRange();
 	}
 
-	public static class Configuration {
+	public static class SuggestorConfiguration {
 		private String inputPrompt;
 
 		List<Class<? extends Model>> logicalAncestors = List.of();
@@ -232,39 +232,39 @@ public class Suggestor extends Model.WithNode
 			return this.suggestOnBind;
 		}
 
-		public Configuration withAnswer(Answer answer) {
+		public SuggestorConfiguration withAnswer(Answer answer) {
 			this.answer = answer;
 			return this;
 		}
 
-		public Configuration withFocusOnBind(boolean focusOnBind) {
+		public SuggestorConfiguration withFocusOnBind(boolean focusOnBind) {
 			this.focusOnBind = focusOnBind;
 			return this;
 		}
 
-		public Configuration withInputPrompt(String inputPrompt) {
+		public SuggestorConfiguration withInputPrompt(String inputPrompt) {
 			this.inputPrompt = inputPrompt;
 			return this;
 		}
 
-		public Configuration withLogicalAncestors(
+		public SuggestorConfiguration withLogicalAncestors(
 				List<Class<? extends Model>> logicalAncestors) {
 			this.logicalAncestors = logicalAncestors;
 			return this;
 		}
 
-		public Configuration withSelectAllOnBind(boolean selectAllOnBind) {
+		public SuggestorConfiguration withSelectAllOnBind(boolean selectAllOnBind) {
 			this.selectAllOnBind = selectAllOnBind;
 			return this;
 		}
 
-		public Configuration withSuggestionXAlign(
+		public SuggestorConfiguration withSuggestionXAlign(
 				OverlayPosition.Position suggestionXAlign) {
 			this.suggestionXAlign = suggestionXAlign;
 			return this;
 		}
 
-		public Configuration withSuggestOnBind(boolean suggestOnBind) {
+		public SuggestorConfiguration withSuggestOnBind(boolean suggestOnBind) {
 			this.suggestOnBind = suggestOnBind;
 			return this;
 		}

@@ -27,7 +27,7 @@ public class AllowCorsFilter
 
 	@Override
 	public void filter(ContainerRequestContext context) throws IOException {
-		Configuration configuration = Configuration.get();
+		CorsFilterConfiguration configuration = CorsFilterConfiguration.get();
 		String explicitRegex = configuration.getAllowExplicitRegex();
 		if (explicitRegex != null) {
 			String origin = httpRequest.getHeader("origin");
@@ -47,9 +47,9 @@ public class AllowCorsFilter
 		// TODO Auto-generated method stub
 	}
 
-	public static class Configuration {
-		public static AllowCorsFilter.Configuration get() {
-			return Registry.impl(AllowCorsFilter.Configuration.class);
+	public static class CorsFilterConfiguration {
+		public static AllowCorsFilter.CorsFilterConfiguration get() {
+			return Registry.impl(AllowCorsFilter.CorsFilterConfiguration.class);
 		}
 
 		private boolean allowWildcard;
