@@ -65,6 +65,10 @@ public class ServerUniquenessValidator extends ServerValidator {
 		return objectClass;
 	}
 
+	public String getObjectClassName() {
+		return this.objectClassName;
+	}
+
 	public Long getOkId() {
 		return okId;
 	}
@@ -98,6 +102,10 @@ public class ServerUniquenessValidator extends ServerValidator {
 		if (objectClass != null) {
 			objectClassName = objectClass.getName();
 		}
+	}
+
+	public void setObjectClassName(String objectClassName) {
+		this.objectClassName = objectClassName;
 	}
 
 	public void setOkId(Long okId) {
