@@ -250,6 +250,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	@Override
 	public final native void setNodeValue(String nodeValue) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.nodeValue = nodeValue;
 	}-*/;
 
@@ -293,6 +294,8 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 * @return The node removed
 	 */
 	private final native NodeRemote removeChild0(NodeRemote oldChild) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
+    //3 == TEXT_NODE
     if (oldChild.parentNode == null && oldChild.nodeType == 3) {
       //handle strange IE11 case (text node equality/substitution?)
       var children = this.childNodes;
@@ -320,6 +323,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	private final native NodeRemote replaceChild0(NodeRemote newChild,
 			NodeRemote oldChild) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     return this.replaceChild(newChild, oldChild);
 	}-*/;
 
@@ -351,6 +355,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 * @return The node added
 	 */
 	final native NodeRemote appendChild0(NodeRemote newChild) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     return this.appendChild(newChild);
 	}-*/;
 
@@ -374,6 +379,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 * @return The duplicate node
 	 */
 	final native NodeRemote cloneNode0(boolean deep) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     return this.cloneNode(deep);
 	}-*/;
 
@@ -408,6 +414,7 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 	 */
 	final native NodeRemote insertBefore0(NodeRemote newChild,
 			NodeRemote refChild) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     return this.insertBefore(newChild, refChild);
 	}-*/;
 

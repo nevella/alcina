@@ -42,12 +42,20 @@ public class LocalDomMutations2 {
 		return this.enabled;
 	}
 
+	public boolean isObserverConnected() {
+		return this.observerConnected;
+	}
+
 	public String serializeHistory() {
 		return history.serialize();
 	}
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public void setObserverConnected(boolean observerConnected) {
+		this.observerConnected = observerConnected;
 	}
 
 	public void startObserving() {

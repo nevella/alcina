@@ -730,6 +730,7 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	 */
 	@Override
 	public final native void setPropertyImpl(String name, String value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
 

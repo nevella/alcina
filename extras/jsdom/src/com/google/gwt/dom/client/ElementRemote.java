@@ -553,6 +553,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void removeAttribute(String name) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.removeAttribute(name);
 	}-*/;
 
@@ -588,6 +589,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setAttribute(String name, String value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.setAttribute(name, value);
 	}-*/;
 
@@ -601,6 +603,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setClassName(String className) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.className = className || "";
 	}-*/;
 
@@ -636,6 +639,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	@Override
 	public final native void setInnerHTML(@IsSafeHtml
 	String html) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.innerHTML = html || '';
 	}-*/;
 
@@ -667,6 +671,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setPropertyBoolean(String name, boolean value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
 
@@ -680,6 +685,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setPropertyDouble(String name, double value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
 
@@ -693,6 +699,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setPropertyInt(String name, int value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
 
@@ -706,6 +713,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setPropertyJSO(String name, JavaScriptObject value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
 
@@ -719,6 +727,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setPropertyObject(String name, Object value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
 
@@ -732,6 +741,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setPropertyString(String name, String value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
 
@@ -745,6 +755,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setScrollTop(int scrollTop) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.scrollTop = scrollTop;
 	}-*/;
 
@@ -757,6 +768,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setTabIndex(int tabIndex) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.tabIndex = tabIndex;
 	}-*/;
 
@@ -767,6 +779,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	public final native void setTitle(String title) /*-{
     // Setting the title to null results in the string "null" being displayed
     // on some browsers.
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.title = title || '';
 	}-*/;
 
@@ -849,6 +862,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	/**
 	 * Explicitly build html by traversing with javascript (cos we can't trust
 	 * IE11, although we can webkit and probably FF)
+	 *
+	 * FIXME dirndl 1x3 - probably remove
 	 */
 	final native String buildOuterHtml()/*-{
 
@@ -1068,6 +1083,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/** only allow if telling all local nodes that they're detached **/
 	final Node removeAllChildrenElement() {
+		LocalDom.verifyMutatingState();
 		if (LocalDom.fastRemoveAll) {
 			setInnerHTML("");
 		} else {
@@ -1077,12 +1093,14 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}
 
 	final native void removeAllChildrenElement0()/*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     while (this.lastChild) {
       this.removeChild(this.lastChild);
     }
 	}-*/;
 
 	final native void removeFromParent0()/*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.parentElement.removeChild(this);
 	}-*/;
 

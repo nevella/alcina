@@ -37,7 +37,7 @@
  L(0...9) - Local nodes (at S0)
  L(Ra)    - Local node corresponding to Ra
 
- I(a...z) - Invert node (see below) corresponding to Ra
+ I(a...z) - Inverse node (see below) corresponding to Ra
 
  M[op{A,R},node,parent,predecessor] - a mutation
  Inv[M] - the inverse mutation

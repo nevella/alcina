@@ -69,6 +69,9 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 	@Override
 	public void topicPublished(MutationHistory.Event event) {
 		if (mutations.configuration.logDoms) {
+			LocalDom.log(Level.INFO,
+					"mutation event %s - %s - received - %s mutations",
+					events.size(), event.type, event.records.size());
 			Element documentElement = Document.get().getDocumentElement();
 			event.localDom = new MutationNode(documentElement, null,
 					mutations.mutationsAccess, true, null);
@@ -85,6 +88,8 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 				issue.append("-----------------------------------");
 				issue.append("");
 				LocalDom.log(Level.WARNING, issue.toString());
+				event.records.forEach(record -> LocalDom.log(Level.WARNING,
+						record.toString()));
 				Scheduler.get().scheduleDeferred(() -> {
 					mutations.mutationsAccess
 							.reportException(new InequivalentDomException());

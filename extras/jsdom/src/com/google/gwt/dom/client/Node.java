@@ -470,7 +470,7 @@ public abstract class Node
 	protected abstract void resetRemote0();
 
 	protected void sync(Runnable runnable) {
-		if (remote() instanceof NodeLocalNull) {
+		if (remote() instanceof NodeLocalNull || LocalDom.isReplaying()) {
 			return;
 		}
 		try {

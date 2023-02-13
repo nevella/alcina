@@ -7,6 +7,7 @@ import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.NodeRemote;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -30,27 +31,28 @@ public class MutationRecord {
 
 	String attributeNamespace;
 
-	private String type;
+	private Type type;
 
 	SyncMutations sync;
 
 	String oldValue;
 
+	String newValue;
+
 	public MutationRecord(SyncMutations sync, MutationRecordJso jso) {
 		this.sync = sync;
 		this.jso = jso;
-		addedNodes = jso.getAddedNodes().stream().map(n -> sync.typedRemote(n))
+		addedNodes = sync.mutationsAccess.streamRemote(jso.getAddedNodes())
 				.map(this::mutationNode).collect(Collectors.toList());
-		removedNodes = jso.getRemovedNodes().stream()
-				.map(n -> sync.typedRemote(n)).map(this::mutationNode)
-				.collect(Collectors.toList());
+		removedNodes = sync.mutationsAccess.streamRemote(jso.getRemovedNodes())
+				.map(this::mutationNode).collect(Collectors.toList());
 		previousSibling = mutationNode(jso.getPreviousSibling());
 		nextSibling = mutationNode(jso.getNextSibling());
 		target = mutationNode(jso.getTarget());
 		attributeName = jso.getAttributeName();
 		attributeNamespace = jso.getAttributeNamespace();
 		oldValue = jso.getOldValue();
-		type = jso.getType();
+		type = Type.valueOf(jso.getType());
 	}
 
 	public List<MutationNode> getAddedNodes() {
@@ -63,6 +65,10 @@ public class MutationRecord {
 
 	public String getAttributeNamespace() {
 		return this.attributeNamespace;
+	}
+
+	public String getNewValue() {
+		return this.newValue;
 	}
 
 	public MutationNode getNextSibling() {
@@ -85,8 +91,12 @@ public class MutationRecord {
 		return this.target;
 	}
 
-	public String getType() {
+	public Type getType() {
 		return this.type;
+	}
+
+	public boolean provideIsStructuralMutation() {
+		return type == Type.childList;
 	}
 
 	public void setAddedNodes(List<MutationNode> addedNodes) {
@@ -99,6 +109,10 @@ public class MutationRecord {
 
 	public void setAttributeNamespace(String attributeNamespace) {
 		this.attributeNamespace = attributeNamespace;
+	}
+
+	public void setNewValue(String newValue) {
+		this.newValue = newValue;
 	}
 
 	public void setNextSibling(MutationNode nextSibling) {
@@ -121,35 +135,107 @@ public class MutationRecord {
 		this.target = target;
 	}
 
-	public void setType(String type) {
+	public void setType(Type type) {
 		this.type = type;
 	}
 
 	@Override
 	public String toString() {
-		FormatBuilder format = new FormatBuilder().separator(" : ");
-		format.append(type);
-		format.append(target);
-		format.indent(2);
-		format.newLine();
-		format.appendIfNotBlankKv("previous", previousSibling);
-		format.appendIfNotBlankKv("next", nextSibling);
-		format.appendIfNotBlankKv("attributeName", attributeName);
-		format.appendIfNotBlankKv("oldValue", oldValue);
+		FormatBuilder format = new FormatBuilder().separator("\n");
+		format.appendIfNotBlankKv("target", target);
+		format.appendIfNotBlankKv("type", type);
+		format.appendIfNotBlankKv("  previous", previousSibling);
+		format.appendIfNotBlankKv("  next", nextSibling);
+		format.appendIfNotBlankKv("  attributeName", attributeName);
+		format.appendIfNotBlankKv("  oldValue", oldValue);
 		if (!addedNodes.isEmpty()) {
-			format.line("addedNodes:");
-			format.indent(4);
-			addedNodes.forEach(format::line);
+			format.append("  addedNodes:");
+			addedNodes.forEach(n -> format
+					.append("    " + n.toString().replace("\n", "\n    ")));
 		}
 		if (!removedNodes.isEmpty()) {
-			format.line("removedNodes:");
-			format.indent(4);
-			removedNodes.forEach(format::line);
+			format.append("  removedNodes:");
+			removedNodes.forEach(n -> format
+					.append("    " + n.toString().replace("\n", "\n    ")));
 		}
+		format.newLine();
 		return format.toString();
+	}
+
+	void apply(ApplyTo applyTo) {
+		ApplyDirection applyDirection = applyTo.direction();
+		MutationRecord record = this;
+		if (applyTo == ApplyTo.mutations_reversed) {
+			target.ensureChildNodes();
+		}
+		switch (type) {
+		case childList: {
+			List<MutationNode> removedNodes = applyDirection == ApplyDirection.history
+					? this.removedNodes
+					: this.addedNodes;
+			List<MutationNode> addedNodes = applyDirection == ApplyDirection.history
+					? this.addedNodes
+					: this.removedNodes;
+			for (MutationNode node : removedNodes) {
+				target.remove(node, applyTo);
+			}
+			MutationNode predecessor = previousSibling;
+			for (MutationNode node : addedNodes) {
+				target.insertAfter(predecessor, node, applyTo);
+				predecessor = node;
+			}
+			break;
+		}
+		case characterData: {
+			String characterData = applyDirection == ApplyDirection.history
+					? oldValue
+					: newValue;
+			String previousValue = target.putCharacterData(applyTo,
+					characterData);
+			if (applyDirection == ApplyDirection.history_reversed) {
+				newValue = previousValue;
+			}
+			break;
+		}
+		case attributes: {
+			String characterData = applyDirection == ApplyDirection.history
+					? oldValue
+					: newValue;
+			String previousValue = target.putAttributeData(applyTo,
+					attributeName, characterData);
+			if (applyDirection == ApplyDirection.history_reversed) {
+				newValue = previousValue;
+			}
+			break;
+		}
+		}
 	}
 
 	MutationNode mutationNode(NodeRemote nodeRemote) {
 		return sync.mutationNode(nodeRemote);
+	}
+
+	@Reflected
+	public enum Type {
+		attributes, characterData, childList
+	}
+
+	enum ApplyDirection {
+		history, history_reversed
+	}
+
+	enum ApplyTo {
+		local, mutations_reversed;
+
+		ApplyDirection direction() {
+			switch (this) {
+			case local:
+				return ApplyDirection.history;
+			case mutations_reversed:
+				return ApplyDirection.history_reversed;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 }

@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -249,6 +250,10 @@ public class LocalDom {
 		return get().remoteLookup.containsKey(remote);
 	}
 
+	static boolean isReplaying() {
+		return get().isReplaying0();
+	}
+
 	static boolean isUseRemoteDom() {
 		return GWT.isClient();
 	}
@@ -267,9 +272,20 @@ public class LocalDom {
 		return remote.buildOuterHtml();
 	}
 
+	/**
+	 * Check that it's valid to mutate (if non-localdom javascript is
+	 * manipulating NodeRemote instances, the MutationObserver must be connected
+	 * - and the converse)
+	 */
+	static void verifyMutatingState() {
+		get().verifyMutatingState0();
+	}
+
 	static void wasResolved(Element elem) {
 		get().wasResolved0(elem);
 	}
+
+	boolean replaying;
 
 	LocalDomMutations2 mutations;
 
@@ -552,6 +568,10 @@ public class LocalDom {
 				.anyMatch(n -> n.remote() == nodeRemote);
 	}
 
+	private boolean isReplaying0() {
+		return replaying;
+	}
+
 	private boolean isStopPropagation0(NativeEvent evt) {
 		List<String> list = eventMods.get(evt);
 		return list != null && (list.contains("eventStopPropagation")
@@ -654,9 +674,6 @@ public class LocalDom {
 			return null;// SEP
 		}
 		ElementRemote elem = (ElementRemote) remote;
-		// if (elem.getTagNameRemote().equalsIgnoreCase("iframe")) {
-		// return null;// don't handle iframes
-		// }
 		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(false);
 		ElementRemote hasNodeRemote = remoteIndex.hasNode();
 		boolean hadNode = hasNodeRemote != null;
@@ -676,7 +693,8 @@ public class LocalDom {
 		}
 		// htmlparser will sometimes fail to parse dodgy DOM - reparse from
 		// browser DOM
-		if (shouldTryReparseFromRemote(elem, hasNode, remoteIndex)
+		if (!isReplaying()
+				&& shouldTryReparseFromRemote(elem, hasNode, remoteIndex)
 				&& !postReparse) {
 			reparseFromRemote(hasNodeRemote, hasNode, remoteIndex);
 			return nodeFor0(remote, true);
@@ -857,6 +875,11 @@ public class LocalDom {
 		}
 	}
 
+	private void verifyMutatingState0() {
+		Preconditions.checkArgument(syncing
+				|| (mutations.isObserverConnected() || !mutations.isEnabled()));
+	}
+
 	private void wasResolved0(Element elem) {
 		elem.local().walk(nl -> nl.node().resolved(resolutionEventId));
 		resolutionEventIdDirty = true;
@@ -980,12 +1003,80 @@ public class LocalDom {
 	}
 
 	public class MutationsAccess {
+		public Node createAndInsertAfter(Node target, Node previousSibling,
+				NodeRemote remoteNode) {
+			ElementLocal parent = target.local();
+			Node newChild = null;
+			switch (remoteNode.getNodeType()) {
+			case Node.COMMENT_NODE:
+				newChild = parent.ownerDocument
+						.createComment(remoteNode.getNodeValue());
+				break;
+			case Node.TEXT_NODE:
+				newChild = parent.ownerDocument
+						.createTextNode(remoteNode.getNodeValue());
+				break;
+			case Node.ELEMENT_NODE:
+				newChild = parent.ownerDocument
+						.createElement(remoteNode.getNodeName());
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+			newChild.putRemote(remoteNode, false);
+			target.insertAfter(newChild, previousSibling);
+			linkRemote(remoteNode, newChild);
+			return newChild;
+		}
+
+		public Element elementForNoResolve(ElementRemote remote) {
+			return (Element) nodeForNoResolve(remote);
+		}
+
+		public Node nodeForNoResolve(NodeRemote remote) {
+			return LocalDom.nodeForNoResolve(remote);
+		}
+
+		public NodeRemote parentNoResolve(NodeRemote cursor) {
+			return cursor.getParentNodeRemote();
+		}
+
+		public void putRemoteChildren(Element elem,
+				List<NodeRemote> remoteChildrenS0) {
+			NodeList<Node> childNodes = elem.getChildNodes();
+			for (int idx = 0; idx < remoteChildrenS0.size(); idx++) {
+				Node child = childNodes.getItem(idx);
+				NodeRemote remote = remoteChildrenS0.get(idx);
+				// not sure about resolved here...
+				child.putRemote(remote, true);
+			}
+		}
+
+		public void removeFromRemoteLookup(Node delta) {
+			Stack<Node> stack = new Stack<>();
+			stack.push(delta);
+			do {
+				Node node = stack.pop();
+				remoteLookup.remove(node.remote());
+				node.streamChildren().forEach(stack::push);
+			} while (stack.size() > 0);
+		}
+
 		public void reportException(Exception exception) {
 			topicReportException.publish(exception);
 		}
 
+		public void setReplaying(boolean replaying) {
+			get().replaying = replaying;
+		}
+
 		public Stream<NodeRemote> streamChildren(NodeRemote node) {
 			return node.getChildNodes0().streamRemote();
+		}
+
+		public Stream<NodeRemote>
+				streamRemote(NodeListRemote<Node> nodeListRemote) {
+			return nodeListRemote.streamRemote();
 		}
 
 		public NodeRemote typedRemote(Node n) {
