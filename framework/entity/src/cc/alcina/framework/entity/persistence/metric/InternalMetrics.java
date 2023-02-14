@@ -294,8 +294,12 @@ public class InternalMetrics {
 		if (!trackMetricsEnabled.get()) {
 			return;
 		}
-		if (ResourceUtilities.is("healthMetricsOnly")
-				&& type != InternalMetricTypeAlcina.health) {
+		// Get specific metrics types we want to capture
+		List<String> trackableMetrics = CommonUtils
+				.split(ResourceUtilities.get("trackableMetrics"), ",");
+		// If there are any specifics types we want, ensure this tracker is one of them
+		if (!trackableMetrics.isEmpty()
+				&& !trackableMetrics.contains(type.toString())) {
 			return;
 		}
 		if (trackers.size() > MAX_TRACKERS) {
@@ -659,13 +663,11 @@ public class InternalMetrics {
 	}
 
 	public interface InternalMetricType {
-
 		public boolean shouldSlice();
 
 		public int maxStackLines();
 
 		public int maxFrames();
-
 	}
 
 	public enum InternalMetricTypeAlcina implements InternalMetricType {
