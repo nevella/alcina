@@ -77,11 +77,18 @@ public class Transaction implements Comparable<Transaction> {
 	public static void beginDomainPreparing() {
 		begin(TransactionPhase.TO_DOMAIN_PREPARING);
 	}
-	/*
+
+	/**
+	 * <p>
 	 * Essentially run within another tx to access graph state before any
 	 * changes in the current tx were applied
+	 *
+	 * <p>
+	 * <b>Note</b> - don't attempt to get any entities without checking that
+	 * they were persisted prior to the current transaction. If working in an
+	 * {@code AdjunctTransformCollation}, one way to check that is
+	 * {@code QueryResult.hasCreateTransform()}
 	 */
-
 	public static <T> T callInSnapshotTransaction(Callable<T> callable)
 			throws Exception {
 		Transaction preSnapshot = current();

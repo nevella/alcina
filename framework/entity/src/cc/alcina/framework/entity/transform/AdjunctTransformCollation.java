@@ -64,7 +64,13 @@ public class AdjunctTransformCollation extends TransformCollation {
 			// preEntityValueSupplier inside a snapshot transaction
 			U preEntityValue = Transaction
 				.callInSnapshotTransaction(() -> {
-					return preEntityValueSupplier.apply(result.getEntity());
+					// Can only act on the entity if it's been persisted,
+					// otherwise return null
+					if (result.getEntity().domain().wasPersisted()) {
+						return preEntityValueSupplier.apply(result.getEntity());
+					} else {
+						return null;
+					}
 				});
 			// Call callable with returned value
 			callable.accept(preEntityValue);

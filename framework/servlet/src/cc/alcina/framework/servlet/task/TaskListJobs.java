@@ -91,8 +91,9 @@ public class TaskListJobs extends AbstractTaskPerformer
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
 			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
-					.accept(Utils::large).cell("Cause").accept(Utils::large)
-					.cell("Links").accept(Utils::links);
+					.accept(Utils::large).cell("Creation date")
+					.accept(Utils::date).cell("Priority").cell("Cause")
+					.accept(Utils::large).cell("Links").accept(Utils::links);
 			CountingMap<Class<? extends Task>> loggedCountsByTaskClass = new CountingMap<>();
 			Stream<Job> futureConsistencyJobs = JobDomain.get()
 					.getFutureConsistencyJobs();
@@ -105,7 +106,9 @@ public class TaskListJobs extends AbstractTaskPerformer
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(job.getId()))
 						.cell(job.provideName()).accept(Utils::large)
-						.cell(job.getCause()).accept(Utils::large);
+						.cell(job.getCreationDate()).accept(Utils::date)
+						.cell(job.getConsistencyPriority()).cell(job.getCause())
+						.accept(Utils::large);
 				DomNode td = cellBuilder.append();
 				{
 					String href = JobServlet
