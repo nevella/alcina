@@ -294,12 +294,47 @@ public class Io {
 			return new String(bytes, StandardCharsets.UTF_8);
 		}
 
+		private String path;
+
+		private File file;
+
+		private String charsetName = StandardCharsets.UTF_8.name();
+
+		public String asString() {
+			try {
+				InputStream stream = getStream();
+				return readStreamToString(stream, charsetName);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
 		public String read(String path) {
 			try {
 				return readFileToString(path);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		public ReadOp withPath(String path) {
+			this.path = path;
+			return this;
+		}
+
+		private void ensureFile() {
+			if (path != null) {
+				file = new File(path);
+			}
+		}
+
+		private InputStream getStream() throws IOException {
+			ensureFile();
+			InputStream stream = null;
+			if (file != null) {
+				stream = new FileInputStream(file);
+			}
+			return stream;
 		}
 	}
 
