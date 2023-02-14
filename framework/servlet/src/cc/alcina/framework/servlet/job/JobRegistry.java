@@ -83,6 +83,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Alloca
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
+import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -143,6 +144,11 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
  *
  * <h2>TODO (doc)</h2> Describe the logic in JobQueue.allocateJobs and
  * JobScheduler a little more fully.
+ *
+ * <p>
+ * FIXME - jobs - activeJobs is a non-transactional view - but possibly should
+ * not be, since there are no guarantees that the job exists/has a visible
+ * version for a given tx
  *
  * @author nick@alcina.cc
  */
@@ -309,7 +315,18 @@ public class JobRegistry {
 		// track why not removed in this-vm process (i.e. finally of performJob0
 		// not completing).
 		// How to track: put logging here (DEVEX)
-		activeJobs.keySet().removeIf(job -> job.getState() == JobState.ABORTED);
+		activeJobs.keySet().removeIf(job -> {
+			try {
+				// this is more a guard against exceptions rather than logically
+				// correct - correctness would be a txview
+				return Mvcc.isVisible(job)
+						&& job.getState() == JobState.ABORTED;
+			} catch (Exception e) {
+				// FIXME - devex - presumably mvcc-deleted
+				e.printStackTrace();
+				return false;
+			}
+		});
 		return activeJobs.size();
 	}
 
