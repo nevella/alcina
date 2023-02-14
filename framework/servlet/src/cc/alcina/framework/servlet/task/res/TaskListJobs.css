@@ -28,8 +28,8 @@ td.numeric-right {
 
 
 td.date, td.links {
-	max-width: 150px;
 	min-width: 150px;
+	white-space: nowrap;
 }
 
 td.instance {
