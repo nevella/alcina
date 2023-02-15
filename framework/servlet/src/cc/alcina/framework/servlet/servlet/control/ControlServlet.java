@@ -169,11 +169,15 @@ public class ControlServlet extends AlcinaServlet {
 			message = Ax.blankTo(message, "<No log>");
 			String trimmedMessage = CommonUtils.trimToWsChars(message, 5000);
 			logger.info(trimmedMessage);
-			String regex = "(?s).*(<\\?xml|<html).*";
-			// if response is huge, regex will be non-performant
-			if (trimmedMessage.matches(regex)) {
+			// no regex, non-performant
+			String lcMessage = message.toLowerCase();
+			int trimStart = lcMessage.indexOf("<?xml");
+			if (trimStart == -1) {
+				trimStart = lcMessage.indexOf("<html");
+			}
+			if (trimStart != -1) {
 				response.setContentType("text/html");
-				response.getWriter().write(message.replaceFirst(regex, "$1"));
+				response.getWriter().write(message.substring(trimStart));
 				response.getWriter().close();
 			} else {
 				writeAndClose(message, response);
