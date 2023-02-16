@@ -13,6 +13,7 @@ import org.w3c.dom.NodeList;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.DomElement;
 import com.google.gwt.dom.client.DomNode;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.Node;
@@ -165,7 +166,7 @@ public class MutationNode {
 				}
 				predecessor.nextSibling = newChild;
 				newChild.previousSibling = predecessor;
-				insertionIndex = parent.childNodes.indexOf(predecessor) + 1;
+				insertionIndex = childNodes.indexOf(predecessor) + 1;
 			}
 			newChild.parent = this;
 			childNodes.add(insertionIndex, newChild);
@@ -185,15 +186,40 @@ public class MutationNode {
 
 	public String putAttributeData(ApplyTo applyTo, String attributeName,
 			String characterData) {
-		int debug = 3;
-		// TODO Auto-generated method stub
-		return null;
+		switch (applyTo) {
+		case mutations_reversed: {
+			String currentValue = attributes.get(attributeName);
+			attributes.put(attributeName, characterData);
+			return currentValue;
+		}
+		case local: {
+			Node target = remoteNode().node();
+			String currentValue = ((Element) target)
+					.getAttribute(attributeName);
+			((Element) target).setAttribute(attributeName, characterData);
+			return currentValue;
+		}
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public String putCharacterData(ApplyTo applyTo, String characterData) {
-		// TODO Auto-generated method stub
-		int debug = 3;
-		return null;
+		switch (applyTo) {
+		case mutations_reversed: {
+			String currentValue = nodeValue;
+			nodeValue = characterData;
+			return currentValue;
+		}
+		case local: {
+			Node target = remoteNode().node();
+			String currentValue = target.getNodeValue();
+			target.setNodeValue(characterData);
+			return currentValue;
+		}
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public void remove(MutationNode node, ApplyTo applyTo) {
@@ -214,6 +240,9 @@ public class MutationNode {
 		}
 		case local: {
 			Node target = remoteNode().node();
+			// so....this should be guaranteed to exist in LocalDom.remoteLookup
+			// (since we've listeed the parent's kids during the inverse tree
+			// build)
 			Node delta = node.remoteNode().node();
 			target.removeChild(delta);
 			// because the non-local code could then reinsert parts of the
@@ -328,15 +357,36 @@ public class MutationNode {
 				if (cursor.shallowInequivalent()) {
 					cursor.firstInequivalent = cursor;
 					firstInequivalent = cursor;
+					int debug = 3;
 					break;
 				} else {
 					int length = cursor.left.childNodes.size();
-					for (int idx = 0; idx < length; idx++) {
+					// reverse order, want to test in iteration order
+					for (int idx = length - 1; idx >= 0; idx--) {
 						EquivalenceTest child = new EquivalenceTest();
 						child.parent = cursor;
 						child.left = cursor.left.childNodes.get(idx);
 						child.right = cursor.right.childNodes.get(idx);
-						stack.push(child);
+						boolean ignoreChecks = false;
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("title")
+								&& cursor.left.nodeName
+										.equalsIgnoreCase("head");
+						// totally rando
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("script");
+						// ditto...ish. Non UI in any case
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("style");
+						// we care about structure, not value
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("input");
+						// we care about structure, not value
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("textarea");
+						if (!ignoreChecks) {
+							stack.push(child);
+						}
 					}
 				}
 			}
@@ -377,12 +427,17 @@ public class MutationNode {
 					format.format("diff: idx: %s", idx);
 					int end = Math.min(maxLength, idx + 10);
 					int start = Math.max(0, idx - 10);
-					format.format("diff: l: %s -> %s <- %s",
+					format.format("diff: l: %s -> %s (%s) <- %s",
 							v1.substring(start, idx), c1,
+							UrlComponentEncoder.get()
+									.encode(String.valueOf(c1)),
 							v1.subSequence(idx + 1, end));
-					format.format("diff: r: %s -> %s <- %s",
+					format.format("diff: r: %s -> %s (%s) <- %s",
 							v2.substring(start, idx), c2,
+							UrlComponentEncoder.get()
+									.encode(String.valueOf(c2)),
 							v2.subSequence(idx + 1, end));
+					break;
 				}
 			}
 			if (!inequivalentFound) {
@@ -410,22 +465,36 @@ public class MutationNode {
 			}
 			if (left.getNodeType() == Node.ELEMENT_NODE) {
 				for (String key : left.getAttributes().keySet()) {
-					if (!Objects.equals(left.getAttributes().get(key),
-							right.getAttributes().get(key))) {
+					if (key.equals("style")) {
+						// style is computed - basically should only use
+						// computedStyle anyway post flush()
+						// admittedly, changing style + a style attribute pre
+						// flush is...problematci
+						continue;
+					}
+					String leftAttr = Ax
+							.blankToEmpty(left.getAttributes().get(key));
+					String rightAttr = Ax
+							.blankToEmpty(right.getAttributes().get(key));
+					if (!Objects.equals(leftAttr, rightAttr)) {
 						inequivalenceReason = Ax.format(
-								"Unequal attributes :: %s :: '%s' - '%s'",
-								left.getAttributes().get(key),
-								right.getAttributes().get(key));
+								"Unequal attributes :: %s :: '%s' - '%s'", key,
+								leftAttr, rightAttr);
 						return true;
 					}
 				}
 				for (String key : right.getAttributes().keySet()) {
-					if (!Objects.equals(left.getAttributes().get(key),
-							right.getAttributes().get(key))) {
+					if (key.equals("style")) {
+						continue;
+					}
+					String leftAttr = Ax
+							.blankToEmpty(left.getAttributes().get(key));
+					String rightAttr = Ax
+							.blankToEmpty(right.getAttributes().get(key));
+					if (!Objects.equals(leftAttr, rightAttr)) {
 						inequivalenceReason = Ax.format(
-								"Unequal attributes :: %s :: '%s' - '%s'",
-								left.getAttributes().get(key),
-								right.getAttributes().get(key));
+								"Unequal attributes :: %s :: '%s' - '%s'", key,
+								leftAttr, rightAttr);
 						return true;
 					}
 				}
@@ -433,21 +502,20 @@ public class MutationNode {
 				int rightSize = right.getChildNodes().size();
 				if (leftSize != rightSize) {
 					MutationNode firstDelta = null;
-					String names = null;
 					if (leftSize > rightSize) {
 						firstDelta = left.getChildNodes().get(rightSize);
-						names = left.getChildNodes().stream()
-								.map(MutationNode::getNodeName)
-								.collect(Collectors.joining(", "));
 					} else {
 						firstDelta = right.getChildNodes().get(leftSize);
-						names = right.getChildNodes().stream()
-								.map(MutationNode::getNodeName)
-								.collect(Collectors.joining(", "));
 					}
 					inequivalenceReason = Ax.format(
-							"Unequal child counts :: %s :: %s - first delta: %s - names: %s",
-							leftSize, rightSize, firstDelta, names);
+							"Unequal child counts :: %s :: %s - first delta: %s - names: \n\tl: %s\n\tr: %s",
+							leftSize, rightSize, firstDelta,
+							left.getChildNodes().stream()
+									.map(MutationNode::getNodeName)
+									.collect(Collectors.joining(", ")),
+							right.getChildNodes().stream()
+									.map(MutationNode::getNodeName)
+									.collect(Collectors.joining(", ")));
 					return true;
 				}
 			}

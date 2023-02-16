@@ -92,6 +92,19 @@ public class ClientProperties {
 	}
 
 	/**
+	 * Determine if a property is defined in a store
+	 *
+	 * @param propertyLocation
+	 *            Class marker on which the property was registered
+	 * @param propertyName
+	 *            Property name
+	 * @return true if defined, false if not
+	 */
+	public static boolean has(Class propertyLocation, String propertyName) {
+		return get(propertyLocation, propertyName) != null;
+	}
+
+	/**
 	 * Fetch the boolean value from property stores. Returns the first found in
 	 * order of priortiy.
 	 *
@@ -102,12 +115,29 @@ public class ClientProperties {
 	 * @return Boolean value stored, false if not present
 	 */
 	public static boolean is(Class propertyLocation, String propertyName) {
-		String value = get(propertyLocation, propertyName);
-		return Boolean.valueOf(value);
+		return is(propertyLocation, propertyName, false);
 	}
 
-	public static boolean is(Class<?> clazz, Key key) {
-		return is(clazz, key.name());
+	/**
+	 * Fetch the boolean value from property stores. Returns the first found in
+	 * order of priortiy.
+	 *
+	 * @param propertyLocation
+	 *            Class marker on which the property was registered
+	 * @param propertyName
+	 *            Property name
+	 * @param defaultValue
+	 *            Default value
+	 * @return Boolean value stored, defaultValue if not present
+	 */
+	public static boolean is(Class propertyLocation, String propertyName,
+			boolean defaultValue) {
+		String value = get(propertyLocation, propertyName);
+		return value == null ? defaultValue : Boolean.valueOf(value);
+	}
+
+	public static boolean is(Class<?> propertyLocation, Key key) {
+		return is(propertyLocation, key.name());
 	}
 
 	/**

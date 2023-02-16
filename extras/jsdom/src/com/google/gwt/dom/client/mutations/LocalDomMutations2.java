@@ -31,6 +31,8 @@ public class LocalDomMutations2 {
 
 	Configuration configuration;
 
+	boolean hadExceptions = false;
+
 	public LocalDomMutations2(LocalDom.MutationsAccess mutationsAccess,
 			Configuration configuration) {
 		this.mutationsAccess = mutationsAccess;
@@ -38,8 +40,20 @@ public class LocalDomMutations2 {
 		history = new MutationHistory(this);
 	}
 
+	public void checkDoms() {
+		history.checkDoms();
+	}
+
+	public boolean hadExceptions() {
+		return history.hadExceptions() || hadExceptions;
+	}
+
 	public boolean isEnabled() {
 		return this.enabled;
+	}
+
+	public boolean isHadExceptions() {
+		return this.hadExceptions;
 	}
 
 	public boolean isObserverConnected() {
@@ -52,6 +66,10 @@ public class LocalDomMutations2 {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public void setHadExceptions(boolean hadExceptions) {
+		this.hadExceptions = hadExceptions;
 	}
 
 	public void setObserverConnected(boolean observerConnected) {
@@ -124,7 +142,7 @@ public class LocalDomMutations2 {
     };
     this.@LocalDomMutations2::observer.observe(
         this.@LocalDomMutations2::documentElement, config);
-    //    this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: connected ",false);
+    //this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: connected ",false);
 	}-*/;
 
 	private native void disconnectObserver() /*-{
@@ -137,11 +155,11 @@ public class LocalDomMutations2 {
       records.push(mutation);
     });
     if (!this.@LocalDomMutations2::observerConnected) {
-      this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: warning  - was not connected ",false);
+      this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: warning  - was not connected ",true);
     }
     this.@LocalDomMutations2::observerConnected = false;
     this.@LocalDomMutations2::observer.disconnect();
-    //    this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: disconnected ",false);
+    //this.@LocalDomMutations2::log(Ljava/lang/String;Z)("Mutation observer :: disconnected ",false);
 	}-*/;
 
 	private native void setupObserver() /*-{
@@ -167,7 +185,9 @@ public class LocalDomMutations2 {
 	}-*/;
 
 	private void syncMutations0(JsArray<MutationRecordJso> records) {
-		new SyncMutations(mutationsAccess).sync(records);
+		SyncMutations syncMutations = new SyncMutations(mutationsAccess);
+		syncMutations.sync(records);
+		hadExceptions |= syncMutations.hadException;
 		log(Ax.format("%s records", records.length()), false);
 	}
 

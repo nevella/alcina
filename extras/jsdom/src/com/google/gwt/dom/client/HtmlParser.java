@@ -18,6 +18,42 @@ import cc.alcina.framework.gwt.client.util.DomUtils;
 public class HtmlParser {
 	public static boolean debugCursor = false;
 
+	public static void appendTextNodes(DomDocument document, DomElement element,
+			String string) {
+		// will not emit a zero-length text node (but that won't be parseable
+		// anyway, although can be programatically created)
+		if (string.isEmpty()) {
+			return;
+		}
+		if (string.contains("\r\n")) {
+			string = string.replace("\r\n", "\n");
+		}
+		boolean singleNode = string.length() == 76700;
+		if (string.length() > 70000 & string.length() < 80000) {
+			Ax.err("strlen:%s - %s", string.length(), element.getTagName());
+		}
+		int idx = 0;
+		int length = string.length();
+		if (length <= LocalDom.maxCharsPerTextNode || singleNode) {
+			Text text = document.createTextNode(string);
+			element.appendChild(text);
+		} else {
+			while (idx < length) {
+				int segmentLength = length - idx;
+				segmentLength = Math.min(segmentLength,
+						LocalDom.maxCharsPerTextNode);
+				String segment = string.substring(idx, idx + segmentLength);
+				Text text = document.createTextNode(segment);
+				element.appendChild(text);
+				idx += segmentLength;
+			}
+		}
+		if (debugCursor) {
+			Ax.out("  tx: %s", CommonUtils.trimToWsChars(
+					TextUtils.normalizeWhitespaceAndTrim(string), 50, true));
+		}
+	}
+
 	static String decodeEntities(String text) {
 		return EntityDecoder.decode(text);
 	}
@@ -51,8 +87,7 @@ public class HtmlParser {
 	 *
 	 * Emit processing instruction, cdata nodes as comments
 	 *
-	 * Also splits #text nodes at 65536 chars - this may be FF behaviour, is
-	 * certainly chromeium
+	 * Also splits #text nodes based on observed
 	 *
 	 * FIXME - LDM2 - live test in the browser
 	 */
@@ -259,27 +294,7 @@ public class HtmlParser {
 	}
 
 	private void emitText(String string) {
-		if (string.isEmpty()) {
-			return;
-		}
-		int idx = 0;
-		int length = string.length();
-		// will not emit a zero-length text node (but that won't be parseable
-		// anyway, although can be programatically created)
-		while (idx < length) {
-			int segmentLength = length - idx;
-			segmentLength = Math.min(segmentLength,
-					LocalDom.maxCharsPerTextNode);
-			String segment = idx == 0 && segmentLength == length ? string
-					: string.substring(idx, idx + segmentLength);
-			Text text = Document.get().createTextNode(segment);
-			cursor.appendChild(text);
-			idx += segmentLength;
-		}
-		if (debugCursor) {
-			Ax.out("  tx: %s", CommonUtils.trimToWsChars(
-					TextUtils.normalizeWhitespaceAndTrim(string), 50, true));
-		}
+		appendTextNodes(Document.get(), cursor, string);
 	}
 
 	private Element parse0(String html, Element replaceContents,

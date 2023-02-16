@@ -385,7 +385,7 @@ public abstract class Node
 
 	@Override
 	public void setTextContent(String arg0) throws DOMException {
-		throw new UnsupportedOperationException();
+		setNodeValue(arg0);
 	}
 
 	@Override

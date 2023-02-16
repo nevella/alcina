@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
@@ -16,7 +17,9 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.ElementRemote.ContiguousTextNodes;
 import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
 import com.google.gwt.dom.client.mutations.LocalDomMutations2;
 import com.google.gwt.user.client.DOM;
@@ -28,6 +31,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.logic.ClientProperties;
 
 /**
  * <p>
@@ -73,9 +77,13 @@ public class LocalDom {
 
 	public static int maxCharsPerTextNode = 65536;
 
+	public static void checkDoms() {
+		get().mutations.checkDoms();
+	};
+
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
-	};
+	}
 
 	public static void ensureRemote(Node node) {
 		get().ensureRemote0(node);
@@ -128,8 +136,11 @@ public class LocalDom {
 	}
 
 	public static void log(Level level, String template, Object... args) {
-		String message = Ax.format(template, args);
 		boolean error = level.intValue() > Level.INFO.intValue();
+		if (!error && !get().configuration.logEvents) {
+			return;
+		}
+		String message = Ax.format(template, args);
 		if (error) {
 			Ax.err(message);
 		} else {
@@ -458,11 +469,11 @@ public class LocalDom {
 
 	private void initalizeSync(Document doc) {
 		docRemote = doc.typedRemote();
-		linkRemote(docRemote, doc);
-		nodeFor0(docRemote.getDocumentElement0());
 		configuration = new Configuration();
 		browserBehaviour = new BrowserBehaviour();
 		browserBehaviour.test();
+		linkRemote(docRemote, doc);
+		nodeFor0(docRemote.getDocumentElement0());
 		mutations = GWT.isClient()
 				? new LocalDomMutations2(new MutationsAccess(),
 						configuration.asMutationsConfiguration())
@@ -554,6 +565,11 @@ public class LocalDom {
 	}
 
 	private void invokeExternal0(Runnable runnable) {
+		// DEV mode check (all script calls are guaranteed within Impl)
+		// don't allow mutating ext js calls in the very first (onModuleLoad)
+		// script cycle - since disconnect/connect cycle is not setup
+		Preconditions.checkState(GWT.isScript() || !Impl.isFirstTimeClient());
+		checkDoms();
 		flush();
 		try {
 			mutations.startObserving();
@@ -653,6 +669,12 @@ public class LocalDom {
 				childNode.putRemote(remote, true);
 				return (T) childNode;
 			} else {
+				/*
+				 * TODO - LDM2 - this should never be the case (since structures
+				 * should be in sync) - probably rework this method in line with
+				 * "what are the whole-model preconditions'
+				 *
+				 */
 				if (postReparse) {
 					topicUnableToParse.publish(Ax.format(
 							"Text node reparse - remote:\n%s\n\nlocal:\n%s\n",
@@ -726,12 +748,22 @@ public class LocalDom {
 		} catch (Exception e) {
 			// TODO - possibly log. But maybe not - full support of dodgy dom wd
 			// be truly hard
+			// FIXME - dirndl 1x3 - DEVEX (or retire - IE legacy?)
 			parsed = new HtmlParser().parse(safeParseByBrowser(outerHtml),
 					replaceContents,
 					root == Document.get().typedRemote().getDocumentElement0());
 		}
 		if (parsed != null) {
+			if (replaceContents != null) {
+				replaceContents.getAttributeMap().keySet().stream()
+						.collect(Collectors.toList())
+						.forEach(replaceContents::removeAttribute);
+				root.getAttributeMap()
+						.forEach((k, v) -> replaceContents.setAttribute(k, v));
+			}
 			wasResolved0(parsed);
+			root.getContiguousTextContainers()
+					.forEach(this::applyContiguousTextNodesToLocal);
 		} else {
 			topicUnableToParse.publish(outerHtml);
 		}
@@ -885,6 +917,51 @@ public class LocalDom {
 		resolutionEventIdDirty = true;
 	}
 
+	void applyContiguousTextNodesToLocal(ContiguousTextNodes contiguous) {
+		/*
+		 * will be either text or comment, and will contain the full text
+		 * content of [contiguous.previous,contiguousnode] + possibly content
+		 * after [contiguous.node]
+		 */
+		NodeIndex previousIndex = NodeIndex.forNode(contiguous.previous);
+		Node previousNode = previousIndex.getNode();
+		Node parent = previousNode.getParentNode();
+		NodeLocal contiguousLocal = null;
+		Node created = createAndInsertAfter(parent, previousNode,
+				contiguous.node);
+		String previousLocalText = previousNode.getTextContent();
+		String remotePreviousTextContent = contiguous.previous.getNodeValue();
+		previousNode.setTextContent(remotePreviousTextContent);
+		created.setTextContent(previousLocalText
+				.substring(remotePreviousTextContent.length()));
+	}
+
+	Node createAndInsertAfter(Node parentNode, Node previousSibling,
+			NodeRemote remoteNode) {
+		ElementLocal parent = parentNode.local();
+		Node newChild = null;
+		switch (remoteNode.getNodeType()) {
+		case Node.COMMENT_NODE:
+			newChild = parent.ownerDocument
+					.createComment(remoteNode.getNodeValue());
+			break;
+		case Node.TEXT_NODE:
+			newChild = parent.ownerDocument
+					.createTextNode(remoteNode.getNodeValue());
+			break;
+		case Node.ELEMENT_NODE:
+			newChild = parent.ownerDocument
+					.createElement(remoteNode.getNodeName());
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		newChild.putRemote(remoteNode, false);
+		parentNode.insertAfter(newChild, previousSibling);
+		linkRemote(remoteNode, newChild);
+		return newChild;
+	}
+
 	void handleReportedException(Exception exception) {
 		String message = null;
 		if (configuration.logHistoryOnEception) {
@@ -954,7 +1031,7 @@ public class LocalDom {
 			if (childNodesLengthHtmlOperation == 1) {
 				maxCharsPerTextNode = Integer.MAX_VALUE;
 			} else {
-				maxCharsPerTextNode = div.getChildNodes0().getItem(0)
+				maxCharsPerTextNode = div.getChildNodes0().getItem0(0)
 						.getNodeValue().length();
 			}
 			log(Level.INFO,
@@ -962,6 +1039,7 @@ public class LocalDom {
 							+ "\n\tchildNodesLengthHtmlOperation: %s\n\tmaxCharsPerTextNode: %s",
 					lengthTest.length(), childNodesLengthNodeOperation,
 					childNodesLengthHtmlOperation, maxCharsPerTextNode);
+			LocalDom.maxCharsPerTextNode = maxCharsPerTextNode;
 		}
 	}
 
@@ -975,6 +1053,13 @@ public class LocalDom {
 		public boolean logHistoryOnEception = true;
 
 		public Configuration() {
+			mutationLogDoms = ClientProperties.is(LocalDom.class,
+					"mutationLogDoms", true);
+			mutationLogEvents = ClientProperties.is(LocalDom.class,
+					"mutationLogEvents", false);
+			logEvents = ClientProperties.is(LocalDom.class, "logEvents", true);
+			logHistoryOnEception = ClientProperties.is(LocalDom.class,
+					"logHistoryOnEception", true);
 		}
 
 		public LocalDomMutations2.Configuration asMutationsConfiguration() {
@@ -1005,28 +1090,8 @@ public class LocalDom {
 	public class MutationsAccess {
 		public Node createAndInsertAfter(Node target, Node previousSibling,
 				NodeRemote remoteNode) {
-			ElementLocal parent = target.local();
-			Node newChild = null;
-			switch (remoteNode.getNodeType()) {
-			case Node.COMMENT_NODE:
-				newChild = parent.ownerDocument
-						.createComment(remoteNode.getNodeValue());
-				break;
-			case Node.TEXT_NODE:
-				newChild = parent.ownerDocument
-						.createTextNode(remoteNode.getNodeValue());
-				break;
-			case Node.ELEMENT_NODE:
-				newChild = parent.ownerDocument
-						.createElement(remoteNode.getNodeName());
-				break;
-			default:
-				throw new UnsupportedOperationException();
-			}
-			newChild.putRemote(remoteNode, false);
-			target.insertAfter(newChild, previousSibling);
-			linkRemote(remoteNode, newChild);
-			return newChild;
+			return LocalDom.this.createAndInsertAfter(target, previousSibling,
+					remoteNode);
 		}
 
 		public Element elementForNoResolve(ElementRemote remote) {
@@ -1049,6 +1114,9 @@ public class LocalDom {
 				NodeRemote remote = remoteChildrenS0.get(idx);
 				// not sure about resolved here...
 				child.putRemote(remote, true);
+				if (!remoteLookup.containsKey(remote)) {
+					linkRemote(remote, child);
+				}
 			}
 		}
 

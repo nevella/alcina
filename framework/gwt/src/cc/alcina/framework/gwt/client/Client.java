@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client;
 import java.util.Objects;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
@@ -133,7 +132,6 @@ public abstract class Client {
 		public static void preRegistry() {
 			startTime = System.currentTimeMillis();
 			CommonUtils.setSupplier = () -> new LightSet();
-			LocalDom.getMutations().setEnabled(false);
 			if (GWT.isScript()) {
 				Registry.Internals
 						.setDelegateCreator(new JsRegistryDelegateCreator());

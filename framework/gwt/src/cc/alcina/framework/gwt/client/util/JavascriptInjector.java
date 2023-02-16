@@ -3,17 +3,18 @@ package cc.alcina.framework.gwt.client.util;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.HeadElement;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.ScriptElement;
 
 public class JavascriptInjector {
 	private static HeadElement head;
 
-	public static ScriptElement inject(String javascript) {
-		HeadElement head = getHead();
-		ScriptElement element = createScriptElement();
-		element.setText(javascript);
-		head.appendChild(element);
-		return element;
+	/*
+	 * Because script creation injection can cause dom mutations (the script
+	 * runs immediately), run it *outside* localdom
+	 */
+	public static void inject(String javascript) {
+		LocalDom.invokeExternal(() -> inject0(javascript));
 	}
 
 	public static void injectExternal(String sourceUrl) {
@@ -53,4 +54,12 @@ public class JavascriptInjector {
 		}
 		return JavascriptInjector.head;
 	}
+
+	private static native void inject0(String javascript) /*-{
+    var head = $doc.head;
+    var script = $doc.createElement("script");
+    script.language = "javascript";
+    script.innerText = javascript;
+    head.appendChild(script);
+	}-*/;
 }

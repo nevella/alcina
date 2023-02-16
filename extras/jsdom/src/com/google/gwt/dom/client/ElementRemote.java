@@ -1,9 +1,11 @@
 package com.google.gwt.dom.client;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -942,6 +944,58 @@ public class ElementRemote extends NodeRemote implements DomElement {
     return buffer.buf;
 	}-*/;
 
+	final List<ContiguousTextNodes> getContiguousTextContainers() {
+		List<ContiguousTextNodes> result = new ArrayList<>();
+		Stack<ElementRemote> stack = new Stack<>();
+		stack.push(this);
+		while (!stack.isEmpty()) {
+			// breadth first is important here, because later application
+			// requires correct parent indicies (at time of application)
+			ElementRemote elem = stack.remove(0);
+			List<NodeRemote> list = new ArrayList<>();
+			NodeListRemote<Node> childNodes = elem.getChildNodes0();
+			int length = childNodes.getLength();
+			int lastNodeType = -1;
+			NodeRemote lastNode = null;
+			for (int idx = 0; idx < length; idx++) {
+				NodeRemote node = childNodes.getItem0(idx);
+				int nodeType = node.getNodeType();
+				switch (nodeType) {
+				case Node.ELEMENT_NODE:
+					ElementRemote elemChild = (ElementRemote) node;
+					switch (elemChild.getNodeName().toLowerCase()) {
+					case "script":
+					case "style":
+						// not visual - and sometimes weird ("br" in script(!!))
+						// - don't descend
+						break;
+					default:
+						stack.push(elemChild);
+						break;
+					}
+					break;
+				case Node.TEXT_NODE:
+					if (lastNodeType == Node.TEXT_NODE) {
+						result.add(
+								new ContiguousTextNodes(idx, lastNode, node));
+					}
+					break;
+				case Node.COMMENT_NODE:
+					if (lastNodeType == Node.COMMENT_NODE) {
+						result.add(
+								new ContiguousTextNodes(idx, lastNode, node));
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+				lastNodeType = nodeType;
+				lastNode = node;
+			}
+		}
+		return result;
+	}
+
 	final native String getInnerHTML0()/*-{
     return this.innerHTML;
 	}-*/;
@@ -1103,6 +1157,23 @@ public class ElementRemote extends NodeRemote implements DomElement {
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.parentElement.removeChild(this);
 	}-*/;
+
+	static class ContiguousTextNodes {
+		NodeRemote previous;
+
+		NodeRemote node;
+
+		int idx;
+
+		ContiguousTextNodes(int idx, NodeRemote previous, NodeRemote node) {
+			this.idx = idx;
+			this.previous = previous;
+			this.node = node;
+		}
+
+		void applyToLocal() {
+		}
+	}
 
 	static class ElementRemoteIndex extends JavaScriptObject {
 		protected ElementRemoteIndex() {

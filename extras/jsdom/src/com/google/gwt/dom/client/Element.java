@@ -722,7 +722,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
-		if (notPendingAndLinked()) {
+		if (linkedAndNotPending()) {
 			remote().setInnerHTML(html);
 			// tbodies? foots? proudfeet?
 			String remoteHtml = typedRemote().getInnerHTML0();
@@ -745,7 +745,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
-		if (notPendingAndLinked()) {
+		if (linkedAndNotPending()) {
 			remote().setInnerText(text);
 			local().setInnerText(text);
 			LocalDom.wasResolved(this);
@@ -949,7 +949,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		// return ensureRemote();
 	}
 
-	private boolean notPendingAndLinked() {
+	private boolean linkedAndNotPending() {
 		return linkedToRemote() && !isPendingResolution();
 	}
 
@@ -1029,7 +1029,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		} else {
 			local().getChildren().clear();
 		}
-		if (notPendingAndLinked()) {
+		if (linkedAndNotPending()) {
 			remote().setInnerSafeHtml(html);
 			String remoteHtml = typedRemote().getInnerHTML0();
 			local().setInnerHTML(remoteHtml);

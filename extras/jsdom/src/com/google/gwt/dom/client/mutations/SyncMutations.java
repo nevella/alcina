@@ -36,6 +36,8 @@ class SyncMutations {
 
 	private Set<NodeRemote> targetsOfInterest;
 
+	boolean hadException;
+
 	public SyncMutations(MutationsAccess mutationsAccess) {
 		this.mutationsAccess = mutationsAccess;
 	}
@@ -52,6 +54,9 @@ class SyncMutations {
 			// ensure remote is not updated
 			mutationsAccess.setReplaying(true);
 			sync0(records);
+		} catch (RuntimeException e) {
+			hadException = true;
+			throw e;
 		} finally {
 			mutationsAccess.setReplaying(false);
 		}
@@ -101,11 +106,14 @@ class SyncMutations {
 		MutationHistory.Event.publish(Type.MUTATIONS, recordList);
 	}
 
-	// at this point (reverse application of mutations), the topmost remote
-	// nodes (at S0) are
-	// precisely those with null parents. They may or may not correspond to
-	// local nodes (at S0) - if they don't, do not sync. The ones that don't
-	// (proof required) will *not* be topmost at SN
+	/*
+	 * at this point (reverse application of mutations), the topmost remote
+	 * nodes (at S0) are precisely those with null parents (in the mutation node
+	 * structure, not the dom). They may or may not correspond to local nodes
+	 * (at S0) - if they don't, do not sync. The ones that don't (proof
+	 * required) will *not* be topmost at SN
+	 *
+	 */
 	private void syncTopmostMutatedIfContainedInInitialLocal() {
 		List<MutationNode> topmostMutated = mutationNodes.values().stream()
 				.filter(mn -> mn.parent == null).collect(Collectors.toList());

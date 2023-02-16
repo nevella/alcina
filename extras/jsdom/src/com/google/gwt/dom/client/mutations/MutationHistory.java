@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 import com.google.gwt.dom.client.mutations.MutationNode.EquivalenceTest;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -33,6 +35,10 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
  */
 @Bean
 public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
+	// ensure we don't OOM with dom logging, but have playback info for
+	// debugging
+	private static int clearBack = 3;
+
 	private List<MutationHistory.Event> events = new ArrayList<>();
 
 	private LocalDomMutations2 mutations;
@@ -56,6 +62,10 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		return MutationHistory.Event.class;
 	}
 
+	public boolean hadExceptions() {
+		return events.stream().anyMatch(Event::isEquivalenceTestFailed);
+	}
+
 	public String serialize() {
 		SerializerOptions options = new ReflectiveSerializer.SerializerOptions()
 				.withElideDefaults(true).withTypeInfo(false).withPretty(true);
@@ -68,38 +78,58 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 	@Override
 	public void topicPublished(MutationHistory.Event event) {
-		if (mutations.configuration.logDoms) {
+		if (mutations.configuration.logEvents) {
 			LocalDom.log(Level.INFO,
 					"mutation event %s - %s - received - %s mutations",
 					events.size(), event.type, event.records.size());
-			Element documentElement = Document.get().getDocumentElement();
-			event.localDom = new MutationNode(documentElement, null,
-					mutations.mutationsAccess, true, null);
-			event.remoteDom = new MutationNode(
-					mutations.mutationsAccess.typedRemote(documentElement),
-					null, mutations.mutationsAccess, true, null);
-			EquivalenceTest equivalenceTest = event.localDom
-					.testEquivalence(event.remoteDom);
-			event.equivalenceTest = equivalenceTest.toString();
-			if (equivalenceTest.firstInequivalent != null) {
-				FormatBuilder issue = new FormatBuilder().separator("\n");
-				issue.append("-----------------------------------");
-				issue.append(event.equivalenceTest);
-				issue.append("-----------------------------------");
-				issue.append("");
-				LocalDom.log(Level.WARNING, issue.toString());
-				event.records.forEach(record -> LocalDom.log(Level.WARNING,
-						record.toString()));
-				Scheduler.get().scheduleDeferred(() -> {
-					mutations.mutationsAccess
-							.reportException(new InequivalentDomException());
-				});
-			} else {
+		}
+		if (mutations.configuration.logDoms && !hadExceptions()) {
+			if (events.size() >= clearBack) {
+				events.get(events.size() - clearBack).clearDoms();
+			}
+			testEquivalence(event);
+		}
+		events.add(event);
+	}
+
+	void checkDoms() {
+		Event event = new Event(Type.TEST, new ArrayList<>());
+		Preconditions.checkState(testEquivalence(event));
+	}
+
+	boolean testEquivalence(MutationHistory.Event event) {
+		Element documentElement = Document.get().getDocumentElement();
+		event.localDom = new MutationNode(documentElement, null,
+				mutations.mutationsAccess, true, null);
+		event.remoteDom = new MutationNode(
+				mutations.mutationsAccess.typedRemote(documentElement), null,
+				mutations.mutationsAccess, true, null);
+		EquivalenceTest equivalenceTest = event.localDom
+				.testEquivalence(event.remoteDom);
+		event.equivalenceTest = equivalenceTest.toString();
+		if (equivalenceTest.firstInequivalent != null) {
+			event.equivalenceTestFailed = true;
+			FormatBuilder issue = new FormatBuilder().separator("\n");
+			issue.append("-----------------------------------");
+			issue.append(event.equivalenceTest);
+			issue.append("-----------------------------------");
+			issue.append("");
+			LocalDom.log(Level.WARNING, issue.toString());
+			event.records.forEach(
+					record -> LocalDom.log(Level.WARNING, record.toString()));
+			Scheduler.get().scheduleDeferred(() -> {
+				mutations.setEnabled(false);
+				mutations.mutationsAccess
+						.reportException(new InequivalentDomException());
+			});
+			return false;
+		} else {
+			if (mutations.configuration.logEvents) {
 				LocalDom.log(Level.INFO, "mutation event %s - verified correct",
 						events.size());
 			}
+			return true;
 		}
-		events.add(event);
 	}
 
 	@Bean
@@ -110,6 +140,8 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			ProcessObservers.publish(MutationHistory.Event.class,
 					() -> new Event(type, records));
 		}
+
+		public boolean equivalenceTestFailed;
 
 		private Type type;
 
@@ -149,8 +181,16 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			return this.type;
 		}
 
+		public boolean isEquivalenceTestFailed() {
+			return this.equivalenceTestFailed;
+		}
+
 		public void setEquivalenceTest(String equivalenceTest) {
 			this.equivalenceTest = equivalenceTest;
+		}
+
+		public void setEquivalenceTestFailed(boolean inequivalent) {
+			this.equivalenceTestFailed = inequivalent;
 		}
 
 		public void setLocalDom(MutationNode localDom) {
@@ -169,9 +209,15 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			this.type = type;
 		}
 
+		void clearDoms() {
+			localDom = null;
+			remoteDom = null;
+			records = null;
+		}
+
 		@Reflected
 		public enum Type {
-			INIT, MUTATIONS
+			INIT, MUTATIONS, TEST
 		}
 	}
 

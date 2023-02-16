@@ -39,10 +39,6 @@ public class ElementLocal extends NodeLocal
 	ElementLocal(DocumentLocal document_Jvm, String tagName) {
 		ownerDocument = document_Jvm;
 		this.tagName = tagName;
-		Ax.err(tagName);
-		if (tagName.equalsIgnoreCase("div1")) {
-			int debug = 3;
-		}
 		if (!GWT.isScript() && GWT.isClient()) {
 			// . is legal - but gets very confusing with css, so don't permit
 			Preconditions.checkArgument(PERMITTED_TAGS.exec(tagName) != null);
@@ -490,7 +486,7 @@ public class ElementLocal extends NodeLocal
 		if (Ax.isBlank(text)) {
 		} else {
 			getChildren().clear();
-			appendChild(ownerDocument.createTextNode(text));
+			HtmlParser.appendTextNodes(ownerDocument, this, text);
 		}
 	}
 

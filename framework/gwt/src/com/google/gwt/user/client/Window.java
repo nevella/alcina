@@ -425,16 +425,6 @@ public class Window {
 	}-*/;
 
 	/**
-	 * Sets the browser window's title.
-	 *
-	 * @param title
-	 *            the new window title.
-	 */
-	public static native void setTitle(String title) /*-{
-    $doc.title = title;
-	}-*/;
-
-	/**
 	 * Adds this handler to the Window.
 	 *
 	 * @param <H>

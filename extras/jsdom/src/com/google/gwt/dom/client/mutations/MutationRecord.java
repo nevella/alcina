@@ -39,6 +39,10 @@ public class MutationRecord {
 
 	String newValue;
 
+	// for serialization
+	public MutationRecord() {
+	}
+
 	public MutationRecord(SyncMutations sync, MutationRecordJso jso) {
 		this.sync = sync;
 		this.jso = jso;
@@ -188,8 +192,8 @@ public class MutationRecord {
 		}
 		case characterData: {
 			String characterData = applyDirection == ApplyDirection.history
-					? oldValue
-					: newValue;
+					? newValue
+					: oldValue;
 			String previousValue = target.putCharacterData(applyTo,
 					characterData);
 			if (applyDirection == ApplyDirection.history_reversed) {
@@ -199,8 +203,8 @@ public class MutationRecord {
 		}
 		case attributes: {
 			String characterData = applyDirection == ApplyDirection.history
-					? oldValue
-					: newValue;
+					? newValue
+					: oldValue;
 			String previousValue = target.putAttributeData(applyTo,
 					attributeName, characterData);
 			if (applyDirection == ApplyDirection.history_reversed) {

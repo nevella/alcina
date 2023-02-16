@@ -58,7 +58,7 @@ public class LuxModule {
 
 	public void interpolateAndInject(String css) {
 		css = interpolate(css);
-		StyleInjector.injectAtEnd(css);
+		StyleInjector.inject(css);
 	}
 
 	public void setVariables(String themeProperties) {

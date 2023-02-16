@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.entity.view;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
-import com.google.gwt.user.client.Window;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
@@ -46,7 +46,7 @@ public class WindowTitleManager {
 	}
 
 	protected void updateTitle(Place place) {
-		Window.setTitle(Ax.format("%s - %s",
+		Document.get().setTitle(Ax.format("%s - %s",
 				getTitlePartFromPlace(place, defaultPlaceName), appName));
 	}
 

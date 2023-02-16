@@ -85,8 +85,8 @@ Smaller components or points of departure, again in no particular order:
 
 ##	SelectionTraversal
 
-##  Context + Process
+##  Context + Process + Frame
 
-Since Alcina is all about process, and every process loves a good [context](doc/components/context-and-process.md)
+Since Alcina is all about process, and every process loves a good [context](doc/components/context-and-process-and-frame.md)
 
 

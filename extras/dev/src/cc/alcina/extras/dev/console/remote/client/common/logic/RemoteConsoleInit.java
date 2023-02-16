@@ -2,11 +2,11 @@ package cc.alcina.extras.dev.console.remote.client.common.logic;
 
 import java.util.Collections;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
-import com.google.gwt.user.client.Window;
 
 import cc.alcina.extras.dev.console.remote.client.RemoteConsoleLayout;
 import cc.alcina.extras.dev.console.remote.client.RemoteConsoleLayout.RemoteConsoleLayoutMessage;
@@ -96,7 +96,7 @@ public class RemoteConsoleInit {
 	void handleStartupResponse(RemoteConsoleResponse response) {
 		RemoteConsoleClientImpl.models()
 				.setStartupModel(response.getStartupModel());
-		Window.setTitle(Ax.format("DevConsole - %s",
+		Document.get().setTitle(Ax.format("DevConsole - %s",
 				response.getStartupModel().getAppName()));
 	}
 }

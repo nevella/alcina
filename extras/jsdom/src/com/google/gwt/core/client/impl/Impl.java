@@ -101,7 +101,7 @@ public final class Impl {
     };
 	}-*/;
 
-    public static native String getHostPageBaseURL() /*-{
+	public static native String getHostPageBaseURL() /*-{
     var s = $doc.location.href;
 
     // Pull off any hash.
@@ -174,6 +174,10 @@ public final class Impl {
         return entryDepth > 0;
     }
 
+    public static boolean isFirstTimeClient() {
+		return firstTimeClient;
+	}
+
     /**
      * Indicates if <code>$entry</code> is present on the stack more than once.
      */
@@ -189,14 +193,14 @@ public final class Impl {
      * Implicitly called by JavaToJavaScriptCompiler.findEntryPoints().
      */
     public static native JavaScriptObject registerEntry() /*-{
-                                                          if (@com.google.gwt.core.client.GWT::isScript()()) {
-                                                          // Assignment to $entry is done by the compiler
-                                                          return @Impl::entry(*);
-                                                          } else {
-                                                          // But we have to do in in Development Mode
-                                                          return $entry = @Impl::entry(*);
-                                                          }
-                                                          }-*/;
+  if (@com.google.gwt.core.client.GWT::isScript()()) {
+  // Assignment to $entry is done by the compiler
+  return @Impl::entry(*);
+  } else {
+  // But we have to do in in Development Mode
+  return $entry = @Impl::entry(*);
+  }
+  }-*/;
 
     public static void reportUncaughtException(Throwable e) {
         if (Impl.uncaughtExceptionHandlerForTest != null) {

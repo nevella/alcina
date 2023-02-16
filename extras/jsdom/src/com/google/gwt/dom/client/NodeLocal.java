@@ -206,6 +206,9 @@ public abstract class NodeLocal implements LocalDomNode {
 		return newChild;
 	}
 
+	@Override
+	public abstract void setNodeValue(String nodeValue);
+
 	public void walk(Consumer<NodeLocal> consumer) {
 		consumer.accept(this);
 		for (int idx = 0; idx < getChildren().size(); idx++) {
