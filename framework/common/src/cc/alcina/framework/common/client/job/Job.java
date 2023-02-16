@@ -560,6 +560,10 @@ public abstract class Job extends VersionableEntity<Job>
 		return provideIsComplete() && getEndTime() != null;
 	}
 
+	public boolean provideIsConsistency() {
+		return Ax.notBlank(consistencyPriority);
+	}
+
 	public boolean provideIsException() {
 		return getResultType() == JobResultType.EXCEPTION;
 	}
