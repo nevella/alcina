@@ -840,12 +840,19 @@ public class JobRegistry {
 			if (runAt != null) {
 				Preconditions.checkArgument(initialState == JobState.FUTURE);
 			}
-			if (initialState == JobState.FUTURE_CONSISTENCY
-					&& !PermissionsManager.isSystemUser()) {
-				// raise the priority of jobs that are directly caused by
-				// non-system users
-				job.setConsistencyPriority(
-						JobDomain.DefaultConsistencyPriorities.high.toString());
+			if (initialState == JobState.FUTURE_CONSISTENCY) {
+				String consistencyPriority = JobDomain.DefaultConsistencyPriorities._default
+						.toString();
+				if (!PermissionsManager.isSystemUser()) {
+					// raise the priority of jobs that are directly caused by
+					// non-system users
+					consistencyPriority = JobDomain.DefaultConsistencyPriorities.high
+							.toString();
+				}
+				// ensure there's always a string value. This enables later
+				// consumers of job metadata to know the job was a 'consistency
+				// job', irrespective of JobState
+				job.setConsistencyPriority(consistencyPriority);
 			}
 			job.setRunAt(SEUtilities.toOldDate(runAt));
 			if (related != null) {
