@@ -186,9 +186,11 @@ public class LocalDomMutations2 {
 
 	private void syncMutations0(JsArray<MutationRecordJso> records) {
 		SyncMutations syncMutations = new SyncMutations(mutationsAccess);
+		history.currentMutations = syncMutations;
 		syncMutations.sync(records);
 		hadExceptions |= syncMutations.hadException;
 		log(Ax.format("%s records", records.length()), false);
+		history.currentMutations = null;
 	}
 
 	void log(String message, boolean error) {
@@ -208,9 +210,9 @@ public class LocalDomMutations2 {
 	}
 
 	public static class Configuration {
-		public boolean logDoms = true;
+		public boolean logDoms = false;
 
-		public boolean logEvents = true;
+		public boolean logEvents = false;
 
 		public Configuration() {
 		}

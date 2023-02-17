@@ -69,12 +69,19 @@ public class MutationNode {
 
 	private MutationsAccess access;
 
+	List<MutationRecord> records = new ArrayList<>();
+
+	private boolean parentModified;
+
 	public MutationNode() {
 	}
 
 	public MutationNode(DomNode node, SyncMutations sync,
 			LocalDom.MutationsAccess access, boolean withChildren,
 			MutationNode parent) {
+		// when syncing (not generating a tree for debugging), parent must be
+		// null
+		Preconditions.checkArgument(!(parent != null && sync != null));
 		this.node = node;
 		this.domNode = node;
 		this.sync = sync;
@@ -168,6 +175,7 @@ public class MutationNode {
 				newChild.previousSibling = predecessor;
 				insertionIndex = childNodes.indexOf(predecessor) + 1;
 			}
+			newChild.parentModified = true;
 			newChild.parent = this;
 			childNodes.add(insertionIndex, newChild);
 			break;
@@ -182,6 +190,10 @@ public class MutationNode {
 			break;
 		}
 		}
+	}
+
+	public boolean isParentModified() {
+		return this.parentModified;
 	}
 
 	public String putAttributeData(ApplyTo applyTo, String attributeName,
@@ -233,6 +245,7 @@ public class MutationNode {
 			}
 			boolean removed = childNodes.remove(node);
 			Preconditions.checkState(removed);
+			node.parentModified = true;
 			node.parent = null;
 			node.nextSibling = null;
 			node.previousSibling = null;
@@ -278,6 +291,10 @@ public class MutationNode {
 		this.nodeValue = nodeValue;
 	}
 
+	public void setParentModified(boolean parentModified) {
+		this.parentModified = parentModified;
+	}
+
 	public void setPath(String path) {
 		this.path = path;
 	}
@@ -319,6 +336,10 @@ public class MutationNode {
 				childNodes.add(child);
 			}
 		}
+	}
+
+	boolean hasRecords() {
+		return records.size() > 0;
 	}
 
 	/*

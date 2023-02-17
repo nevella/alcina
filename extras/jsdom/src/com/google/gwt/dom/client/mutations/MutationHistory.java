@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.DomNode;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
@@ -42,6 +43,8 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 	private List<MutationHistory.Event> events = new ArrayList<>();
 
 	private LocalDomMutations2 mutations;
+
+	SyncMutations currentMutations;
 
 	public MutationHistory() {
 	}
@@ -98,6 +101,16 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 	}
 
 	boolean testEquivalence(MutationHistory.Event event) {
+		long start = System.currentTimeMillis();
+		try {
+			return testEquivalence0(event);
+		} finally {
+			LocalDom.log(Level.INFO, "mutations - testEquivalence - %s ms",
+					System.currentTimeMillis() - start);
+		}
+	}
+
+	boolean testEquivalence0(MutationHistory.Event event) {
 		Element documentElement = Document.get().getDocumentElement();
 		event.localDom = new MutationNode(documentElement, null,
 				mutations.mutationsAccess, true, null);
@@ -114,6 +127,16 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			issue.append(event.equivalenceTest);
 			issue.append("-----------------------------------");
 			issue.append("");
+			if (currentMutations != null) {
+				DomNode triggeringRemote = equivalenceTest.firstInequivalent.right.domNode;
+				MutationNode mutationNodeWithRecords = currentMutations.mutationNodes
+						.get(triggeringRemote);
+				MutationRecord mutationRecord = mutationNodeWithRecords.records
+						.get(0);
+				int indexOf = event.records.indexOf(mutationRecord);
+				// TODO - add to fb
+				int debug = 3;
+			}
 			LocalDom.log(Level.WARNING, issue.toString());
 			event.records.forEach(
 					record -> LocalDom.log(Level.WARNING, record.toString()));
@@ -124,10 +147,6 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			});
 			return false;
 		} else {
-			if (mutations.configuration.logEvents) {
-				LocalDom.log(Level.INFO, "mutation event %s - verified correct",
-						events.size());
-			}
 			return true;
 		}
 	}

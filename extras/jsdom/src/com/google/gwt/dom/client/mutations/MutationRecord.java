@@ -1,8 +1,10 @@
 package com.google.gwt.dom.client.mutations;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.NodeRemote;
 
@@ -11,15 +13,20 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import elemental.json.Json;
+import elemental.json.JsonNull;
+import elemental.json.JsonObject;
+import elemental.json.JsonValue;
 
 @Bean
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
+@SuppressWarnings("deprecation")
 public class MutationRecord {
 	MutationRecordJso jso;
 
-	List<MutationNode> addedNodes;
+	List<MutationNode> addedNodes = new ArrayList<>();
 
-	List<MutationNode> removedNodes;
+	List<MutationNode> removedNodes = new ArrayList<>();
 
 	MutationNode target;
 
@@ -46,17 +53,46 @@ public class MutationRecord {
 	public MutationRecord(SyncMutations sync, MutationRecordJso jso) {
 		this.sync = sync;
 		this.jso = jso;
-		addedNodes = sync.mutationsAccess.streamRemote(jso.getAddedNodes())
-				.map(this::mutationNode).collect(Collectors.toList());
-		removedNodes = sync.mutationsAccess.streamRemote(jso.getRemovedNodes())
-				.map(this::mutationNode).collect(Collectors.toList());
-		previousSibling = mutationNode(jso.getPreviousSibling());
-		nextSibling = mutationNode(jso.getNextSibling());
 		target = mutationNode(jso.getTarget());
-		attributeName = jso.getAttributeName();
-		attributeNamespace = jso.getAttributeNamespace();
-		oldValue = jso.getOldValue();
-		type = Type.valueOf(jso.getType());
+		target.records.add(this);
+		if (GWT.isScript()) {
+			addedNodes = sync.mutationsAccess.streamRemote(jso.getAddedNodes())
+					.map(this::mutationNode).collect(Collectors.toList());
+			removedNodes = sync.mutationsAccess
+					.streamRemote(jso.getRemovedNodes()).map(this::mutationNode)
+					.collect(Collectors.toList());
+			previousSibling = mutationNode(jso.getPreviousSibling());
+			nextSibling = mutationNode(jso.getNextSibling());
+			attributeName = jso.getAttributeName();
+			attributeNamespace = jso.getAttributeNamespace();
+			oldValue = jso.getOldValue();
+			type = Type.valueOf(jso.getType());
+		} else {
+			// optimised, reduce # ws calls
+			String json = jso.getInterchangeJson();
+			JsonObject jsonObj = Json.parse(json);
+			if (jsonObj.getNumber("addedNodes") > 0) {
+				addedNodes = sync.mutationsAccess
+						.streamRemote(jso.getAddedNodes())
+						.map(this::mutationNode).collect(Collectors.toList());
+			}
+			if (jsonObj.getNumber("removedNodes") > 0) {
+				removedNodes = sync.mutationsAccess
+						.streamRemote(jso.getRemovedNodes())
+						.map(this::mutationNode).collect(Collectors.toList());
+			}
+			if (jsonObj.getNumber("previousSibling") > 0) {
+				previousSibling = mutationNode(jso.getPreviousSibling());
+			}
+			if (jsonObj.getNumber("nextSibling") > 0) {
+				// optimisation
+				// nextSibling = mutationNode(jso.getNextSibling());
+			}
+			attributeName = stringOrNull(jsonObj, "attributeName");
+			// attributeNamespace = stringOrNull(jsonObj, "attributeNamespace");
+			oldValue = stringOrNull(jsonObj, "oldValue");
+			type = Type.valueOf(jsonObj.getString("type"));
+		}
 	}
 
 	public List<MutationNode> getAddedNodes() {
@@ -75,6 +111,7 @@ public class MutationRecord {
 		return this.newValue;
 	}
 
+	// never used
 	public MutationNode getNextSibling() {
 		return this.nextSibling;
 	}
@@ -152,6 +189,7 @@ public class MutationRecord {
 		format.appendIfNotBlankKv("  next", nextSibling);
 		format.appendIfNotBlankKv("  attributeName", attributeName);
 		format.appendIfNotBlankKv("  oldValue", oldValue);
+		format.appendIfNotBlankKv("  newValue", newValue);
 		if (!addedNodes.isEmpty()) {
 			format.append("  addedNodes:");
 			addedNodes.forEach(n -> format
@@ -164,6 +202,15 @@ public class MutationRecord {
 		}
 		format.newLine();
 		return format.toString();
+	}
+
+	private String stringOrNull(JsonObject jsonObj, String string) {
+		JsonValue jsonValue = jsonObj.get(string);
+		if (jsonValue instanceof JsonNull) {
+			return null;
+		} else {
+			return jsonValue.asString();
+		}
 	}
 
 	void apply(ApplyTo applyTo) {

@@ -2,10 +2,12 @@ package com.google.gwt.dom.client.mutations;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -22,6 +24,7 @@ import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 class SyncMutations {
@@ -34,9 +37,11 @@ class SyncMutations {
 	// sync process
 	List<Element> createdLocals = new ArrayList<>();
 
-	private Set<NodeRemote> targetsOfInterest;
+	private Set<NodeRemote> applyStructuralMutations;
 
 	boolean hadException;
+
+	private Set<NodeRemote> syncedChildren;
 
 	public SyncMutations(MutationsAccess mutationsAccess) {
 		this.mutationsAccess = mutationsAccess;
@@ -50,16 +55,21 @@ class SyncMutations {
 	}
 
 	public void sync(JsArray<MutationRecordJso> records) {
+		long start = System.currentTimeMillis();
+		List<MutationRecord> recordList = null;
 		try {
 			// ensure remote is not updated
 			mutationsAccess.setReplaying(true);
-			sync0(records);
+			recordList = sync0(records);
 		} catch (RuntimeException e) {
 			hadException = true;
 			throw e;
 		} finally {
 			mutationsAccess.setReplaying(false);
+			LocalDom.log(Level.INFO, "mutations - sync - %s ms",
+					System.currentTimeMillis() - start);
 		}
+		MutationHistory.Event.publish(Type.MUTATIONS, recordList);
 	}
 
 	public NodeRemote typedRemote(Node n) {
@@ -78,7 +88,7 @@ class SyncMutations {
 				// reparse will do that, and we don't have enough information
 				// apply via mutation)
 				if (record.provideIsStructuralMutation()
-						&& !targetsOfInterest.contains(targetRemote)) {
+						&& !applyStructuralMutations.contains(targetRemote)) {
 					return;
 				}
 				record.apply(ApplyTo.local);
@@ -86,7 +96,56 @@ class SyncMutations {
 		});
 	}
 
-	private void sync0(JsArray<MutationRecordJso> records) {
+	private final native JsArray<MutationRecordJso>
+			filterForRepeatedModification(JsArray<MutationRecordJso> records)/*-{
+    //note records will be a []
+    var nodeRecord = new Map();
+    var result = [];
+    for (var idx = 0; idx < records.length; idx++) {
+      var record = records[idx];
+      var name = null;
+      if (record.type == 'childList') {
+        continue;
+      }
+      if (record.type == 'attributes') {
+        name = record.attributeName;
+      }
+      var target = record.target;
+      if (!nodeRecord.has(target)) {
+        nodeRecord.set(target, new Map());
+      }
+      var map = nodeRecord.get(target);
+      if (!map.has(name)) {
+        map.set(name, []);
+      }
+      map.get(name).push(record);
+    }
+    var result = [];
+    for (var idx = 0; idx < records.length; idx++) {
+      var record = records[idx];
+      var name = null;
+      if (record.type == 'childList') {
+        result.push(record);
+        continue;
+      }
+      if (record.type == 'attributes') {
+        name = record.attributeName;
+      }
+      var target = record.target;
+      var changes = nodeRecord.get(target).get(name);
+      var last = changes[changes.length - 1];
+      if (record == last) {
+        result.push(record);
+      }
+    }
+    return result;
+	}-*/;
+
+	private List<MutationRecord> sync0(JsArray<MutationRecordJso> records) {
+		int unfilteredLength = records.length();
+		records = filterForRepeatedModification(records);
+		LocalDom.getMutations().log(Ax.format("Syncing records :: %s/%s",
+				records.length(), unfilteredLength), false);
 		List<MutationRecordJso> recordJsoList = ClientUtils
 				.jsArrayToTypedArray(records);
 		List<MutationRecord> recordList = recordJsoList.stream()
@@ -103,7 +162,32 @@ class SyncMutations {
 		applyMutationsToLocalDom(recordList);
 		// sync added subtrees
 		createdLocals.forEach(LocalDom::syncToRemote);
-		MutationHistory.Event.publish(Type.MUTATIONS, recordList);
+		return recordList;
+	}
+
+	private void syncChildren(NodeRemote nodeRemote) {
+		MutationNode mutationNode = mutationNodes.get(nodeRemote);
+		// at each point of descent, guaranteed to exist by previous
+		// step
+		Node node = LocalDom.nodeFor(nodeRemote);
+		if (node instanceof Element) {
+			Element elem = (Element) node;
+			NodeList<Node> childNodes = elem.getChildNodes();
+			List<NodeRemote> remoteChildrenS0 = null;
+			if (mutationNode == null || mutationNode.records.isEmpty()) {
+				// unchanged since s0;
+				remoteChildrenS0 = mutationsAccess.streamChildren(nodeRemote)
+						.collect(Collectors.toList());
+			} else {
+				Preconditions.checkState(childNodes
+						.getLength() == mutationNode.childNodes.size());
+				remoteChildrenS0 = mutationNode.childNodes.stream()
+						.map(MutationNode::remoteNode)
+						.collect(Collectors.toList());
+			}
+			mutationsAccess.putRemoteChildren(elem, remoteChildrenS0);
+		}
+		syncedChildren.add(nodeRemote);
 	}
 
 	/*
@@ -113,27 +197,41 @@ class SyncMutations {
 	 * (at S0) - if they don't, do not sync. The ones that don't (proof
 	 * required) will *not* be topmost at SN
 	 *
+	 * Dot dot dot...expansion (and this requires (a) better expression and (b)
+	 * a whole algo rework)
+	 *
+	 * The nodes we care about (must change) are those in the localdom at s0,
+	 * not removed during the mutation - which corresponds to 'not a node in a
+	 * mutation subtree' - where 'mutation subtree' is 'subtrees rooted in
+	 * mutationnodes with non-null parents'.
+	 *
+	 *
+	 *
 	 */
 	private void syncTopmostMutatedIfContainedInInitialLocal() {
-		List<MutationNode> topmostMutated = mutationNodes.values().stream()
-				.filter(mn -> mn.parent == null).collect(Collectors.toList());
+		Set<MutationNode> mutationSubtreeParents = mutationNodes.values()
+				.stream().filter(MutationNode::hasRecords)
+				.filter(mn -> !mn.isParentModified())
+				.collect(Collectors.toSet());
+		Set<NodeRemote> mutationSubtreeRoots = mutationNodes.values().stream()
+				.filter(MutationNode::isParentModified)
+				.map(MutationNode::remoteNode).collect(Collectors.toSet());
 		// there won't normally be many of these - so use a fairly inefficent
 		// (but clear) ancestry algorithm
-		boolean delta = false;
-		Map<NodeRemote, NodeRemote> topmostAtSN = AlcinaCollections
+		Map<NodeRemote, NodeRemote> topmostMutationAncestorsAtSN = AlcinaCollections
 				.newUnqiueMap();
-		Map<NodeRemote, MutationNode> topmostMutatedRemotes = topmostMutated
+		Map<NodeRemote, MutationNode> mutationSubtreeParentRemotes = mutationSubtreeParents
 				.stream()
 				.collect(AlcinaCollectors.toKeyMap(MutationNode::remoteNode));
-		for (NodeRemote n1 : topmostMutatedRemotes.keySet()) {
+		for (NodeRemote n1 : mutationSubtreeParentRemotes.keySet()) {
 			NodeRemote cursor = n1;
 			while (true) {
-				if (topmostMutatedRemotes.containsKey(cursor)) {
-					topmostAtSN.put(n1, cursor);
+				if (mutationSubtreeParentRemotes.containsKey(cursor)) {
+					topmostMutationAncestorsAtSN.put(n1, cursor);
 				}
 				cursor = mutationsAccess.parentNoResolve(cursor);
 				if (cursor == null) {
-					topmostAtSN.put(n1, null);
+					topmostMutationAncestorsAtSN.put(n1, null);
 					break;
 				} else if (cursor.getNodeType() == Node.DOCUMENT_NODE) {
 					// attached
@@ -141,25 +239,36 @@ class SyncMutations {
 				}
 			}
 		}
-		targetsOfInterest = topmostAtSN.values().stream()
-				.filter(Objects::nonNull).distinct()
+		applyStructuralMutations = new LinkedHashSet<>();
+		syncedChildren = AlcinaCollections.newUniqueSet();
+		Set<NodeRemote> mutatedLinkableRoots = topmostMutationAncestorsAtSN
+				.values().stream().filter(Objects::nonNull).distinct()
 				.collect(Collectors.toSet());
-		List<MutationNode> toSync = targetsOfInterest.stream()
-				.map(topmostMutatedRemotes::get).collect(Collectors.toList());
-		toSync.forEach(mn -> {
-			NodeRemote targetRemote = mn.remoteNode();
-			Node node = LocalDom.nodeFor(targetRemote);
-			if (node instanceof Element) {
-				Element elem = (Element) node;
-				NodeList<Node> childNodes = elem.getChildNodes();
-				Preconditions.checkState(
-						childNodes.getLength() == mn.childNodes.size());
-				List<NodeRemote> remoteChildrenS0 = mn.childNodes.stream()
-						.map(MutationNode::remoteNode)
-						.collect(Collectors.toList());
-				mutationsAccess.putRemoteChildren(elem, remoteChildrenS0);
+		if (LocalDom.getMutations().history.getEvents().size() == 3) {
+			int debug = 3;
+		}
+		for (MutationNode mutationSubtreeParent : mutationSubtreeParents) {
+			NodeRemote cursor = mutationSubtreeParent.remoteNode();
+			List<NodeRemote> ancestors = new ArrayList<>();
+			boolean populateAncestors = false;
+			while (true) {
+				ancestors.add(0, cursor);
+				if (mutatedLinkableRoots.contains(cursor)) {
+					populateAncestors = true;
+					break;
+				} else if (mutationSubtreeRoots.contains(cursor)) {
+					break;
+				}
+				cursor = mutationsAccess.parentNoResolve(cursor);
+				// will terminate, no need to test (if the logic is correct)
 			}
-		});
+			if (populateAncestors) {
+				applyStructuralMutations
+						.add(mutationSubtreeParent.remoteNode());
+				ancestors.stream().filter(syncedChildren::add)
+						.forEach(this::syncChildren);
+			}
+		}
 	}
 
 	void recordLocalCreation(Node newChild) {

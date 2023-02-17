@@ -569,7 +569,9 @@ public class LocalDom {
 		// don't allow mutating ext js calls in the very first (onModuleLoad)
 		// script cycle - since disconnect/connect cycle is not setup
 		Preconditions.checkState(GWT.isScript() || !Impl.isFirstTimeClient());
-		checkDoms();
+		if (configuration.mutationLogDoms) {
+			checkDoms();
+		}
 		flush();
 		try {
 			mutations.startObserving();
@@ -1044,19 +1046,19 @@ public class LocalDom {
 	}
 
 	public static class Configuration {
-		public boolean mutationLogDoms = true;
+		public boolean mutationLogDoms;
 
-		public boolean mutationLogEvents = true;
+		public boolean mutationLogEvents;
 
-		public boolean logEvents = true;
+		public boolean logEvents;
 
-		public boolean logHistoryOnEception = true;
+		public boolean logHistoryOnEception;
 
 		public Configuration() {
 			mutationLogDoms = ClientProperties.is(LocalDom.class,
 					"mutationLogDoms", true);
 			mutationLogEvents = ClientProperties.is(LocalDom.class,
-					"mutationLogEvents", false);
+					"mutationLogEvents", true);
 			logEvents = ClientProperties.is(LocalDom.class, "logEvents", true);
 			logHistoryOnEception = ClientProperties.is(LocalDom.class,
 					"logHistoryOnEception", true);

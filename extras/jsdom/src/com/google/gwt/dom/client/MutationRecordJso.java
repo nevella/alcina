@@ -18,6 +18,21 @@ public class MutationRecordJso extends JavaScriptObject {
     return this.attributeNamespace;
 	}-*/;
 
+	public final native String getInterchangeJson() /*-{
+
+    var obj = {
+      addedNodes : this.addedNodes.length,
+      attributeName : this.attributeName,
+      attributeNamespace : this.aattributeNamespace,
+      type : this.type,
+      nextSibling : this.nextSibling == null ? 0 : 1,
+      oldValue : this.oldValue,
+      previousSibling : this.previousSibling == null ? 0 : 1,
+      removedNodes : this.removedNodes.length
+    };
+    return JSON.stringify(obj);
+	}-*/;
+
 	public final MutationRecordType getMutationRecordType() {
 		return MutationRecordType.valueOf(getType());
 	}

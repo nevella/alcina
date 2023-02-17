@@ -364,8 +364,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 		GWT.setBridge(new GWTBridgeHeadless());
 		JsonUtil.FAST_STRINGIFY = true;
-		Document.registerContextProvider(DocumentContextProviderImpl.get());
-		LocalDom.initalize();
 	}
 
 	protected abstract void initContainerBridge();
@@ -512,6 +510,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					.setServletLayerClassloader(getClass().getClassLoader());
 			EntityLayerObjects.get()
 					.setServletLayerRegistry(servletLayerRegistry);
+			Document.registerContextProvider(DocumentContextProviderImpl.get());
+			LocalDom.initalize();
 		} catch (Exception e) {
 			logger.warn("", e);
 		} finally {
