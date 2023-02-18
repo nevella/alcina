@@ -22,8 +22,35 @@
  * <li>Probably each op should call through a pipeline/router ('appendChild'
  * calls 'mutate(()->appendChild)' - can ignore if in mutation replay mode
  * </ul>
- * <li>Mutation application sketch: (assume mutations are of type childList)
  * </ul>
+ *
+ * <h2>Status</h2>
+ * <p>
+ * The above goals are implemented and function correctly. With some minor
+ * exceptions, the local dom tree is an exact mirror of the remote dom tree, in
+ * the presence of arbitrary ex-local-dom (e.g. Chrome extension, external js)
+ * dom mutatoins.
+ *
+ * <p>
+ *
+ * <h3>Performance</h3>
+ *
+ * <h3>Flags</h3>
+ *
+ * <pre>
+ * <code>
+ * (log events and metrics)
+ * /set-client-property/LocalDom/mutationLogEvents/true
+ * (log local + remote dom with each event, verify)
+ * /set-client-property/LocalDom/mutationLogDoms/true
+ * </code>
+ * </pre>
+ *
+ * <h3>Exceptions</h3>
+ * <p>
+ * Exceptions are emitted with debug info (mutation history, dumps of local and
+ * remote doms). Note that the history is indefinite - FIXME dirndl 1x3 cap at
+ * 100k filtered mutation records (a *lot*)
  *
  * <pre>
  * <code>

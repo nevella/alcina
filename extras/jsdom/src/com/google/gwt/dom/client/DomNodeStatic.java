@@ -47,11 +47,17 @@ class DomNodeStatic {
 
 	static Node insertAfter(DomNode domNode, Node newChild, Node refChild) {
 		assert (newChild != null) : "Cannot add a null child node";
-		Node next = (refChild == null) ? null : refChild.getNextSibling();
-		if (next == null) {
-			return domNode.appendChild(newChild);
+		if (refChild == null) {
+			// insert at start
+			Node firstChild = domNode.getFirstChild();
+			return domNode.insertBefore(newChild, firstChild);
 		} else {
-			return domNode.insertBefore(newChild, next);
+			Node next = refChild.getNextSibling();
+			if (next == null) {
+				return domNode.appendChild(newChild);
+			} else {
+				return domNode.insertBefore(newChild, next);
+			}
 		}
 	}
 

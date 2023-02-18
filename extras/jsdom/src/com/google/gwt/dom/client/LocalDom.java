@@ -21,7 +21,7 @@ import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.ElementRemote.ContiguousTextNodes;
 import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
-import com.google.gwt.dom.client.mutations.LocalDomMutations2;
+import com.google.gwt.dom.client.mutations.LocalDomMutations;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.LocalDomDebug;
 
@@ -77,13 +77,9 @@ public class LocalDom {
 
 	public static int maxCharsPerTextNode = 65536;
 
-	public static void checkDoms() {
-		get().mutations.checkDoms();
-	};
-
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
-	}
+	};
 
 	public static void ensureRemote(Node node) {
 		get().ensureRemote0(node);
@@ -105,7 +101,7 @@ public class LocalDom {
 		get().resolve0();
 	}
 
-	public static LocalDomMutations2 getMutations() {
+	public static LocalDomMutations getMutations() {
 		return get().mutations;
 	}
 
@@ -195,8 +191,21 @@ public class LocalDom {
 				element.typedRemote().getOuterHtml(), element);
 	}
 
+	public static void triggerLocalDomException() {
+		topicReportException.publish(new Exception("test exception trigger"));
+	}
+
 	public static String validateHtml(String html) {
 		return get().validateHtml0(html);
+	}
+
+	public static void verifyDomEquivalence() {
+		try {
+			get().mutations.verifyDomEquivalence();
+		} catch (Exception e) {
+			e.printStackTrace();
+			topicReportException.publish(e);
+		}
 	}
 
 	private static native void consoleLog(String message, boolean error) /*-{
@@ -298,7 +307,7 @@ public class LocalDom {
 
 	boolean replaying;
 
-	LocalDomMutations2 mutations;
+	LocalDomMutations mutations;
 
 	private Configuration configuration;
 
@@ -475,7 +484,7 @@ public class LocalDom {
 		linkRemote(docRemote, doc);
 		nodeFor0(docRemote.getDocumentElement0());
 		mutations = GWT.isClient()
-				? new LocalDomMutations2(new MutationsAccess(),
+				? new LocalDomMutations(new MutationsAccess(),
 						configuration.asMutationsConfiguration())
 				: null;
 	}
@@ -570,7 +579,7 @@ public class LocalDom {
 		// script cycle - since disconnect/connect cycle is not setup
 		Preconditions.checkState(GWT.isScript() || !Impl.isFirstTimeClient());
 		if (configuration.mutationLogDoms) {
-			checkDoms();
+			verifyDomEquivalence();
 		}
 		flush();
 		try {
@@ -1059,14 +1068,15 @@ public class LocalDom {
 			mutationLogDoms = ClientProperties.is(LocalDom.class,
 					"mutationLogDoms", false);
 			mutationLogEvents = ClientProperties.is(LocalDom.class,
-					"mutationLogEvents", true);
-			logEvents = ClientProperties.is(LocalDom.class, "logEvents", true);
+					"mutationLogEvents", !GWT.isScript());
+			logEvents = ClientProperties.is(LocalDom.class, "logEvents",
+					!GWT.isScript());
 			logHistoryOnEception = ClientProperties.is(LocalDom.class,
 					"logHistoryOnEception", true);
 		}
 
-		public LocalDomMutations2.Configuration asMutationsConfiguration() {
-			LocalDomMutations2.Configuration result = new LocalDomMutations2.Configuration();
+		public LocalDomMutations.Configuration asMutationsConfiguration() {
+			LocalDomMutations.Configuration result = new LocalDomMutations.Configuration();
 			result.logDoms = mutationLogDoms;
 			result.logEvents = mutationLogEvents;
 			return result;

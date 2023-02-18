@@ -42,14 +42,14 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 	private List<MutationHistory.Event> events = new ArrayList<>();
 
-	private LocalDomMutations2 mutations;
+	private LocalDomMutations mutations;
 
 	SyncMutations currentMutations;
 
 	public MutationHistory() {
 	}
 
-	public MutationHistory(LocalDomMutations2 mutations) {
+	public MutationHistory(LocalDomMutations mutations) {
 		this.mutations = mutations;
 		if (mutations.configuration.provideIsObserveHistory()) {
 			ProcessObservers.observe(this, true);
@@ -95,7 +95,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		events.add(event);
 	}
 
-	void checkDoms() {
+	void verifyDomEquivalence() {
 		Event event = new Event(Type.TEST, new ArrayList<>());
 		Preconditions.checkState(testEquivalence(event));
 	}
