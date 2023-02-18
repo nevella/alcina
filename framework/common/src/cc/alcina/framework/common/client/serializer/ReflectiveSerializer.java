@@ -55,7 +55,6 @@ import elemental.json.JsonObject;
 import elemental.json.JsonString;
 import elemental.json.JsonType;
 import elemental.json.JsonValue;
-import elemental.json.impl.JsonUtil;
 
 /**
  * <p>
@@ -117,6 +116,12 @@ import elemental.json.impl.JsonUtil;
  *
  * <p>
  * FIXME - dirndl 1x1d - use a ringbuffer (and fix ringbuffer rotation)
+ *
+ * <p>
+ * Also - it looks like script mode the jrejson objects are still used? Commit
+ * c90d2608a825704a155778b05a0d54e6a0257775 (or a few earlier) introduced an
+ * explicit isscript call during pretty json toString() which got us there - but
+ * there are casting and false/null issues in that branch - WIP basically
  *
  * @author nick@alcina.cc
  */
@@ -205,7 +210,7 @@ public class ReflectiveSerializer {
 		if (!options.topLevelTypeInfo) {
 			out = root.getChild(1);
 		}
-		return out.toJson(options.pretty);
+		return out.toJson();
 	}
 
 	static TypeSerializerLocation resolveSerializer(Class clazz) {
@@ -478,7 +483,7 @@ public class ReflectiveSerializer {
 		}
 
 		boolean elideTypeInfo(Class<? extends Object> clazz) {
-			return !typeInfo || elideTypeInfo.contains(clazz);
+			return elideTypeInfo.contains(clazz);
 		}
 	}
 
@@ -879,16 +884,13 @@ public class ReflectiveSerializer {
 		}
 
 		@Override
-		public String toJson(boolean pretty) {
-			// FIXME - dirndl 1x2 - extend jsonValue.toJson, remove GWT.isScript
-			// check
-			return pretty && !GWT.isScript() ? JsonUtil.stringify(jsonValue, 2)
-					: jsonValue.toJson();
+		public String toJson() {
+			return jsonValue.toJson();
 		}
 
 		@Override
 		public String toString() {
-			return toJson(true);
+			return toJson();
 		}
 
 		@Override
@@ -1049,7 +1051,7 @@ public class ReflectiveSerializer {
 
 		Object readValue(GraphNode node);
 
-		String toJson(boolean pretty);
+		String toJson();
 
 		void write(GraphNode node, Object value);
 
