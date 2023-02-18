@@ -13,6 +13,7 @@ import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -348,6 +349,13 @@ public class ReflectiveSerializer {
 	}
 
 	public static class DeserializerOptions {
+		private boolean defaultCollectionTypes;
+
+		public DeserializerOptions
+				withDefaultCollectionTypes(boolean defaultCollectionTypes) {
+			this.defaultCollectionTypes = defaultCollectionTypes;
+			return this;
+		}
 	}
 
 	public interface ReflectiveSerializable {
@@ -980,6 +988,16 @@ public class ReflectiveSerializer {
 					.solePossibleImplementation(type);
 			if (exactType != null) {
 				exactTypeNode = state.typeNode(exactType);
+			}
+			if (state.deserializerOptions != null
+					&& state.deserializerOptions.defaultCollectionTypes) {
+				if (type == List.class) {
+					exactTypeNode = state.typeNode(ArrayList.class);
+				} else if (type == Map.class) {
+					exactTypeNode = state.typeNode(LinkedHashMap.class);
+				} else if (type == Set.class) {
+					exactTypeNode = state.typeNode(LinkedHashSet.class);
+				}
 			}
 			propertySerialization = property
 					.annotation(PropertySerialization.class);

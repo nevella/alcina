@@ -21,6 +21,7 @@ import com.google.gwt.dom.client.NodeRemote;
 import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
@@ -38,7 +39,7 @@ import cc.alcina.framework.common.client.util.UrlComponentEncoder;
  */
 @Bean
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
-public class MutationNode {
+public final class MutationNode {
 	DomNode domNode;
 
 	short nodeType;
@@ -133,10 +134,12 @@ public class MutationNode {
 		}
 	}
 
+	@PropertySerialization(types = String.class)
 	public Map<String, String> getAttributes() {
 		return this.attributes;
 	}
 
+	@PropertySerialization(types = MutationNode.class)
 	public List<MutationNode> getChildNodes() {
 		return this.childNodes;
 	}

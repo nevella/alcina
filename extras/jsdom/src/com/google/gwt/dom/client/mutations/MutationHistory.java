@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -60,6 +61,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		}
 	}
 
+	@PropertySerialization(types = MutationHistory.Event.class)
 	public List<MutationHistory.Event> getEvents() {
 		return this.events;
 	}
@@ -199,6 +201,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			return this.localDom;
 		}
 
+		@PropertySerialization(types = MutationRecord.class)
 		public List<MutationRecord> getRecords() {
 			return this.records;
 		}

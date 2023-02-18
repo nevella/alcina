@@ -10,6 +10,7 @@ import com.google.gwt.dom.client.NodeRemote;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -102,6 +103,7 @@ public class MutationRecord {
 		}
 	}
 
+	@PropertySerialization(types = MutationNode.class)
 	public List<MutationNode> getAddedNodes() {
 		return this.addedNodes;
 	}
@@ -131,6 +133,7 @@ public class MutationRecord {
 		return this.previousSibling;
 	}
 
+	@PropertySerialization(types = MutationNode.class)
 	public List<MutationNode> getRemovedNodes() {
 		return this.removedNodes;
 	}
