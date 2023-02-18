@@ -59,7 +59,7 @@ public class JavascriptInjector {
     var head = $doc.head;
     var script = $doc.createElement("script");
     script.language = "javascript";
-    script.innerText = javascript;
+    script.text = javascript;
     head.appendChild(script);
 	}-*/;
 }

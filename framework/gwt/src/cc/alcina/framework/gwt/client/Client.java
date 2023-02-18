@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client;
 import java.util.Objects;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
@@ -124,6 +125,13 @@ public abstract class Client {
 		public static long startTime;
 
 		private static boolean complete;
+
+		public static void init() {
+			preRegistry();
+			registry();
+			// initialise localdom, mutations
+			Document.get();
+		}
 
 		public static boolean isComplete() {
 			return Init.complete;

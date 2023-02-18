@@ -76,8 +76,8 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 	}
 
 	public String serialize() {
-		SerializerOptions options = new ReflectiveSerializer.SerializerOptions()
-				.withElideDefaults(true).withTypeInfo(false).withPretty(true);
+		SerializerOptions options = new ReflectiveSerializer.SerializerOptions();
+		// .withElideDefaults(true).withTypeInfo(false).withPretty(true);
 		return ReflectiveSerializer.serialize(this, options);
 	}
 
