@@ -205,6 +205,10 @@ class SyncMutations {
 	 * mutation subtree' - where 'mutation subtree' is 'subtrees rooted in
 	 * mutationnodes with non-null parents'.
 	 *
+	 * FIXME - dirndl 1x3 - this is the part of code that required the most
+	 * revision, and is slightly out of sync with the algorithm described in the
+	 * package doc
+	 *
 	 *
 	 *
 	 */

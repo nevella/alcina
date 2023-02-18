@@ -18,6 +18,13 @@ import elemental.json.JsonNull;
 import elemental.json.JsonObject;
 import elemental.json.JsonValue;
 
+/**
+ * Devmode-friendly (faster) representations of browser MutationRecordJso
+ * objects
+ *
+ * @author nick@alcina.cc
+ *
+ */
 @Bean
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 @SuppressWarnings("deprecation")

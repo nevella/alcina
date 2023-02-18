@@ -13,7 +13,7 @@ import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 @TypeSerialization(flatSerializable = false)
-public class TaskPublish extends ServerTask<TaskPublish>
+public class TaskPublish extends ServerTask
 		implements ServletAwaitTask {
 	private ContentRequestBase publicationRequest;
 
@@ -64,7 +64,7 @@ public class TaskPublish extends ServerTask<TaskPublish>
 	}
 
 	@Override
-	protected void performAction0(TaskPublish task) throws Exception {
+	public void run() throws Exception {
 		PublicationResult result = null;
 		IUser user = JobContext.get().getJob().getUser();
 		if (user == UserlandProvider.get().getSystemUser()) {

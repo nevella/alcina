@@ -13,7 +13,7 @@ import cc.alcina.framework.servlet.domain.view.LiveTree.ProcessLoggerImpl;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskPeristDomainViewLog
-		extends ServerTask<TaskPeristDomainViewLog> {
+		extends ServerTask {
 	private EntityLocator rootEntity;
 
 	public transient ProcessLoggerImpl processLoggerImpl;
@@ -23,7 +23,7 @@ public class TaskPeristDomainViewLog
 	}
 
 	@Override
-	public void performAction0(TaskPeristDomainViewLog task) throws Exception {
+	public void run() throws Exception {
 		Function<LiveTree, String> lambda = liveTree -> {
 			return liveTree.persistProcessLog();
 		};

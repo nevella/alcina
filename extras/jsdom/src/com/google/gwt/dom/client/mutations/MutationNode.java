@@ -378,7 +378,6 @@ public class MutationNode {
 				if (cursor.shallowInequivalent()) {
 					cursor.firstInequivalent = cursor;
 					firstInequivalent = cursor;
-					int debug = 3;
 					break;
 				} else {
 					int length = cursor.left.childNodes.size();

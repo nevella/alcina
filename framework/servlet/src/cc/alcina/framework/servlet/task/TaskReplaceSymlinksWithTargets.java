@@ -12,7 +12,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskReplaceSymlinksWithTargets
-		extends ServerTask<TaskReplaceSymlinksWithTargets> {
+		extends ServerTask {
 	private String root;
 
 	public String getRoot() {
@@ -24,7 +24,7 @@ public class TaskReplaceSymlinksWithTargets
 	}
 
 	@Override
-	protected void performAction0(TaskReplaceSymlinksWithTargets task)
+	public void run()
 			throws Exception {
 		Files.walkFileTree(Paths.get(root), new SimpleFileVisitor<Path>() {
 			@Override

@@ -8,6 +8,10 @@ import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
+/*
+ * Used to transfer transient (because possibly too large to serialize) tasks to
+ * the receiving handler across threads
+ */
 @Registration.Singleton
 public class TransientFieldTasks {
 	public static TransientFieldTasks get() {

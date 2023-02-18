@@ -147,7 +147,7 @@ public class TaskGenerateTreeSerializableSignatures extends ServerTask {
 	}
 
 	@Override
-	protected void performAction0(Task task) throws Exception {
+	public void run() throws Exception {
 		List<TreeSerializable> serializables = Registry
 				.query(TreeSerializable.class).implementations()
 				.sorted(Comparator.comparing(c -> c.getClass().getName()))

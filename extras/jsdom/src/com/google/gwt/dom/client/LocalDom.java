@@ -199,12 +199,20 @@ public class LocalDom {
 		return get().validateHtml0(html);
 	}
 
-	public static void verifyDomEquivalence() {
+	public static void verifyDomEquivalence(boolean fromUserGesture) {
+		boolean logEvents = get().configuration.logEvents;
 		try {
+			if (fromUserGesture) {
+				get().configuration.logEvents = true;
+			}
 			get().mutations.verifyDomEquivalence();
 		} catch (Exception e) {
 			e.printStackTrace();
 			topicReportException.publish(e);
+		} finally {
+			if (fromUserGesture) {
+				get().configuration.logEvents = logEvents;
+			}
 		}
 	}
 
@@ -579,7 +587,7 @@ public class LocalDom {
 		// script cycle - since disconnect/connect cycle is not setup
 		Preconditions.checkState(GWT.isScript() || !Impl.isFirstTimeClient());
 		if (configuration.mutationLogDoms) {
-			verifyDomEquivalence();
+			verifyDomEquivalence(false);
 		}
 		flush();
 		try {

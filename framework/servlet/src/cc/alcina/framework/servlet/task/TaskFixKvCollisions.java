@@ -13,9 +13,9 @@ import cc.alcina.framework.entity.persistence.KeyValuePersistent;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskFixKvCollisions extends ServerTask<TaskFixKvCollisions> {
+public class TaskFixKvCollisions extends ServerTask {
 	@Override
-	protected void performAction0(TaskFixKvCollisions task) throws Exception {
+	public void run() throws Exception {
 		Class<? extends KeyValuePersistent> impl = PersistentImpl
 				.getImplementation(KeyValuePersistent.class);
 		Multimap<String, List<KeyValuePersistent>> byKey = Domain.stream(impl)

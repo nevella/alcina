@@ -35,7 +35,7 @@ import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskRefactorRegistrations
-		extends ServerTask<TaskRefactorRegistrations> {
+		extends ServerTask {
 	private boolean overwriteOriginals;
 
 	private String classPathList;
@@ -97,7 +97,7 @@ public class TaskRefactorRegistrations
 	}
 
 	@Override
-	protected void performAction0(TaskRefactorRegistrations task)
+	public void run()
 			throws Exception {
 		ClassOrInterfaceDeclarationWrapper.evaluateSuperclassFqn = false;
 		StringMap classPaths = StringMap.fromStringList(classPathList);

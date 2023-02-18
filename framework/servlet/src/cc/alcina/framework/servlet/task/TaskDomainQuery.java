@@ -178,7 +178,7 @@ public class TaskDomainQuery extends ServerTask {
 	}
 
 	@Override
-	protected void performAction0(Task task) throws Exception {
+	public void run() throws Exception {
 		Entity entity = from.find();
 		if (resultPaths == null) {
 			resultPaths = List.of("*");

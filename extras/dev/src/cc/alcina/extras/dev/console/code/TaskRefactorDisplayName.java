@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskRefactorDisplayName
-		extends ServerTask<TaskRefactorDisplayName> {
+		extends ServerTask {
 	private boolean overwriteOriginals;
 
 	private String classPathList;
@@ -92,7 +92,7 @@ public class TaskRefactorDisplayName
 	}
 
 	@Override
-	protected void performAction0(TaskRefactorDisplayName task)
+	public void run()
 			throws Exception {
 		StringMap classPaths = StringMap.fromStringList(classPathList);
 		SingletonCache<CompilationUnits> cache = FsObjectCache

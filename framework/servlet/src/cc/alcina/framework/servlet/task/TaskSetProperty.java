@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.task;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskSetProperty extends ServerTask<TaskSetProperty> {
+public class TaskSetProperty extends ServerTask {
 	private String key;
 
 	private String value;
@@ -12,24 +12,22 @@ public class TaskSetProperty extends ServerTask<TaskSetProperty> {
 		return this.key;
 	}
 
-	@Override
 	public String getValue() {
 		return this.value;
+	}
+
+	@Override
+	public void run() throws Exception {
+		String existing = ResourceUtilities.set(key, value);
+		logger.info("TaskSetProperty - {} - '{}' => '{}'", key, existing,
+				value);
 	}
 
 	public void setKey(String key) {
 		this.key = key;
 	}
 
-	@Override
 	public void setValue(String value) {
 		this.value = value;
-	}
-
-	@Override
-	protected void performAction0(TaskSetProperty task) throws Exception {
-		String existing = ResourceUtilities.set(key, value);
-		logger.info("TaskSetProperty - {} - '{}' => '{}'", key, existing,
-				value);
 	}
 }

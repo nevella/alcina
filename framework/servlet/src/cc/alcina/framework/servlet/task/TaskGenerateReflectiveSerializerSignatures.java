@@ -16,7 +16,6 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.GwtTransient;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
-import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -30,6 +29,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -75,7 +75,7 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 	}
 
 	@Override
-	public void performAction0(Task task) throws Exception {
+	public void run() throws Exception {
 		MethodContext.instance()
 				.withMetricKey("TaskGenerateReflectiveSerializerSignatures")
 				.run(this::performAction1);
@@ -110,6 +110,16 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 	}
 
 	private void checkSerializationIssues(Class<?> clazz) {
+		try {
+			checkSerializationIssues0(clazz);
+		} catch (Exception e) {
+			e.printStackTrace();
+			serializationIssues.add(Ax.format("%s - %s", clazz.getSimpleName(),
+					CommonUtils.toSimpleExceptionMessage(e)));
+		}
+	}
+
+	private void checkSerializationIssues0(Class<?> clazz) {
 		if (clazz.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
 			if (clazz.getAnnotation(ReflectiveSerializer.Checks.class)
 					.ignore()) {

@@ -11,9 +11,9 @@ import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFactory;
 
-public class TaskReapProcessLogs extends ServerTask<TaskReapProcessLogs> {
+public class TaskReapProcessLogs extends ServerTask {
 	@Override
-	protected void performAction0(TaskReapProcessLogs task) throws Exception {
+	public void run() throws Exception {
 		List<String> omittedFolders = Arrays
 				.asList(ResourceUtilities.get("omit").split(","));
 		Registry.query(ProcessLogFolder.class).implementations()

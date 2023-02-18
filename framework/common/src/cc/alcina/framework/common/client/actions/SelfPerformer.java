@@ -13,25 +13,21 @@
  */
 package cc.alcina.framework.common.client.actions;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
 /**
  *
+ * <p>
+ * SelfPerformer exposes methods for processing a task outside a JobContext -
+ * call run() (or performAction()) directly on them to bypass the Job system -
+ * perform() will execute in a job context
+ *
  * @author Nick Reddel
  */
-public interface SelfPerformer<T extends Task>
-		extends Task, TaskPerformer<T>, Runnable {
-	default void performSelf() {
-		try {
-			performAction(null);
-		} catch (Exception e) {
-			throw WrappedRuntimeException.wrap(e);
-		}
-	}
-
+public interface SelfPerformer extends Task, TaskPerformer, ThrowingRunnable {
 	@Override
-	default void run() {
-		perform();
+	default void performAction(Task task) throws Exception {
+		run();
 	}
 }

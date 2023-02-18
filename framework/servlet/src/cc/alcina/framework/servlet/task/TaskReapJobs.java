@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -21,13 +20,10 @@ import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFactory;
 
-public class TaskReapJobs extends ServerTask<TaskReapJobs> {
+public class TaskReapJobs extends ServerTask {
 	@Override
-	protected void performAction0(TaskReapJobs task) throws Exception {
+	public void run() throws Exception {
 		Stream<? extends Job> jobs = JobDomain.get().getAllJobs();
-		if (Ax.notBlank(value)) {
-			jobs = Stream.of(Job.byId(Long.valueOf(value)));
-		}
 		AtomicInteger counter = new AtomicInteger(0);
 		AtomicInteger reaped = new AtomicInteger(0);
 		AtomicInteger exceptions = new AtomicInteger(0);

@@ -13,12 +13,12 @@ import cc.alcina.framework.servlet.test.job.TaskTestBackendQueues.TaskTestSubjob
 
 /**
  */
-public class TaskTestBackendQueues extends ServerTask<TaskTestBackendQueues> {
+public class TaskTestBackendQueues extends ServerTask {
 	public TaskTestBackendQueues() {
 	}
 
 	@Override
-	public void performAction0(TaskTestBackendQueues task) throws Exception {
+	public void run() throws Exception {
 		testBackendTransformQueue();
 	}
 
@@ -27,7 +27,7 @@ public class TaskTestBackendQueues extends ServerTask<TaskTestBackendQueues> {
 				.forEach(tt -> new TaskTestSubjob().withType(tt).perform());
 	}
 
-	public static class TaskTestSubjob extends ServerTask<TaskTestSubjob> {
+	public static class TaskTestSubjob extends ServerTask {
 		private TestType type;
 
 		public TestType getType() {
@@ -76,7 +76,7 @@ public class TaskTestBackendQueues extends ServerTask<TaskTestBackendQueues> {
 		}
 
 		@Override
-		protected void performAction0(TaskTestSubjob task) throws Exception {
+		public void run() throws Exception {
 			Ax.sysLogHigh("Performing subjob test: %s", type);
 			JobContext.setEnqueueProgressOnBackend(true);
 			switch (type) {

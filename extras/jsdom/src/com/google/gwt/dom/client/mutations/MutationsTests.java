@@ -24,6 +24,13 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagTextModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+/**
+ * A set of tests that mutate the dom in different ways, and validate the
+ * localdom is updated correctly
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class MutationsTests {
 	static boolean hadException = false;
 

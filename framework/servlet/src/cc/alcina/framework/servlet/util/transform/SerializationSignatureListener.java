@@ -55,7 +55,7 @@ public class SerializationSignatureListener
 							/*
 							 * NOT perform()
 							 */
-							task.performSelf();
+							task.run();
 						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {

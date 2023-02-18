@@ -25,20 +25,24 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOr
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 /*
- * @formatter:off
+ * This class (which is client-serializable) should provide enough info to
+ * reproduce an issue for debugging, bearing in mind memory constraints.
  *
- * - list of MutationEvents
- * - controlled by ldm2.config.observe [init, events, check_dom]
- * - if init, intercept init (and get initial local, remote MutationNode trees)
- * - if events,
- *
- * @formatter:on
+ * It's basically an event processor and collector, delegating most of the
+ * actual application of a mutation event to SyncMutations
  */
 @Bean
 public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 	// ensure we don't OOM with dom logging, but have playback info for
 	// debugging
-	private static int clearBack = 3;
+	private static final int RETAIN_AT_MOST_DOM_COUNT = 3;
+
+	// don't go crazy here
+	private static final int RETAIN_AT_MOST_EVENT_COUNT = 30000;
+
+	private int clearedEventsIdx = -1;
+
+	private int totalRecordCount = 0;
 
 	private List<MutationHistory.Event> events = new ArrayList<>();
 
@@ -86,18 +90,21 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 					"mutation event %s - %s - received - %s mutations",
 					events.size(), event.type, event.records.size());
 		}
+		events.add(event);
 		if (mutations.configuration.logDoms && !hadExceptions()) {
-			if (events.size() >= clearBack) {
-				events.get(events.size() - clearBack).clearDoms();
+			if (events.size() > RETAIN_AT_MOST_DOM_COUNT) {
+				// always retain dom0
+				events.get(events.size() - RETAIN_AT_MOST_DOM_COUNT)
+						.clearDoms();
 			}
 			testEquivalence(event);
 		}
-		events.add(event);
-	}
-
-	void verifyDomEquivalence() {
-		Event event = new Event(Type.TEST, new ArrayList<>());
-		Preconditions.checkState(testEquivalence(event));
+		totalRecordCount += event.records.size();
+		while (totalRecordCount > RETAIN_AT_MOST_EVENT_COUNT) {
+			Event cursor = events.get(++clearedEventsIdx);
+			totalRecordCount -= cursor.getRecords().size();
+			cursor.getRecords().clear();
+		}
 	}
 
 	boolean testEquivalence(MutationHistory.Event event) {
@@ -134,8 +141,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 				MutationRecord mutationRecord = mutationNodeWithRecords.records
 						.get(0);
 				int indexOf = event.records.indexOf(mutationRecord);
-				// TODO - add to fb
-				int debug = 3;
+				issue.format("Triggering record idx: %s", indexOf);
 			}
 			LocalDom.log(Level.WARNING, issue.toString());
 			event.records.forEach(
@@ -149,6 +155,11 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		} else {
 			return true;
 		}
+	}
+
+	void verifyDomEquivalence() {
+		Event event = new Event(Type.TEST, new ArrayList<>());
+		Preconditions.checkState(testEquivalence(event));
 	}
 
 	@Bean

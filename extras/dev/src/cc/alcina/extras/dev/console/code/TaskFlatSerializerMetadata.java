@@ -59,7 +59,7 @@ import cc.alcina.framework.entity.util.SerializationStrategy.SerializationStrate
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskFlatSerializerMetadata
-		extends ServerTask<TaskFlatSerializerMetadata> {
+		extends ServerTask {
 	private boolean overwriteOriginals;
 
 	private String classPathList;
@@ -312,7 +312,7 @@ public class TaskFlatSerializerMetadata
 	}
 
 	@Override
-	protected void performAction0(TaskFlatSerializerMetadata task)
+	public void run()
 			throws Exception {
 		StringMap classPaths = StringMap.fromStringList(classPathList);
 		SingletonCache<CompilationUnits> cache = FsObjectCache

@@ -640,8 +640,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					// FIXME - startup - this
 					// is never performed scheduled if run as a job - probably
 					// an interplay with the signature generation? Fix it anyway
-					new TaskGenerateReflectiveSerializerSignatures()
-							.performAction0(null);
+					new TaskGenerateReflectiveSerializerSignatures().run();
 				} else {
 					new TaskGenerateReflectiveSerializerSignatures().schedule();
 					Transaction.commit();
