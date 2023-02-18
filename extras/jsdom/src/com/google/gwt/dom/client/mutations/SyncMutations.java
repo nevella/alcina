@@ -150,7 +150,7 @@ class SyncMutations {
 				.jsArrayToTypedArray(records);
 		List<MutationRecord> recordList = recordJsoList.stream()
 				.map(jso -> new MutationRecord(this, jso))
-				.collect(Collectors.toList());
+				.filter(this::isApplicable).collect(Collectors.toList());
 		// create inverse tree
 		List<MutationRecord> reversed = new ArrayList<>(recordList);
 		Collections.reverse(reversed);
@@ -223,15 +223,20 @@ class SyncMutations {
 		Map<NodeRemote, MutationNode> mutationSubtreeParentRemotes = mutationSubtreeParents
 				.stream()
 				.collect(AlcinaCollectors.toKeyMap(MutationNode::remoteNode));
-		for (NodeRemote n1 : mutationSubtreeParentRemotes.keySet()) {
-			NodeRemote cursor = n1;
+		for (NodeRemote node : mutationSubtreeParentRemotes.keySet()) {
+			NodeRemote cursor = node;
 			while (true) {
+				// TODO - optimise 'exclude' check
+				if (cursor.getNodeName().equalsIgnoreCase("TITLE")) {
+					topmostMutationAncestorsAtSN.put(node, null);
+					break;
+				}
 				if (mutationSubtreeParentRemotes.containsKey(cursor)) {
-					topmostMutationAncestorsAtSN.put(n1, cursor);
+					topmostMutationAncestorsAtSN.put(node, cursor);
 				}
 				cursor = mutationsAccess.parentNoResolve(cursor);
 				if (cursor == null) {
-					topmostMutationAncestorsAtSN.put(n1, null);
+					topmostMutationAncestorsAtSN.put(node, null);
 					break;
 				} else if (cursor.getNodeType() == Node.DOCUMENT_NODE) {
 					// attached
@@ -244,11 +249,12 @@ class SyncMutations {
 		Set<NodeRemote> mutatedLinkableRoots = topmostMutationAncestorsAtSN
 				.values().stream().filter(Objects::nonNull).distinct()
 				.collect(Collectors.toSet());
-		if (LocalDom.getMutations().history.getEvents().size() == 3) {
-			int debug = 3;
-		}
 		for (MutationNode mutationSubtreeParent : mutationSubtreeParents) {
 			NodeRemote cursor = mutationSubtreeParent.remoteNode();
+			NodeRemote topmost = topmostMutationAncestorsAtSN.get(cursor);
+			if (topmost == null) {
+				return;
+			}
 			List<NodeRemote> ancestors = new ArrayList<>();
 			boolean populateAncestors = false;
 			while (true) {
@@ -268,6 +274,15 @@ class SyncMutations {
 				ancestors.stream().filter(syncedChildren::add)
 						.forEach(this::syncChildren);
 			}
+		}
+	}
+
+	boolean isApplicable(MutationRecord record) {
+		if (record.getTarget().getNodeName().equalsIgnoreCase("title")) {
+			// FIXME - merge with other 'can't track' checks
+			return false;
+		} else {
+			return true;
 		}
 	}
 

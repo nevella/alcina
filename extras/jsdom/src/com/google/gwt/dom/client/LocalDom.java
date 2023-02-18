@@ -614,12 +614,13 @@ public class LocalDom {
 		ElementRemote f_remote = remote;
 		// doesn't include style
 		local.getAttributeMap().entrySet().forEach(e -> {
+			String value = e.getValue();
 			switch (e.getKey()) {
 			case "text":
-				f_remote.setPropertyString(e.getKey(), e.getValue());
+				f_remote.setPropertyString(e.getKey(), value);
 				break;
 			default:
-				f_remote.setAttribute(e.getKey(), e.getValue());
+				f_remote.setAttribute(e.getKey(), value);
 				break;
 			}
 		});
@@ -1056,7 +1057,7 @@ public class LocalDom {
 
 		public Configuration() {
 			mutationLogDoms = ClientProperties.is(LocalDom.class,
-					"mutationLogDoms", true);
+					"mutationLogDoms", false);
 			mutationLogEvents = ClientProperties.is(LocalDom.class,
 					"mutationLogEvents", true);
 			logEvents = ClientProperties.is(LocalDom.class, "logEvents", true);

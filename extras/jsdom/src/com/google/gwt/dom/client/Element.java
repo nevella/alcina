@@ -141,7 +141,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public boolean addClassName(String className) {
 		ensureRemoteCheck();
 		boolean result = local().addClassName(className);
-		remote().addClassName(className);
+		sync(() -> remote().addClassName(className));
 		return result;
 	}
 
@@ -565,7 +565,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public void removeAttribute(String name) {
 		ensureRemoteCheck();
 		local().removeAttribute(name);
-		remote().removeAttribute(name);
+		sync(() -> remote().removeAttribute(name));
 	}
 
 	@Override
@@ -583,7 +583,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public boolean removeClassName(String className) {
 		ensureRemoteCheck();
 		boolean result = local().removeClassName(className);
-		remote().removeClassName(className);
+		sync(() -> remote().removeClassName(className));
 		return result;
 	}
 
@@ -591,7 +591,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public void replaceClassName(String oldClassName, String newClassName) {
 		ensureRemoteCheck();
 		local().replaceClassName(oldClassName, newClassName);
-		remote().replaceClassName(oldClassName, newClassName);
+		sync(() -> remote().replaceClassName(oldClassName, newClassName));
 	}
 
 	/**
@@ -639,7 +639,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		}
 		ensureRemoteCheck();
 		local().setAttribute(name, value);
-		remote().setAttribute(name, value);
+		sync(() -> remote().setAttribute(name, value));
 	}
 
 	@Override
@@ -666,7 +666,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		}
 		ensureRemoteCheck();
 		local().setClassName(className);
-		remote().setClassName(className);
+		sync(() -> remote().setClassName(className));
 	}
 
 	public void setClassName(String className, boolean present) {
@@ -681,21 +681,21 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public void setDir(String dir) {
 		ensureRemoteCheck();
 		local().setDir(dir);
-		remote().setDir(dir);
+		sync(() -> remote().setDir(dir));
 	}
 
 	@Override
 	public void setDraggable(String draggable) {
 		ensureRemoteCheck();
 		local().setDraggable(draggable);
-		remote().setDraggable(draggable);
+		sync(() -> remote().setDraggable(draggable));
 	}
 
 	@Override
 	public void setId(String id) {
 		ensureRemoteCheck();
 		local().setId(id);
-		remote().setId(id);
+		sync(() -> remote().setId(id));
 	}
 
 	@Override
@@ -758,14 +758,14 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public void setLang(String lang) {
 		ensureRemoteCheck();
 		local().setLang(lang);
-		remote().setLang(lang);
+		sync(() -> remote().setLang(lang));
 	}
 
 	@Override
 	public void setNodeValue(String nodeValue) {
 		ensureRemoteCheck();
 		local().setNodeValue(nodeValue);
-		remote().setNodeValue(nodeValue);
+		sync(() -> remote().setNodeValue(nodeValue));
 	}
 
 	public void setOuterHtml(String html) {
@@ -777,41 +777,41 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public void setPropertyBoolean(String name, boolean value) {
 		ensureRemoteCheck();
 		local().setPropertyBoolean(name, value);
-		remote().setPropertyBoolean(name, value);
+		sync(() -> remote().setPropertyBoolean(name, value));
 	}
 
 	@Override
 	public void setPropertyDouble(String name, double value) {
 		ensureRemoteCheck();
 		local().setPropertyDouble(name, value);
-		remote().setPropertyDouble(name, value);
+		sync(() -> remote().setPropertyDouble(name, value));
 	}
 
 	@Override
 	public void setPropertyInt(String name, int value) {
 		ensureRemoteCheck();
 		local().setPropertyInt(name, value);
-		remote().setPropertyInt(name, value);
+		sync(() -> remote().setPropertyInt(name, value));
 	}
 
 	@Override
 	public void setPropertyJSO(String name, JavaScriptObject value) {
 		ensureRemoteCheck();
-		remote().setPropertyJSO(name, value);
+		sync(() -> remote().setPropertyJSO(name, value));
 	}
 
 	@Override
 	public void setPropertyObject(String name, Object value) {
 		ensureRemoteCheck();
 		local().setPropertyObject(name, value);
-		remote().setPropertyObject(name, value);
+		sync(() -> remote().setPropertyObject(name, value));
 	}
 
 	@Override
 	public void setPropertyString(String name, String value) {
 		ensureRemoteCheck();
 		local().setPropertyString(name, value);
-		remote().setPropertyString(name, value);
+		sync(() -> remote().setPropertyString(name, value));
 	}
 
 	@Override
@@ -828,33 +828,33 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public void setTabIndex(int tabIndex) {
 		ensureRemoteCheck();
 		local().setTabIndex(tabIndex);
-		remote().setTabIndex(tabIndex);
+		sync(() -> remote().setTabIndex(tabIndex));
 	}
 
 	@Override
 	public void setTitle(String title) {
 		ensureRemoteCheck();
 		local().setTitle(title);
-		remote().setTitle(title);
+		sync(() -> remote().setTitle(title));
 	}
 
 	@Override
 	public void sinkBitlessEvent(String eventTypeName) {
 		local().sinkBitlessEvent(eventTypeName);
-		remote().sinkBitlessEvent(eventTypeName);
+		sync(() -> remote().sinkBitlessEvent(eventTypeName));
 	}
 
 	@Override
 	public void sinkEvents(int eventBits) {
 		local().sinkEvents(eventBits);
-		remote().sinkEvents(eventBits);
+		sync(() -> remote().sinkEvents(eventBits));
 	}
 
 	@Override
 	public void toggleClassName(String className) {
 		ensureRemoteCheck();
 		local().toggleClassName(className);
-		remote().toggleClassName(className);
+		sync(() -> remote().toggleClassName(className));
 	}
 
 	@Override
