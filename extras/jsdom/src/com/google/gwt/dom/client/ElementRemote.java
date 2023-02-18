@@ -1136,22 +1136,11 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}-*/;
 
 	/** only allow if telling all local nodes that they're detached **/
-	final Node removeAllChildrenElement() {
+	final Node removeAllChildren0() {
 		LocalDom.verifyMutatingState();
-		if (LocalDom.fastRemoveAll) {
-			setInnerHTML("");
-		} else {
-			removeAllChildrenElement0();
-		}
+		setInnerHTML("");
 		return node();
 	}
-
-	final native void removeAllChildrenElement0()/*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
-    while (this.lastChild) {
-      this.removeChild(this.lastChild);
-    }
-	}-*/;
 
 	final native void removeFromParent0()/*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();

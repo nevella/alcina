@@ -1116,7 +1116,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		public void resolvedToPending() {
 			if (linkedToRemote()) {
 				ElementRemote oldRemote = typedRemote();
-				oldRemote.removeAllChildrenElement();
+				sync(() -> oldRemote.removeAllChildren0());
 				local().walk(ln -> ln.node().resetRemote());
 				resetRemote();
 				LocalDom.ensureRemoteNodeMaybePendingResolution(Element.this);

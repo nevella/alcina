@@ -62,8 +62,6 @@ public class LocalDom {
 
 	private static Map<String, String> declarativeCssNames;
 
-	public static boolean fastRemoveAll;
-
 	private static boolean disableRemoteWrite;
 
 	public static Topic<Exception> topicPublishException;
@@ -107,7 +105,6 @@ public class LocalDom {
 
 	public static void initalize() {
 		Preconditions.checkState(instance == null);
-		fastRemoveAll = true;
 		disableRemoteWrite = !GWT.isClient();
 		topicPublishException = Topic.create();
 		topicReportException = Topic.create();

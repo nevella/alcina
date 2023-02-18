@@ -40,9 +40,6 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import elemental.json.Json;
-import elemental.json.JsonBoolean;
-import elemental.json.JsonNumber;
-import elemental.json.JsonString;
 import elemental.json.JsonValue;
 
 @SuppressWarnings("deprecation")
@@ -457,7 +454,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		protected Boolean fromJsonBoolean(JsonBoolean value) {
+		protected Boolean fromJsonBoolean(JsonValue value) {
 			return value.asBoolean();
 		}
 	}
@@ -475,7 +472,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		protected Byte fromJsonNumber(JsonNumber value) {
+		protected Byte fromJsonNumber(JsonValue value) {
 			return (byte) value.asNumber();
 		}
 	}
@@ -552,7 +549,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		protected Double fromJsonNumber(JsonNumber value) {
+		protected Double fromJsonNumber(JsonValue value) {
 			return value.asNumber();
 		}
 	}
@@ -571,7 +568,7 @@ public class ReflectiveSerializers {
 
 		@Override
 		protected Enum fromJsonString(Class<? extends Enum> clazz,
-				JsonString value) {
+				JsonValue value) {
 			return CommonUtils.getEnumValueOrNull(clazz, value.asString());
 		}
 	}
@@ -590,7 +587,7 @@ public class ReflectiveSerializers {
 
 		@Override
 		protected ExtensibleEnum fromJsonString(
-				Class<? extends ExtensibleEnum> clazz, JsonString value) {
+				Class<? extends ExtensibleEnum> clazz, JsonValue value) {
 			return ExtensibleEnum.valueOf(clazz, value.asString());
 		}
 	}
@@ -608,7 +605,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		protected Float fromJsonNumber(JsonNumber value) {
+		protected Float fromJsonNumber(JsonValue value) {
 			return (float) value.asNumber();
 		}
 	}
@@ -626,7 +623,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		protected Integer fromJsonNumber(JsonNumber value) {
+		protected Integer fromJsonNumber(JsonValue value) {
 			return (int) value.asNumber();
 		}
 	}
@@ -662,7 +659,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		protected Short fromJsonNumber(JsonNumber value) {
+		protected Short fromJsonNumber(JsonValue value) {
 			return (short) value.asNumber();
 		}
 	}

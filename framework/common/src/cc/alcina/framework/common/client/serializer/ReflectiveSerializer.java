@@ -47,14 +47,13 @@ import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCr
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import elemental.js.json.JsJsonFactory;
 import elemental.json.Json;
 import elemental.json.JsonArray;
-import elemental.json.JsonBoolean;
-import elemental.json.JsonNumber;
 import elemental.json.JsonObject;
-import elemental.json.JsonString;
 import elemental.json.JsonType;
 import elemental.json.JsonValue;
+import elemental.json.impl.JsonUtil;
 
 /**
  * <p>
@@ -116,12 +115,6 @@ import elemental.json.JsonValue;
  *
  * <p>
  * FIXME - dirndl 1x1d - use a ringbuffer (and fix ringbuffer rotation)
- *
- * <p>
- * Also - it looks like script mode the jrejson objects are still used? Commit
- * c90d2608a825704a155778b05a0d54e6a0257775 (or a few earlier) introduced an
- * explicit isscript call during pretty json toString() which got us there - but
- * there are casting and false/null issues in that branch - WIP basically
  *
  * @author nick@alcina.cc
  */
@@ -210,7 +203,7 @@ public class ReflectiveSerializer {
 		if (!options.topLevelTypeInfo) {
 			out = root.getChild(1);
 		}
-		return out.toJson();
+		return out.toJson(options.pretty);
 	}
 
 	static TypeSerializerLocation resolveSerializer(Class clazz) {
@@ -483,7 +476,7 @@ public class ReflectiveSerializer {
 		}
 
 		boolean elideTypeInfo(Class<? extends Object> clazz) {
-			return elideTypeInfo.contains(clazz);
+			return !typeInfo || elideTypeInfo.contains(clazz);
 		}
 	}
 
@@ -535,25 +528,25 @@ public class ReflectiveSerializer {
 			case NULL:
 				return null;
 			case BOOLEAN:
-				return fromJsonBoolean((JsonBoolean) value);
+				return fromJsonBoolean(value);
 			case NUMBER:
-				return fromJsonNumber((JsonNumber) value);
+				return fromJsonNumber(value);
 			case STRING:
-				return fromJsonString(clazz, (JsonString) value);
+				return fromJsonString(clazz, value);
 			default:
 				throw new UnsupportedOperationException();
 			}
 		}
 
-		protected T fromJsonBoolean(JsonBoolean value) {
+		protected T fromJsonBoolean(JsonValue value) {
 			throw new UnsupportedOperationException();
 		}
 
-		protected T fromJsonNumber(JsonNumber value) {
+		protected T fromJsonNumber(JsonValue value) {
 			throw new UnsupportedOperationException();
 		}
 
-		protected T fromJsonString(Class<? extends T> clazz, JsonString value) {
+		protected T fromJsonString(Class<? extends T> clazz, JsonValue value) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -612,7 +605,7 @@ public class ReflectiveSerializer {
 				typeNode.serializer.deserializationComplete(this);
 			} else {
 				/*
-				 * when deserializing an boject reference
+				 * when deserializing an object reference
 				 */
 				if (parent != null) {
 					parent.typeNode.serializer
@@ -848,19 +841,19 @@ public class ReflectiveSerializer {
 
 		@Override
 		public int peekInt() {
-			return (int) (jsonValue.getType() == JsonType.NUMBER
-					? ((JsonNumber) jsonValue).asNumber()
-					: -1);
+			return jsonValue == null || jsonValue.getType() != JsonType.NUMBER
+					? -1
+					: (int) jsonValue.asNumber();
 		}
 
 		@Override
 		public Class readType(GraphNode node) {
-			if (jsonValue.getType() == JsonType.NULL) {
+			if (isNullValue()) {
 				return void.class;
 			}
 			Preconditions.checkState(jsonValue.getType() == JsonType.ARRAY);
 			JsonArray array = (JsonArray) jsonValue;
-			String className = array.getString(0);
+			String className = array.get(0).asString();
 			JsonSerialNode valueChild = new JsonSerialNode(array.get(1));
 			node.serialNode = valueChild;
 			Class<?> forName = Reflections.forName(className);
@@ -870,7 +863,7 @@ public class ReflectiveSerializer {
 
 		@Override
 		public Object readValue(GraphNode node) {
-			if (jsonValue.getType() == JsonType.NULL) {
+			if (isNullValue()) {
 				return null;
 			}
 			ValueSerializer valueSerializer = getValueSerializer(
@@ -884,13 +877,16 @@ public class ReflectiveSerializer {
 		}
 
 		@Override
-		public String toJson() {
-			return jsonValue.toJson();
+		public String toJson(boolean pretty) {
+			// FIXME - dirndl 1x2 - extend jsonValue.toJson, remove GWT.isScript
+			// check
+			return pretty && !GWT.isScript() ? JsonUtil.stringify(jsonValue, 2)
+					: jsonValue.toJson();
 		}
 
 		@Override
 		public String toString() {
-			return toJson();
+			return toJson(true);
 		}
 
 		@Override
@@ -909,6 +905,18 @@ public class ReflectiveSerializer {
 		public void writeTypeName(Class type) {
 			Preconditions.checkState(jsonValue instanceof JsonArray);
 			((JsonArray) jsonValue).set(0, serializationClass(type).getName());
+		}
+
+		/*
+		 * pure java 'jsonValue==null' was translated to .js '!jsonValue' --
+		 * problematic when jsonValue === false
+		 */
+		private boolean isNullValue() {
+			if (GWT.isScript()) {
+				return JsJsonFactory.isNull(jsonValue);
+			} else {
+				return jsonValue.getType() == JsonType.NULL;
+			}
 		}
 
 		private JsonValue toJsonValue(Object value) {
@@ -1051,7 +1059,7 @@ public class ReflectiveSerializer {
 
 		Object readValue(GraphNode node);
 
-		String toJson();
+		String toJson(boolean pretty);
 
 		void write(GraphNode node, Object value);
 

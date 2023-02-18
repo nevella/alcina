@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -13,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.AsyncSerializableTypes;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializationException;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -52,15 +52,10 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 				LooseContext.push();
 				AlcinaTransient.Support
 						.setTransienceContexts(TransienceContext.RPC);
-				serializedPayload = ReflectiveSerializer.serialize(payload);
-				if (!GWT.isScript()) {
-					try {
-						// test
-						ReflectiveSerializer.deserialize(serializedPayload);
-					} catch (RuntimeException e) {
-						throw e;
-					}
-				}
+				SerializerOptions options = new ReflectiveSerializer.SerializerOptions()
+						.withElideDefaults(true);
+				serializedPayload = ReflectiveSerializer.serialize(payload,
+						options);
 			} finally {
 				LooseContext.pop();
 			}
