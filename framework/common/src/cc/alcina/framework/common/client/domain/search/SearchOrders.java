@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence;
@@ -175,7 +176,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		// direct access ok
 		if (cmps.isEmpty() && serializableSearchOrders.size() > 0) {
 			cmps = (Map) serializableSearchOrders.stream()
-					.collect(Collectors.toMap(sso -> {
+					.collect(AlcinaCollectors.toLinkedHashMap(sso -> {
 						if (sso.getKey().contains(".")) {
 							Class clazz = Reflections.forName(sso.getKey());
 							return (SearchOrder) Reflections.newInstance(clazz);

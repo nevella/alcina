@@ -63,6 +63,12 @@ public class AlcinaCollectors {
 		return new ToMultisetCollector(keyMapper, t -> t, Multiset::new);
 	}
 
+	public static <T, K, U> Collector<T, ?, Map<K, U>> toLinkedHashMap(
+			Function<? super T, ? extends K> keyMapper,
+			Function<? super T, ? extends U> valueMapper) {
+		return new ToLinkedHashMapCollector<>(keyMapper, valueMapper);
+	}
+
 	public static <T> Collector<T, ?, Set<T>> toLinkedHashSet() {
 		return new ToLinkedHashSetCollector<>();
 	}
@@ -253,6 +259,50 @@ public class AlcinaCollectors {
 		@Override
 		public Supplier<Map<K, T>> supplier() {
 			return supplier;
+		}
+	}
+
+	private static class ToLinkedHashMapCollector<T, K, U>
+			implements java.util.stream.Collector<T, Map<K, U>, Map<K, U>> {
+		private Function<? super T, ? extends K> keyMapper;
+
+		private Function<? super T, ? extends U> valueMapper;
+
+		public ToLinkedHashMapCollector(
+				Function<? super T, ? extends K> keyMapper,
+				Function<? super T, ? extends U> valueMapper) {
+			this.keyMapper = keyMapper;
+			this.valueMapper = valueMapper;
+		}
+
+		@Override
+		public BiConsumer<Map<K, U>, T> accumulator() {
+			return (map, t) -> map.put(keyMapper.apply(t),
+					valueMapper.apply(t));
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.IDENTITY_FINISH);
+		}
+
+		@Override
+		public BinaryOperator<Map<K, U>> combiner() {
+			return (left, right) -> {
+				left.putAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<Map<K, U>, Map<K, U>> finisher() {
+			return castingIdentity();
+		}
+
+		@Override
+		public Supplier<Map<K, U>> supplier() {
+			return () -> new LinkedHashMap<>();
 		}
 	}
 
