@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomTokenStream;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -90,13 +89,11 @@ public class StructuredTokenParserContext {
 		}
 		String depthInSpacer = CommonUtils.padStringLeft("",
 				(depthIn - initialDepthIn) * 2, " ");
-		if (LooseContext.is(CONTEXT_DEBUG_UNMATCHED_NODES)) {
-			Ax.out("=== === ===");
-			Ax.out(join.sourceNode.prettyToString());
-			Ax.out("=== === ===");
-			Ax.out(matched.keySet().toString());
-			Ax.out("=== === ===");
-		}
+		Ax.out("=== === === problematic source node === === ===");
+		Ax.out(join.sourceNode.prettyToString());
+		Ax.out("=== === === already matched token types === === ===");
+		Ax.out(matched.keySet().toString());
+		Ax.out("=== === ===\n");
 		String outStr = targetNode == null ? "(no output)"
 				: targetNode.debug().shortRepresentation();
 		String inStr = sourceNode == null ? "(no input)"
