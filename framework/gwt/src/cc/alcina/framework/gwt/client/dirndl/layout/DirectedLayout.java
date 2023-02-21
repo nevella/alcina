@@ -239,6 +239,13 @@ public class DirectedLayout implements AlcinaProcess {
 
 	public InsertionPoint insertionPoint;
 
+	// remove the root node (unbind all listeners following removal from the
+	// dom)
+	public void remove() {
+		root.remove();
+		root = null;
+	}
+
 	/**
 	 * Render a model object and add top-level output widgets to the parent
 	 * widget
@@ -854,8 +861,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 			@Override
 			public String toString() {
-				return Ax.format("Binding :: %s :: %s",
-						model.getClass().getSimpleName(), type);
+				return Ax.format("%s :: %s", model.getClass().getSimpleName(),
+						type.getSimpleName());
 			}
 
 			// this method contains devmode checks that a binding exists (if the

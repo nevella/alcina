@@ -44,8 +44,9 @@
  * <li>Scripts must be written with a mutations check (i.e. not via localdom)
  * since they may immediately mutate the DOM
  * <li>Some tags (script, style, iframe, shadow-dom, head/title) have
- * unpredictable interiors and are omitted from dom equivalence tests. FIXME -
- * dirndl1x3 - unitfy/formalise these "opaque" elements
+ * unpredictable interiors and are omitted from dom equivalence tests.
+ * <p>
+ * FIXME - dirndl1x3 - unify/formalise these "opaque" elements
  * </ul>
  *
  * <h3>Performance</h3>

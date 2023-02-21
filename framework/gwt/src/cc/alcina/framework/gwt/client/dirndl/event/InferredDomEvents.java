@@ -592,7 +592,11 @@ public class InferredDomEvents {
 			NativeEvent nativeEvent = event.getNativeEvent();
 			boolean fire = eventTargetsWidget ^ fireIfOutside();
 			if (fire) {
-				Scheduler.get().scheduleDeferred(() -> {
+				Scheduler.get().scheduleFinally(() -> {
+					if (handlerRegistration == null) {
+						// was unbound by a prior finally event
+						return;
+					}
 					fireEvent(new NativePreviewEventAsync(nativeEvent));
 				});
 			}

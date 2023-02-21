@@ -67,7 +67,9 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceList
 
 /**
  * FIXME - mvcc.4 - any non-transactional refs (particularly collections) to
- * mvcc objects should filter by Domain.notRemoved
+ * mvcc objects should filter by Domain.notRemoved - in fact, just don't have
+ * non-transactional refs/collections (if possible) - the sketch factor is just
+ * too high.
  */
 @Registration.Singleton
 public class JobDomain {
@@ -285,8 +287,14 @@ public class JobDomain {
 	}
 
 	public Stream<Job> getFutureConsistencyJobsEquivalentTo(Job job) {
-		return jobDescriptor.futureConsistencyTaskProjection.getEquivalentTo(job.getTask())
-				.filter(j -> j != job);
+		return jobDescriptor.futureConsistencyTaskProjection
+				.getEquivalentTo(job.getTask()).filter(j -> j != job);
+	}
+
+	public Map<Class<? extends Task>, Integer>
+			getFutureConsistencyTaskCountByTaskClass() {
+		return jobDescriptor.futureConsistencyTaskProjection
+				.taskCountByTaskClass();
 	}
 
 	public Stream<Job> getIncompleteJobs() {
@@ -349,10 +357,6 @@ public class JobDomain {
 
 	public void removeAllocationQueue(Job job) {
 		AllocationQueue queue = queues.remove(job);
-	}
-
-	public Map<Class<? extends Task>, Integer> getFutureConsistencyTaskCountByTaskClass() {
-		return jobDescriptor.futureConsistencyTaskProjection.taskCountByTaskClass();
 	}
 
 	private void cleanupQueues() {

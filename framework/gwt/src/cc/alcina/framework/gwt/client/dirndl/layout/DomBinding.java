@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -15,14 +16,11 @@ public abstract class DomBinding<E extends NodeEvent> implements EventHandler {
 
 	public void bind(Widget widget, Object model, boolean bind) {
 		if (!bind) {
-			if (handlerRegistration != null) {
-				handlerRegistration.removeHandler();
-				handlerRegistration = null;
-			}
+			Preconditions.checkState(handlerRegistration != null);
+			handlerRegistration.removeHandler();
+			handlerRegistration = null;
 		} else {
-			if (handlerRegistration != null) {
-				return;
-			}
+			Preconditions.checkState(handlerRegistration == null);
 			handlerRegistration = bind0(widget, model);
 		}
 	}

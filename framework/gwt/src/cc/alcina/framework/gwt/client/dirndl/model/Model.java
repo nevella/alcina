@@ -63,6 +63,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * instrument, but in the absence of more granular (propertychange) binding
  * possibilities, it's reasonable.
  *
+ * <p>
+ * FIXME - dirndl 1x1d.0 - flatten hierarchy - remove nested subclasses,
+ * BoundValues -> Bindings
  *
  * @author nick@alcina.cc
  *

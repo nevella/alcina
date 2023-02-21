@@ -60,12 +60,12 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * <p>
  * FIXME - doc - this goes in dirndl events as an edge case
  * <p>
- * FIXME - dirndl 1x1d.0 - enforce overlay styles via css-ification of logical
- * parent and optional logical ancestor classes (and doc). Basically,
- * class="cssify(logicalParent.class) cssify(logicalAncestor0.class) etc"
+ * Overlay css styles are generated via css-ification of logical parent and
+ * optional logical ancestor classes (and doc). Basically,
+ * class="cssify(logicalParent.class) cssify(logicalAncestor0.class) etc". This
+ * gives *more or less* the same sass keys as would exist for the logical parent
+ * (although css classes, not containing tags). FIXME - doc - example
  *
- * FIXME - dirndl 1x1d - check all preview etc listeners are really being
- * removed on unbind
  *
  * @author nick@alcina.cc
  *
@@ -143,6 +143,10 @@ public class Overlay extends Model.WithNode implements
 			if (!childOverlay.close(from, submit)) {
 				return false;
 			}
+		}
+		// double-check open, since childOverlay.close may have re-called
+		if (!open) {
+			return true;
 		}
 		open = false;
 		if (submit) {
