@@ -971,7 +971,10 @@ public class JobRegistry {
 
 		public Builder withCause(String cause) {
 			// will be persisted to a varchar
-			Preconditions.checkArgument(cause.length() < MAX_CAUSE_LENGTH);
+			if (cause.length() > MAX_CAUSE_LENGTH) {
+				logger.warn("Truncating job cause: {}", cause);
+				cause = Ax.trim(cause, MAX_CAUSE_LENGTH);
+			}
 			this.cause = cause;
 			return this;
 		}
