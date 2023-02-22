@@ -22,8 +22,7 @@ import cc.alcina.framework.gwt.client.Client;
 public class RemoteConsoleClient implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
-		Client.Init.preRegistry();
-		Client.Init.registry();
+		Client.Init.init();
 		Scheduler.get().scheduleDeferred(() -> init0());
 	}
 
