@@ -105,7 +105,9 @@ public abstract class Model extends Bindable
 
 		default void onBind(FocusOnBind dispatchMarker, Bind event) {
 			if (event.isBound() && isFocusOnBind()) {
-				Scheduler.get().scheduleFinally(() -> {
+				// definitely deferred (not finally), since the dom can be
+				// mutated in finally blocks
+				Scheduler.get().scheduleDeferred(() -> {
 					Widget widget = event.getContext().node.getWidget();
 					FocusImpl.getFocusImplForWidget()
 							.focus(widget.getElement());

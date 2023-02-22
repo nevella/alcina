@@ -9,6 +9,7 @@ import com.google.web.bindery.event.shared.SimpleEventBus;
 
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 /**
  * <p>
@@ -57,6 +58,16 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 				}
 			}
 			Scheduler.get().scheduleFinally(this::dispatchSync);
+		}
+
+		/**
+		 * Sugar for a commonn emission pattern. Note that it is distinct()
+		 */
+		public void dispatchModelEvent(Node node,
+				Class<? extends ModelEvent> clazz) {
+			distinct().lambda(
+					() -> NodeEvent.Context.newNodeContext(node).fire(clazz))
+					.dispatch();
 		}
 
 		public QueuedEvent distinct() {
