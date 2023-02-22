@@ -137,7 +137,7 @@ public abstract class Client {
 			return Init.complete;
 		}
 
-		public static void preRegistry() {
+		private static void preRegistry() {
 			startTime = System.currentTimeMillis();
 			CommonUtils.setSupplier = () -> new LightSet();
 			if (GWT.isScript()) {
@@ -147,7 +147,7 @@ public abstract class Client {
 			JavascriptKeyableLookup.initJs();
 		}
 
-		public static void registry() {
+		private static void registry() {
 			Reflections.init();
 			ModuleReflector moduleReflector = ClientReflectorFactory.create();
 			moduleReflector.register();
