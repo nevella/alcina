@@ -84,9 +84,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 	write = @Permission(access = AccessLevel.EVERYONE))
 public abstract class Model extends Bindable implements
 		LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler, HasNode {
-	private DirectedLayout.Node node;
+	private transient DirectedLayout.Node node;
 
-	private Bindings bindings;
+	private transient Bindings bindings;
 
 	/**
 	 * <p>
