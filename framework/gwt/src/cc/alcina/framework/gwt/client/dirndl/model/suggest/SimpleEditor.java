@@ -10,7 +10,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorAsk;
 
 @Directed(receives = DomEvents.Input.class, emits = EditorAsk.class)
-public class SimpleEditor extends Model.WithNode
+public class SimpleEditor extends Model
 		implements Suggestor.Editor, DomEvents.Input.Handler {
 	private final StringInput input;
 
@@ -23,7 +23,7 @@ public class SimpleEditor extends Model.WithNode
 
 	@Override
 	public void emitAsk() {
-		NodeEvent.Context.newNodeContext(node).fire(EditorAsk.class,
+		NodeEvent.Context.fromNode(provideNode()).dispatch(EditorAsk.class,
 				computeAsk());
 	}
 
@@ -34,7 +34,7 @@ public class SimpleEditor extends Model.WithNode
 
 	@Override
 	public void onInput(Input event) {
-		event.reemitAs(EditorAsk.class, computeAsk());
+		event.reemitAs(this, EditorAsk.class, computeAsk());
 	}
 
 	private StringAsk computeAsk() {

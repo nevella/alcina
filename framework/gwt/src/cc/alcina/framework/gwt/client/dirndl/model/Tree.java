@@ -7,13 +7,13 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.IntersectionObserved;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.IntersectionObserved;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeLabelClicked;
@@ -60,9 +60,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 		selectedNodeModel = model;
 		selectedNodeModel.setSelected(true);
-		Context context = NodeEvent.Context.newModelContext(event.getContext(),
-				null);
-		ModelEvent.dispatch(context, SelectionChanged.class, model);
+		event.reemitAs(this, SelectionChanged.class, model);
 	}
 
 	@Override
@@ -175,7 +173,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			if (event.isIntersecting() && !fired) {
 				fired = true;
 				Context context = NodeEvent.Context
-						.newModelContext(event.getContext(), null);
+						.fromContext(event.getContext(), null);
 				ModelEvent.dispatch(context, PaginatorVisible.class, null);
 			}
 		}

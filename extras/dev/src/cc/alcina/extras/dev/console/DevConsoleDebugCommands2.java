@@ -49,7 +49,7 @@ public class DevConsoleDebugCommands2 {
 		public String run(String[] argv) throws Exception {
 			String log = ResourceUtilities.read(
 					Ax.format("/tmp/log/%s", LOCAL_DOM_EXCEPTION_LOG_PATH));
-			Model model = new Model();
+			DebugModel model = new DebugModel();
 			model.parse(log);
 			Ax.out(model.localHtml);
 			Ax.out("\n\n************************\n\n");
@@ -61,7 +61,7 @@ public class DevConsoleDebugCommands2 {
 			return "OK";
 		}
 
-		static class Model {
+		static class DebugModel {
 			String localHtml;
 
 			String remoteHtml;

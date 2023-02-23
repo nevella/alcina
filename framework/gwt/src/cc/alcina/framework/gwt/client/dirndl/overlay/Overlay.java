@@ -77,8 +77,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			InferredDomEvents.MouseDownOutside.class, ModelEvents.Closed.class,
 			ModelEvents.Submit.class },
 	bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
-public class Overlay extends Model.WithNode implements
-		ModelEvents.Close.Handler, InferredDomEvents.EscapePressed.Handler,
+public class Overlay extends Model implements ModelEvents.Close.Handler,
+		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
 		InferredDomEvents.MouseDownOutside.Handler, Model.RerouteBubbledEvents,
 		ModelEvents.Submit.Handler, ModelEvents.Closed.Handler {
@@ -157,12 +157,12 @@ public class Overlay extends Model.WithNode implements
 					&& provideElement().provideIsAncestorOf(focus, true)) {
 				WidgetUtils.clearFocussedDocumentElement();
 			}
-			NodeEvent.Context.newModelContext(from, node)
-					.fire(ModelEvents.Submit.class);
+			NodeEvent.Context.fromEvent(from, provideNode())
+					.dispatch(ModelEvents.Submit.class, null);
 		}
 		OverlayPositions.get().hide(this);
-		NodeEvent.Context.newModelContext(from, node)
-				.fire(ModelEvents.Closed.class);
+		NodeEvent.Context.fromEvent(from, provideNode())
+				.dispatch(ModelEvents.Closed.class, null);
 		return true;
 	}
 
@@ -218,11 +218,11 @@ public class Overlay extends Model.WithNode implements
 
 	@Override
 	public void onClosed(Closed event) {
-		if (event.getContext().node != node) {
+		if (event.getContext().node != provideNode()) {
 			// child overlay
 			return;
 		}
-		if (event.checkReemitted(node)) {
+		if (event.checkReemitted(this)) {
 			return;
 		}
 		if (modalClosedHandler != null) {
@@ -265,7 +265,7 @@ public class Overlay extends Model.WithNode implements
 
 	@Override
 	public void onSubmit(Submit event) {
-		if (event.checkReemitted(node)) {
+		if (event.checkReemitted(this)) {
 			return;
 		}
 		if (modalSubmitHandler != null) {

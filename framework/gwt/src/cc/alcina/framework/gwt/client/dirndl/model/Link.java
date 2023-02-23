@@ -46,8 +46,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * but possible), subclass Link and have the subclass implement the appropriate
  * ModelEvent.Handler
  */
-public class Link extends Model.WithNode
-		implements DomEvents.Click.Handler, HasTag {
+public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	public static final transient String PRIMARY_ACTION = "primary-action";
 
 	private String href = "#";
@@ -139,7 +138,7 @@ public class Link extends Model.WithNode
 		if (gwtEvent.getNativeButton() == NativeEvent.BUTTON_LEFT) {
 			if (modelEvent != null) {
 				WidgetUtils.squelchCurrentEvent();
-				event.reemitAs(modelEvent);
+				event.reemitAs(this, modelEvent);
 			} else if (nonStandardObjectAction != null) {
 				WidgetUtils.squelchCurrentEvent();
 				DefaultPermissibleActionHandler.handleAction(

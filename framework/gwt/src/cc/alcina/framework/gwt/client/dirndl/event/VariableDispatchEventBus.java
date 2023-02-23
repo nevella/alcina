@@ -66,7 +66,7 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 		public void dispatchModelEvent(Node node,
 				Class<? extends ModelEvent> clazz) {
 			distinct().lambda(
-					() -> NodeEvent.Context.newNodeContext(node).fire(clazz))
+					() -> NodeEvent.Context.fromNode(node).dispatch(clazz, null))
 					.dispatch();
 		}
 

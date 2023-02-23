@@ -32,7 +32,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
 				to = "visibility",
 				transform = Binding.VisibilityVisibleHidden.class,
 				type = Type.STYLE_ATTRIBUTE) })
-public class OverlayContainer extends Model.WithNode implements HasTag {
+public class OverlayContainer extends Model implements HasTag {
 	private final Overlay contents;
 
 	private final ContainerOptions containerOptions;

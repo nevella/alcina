@@ -43,7 +43,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 	receives = { SuggestorEvents.EditorAsk.class,
 			ModelEvents.SelectionChanged.class },
 	emits = ModelEvents.SelectionChanged.class)
-public class Suggestor extends Model.WithNode
+public class Suggestor extends Model
 		implements SuggestorEvents.EditorAsk.Handler,
 		ModelEvents.SelectionChanged.Handler, HasSelectedValue {
 	protected Editor editor;
@@ -98,7 +98,7 @@ public class Suggestor extends Model.WithNode
 
 	@Override
 	public void onSelectionChanged(SelectionChanged event) {
-		if (event.checkReemitted(node)) {
+		if (event.checkReemitted(this)) {
 			return;
 		}
 		setChosenSuggestions(suggestions.provideSelectedValue());
@@ -187,87 +187,6 @@ public class Suggestor extends Model.WithNode
 	 */
 	public interface Ask {
 		IntPair getResultRange();
-	}
-
-	public static class SuggestorConfiguration {
-		private String inputPrompt;
-
-		List<Class<? extends Model>> logicalAncestors = List.of();
-
-		private boolean focusOnBind;
-
-		private boolean selectAllOnBind;
-
-		private Answer<?> answer;
-
-		private OverlayPosition.Position suggestionXAlign = Position.START;
-
-		private boolean suggestOnBind;
-
-		public Answer getAnswer() {
-			return this.answer;
-		}
-
-		public String getInputPrompt() {
-			return this.inputPrompt;
-		}
-
-		public List<Class<? extends Model>> getLogicalAncestors() {
-			return this.logicalAncestors;
-		}
-
-		public OverlayPosition.Position getSuggestionXAlign() {
-			return this.suggestionXAlign;
-		}
-
-		public boolean isFocusOnBind() {
-			return this.focusOnBind;
-		}
-
-		public boolean isSelectAllOnBind() {
-			return this.selectAllOnBind;
-		}
-
-		public boolean isSuggestOnBind() {
-			return this.suggestOnBind;
-		}
-
-		public SuggestorConfiguration withAnswer(Answer answer) {
-			this.answer = answer;
-			return this;
-		}
-
-		public SuggestorConfiguration withFocusOnBind(boolean focusOnBind) {
-			this.focusOnBind = focusOnBind;
-			return this;
-		}
-
-		public SuggestorConfiguration withInputPrompt(String inputPrompt) {
-			this.inputPrompt = inputPrompt;
-			return this;
-		}
-
-		public SuggestorConfiguration withLogicalAncestors(
-				List<Class<? extends Model>> logicalAncestors) {
-			this.logicalAncestors = logicalAncestors;
-			return this;
-		}
-
-		public SuggestorConfiguration withSelectAllOnBind(boolean selectAllOnBind) {
-			this.selectAllOnBind = selectAllOnBind;
-			return this;
-		}
-
-		public SuggestorConfiguration withSuggestionXAlign(
-				OverlayPosition.Position suggestionXAlign) {
-			this.suggestionXAlign = suggestionXAlign;
-			return this;
-		}
-
-		public SuggestorConfiguration withSuggestOnBind(boolean suggestOnBind) {
-			this.suggestOnBind = suggestOnBind;
-			return this;
-		}
 	}
 
 	/*
@@ -459,6 +378,88 @@ public class Suggestor extends Model.WithNode
 
 		public static enum State {
 			LOADING, LOADED, EXCEPTION, UNBOUND
+		}
+	}
+
+	public static class SuggestorConfiguration {
+		private String inputPrompt;
+
+		List<Class<? extends Model>> logicalAncestors = List.of();
+
+		private boolean focusOnBind;
+
+		private boolean selectAllOnBind;
+
+		private Answer<?> answer;
+
+		private OverlayPosition.Position suggestionXAlign = Position.START;
+
+		private boolean suggestOnBind;
+
+		public Answer getAnswer() {
+			return this.answer;
+		}
+
+		public String getInputPrompt() {
+			return this.inputPrompt;
+		}
+
+		public List<Class<? extends Model>> getLogicalAncestors() {
+			return this.logicalAncestors;
+		}
+
+		public OverlayPosition.Position getSuggestionXAlign() {
+			return this.suggestionXAlign;
+		}
+
+		public boolean isFocusOnBind() {
+			return this.focusOnBind;
+		}
+
+		public boolean isSelectAllOnBind() {
+			return this.selectAllOnBind;
+		}
+
+		public boolean isSuggestOnBind() {
+			return this.suggestOnBind;
+		}
+
+		public SuggestorConfiguration withAnswer(Answer answer) {
+			this.answer = answer;
+			return this;
+		}
+
+		public SuggestorConfiguration withFocusOnBind(boolean focusOnBind) {
+			this.focusOnBind = focusOnBind;
+			return this;
+		}
+
+		public SuggestorConfiguration withInputPrompt(String inputPrompt) {
+			this.inputPrompt = inputPrompt;
+			return this;
+		}
+
+		public SuggestorConfiguration withLogicalAncestors(
+				List<Class<? extends Model>> logicalAncestors) {
+			this.logicalAncestors = logicalAncestors;
+			return this;
+		}
+
+		public SuggestorConfiguration
+				withSelectAllOnBind(boolean selectAllOnBind) {
+			this.selectAllOnBind = selectAllOnBind;
+			return this;
+		}
+
+		public SuggestorConfiguration withSuggestionXAlign(
+				OverlayPosition.Position suggestionXAlign) {
+			this.suggestionXAlign = suggestionXAlign;
+			return this;
+		}
+
+		public SuggestorConfiguration withSuggestOnBind(boolean suggestOnBind) {
+			this.suggestOnBind = suggestOnBind;
+			return this;
 		}
 	}
 }

@@ -23,7 +23,7 @@ public class LayoutEvents {
 	 */
 	public static class BeforeRender extends LayoutEvent<BeforeRender.Handler> {
 		public BeforeRender(DirectedLayout.Node node) {
-			setContext(Context.newNodeContext(node));
+			setContext(Context.fromNode(node));
 		}
 
 		@Override
@@ -53,7 +53,7 @@ public class LayoutEvents {
 		private final boolean bound;
 
 		public Bind(DirectedLayout.Node node, boolean bound) {
-			setContext(Context.newNodeContext(node));
+			setContext(Context.fromNode(node));
 			this.bound = bound;
 		}
 

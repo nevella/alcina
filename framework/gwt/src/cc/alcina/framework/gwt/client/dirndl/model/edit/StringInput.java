@@ -15,7 +15,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
@@ -60,7 +59,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 			@Binding(type = Type.PROPERTY, from = "autocomplete"),
 			@Binding(type = Type.INNER_TEXT, from = "innerText") },
 	receives = { DomEvents.Change.class, DomEvents.Input.class })
-public class StringInput extends Model.WithNode
+public class StringInput extends Model
 		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
 		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler {
 	private String value;
@@ -157,15 +156,13 @@ public class StringInput extends Model.WithNode
 	public void onChange(Change event) {
 		currentValue = elementValue();
 		setValue(currentValue);
-		NodeEvent.Context.newModelContext(event, node)
-				.fire(ModelEvents.Change.class);
+		event.reemitAs(this, ModelEvents.Change.class);
 	}
 
 	@Override
 	public void onInput(Input event) {
 		currentValue = elementValue();
-		NodeEvent.Context.newModelContext(event, node)
-				.fire(ModelEvents.Input.class);
+		event.reemitAs(this, ModelEvents.Input.class);
 	}
 
 	@Override
@@ -199,7 +196,7 @@ public class StringInput extends Model.WithNode
 
 	public void setType(String type) {
 		// must set before attach
-		Preconditions.checkState(node == null);
+		Preconditions.checkState(!provideIsBound());
 		this.type = type;
 	}
 

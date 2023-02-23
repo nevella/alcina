@@ -67,88 +67,26 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * FIXME - dirndl 1x1d.0 - flatten hierarchy - remove nested subclasses,
  * BoundValues -> Bindings
  *
+ * <p>
+ * DOC - bindings
+ *
+ * <p>
+ * Laziness: bindings is lazy but dependent fields are not. Simple RO models
+ * (table, tree leaves - where the vast majority of instances are in a large UI)
+ * won't use it, so that's the simplest + most effective (memory-conserving)
+ * optimisation
+ *
  * @author nick@alcina.cc
  *
  */
 @ObjectPermissions(
 	read = @Permission(access = AccessLevel.EVERYONE),
 	write = @Permission(access = AccessLevel.EVERYONE))
-public abstract class Model extends Bindable
-		implements LayoutEvents.Bind.Handler {
-	@Override
-	/**
-	 * Note that subclasses must call super.onBind(Bind) if overriding this
-	 * event
-	 */
-	public void onBind(Bind event) {
-		if (event.isBound()) {
-			// I'm not sure that this is the best way to dispatch, but there may
-			// be no other way
-			// to call arbitrary interface methods non-reflectively?
-			if (this instanceof FocusOnBind) {
-				FocusOnBind focusOnBind = (FocusOnBind) this;
-				focusOnBind.onBind(focusOnBind, event);
-			}
-		} else {
-			if (!hasPropertyChangeSupport()) {
-				return;
-			}
-			Arrays.stream(propertyChangeSupport().getPropertyChangeListeners())
-					.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
-					.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
-							.unbind());
-		}
-	}
+public abstract class Model extends Bindable implements
+		LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler, HasNode {
+	private DirectedLayout.Node node;
 
-	public interface FocusOnBind {
-		boolean isFocusOnBind();
-
-		default void onBind(FocusOnBind dispatchMarker, Bind event) {
-			if (event.isBound() && isFocusOnBind()) {
-				// definitely deferred (not finally), since the dom can be
-				// mutated in finally blocks
-				Scheduler.get().scheduleDeferred(() -> {
-					Widget widget = event.getContext().node.getWidget();
-					FocusImpl.getFocusImplForWidget()
-							.focus(widget.getElement());
-				});
-			}
-		}
-	}
-
-	public interface RerouteBubbledEvents {
-		Model rerouteBubbledEventsTo();
-	}
-
-	/**
-	 * This extension of Model exposes the corresponding Node in the dirdnl
-	 * layout tree. It's mostly used to provide access to the rendered DOM for
-	 * things like focus, scroll and rendered offset handling.
-	 *
-	 * @author nick@alcina.cc
-	 *
-	 */
-	public static class WithNode extends Model implements HasNode {
-		protected DirectedLayout.Node node;
-
-		/**
-		 * Ahoy subclasses! Don't forget to call {@code super.onBind(event)}
-		 */
-		@Override
-		public void onBind(Bind event) {
-			if (event.isBound()) {
-				node = event.getContext().node;
-			} else {
-				node = null;
-			}
-			super.onBind(event);
-		}
-
-		@Override
-		public Node provideNode() {
-			return node;
-		}
-	}
+	private Bindings bindings;
 
 	/**
 	 * <p>
@@ -170,195 +108,228 @@ public abstract class Model extends Bindable
 	 * @author nick@alcina.cc
 	 *
 	 */
-	public static class WithPropertyBinding extends Model
-			implements LayoutEvents.BeforeRender.Handler {
-		private BoundValues bindings = new BoundValues();
-
-		public BoundValues bindings() {
-			return bindings;
+	public Bindings bindings() {
+		if (bindings == null) {
+			bindings = new Bindings();
 		}
+		return bindings;
+	}
 
-		@Override
-		public void onBeforeRender(BeforeRender event) {
+	@Override
+	public void onBeforeRender(BeforeRender event) {
+		if (bindings != null) {
 			bindings.setLeft();
 		}
+	}
 
-		@Override
-		public void onBind(Bind event) {
-			if (event.isBound()) {
+	@Override
+	/**
+	 * Note that subclasses -must- call super.onBind(Bind) if overriding this
+	 * event
+	 */
+	public void onBind(Bind event) {
+		if (event.isBound()) {
+			node = event.getContext().node;
+			if (bindings != null) {
 				bindings.bind();
-			} else {
+			}
+			// I'm not sure that this is the best way to dispatch, but there may
+			// be no other way
+			// to call arbitrary interface methods non-reflectively?
+			if (this instanceof FocusOnBind) {
+				FocusOnBind focusOnBind = (FocusOnBind) this;
+				focusOnBind.onBind(focusOnBind, event);
+			}
+		} else {
+			if (bindings != null) {
 				bindings.unbind();
 			}
-			super.onBind(event);
+			node = null;
+			if (!hasPropertyChangeSupport()) {
+				return;
+			}
+			// TODO - nope, asymmetrical. Move to bindings
+			Arrays.stream(propertyChangeSupport().getPropertyChangeListeners())
+					.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
+					.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
+							.unbind());
+		}
+	}
+
+	/*
+	 * Provide access to the corresponding Node in the dirdnl layout tree. It's
+	 * mostly used to provide access to the rendered DOM for things like focus,
+	 * scroll and rendered offset handling.
+	 */
+	@Override
+	public Node provideNode() {
+		return node;
+	}
+
+	/*
+	 * This class supports 'fieldless' mode, where the property values are
+	 * stored in the values map
+	 *
+	 * TODO - make that a subclass,since rare
+	 */
+	public class Bindings {
+		private Binding binding = new Binding();
+
+		public DetachList detachList = new DetachList();
+
+		private Map<String, Object> values = AlcinaCollections.newUnqiueMap();
+
+		/*
+		 * keep the fieldless propertychange contract mostly separate/clean
+		 *
+		 */
+		private PropertyChangeSource propertyChangeSource = new PropertyChangeSource();
+
+		/*
+		 * model has no field-backed properties, instead all values are stored
+		 * in the values array (and getters call
+		 * BoundValues.value(propertyName))
+		 */
+		private boolean fieldless;
+
+		public void add(Object leftPropertyName, Converter leftToRightConverter,
+				SourcesPropertyChangeEvents right, Object rightPropertyName,
+				Converter rightToLeftConverter) {
+			SourcesPropertyChangeEvents left = getSource();
+			add(left, leftPropertyName, leftToRightConverter, right,
+					rightPropertyName, rightToLeftConverter);
 		}
 
-		public class BoundValues {
-			private Binding binding = new Binding();
+		/*
+		 * Recomputes on any property change
+		 */
+		public void add(Object leftPropertyName,
+				SourcesPropertyChangeEvents right) {
+			BaseSourcesPropertyChangeEvents source = (BaseSourcesPropertyChangeEvents) getSource();
+			RemovablePropertyChangeListener listener = new RemovablePropertyChangeListener(
+					right, null, evt -> {
+						source.firePropertyChange(null, evt.getOldValue(),
+								evt.getNewValue());
+					});
+			// FIXME - dirndl 1x1d - route everything via detachlist /
+			// hasbind
+			listener.bind();
+			detachList.add(listener);
+		}
 
-			public DetachList detachList = new DetachList();
+		public void add(Object leftPropertyName,
+				SourcesPropertyChangeEvents right, Object rightPropertyName) {
+			add(leftPropertyName, null, right, rightPropertyName, null);
+		}
 
-			private Map<String, Object> values = AlcinaCollections
-					.newUnqiueMap();
+		public void add(SourcesPropertyChangeEvents left,
+				Object leftPropertyName, Converter leftToRightConverter,
+				SourcesPropertyChangeEvents right, Object rightPropertyName,
+				Converter rightToLeftConverter) {
+			String leftPropertyNameString = PropertyEnum
+					.asPropertyName(leftPropertyName);
+			String rightPropertyNameString = PropertyEnum
+					.asPropertyName(rightPropertyName);
+			Binding child = BindingBuilder.bind(left)
+					.onLeftProperty(leftPropertyNameString)
+					.convertLeftWith(leftToRightConverter).toRight(right)
+					.onRightProperty(rightPropertyNameString)
+					.convertRightWith(rightToLeftConverter).toBinding();
+			binding.getChildren().add(child);
+		}
 
-			/*
-			 * keep the fieldless propertychange contract mostly separate/clean
-			 *
-			 */
-			private PropertyChangeSource propertyChangeSource = new PropertyChangeSource();
+		public void add(SourcesPropertyChangeEvents left,
+				Object leftPropertyName, SourcesPropertyChangeEvents right,
+				Object rightPropertyName) {
+			add(left, leftPropertyName, null, right, rightPropertyName, null);
+		}
 
-			/*
-			 * model has no field-backed properties, instead all values are
-			 * stored in the values array (and getters call
-			 * BoundValues.value(propertyName))
-			 */
-			private boolean fieldless;
+		public <I, O> void addOneway(Object leftPropertyName,
+				SourcesPropertyChangeEvents right, Object rightPropertyName,
+				Converter<I, O> rightToLeftConverter) {
+			add(leftPropertyName, Binding.IGNORE_CHANGE, right,
+					rightPropertyName, rightToLeftConverter);
+		}
 
-			public void add(Object leftPropertyName,
-					Converter leftToRightConverter,
-					SourcesPropertyChangeEvents right, Object rightPropertyName,
-					Converter rightToLeftConverter) {
-				SourcesPropertyChangeEvents left = getSource();
-				add(left, leftPropertyName, leftToRightConverter, right,
-						rightPropertyName, rightToLeftConverter);
+		public void bind() {
+			binding.bind();
+		}
+
+		public boolean isFieldless() {
+			return this.fieldless;
+		}
+
+		public void setFieldless(boolean fieldless) {
+			this.fieldless = fieldless;
+		}
+
+		public void setLeft() {
+			binding.setLeft();
+		}
+
+		public void unbind() {
+			binding.unbind();
+			detachList.detach();
+		}
+
+		public <T> T value(Object propertyName) {
+			String propertyNameString = PropertyEnum
+					.asPropertyName(propertyName);
+			return (T) values.get(propertyNameString);
+		}
+
+		private SourcesPropertyChangeEvents getSource() {
+			SourcesPropertyChangeEvents left = fieldless ? propertyChangeSource
+					: Model.this;
+			return left;
+		}
+
+		public class MapBackedProperty extends Property {
+			public MapBackedProperty(Property property) {
+				super(property);
 			}
 
-			/*
-			 * Recomputes on any property change
-			 */
-			public void add(Object leftPropertyName,
-					SourcesPropertyChangeEvents right) {
-				BaseSourcesPropertyChangeEvents source = (BaseSourcesPropertyChangeEvents) getSource();
-				RemovablePropertyChangeListener listener = new RemovablePropertyChangeListener(
-						right, null, evt -> {
-							source.firePropertyChange(null, evt.getOldValue(),
-									evt.getNewValue());
-						});
-				// FIXME - dirndl 1x1d - route everything via detachlist /
-				// hasbind
-				listener.bind();
-				detachList.add(listener);
+			@Override
+			public Object get(Object bean) {
+				throw new UnsupportedOperationException();
 			}
 
-			public void add(Object leftPropertyName,
-					SourcesPropertyChangeEvents right,
-					Object rightPropertyName) {
-				add(leftPropertyName, null, right, rightPropertyName, null);
+			@Override
+			public void set(Object bean, Object newValue) {
+				Object oldValue = value(getName());
+				values.put(getName(), newValue);
+				Model.this.firePropertyChange(getName(), oldValue, newValue);
 			}
+		}
 
-			public void add(SourcesPropertyChangeEvents left,
-					Object leftPropertyName, Converter leftToRightConverter,
-					SourcesPropertyChangeEvents right, Object rightPropertyName,
-					Converter rightToLeftConverter) {
-				String leftPropertyNameString = PropertyEnum
-						.asPropertyName(leftPropertyName);
-				String rightPropertyNameString = PropertyEnum
-						.asPropertyName(rightPropertyName);
-				Binding child = BindingBuilder.bind(left)
-						.onLeftProperty(leftPropertyNameString)
-						.convertLeftWith(leftToRightConverter).toRight(right)
-						.onRightProperty(rightPropertyNameString)
-						.convertRightWith(rightToLeftConverter).toBinding();
-				binding.getChildren().add(child);
-			}
-
-			public void add(SourcesPropertyChangeEvents left,
-					Object leftPropertyName, SourcesPropertyChangeEvents right,
-					Object rightPropertyName) {
-				add(left, leftPropertyName, null, right, rightPropertyName,
-						null);
-			}
-
-			public <I, O> void addOneway(Object leftPropertyName,
-					SourcesPropertyChangeEvents right, Object rightPropertyName,
-					Converter<I, O> rightToLeftConverter) {
-				add(leftPropertyName, Binding.IGNORE_CHANGE, right,
-						rightPropertyName, rightToLeftConverter);
-			}
-
-			public void bind() {
-				binding.bind();
-			}
-
-			public boolean isFieldless() {
-				return this.fieldless;
-			}
-
-			public void setFieldless(boolean fieldless) {
-				this.fieldless = fieldless;
-			}
-
-			public void setLeft() {
-				binding.setLeft();
-			}
-
-			public void unbind() {
-				binding.unbind();
-				detachList.detach();
-			}
-
-			public <T> T value(Object propertyName) {
-				String propertyNameString = PropertyEnum
-						.asPropertyName(propertyName);
-				return (T) values.get(propertyNameString);
-			}
-
-			private SourcesPropertyChangeEvents getSource() {
-				SourcesPropertyChangeEvents left = fieldless
-						? propertyChangeSource
-						: WithPropertyBinding.this;
-				return left;
-			}
-
-			public class MapBackedProperty extends Property {
-				public MapBackedProperty(Property property) {
-					super(property);
-				}
-
-				@Override
-				public Object get(Object bean) {
-					throw new UnsupportedOperationException();
-				}
-
-				@Override
-				public void set(Object bean, Object newValue) {
-					Object oldValue = value(getName());
-					values.put(getName(), newValue);
-					WithPropertyBinding.this.firePropertyChange(getName(),
-							oldValue, newValue);
-				}
-			}
-
-			class PropertyChangeSource extends BaseSourcesPropertyChangeEvents
-					implements DefinesProperties {
-				@Override
-				public Property provideProperty(String propertyName) {
-					Property property = Reflections.at(WithPropertyBinding.this)
-							.property(propertyName);
-					return new MapBackedProperty(property);
-				}
+		class PropertyChangeSource extends BaseSourcesPropertyChangeEvents
+				implements DefinesProperties {
+			@Override
+			public Property provideProperty(String propertyName) {
+				Property property = Reflections.at(Model.this)
+						.property(propertyName);
+				return new MapBackedProperty(property);
 			}
 		}
 	}
 
-	// No mixins sez Java (so this effectively mixes WithNode + WithBinding)
-	public static class WithPropertyBindingAndNode
-			extends Model.WithPropertyBinding implements HasNode {
-		protected DirectedLayout.Node node;
+	public interface FocusOnBind {
+		boolean isFocusOnBind();
 
-		@Override
-		public void onBind(Bind event) {
-			if (event.isBound()) {
-				node = event.getContext().node;
-			} else {
-				node = null;
+		default void onBind(FocusOnBind dispatchMarker, Bind event) {
+			if (event.isBound() && isFocusOnBind()) {
+				// definitely deferred (not finally), since the dom can be
+				// mutated in finally blocks
+				Scheduler.get().scheduleDeferred(() -> {
+					Widget widget = event.getContext().node.getWidget();
+					FocusImpl.getFocusImplForWidget()
+							.focus(widget.getElement());
+				});
 			}
-			super.onBind(event);
 		}
+	}
 
-		@Override
-		public Node provideNode() {
-			return node;
-		}
+	public interface RerouteBubbledEvents {
+		Model rerouteBubbledEventsTo();
 	}
 }

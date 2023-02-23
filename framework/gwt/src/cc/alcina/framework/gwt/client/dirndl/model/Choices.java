@@ -35,7 +35,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
  * FIXME - dirndl 1x1e - Now that overlay events are routed to logical parents,
  * it may be possible to cleanup event handling in this class
  */
-public abstract class Choices<T> extends Model.WithNode
+public abstract class Choices<T> extends Model
 		implements ModelEvents.Selected.Handler, HasSelectedValue {
 	protected List<Choices.Choice<T>> choices;
 
@@ -156,8 +156,8 @@ public abstract class Choices<T> extends Model.WithNode
 			choices.forEach(c -> c.setSelected(valuesSet.contains(c.value)));
 			List<T> newValues = getSelectedValues();
 			if (!Objects.equals(oldValues, newValues)) {
-				NodeEvent.Context.newNodeContext(node)
-						.fire(ModelEvents.SelectionChanged.class);
+				NodeEvent.Context.fromNode(provideNode())
+						.dispatch(ModelEvents.SelectionChanged.class, null);
 			}
 		}
 	}
@@ -214,7 +214,7 @@ public abstract class Choices<T> extends Model.WithNode
 
 		@Override
 		public void onSelected(Selected event) {
-			if (event.checkReemitted(node)) {
+			if (event.checkReemitted(this)) {
 				return;
 			}
 			Choices.Choice<T> choice = event == null ? null : event.getModel();
@@ -249,8 +249,8 @@ public abstract class Choices<T> extends Model.WithNode
 			choices.forEach(c -> c.setSelected(c.value == value));
 			T newValue = getSelectedValue();
 			if (!Objects.equals(oldValue, newValue)) {
-				NodeEvent.Context.newNodeContext(node)
-						.fire(ModelEvents.SelectionChanged.class);
+				NodeEvent.Context.fromNode(provideNode())
+						.dispatch(ModelEvents.SelectionChanged.class, null);
 				selectionChanged.signal();
 			}
 		}

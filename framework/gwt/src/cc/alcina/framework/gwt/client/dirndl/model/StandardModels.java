@@ -18,7 +18,7 @@ public class StandardModels {
 			type = Type.CLASS_PROPERTY,
 			transform = ToStringFunction.ExplicitIdentity.class))
 	@TypeSerialization(reflectiveSerializable = false)
-	public static class HeaderContent extends Model.WithPropertyBinding {
+	public static class HeaderContent extends Model {
 		private Object header;
 
 		private Object content;

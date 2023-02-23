@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 	bindings = @Binding(from = "open", type = Type.CSS_CLASS),
 	receives = { DropdownEvents.DropdownButtonClicked.class,
 			ModelEvents.Closed.class })
-public class Dropdown extends Model.WithNode
+public class Dropdown extends Model
 		implements DropdownButtonClicked.Handler, ModelEvents.Closed.Handler {
 	private boolean open;
 

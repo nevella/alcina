@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.process.TreeProcess.HasNode;
+import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal.Generation;
@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  * @param <T>
  */
-public interface Selection<T> extends HasNode<Selection> {
+public interface Selection<T> extends HasProcessNode<Selection> {
 	public T get();
 
 	/**

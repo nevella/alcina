@@ -167,7 +167,7 @@ public class TreeProcess {
 		}
 	}
 
-	public interface HasNode<T> {
+	public interface HasProcessNode<T> {
 		public Node processNode();
 
 		default <V> V processAncestorValue(Class<V> clazz) {
@@ -238,8 +238,8 @@ public class TreeProcess {
 			}
 			if (getChildren().stream()
 					.allMatch(n -> n.isReleasedResources()
-							|| (n.getValue() instanceof HasNode
-									&& !((HasNode) n.getValue())
+							|| (n.getValue() instanceof HasProcessNode
+									&& !((HasProcessNode) n.getValue())
 											.referencesParentResources()))) {
 				setReleasedResources(true);
 				return true;

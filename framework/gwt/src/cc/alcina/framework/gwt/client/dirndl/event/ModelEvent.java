@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
+import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 
 /**
  * <h2>Gotchas</h2>
@@ -27,6 +28,18 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
  * was made" - e.g. clicking on the 'x' button somewhere commands 'Close', so
  * emit a {@code CloseEvent}. But when a UI <i>change</i> event occurs - such as
  * 'the popup closed', use the past simple - {@code ClosedEvent}.
+ *
+ * <p>
+ * Naming note: 'dispatch' - emit/enqueue an event. 'Fire' call an event handler
+ * with an event instance. There may be some lingering misuse...and there's
+ * confusion all over the web. But if you "dispatch" a physical package, that's
+ * really the beginning of a process - not a step - so I think this usage is
+ * reasonable. Note that GWT event bus sort of has it the other way round - sad.
+ *
+ * <p>
+ * usage note: there are many ways to reemit or emit an event from code -
+ * preferred are the fluent ones ({@code DirectedLayout.Node.dispatch_, {@code
+ * NodeEvent.reemitAs})
  *
  * @author nick@alcina.cc
  *
@@ -57,8 +70,8 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public ModelEvent() {
 	}
 
-	public boolean checkReemitted(Node node) {
-		if (wasReemitted(node)) {
+	public boolean checkReemitted(HasNode hasNode) {
+		if (wasReemitted(hasNode.provideNode())) {
 			getContext().markCauseEventAsNotHandled();
 			return true;
 		} else {

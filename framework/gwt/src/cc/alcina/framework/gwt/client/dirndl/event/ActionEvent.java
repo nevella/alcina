@@ -110,7 +110,7 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 		@Override
 		public void onClick(Click event) {
 			WidgetUtils.squelchCurrentEvent();
-			event.reemitAs(this.event.getClass());
+			event.reemitAs(this, this.event.getClass());
 		}
 	}
 

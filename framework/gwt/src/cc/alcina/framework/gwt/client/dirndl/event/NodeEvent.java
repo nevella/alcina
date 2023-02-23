@@ -9,6 +9,7 @@ import com.google.gwt.event.shared.GwtEvent;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
  * <p>
@@ -44,14 +45,15 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		context.reemit();
 	}
 
-	public <O extends ModelEvent> void reemitAs(Class<O> clazz) {
-		reemitAs(clazz, null);
+	public <O extends ModelEvent> void reemitAs(Model from,
+			Class<O> eventClass) {
+		reemitAs(from, eventClass, from);
 	}
 
-	public <O extends ModelEvent> void reemitAs(Class<O> clazz,
+	public <O extends ModelEvent> void reemitAs(Model from, Class<O> eventClass,
 			Object eventModel) {
-		NodeEvent.Context.newModelContext(this, this.context.node).fire(clazz,
-				eventModel);
+		NodeEvent.Context.fromEvent(this, from.provideNode())
+				.dispatch(eventClass, eventModel);
 	}
 
 	public void setContext(Context context) {
@@ -69,13 +71,13 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 	//
 	public static class Context {
-		public static Context newModelContext(Context previous, Node node) {
+		public static Context fromContext(Context previous, Node node) {
 			Context context = new Context(node == null ? previous.node : node);
 			context.previous = previous;
 			return context;
 		}
 
-		public static Context newModelContext(GwtEvent event, Node node) {
+		public static Context fromEvent(GwtEvent event, Node node) {
 			Context context = new Context(node);
 			if (event instanceof NodeEvent
 					&& ((NodeEvent) event).context != null) {
@@ -86,20 +88,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return context;
 		}
 
-		public static Context newModelContext(String hint, Node node) {
-			Context context = new Context(node);
-			context.hint = hint;
-			return context;
-		}
-
-		public static Context newNodeContext(Node node) {
+		public static Context fromNode(Node node) {
 			Context context = new Context(node);
 			return context;
 		}
-
-		// informational/debugging
-		@SuppressWarnings("unused")
-		private String hint;
 
 		private Context previous;
 
@@ -119,12 +111,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return node.annotation(clazz);
 		}
 
-		// Fluent event emission
-		public void fire(Class<? extends ModelEvent> modelEventClass) {
-			fire(modelEventClass, null);
-		}
-
-		public void fire(Class<? extends ModelEvent> modelEventClass,
+		public void dispatch(Class<? extends ModelEvent> modelEventClass,
 				Object model) {
 			ModelEvent.dispatch(this, modelEventClass, model);
 		}
@@ -170,10 +157,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		}
 
 		void reemit() {
-			Context newContext = newModelContext(this, null);
+			Context newContext = fromContext(this, node);
 			newContext.reemission = node;
-			newContext.fire((Class<? extends ModelEvent>) nodeEvent.getClass(),
-					null);
+			newContext.dispatch(
+					(Class<? extends ModelEvent>) nodeEvent.getClass(), null);
 		}
 	}
 

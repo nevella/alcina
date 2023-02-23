@@ -182,7 +182,7 @@ public class DirectedLayout implements AlcinaProcess {
 		 */
 		Node cursor = modelEvent.getContext().node;
 		while (cursor != null) {
-			cursor.dispatchEvent(modelEvent);
+			cursor.fireEvent(modelEvent);
 			if (modelEvent.isHandled()) {
 				break;
 			}
@@ -458,10 +458,10 @@ public class DirectedLayout implements AlcinaProcess {
 			return null;
 		}
 
-		public void dispatchEvent(ModelEvent modelEvent) {
-			if (eventBindings != null) {
-				eventBindings.forEach(bb -> bb.dispatchEventIfType(modelEvent));
-			}
+		public void dispatch(Class<? extends ModelEvent> modelEventClass,
+				Object data) {
+			Context context = NodeEvent.Context.fromNode(this);
+			ModelEvent.dispatch(context, modelEventClass, data);
 		}
 
 		public AnnotationLocation getAnnotationLocation() {
@@ -622,6 +622,12 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			if (propertyBindings != null) {
 				propertyBindings.unbind();
+			}
+		}
+
+		void fireEvent(ModelEvent modelEvent) {
+			if (eventBindings != null) {
+				eventBindings.forEach(bb -> bb.fireEventIfType(modelEvent));
 			}
 		}
 
@@ -854,9 +860,9 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 
 			public void onEvent(GwtEvent event) {
-				Context context = NodeEvent.Context.newModelContext(event,
+				Context context = NodeEvent.Context.fromEvent(event,
 						Node.this);
-				dispatchEvent(type, context, Node.this.getModel());
+				fireEvent(type, context, Node.this.getModel());
 			}
 
 			@Override
@@ -893,9 +899,8 @@ public class DirectedLayout implements AlcinaProcess {
 			// reemit)
 			//
 			//
-			private void dispatchEvent(
-					Class<? extends NodeEvent> actualEventType, Context context,
-					Object model) {
+			private void fireEvent(Class<? extends NodeEvent> actualEventType,
+					Context context, Object model) {
 				NodeEvent nodeEvent = Reflections.newInstance(actualEventType);
 				context.setNodeEvent(nodeEvent);
 				nodeEvent.setModel(model);
@@ -916,7 +921,7 @@ public class DirectedLayout implements AlcinaProcess {
 					// correspondence between elements of @Directed.reemits and
 					// receives
 					Context eventContext = NodeEvent.Context
-							.newModelContext(context, Node.this);
+							.fromContext(context, Node.this);
 					Preconditions.checkState(directed
 							.receives().length == directed.reemits().length);
 					Class<? extends ModelEvent> emitType = (Class<? extends ModelEvent>) directed
@@ -932,14 +937,14 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 
-			void dispatchEventIfType(ModelEvent event) {
+			void fireEventIfType(ModelEvent event) {
 				if (event.getReceiverType() == type) {
 					Context context = NodeEvent.Context
-							.newModelContext(event.getContext(), Node.this);
+							.fromContext(event.getContext(), Node.this);
 					// set before we dispatch to the handler, so the handler can
 					// unset
 					event.setHandled(true);
-					dispatchEvent(event.getClass(), context, event.getModel());
+					fireEvent(event.getClass(), context, event.getModel());
 				}
 			}
 
