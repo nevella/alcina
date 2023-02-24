@@ -13,10 +13,12 @@
  */
 package cc.alcina.framework.common.client.csobjects;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -202,7 +204,8 @@ public class JobTracker extends Model implements TreeSerializable {
 				CommonUtils.nullToEmpty(getJobResult()));
 	}
 
-	public static class Request extends Model {
+	@Bean
+	public static class Request implements Serializable {
 		private List<Long> ids = new ArrayList<>();
 
 		public List<Long> getIds() {
@@ -214,7 +217,8 @@ public class JobTracker extends Model implements TreeSerializable {
 		}
 	}
 
-	public static class Response extends Model {
+	@Bean
+	public static class Response implements Serializable {
 		private List<JobTracker> trackers = new ArrayList<>();
 
 		public List<JobTracker> getTrackers() {

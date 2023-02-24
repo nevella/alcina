@@ -44,3 +44,8 @@ should route to the correct property
 
 ##  	TODOS
 ### 	reflection/script - split between serialization accessors (field) vs other (method)?
+
+## Progress
+* mostly done, should revisit a few:
+  * use mvcc classes as property source (not non-mvcc superclass)
+  * split between serialization accessors (field) vs other (method)?
