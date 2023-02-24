@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal.TraversalNode;
 
 /**
@@ -20,6 +21,10 @@ import cc.alcina.framework.common.client.util.traversal.OneWayTraversal.Traversa
  * <p>
  * This does *not* throw a ConcurrentModificationException if modifying the
  * children of the entered (current) node, but will in other cases
+ *
+ * <p>
+ * TODO - there is no way to non-destructively walk (aka toString()) - possibly
+ * should be
  *
  * @author nick@alcina.cc
  *
@@ -82,6 +87,15 @@ public class OneWayTraversal<T extends Traversable>
 		// dealer's choice
 		next.enter();
 		return result;
+	}
+
+	@Override
+	public String toString() {
+		if (next == null) {
+			return "(traversal complete)";
+		} else {
+			return next.toString();
+		}
 	}
 
 	private void prepareNext() {
@@ -165,6 +179,17 @@ public class OneWayTraversal<T extends Traversable>
 			nextSibling = null;
 			parent = null;
 			buffer.release(this);
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder format = new FormatBuilder().separator("\n");
+			format.appendIfNotBlankKv("value", value);
+			format.appendIfNotBlankKv("descentChild", descentChild,
+					() -> descentChild.value);
+			format.appendIfNotBlankKv("nextSibling", descentChild,
+					() -> nextSibling.value);
+			return format.toString();
 		}
 	}
 }

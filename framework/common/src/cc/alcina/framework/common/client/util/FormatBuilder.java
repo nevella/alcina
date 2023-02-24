@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -176,6 +177,13 @@ public class FormatBuilder {
 			sb.append(toString);
 		}
 		return this;
+	}
+
+	public void appendIfNotBlankKv(String key, Object object,
+			Supplier supplier) {
+		if (object != null) {
+			appendIfNotBlankKv(key, supplier.get());
+		}
 	}
 
 	public FormatBuilder appendKeyValues(Object... objects) {

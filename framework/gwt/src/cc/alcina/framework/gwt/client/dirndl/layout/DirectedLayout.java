@@ -533,8 +533,13 @@ public class DirectedLayout implements AlcinaProcess {
 				propertyBindings.bind();
 			}
 			if (model instanceof LayoutEvents.Bind.Handler) {
-				((LayoutEvents.Bind.Handler) model)
-						.onBind(new LayoutEvents.Bind(this, true));
+				if (parent != null && parent.model == model) {
+					// only bind if topmost of a multiple node -> single model
+					// chain
+				} else {
+					((LayoutEvents.Bind.Handler) model)
+							.onBind(new LayoutEvents.Bind(this, true));
+				}
 			}
 		}
 
@@ -663,7 +668,7 @@ public class DirectedLayout implements AlcinaProcess {
 			if (parent == null) {
 				return thisLoc;
 			} else {
-				return parent.path() + " =>\n" + thisLoc;
+				return parent.path() + " \n" + thisLoc;
 			}
 		}
 
@@ -860,8 +865,7 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 
 			public void onEvent(GwtEvent event) {
-				Context context = NodeEvent.Context.fromEvent(event,
-						Node.this);
+				Context context = NodeEvent.Context.fromEvent(event, Node.this);
 				fireEvent(type, context, Node.this.getModel());
 			}
 

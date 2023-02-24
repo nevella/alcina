@@ -2,10 +2,13 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Supplier;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Binding.DefinesProperties;
 import com.totsp.gwittir.client.beans.BindingBuilder;
@@ -15,6 +18,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.HasChanges;
+import cc.alcina.framework.common.client.logic.ListenerBinding;
+import cc.alcina.framework.common.client.logic.ListenerBindings;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -23,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
@@ -63,9 +69,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * instrument, but in the absence of more granular (propertychange) binding
  * possibilities, it's reasonable.
  *
- * <p>
- * FIXME - dirndl 1x1d.0 - flatten hierarchy - remove nested subclasses,
- * BoundValues -> Bindings
  *
  * <p>
  * DOC - bindings
@@ -132,7 +135,8 @@ public abstract class Model extends Bindable implements
 	@Override
 	/**
 	 * Note that subclasses -must- call super.onBind(Bind) if overriding this
-	 * event
+	 * event - and generally should call it first (since it sets
+	 * {@code model.node}). Bindings should be set up prior to this call
 	 */
 	public void onBind(Bind event) {
 		if (event.isBound()) {
@@ -182,9 +186,9 @@ public abstract class Model extends Bindable implements
 	public class Bindings {
 		private Binding binding = new Binding();
 
-		public DetachList detachList = new DetachList();
-
 		private Map<String, Object> values = AlcinaCollections.newUnqiueMap();
+
+		private ListenerBindings listenerBindings = new ListenerBindings();
 
 		/*
 		 * keep the fieldless propertychange contract mostly separate/clean
@@ -198,6 +202,12 @@ public abstract class Model extends Bindable implements
 		 * BoundValues.value(propertyName))
 		 */
 		private boolean fieldless;
+
+		private boolean bound;
+
+		public void add(ListenerBinding listenerBinding) {
+			listenerBindings.add(listenerBinding);
+		}
 
 		public void add(Object leftPropertyName, Converter leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
@@ -218,10 +228,7 @@ public abstract class Model extends Bindable implements
 						source.firePropertyChange(null, evt.getOldValue(),
 								evt.getNewValue());
 					});
-			// FIXME - dirndl 1x1d - route everything via detachlist /
-			// hasbind
-			listener.bind();
-			detachList.add(listener);
+			add(listener);
 		}
 
 		public void add(Object leftPropertyName,
@@ -251,6 +258,11 @@ public abstract class Model extends Bindable implements
 			add(left, leftPropertyName, null, right, rightPropertyName, null);
 		}
 
+		public void addListener(
+				Supplier<ListenerReference> listenerReferenceSupplier) {
+			listenerBindings.add(listenerReferenceSupplier);
+		}
+
 		public <I, O> void addOneway(Object leftPropertyName,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
 				Converter<I, O> rightToLeftConverter) {
@@ -258,8 +270,16 @@ public abstract class Model extends Bindable implements
 					rightPropertyName, rightToLeftConverter);
 		}
 
+		public void addRegistration(
+				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
+			listenerBindings.add(asBinding(handlerRegistrationSupplier));
+		}
+
 		public void bind() {
+			Preconditions.checkState(!bound);
 			binding.bind();
+			listenerBindings.bind();
+			bound = true;
 		}
 
 		public boolean isFieldless() {
@@ -275,14 +295,34 @@ public abstract class Model extends Bindable implements
 		}
 
 		public void unbind() {
+			Preconditions.checkState(bound);
+			listenerBindings.unbind();
 			binding.unbind();
-			detachList.detach();
+			bound = false;
 		}
 
 		public <T> T value(Object propertyName) {
 			String propertyNameString = PropertyEnum
 					.asPropertyName(propertyName);
 			return (T) values.get(propertyNameString);
+		}
+
+		private ListenerBinding asBinding(
+				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
+			return new ListenerBinding() {
+				private HandlerRegistration reference;
+
+				@Override
+				public void bind() {
+					reference = handlerRegistrationSupplier.get();
+				}
+
+				@Override
+				public void unbind() {
+					reference.removeHandler();
+					reference = null;
+				}
+			};
 		}
 
 		private SourcesPropertyChangeEvents getSource() {

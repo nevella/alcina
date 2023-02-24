@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.util.TopicListener;
  *
  */
 public class RemovablePropertyChangeListener
-		implements PropertyChangeListener, ListenerReference {
+		implements PropertyChangeListener, ListenerReference, ListenerBinding {
 	private SourcesPropertyChangeEvents source;
 
 	protected String propertyName;
@@ -38,7 +38,8 @@ public class RemovablePropertyChangeListener
 		this.handler = handler;
 	}
 
-	public RemovablePropertyChangeListener bind() {
+	@Override
+	public void bind() {
 		Preconditions.checkState(!bound);
 		bound = true;
 		if (propertyName == null) {
@@ -46,7 +47,6 @@ public class RemovablePropertyChangeListener
 		} else {
 			source.addPropertyChangeListener(propertyName, this);
 		}
-		return this;
 	}
 
 	public RemovablePropertyChangeListener changeBoundState(boolean to) {
@@ -76,6 +76,7 @@ public class RemovablePropertyChangeListener
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public void unbind() {
 		if (bound) {
 			if (propertyName == null) {
