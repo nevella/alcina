@@ -1514,6 +1514,17 @@ public class CommonUtils {
 		}
 	}
 
+	/**
+	 * <li>Returns whether a given string starts with a given prefix.
+	 * <li>Returns false for null strings or null prefixes
+	 * @param str String to check
+	 * @param prefix Prefix to check for
+	 * @return
+	 */
+	public static boolean safeStartsWith(String str, String prefix) {
+		return str == null || prefix == null ? false : str.startsWith(prefix); 
+	}
+
 	/*
 	 * This controls how dates are *rendered* (including in editors) - not their
 	 * general representation
