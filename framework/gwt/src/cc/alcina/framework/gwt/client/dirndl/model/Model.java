@@ -76,6 +76,13 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * won't use it, so that's the simplest + most effective (memory-conserving)
  * optimisation
  *
+ * <p>
+ * Serialization: this is predominantly a UI class, if you need a just a general
+ * purpose base reflective serializable class use Bindable (or any Bean-like
+ * with an @Bean annotation (FIXME - beans 2)). That's not to say that this
+ * shouldn't be used as an rpc class (when sending server-side renderable model
+ * trees/graphs to the client), it just shouldn't be the go-to base.
+ *
  * @author nick@alcina.cc
  *
  */
