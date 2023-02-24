@@ -18,6 +18,16 @@ public interface ThrowingRunnable {
 				.collect(Collectors.toList());
 	}
 
+	public static Runnable castIfRunnable(Object instance) {
+		if (instance instanceof Runnable) {
+			return (Runnable) instance;
+		}
+		if (instance instanceof ThrowingRunnable) {
+			return asRunnable((ThrowingRunnable) instance);
+		}
+		return null;
+	}
+
 	public static void runAll(Collection<ThrowingRunnable> throwingRunnables) {
 		try {
 			for (ThrowingRunnable throwingRunnable : throwingRunnables) {
