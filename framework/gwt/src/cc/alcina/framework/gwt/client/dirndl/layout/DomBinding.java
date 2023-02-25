@@ -22,15 +22,21 @@ public abstract class DomBinding<E extends NodeEvent> implements EventHandler {
 		} else {
 			Preconditions.checkState(handlerRegistration == null);
 			handlerRegistration = bind0(widget, model);
+			Preconditions.checkState(handlerRegistration != null);
 		}
 	}
 
-	// most bindings won't require the model - but bindings the vary based on
+	// most bindings won't require the model - but bindings that vary based on
 	// model characteristics (e.g. IsModal) will
 	protected HandlerRegistration bind0(Widget widget, Object model) {
 		return bind1(widget);
 	}
 
+	/*
+	 * Some subclasses bind to non-handler-registration sources (e.g.
+	 * intersectionobserver), so HandlerRegistration is somewhat abused (what is
+	 * really bound is an Observer, and the return is an ObserverRegistration)
+	 */
 	protected abstract HandlerRegistration bind1(Widget widget);
 
 	protected void fireEvent(GwtEvent gwtEvent) {

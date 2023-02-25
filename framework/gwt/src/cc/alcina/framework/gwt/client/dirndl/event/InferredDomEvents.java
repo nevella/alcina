@@ -300,16 +300,14 @@ public class InferredDomEvents {
 
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
-				widget.addAttachHandler(evt -> {
-					if (evt.isAttached()) {
-						intersectionObserver = IntersectionObserver
-								.observerFor(this, widget.getElement()
-										.implAccess().ensureRemote());
-					} else {
+				intersectionObserver = IntersectionObserver.observerFor(this,
+						widget.getElement().implAccess().ensureRemote());
+				return new HandlerRegistration() {
+					@Override
+					public void removeHandler() {
 						intersectionObserver.disconnect();
 					}
-				});
-				return null;
+				};
 			}
 
 			public static final class IntersectionObserver
@@ -493,15 +491,14 @@ public class InferredDomEvents {
 
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
-				widget.addAttachHandler(evt -> {
-					if (evt.isAttached()) {
-						resizeObserver = ResizeObserver.observerFor(this, widget
-								.getElement().implAccess().ensureRemote());
-					} else {
+				resizeObserver = ResizeObserver.observerFor(this,
+						widget.getElement().implAccess().ensureRemote());
+				return new HandlerRegistration() {
+					@Override
+					public void removeHandler() {
 						resizeObserver.disconnect();
 					}
-				});
-				return null;
+				};
 			}
 		}
 
