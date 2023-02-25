@@ -60,7 +60,6 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 			if (handler.isPresent()) {
 				((SimpleEventBus) Client.eventBus()).fireEventFromSource(
 						modelEvent, context.node, List.of(handler.get()));
-				handler.get().handle(modelEvent);
 			}
 		}
 	}

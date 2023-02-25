@@ -612,8 +612,12 @@ public class DirectedLayout implements AlcinaProcess {
 
 		private void unbind() {
 			if (model instanceof LayoutEvents.Bind.Handler) {
-				((LayoutEvents.Bind.Handler) model)
-						.onBind(new LayoutEvents.Bind(this, false));
+				if (parent != null && parent.model == model) {
+					//noop
+				} else {
+					((LayoutEvents.Bind.Handler) model)
+							.onBind(new LayoutEvents.Bind(this, false));
+				}
 			}
 			if (children != null) {
 				children.forEach(Node::unbind);

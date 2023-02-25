@@ -46,6 +46,9 @@ public class LayoutEvents {
 	 * Fired at the bind/unbind points of the layout algorithm as it lays out
 	 * this model. See {@link DirectedLayout.RendererInput#render} for details
 	 *
+	 * FIXME - dirndl 1x1d.0 - remove unneeded usages (since generally better
+	 * via early binding().add() if possible
+	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
