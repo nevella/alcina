@@ -28,10 +28,13 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
  *
  */
 /*
- * FIXME - dirndl 1x1d - phase - add Phase
+ * FIXME - dirndl 1x3 - phase - add Phase
  * [DEFAULT,COLLECTION,ELEMENT,PRE_TRANSFORM,POST_TRANSFORM] - which defaults to
  * DEFAULT but allows finer control over DirectedRenderer.Transform and
  * DirectedRenderer.Collection transformations
+ *
+ * What there is now works - but it's not that easy to understand -- 'phase'
+ * would help to split the process into layers
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
