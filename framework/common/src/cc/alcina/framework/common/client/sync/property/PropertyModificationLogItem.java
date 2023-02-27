@@ -2,10 +2,12 @@ package cc.alcina.framework.common.client.sync.property;
 
 import java.util.Date;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
+@Bean
 public class PropertyModificationLogItem {
 	private String propertyName;
 
@@ -92,6 +94,7 @@ public class PropertyModificationLogItem {
 		this.value = value;
 	}
 
+	@Override
 	public String toString() {
 		return Ax.format("%s\t%s\t%s",
 				CommonUtils.padStringRight(source, 20, ' '),

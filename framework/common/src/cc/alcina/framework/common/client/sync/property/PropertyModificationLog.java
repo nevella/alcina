@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
+@Bean
 public class PropertyModificationLog {
 	private List<PropertyModificationLogItem> items = new ArrayList<>();
 

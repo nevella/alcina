@@ -1,7 +1,10 @@
 package cc.alcina.framework.servlet.sync;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 
+@Bean
 public class SyncPair<T> {
 	private KeyedObject<T> left;
 
@@ -47,6 +50,7 @@ public class SyncPair<T> {
 		return this.left;
 	}
 
+	@AlcinaTransient
 	public SyncItemMatch<T> getMatchRecord() {
 		return this.matchRecord;
 	}

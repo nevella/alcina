@@ -4,12 +4,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.sync.property.PropertyModificationLog;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
+@Bean
 public class SyncDeltaModel {
 	private Multimap<Class, List<SyncPair>> deltas = new Multimap<Class, List<SyncPair>>();
 
