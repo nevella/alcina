@@ -46,8 +46,6 @@ public class LayoutEvents {
 	 * Fired at the bind/unbind points of the layout algorithm as it lays out
 	 * this model. See {@link DirectedLayout.RendererInput#render} for details
 	 *
-	 * FIXME - dirndl 1x1d.0 - remove unneeded usages (since generally better
-	 * via early binding().add() if possible
 	 *
 	 * @author nick@alcina.cc
 	 *
@@ -76,9 +74,9 @@ public class LayoutEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			/**
-			 * Do not modify the model (properties) here - instead, use
-			 * BeforeRender.onBeforeHandler. This occurs after widget and child
-			 * node layout
+			 * Do not modify the model (properties) here or create bindings -
+			 * instead, use BeforeRender.onBeforeHandler. This occurs after
+			 * widget and child node layout
 			 */
 			void onBind(Bind event);
 		}

@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.dirndl.overlay;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.logical.shared.ResizeEvent;
-import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -41,12 +40,12 @@ public class OverlayContainer extends Model implements HasTag {
 
 	private boolean visible = false;
 
-	private HandlerRegistration resizeRegistration;
-
 	OverlayContainer(Overlay contents, ContainerOptions containerOptions) {
 		this.contents = contents;
 		this.containerOptions = containerOptions;
 		this.modal = containerOptions.modal;
+		bindings()
+				.addRegistration(() -> Window.addResizeHandler(this::onResize));
 	}
 
 	@Directed
@@ -66,10 +65,7 @@ public class OverlayContainer extends Model implements HasTag {
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (event.isBound()) {
-			this.resizeRegistration = Window.addResizeHandler(this::onResize);
 			Scheduler.get().scheduleFinally(this::position);
-		} else {
-			resizeRegistration.removeHandler();
 		}
 	}
 
