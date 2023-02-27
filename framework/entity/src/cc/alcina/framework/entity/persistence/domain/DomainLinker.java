@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -198,7 +198,7 @@ public class DomainLinker<E extends Entity> {
 			E attached = (E) array[0];
 			E detached = Reflections.newInstance(clazz);
 			result.add(detached);
-			ResourceUtilities.copyBeanProperties(attached, detached, null, true,
+			ObjectUtil.copyBeanProperties(attached, detached, null, true,
 					ignorePropertyNames);
 			cache().put(detached);
 			// only needed for top-level

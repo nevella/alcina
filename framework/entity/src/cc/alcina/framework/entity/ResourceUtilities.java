@@ -17,7 +17,6 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyDescriptor;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -36,7 +35,6 @@ import java.io.OutputStreamWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -77,12 +75,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalCollection;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
 /**
  *
@@ -110,83 +106,6 @@ public class ResourceUtilities {
 	 */
 	public static void addImmutableCustomPropertyKey(String key) {
 		immutableCustomProperties.add(key);
-	}
-
-	public static void appShutdown() {
-	}
-
-	public static StringMap classPathStringExistenceMap(Class clazz,
-			String path) {
-		return StringMap
-				.fromStringList(readClassPathResourceAsString(clazz, path));
-	}
-
-	public static StringMap classPathStringMap(Class clazz, String path) {
-		return StringMap
-				.fromPropertyString(readClassPathResourceAsString(clazz, path));
-	}
-
-	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
-			Class methodFilterAnnotation, boolean cloneCollections) {
-		return copyBeanProperties(srcBean, tgtBean, methodFilterAnnotation,
-				cloneCollections, new ArrayList<String>());
-	}
-
-	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
-			Class methodFilterAnnotation, boolean cloneCollections,
-			Collection<String> ignorePropertyNames) {
-		for (PropertyDescriptor targetDescriptor : SEUtilities
-				.getPropertyDescriptorsSortedByName(tgtBean.getClass())) {
-			if (ignorePropertyNames.contains(targetDescriptor.getName())) {
-				continue;
-			}
-			PropertyDescriptor sourceDescriptor = SEUtilities
-					.getPropertyDescriptorByName(srcBean.getClass(),
-							targetDescriptor.getName());
-			if (sourceDescriptor == null) {
-				continue;
-			}
-			Method readMethod = sourceDescriptor.getReadMethod();
-			if (readMethod == null) {
-				continue;
-			}
-			if (methodFilterAnnotation != null) {
-				if (readMethod.isAnnotationPresent(methodFilterAnnotation)) {
-					continue;
-				}
-			}
-			Method setMethod = targetDescriptor.getWriteMethod();
-			if (setMethod != null) {
-				try {
-					Object obj = readMethod.invoke(srcBean, (Object[]) null);
-					if (cloneCollections && obj instanceof Collection
-							&& obj instanceof Cloneable) {
-						Method clone = obj.getClass().getMethod("clone",
-								new Class[0]);
-						clone.setAccessible(true);
-						obj = clone.invoke(obj, CommonUtils.EMPTY_OBJECT_ARRAY);
-					}
-					setMethod.invoke(tgtBean, obj);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-		return tgtBean;
-	}
-
-	public static <T> T deserializeKryoOrAlcina(String string, Class<T> clazz) {
-		try {
-			return KryoUtils.deserializeFromBase64(string, clazz);
-		} catch (Exception e) {
-			try {
-				return new AlcinaBeanSerializerS().deserialize(string);
-			} catch (RuntimeException e1) {
-				Ax.err(SEUtilities.getMessageOrClass(e));
-				Ax.err(SEUtilities.getMessageOrClass(e1));
-				throw e1;
-			}
-		}
 	}
 
 	public static void ensureFromSystemProperties() {

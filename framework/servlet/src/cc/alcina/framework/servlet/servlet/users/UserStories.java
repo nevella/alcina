@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -255,7 +256,7 @@ public class UserStories {
 			postCreateStory(story, clientInstance);
 		}
 		String delta = getDelta(incoming, story);
-		ResourceUtilities.copyBeanProperties(incoming, story, null, false,
+		ObjectUtil.copyBeanProperties(incoming, story, null, false,
 				getUserStoryPropertiesNotPopulatedByClient());
 		story.setClientInstanceId(clientInstance.getId());
 		story.setIid(clientInstance.getIid());

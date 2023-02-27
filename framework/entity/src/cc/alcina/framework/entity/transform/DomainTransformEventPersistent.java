@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 
 @MappedSuperclass
@@ -73,7 +73,7 @@ public abstract class DomainTransformEventPersistent
 	}
 
 	public void copyFromNonPersistentEvent(DomainTransformEvent event) {
-		ResourceUtilities.copyBeanProperties(event, this, null, true);
+		ObjectUtil.copyBeanProperties(event, this, null, true);
 		if (event.getTransformType() == TransformType.CREATE_OBJECT) {
 			setGeneratedServerId(event.getObjectId());
 		}
@@ -175,7 +175,7 @@ public abstract class DomainTransformEventPersistent
 	 */
 	public DomainTransformEvent toNonPersistentEvent(boolean clearLocalIds) {
 		DomainTransformEvent event = new DomainTransformEvent();
-		ResourceUtilities.copyBeanProperties(this, event, null, true);
+		ObjectUtil.copyBeanProperties(this, event, null, true);
 		if (clearLocalIds) {
 			event.setObjectLocalId(0);
 			event.setValueLocalId(0);
