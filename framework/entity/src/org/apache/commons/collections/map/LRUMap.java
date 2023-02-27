@@ -55,7 +55,7 @@ import org.apache.commons.collections.BoundedMap;
  * @author Stephen Colebourne
  * @author Mike Pettypiece
  * @author Mario Ivankovits
- * 
+ *
  *         Nick - renamed to LRUMap2 because of nullpointer exceptions from
  *         older versions of LRUMap, reuseMapping - see various web threads
  */
@@ -192,6 +192,7 @@ public class LRUMap extends AbstractLinkedMap
 	 *
 	 * @return a shallow clone
 	 */
+	@Override
 	public Object clone() {
 		return super.clone();
 	}
@@ -202,11 +203,12 @@ public class LRUMap extends AbstractLinkedMap
 	 * <p>
 	 * This operation changes the position of the key in the map to the most
 	 * recently used position (first).
-	 * 
+	 *
 	 * @param key
 	 *            the key
 	 * @return the mapped value, null if no match
 	 */
+	@Override
 	public Object get(Object key) {
 		LinkEntry entry = (LinkEntry) getEntry(key);
 		if (entry == null) {
@@ -222,6 +224,7 @@ public class LRUMap extends AbstractLinkedMap
 	 *
 	 * @return <code>true</code> if the map is full
 	 */
+	@Override
 	public boolean isFull() {
 		return (size >= maxSize);
 	}
@@ -242,6 +245,7 @@ public class LRUMap extends AbstractLinkedMap
 	 *
 	 * @return the maximum number of elements the map can hold
 	 */
+	@Override
 	public int maxSize() {
 		return maxSize;
 	}
@@ -272,7 +276,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * From Commons Collections 3.1 this method uses {@link #isFull()} rather
 	 * than accessing <code>size</code> and <code>maxSize</code> directly. It
 	 * also handles the scanUntilRemovable functionality.
-	 * 
+	 *
 	 * @param hashIndex
 	 *            the index into the data array to store at
 	 * @param hashCode
@@ -282,6 +286,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * @param value
 	 *            the value to add
 	 */
+	@Override
 	protected void addMapping(int hashIndex, int hashCode, Object key,
 			Object value) {
 		if (isFull()) {
@@ -329,6 +334,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * Reads the data necessary for <code>put()</code> to work in the
 	 * superclass.
 	 */
+	@Override
 	protected void doReadObject(ObjectInputStream in)
 			throws IOException, ClassNotFoundException {
 		maxSize = in.readInt();
@@ -339,6 +345,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * Writes the data necessary for <code>put()</code> to work in
 	 * deserialization.
 	 */
+	@Override
 	protected void doWriteObject(ObjectOutputStream out) throws IOException {
 		out.writeInt(maxSize);
 		super.doWriteObject(out);
@@ -349,7 +356,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * Moves an entry to the MRU position at the end of the list.
 	 * <p>
 	 * This implementation moves the updated entry to the end of the list.
-	 * 
+	 *
 	 * @param entry
 	 *            the entry to update
 	 */
@@ -376,7 +383,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * <p>
 	 * This method exists for subclasses to override. A subclass may wish to
 	 * provide cleanup of resources when an entry is removed. For example:
-	 * 
+	 *
 	 * <pre>
 	 * protected boolean removeLRU(LinkEntry entry) {
 	 * 	releaseResources(entry.getValue()); // release resources held by
@@ -387,7 +394,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * <p>
 	 * Alternatively, a subclass may choose to not remove the entry or
 	 * selectively keep certain LRU entries. For example:
-	 * 
+	 *
 	 * <pre>
 	 * protected boolean removeLRU(LinkEntry entry) {
 	 * 	if (entry.getKey().toString().startsWith("System.")) {
@@ -397,7 +404,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * 	}
 	 * }
 	 * </pre>
-	 * 
+	 *
 	 * The effect of returning false is dependent on the scanUntilRemovable
 	 * flag. If the flag is true, the next LRU entry will be passed to this
 	 * method and so on until one returns false and is removed, or every entry
@@ -406,7 +413,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * <p>
 	 * NOTE: Commons Collections 3.0 passed the wrong entry to this method. This
 	 * is fixed in version 3.1 onwards.
-	 * 
+	 *
 	 * @param entry
 	 *            the entry to be removed
 	 */
@@ -419,7 +426,7 @@ public class LRUMap extends AbstractLinkedMap
 	 * <p>
 	 * This method uses {@link #removeEntry}, {@link #reuseEntry} and
 	 * {@link #addEntry}.
-	 * 
+	 *
 	 * @param entry
 	 *            the entry to reuse
 	 * @param hashIndex
@@ -475,12 +482,13 @@ public class LRUMap extends AbstractLinkedMap
 	 * <p>
 	 * This implementation moves the updated entry to the top of the list using
 	 * {@link #moveToMRU(AbstractLinkedMap.LinkEntry)}.
-	 * 
+	 *
 	 * @param entry
 	 *            the entry to update
 	 * @param newValue
 	 *            the new value to store
 	 */
+	@Override
 	protected void updateEntry(HashEntry entry, Object newValue) {
 		moveToMRU((LinkEntry) entry); // handles modCount
 		entry.setValue(newValue);

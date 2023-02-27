@@ -30,19 +30,10 @@ public class CookieUtils {
 	public static final String ADDED_COOKIES_ATTR = CookieUtils.class.getName()
 			+ "_addedcookies";
 
-	public void clearRemembermeCookie(HttpServletRequest request,
-			HttpServletResponse response) {
-		throw new UnsupportedOperationException();
-	}
-
-	private static List<Cookie> getAddedCookies(HttpServletRequest request) {
-		List<Cookie> addedCookies = (List<Cookie>) request
-				.getAttribute(ADDED_COOKIES_ATTR);
-		if (addedCookies == null) {
-			addedCookies = new ArrayList<Cookie>();
-			request.setAttribute(ADDED_COOKIES_ATTR, addedCookies);
-		}
-		return addedCookies;
+	public static void addToRequestAndResponse(HttpServletRequest request,
+			HttpServletResponse response, Cookie cookie) {
+		getAddedCookies(request).add(cookie);
+		response.addCookie(cookie);
 	}
 
 	public static String getCookieValueByName(HttpServletRequest request,
@@ -67,9 +58,18 @@ public class CookieUtils {
 		return null;
 	}
 
-	public static void addToRequestAndResponse(HttpServletRequest request,
-			HttpServletResponse response, Cookie cookie) {
-		getAddedCookies(request).add(cookie);
-		response.addCookie(cookie);
+	private static List<Cookie> getAddedCookies(HttpServletRequest request) {
+		List<Cookie> addedCookies = (List<Cookie>) request
+				.getAttribute(ADDED_COOKIES_ATTR);
+		if (addedCookies == null) {
+			addedCookies = new ArrayList<Cookie>();
+			request.setAttribute(ADDED_COOKIES_ATTR, addedCookies);
+		}
+		return addedCookies;
+	}
+
+	public void clearRemembermeCookie(HttpServletRequest request,
+			HttpServletResponse response) {
+		throw new UnsupportedOperationException();
 	}
 }

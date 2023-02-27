@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCr
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.HashMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.HashSetCreator;
+import cc.alcina.framework.common.client.util.CollectionCreators.LinkedMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.WeakMapCreator;
 import it.unimi.dsi.fastutil.Hash;
@@ -72,6 +73,16 @@ public class CollectionCreatorsJvm {
 		@Override
 		public <T> Set<T> create() {
 			return new ObjectLinkedOpenHashSet<>();
+		}
+	}
+
+	@Registration.Singleton(
+		value = LinkedMapCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class LinkedMapCreatorJvm extends LinkedMapCreator {
+		@Override
+		public <K, V> Map<K, V> create() {
+			return new Object2ObjectLinkedOpenHashMap<>();
 		}
 	}
 

@@ -239,34 +239,6 @@ public final class JavaToJavaScriptCompiler {
 		InternalCompilerException.preload();
 	}
 
-	private final CompilerContext compilerContext;
-
-	private final TreeLogger logger;
-
-	private final ModuleDef module;
-
-	private final PrecompileTaskOptions options;
-
-	private JsProgram jsProgram;
-
-	private JProgram jprogram;
-
-	public JavaToJavaScriptCompiler(TreeLogger logger,
-			CompilerContext compilerContext) {
-		this.logger = logger;
-		this.compilerContext = compilerContext;
-		this.module = compilerContext.getModule();
-		this.options = compilerContext.getOptions();
-	}
-
-	public static UnifiedAst precompile(TreeLogger logger,
-			CompilerContext compilerContext,
-			PrecompilationContext precompilationContext)
-			throws UnableToCompleteException {
-		return new JavaToJavaScriptCompiler(logger, compilerContext)
-				.precompile(precompilationContext);
-	}
-
 	/**
 	 * Compiles a particular permutation.
 	 *
@@ -287,6 +259,165 @@ public final class JavaToJavaScriptCompiler {
 				logger, compilerContext);
 		return javaToJavaScriptCompiler.compilePermutation(permutation,
 				unifiedAst);
+	}
+
+	public static UnifiedAst precompile(TreeLogger logger,
+			CompilerContext compilerContext,
+			PrecompilationContext precompilationContext)
+			throws UnableToCompleteException {
+		return new JavaToJavaScriptCompiler(logger, compilerContext)
+				.precompile(precompilationContext);
+	}
+
+	private final CompilerContext compilerContext;
+
+	private final TreeLogger logger;
+
+	private final ModuleDef module;
+
+	private final PrecompileTaskOptions options;
+
+	private JsProgram jsProgram;
+
+	private JProgram jprogram;
+
+	public JavaToJavaScriptCompiler(TreeLogger logger,
+			CompilerContext compilerContext) {
+		this.logger = logger;
+		this.compilerContext = compilerContext;
+		this.module = compilerContext.getModule();
+		this.options = compilerContext.getOptions();
+	}
+
+	private CompilationMetricsArtifact addCompilerMetricsArtifact(
+			UnifiedAst unifiedAst, Permutation permutation, long startTimeMs,
+			SizeBreakdown[] sizeBreakdowns,
+			PermutationResult permutationResult) {
+		CompilationMetricsArtifact compilationMetrics = null;
+		if (options.isCompilerMetricsEnabled()) {
+			compilationMetrics = new CompilationMetricsArtifact(
+					permutation.getId());
+			compilationMetrics.setCompileElapsedMilliseconds(
+					System.currentTimeMillis() - startTimeMs);
+			compilationMetrics.setElapsedMilliseconds(System.currentTimeMillis()
+					- ManagementFactory.getRuntimeMXBean().getStartTime());
+			compilationMetrics.setJsSize(sizeBreakdowns);
+			compilationMetrics.setPermutationDescription(
+					permutation.getProperties().prettyPrint());
+			permutationResult.addArtifacts(Lists.newArrayList(
+					unifiedAst.getModuleMetrics(),
+					unifiedAst.getPrecompilationMetrics(), compilationMetrics));
+		}
+		return compilationMetrics;
+	}
+
+	private void addSourceMapArtifacts(int permutationId,
+			JavaToJavaScriptMap jjsmap,
+			Pair<SyntheticArtifact, MultipleDependencyGraphRecorder> dependenciesAndRecorder,
+			boolean isSourceMapsEnabled, SizeBreakdown[] sizeBreakdowns,
+			List<JsSourceMap> sourceInfoMaps,
+			PermutationResult permutationResult) {
+		if (options.isJsonSoycEnabled()) {
+			// Is a super set of SourceMapRecorder.makeSourceMapArtifacts().
+			permutationResult.addArtifacts(EntityRecorder.makeSoycArtifacts(
+					permutationId, sourceInfoMaps,
+					options.getSourceMapFilePrefix(), jjsmap, sizeBreakdowns,
+					((DependencyGraphRecorder) dependenciesAndRecorder
+							.getRight()),
+					jprogram));
+		} else if (isSourceMapsEnabled) {
+			logger.log(TreeLogger.INFO, "Source Maps Enabled");
+			permutationResult.addArtifacts(SourceMapRecorder.exec(permutationId,
+					sourceInfoMaps, options.getSourceMapFilePrefix()));
+		}
+	}
+
+	private void addSoycArtifacts(UnifiedAst unifiedAst, int permutationId,
+			JavaToJavaScriptMap jjsmap,
+			Pair<SyntheticArtifact, MultipleDependencyGraphRecorder> dependenciesAndRecorder,
+			Map<JsName, JsLiteral> internedLiteralByVariableName, String[] js,
+			SizeBreakdown[] sizeBreakdowns, List<JsSourceMap> sourceInfoMaps,
+			PermutationResult permutationResult,
+			CompilationMetricsArtifact compilationMetrics)
+			throws IOException, UnableToCompleteException {
+		permutationResult.addArtifacts(makeSoycArtifacts(permutationId, js,
+				sizeBreakdowns, options.isSoycExtra() ? sourceInfoMaps : null,
+				dependenciesAndRecorder.getLeft(), jjsmap,
+				internedLiteralByVariableName, unifiedAst.getModuleMetrics(),
+				unifiedAst.getPrecompilationMetrics(), compilationMetrics,
+				options.isSoycHtmlDisabled()));
+	}
+
+	private void addSyntheticArtifacts(UnifiedAst unifiedAst,
+			Permutation permutation, long startTimeMs, int permutationId,
+			JavaToJavaScriptMap jjsmap,
+			Pair<SyntheticArtifact, MultipleDependencyGraphRecorder> dependenciesAndRecorder,
+			Map<JsName, JsLiteral> internedLiteralByVariableName,
+			boolean isSourceMapsEnabled, String[] jsFragments,
+			SizeBreakdown[] sizeBreakdowns, List<JsSourceMap> sourceInfoMaps,
+			PermutationResult permutationResult)
+			throws IOException, UnableToCompleteException {
+		assert internedLiteralByVariableName != null;
+		Event event = SpeedTracerLogger
+				.start(CompilerEventType.PERMUTATION_ARTIFACTS);
+		CompilationMetricsArtifact compilationMetrics = addCompilerMetricsArtifact(
+				unifiedAst, permutation, startTimeMs, sizeBreakdowns,
+				permutationResult);
+		addSoycArtifacts(unifiedAst, permutationId, jjsmap,
+				dependenciesAndRecorder, internedLiteralByVariableName,
+				jsFragments, sizeBreakdowns, sourceInfoMaps, permutationResult,
+				compilationMetrics);
+		addSourceMapArtifacts(permutationId, jjsmap, dependenciesAndRecorder,
+				isSourceMapsEnabled, sizeBreakdowns, sourceInfoMaps,
+				permutationResult);
+		maybeAddGeneratedArtifacts(permutationResult);
+		event.end();
+	}
+
+	/**
+	 * Creates (and returns the name for) a new class to serve as the container
+	 * for the invocation of registered entry point methods as part of module
+	 * bootstrapping.<br />
+	 *
+	 * The resulting class will be invoked during bootstrapping like
+	 * FooEntryMethodHolder.init(). By generating the class on the fly and
+	 * naming it to match the current module, the resulting holder class can
+	 * work in both monolithic and separate compilation schemes.
+	 */
+	private String buildEntryMethodHolder(StandardGeneratorContext context,
+			String[] entryPointTypeNames, Set<String> allRootTypes)
+			throws UnableToCompleteException {
+		// If there are no entry points.
+		if (entryPointTypeNames.length == 0) {
+			// Then there's no need to generate an EntryMethodHolder class to
+			// launch them.
+			return null;
+		}
+		EntryMethodHolderGenerator entryMethodHolderGenerator = new EntryMethodHolderGenerator();
+		String entryMethodHolderTypeName = entryMethodHolderGenerator
+				.generate(logger, context, module.getCanonicalName());
+		context.finish(logger);
+		// Ensures that unification traverses and keeps the class.
+		allRootTypes.add(entryMethodHolderTypeName);
+		// Ensures that JProgram knows to index this class's methods so that
+		// later bootstrap
+		// construction code is able to locate the FooEntryMethodHolder.init()
+		// function.
+		jprogram.addIndexedTypeName(entryMethodHolderTypeName);
+		return entryMethodHolderTypeName;
+	}
+
+	private MultipleDependencyGraphRecorder
+			chooseDependencyRecorder(OutputStream out) {
+		MultipleDependencyGraphRecorder dependencyRecorder = MultipleDependencyGraphRecorder.NULL_RECORDER;
+		if (options.isSoycEnabled() && options.isJsonSoycEnabled()) {
+			dependencyRecorder = new DependencyGraphRecorder(out, jprogram);
+		} else if (options.isSoycEnabled()) {
+			dependencyRecorder = new DependencyRecorder(out);
+		} else if (options.isJsonSoycEnabled()) {
+			dependencyRecorder = new DependencyGraphRecorder(out, jprogram);
+		}
+		return dependencyRecorder;
 	}
 
 	/**
@@ -480,301 +611,49 @@ public final class JavaToJavaScriptCompiler {
 		}
 	}
 
-	private void maybeRecordReferencesAndControlFlow(boolean onlyUpdate) {
-		if (options.isIncrementalCompileEnabled()) {
-			// Per file compilation needs the type reference graph to construct
-			// the set of reachable
-			// types when linking.
-			TypeReferencesRecorder.exec(jprogram, getMinimalRebuildCache(),
-					onlyUpdate);
-			ControlFlowRecorder.exec(jprogram,
-					getMinimalRebuildCache().getTypeEnvironment(), onlyUpdate);
+	private Set<String> computeRootTypes(String[] entryPointTypeNames,
+			String[] additionalRootTypes, CompilationState compilationState) {
+		Set<String> allRootTypes = Sets.newTreeSet();
+		Iterables.addAll(allRootTypes,
+				compilationState.getQualifiedJsInteropRootTypesNames());
+		Collections.addAll(allRootTypes, entryPointTypeNames);
+		Collections.addAll(allRootTypes, additionalRootTypes);
+		allRootTypes.addAll(JProgram.CODEGEN_TYPES_SET);
+		allRootTypes.addAll(jprogram.getTypeNamesToIndex());
+		/*
+		 * Add all SingleJsoImpl types that we know about. It's likely that the
+		 * concrete types are never explicitly referenced.
+		 */
+		TypeOracle typeOracle = compilationState.getTypeOracle();
+		for (com.google.gwt.core.ext.typeinfo.JClassType singleJsoIntf : typeOracle
+				.getSingleJsoImplInterfaces()) {
+			allRootTypes.add(typeOracle.getSingleJsoImpl(singleJsoIntf)
+					.getQualifiedSourceName());
 		}
+		return allRootTypes;
 	}
 
-	/**
-	 * Transform patterns that can't be represented in JS (such as multiple
-	 * catch blocks) into equivalent but compatible patterns and take JVM
-	 * semantics (such as numeric casts) that are not explicit in the AST and
-	 * make them explicit.<br />
-	 *
-	 * These passes can not be reordering because of subtle interdependencies.
-	 */
-	protected TypeMapper<?> normalizeSemantics() {
-		Event event = SpeedTracerLogger
-				.start(CompilerEventType.JAVA_NORMALIZERS);
-		try {
-			Devirtualizer.exec(jprogram);
-			CatchBlockNormalizer.exec(jprogram);
-			PostOptimizationCompoundAssignmentNormalizer.exec(jprogram);
-			LongCastNormalizer.exec(jprogram);
-			LongEmulationNormalizer.exec(jprogram);
-			TypeCoercionNormalizer.exec(jprogram);
-			if (options.isIncrementalCompileEnabled()) {
-				// Per file compilation reuses type JS even as references (like
-				// casts) in other files
-				// change, which means all legal casts need to be allowed now
-				// before they are actually
-				// used later.
-				ComputeExhaustiveCastabilityInformation.exec(jprogram);
-			} else {
-				// If trivial casts are pruned then one can use smaller runtime
-				// castmaps.
-				ComputeCastabilityInformation.exec(jprogram,
-						!shouldOptimize() /* recordTrivialCasts */);
-			}
-			ImplementCastsAndTypeChecks.exec(jprogram,
-					shouldOptimize() /* pruneTrivialCasts */);
-			ImplementJsVarargs.exec(jprogram);
-			ArrayNormalizer.exec(jprogram);
-			EqualityNormalizer.exec(jprogram);
-			TypeMapper<?> typeMapper = getTypeMapper();
-			ResolveRuntimeTypeReferences.exec(jprogram, typeMapper,
-					getTypeOrder());
-			return typeMapper;
-		} finally {
-			event.end();
+	private CompilationState
+			constructJavaAst(PrecompilationContext precompilationContext)
+					throws UnableToCompleteException {
+		RebindPermutationOracle rpo = precompilationContext
+				.getRebindPermutationOracle();
+		CompilationState compilationState = rpo.getCompilationState();
+		Memory.maybeDumpMemory("CompStateBuilt");
+		recordJsoTypes(compilationState.getTypeOracle());
+		unifyJavaAst(precompilationContext);
+		if (options.isSoycEnabled() || options.isJsonSoycEnabled()) {
+			SourceInfoCorrelator.exec(jprogram);
 		}
-	}
-
-	private void optimizeJava() throws InterruptedException {
-		if (shouldOptimize()) {
-			optimizeJavaToFixedPoint();
-			RemoveEmptySuperCalls.exec(jprogram);
-		}
-	}
-
-	private void optimizeJs(Set<JsNode> inlinableJsFunctions)
-			throws InterruptedException {
-		if (shouldOptimize()) {
-			optimizeJsLoop(inlinableJsFunctions);
-			JsDuplicateCaseFolder.exec(jsProgram);
-		}
-	}
-
-	private void postNormalizationOptimizeJava() {
-		Event event = SpeedTracerLogger
-				.start(CompilerEventType.JAVA_POST_NORMALIZER_OPTIMIZERS);
-		try {
-			if (shouldOptimize()) {
-				RemoveSpecializations.exec(jprogram);
-				Pruner.exec(jprogram, false);
-				// Last Java optimization step, update type oracle accordingly.
-				jprogram.typeOracle.recomputeAfterOptimizations(
-						jprogram.getDeclaredTypes());
-			}
-			ReplaceGetClassOverrides.exec(jprogram);
-		} finally {
-			event.end();
-		}
-	}
-
-	private Map<JsName, JsLiteral> runDetailedNamer(
-			ConfigurationProperties config) throws IllegalNameException {
-		Map<JsName, JsLiteral> internedTextByVariableName = maybeInternLiterals(
-				JsLiteralInterner.INTERN_ALL);
-		JsVerboseNamer.exec(jsProgram, config);
-		return internedTextByVariableName;
-	}
-
-	private Map<JsName, JsLiteral> maybeInternLiterals(int interningMask) {
-		if (!shouldOptimize()) {
-			return null;
-		}
-		// Only perform the interning optimization when optimizations are
-		// enabled.
-		if (options.isClosureCompilerFormatEnabled()) {
-			// Do no intern strings in closure format as it breaks
-			// goog.provides, etc.
-			interningMask &= ~JsLiteralInterner.INTERN_STRINGS;
-		}
-		return JsLiteralInterner.exec(jprogram, jsProgram, interningMask);
-	}
-
-	private Pair<SyntheticArtifact, MultipleDependencyGraphRecorder>
-			splitJsIntoFragments(PermutationProperties properties,
-					int permutationId, JavaToJavaScriptMap jjsmap) {
-		Pair<SyntheticArtifact, MultipleDependencyGraphRecorder> dependenciesAndRecorder;
-		MultipleDependencyGraphRecorder dependencyRecorder = null;
-		SyntheticArtifact dependencies = null;
-		if (options.isRunAsyncEnabled()) {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			int expectedFragmentCount = options.getFragmentCount();
-			// -1 is the default value, we trap 0 just in case (0 is not a legal
-			// value in any case)
-			if (expectedFragmentCount <= 0) {
-				// Fragment count not set check fragments merge.
-				int numberOfMerges = options.getFragmentsMerge();
-				if (numberOfMerges > 0) {
-					// + 1 for left over, + 1 for initial gave us the total
-					// number
-					// of fragments without splitting.
-					expectedFragmentCount = Math.max(0,
-							jprogram.getRunAsyncs().size() + 2
-									- numberOfMerges);
-				}
-			}
-			int minFragmentSize = properties.getConfigurationProperties()
-					.getInteger(CodeSplitters.MIN_FRAGMENT_SIZE, 0);
-			dependencyRecorder = chooseDependencyRecorder(baos);
-			CodeSplitter.exec(logger, jprogram, jsProgram, jjsmap,
-					expectedFragmentCount, minFragmentSize, dependencyRecorder);
-			if (baos.size() == 0) {
-				dependencyRecorder = recordNonSplitDependencies(baos);
-			}
-			if (baos.size() > 0) {
-				dependencies = new SyntheticArtifact(SoycReportLinker.class,
-						"dependencies" + permutationId + ".xml.gz",
-						baos.toByteArray());
-			}
-		} else if (options.isSoycEnabled() || options.isJsonSoycEnabled()) {
-			dependencyRecorder = recordNonSplitDependencies(
-					new ByteArrayOutputStream());
-		}
-		dependenciesAndRecorder = Pair.create(dependencies, dependencyRecorder);
-		return dependenciesAndRecorder;
-	}
-
-	private MultipleDependencyGraphRecorder
-			chooseDependencyRecorder(OutputStream out) {
-		MultipleDependencyGraphRecorder dependencyRecorder = MultipleDependencyGraphRecorder.NULL_RECORDER;
-		if (options.isSoycEnabled() && options.isJsonSoycEnabled()) {
-			dependencyRecorder = new DependencyGraphRecorder(out, jprogram);
-		} else if (options.isSoycEnabled()) {
-			dependencyRecorder = new DependencyRecorder(out);
-		} else if (options.isJsonSoycEnabled()) {
-			dependencyRecorder = new DependencyGraphRecorder(out, jprogram);
-		}
-		return dependencyRecorder;
-	}
-
-	/**
-	 * Dependency information is normally recorded during code splitting, and it
-	 * results in multiple dependency graphs. If the code splitter doesn't run,
-	 * then this method can be used instead to record a single dependency graph
-	 * for the whole program.
-	 */
-	private DependencyRecorder recordNonSplitDependencies(OutputStream out) {
-		DependencyRecorder deps;
-		if (options.isSoycEnabled() && options.isJsonSoycEnabled()) {
-			deps = new DependencyGraphRecorder(out, jprogram);
-		} else if (options.isSoycEnabled()) {
-			deps = new DependencyRecorder(out);
-		} else if (options.isJsonSoycEnabled()) {
-			deps = new DependencyGraphRecorder(out, jprogram);
-		} else {
-			return null;
-		}
-		deps.open();
-		deps.startDependencyGraph("initial", null);
-		ControlFlowAnalyzer cfa = new ControlFlowAnalyzer(jprogram);
-		cfa.setDependencyRecorder(deps);
-		cfa.traverseEntryMethods();
-		deps.endDependencyGraph();
-		deps.close();
-		return deps;
-	}
-
-	private CompilationMetricsArtifact addCompilerMetricsArtifact(
-			UnifiedAst unifiedAst, Permutation permutation, long startTimeMs,
-			SizeBreakdown[] sizeBreakdowns,
-			PermutationResult permutationResult) {
-		CompilationMetricsArtifact compilationMetrics = null;
-		if (options.isCompilerMetricsEnabled()) {
-			compilationMetrics = new CompilationMetricsArtifact(
-					permutation.getId());
-			compilationMetrics.setCompileElapsedMilliseconds(
-					System.currentTimeMillis() - startTimeMs);
-			compilationMetrics.setElapsedMilliseconds(System.currentTimeMillis()
-					- ManagementFactory.getRuntimeMXBean().getStartTime());
-			compilationMetrics.setJsSize(sizeBreakdowns);
-			compilationMetrics.setPermutationDescription(
-					permutation.getProperties().prettyPrint());
-			permutationResult.addArtifacts(Lists.newArrayList(
-					unifiedAst.getModuleMetrics(),
-					unifiedAst.getPrecompilationMetrics(), compilationMetrics));
-		}
-		return compilationMetrics;
-	}
-
-	private void addSourceMapArtifacts(int permutationId,
-			JavaToJavaScriptMap jjsmap,
-			Pair<SyntheticArtifact, MultipleDependencyGraphRecorder> dependenciesAndRecorder,
-			boolean isSourceMapsEnabled, SizeBreakdown[] sizeBreakdowns,
-			List<JsSourceMap> sourceInfoMaps,
-			PermutationResult permutationResult) {
-		if (options.isJsonSoycEnabled()) {
-			// Is a super set of SourceMapRecorder.makeSourceMapArtifacts().
-			permutationResult.addArtifacts(EntityRecorder.makeSoycArtifacts(
-					permutationId, sourceInfoMaps,
-					options.getSourceMapFilePrefix(), jjsmap, sizeBreakdowns,
-					((DependencyGraphRecorder) dependenciesAndRecorder
-							.getRight()),
-					jprogram));
-		} else if (isSourceMapsEnabled) {
-			logger.log(TreeLogger.INFO, "Source Maps Enabled");
-			permutationResult.addArtifacts(SourceMapRecorder.exec(permutationId,
-					sourceInfoMaps, options.getSourceMapFilePrefix()));
-		}
-	}
-
-	/**
-	 * Adds generated artifacts from previous compiles when doing per-file
-	 * compiles.
-	 * <p>
-	 * All generators are run on first compile but only some very small subset
-	 * are rerun on recompiles. Care must be taken to ensure that all generated
-	 * artifacts (such as png/html/css files) are still registered for output
-	 * even when no generators are run in the current compile.
-	 */
-	private void
-			maybeAddGeneratedArtifacts(PermutationResult permutationResult) {
-		if (options.isIncrementalCompileEnabled()) {
-			permutationResult.addArtifacts(compilerContext
-					.getMinimalRebuildCache().getGeneratedArtifacts());
-		}
-	}
-
-	private void addSoycArtifacts(UnifiedAst unifiedAst, int permutationId,
-			JavaToJavaScriptMap jjsmap,
-			Pair<SyntheticArtifact, MultipleDependencyGraphRecorder> dependenciesAndRecorder,
-			Map<JsName, JsLiteral> internedLiteralByVariableName, String[] js,
-			SizeBreakdown[] sizeBreakdowns, List<JsSourceMap> sourceInfoMaps,
-			PermutationResult permutationResult,
-			CompilationMetricsArtifact compilationMetrics)
-			throws IOException, UnableToCompleteException {
-		permutationResult.addArtifacts(makeSoycArtifacts(permutationId, js,
-				sizeBreakdowns, options.isSoycExtra() ? sourceInfoMaps : null,
-				dependenciesAndRecorder.getLeft(), jjsmap,
-				internedLiteralByVariableName, unifiedAst.getModuleMetrics(),
-				unifiedAst.getPrecompilationMetrics(), compilationMetrics,
-				options.isSoycHtmlDisabled()));
-	}
-
-	private void addSyntheticArtifacts(UnifiedAst unifiedAst,
-			Permutation permutation, long startTimeMs, int permutationId,
-			JavaToJavaScriptMap jjsmap,
-			Pair<SyntheticArtifact, MultipleDependencyGraphRecorder> dependenciesAndRecorder,
-			Map<JsName, JsLiteral> internedLiteralByVariableName,
-			boolean isSourceMapsEnabled, String[] jsFragments,
-			SizeBreakdown[] sizeBreakdowns, List<JsSourceMap> sourceInfoMaps,
-			PermutationResult permutationResult)
-			throws IOException, UnableToCompleteException {
-		assert internedLiteralByVariableName != null;
-		Event event = SpeedTracerLogger
-				.start(CompilerEventType.PERMUTATION_ARTIFACTS);
-		CompilationMetricsArtifact compilationMetrics = addCompilerMetricsArtifact(
-				unifiedAst, permutation, startTimeMs, sizeBreakdowns,
-				permutationResult);
-		addSoycArtifacts(unifiedAst, permutationId, jjsmap,
-				dependenciesAndRecorder, internedLiteralByVariableName,
-				jsFragments, sizeBreakdowns, sourceInfoMaps, permutationResult,
-				compilationMetrics);
-		addSourceMapArtifacts(permutationId, jjsmap, dependenciesAndRecorder,
-				isSourceMapsEnabled, sizeBreakdowns, sourceInfoMaps,
-				permutationResult);
-		maybeAddGeneratedArtifacts(permutationResult);
-		event.end();
+		// Free up memory.
+		rpo.clear();
+		Set<String> deletedTypeNames = options.isIncrementalCompileEnabled()
+				? getMinimalRebuildCache().computeDeletedTypeNames()
+				: Sets.<String> newHashSet();
+		jprogram.typeOracle.computeBeforeAST(StandardTypes.createFrom(jprogram),
+				jprogram.getDeclaredTypes(), jprogram.getModuleDeclaredTypes(),
+				deletedTypeNames);
+		return compilationState;
 	}
 
 	/**
@@ -839,6 +718,77 @@ public final class JavaToJavaScriptCompiler {
 			}
 		}
 		generateJavascriptEvent.end();
+	}
+
+	private MinimalRebuildCache getMinimalRebuildCache() {
+		return compilerContext.getMinimalRebuildCache();
+	}
+
+	/**
+	 * This method can be used to fetch the list of referenced class.
+	 *
+	 * This method is intended to support compiler metrics.
+	 */
+	private String[] getReferencedJavaClasses() {
+		class ClassNameVisitor extends JVisitor {
+			List<String> classNames = new ArrayList<String>();
+
+			@Override
+			public boolean visit(JClassType x, Context ctx) {
+				classNames.add(x.getName());
+				return true;
+			}
+		}
+		ClassNameVisitor v = new ClassNameVisitor();
+		v.accept(jprogram);
+		return v.classNames.toArray(new String[v.classNames.size()]);
+	}
+
+	private TypeMapper getTypeMapper() {
+		// Used to stabilize output for DeltaJS
+		if (JjsUtils.closureStyleLiteralsNeeded(this.options)) {
+			return new ClosureUniqueIdTypeMapper(jprogram);
+		}
+		if (this.options.useDetailedTypeIds()) {
+			return new StringTypeMapper(jprogram);
+		}
+		return this.options.isIncrementalCompileEnabled()
+				? compilerContext.getMinimalRebuildCache().getTypeMapper()
+				: new IntTypeMapper();
+	}
+
+	private TypeOrder getTypeOrder() {
+		// Used to stabilize output for DeltaJS
+		if (JjsUtils.closureStyleLiteralsNeeded(this.options)) {
+			return TypeOrder.ALPHABETICAL;
+		}
+		if (this.options.useDetailedTypeIds()) {
+			return TypeOrder.NONE;
+		}
+		return this.options.isIncrementalCompileEnabled()
+				? TypeOrder.ALPHABETICAL
+				: TypeOrder.FREQUENCY;
+	}
+
+	private void logAstTypeMetrics(
+			PrecompilationMetricsArtifact precompilationMetrics) {
+		if (options.isCompilerMetricsEnabled()) {
+			precompilationMetrics.setAstTypes(getReferencedJavaClasses());
+		}
+	}
+
+	private void logTypeOracleMetrics(
+			PrecompilationMetricsArtifact precompilationMetrics,
+			CompilationState compilationState) {
+		if (precompilationMetrics != null) {
+			List<String> finalTypeOracleTypes = Lists.newArrayList();
+			for (com.google.gwt.core.ext.typeinfo.JClassType type : compilationState
+					.getTypeOracle().getTypes()) {
+				finalTypeOracleTypes.add(
+						type.getPackage().getName() + "." + type.getName());
+			}
+			precompilationMetrics.setFinalTypeOracleTypes(finalTypeOracleTypes);
+		}
 	}
 
 	private Collection<? extends Artifact<?>> makeSoycArtifacts(
@@ -1022,12 +972,155 @@ public final class JavaToJavaScriptCompiler {
 	}
 
 	/**
+	 * Adds generated artifacts from previous compiles when doing per-file
+	 * compiles.
+	 * <p>
+	 * All generators are run on first compile but only some very small subset
+	 * are rerun on recompiles. Care must be taken to ensure that all generated
+	 * artifacts (such as png/html/css files) are still registered for output
+	 * even when no generators are run in the current compile.
+	 */
+	private void
+			maybeAddGeneratedArtifacts(PermutationResult permutationResult) {
+		if (options.isIncrementalCompileEnabled()) {
+			permutationResult.addArtifacts(compilerContext
+					.getMinimalRebuildCache().getGeneratedArtifacts());
+		}
+	}
+
+	private Map<JsName, JsLiteral> maybeInternLiterals(int interningMask) {
+		if (!shouldOptimize()) {
+			return null;
+		}
+		// Only perform the interning optimization when optimizations are
+		// enabled.
+		if (options.isClosureCompilerFormatEnabled()) {
+			// Do no intern strings in closure format as it breaks
+			// goog.provides, etc.
+			interningMask &= ~JsLiteralInterner.INTERN_STRINGS;
+		}
+		return JsLiteralInterner.exec(jprogram, jsProgram, interningMask);
+	}
+
+	private void maybeRecordReferencesAndControlFlow(boolean onlyUpdate) {
+		if (options.isIncrementalCompileEnabled()) {
+			// Per file compilation needs the type reference graph to construct
+			// the set of reachable
+			// types when linking.
+			TypeReferencesRecorder.exec(jprogram, getMinimalRebuildCache(),
+					onlyUpdate);
+			ControlFlowRecorder.exec(jprogram,
+					getMinimalRebuildCache().getTypeEnvironment(), onlyUpdate);
+		}
+	}
+
+	/**
 	 * Open an emitted artifact and gunzip its contents.
 	 */
 	private InputStream openWithGunzip(EmittedArtifact artifact)
 			throws IOException, UnableToCompleteException {
 		return new BufferedInputStream(
 				new GZIPInputStream(artifact.getContents(TreeLogger.NULL)));
+	}
+
+	private void optimizeJava() throws InterruptedException {
+		if (shouldOptimize()) {
+			optimizeJavaToFixedPoint();
+			RemoveEmptySuperCalls.exec(jprogram);
+		}
+	}
+
+	private OptimizerStats optimizeJavaOneTime(String passName, int numNodes,
+			OptimizerContext optimizerCtx) {
+		Event optimizeEvent = SpeedTracerLogger
+				.start(CompilerEventType.OPTIMIZE, "phase", "loop");
+		// Clinits might have become empty become empty.
+		jprogram.typeOracle
+				.recomputeAfterOptimizations(jprogram.getDeclaredTypes());
+		OptimizerStats stats = new OptimizerStats(passName);
+		JavaAstVerifier.assertProgramIsConsistent(jprogram);
+		stats.add(Pruner.exec(jprogram, true, optimizerCtx)
+				.recordVisits(numNodes));
+		stats.add(
+				Finalizer.exec(jprogram, optimizerCtx).recordVisits(numNodes));
+		stats.add(MakeCallsStatic
+				.exec(jprogram, options.shouldAddRuntimeChecks(), optimizerCtx)
+				.recordVisits(numNodes));
+		stats.add(TypeTightener.exec(jprogram, optimizerCtx)
+				.recordVisits(numNodes));
+		stats.add(MethodCallTightener.exec(jprogram, optimizerCtx)
+				.recordVisits(numNodes));
+		// Note: Specialization should be done before inlining.
+		stats.add(MethodCallSpecializer.exec(jprogram, optimizerCtx)
+				.recordVisits(numNodes));
+		stats.add(DeadCodeElimination.exec(jprogram, optimizerCtx)
+				.recordVisits(numNodes));
+		stats.add(MethodInliner.exec(jprogram, optimizerCtx)
+				.recordVisits(numNodes));
+		if (options.shouldInlineLiteralParameters()) {
+			stats.add(SameParameterValueOptimizer.exec(jprogram, optimizerCtx)
+					.recordVisits(numNodes));
+		}
+		if (options.shouldOrdinalizeEnums()) {
+			stats.add(EnumOrdinalizer.exec(jprogram, optimizerCtx)
+					.recordVisits(numNodes));
+		}
+		optimizeEvent.end();
+		return stats;
+	}
+
+	private void optimizeJavaToFixedPoint() throws InterruptedException {
+		Event optimizeEvent = SpeedTracerLogger
+				.start(CompilerEventType.OPTIMIZE);
+		List<OptimizerStats> allOptimizerStats = Lists.newArrayList();
+		int passCount = 0;
+		int nodeCount = jprogram.getNodeCount();
+		int lastNodeCount;
+		boolean atMaxLevel = options
+				.getOptimizationLevel() == OptionOptimize.OPTIMIZE_LEVEL_MAX;
+		int passLimit = atMaxLevel ? MAX_PASSES
+				: options.getOptimizationLevel();
+		float minChangeRate = atMaxLevel ? FIXED_POINT_CHANGE_RATE
+				: EFFICIENT_CHANGE_RATE;
+		OptimizerContext optimizerCtx = new FullOptimizerContext(jprogram);
+		while (true) {
+			passCount++;
+			if (passCount > passLimit) {
+				break;
+			}
+			if (Thread.interrupted()) {
+				optimizeEvent.end();
+				throw new InterruptedException();
+			}
+			AstDumper.maybeDumpAST(jprogram);
+			OptimizerStats stats = optimizeJavaOneTime("Pass " + passCount,
+					nodeCount, optimizerCtx);
+			allOptimizerStats.add(stats);
+			lastNodeCount = nodeCount;
+			nodeCount = jprogram.getNodeCount();
+			float nodeChangeRate = stats.getNumMods() / (float) lastNodeCount;
+			float sizeChangeRate = (lastNodeCount - nodeCount)
+					/ (float) lastNodeCount;
+			if (nodeChangeRate <= minChangeRate
+					&& sizeChangeRate <= minChangeRate) {
+				break;
+			}
+		}
+		if (options.shouldOptimizeDataflow()) {
+			logger.log(TreeLogger.Type.WARN,
+					"Unsafe dataflow optimization enabled, disable with -XdisableOptimizeDataflow.");
+			// Just run it once, because it is very time consuming
+			allOptimizerStats.add(DataflowOptimizer.exec(jprogram));
+		}
+		optimizeEvent.end();
+	}
+
+	private void optimizeJs(Set<JsNode> inlinableJsFunctions)
+			throws InterruptedException {
+		if (shouldOptimize()) {
+			optimizeJsLoop(inlinableJsFunctions);
+			JsDuplicateCaseFolder.exec(jsProgram);
+		}
 	}
 
 	private void optimizeJsLoop(Collection<JsNode> toInline)
@@ -1062,78 +1155,21 @@ public final class JavaToJavaScriptCompiler {
 		}
 	}
 
-	private Map<JsName, JsLiteral> renameJsSymbols(
-			PermutationProperties properties, JavaToJavaScriptMap jjsmap)
-			throws UnableToCompleteException {
-		Map<JsName, JsLiteral> internedLiteralByVariableName = null;
+	private void postNormalizationOptimizeJava() {
+		Event event = SpeedTracerLogger
+				.start(CompilerEventType.JAVA_POST_NORMALIZER_OPTIMIZERS);
 		try {
-			switch (options.getOutput()) {
-			case OBFUSCATED:
-				internedLiteralByVariableName = runObfuscateNamer(options,
-						properties, jjsmap);
-				break;
-			case PRETTY:
-				internedLiteralByVariableName = runPrettyNamer(options,
-						properties, jjsmap);
-				break;
-			case DETAILED:
-				internedLiteralByVariableName = runDetailedNamer(
-						properties.getConfigurationProperties());
-				break;
-			default:
-				throw new InternalCompilerException("Unknown output mode");
+			if (shouldOptimize()) {
+				RemoveSpecializations.exec(jprogram);
+				Pruner.exec(jprogram, false);
+				// Last Java optimization step, update type oracle accordingly.
+				jprogram.typeOracle.recomputeAfterOptimizations(
+						jprogram.getDeclaredTypes());
 			}
-		} catch (IllegalNameException e) {
-			logger.log(TreeLogger.ERROR, e.getMessage(), e);
-			throw new UnableToCompleteException();
+			ReplaceGetClassOverrides.exec(jprogram);
+		} finally {
+			event.end();
 		}
-		return internedLiteralByVariableName == null
-				? ImmutableMap.<JsName, JsLiteral> of()
-				: internedLiteralByVariableName;
-	}
-
-	private Map<JsName, JsLiteral> runObfuscateNamer(JJSOptions options,
-			PermutationProperties properties, JavaToJavaScriptMap jjsmap)
-			throws IllegalNameException {
-		if (options.isIncrementalCompileEnabled()) {
-			runIncrementalNamer(options,
-					properties.getConfigurationProperties(), jjsmap);
-			return null;
-		}
-		Map<JsName, JsLiteral> internedLiteralByVariableName = maybeInternLiterals(
-				JsLiteralInterner.INTERN_ALL);
-		FreshNameGenerator freshNameGenerator = JsObfuscateNamer.exec(jsProgram,
-				properties.getConfigurationProperties());
-		if (options.shouldRemoveDuplicateFunctions() && JsStackEmulator
-				.getStackMode(properties) == JsStackEmulator.StackMode.STRIP) {
-			JsDuplicateFunctionRemover.exec(jsProgram, freshNameGenerator);
-		}
-		return internedLiteralByVariableName;
-	}
-
-	private Map<JsName, JsLiteral> runPrettyNamer(JJSOptions options,
-			PermutationProperties properties, JavaToJavaScriptMap jjsmap)
-			throws IllegalNameException {
-		if (options.isIncrementalCompileEnabled()) {
-			runIncrementalNamer(options,
-					properties.getConfigurationProperties(), jjsmap);
-			return null;
-		}
-		// We don't intern strings in pretty mode to improve readability
-		Map<JsName, JsLiteral> internedLiteralByVariableName = maybeInternLiterals(
-				JsLiteralInterner.INTERN_ALL
-						& ~JsLiteralInterner.INTERN_STRINGS);
-		JsPrettyNamer.exec(jsProgram, properties.getConfigurationProperties());
-		return internedLiteralByVariableName;
-	}
-
-	private void runIncrementalNamer(JJSOptions options,
-			ConfigurationProperties configurationProperties,
-			JavaToJavaScriptMap jjsmap) throws IllegalNameException {
-		JsIncrementalNamer.exec(jsProgram, configurationProperties,
-				compilerContext.getMinimalRebuildCache()
-						.getPersistentPrettyNamerState(),
-				jjsmap, options.getOutput() == JsOutputOption.OBFUSCATED);
 	}
 
 	/**
@@ -1237,125 +1273,6 @@ public final class JavaToJavaScriptCompiler {
 		}
 	}
 
-	/**
-	 * Creates (and returns the name for) a new class to serve as the container
-	 * for the invocation of registered entry point methods as part of module
-	 * bootstrapping.<br />
-	 *
-	 * The resulting class will be invoked during bootstrapping like
-	 * FooEntryMethodHolder.init(). By generating the class on the fly and
-	 * naming it to match the current module, the resulting holder class can
-	 * work in both monolithic and separate compilation schemes.
-	 */
-	private String buildEntryMethodHolder(StandardGeneratorContext context,
-			String[] entryPointTypeNames, Set<String> allRootTypes)
-			throws UnableToCompleteException {
-		// If there are no entry points.
-		if (entryPointTypeNames.length == 0) {
-			// Then there's no need to generate an EntryMethodHolder class to
-			// launch them.
-			return null;
-		}
-		EntryMethodHolderGenerator entryMethodHolderGenerator = new EntryMethodHolderGenerator();
-		String entryMethodHolderTypeName = entryMethodHolderGenerator
-				.generate(logger, context, module.getCanonicalName());
-		context.finish(logger);
-		// Ensures that unification traverses and keeps the class.
-		allRootTypes.add(entryMethodHolderTypeName);
-		// Ensures that JProgram knows to index this class's methods so that
-		// later bootstrap
-		// construction code is able to locate the FooEntryMethodHolder.init()
-		// function.
-		jprogram.addIndexedTypeName(entryMethodHolderTypeName);
-		return entryMethodHolderTypeName;
-	}
-
-	private CompilationState
-			constructJavaAst(PrecompilationContext precompilationContext)
-					throws UnableToCompleteException {
-		RebindPermutationOracle rpo = precompilationContext
-				.getRebindPermutationOracle();
-		CompilationState compilationState = rpo.getCompilationState();
-		Memory.maybeDumpMemory("CompStateBuilt");
-		recordJsoTypes(compilationState.getTypeOracle());
-		unifyJavaAst(precompilationContext);
-		if (options.isSoycEnabled() || options.isJsonSoycEnabled()) {
-			SourceInfoCorrelator.exec(jprogram);
-		}
-		// Free up memory.
-		rpo.clear();
-		Set<String> deletedTypeNames = options.isIncrementalCompileEnabled()
-				? getMinimalRebuildCache().computeDeletedTypeNames()
-				: Sets.<String> newHashSet();
-		jprogram.typeOracle.computeBeforeAST(StandardTypes.createFrom(jprogram),
-				jprogram.getDeclaredTypes(), jprogram.getModuleDeclaredTypes(),
-				deletedTypeNames);
-		return compilationState;
-	}
-
-	/**
-	 * This method can be used to fetch the list of referenced class.
-	 *
-	 * This method is intended to support compiler metrics.
-	 */
-	private String[] getReferencedJavaClasses() {
-		class ClassNameVisitor extends JVisitor {
-			List<String> classNames = new ArrayList<String>();
-
-			@Override
-			public boolean visit(JClassType x, Context ctx) {
-				classNames.add(x.getName());
-				return true;
-			}
-		}
-		ClassNameVisitor v = new ClassNameVisitor();
-		v.accept(jprogram);
-		return v.classNames.toArray(new String[v.classNames.size()]);
-	}
-
-	private void logAstTypeMetrics(
-			PrecompilationMetricsArtifact precompilationMetrics) {
-		if (options.isCompilerMetricsEnabled()) {
-			precompilationMetrics.setAstTypes(getReferencedJavaClasses());
-		}
-	}
-
-	private void logTypeOracleMetrics(
-			PrecompilationMetricsArtifact precompilationMetrics,
-			CompilationState compilationState) {
-		if (precompilationMetrics != null) {
-			List<String> finalTypeOracleTypes = Lists.newArrayList();
-			for (com.google.gwt.core.ext.typeinfo.JClassType type : compilationState
-					.getTypeOracle().getTypes()) {
-				finalTypeOracleTypes.add(
-						type.getPackage().getName() + "." + type.getName());
-			}
-			precompilationMetrics.setFinalTypeOracleTypes(finalTypeOracleTypes);
-		}
-	}
-
-	private Set<String> computeRootTypes(String[] entryPointTypeNames,
-			String[] additionalRootTypes, CompilationState compilationState) {
-		Set<String> allRootTypes = Sets.newTreeSet();
-		Iterables.addAll(allRootTypes,
-				compilationState.getQualifiedJsInteropRootTypesNames());
-		Collections.addAll(allRootTypes, entryPointTypeNames);
-		Collections.addAll(allRootTypes, additionalRootTypes);
-		allRootTypes.addAll(JProgram.CODEGEN_TYPES_SET);
-		allRootTypes.addAll(jprogram.getTypeNamesToIndex());
-		/*
-		 * Add all SingleJsoImpl types that we know about. It's likely that the
-		 * concrete types are never explicitly referenced.
-		 */
-		TypeOracle typeOracle = compilationState.getTypeOracle();
-		for (com.google.gwt.core.ext.typeinfo.JClassType singleJsoIntf : typeOracle
-				.getSingleJsoImplInterfaces()) {
-			allRootTypes.add(typeOracle.getSingleJsoImpl(singleJsoIntf)
-					.getQualifiedSourceName());
-		}
-		return allRootTypes;
-	}
-
 	private void recordJsoTypes(TypeOracle typeOracle) {
 		if (!options.isIncrementalCompileEnabled()) {
 			return;
@@ -1385,6 +1302,164 @@ public final class JavaToJavaScriptCompiler {
 		}
 		compilerContext.getMinimalRebuildCache().setJsoTypeNames(jsoTypeNames,
 				singleJsoImplInterfaceNames, dualJsoImplInterfaceNames);
+	}
+
+	/**
+	 * Dependency information is normally recorded during code splitting, and it
+	 * results in multiple dependency graphs. If the code splitter doesn't run,
+	 * then this method can be used instead to record a single dependency graph
+	 * for the whole program.
+	 */
+	private DependencyRecorder recordNonSplitDependencies(OutputStream out) {
+		DependencyRecorder deps;
+		if (options.isSoycEnabled() && options.isJsonSoycEnabled()) {
+			deps = new DependencyGraphRecorder(out, jprogram);
+		} else if (options.isSoycEnabled()) {
+			deps = new DependencyRecorder(out);
+		} else if (options.isJsonSoycEnabled()) {
+			deps = new DependencyGraphRecorder(out, jprogram);
+		} else {
+			return null;
+		}
+		deps.open();
+		deps.startDependencyGraph("initial", null);
+		ControlFlowAnalyzer cfa = new ControlFlowAnalyzer(jprogram);
+		cfa.setDependencyRecorder(deps);
+		cfa.traverseEntryMethods();
+		deps.endDependencyGraph();
+		deps.close();
+		return deps;
+	}
+
+	private Map<JsName, JsLiteral> renameJsSymbols(
+			PermutationProperties properties, JavaToJavaScriptMap jjsmap)
+			throws UnableToCompleteException {
+		Map<JsName, JsLiteral> internedLiteralByVariableName = null;
+		try {
+			switch (options.getOutput()) {
+			case OBFUSCATED:
+				internedLiteralByVariableName = runObfuscateNamer(options,
+						properties, jjsmap);
+				break;
+			case PRETTY:
+				internedLiteralByVariableName = runPrettyNamer(options,
+						properties, jjsmap);
+				break;
+			case DETAILED:
+				internedLiteralByVariableName = runDetailedNamer(
+						properties.getConfigurationProperties());
+				break;
+			default:
+				throw new InternalCompilerException("Unknown output mode");
+			}
+		} catch (IllegalNameException e) {
+			logger.log(TreeLogger.ERROR, e.getMessage(), e);
+			throw new UnableToCompleteException();
+		}
+		return internedLiteralByVariableName == null
+				? ImmutableMap.<JsName, JsLiteral> of()
+				: internedLiteralByVariableName;
+	}
+
+	private Map<JsName, JsLiteral> runDetailedNamer(
+			ConfigurationProperties config) throws IllegalNameException {
+		Map<JsName, JsLiteral> internedTextByVariableName = maybeInternLiterals(
+				JsLiteralInterner.INTERN_ALL);
+		JsVerboseNamer.exec(jsProgram, config);
+		return internedTextByVariableName;
+	}
+
+	private void runIncrementalNamer(JJSOptions options,
+			ConfigurationProperties configurationProperties,
+			JavaToJavaScriptMap jjsmap) throws IllegalNameException {
+		JsIncrementalNamer.exec(jsProgram, configurationProperties,
+				compilerContext.getMinimalRebuildCache()
+						.getPersistentPrettyNamerState(),
+				jjsmap, options.getOutput() == JsOutputOption.OBFUSCATED);
+	}
+
+	private Map<JsName, JsLiteral> runObfuscateNamer(JJSOptions options,
+			PermutationProperties properties, JavaToJavaScriptMap jjsmap)
+			throws IllegalNameException {
+		if (options.isIncrementalCompileEnabled()) {
+			runIncrementalNamer(options,
+					properties.getConfigurationProperties(), jjsmap);
+			return null;
+		}
+		Map<JsName, JsLiteral> internedLiteralByVariableName = maybeInternLiterals(
+				JsLiteralInterner.INTERN_ALL);
+		FreshNameGenerator freshNameGenerator = JsObfuscateNamer.exec(jsProgram,
+				properties.getConfigurationProperties());
+		if (options.shouldRemoveDuplicateFunctions() && JsStackEmulator
+				.getStackMode(properties) == JsStackEmulator.StackMode.STRIP) {
+			JsDuplicateFunctionRemover.exec(jsProgram, freshNameGenerator);
+		}
+		return internedLiteralByVariableName;
+	}
+
+	private Map<JsName, JsLiteral> runPrettyNamer(JJSOptions options,
+			PermutationProperties properties, JavaToJavaScriptMap jjsmap)
+			throws IllegalNameException {
+		if (options.isIncrementalCompileEnabled()) {
+			runIncrementalNamer(options,
+					properties.getConfigurationProperties(), jjsmap);
+			return null;
+		}
+		// We don't intern strings in pretty mode to improve readability
+		Map<JsName, JsLiteral> internedLiteralByVariableName = maybeInternLiterals(
+				JsLiteralInterner.INTERN_ALL
+						& ~JsLiteralInterner.INTERN_STRINGS);
+		JsPrettyNamer.exec(jsProgram, properties.getConfigurationProperties());
+		return internedLiteralByVariableName;
+	}
+
+	private boolean shouldOptimize() {
+		return options
+				.getOptimizationLevel() > OptionOptimize.OPTIMIZE_LEVEL_DRAFT;
+	}
+
+	private Pair<SyntheticArtifact, MultipleDependencyGraphRecorder>
+			splitJsIntoFragments(PermutationProperties properties,
+					int permutationId, JavaToJavaScriptMap jjsmap) {
+		Pair<SyntheticArtifact, MultipleDependencyGraphRecorder> dependenciesAndRecorder;
+		MultipleDependencyGraphRecorder dependencyRecorder = null;
+		SyntheticArtifact dependencies = null;
+		if (options.isRunAsyncEnabled()) {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			int expectedFragmentCount = options.getFragmentCount();
+			// -1 is the default value, we trap 0 just in case (0 is not a legal
+			// value in any case)
+			if (expectedFragmentCount <= 0) {
+				// Fragment count not set check fragments merge.
+				int numberOfMerges = options.getFragmentsMerge();
+				if (numberOfMerges > 0) {
+					// + 1 for left over, + 1 for initial gave us the total
+					// number
+					// of fragments without splitting.
+					expectedFragmentCount = Math.max(0,
+							jprogram.getRunAsyncs().size() + 2
+									- numberOfMerges);
+				}
+			}
+			int minFragmentSize = properties.getConfigurationProperties()
+					.getInteger(CodeSplitters.MIN_FRAGMENT_SIZE, 0);
+			dependencyRecorder = chooseDependencyRecorder(baos);
+			CodeSplitter.exec(logger, jprogram, jsProgram, jjsmap,
+					expectedFragmentCount, minFragmentSize, dependencyRecorder);
+			if (baos.size() == 0) {
+				dependencyRecorder = recordNonSplitDependencies(baos);
+			}
+			if (baos.size() > 0) {
+				dependencies = new SyntheticArtifact(SoycReportLinker.class,
+						"dependencies" + permutationId + ".xml.gz",
+						baos.toByteArray());
+			}
+		} else if (options.isSoycEnabled() || options.isJsonSoycEnabled()) {
+			dependencyRecorder = recordNonSplitDependencies(
+					new ByteArrayOutputStream());
+		}
+		dependenciesAndRecorder = Pair.create(dependencies, dependencyRecorder);
+		return dependenciesAndRecorder;
 	}
 
 	private void synthesizeEntryMethodHolderInit(UnifyAst unifyAst,
@@ -1488,124 +1563,49 @@ public final class JavaToJavaScriptCompiler {
 		event.end();
 	}
 
-	private void optimizeJavaToFixedPoint() throws InterruptedException {
-		Event optimizeEvent = SpeedTracerLogger
-				.start(CompilerEventType.OPTIMIZE);
-		List<OptimizerStats> allOptimizerStats = Lists.newArrayList();
-		int passCount = 0;
-		int nodeCount = jprogram.getNodeCount();
-		int lastNodeCount;
-		boolean atMaxLevel = options
-				.getOptimizationLevel() == OptionOptimize.OPTIMIZE_LEVEL_MAX;
-		int passLimit = atMaxLevel ? MAX_PASSES
-				: options.getOptimizationLevel();
-		float minChangeRate = atMaxLevel ? FIXED_POINT_CHANGE_RATE
-				: EFFICIENT_CHANGE_RATE;
-		OptimizerContext optimizerCtx = new FullOptimizerContext(jprogram);
-		while (true) {
-			passCount++;
-			if (passCount > passLimit) {
-				break;
+	/**
+	 * Transform patterns that can't be represented in JS (such as multiple
+	 * catch blocks) into equivalent but compatible patterns and take JVM
+	 * semantics (such as numeric casts) that are not explicit in the AST and
+	 * make them explicit.<br />
+	 *
+	 * These passes can not be reordering because of subtle interdependencies.
+	 */
+	protected TypeMapper<?> normalizeSemantics() {
+		Event event = SpeedTracerLogger
+				.start(CompilerEventType.JAVA_NORMALIZERS);
+		try {
+			Devirtualizer.exec(jprogram);
+			CatchBlockNormalizer.exec(jprogram);
+			PostOptimizationCompoundAssignmentNormalizer.exec(jprogram);
+			LongCastNormalizer.exec(jprogram);
+			LongEmulationNormalizer.exec(jprogram);
+			TypeCoercionNormalizer.exec(jprogram);
+			if (options.isIncrementalCompileEnabled()) {
+				// Per file compilation reuses type JS even as references (like
+				// casts) in other files
+				// change, which means all legal casts need to be allowed now
+				// before they are actually
+				// used later.
+				ComputeExhaustiveCastabilityInformation.exec(jprogram);
+			} else {
+				// If trivial casts are pruned then one can use smaller runtime
+				// castmaps.
+				ComputeCastabilityInformation.exec(jprogram,
+						!shouldOptimize() /* recordTrivialCasts */);
 			}
-			if (Thread.interrupted()) {
-				optimizeEvent.end();
-				throw new InterruptedException();
-			}
-			AstDumper.maybeDumpAST(jprogram);
-			OptimizerStats stats = optimizeJavaOneTime("Pass " + passCount,
-					nodeCount, optimizerCtx);
-			allOptimizerStats.add(stats);
-			lastNodeCount = nodeCount;
-			nodeCount = jprogram.getNodeCount();
-			float nodeChangeRate = stats.getNumMods() / (float) lastNodeCount;
-			float sizeChangeRate = (lastNodeCount - nodeCount)
-					/ (float) lastNodeCount;
-			if (nodeChangeRate <= minChangeRate
-					&& sizeChangeRate <= minChangeRate) {
-				break;
-			}
+			ImplementCastsAndTypeChecks.exec(jprogram,
+					shouldOptimize() /* pruneTrivialCasts */);
+			ImplementJsVarargs.exec(jprogram);
+			ArrayNormalizer.exec(jprogram);
+			EqualityNormalizer.exec(jprogram);
+			TypeMapper<?> typeMapper = getTypeMapper();
+			ResolveRuntimeTypeReferences.exec(jprogram, typeMapper,
+					getTypeOrder());
+			return typeMapper;
+		} finally {
+			event.end();
 		}
-		if (options.shouldOptimizeDataflow()) {
-			logger.log(TreeLogger.Type.WARN,
-					"Unsafe dataflow optimization enabled, disable with -XdisableOptimizeDataflow.");
-			// Just run it once, because it is very time consuming
-			allOptimizerStats.add(DataflowOptimizer.exec(jprogram));
-		}
-		optimizeEvent.end();
-	}
-
-	private boolean shouldOptimize() {
-		return options
-				.getOptimizationLevel() > OptionOptimize.OPTIMIZE_LEVEL_DRAFT;
-	}
-
-	private TypeMapper getTypeMapper() {
-		// Used to stabilize output for DeltaJS
-		if (JjsUtils.closureStyleLiteralsNeeded(this.options)) {
-			return new ClosureUniqueIdTypeMapper(jprogram);
-		}
-		if (this.options.useDetailedTypeIds()) {
-			return new StringTypeMapper(jprogram);
-		}
-		return this.options.isIncrementalCompileEnabled()
-				? compilerContext.getMinimalRebuildCache().getTypeMapper()
-				: new IntTypeMapper();
-	}
-
-	private TypeOrder getTypeOrder() {
-		// Used to stabilize output for DeltaJS
-		if (JjsUtils.closureStyleLiteralsNeeded(this.options)) {
-			return TypeOrder.ALPHABETICAL;
-		}
-		if (this.options.useDetailedTypeIds()) {
-			return TypeOrder.NONE;
-		}
-		return this.options.isIncrementalCompileEnabled()
-				? TypeOrder.ALPHABETICAL
-				: TypeOrder.FREQUENCY;
-	}
-
-	private OptimizerStats optimizeJavaOneTime(String passName, int numNodes,
-			OptimizerContext optimizerCtx) {
-		Event optimizeEvent = SpeedTracerLogger
-				.start(CompilerEventType.OPTIMIZE, "phase", "loop");
-		// Clinits might have become empty become empty.
-		jprogram.typeOracle
-				.recomputeAfterOptimizations(jprogram.getDeclaredTypes());
-		OptimizerStats stats = new OptimizerStats(passName);
-		JavaAstVerifier.assertProgramIsConsistent(jprogram);
-		stats.add(Pruner.exec(jprogram, true, optimizerCtx)
-				.recordVisits(numNodes));
-		stats.add(
-				Finalizer.exec(jprogram, optimizerCtx).recordVisits(numNodes));
-		stats.add(MakeCallsStatic
-				.exec(jprogram, options.shouldAddRuntimeChecks(), optimizerCtx)
-				.recordVisits(numNodes));
-		stats.add(TypeTightener.exec(jprogram, optimizerCtx)
-				.recordVisits(numNodes));
-		stats.add(MethodCallTightener.exec(jprogram, optimizerCtx)
-				.recordVisits(numNodes));
-		// Note: Specialization should be done before inlining.
-		stats.add(MethodCallSpecializer.exec(jprogram, optimizerCtx)
-				.recordVisits(numNodes));
-		stats.add(DeadCodeElimination.exec(jprogram, optimizerCtx)
-				.recordVisits(numNodes));
-		stats.add(MethodInliner.exec(jprogram, optimizerCtx)
-				.recordVisits(numNodes));
-		if (options.shouldInlineLiteralParameters()) {
-			stats.add(SameParameterValueOptimizer.exec(jprogram, optimizerCtx)
-					.recordVisits(numNodes));
-		}
-		if (options.shouldOrdinalizeEnums()) {
-			stats.add(EnumOrdinalizer.exec(jprogram, optimizerCtx)
-					.recordVisits(numNodes));
-		}
-		optimizeEvent.end();
-		return stats;
-	}
-
-	private MinimalRebuildCache getMinimalRebuildCache() {
-		return compilerContext.getMinimalRebuildCache();
 	}
 
 	private static class PermutationResultImpl implements PermutationResult {

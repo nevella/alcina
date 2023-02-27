@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
 
@@ -98,6 +99,17 @@ public class CollectionCreators {
 		}
 	}
 
+	@Registration.Singleton
+	public static class LinkedMapCreator {
+		public static CollectionCreators.LinkedMapCreator get() {
+			return Registry.impl(CollectionCreators.LinkedMapCreator.class);
+		}
+
+		public <K, V> Map<K, V> create() {
+			return new LinkedHashMap<>();
+		}
+	}
+
 	public interface MapCreator<K, V> extends Supplier<Map<K, V>> {
 	}
 
@@ -159,6 +171,10 @@ public class CollectionCreators {
 
 	@Registration.Singleton
 	public static class UnsortedMapCreator implements DelegateMapCreator {
+		public Map create() {
+			return createDelegateMap(0, 0);
+		}
+
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new LinkedHashMap<>();

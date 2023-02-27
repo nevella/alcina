@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.dom;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -19,6 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.CollectionCreators.LinkedMapCreator;
 import cc.alcina.framework.common.client.util.Multimap;
 
 public class DomDocument extends DomNode {
@@ -32,6 +36,13 @@ public class DomDocument extends DomNode {
 	public static DomNode createDocumentElement(String tag) {
 		return new DomDocument(Ax.format("<%s/>", tag))
 				.getDocumentElementNode();
+	}
+
+	public static DomDocument createTextContainer(String text) {
+		DomDocument document = new DomDocument("<container/>");
+		document.getDocumentElementNode().setText(text);
+		document.setReadonly(true);
+		return document;
 	}
 
 	public static DomDocument documentFor(Document document) {
@@ -55,6 +66,8 @@ public class DomDocument extends DomNode {
 	private Multimap<String, List<DomNode>> byTag;
 
 	private Multimap<String, List<DomNode>> byId;
+
+	private Locations locations;
 
 	public DomDocument(Document w3cDocument) {
 		this(w3cDocument, 0);
@@ -122,8 +135,19 @@ public class DomDocument extends DomNode {
 		}
 	}
 
+	public Location.Range getLocationRange() {
+		return locations().getDocumentRange();
+	}
+
 	public boolean isReadonly() {
 		return this.readonly;
+	}
+
+	public Locations locations() {
+		if (locations == null) {
+			locations = new Locations();
+		}
+		return locations;
 	}
 
 	public DomNode nodeFor(Node domNode) {
@@ -262,6 +286,85 @@ public class DomDocument extends DomNode {
 
 		public void setMaxSize(int maxSize) {
 			this.maxSize = maxSize;
+		}
+	}
+
+	class Locations implements LocationContext {
+		Map<DomNode, Location> byNode;
+
+		Map<DomNode, Integer> contentLengths;
+
+		Location[] locations;
+
+		String contents;
+
+		Locations() {
+			Preconditions.checkState(readonly);
+			generateLookups();
+		}
+
+		@Override
+		public Location createRelativeLocation(Location location, int offset) {
+			int index = location.index + offset;
+			Location test = new Location(0, index, location.after);
+			Location containingLocation = getContainingLocation(test);
+			return new Location(containingLocation.treeIndex, index,
+					location.after, containingLocation.containingNode, this);
+		}
+
+		@Override
+		public DomNode getContainingNode(Location test) {
+			return getContainingLocation(test).containingNode;
+		}
+
+		@Override
+		public String textContent(Location.Range range) {
+			return contents.substring(range.start.index, range.end.index);
+		}
+
+		private void generateLookups() {
+			byNode = LinkedMapCreator.get().create();
+			contentLengths = LinkedMapCreator.get().create();
+			StringBuilder content = new StringBuilder();
+			List<DomNode> openNodes = new ArrayList<>();
+			getDocumentElementNode().stream().forEach(node -> {
+				int depth = node.depth() - 1;
+				Location location = new Location(depth, content.length(), false,
+						node, this);
+				byNode.put(node, location);
+				contentLengths.put(node, 0);
+				if (depth == openNodes.size()) {
+					openNodes.add(node);
+				} else {
+					openNodes.set(depth, node);
+				}
+				if (node.isText()) {
+					content.append(node.textContent());
+					int nodeLength = node.textContent().length();
+					for (int idx = 0; idx <= depth; idx++) {
+						DomNode domNode = openNodes.get(idx);
+						contentLengths.put(domNode,
+								contentLengths.get(domNode) + nodeLength);
+					}
+				}
+			});
+			contents = content.toString();
+			locations = (Location[]) new ArrayList<>(byNode.values())
+					.toArray(new Location[byNode.size()]);
+		}
+
+		Location getContainingLocation(Location test) {
+			// binary search location array
+			int index = Arrays.binarySearch(locations, test);
+			return locations[index];
+		}
+
+		Location.Range getDocumentRange() {
+			DomNode documentElementNode = getDocumentElementNode();
+			Location start = byNode.get(documentElementNode);
+			Location end = new Location(0, contents.length(), true,
+					documentElementNode, this);
+			return new Location.Range(start, end);
 		}
 	}
 }

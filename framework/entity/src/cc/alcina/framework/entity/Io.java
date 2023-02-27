@@ -300,6 +300,10 @@ public class Io {
 
 		private String charsetName = StandardCharsets.UTF_8.name();
 
+		private String classpathResource;
+
+		private Class classpathRelative;
+
 		public String asString() {
 			try {
 				InputStream stream = getStream();
@@ -315,6 +319,14 @@ public class Io {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		public ReadOp withClasspathResource(String classpathResource) {
+			this.classpathResource = classpathResource;
+			classpathRelative = StackWalker
+					.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+					.getCallerClass();
+			return this;
 		}
 
 		public ReadOp withPath(String path) {
@@ -333,6 +345,13 @@ public class Io {
 			InputStream stream = null;
 			if (file != null) {
 				stream = new FileInputStream(file);
+			} else if (classpathRelative != null) {
+				stream = classpathRelative
+						.getResourceAsStream(classpathResource);
+				if (stream == null) {
+					stream = Thread.currentThread().getContextClassLoader()
+							.getResourceAsStream(classpathResource);
+				}
 			}
 			return stream;
 		}

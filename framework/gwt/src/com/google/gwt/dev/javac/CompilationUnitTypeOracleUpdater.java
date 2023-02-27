@@ -83,161 +83,6 @@ import com.google.gwt.thirdparty.guava.common.util.concurrent.ThreadFactoryBuild
  */
 public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 	/**
-	 * A container to hold all the information we need to add one type to the
-	 * TypeOracle.
-	 */
-	static class TypeData {
-		private final byte[] byteCode;
-
-		private CollectClassData classData;
-
-		private final String internalName;
-
-		/**
-		 * A timestamp as returned from {@link System#currentTimeMillis()}
-		 */
-		private final long lastModifiedTime;
-
-		private final String packageName;
-
-		private final String sourceName;
-
-		protected TypeData(String packageName, String sourceName,
-				String internalName, byte[] byteCode, long lastModifiedTime) {
-			this.packageName = packageName;
-			this.sourceName = sourceName;
-			this.internalName = internalName;
-			this.byteCode = byteCode;
-			this.lastModifiedTime = lastModifiedTime;
-		}
-
-		/**
-		 * Collects data about a class which only needs the bytecode and no
-		 * TypeOracle data structures. This is used to make the initial shallow
-		 * identity pass for creating JRealClassType/JGenericType objects.
-		 */
-		synchronized CollectClassData getCollectClassData() {
-			if (classData == null) {
-				ClassReader reader = new ClassReader(byteCode);
-				classData = new CollectClassData();
-				ClassVisitor classVisitor = classData;
-				if (TRACE_CLASSES) {
-					classVisitor = new TraceClassVisitor(classVisitor,
-							new PrintWriter(System.out));
-				}
-				reader.accept(classVisitor, 0);
-			}
-			return classData;
-		}
-	}
-
-	private class CompilationUnitTypeOracleResolver implements Resolver {
-		private final TypeOracleBuildContext context;
-
-		public CompilationUnitTypeOracleResolver(
-				TypeOracleBuildContext context) {
-			this.context = context;
-		}
-
-		@Override
-		public void addImplementedInterface(JRealClassType type,
-				JClassType intf) {
-			CompilationUnitTypeOracleUpdater.this.addImplementedInterface(type,
-					intf);
-		}
-
-		@Override
-		public void addThrows(JAbstractMethod method, JClassType exception) {
-			CompilationUnitTypeOracleUpdater.this.addThrows(method, exception);
-		}
-
-		@Override
-		public JRealClassType findByInternalName(String internalName) {
-			return CompilationUnitTypeOracleUpdater.this
-					.findByInternalName(internalName);
-		}
-
-		@Override
-		public TypeOracle getTypeOracle() {
-			return CompilationUnitTypeOracleUpdater.this.typeOracle;
-		}
-
-		@Override
-		public JMethod newMethod(JClassType type, String name,
-				Map<Class<? extends Annotation>, Annotation> declaredAnnotations,
-				JTypeParameter[] typeParams) {
-			return CompilationUnitTypeOracleUpdater.this.newMethod(type, name,
-					declaredAnnotations, typeParams);
-		}
-
-		@Override
-		public void newParameter(JAbstractMethod method, JType argType,
-				String argName,
-				Map<Class<? extends Annotation>, Annotation> declaredAnnotations,
-				boolean argNamesAreReal) {
-			CompilationUnitTypeOracleUpdater.this.newParameter(method, argType,
-					argName, declaredAnnotations, argNamesAreReal);
-		}
-
-		@Override
-		public JRealClassType newRealClassType(JPackage pkg,
-				String enclosingTypeName, boolean isLocalType,
-				String simpleSourceName, boolean isInterface) {
-			return CompilationUnitTypeOracleUpdater.this.newRealClassType(pkg,
-					enclosingTypeName, simpleSourceName, isInterface);
-		}
-
-		@Override
-		public boolean resolveAnnotations(TreeLogger logger,
-				List<CollectAnnotationData> annotations,
-				Map<Class<? extends Annotation>, Annotation> declaredAnnotations) {
-			return CompilationUnitTypeOracleUpdater.this.resolveAnnotations(
-					logger, annotations, declaredAnnotations);
-		}
-
-		@Override
-		public boolean resolveClass(TreeLogger logger, JRealClassType type) {
-			return CompilationUnitTypeOracleUpdater.this.resolveClass(logger,
-					type, context);
-		}
-
-		@Override
-		public void setReturnType(JAbstractMethod method, JType returnType) {
-			CompilationUnitTypeOracleUpdater.this.setReturnType(method,
-					returnType);
-		}
-
-		@Override
-		public void setSuperClass(JRealClassType type, JClassType superType) {
-			CompilationUnitTypeOracleUpdater.this.setSuperClass(type,
-					superType);
-		}
-	}
-
-	/**
-	 * This context keeps common data so we don't have to pass it around between
-	 * methods for one pass of
-	 * {@link CompilationUnitTypeOracleUpdater#addNewTypesDontIndex(TreeLogger, Collection, MethodArgNamesLookup)}
-	 * .
-	 */
-	protected class TypeOracleBuildContext {
-		protected final MethodArgNamesLookup allMethodArgs;
-
-		private final Map<String, CollectClassData> classDataByInternalName = Maps
-				.newHashMap();
-
-		private final Map<JRealClassType, CollectClassData> classDataByType = Maps
-				.newHashMap();
-
-		private final Resolver resolver = new CompilationUnitTypeOracleResolver(
-				this);
-
-		protected TypeOracleBuildContext(MethodArgNamesLookup allMethodArgs) {
-			this.allMethodArgs = allMethodArgs;
-		}
-	}
-
-	/**
 	 * Pairs of bits to convert from ASM Opcodes.* to Shared.* bitfields.
 	 */
 	private static final int[] ASM_TO_SHARED_MODIFIERS = new int[] {
@@ -262,6 +107,42 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 	 * Suppress some warnings related to missing valiation.jar on classpath.
 	 */
 	private static boolean warnedMissingValidationJar = false;
+
+	/**
+	 * An executor service to parallelize some of the update process.
+	 */
+	private static ExecutorService executor = new ThreadPoolExecutor(0,
+			Runtime.getRuntime().availableProcessors(), 60L, TimeUnit.SECONDS,
+			Queues.<Runnable> newLinkedBlockingQueue(),
+			// Make sure this executor lets the whole process terminate
+			// correctly even if there
+			// are still live threads.
+			new ThreadFactoryBuilder().setDaemon(true).build());
+
+	private static final Map<String, Class<?>> BUILT_IN_PRIMITIVE_MAP;
+	static {
+		ImmutableMap.Builder<String, Class<?>> builder = ImmutableMap
+				.<String, Class<?>> builder().put("Z", boolean.class)
+				.put("B", byte.class).put("C", char.class).put("S", short.class)
+				.put("I", int.class).put("F", float.class)
+				.put("D", double.class).put("J", long.class)
+				.put("V", void.class);
+		for (Class c : new Class[] { void.class, boolean.class, byte.class,
+				char.class, short.class, int.class, float.class, double.class,
+				long.class }) {
+			builder.put(c.getName(), c);
+		}
+		BUILT_IN_PRIMITIVE_MAP = builder.build();
+	}
+
+	public static Class forName(String name) throws ClassNotFoundException {
+		Class c = BUILT_IN_PRIMITIVE_MAP.get(name);
+		if (c == null) {
+			c = Class.forName(name, false,
+					Thread.currentThread().getContextClassLoader());
+		}
+		return c;
+	}
 
 	private static JTypeParameter[] collectTypeParams(String signature) {
 		if (signature != null) {
@@ -341,126 +222,6 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 		return type;
 	}
 
-	private final Set<String> resolvedTypeSourceNames = Sets.newHashSet();
-
-	private final Map<String, JRealClassType> typesByInternalName = Maps
-			.newHashMap();
-
-	/**
-	 * An executor service to parallelize some of the update process.
-	 */
-	private static ExecutorService executor = new ThreadPoolExecutor(0,
-			Runtime.getRuntime().availableProcessors(), 60L, TimeUnit.SECONDS,
-			Queues.<Runnable> newLinkedBlockingQueue(),
-			// Make sure this executor lets the whole process terminate
-			// correctly even if there
-			// are still live threads.
-			new ThreadFactoryBuilder().setDaemon(true).build());
-
-	public CompilationUnitTypeOracleUpdater(TypeOracle typeOracle) {
-		super(typeOracle);
-	}
-
-	/**
-	 * Adds new units to an existing TypeOracle but does not yet index their
-	 * type hierarchy.<br />
-	 *
-	 * It is ok for this function to recursive since no repeated or invalid type
-	 * indexing will result.
-	 *
-	 * @param logger
-	 *            logger to use
-	 * @param typeDataList
-	 *            collection of data need to build types. (Doesn't retain
-	 *            references to TypeData instances.)
-	 * @param argsLookup
-	 *            Allows the caller to pass the method argument names which are
-	 *            not normally available in bytecode.
-	 */
-	void addNewTypesDontIndex(TreeLogger logger,
-			Collection<TypeData> typeDataList,
-			MethodArgNamesLookup argsLookup) {
-		Event typeOracleUpdaterEvent = SpeedTracerLogger
-				.start(CompilerEventType.TYPE_ORACLE_UPDATER);
-		// First collect all class data.
-		Event visitClassFileEvent = SpeedTracerLogger.start(
-				CompilerEventType.TYPE_ORACLE_UPDATER, "phase",
-				"Visit Class Files");
-		TypeOracleBuildContext context = getContext(argsLookup);
-		for (TypeData typeData : typeDataList) {
-			CollectClassData classData = typeData.getCollectClassData();
-			// skip any classes that can't be referenced by name outside of
-			// their local scope, such as anonymous classes and method-local
-			// classes
-			if (classData.hasNoExternalName()) {
-				continue;
-			}
-			// skip classes that have been previously added
-			if (typesByInternalName.containsKey(classData.getInternalName())) {
-				continue;
-			}
-			context.classDataByInternalName.put(typeData.internalName,
-					classData);
-		}
-		visitClassFileEvent.end();
-		Event identityEvent = SpeedTracerLogger.start(
-				CompilerEventType.TYPE_ORACLE_UPDATER, "phase",
-				"Establish Identity");
-		// Perform a shallow pass to establish identity for new and old types.
-		Set<JRealClassType> unresolvedTypes = Sets.newLinkedHashSet();
-		for (TypeData typeData : typeDataList) {
-			CollectClassData classData = context.classDataByInternalName
-					.get(typeData.internalName);
-			if (classData == null) {
-				// ignore classes that were skipped earlier
-				continue;
-			}
-			if (typesByInternalName.containsKey(classData.getInternalName())) {
-				// skip classes that have been previously added
-				continue;
-			}
-			JRealClassType type = createType(typeData, unresolvedTypes,
-					context);
-			if (type != null) {
-				assert Name.isInternalName(typeData.internalName);
-				typesByInternalName.put(typeData.internalName, type);
-				context.classDataByType.put(type, classData);
-			}
-		}
-		identityEvent.end();
-		Event resolveEnclosingEvent = SpeedTracerLogger.start(
-				CompilerEventType.TYPE_ORACLE_UPDATER, "phase",
-				"Resolve Enclosing Classes");
-		// Hook up enclosing types
-		TreeLogger branch = logger.branch(TreeLogger.SPAM,
-				"Resolving enclosing classes");
-		for (Iterator<JRealClassType> unresolvedTypesIterator = unresolvedTypes
-				.iterator(); unresolvedTypesIterator.hasNext();) {
-			JRealClassType unresolvedType = unresolvedTypesIterator.next();
-			if (!resolveEnclosingClass(branch, unresolvedType, context)) {
-				// already logged why it failed, don't try and use it further
-				unresolvedTypesIterator.remove();
-			}
-		}
-		resolveEnclosingEvent.end();
-		Event resolveUnresolvedEvent = SpeedTracerLogger.start(
-				CompilerEventType.TYPE_ORACLE_UPDATER, "phase",
-				"Resolve Unresolved Types");
-		// Resolve unresolved types.
-		for (JRealClassType unresolvedType : unresolvedTypes) {
-			branch = logger.branch(TreeLogger.SPAM,
-					"Resolving " + unresolvedType.getQualifiedSourceName());
-			if (!resolveClass(branch, unresolvedType, context)) {
-				// already logged why it failed.
-				// TODO: should we do anything else here?
-			}
-		}
-		resolveUnresolvedEvent.end();
-		// no longer needed
-		context = null;
-		typeOracleUpdaterEvent.end();
-	}
-
 	private static void prefechTypeData(Collection<TypeData> typeDataList) {
 		// Parse bytecode in parallel by calling {@code
 		// TypeData.getCollectClassData()} in parallel.
@@ -489,6 +250,15 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 		}
 	}
 
+	private final Set<String> resolvedTypeSourceNames = Sets.newHashSet();
+
+	private final Map<String, JRealClassType> typesByInternalName = Maps
+			.newHashMap();
+
+	public CompilationUnitTypeOracleUpdater(TypeOracle typeOracle) {
+		super(typeOracle);
+	}
+
 	/**
 	 * Adds new units to an existing TypeOracle and indexes their type
 	 * hierarchy.
@@ -497,42 +267,6 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 			Collection<CompilationUnit> compilationUnits) {
 		addNewTypesDontIndex(logger, compilationUnits);
 		indexTypes();
-	}
-
-	@VisibleForTesting
-	void indexTypes() {
-		Event finishEvent = SpeedTracerLogger.start(
-				CompilerEventType.TYPE_ORACLE_UPDATER, "phase", "Finish");
-		super.finish();
-		finishEvent.end();
-	}
-
-	protected void addNewTypesDontIndex(TreeLogger logger,
-			Collection<CompilationUnit> compilationUnits) {
-		Collection<TypeData> typeDataList = Lists.newArrayList();
-		// Create method args data for types to add
-		MethodArgNamesLookup argsLookup = new MethodArgNamesLookup();
-		for (CompilationUnit compilationUnit : compilationUnits) {
-			argsLookup.mergeFrom(compilationUnit.getMethodArgs());
-		}
-		// Create list including byte code for each type to add
-		// TODO(rluble): this process can be done in parallel. Probably best to
-		// merge this for
-		// loop with the one in prefetchTypeData.
-		for (CompilationUnit compilationUnit : compilationUnits) {
-			for (CompiledClass compiledClass : compilationUnit
-					.getCompiledClasses()) {
-				TypeData typeData = new TypeData(compiledClass.getPackageName(),
-						compiledClass.getSourceName(),
-						compiledClass.getInternalName(),
-						compiledClass.getBytes(),
-						compiledClass.getUnit().getLastModified());
-				typeDataList.add(typeData);
-			}
-		}
-		prefechTypeData(typeDataList);
-		// Add the new types to the type oracle build in progress.
-		addNewTypesDontIndex(logger, typeDataList, argsLookup);
 	}
 
 	@VisibleForTesting
@@ -548,16 +282,6 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 	@VisibleForTesting
 	public Map<String, JRealClassType> getTypesByInternalName() {
 		return typesByInternalName;
-	}
-
-	/**
-	 * Returns the type corresponding to the given internal name.<br />
-	 *
-	 * Implementations are free to service requests eagerly or lazily.
-	 */
-	protected JRealClassType findByInternalName(String internalName) {
-		assert Name.isInternalName(internalName);
-		return typesByInternalName.get(internalName);
 	}
 
 	private Annotation createAnnotation(TreeLogger logger,
@@ -710,13 +434,12 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 		}
 	}
 
-	/**
-	 * Returns a new build context to use for the duration of one
-	 * addNewTypesDontIndex() invocation.
-	 */
-	protected TypeOracleBuildContext
-			getContext(MethodArgNamesLookup argsLookup) {
-		return new TypeOracleBuildContext(argsLookup);
+	private boolean isJava8InterfaceMethod(CollectMethodData method) {
+		// (Normal) interface methods are abstract. Java 8 introduced the
+		// ability to declare default
+		// methods and static methods both of which are exposed as non abstract
+		// methods.
+		return (method.getAccess() & Opcodes.ACC_ABSTRACT) == 0;
 	}
 
 	/**
@@ -875,31 +598,6 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 		}
 	}
 
-	private static final Map<String, Class<?>> BUILT_IN_PRIMITIVE_MAP;
-	static {
-		ImmutableMap.Builder<String, Class<?>> builder = ImmutableMap
-				.<String, Class<?>> builder().put("Z", boolean.class)
-				.put("B", byte.class).put("C", char.class).put("S", short.class)
-				.put("I", int.class).put("F", float.class)
-				.put("D", double.class).put("J", long.class)
-				.put("V", void.class);
-		for (Class c : new Class[] { void.class, boolean.class, byte.class,
-				char.class, short.class, int.class, float.class, double.class,
-				long.class }) {
-			builder.put(c.getName(), c);
-		}
-		BUILT_IN_PRIMITIVE_MAP = builder.build();
-	}
-
-	public static Class forName(String name) throws ClassNotFoundException {
-		Class c = BUILT_IN_PRIMITIVE_MAP.get(name);
-		if (c == null) {
-			c = Class.forName(name, false,
-					Thread.currentThread().getContextClassLoader());
-		}
-		return c;
-	}
-
 	private JType resolveArray(Type type) {
 		assert type.getSort() == Type.ARRAY;
 		JType resolvedType = resolveType(type.getElementType());
@@ -1055,14 +753,6 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 			}
 		}
 		return true;
-	}
-
-	private boolean isJava8InterfaceMethod(CollectMethodData method) {
-		// (Normal) interface methods are abstract. Java 8 introduced the
-		// ability to declare default
-		// methods and static methods both of which are exposed as non abstract
-		// methods.
-		return (method.getAccess() & Opcodes.ACC_ABSTRACT) == 0;
 	}
 
 	private boolean resolveClass(TreeLogger logger, JType unresolvedType,
@@ -1429,5 +1119,315 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 			return true;
 		}
 		return false;
+	}
+
+	protected void addNewTypesDontIndex(TreeLogger logger,
+			Collection<CompilationUnit> compilationUnits) {
+		Collection<TypeData> typeDataList = Lists.newArrayList();
+		// Create method args data for types to add
+		MethodArgNamesLookup argsLookup = new MethodArgNamesLookup();
+		for (CompilationUnit compilationUnit : compilationUnits) {
+			argsLookup.mergeFrom(compilationUnit.getMethodArgs());
+		}
+		// Create list including byte code for each type to add
+		// TODO(rluble): this process can be done in parallel. Probably best to
+		// merge this for
+		// loop with the one in prefetchTypeData.
+		for (CompilationUnit compilationUnit : compilationUnits) {
+			for (CompiledClass compiledClass : compilationUnit
+					.getCompiledClasses()) {
+				TypeData typeData = new TypeData(compiledClass.getPackageName(),
+						compiledClass.getSourceName(),
+						compiledClass.getInternalName(),
+						compiledClass.getBytes(),
+						compiledClass.getUnit().getLastModified());
+				typeDataList.add(typeData);
+			}
+		}
+		prefechTypeData(typeDataList);
+		// Add the new types to the type oracle build in progress.
+		addNewTypesDontIndex(logger, typeDataList, argsLookup);
+	}
+
+	/**
+	 * Returns the type corresponding to the given internal name.<br />
+	 *
+	 * Implementations are free to service requests eagerly or lazily.
+	 */
+	protected JRealClassType findByInternalName(String internalName) {
+		assert Name.isInternalName(internalName);
+		return typesByInternalName.get(internalName);
+	}
+
+	/**
+	 * Returns a new build context to use for the duration of one
+	 * addNewTypesDontIndex() invocation.
+	 */
+	protected TypeOracleBuildContext
+			getContext(MethodArgNamesLookup argsLookup) {
+		return new TypeOracleBuildContext(argsLookup);
+	}
+
+	/**
+	 * Adds new units to an existing TypeOracle but does not yet index their
+	 * type hierarchy.<br />
+	 *
+	 * It is ok for this function to recursive since no repeated or invalid type
+	 * indexing will result.
+	 *
+	 * @param logger
+	 *            logger to use
+	 * @param typeDataList
+	 *            collection of data need to build types. (Doesn't retain
+	 *            references to TypeData instances.)
+	 * @param argsLookup
+	 *            Allows the caller to pass the method argument names which are
+	 *            not normally available in bytecode.
+	 */
+	void addNewTypesDontIndex(TreeLogger logger,
+			Collection<TypeData> typeDataList,
+			MethodArgNamesLookup argsLookup) {
+		Event typeOracleUpdaterEvent = SpeedTracerLogger
+				.start(CompilerEventType.TYPE_ORACLE_UPDATER);
+		// First collect all class data.
+		Event visitClassFileEvent = SpeedTracerLogger.start(
+				CompilerEventType.TYPE_ORACLE_UPDATER, "phase",
+				"Visit Class Files");
+		TypeOracleBuildContext context = getContext(argsLookup);
+		for (TypeData typeData : typeDataList) {
+			CollectClassData classData = typeData.getCollectClassData();
+			// skip any classes that can't be referenced by name outside of
+			// their local scope, such as anonymous classes and method-local
+			// classes
+			if (classData.hasNoExternalName()) {
+				continue;
+			}
+			// skip classes that have been previously added
+			if (typesByInternalName.containsKey(classData.getInternalName())) {
+				continue;
+			}
+			context.classDataByInternalName.put(typeData.internalName,
+					classData);
+		}
+		visitClassFileEvent.end();
+		Event identityEvent = SpeedTracerLogger.start(
+				CompilerEventType.TYPE_ORACLE_UPDATER, "phase",
+				"Establish Identity");
+		// Perform a shallow pass to establish identity for new and old types.
+		Set<JRealClassType> unresolvedTypes = Sets.newLinkedHashSet();
+		for (TypeData typeData : typeDataList) {
+			CollectClassData classData = context.classDataByInternalName
+					.get(typeData.internalName);
+			if (classData == null) {
+				// ignore classes that were skipped earlier
+				continue;
+			}
+			if (typesByInternalName.containsKey(classData.getInternalName())) {
+				// skip classes that have been previously added
+				continue;
+			}
+			JRealClassType type = createType(typeData, unresolvedTypes,
+					context);
+			if (type != null) {
+				assert Name.isInternalName(typeData.internalName);
+				typesByInternalName.put(typeData.internalName, type);
+				context.classDataByType.put(type, classData);
+			}
+		}
+		identityEvent.end();
+		Event resolveEnclosingEvent = SpeedTracerLogger.start(
+				CompilerEventType.TYPE_ORACLE_UPDATER, "phase",
+				"Resolve Enclosing Classes");
+		// Hook up enclosing types
+		TreeLogger branch = logger.branch(TreeLogger.SPAM,
+				"Resolving enclosing classes");
+		for (Iterator<JRealClassType> unresolvedTypesIterator = unresolvedTypes
+				.iterator(); unresolvedTypesIterator.hasNext();) {
+			JRealClassType unresolvedType = unresolvedTypesIterator.next();
+			if (!resolveEnclosingClass(branch, unresolvedType, context)) {
+				// already logged why it failed, don't try and use it further
+				unresolvedTypesIterator.remove();
+			}
+		}
+		resolveEnclosingEvent.end();
+		Event resolveUnresolvedEvent = SpeedTracerLogger.start(
+				CompilerEventType.TYPE_ORACLE_UPDATER, "phase",
+				"Resolve Unresolved Types");
+		// Resolve unresolved types.
+		for (JRealClassType unresolvedType : unresolvedTypes) {
+			branch = logger.branch(TreeLogger.SPAM,
+					"Resolving " + unresolvedType.getQualifiedSourceName());
+			if (!resolveClass(branch, unresolvedType, context)) {
+				// already logged why it failed.
+				// TODO: should we do anything else here?
+			}
+		}
+		resolveUnresolvedEvent.end();
+		// no longer needed
+		context = null;
+		typeOracleUpdaterEvent.end();
+	}
+
+	@VisibleForTesting
+	void indexTypes() {
+		Event finishEvent = SpeedTracerLogger.start(
+				CompilerEventType.TYPE_ORACLE_UPDATER, "phase", "Finish");
+		super.finish();
+		finishEvent.end();
+	}
+
+	private class CompilationUnitTypeOracleResolver implements Resolver {
+		private final TypeOracleBuildContext context;
+
+		public CompilationUnitTypeOracleResolver(
+				TypeOracleBuildContext context) {
+			this.context = context;
+		}
+
+		@Override
+		public void addImplementedInterface(JRealClassType type,
+				JClassType intf) {
+			CompilationUnitTypeOracleUpdater.this.addImplementedInterface(type,
+					intf);
+		}
+
+		@Override
+		public void addThrows(JAbstractMethod method, JClassType exception) {
+			CompilationUnitTypeOracleUpdater.this.addThrows(method, exception);
+		}
+
+		@Override
+		public JRealClassType findByInternalName(String internalName) {
+			return CompilationUnitTypeOracleUpdater.this
+					.findByInternalName(internalName);
+		}
+
+		@Override
+		public TypeOracle getTypeOracle() {
+			return CompilationUnitTypeOracleUpdater.this.typeOracle;
+		}
+
+		@Override
+		public JMethod newMethod(JClassType type, String name,
+				Map<Class<? extends Annotation>, Annotation> declaredAnnotations,
+				JTypeParameter[] typeParams) {
+			return CompilationUnitTypeOracleUpdater.this.newMethod(type, name,
+					declaredAnnotations, typeParams);
+		}
+
+		@Override
+		public void newParameter(JAbstractMethod method, JType argType,
+				String argName,
+				Map<Class<? extends Annotation>, Annotation> declaredAnnotations,
+				boolean argNamesAreReal) {
+			CompilationUnitTypeOracleUpdater.this.newParameter(method, argType,
+					argName, declaredAnnotations, argNamesAreReal);
+		}
+
+		@Override
+		public JRealClassType newRealClassType(JPackage pkg,
+				String enclosingTypeName, boolean isLocalType,
+				String simpleSourceName, boolean isInterface) {
+			return CompilationUnitTypeOracleUpdater.this.newRealClassType(pkg,
+					enclosingTypeName, simpleSourceName, isInterface);
+		}
+
+		@Override
+		public boolean resolveAnnotations(TreeLogger logger,
+				List<CollectAnnotationData> annotations,
+				Map<Class<? extends Annotation>, Annotation> declaredAnnotations) {
+			return CompilationUnitTypeOracleUpdater.this.resolveAnnotations(
+					logger, annotations, declaredAnnotations);
+		}
+
+		@Override
+		public boolean resolveClass(TreeLogger logger, JRealClassType type) {
+			return CompilationUnitTypeOracleUpdater.this.resolveClass(logger,
+					type, context);
+		}
+
+		@Override
+		public void setReturnType(JAbstractMethod method, JType returnType) {
+			CompilationUnitTypeOracleUpdater.this.setReturnType(method,
+					returnType);
+		}
+
+		@Override
+		public void setSuperClass(JRealClassType type, JClassType superType) {
+			CompilationUnitTypeOracleUpdater.this.setSuperClass(type,
+					superType);
+		}
+	}
+
+	/**
+	 * This context keeps common data so we don't have to pass it around between
+	 * methods for one pass of
+	 * {@link CompilationUnitTypeOracleUpdater#addNewTypesDontIndex(TreeLogger, Collection, MethodArgNamesLookup)}
+	 * .
+	 */
+	protected class TypeOracleBuildContext {
+		protected final MethodArgNamesLookup allMethodArgs;
+
+		private final Map<String, CollectClassData> classDataByInternalName = Maps
+				.newHashMap();
+
+		private final Map<JRealClassType, CollectClassData> classDataByType = Maps
+				.newHashMap();
+
+		private final Resolver resolver = new CompilationUnitTypeOracleResolver(
+				this);
+
+		protected TypeOracleBuildContext(MethodArgNamesLookup allMethodArgs) {
+			this.allMethodArgs = allMethodArgs;
+		}
+	}
+
+	/**
+	 * A container to hold all the information we need to add one type to the
+	 * TypeOracle.
+	 */
+	static class TypeData {
+		private final byte[] byteCode;
+
+		private CollectClassData classData;
+
+		private final String internalName;
+
+		/**
+		 * A timestamp as returned from {@link System#currentTimeMillis()}
+		 */
+		private final long lastModifiedTime;
+
+		private final String packageName;
+
+		private final String sourceName;
+
+		protected TypeData(String packageName, String sourceName,
+				String internalName, byte[] byteCode, long lastModifiedTime) {
+			this.packageName = packageName;
+			this.sourceName = sourceName;
+			this.internalName = internalName;
+			this.byteCode = byteCode;
+			this.lastModifiedTime = lastModifiedTime;
+		}
+
+		/**
+		 * Collects data about a class which only needs the bytecode and no
+		 * TypeOracle data structures. This is used to make the initial shallow
+		 * identity pass for creating JRealClassType/JGenericType objects.
+		 */
+		synchronized CollectClassData getCollectClassData() {
+			if (classData == null) {
+				ClassReader reader = new ClassReader(byteCode);
+				classData = new CollectClassData();
+				ClassVisitor classVisitor = classData;
+				if (TRACE_CLASSES) {
+					classVisitor = new TraceClassVisitor(classVisitor,
+							new PrintWriter(System.out));
+				}
+				reader.accept(classVisitor, 0);
+			}
+			return classData;
+		}
 	}
 }
