@@ -157,6 +157,7 @@
 				<pathelement path="${framework.classmeta.build.dir}" />
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.servlet.lib.path" />
+				<path refid="extras.wd.lib.path" />
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
