@@ -208,7 +208,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			LooseContext.pushWithKey(CONTEXT_CURRENT_TEST, this);
 			this.token = token;
 			initialiseContext();
-			beforeProcess();
+			onBeforeProcess();
 			return process0(level, parent);
 		} catch (Exception e) {
 			if (level == 0 && e instanceof CancelParentsException) {
@@ -218,7 +218,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 				throw e;
 			}
 		} finally {
-			afterProcess();
+			onAfterProcess();
 			LooseContext.pop();
 		}
 	}
@@ -312,7 +312,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 		level++;
 		List<WebdriverTest> dependentTests = getRequiredDependentTests();
-		beforeDependentTests();
+		onBeforeDependentTests();
 		if (!dependentTests.isEmpty()) {
 			level++;
 			token.getWriter().write("Processing dependencies - \n", level);
@@ -330,7 +330,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		if (cancelDueToError(level)) {
 			return result;
 		}
-		beforeChildTests();
+		onBeforeChildTests();
 		long startTime = System.currentTimeMillis();
 		token.getWriter().write(
 				Ax.format("Starting test: %s - \n", getClass().getSimpleName()),
@@ -401,16 +401,16 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return result;
 	}
 
-	protected void afterProcess() {
+	protected void onAfterProcess() {
 	}
 
-	protected void beforeChildTests() {
+	protected void onBeforeChildTests() {
 	}
 
-	protected void beforeDependentTests() {
+	protected void onBeforeDependentTests() {
 	}
 
-	protected void beforeProcess() {
+	protected void onBeforeProcess() {
 		token.ensureDriver();
 		WebDriver driver = token.getWebDriver();
 		exec = new WdExec().driver(driver).token(token).timeout(5);

@@ -238,9 +238,9 @@ public class SelectionTraversal
 					int submittedBySelector = 0;
 					try {
 						this.currentSelector = selector;
-						selector.beforeTraversal(generationTraversal,
+						selector.onBeforeTraversal(generationTraversal,
 								selectorPass == 0);
-						generationTraversal.beforeSelectorTraversal(selector);
+						generationTraversal.onBeforeSelectorTraversal(selector);
 						for (Selection selection : generationTraversal
 								.selectionIterator()) {
 							if (generationTraversal.submitted.add(selector,
@@ -254,7 +254,7 @@ public class SelectionTraversal
 						}
 						executor.awaitCompletion();
 					} finally {
-						selector.afterTraversal(generationTraversal,
+						selector.onAfterTraversal(generationTraversal,
 								submittedBySelector != 0);
 					}
 				}
@@ -424,7 +424,7 @@ public class SelectionTraversal
 			this.generation = generation;
 		}
 
-		public void beforeSelectorTraversal(Selector selector) {
+		public void onBeforeSelectorTraversal(Selector selector) {
 			selectionsBySelector.getAndEnsure(selector);
 		}
 
