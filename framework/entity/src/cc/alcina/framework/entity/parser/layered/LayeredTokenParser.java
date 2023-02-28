@@ -224,6 +224,13 @@ public class LayeredTokenParser {
 				return inputContent;
 			}
 
+			public boolean isAtEnd(Slice match) {
+				if (match == null) {
+					return false;
+				}
+				return match.end.index == input.end.index;
+			}
+
 			public SliceMatcher matcher() {
 				return sliceMatcher;
 			}
