@@ -16,12 +16,12 @@ class LayerParser {
 		layer.onBeforeParse(layerState);
 		layerState.inputs = layer.generateInputs(layerState);
 		// outer loop - iterate until no match
-		for (LayeredParserSlice input : layerState.inputs) {
+		for (Slice input : layerState.inputs) {
 			InputState inputState = layerState.createInputState(input);
 			while (inputState.location.isBefore(inputState.input.end)) {
 				inputState.onBeforeTokenMatch();
-				for (LayeredParserToken token : layer.tokens) {
-					LayeredParserSlice slice = token.match(inputState);
+				for (Token token : layer.tokens) {
+					Slice slice = token.match(inputState);
 					if (slice != null) {
 						if (inputState.bestMatch == null
 								|| inputState.bestMatch.start
@@ -31,6 +31,7 @@ class LayerParser {
 					}
 				}
 				if (inputState.bestMatch != null) {
+					inputState.bestMatch.addToParent();
 					inputState.matches.add(inputState.bestMatch);
 					// TODO - probably make it 'next()'
 					inputState.location = inputState.bestMatch.end;

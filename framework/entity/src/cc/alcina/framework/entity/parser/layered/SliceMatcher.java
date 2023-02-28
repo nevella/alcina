@@ -12,7 +12,7 @@ public class SliceMatcher {
 		this.inputState = inputState;
 	}
 
-	public LayeredParserSlice match(LayeredParserToken token, Pattern pattern) {
+	public Slice match(Token token, Pattern pattern) {
 		String text = inputState.inputContent();
 		Matcher matcher = pattern.matcher(text);
 		if (matcher.find()) {

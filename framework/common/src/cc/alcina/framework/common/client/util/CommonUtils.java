@@ -234,6 +234,22 @@ public class CommonUtils {
 		return absPath + relPath;
 	}
 
+	public static String commaCommaAnd(List<String> list) {
+		StringBuilder sb = new StringBuilder();
+		int size = list.size();
+		for (int idx = 0; idx < size; idx++) {
+			if (idx > 0) {
+				if (idx == size - 1) {
+					sb.append(" and ");
+				} else {
+					sb.append(", ");
+				}
+			}
+			sb.append(list.get(idx));
+		}
+		return sb.toString();
+	}
+
 	public static int compareBoolean(Boolean o1, Boolean o2) {
 		int i = 0;
 		if (bv(o1)) {
@@ -1506,23 +1522,26 @@ public class CommonUtils {
 		return val;
 	}
 
+	/**
+	 * <li>Returns whether a given string starts with a given prefix.
+	 * <li>Returns false for null strings or null prefixes
+	 *
+	 * @param str
+	 *            String to check
+	 * @param prefix
+	 *            Prefix to check for
+	 * @return
+	 */
+	public static boolean safeStartsWith(String str, String prefix) {
+		return str == null || prefix == null ? false : str.startsWith(prefix);
+	}
+
 	public static String safeToString(Object obj) {
 		try {
 			return obj == null ? "(null)" : obj.toString();
 		} catch (Exception e) {
 			return "Exception in toString() - " + e.getMessage();
 		}
-	}
-
-	/**
-	 * <li>Returns whether a given string starts with a given prefix.
-	 * <li>Returns false for null strings or null prefixes
-	 * @param str String to check
-	 * @param prefix Prefix to check for
-	 * @return
-	 */
-	public static boolean safeStartsWith(String str, String prefix) {
-		return str == null || prefix == null ? false : str.startsWith(prefix); 
 	}
 
 	/*

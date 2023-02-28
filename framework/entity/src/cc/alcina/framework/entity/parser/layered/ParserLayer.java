@@ -11,7 +11,7 @@ import cc.alcina.framework.entity.parser.layered.LayeredTokenParser.LayerState.I
 public abstract class ParserLayer {
 	public final Name name;
 
-	public List<LayeredParserToken> tokens = new ArrayList<>();
+	public List<Token> tokens = new ArrayList<>();
 
 	List<ParserLayer> children = new ArrayList<>();
 
@@ -25,7 +25,7 @@ public abstract class ParserLayer {
 		name = Name.fromClass(getClass());
 	}
 
-	public abstract List<LayeredParserSlice>
+	public abstract List<Slice>
 			generateInputs(LayerState layerState);
 
 	public void withParent(ParserLayer parent) {
@@ -33,7 +33,7 @@ public abstract class ParserLayer {
 		this.parent = parent;
 	}
 
-	protected void addTokens(LayeredParserToken... tokens) {
+	protected void addTokens(Token... tokens) {
 		Arrays.stream(tokens).forEach(this.tokens::add);
 	}
 

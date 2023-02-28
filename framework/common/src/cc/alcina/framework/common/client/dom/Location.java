@@ -116,14 +116,14 @@ public class Location implements Comparable<Location> {
 		}
 
 		public int length() {
-			return textContent().length();
+			return text().length();
 		}
 
 		public boolean provideIsPoint() {
 			return start.index == end.index;
 		}
 
-		public String textContent() {
+		public String text() {
 			if (textContent == null) {
 				textContent = start.locationContext.textContent(this);
 			}

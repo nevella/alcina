@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.parser.layered.LayeredTokenParser.LayerState.InputState;
 import cc.alcina.framework.entity.parser.layered.ParserLayer.MatchesAreOutputs;
 
@@ -60,6 +61,7 @@ public class LayeredTokenParser {
 	}
 
 	public <T> T parse(String text) {
+		text = Ax.ntrim(text);
 		DomDocument document = DomDocument.createTextContainer(text);
 		parse(document);
 		return (T) peer.getResult();
@@ -116,33 +118,33 @@ public class LayeredTokenParser {
 
 		int layerPass;
 
-		List<LayeredParserSlice> inputs;
+		List<Slice> inputs;
 
-		List<LayeredParserSlice> matches = new ArrayList<>();
+		List<Slice> matches = new ArrayList<>();
 
-		List<LayeredParserSlice> outputs = new ArrayList<>();
+		List<Slice> outputs = new ArrayList<>();
 
 		public LayerState(ParserLayer layer) {
 			this.layer = layer;
 		}
 
-		public List<LayeredParserSlice> documentLayerOutputs() {
+		public List<Slice> documentLayerOutputs() {
 			return layerState(DocumentLayer.class).outputs;
 		}
 
-		public List<LayeredParserSlice> getMatches() {
+		public List<Slice> getMatches() {
 			return this.matches;
 		}
 
-		public List<LayeredParserSlice> getOutputs() {
+		public List<Slice> getOutputs() {
 			return this.outputs;
 		}
 
 		public LayerState layerState(Class<? extends ParserLayer> clazz) {
-			return state.layerStates.get(clazz);
+			return state.layerState(clazz);
 		}
 
-		InputState createInputState(LayeredParserSlice input) {
+		InputState createInputState(Slice input) {
 			return new InputState(input);
 		}
 
@@ -166,19 +168,19 @@ public class LayeredTokenParser {
 		public class InputState {
 			SliceMatcher sliceMatcher = new SliceMatcher(this);
 
-			LayeredParserSlice input;
+			Slice input;
 
 			Location location;
 
-			LayeredParserSlice bestMatch;
+			Slice bestMatch;
 
-			List<LayeredParserSlice> matches = new ArrayList<>();
+			List<Slice> matches = new ArrayList<>();
 
-			List<LayeredParserSlice> outputs = new ArrayList<>();
+			List<Slice> outputs = new ArrayList<>();
 
 			private String inputContent = null;
 
-			public InputState(LayeredParserSlice input) {
+			public InputState(Slice input) {
 				this.input = input;
 				this.location = input.start;
 			}
@@ -188,7 +190,7 @@ public class LayeredTokenParser {
 				LayerState.this.outputs.addAll(outputs);
 			}
 
-			public void emitUnmatchedSegmentsAs(LayeredParserToken token) {
+			public void emitUnmatchedSegmentsAs(Token token) {
 				Location start = input.start;
 				Location end = null;
 				int matchesIdx = 0;
@@ -198,10 +200,9 @@ public class LayeredTokenParser {
 					} else {
 						end = matches.get(matchesIdx).start;
 					}
-					LayeredParserSlice segment = input.subSlice(start.index,
-							end.index, token);
+					Slice segment = input.subSlice(start.index, end.index,
+							token);
 					if (segment.provideIsPoint()) {
-						segment.removeFromParent();
 						// empty
 					} else {
 						outputs.add(segment);
@@ -229,8 +230,7 @@ public class LayeredTokenParser {
 
 			void onBeforeTokenMatch() {
 				bestMatch = null;
-				inputContent = input.textContent()
-						.substring(getOffsetInInput());
+				inputContent = input.text().substring(getOffsetInInput());
 			}
 		}
 	}
@@ -249,26 +249,30 @@ public class LayeredTokenParser {
 			layers.forEach(layer -> layerStates.put(layer.getClass(),
 					new LayerState(layer)));
 		}
+
+		public LayerState layerState(Class<? extends ParserLayer> clazz) {
+			return layerStates.get(clazz);
+		}
 	}
 
 	class DocumentLayer extends ParserLayer implements MatchesAreOutputs {
-		private Token token = new Token();
+		private TokenImpl token = new TokenImpl();
 
 		DocumentLayer() {
 			tokens.add(token);
 		}
 
 		@Override
-		public List<LayeredParserSlice> generateInputs(LayerState layer) {
+		public List<Slice> generateInputs(LayerState layer) {
 			Location.Range documentRange = state.document.getLocationRange();
-			return List.of(new LayeredParserSlice(documentRange.start,
-					documentRange.end, token));
+			return List.of(
+					new Slice(documentRange.start, documentRange.end, token));
 		}
 
-		class Token implements LayeredParserToken {
+		class TokenImpl implements Token {
 			// matches self
 			@Override
-			public LayeredParserSlice match(InputState state) {
+			public Slice match(InputState state) {
 				Preconditions.checkState(state.input.token == token);
 				return state.input;
 			}

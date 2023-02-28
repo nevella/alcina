@@ -159,7 +159,7 @@ public class Io {
 
 			public ReadOp resource(String classpathResource) {
 				this.classpathResource = classpathResource;
-				if (classpathRelative != null) {
+				if (classpathRelative == null) {
 					classpathRelative = StackWalker
 							.getInstance(
 									StackWalker.Option.RETAIN_CLASS_REFERENCE)
