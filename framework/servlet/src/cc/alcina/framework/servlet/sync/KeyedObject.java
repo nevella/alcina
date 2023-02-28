@@ -6,11 +6,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.util.Ax;
 
 @Bean
+/*
+ * Properties are not reflection-serializable (since currently too generic) -
+ * revisit if needed
+ */
 public class KeyedObject<T> implements Serializable {
 	private StringKeyProvider<T> keyProvider;
 
@@ -25,14 +30,17 @@ public class KeyedObject<T> implements Serializable {
 	}
 
 	@JsonIgnore
+	@AlcinaTransient
 	public String getKey() {
 		return keyProvider.firstKey(object);
 	}
 
+	@AlcinaTransient
 	public StringKeyProvider<T> getKeyProvider() {
 		return this.keyProvider;
 	}
 
+	@AlcinaTransient
 	public T getObject() {
 		return this.object;
 	}
