@@ -4,12 +4,14 @@ import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.gwt.client.entity.place.ActionPlace;
-import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler;
+import cc.alcina.framework.gwt.client.ide.provider.ActionPlaceHandler;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
-public interface ActionWidgetSupplier extends LooseActionHandler {
-	public Widget getWidget(ActionPlace place);
+public interface ActionWidgetSupplier<P extends ActionPlace>
+		extends ActionPlaceHandler<P> {
+	public Widget getWidget(P place);
 
+	@Override
 	default void performAction() {
 	}
 
