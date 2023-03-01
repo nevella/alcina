@@ -340,6 +340,8 @@ public class LocalDom {
 
 	boolean syncing;
 
+	boolean markTextNodesAsResolvedOnResolve;
+
 	private LocalDom() {
 		if (GWT.isScript()) {
 			remoteLookup = JsUniqueMap.createWeakMap();
@@ -683,6 +685,10 @@ public class LocalDom {
 			if (parent.getChildCount() == parentRemote.getChildCount()) {
 				Node childNode = parent.getChild(index);
 				linkRemote(remote, childNode);
+				if (markTextNodesAsResolvedOnResolve
+						&& !childNode.wasResolved()) {
+					childNode.resolved(resolutionEventId);
+				}
 				childNode.putRemote(remote, true);
 				return (T) childNode;
 			} else {
@@ -1116,6 +1122,15 @@ public class LocalDom {
 			return (Element) nodeForNoResolve(remote);
 		}
 
+		public void markAsResolved(List<NodeRemote> ancestors) {
+			try {
+				markTextNodesAsResolvedOnResolve = true;
+				ancestors.forEach(LocalDom::nodeFor);
+			} finally {
+				markTextNodesAsResolvedOnResolve = false;
+			}
+		}
+
 		public Node nodeForNoResolve(NodeRemote remote) {
 			return LocalDom.nodeForNoResolve(remote);
 		}
@@ -1131,7 +1146,7 @@ public class LocalDom {
 				Node child = childNodes.getItem(idx);
 				NodeRemote remote = remoteChildrenS0.get(idx);
 				// not sure about resolved here...
-				child.putRemote(remote, true);
+				child.putRemote(remote, child.wasResolved());
 				if (!remoteLookup.containsKey(remote)) {
 					linkRemote(remote, child);
 				}

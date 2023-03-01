@@ -263,7 +263,7 @@ public final class MutationNode {
 			target.removeChild(delta);
 			// because the non-local code could then reinsert parts of the
 			// local/remote synced structure, make sure all the subtree
-			// local/remote links are remov
+			// local/remote links are removed
 			sync.mutationsAccess.removeFromRemoteLookup(delta);
 			break;
 		}
