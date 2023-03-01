@@ -15,6 +15,9 @@ import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
 /*
  * FIXME - dirndl 1x1d - make abstract, per-action subclasses
+ *
+ * FIXME - dirndl 1x1d - extract out 'NamedPlace' - ActionPlace with no params
+ * (defined only by name -- no prefix)
  */
 @Registration(ActionPlace.class)
 public abstract class ActionPlace extends BasePlace {
@@ -48,8 +51,7 @@ public abstract class ActionPlace extends BasePlace {
 		return Long.parseLong(parameters.get(idx));
 	}
 
-	public static class ActionsPlaceTokenizer
-			extends BasePlaceTokenizer<ActionPlace> {
+	public static class Tokenizer extends BasePlaceTokenizer<ActionPlace> {
 		Map<String, ClassReflector<? extends ActionPlace>> byName;
 
 		@Override
@@ -100,6 +102,11 @@ public abstract class ActionPlace extends BasePlace {
 			for (String parameter : place.parameters) {
 				addTokenPart(parameter);
 			}
+		}
+
+		@Override
+		protected boolean handlesPlaceSubclasses() {
+			return true;
 		}
 
 		ClassReflector<? extends ActionPlace> getReflector(String actionName) {

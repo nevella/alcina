@@ -191,6 +191,14 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	protected abstract void getToken0(P place);
 
+	/**
+	 * @return true if the tokenizer instantiates place subclasses based on a
+	 *         token parameter
+	 */
+	protected boolean handlesPlaceSubclasses() {
+		return false;
+	}
+
 	protected void parseMap(String s) {
 		params = AlcinaHistory.fromHash(s);
 	}

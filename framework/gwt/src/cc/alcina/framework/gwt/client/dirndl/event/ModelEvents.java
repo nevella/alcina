@@ -40,20 +40,19 @@ public class ModelEvents {
 		}
 	}
 
-	public static class Cancelled
-			extends ModelEvent<Object, Cancelled.Handler> {
+	public static class Cancel extends ModelEvent<Object, Cancel.Handler> {
 		@Override
-		public void dispatch(Cancelled.Handler handler) {
-			handler.onCancelled(this);
+		public void dispatch(Cancel.Handler handler) {
+			handler.onCancel(this);
 		}
 
 		@Override
-		public Class<Cancelled.Handler> getHandlerClass() {
-			return Cancelled.Handler.class;
+		public Class<Cancel.Handler> getHandlerClass() {
+			return Cancel.Handler.class;
 		}
 
 		public interface Handler extends NodeEvent.Handler {
-			void onCancelled(Cancelled event);
+			void onCancel(Cancel event);
 		}
 	}
 
@@ -137,6 +136,22 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Create extends ModelEvent<Object, Create.Handler> {
+		@Override
+		public void dispatch(Create.Handler handler) {
+			handler.onCreate(this);
+		}
+
+		@Override
+		public Class<Create.Handler> getHandlerClass() {
+			return Create.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCreate(Create event);
+		}
+	}
+
 	public static class Delete extends ModelEvent<Object, Delete.Handler> {
 		@Override
 		public void dispatch(Delete.Handler handler) {
@@ -166,6 +181,22 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onDownload(Download event);
+		}
+	}
+
+	public static class Edit extends ModelEvent<Object, Edit.Handler> {
+		@Override
+		public void dispatch(Edit.Handler handler) {
+			handler.onEdit(this);
+		}
+
+		@Override
+		public Class<Edit.Handler> getHandlerClass() {
+			return Edit.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEdit(Edit event);
 		}
 	}
 
@@ -337,6 +368,22 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Search extends ModelEvent<Object, Search.Handler> {
+		@Override
+		public void dispatch(Search.Handler handler) {
+			handler.onSearch(this);
+		}
+
+		@Override
+		public Class<Search.Handler> getHandlerClass() {
+			return Search.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSearch(Search event);
+		}
+	}
+
 	/**
 	 * Emitted by single-item selection sources, such as {@code Choices.Single}
 	 *
@@ -428,6 +475,22 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onToggle(Toggle event);
+		}
+	}
+
+	public static class View extends ModelEvent<Object, View.Handler> {
+		@Override
+		public void dispatch(View.Handler handler) {
+			handler.onView(this);
+		}
+
+		@Override
+		public Class<View.Handler> getHandlerClass() {
+			return View.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onView(View event);
 		}
 	}
 }

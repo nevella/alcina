@@ -156,6 +156,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *   1x1h docs (ditto)
  *   1x1j overlay/preview events redux
  *   1x2 switch table/form rendering to pure model - adjunct transformmanager
+ *   1x2a Java Records!
+ *   1x2b Java Beans 2! Not public -- also consider removal of @Bean (but @ReflectionSerializable is required)
  *   1x3 low priority fixmes
  *   1x3a consider consort rework
  *   1x4 consider removing widget entirely (localdom)

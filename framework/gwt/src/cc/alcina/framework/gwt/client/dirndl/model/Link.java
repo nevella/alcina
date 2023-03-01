@@ -47,9 +47,11 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * ModelEvent.Handler
  */
 public class Link extends Model implements DomEvents.Click.Handler, HasTag {
+	private static final transient String INITIAL_HREF = "#";
+
 	public static final transient String PRIMARY_ACTION = "primary-action";
 
-	private String href = "#";
+	private String href = INITIAL_HREF;
 
 	private String target;
 
@@ -181,6 +183,11 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	public void setModelEvent(Class<? extends ModelEvent> modelEvent) {
 		this.modelEvent = modelEvent;
+		if (modelEvent != null) {
+			if (text == null) {
+				setText(ModelEvent.staticDisplayName(modelEvent));
+			}
+		}
 	}
 
 	public void setNonStandardObjectAction(
@@ -191,7 +198,12 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	public void setPlace(BasePlace place) {
 		this.place = place;
 		if (place != null) {
-			setHref(place.toHrefString());
+			if (text == null) {
+				setText(place.toTitleString());
+			}
+			if (Objects.equals(href, INITIAL_HREF)) {
+				setHref(place.toHrefString());
+			}
 		}
 	}
 
@@ -243,7 +255,7 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	}
 
 	public Link withModelEvent(Class<? extends ModelEvent> modelEvent) {
-		this.modelEvent = modelEvent;
+		setModelEvent(modelEvent);
 		return this;
 	}
 

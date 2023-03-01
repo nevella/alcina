@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
-import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeRequestEvent;
 import com.google.gwt.user.client.History;
@@ -52,34 +51,29 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Submit;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
-import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
-@Directed(receives = { DomEvents.KeyDown.class })
+// FIXME - dirndl 1x1d.1 - actions - check validation, form submit
+@Directed(
+	receives = { DomEvents.KeyDown.class, ModelEvents.Cancel.class,
+			ModelEvents.Submit.class })
 @Registration(FormModel.class)
 public class FormModel extends Model
-		implements DomEvents.Submit.Handler, DomEvents.KeyDown.Handler {
+		implements DomEvents.Submit.Handler, DomEvents.KeyDown.Handler,
+		ModelEvents.Cancel.Handler, ModelEvents.Submit.Handler {
 	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
 
 	protected List<FormElement> elements = new ArrayList<>();
@@ -125,6 +119,32 @@ public class FormModel extends Model
 	}
 
 	@Override
+	public void onCancel(Cancel event) {
+		Place currentPlace = Client.currentPlace();
+		TransformManager.get().removeTransformsFor(getState().model);
+		TransformManager.get().deregisterProvisionalObject(getState().model);
+		if (currentPlace instanceof EntityPlace) {
+			/*
+			 * behaviour differs. If action was CREATE, go back - if EDIT, VIEW
+			 */
+			EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
+			if (currentEntityPlace.action == EntityAction.CREATE) {
+				History.back();
+			} else {
+				EntityPlace entityPlace = (EntityPlace) Reflections
+						.newInstance(currentPlace.getClass());
+				entityPlace.id = currentEntityPlace.id;
+				entityPlace.go();
+			}
+		} else if (currentPlace instanceof CategoryNamePlace) {
+			CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
+					.copy();
+			categoryNamePlace.nodeName = null;
+			categoryNamePlace.go();
+		}
+	}
+
+	@Override
 	public void onKeyDown(KeyDown event) {
 		KeyDownEvent domEvent = (KeyDownEvent) event.getContext().getGwtEvent();
 		if (domEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
@@ -133,18 +153,26 @@ public class FormModel extends Model
 			// this is before KEY_ENTER is applied, so current form field
 			// may not have fired 'onchange'
 			GwittirUtils.commitAllTextBoxes(getState().formBinding);
-			ActionRefPlace place = new ActionRefPlace(SubmitRef.class);
-			new SubmitHandler().handleAction(event.getContext().node, domEvent,
-					place);
+			event.reemitAs(this, ModelEvents.Submit.class);
 		}
 	}
 
 	@Override
-	public void onSubmit(Submit event) {
-		submit(event.getContext().node);
+	public void onSubmit(DomEvents.Submit event) {
+		((DomEvent) event.getContext().getOriginatingGwtEvent())
+				.preventDefault();
+		submit();
 	}
 
-	public boolean submit(Node node) {
+	// the dom 'Submit' event - fired for instance by <submit> elements
+	@Override
+	public void onSubmit(ModelEvents.Submit event) {
+		submit();
+	}
+
+	// FIXME - dirndl 1x1d.1 - action - cleaner would be to emit a 'created'
+	// event and let the default top-level handlers emit the new place
+	public boolean submit() {
 		Consumer<Void> onValid = o -> {
 			if (getState().model instanceof Entity) {
 				ClientTransformManager.cast()
@@ -178,7 +206,7 @@ public class FormModel extends Model
 				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
 						.currentPlace();
 				DefaultPermissibleActionHandler.handleAction(null,
-						categoryNamePlace.ensureAction(), node);
+						categoryNamePlace.ensureAction(), provideNode());
 			}
 		};
 		return new FormValidation().validate(onValid, getState().formBinding);
@@ -249,49 +277,6 @@ public class FormModel extends Model
 		public @interface Args {
 			boolean adjunct() default false;
 		}
-	}
-
-	public static class CancelHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-			Place currentPlace = Client.currentPlace();
-			/*
-			 * FIXME - dirndl 1x2 - should be an event, handled by formModel
-			 */
-			FormModel formModel = ((FormModel.Has) node.getResolver())
-					.getFormModel();
-			TransformManager.get()
-					.removeTransformsFor(formModel.getState().model);
-			TransformManager.get()
-					.deregisterProvisionalObject(formModel.getState().model);
-			if (currentPlace instanceof EntityPlace) {
-				/*
-				 * behaviour differs. If action was CREATE, go back - if EDIT,
-				 * VIEW
-				 */
-				EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
-				if (currentEntityPlace.action == EntityAction.CREATE) {
-					History.back();
-				} else {
-					EntityPlace entityPlace = (EntityPlace) Reflections
-							.newInstance(currentPlace.getClass());
-					entityPlace.id = currentEntityPlace.id;
-					entityPlace.go();
-				}
-			} else if (currentPlace instanceof CategoryNamePlace) {
-				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
-						.copy();
-				categoryNamePlace.nodeName = null;
-				categoryNamePlace.go();
-			}
-		}
-	}
-
-	@Ref("cancel")
-	@ActionRefHandler(CancelHandler.class)
-	@EmitsModelEvent(ModelEvents.Cancelled.class)
-	public static class CancelRef extends ActionRef {
 	}
 
 	public static class EntityTransformer extends
@@ -431,10 +416,10 @@ public class FormModel extends Model
 						}).forEach(formModel.elements::add);
 			}
 			if (state.adjunct) {
-				new Link().withPlace(new ActionRefPlace(SubmitRef.class))
+				new Link().withModelEvent(ModelEvents.Submit.class)
 						.withClassName(Link.PRIMARY_ACTION)
 						.addTo(formModel.actions);
-				new Link().withPlace(new ActionRefPlace(CancelRef.class))
+				new Link().withModelEvent(ModelEvents.Cancel.class)
 						.addTo(formModel.actions);
 			} else {
 				if (state.presentationModel != null) {
@@ -525,6 +510,8 @@ public class FormModel extends Model
 		}
 	}
 
+	// FIXME - dirndl 1x2 - can probably remove (since modelevents locate the
+	// correct model)(maybe)
 	public interface Has {
 		public FormModel getFormModel();
 	}
@@ -591,31 +578,6 @@ public class FormModel extends Model
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
 		}
-	}
-
-	/*
-	 * FIXME - dirndl 1x2 - move to OlForm
-	 */
-	public static class SubmitHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-			((DomEvent) event).preventDefault();
-			FormModel formModel = ((FormModel.Has) node.getResolver())
-					.getFormModel();
-			if (formModel.submit(node)) {
-				Optional<EmitsModelEvent> emitsType = place.emitsModelEvent();
-				Class<? extends ModelEvent> type = emitsType.get().value();
-				Context context = NodeEvent.Context.fromEvent(event, node);
-				ModelEvent.dispatch(context, type, formModel);
-			}
-		}
-	}
-
-	@Ref("submit")
-	@ActionRefHandler(SubmitHandler.class)
-	@EmitsModelEvent(value = ModelEvents.Submit.class, hasValidation = true)
-	public static class SubmitRef extends ActionRef {
 	}
 
 	public interface ValueModel {

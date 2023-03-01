@@ -11,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.IntersectionObserved;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
@@ -166,6 +167,12 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 		public String getText() {
 			return this.text;
+		}
+
+		@Override
+		public void onBind(Bind event) {
+			int debug = 3;
+			super.onBind(event);
 		}
 
 		@Override

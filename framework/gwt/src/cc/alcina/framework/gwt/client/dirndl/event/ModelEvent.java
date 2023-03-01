@@ -6,8 +6,10 @@ import java.util.Optional;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.web.bindery.event.shared.SimpleEventBus;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.ClassSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -46,8 +48,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
  * @param <T>
  * @param <H>
  */
+@Registration(ClassSerialization.class)
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
-		extends NodeEvent<H> implements NodeEvent.WithoutDomBinding {
+		extends NodeEvent<H>
+		implements NodeEvent.WithoutDomBinding, Registration.Ensure {
 	public static void dispatch(Context context,
 			Class<? extends ModelEvent> type, Object model) {
 		ModelEvent modelEvent = Reflections.newInstance(type);
@@ -60,8 +64,19 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 			if (handler.isPresent()) {
 				((SimpleEventBus) Client.eventBus()).fireEventFromSource(
 						modelEvent, context.node, List.of(handler.get()));
+				return;
+			}
+			Optional<TopLevelCatchallHandler> catchallHandler = Registry
+					.optional(TopLevelCatchallHandler.class);
+			if (catchallHandler.isPresent()) {
+				catchallHandler.get().handle(modelEvent);
+				return;
 			}
 		}
+	}
+
+	public static String staticDisplayName(Class<? extends ModelEvent> clazz) {
+		return Ax.friendly(clazz.getSimpleName().replaceFirst("Event$", ""));
 	}
 
 	private boolean handled;
@@ -83,7 +98,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	}
 
 	public String getName() {
-		return Ax.friendly(getClass().getSimpleName());
+		return staticDisplayName(getClass());
 	}
 
 	public Class<? extends ModelEvent> getReceiverType() {
@@ -102,6 +117,10 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public boolean wasReemitted(Node node) {
 		return getContext().getPrevious() != null
 				&& getContext().getPrevious().reemission == node;
+	}
+
+	public static interface TopLevelCatchallHandler {
+		void handle(ModelEvent unhandledEvent);
 	}
 
 	/**

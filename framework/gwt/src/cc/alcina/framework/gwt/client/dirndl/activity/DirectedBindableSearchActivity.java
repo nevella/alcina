@@ -14,9 +14,9 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.entity.view.EntityActions;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 
@@ -25,7 +25,7 @@ public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends 
 		extends DirectedActivity<BP> {
 	private transient ModelSearchResults<B> searchResults;
 
-	public Stream<Class<? extends ActionRef>> getActions() {
+	public Stream<Class<? extends ModelEvent>> getActions() {
 		return Stream.empty();
 	}
 
@@ -55,14 +55,14 @@ public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends 
 	public static class DirectedBindableSearchActivity_Entity<E extends Entity & SearchResult>
 			extends DirectedBindableSearchActivity<EntityPlace, E> {
 		@Override
-		public Stream<Class<? extends ActionRef>> getActions() {
+		public Stream<Class<? extends ModelEvent>> getActions() {
 			Class<? extends Entity> entityClass = ((EntityPlace) getPlace())
 					.provideEntityClass();
-			Stream superStream = super.getActions();
+			Stream<Class<? extends ModelEvent>> superStream = super.getActions();
 			if (PermissionsManager.get().isPermitted(PermissionsManager
 					.getObjectPermissions(entityClass).create())) {
 				return Stream.concat(superStream,
-						Stream.of(EntityActions.CreateRef.class));
+						Stream.of(ModelEvents.Create.class));
 			} else {
 				return superStream;
 			}
