@@ -199,10 +199,13 @@ public class DomEvents {
 				EventTarget eventTarget = ((InputEvent) getContext()
 						.getGwtEvent()).getNativeEvent().getEventTarget();
 				Element element = Element.as(eventTarget);
-				if (element.getTagName().equals("input")) {
+				if (element.getTagName().equalsIgnoreCase("input")) {
 					value = ((InputElement) element).getValue();
-				} else {
+				} else if (element.getTagName().equalsIgnoreCase("textarea")) {
 					value = ((TextAreaElement) element).getValue();
+				} else {
+					//contenteditable
+					value = null;
 				}
 			}
 			handler.onInput(this);

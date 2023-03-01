@@ -224,8 +224,22 @@ public class LayeredTokenParser {
 				return inputContent;
 			}
 
+			public boolean isAtEnd(Slice match) {
+				if (match == null) {
+					return false;
+				}
+				return match.end.index == input.end.index;
+			}
+
 			public SliceMatcher matcher() {
 				return sliceMatcher;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format(
+						"Initial state: %s\nCurrent: [%s] : %s\nMatches: %s",
+						input, getOffsetInInput(), inputContent, matches);
 			}
 
 			void onBeforeTokenMatch() {

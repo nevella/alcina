@@ -20,6 +20,8 @@ public class Slice extends Location.Range {
 
 	private List<Slice> children = new ArrayList<>();
 
+	private Slice aliasedFrom;
+
 	public Slice(Location start, Location end, Token token) {
 		super(start, end);
 		this.token = token;
@@ -29,6 +31,13 @@ public class Slice extends Location.Range {
 		if (parent != null) {
 			parent.children.add(this);
 		}
+	}
+
+	public Slice alias() {
+		Slice alias = new Slice(start, end, token);
+		alias.data = data;
+		alias.aliasedFrom = this;
+		return alias;
 	}
 
 	public Slice childSlice(Token... tokens) {
@@ -62,7 +71,8 @@ public class Slice extends Location.Range {
 
 	@Override
 	public String toString() {
-		return Ax.format("[%s,%s] :: %s :: %s", start.index, end.index, token,
-				text());
+		String aliasMarker = aliasedFrom != null ? " (alias)" : "";
+		return Ax.format("[%s,%s]%s :: %s :: %s", start.index, end.index,
+				aliasMarker, token, text());
 	}
 }

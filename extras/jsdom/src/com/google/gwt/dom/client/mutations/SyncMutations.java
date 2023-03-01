@@ -89,6 +89,15 @@ class SyncMutations {
 				// apply via mutation)
 				if (record.provideIsStructuralMutation()
 						&& !applyStructuralMutations.contains(targetRemote)) {
+					// with the caveat that any removed nodes must be unlinked
+					// from the localdom
+					record.getRemovedNodes().forEach(removed -> {
+						Node removedNode = mutationsAccess
+								.nodeForNoResolve(removed.remoteNode());
+						if (removedNode != null) {
+							mutationsAccess.removeFromRemoteLookup(removedNode);
+						}
+					});
 					return;
 				}
 				record.apply(ApplyTo.local);
@@ -273,6 +282,11 @@ class SyncMutations {
 				// will terminate, no need to test (if the logic is correct)
 			}
 			if (populateAncestors) {
+				// FIXME - dirndl 1x1d - this is a little questionable (have to
+				// think it through -- basically list states + transitions of
+				// Node.resolved). Without this, exceptions are thrown when
+				// editing text of created subtrees in later mutation cycles
+				mutationsAccess.markAsResolved(ancestors);
 				applyStructuralMutations
 						.add(mutationSubtreeParent.remoteNode());
 				ancestors.stream().filter(syncedChildren::add)
