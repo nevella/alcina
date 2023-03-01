@@ -235,6 +235,13 @@ public class LayeredTokenParser {
 				return sliceMatcher;
 			}
 
+			@Override
+			public String toString() {
+				return Ax.format(
+						"Initial state: %s\nCurrent: [%s] : %s\nMatches: %s",
+						input, getOffsetInInput(), inputContent, matches);
+			}
+
 			void onBeforeTokenMatch() {
 				bestMatch = null;
 				inputContent = input.text().substring(getOffsetInInput());
