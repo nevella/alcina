@@ -1,30 +1,33 @@
 package cc.alcina.framework.gwt.client.entity.place;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
-public class ActionPlace extends BasePlace {
-	public static String getActionToken(String actionName,
-			String... parameters) {
-		ActionPlace place = new ActionPlace();
-		place.actionName = actionName;
-		place.parameters.addAll(Arrays.asList(parameters));
-		return new ActionsPlaceTokenizer().getToken(place);
-	}
-
-	public String actionName;
-
+/*
+ * FIXME - dirndl 1x1d - make abstract, per-action subclasses
+ *
+ * FIXME - dirndl 1x1d - extract out 'NamedPlace' - ActionPlace with no params
+ * (defined only by name -- no prefix)
+ */
+@Registration(ActionPlace.class)
+public abstract class ActionPlace extends BasePlace {
 	public List<String> parameters = new ArrayList<>();
 
 	public ActionPlace() {
 	}
 
-	public ActionPlace(String actionName) {
-		this.actionName = actionName;
+	public void addParameter(Enum e) {
+		addParameter(e.toString().toLowerCase());
 	}
 
 	public void addParameter(Long longValue) {
@@ -42,24 +45,51 @@ public class ActionPlace extends BasePlace {
 		parameters.add(string);
 	}
 
+	public abstract String getName();
+
 	public long longParameter(int idx) {
 		return Long.parseLong(parameters.get(idx));
 	}
 
-	public static class ActionsPlaceTokenizer
-			extends BasePlaceTokenizer<ActionPlace> {
+	public static class Tokenizer extends BasePlaceTokenizer<ActionPlace> {
+		Map<String, ClassReflector<? extends ActionPlace>> byName;
+
 		@Override
 		public Class<ActionPlace> getTokenizedClass() {
 			return ActionPlace.class;
 		}
 
+		private void ensureLookup() {
+			if (byName == null) {
+				Map<String, ClassReflector<? extends ActionPlace>> byName = AlcinaCollections
+						.newHashMap();
+				Registry.query(ActionPlace.class).registrations()
+						.map(Reflections::at).forEach(refl -> {
+							ActionPlace instance = refl.templateInstance();
+							String key = instance.getName();
+							if (byName.containsKey(key)) {
+								throw new IllegalArgumentException(Ax.format(
+										"Identical keys - '%s' - [%s,%s]", key,
+										byName.get(key), refl));
+							}
+							byName.put(key, refl);
+						});
+				this.byName = byName;
+			}
+		}
+
 		@Override
 		protected ActionPlace getPlace0(String token) {
-			ActionPlace place = new ActionPlace();
-			if (parts.length == 1) {
-				return place;
+			if (parts.length < 2) {
+				return null;
 			}
-			place.actionName = parts[1];
+			String actionName = parts[1];
+			ClassReflector<? extends ActionPlace> reflector = getReflector(
+					actionName);
+			if (reflector == null) {
+				return null;
+			}
+			ActionPlace place = reflector.newInstance();
 			for (int i = 2; i < parts.length; i++) {
 				place.parameters.add(parts[i]);
 			}
@@ -68,14 +98,26 @@ public class ActionPlace extends BasePlace {
 
 		@Override
 		protected void getToken0(ActionPlace place) {
-			addTokenPart(place.actionName);
+			addTokenPart(place.getName());
 			for (String parameter : place.parameters) {
 				addTokenPart(parameter);
 			}
 		}
-	}
 
-	public void addParameter(Enum e) {
-		addParameter(e.toString().toLowerCase());
+		@Override
+		protected boolean handlesPlaceSubclasses() {
+			return true;
+		}
+
+		ClassReflector<? extends ActionPlace> getReflector(String actionName) {
+			ensureLookup();
+			ClassReflector<? extends ActionPlace> reflector = byName
+					.get(actionName);
+			if (reflector == null) {
+				byName = null;
+				ensureLookup();
+			}
+			return reflector;
+		}
 	}
 }

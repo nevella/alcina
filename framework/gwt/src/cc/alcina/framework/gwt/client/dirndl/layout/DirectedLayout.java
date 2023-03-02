@@ -148,7 +148,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *
  * - Phases :
  *   1x1b rest of TODO (complete)
- *   1x1c categorise FIXMEs, then d -> e -> f  etc (current, also working on [d])
+ *   1x1c categorise FIXMEs, then d -> e -> f  etc (current, also working on [d])(complete)
  *   1x1d initial FIXMEs
  *   1x1e do a big localdom issue block - FIXMEs, improve tracking (with fully reproducible exceptions)
  *   1x1f reflectiveserializer: integrate into GWT serializer framework
@@ -156,6 +156,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *   1x1h docs (ditto)
  *   1x1j overlay/preview events redux
  *   1x2 switch table/form rendering to pure model - adjunct transformmanager
+ *   1x2a Java Records!
+ *   1x2b Java Beans 2! Not public -- also consider removal of @Bean (but @ReflectionSerializable is required)
  *   1x3 low priority fixmes
  *   1x3a consider consort rework
  *   1x4 consider removing widget entirely (localdom)
@@ -613,7 +615,7 @@ public class DirectedLayout implements AlcinaProcess {
 		private void unbind() {
 			if (model instanceof LayoutEvents.Bind.Handler) {
 				if (parent != null && parent.model == model) {
-					//noop
+					// noop
 				} else {
 					((LayoutEvents.Bind.Handler) model)
 							.onBind(new LayoutEvents.Bind(this, false));

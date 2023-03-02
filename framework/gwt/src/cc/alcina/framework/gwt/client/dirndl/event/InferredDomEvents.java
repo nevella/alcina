@@ -288,9 +288,15 @@ public class InferredDomEvents {
 			this.intersecting = intersecting;
 		}
 
+		/*
+		 * Must defer connect (since requires element connected to the dom) --
+		 * so must also check connect occurred on disconnect
+		 */
 		@Registration({ DomBinding.class, IntersectionObserved.class })
 		public static class BindingImpl extends DomBinding {
 			private IntersectionObserver intersectionObserver;
+
+			boolean removed = false;
 
 			public void fireEvent(boolean visible) {
 				IntersectionObserved event = new IntersectionObserved();
@@ -300,12 +306,20 @@ public class InferredDomEvents {
 
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
-				intersectionObserver = IntersectionObserver.observerFor(this,
-						widget.getElement().implAccess().ensureRemote());
+				Scheduler.get().scheduleFinally(() -> {
+					if (!removed) {
+						intersectionObserver = IntersectionObserver
+								.observerFor(this, widget.getElement()
+										.implAccess().ensureRemote());
+					}
+				});
 				return new HandlerRegistration() {
 					@Override
 					public void removeHandler() {
-						intersectionObserver.disconnect();
+						removed = true;
+						if (intersectionObserver != null) {
+							intersectionObserver.disconnect();
+						}
 					}
 				};
 			}
@@ -485,18 +499,27 @@ public class InferredDomEvents {
 		public static class BindingImpl extends DomBinding {
 			private ResizeObserver resizeObserver;
 
+			boolean removed = false;
+
 			public void fireEvent() {
 				super.fireEvent(null);
 			}
 
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
-				resizeObserver = ResizeObserver.observerFor(this,
-						widget.getElement().implAccess().ensureRemote());
+				Scheduler.get().scheduleFinally(() -> {
+					if (!removed) {
+						resizeObserver = ResizeObserver.observerFor(this, widget
+								.getElement().implAccess().ensureRemote());
+					}
+				});
 				return new HandlerRegistration() {
 					@Override
 					public void removeHandler() {
-						resizeObserver.disconnect();
+						removed = true;
+						if (resizeObserver != null) {
+							resizeObserver.disconnect();
+						}
 					}
 				};
 			}

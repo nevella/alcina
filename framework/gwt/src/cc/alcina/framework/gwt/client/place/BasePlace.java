@@ -78,8 +78,7 @@ public abstract class BasePlace extends Place
 	}
 
 	public String toTitleString() {
-		String category = getClass().getSimpleName().replaceFirst("(.*)Place",
-				"$1");
+		String category = getClass().getSimpleName().replaceFirst("Place$", "");
 		return category;
 	}
 

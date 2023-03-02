@@ -9,12 +9,12 @@ import cc.alcina.framework.common.client.gwittir.validator.EmailAddressValidator
 import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancelled;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
-@Directed(receives = ModelEvents.Cancelled.class)
+@Directed(receives = ModelEvents.Cancel.class)
 public class LoginPageUsername extends LoginPage
-		implements ModelEvents.Cancelled.Handler {
+		implements ModelEvents.Cancel.Handler {
 	protected StringInput input;
 
 	public LoginPageUsername(LoginConsort loginConsort) {
@@ -27,7 +27,7 @@ public class LoginPageUsername extends LoginPage
 	}
 
 	@Override
-	public void onCancelled(Cancelled event) {
+	public void onCancel(Cancel event) {
 		History.back();
 	}
 

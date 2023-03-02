@@ -3,80 +3,37 @@ package cc.alcina.framework.gwt.client.entity.view;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.TopLevelHandler;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Create;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Delete;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Edit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.View;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
-import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 
 public class EntityActions {
-	@Ref("edit")
-	@ActionRefHandler(EditHandler.class)
-	public static class EditRef extends ActionRef {
-	}
-
-	public static class EditHandler extends ActionHandler {
+	@Registration({ TopLevelHandler.class, ModelEvents.Create.class })
+	public static class CreateHandler
+			implements TopLevelHandler, ModelEvents.Create.Handler {
 		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
-					.copy();
-			entityPlace.action = EntityAction.EDIT;
-			entityPlace.go();
+		public void handle(ModelEvent unhandledEvent) {
+			onCreate((Create) unhandledEvent);
 		}
-	}
 
-	public static class VoidHandler extends ActionHandler {
 		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-		}
-	}
-
-	@Ref("delete")
-	@ActionRefHandler(DeleteHandler.class)
-	public static class DeleteRef extends ActionRef {
-	}
-
-	public static class DeleteHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
-					.copy();
-			if (Window.confirm(Ax.format(
-					"Are you sure you want to delete the selected %s?",
-					entityPlace.provideCategoryString(1, false)))) {
-				entityPlace.provideEntity().delete();
-				MessageManager.get().icyMessage(Ax.format("%s deleted",
-						entityPlace.provideCategoryString(1, false)));
-				Client.refreshCurrentPlace();
-			}
-		}
-	}
-
-	@Ref("create")
-	@ActionRefHandler(CreateHandler.class)
-	public static class CreateRef extends ActionRef {
-	}
-
-	public static class CreateHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
+		public void onCreate(Create event) {
 			EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
 			EntityPlace entityPlace = Reflections
 					.newInstance(currentPlace.getClass());
@@ -104,24 +61,60 @@ public class EntityActions {
 		}
 	}
 
-	public static class ViewHandler extends ActionHandler {
+	@Registration({ TopLevelHandler.class, ModelEvents.Delete.class })
+	public static class DeleteHandler
+			implements TopLevelHandler, ModelEvents.Delete.Handler {
 		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
+		public void handle(ModelEvent unhandledEvent) {
+			onDelete((Delete) unhandledEvent);
+		}
+
+		@Override
+		public void onDelete(Delete event) {
+			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
+					.copy();
+			if (Window.confirm(Ax.format(
+					"Are you sure you want to delete the selected %s?",
+					entityPlace.provideCategoryString(1, false)))) {
+				entityPlace.provideEntity().delete();
+				MessageManager.get().icyMessage(Ax.format("%s deleted",
+						entityPlace.provideCategoryString(1, false)));
+				Client.refreshCurrentPlace();
+			}
+		}
+	}
+
+	@Registration({ TopLevelHandler.class, ModelEvents.Edit.class })
+	public static class EditHandler
+			implements TopLevelHandler, ModelEvents.Edit.Handler {
+		@Override
+		public void handle(ModelEvent unhandledEvent) {
+			onEdit((Edit) unhandledEvent);
+		}
+
+		@Override
+		public void onEdit(Edit event) {
+			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
+					.copy();
+			entityPlace.action = EntityAction.EDIT;
+			entityPlace.go();
+		}
+	}
+
+	@Registration({ TopLevelHandler.class, ModelEvents.View.class })
+	public static class ViewHandler
+			implements TopLevelHandler, ModelEvents.View.Handler {
+		@Override
+		public void handle(ModelEvent unhandledEvent) {
+			onView((View) unhandledEvent);
+		}
+
+		@Override
+		public void onView(View event) {
 			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
 					.copy();
 			entityPlace.action = EntityAction.VIEW;
 			entityPlace.go();
 		}
-	}
-
-	@Ref("view")
-	@ActionRefHandler(ViewHandler.class)
-	public static class ViewRef extends ActionRef {
-	}
-
-	@Ref("preview")
-	@ActionRefHandler(VoidHandler.class)
-	public static class PreviewRef extends ActionRef {
 	}
 }

@@ -117,7 +117,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 				|| place == Place.NOWHERE) {
 			return "";
 		}
-		String token = tokenizersByPlace.get(place.getClass()).mutableInstance()
+		String token = getTokenizerByClass(place).mutableInstance()
 				.getToken(place);
 		return getAppPrefix().isEmpty() ? token : getAppPrefix() + "/" + token;
 	}
@@ -126,7 +126,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		if (place == null || tokenizersByPlace.isEmpty()) {
 			return null;
 		}
-		return tokenizersByPlace.get(place.getClass()).mutableInstance();
+		return getTokenizerByClass(place).mutableInstance();
 	}
 
 	public String removeAppPrefixAndLeadingSlashes(String tokenString) {
@@ -183,6 +183,24 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		listPlaces().filter(p -> p instanceof SubPlace)
 				.forEach(place -> placesBySubPlace
 						.put(((SubPlace) place).getSub(), place));
+	}
+
+	private BasePlaceTokenizer getTokenizerByClass(Place place) {
+		Class<? extends Place> clazz = place.getClass();
+		{
+			BasePlaceTokenizer tokenizer = tokenizersByPlace.get(clazz);
+			if (tokenizer != null) {
+				return tokenizer;
+			}
+		}
+		{
+			BasePlaceTokenizer tokenizer = tokenizersByPlace
+					.get(clazz.getSuperclass());
+			if (tokenizer != null && tokenizer.handlesPlaceSubclasses()) {
+				return tokenizer;
+			}
+		}
+		return null;
 	}
 
 	protected String getAppPrefix() {

@@ -3,9 +3,9 @@ package cc.alcina.framework.gwt.client.entity.view;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.entity.place.ActionPlace;
-import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler;
-import cc.alcina.framework.gwt.client.ide.provider.LooseActionRegistry;
+import cc.alcina.framework.gwt.client.ide.provider.ActionPlaceHandler;
 import cc.alcina.framework.gwt.client.place.TypedActivity;
 
 public class ActionActivity extends TypedActivity<ActionPlace> {
@@ -15,8 +15,8 @@ public class ActionActivity extends TypedActivity<ActionPlace> {
 
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		LooseActionHandler handler = LooseActionRegistry.get()
-				.getHandler((place).actionName);
+		ActionPlaceHandler handler = Registry.impl(ActionPlaceHandler.class,
+				place.getClass());
 		if (handler != null) {
 			if (handler instanceof ActionWidgetSupplier) {
 				panel.setWidget(
