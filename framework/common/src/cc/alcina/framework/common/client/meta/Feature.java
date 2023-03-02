@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 
 /*
  * Project planning/structure - expressed in code
+ *
  */
 public interface Feature {
 	@Retention(RetentionPolicy.RUNTIME)
@@ -43,8 +44,16 @@ public interface Feature {
 	@Inherited
 	@Documented
 	@Target({ ElementType.TYPE })
-	@interface Ref {
+	@interface Parent {
 		Class<? extends Feature> value();
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@Documented
+	@Target({ ElementType.TYPE })
+	@interface Ref {
+		Class<? extends Feature>[] value();
 	}
 
 	public interface ReleaseVersion {

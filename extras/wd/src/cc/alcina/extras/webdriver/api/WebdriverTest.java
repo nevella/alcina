@@ -210,7 +210,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			initialiseContext();
 			onBeforeProcess();
 			return process0(level, parent);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			if (level == 0 && e instanceof CancelParentsException) {
 				// result will be in error state due to descendant exception
 				return result;
@@ -401,21 +401,6 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return result;
 	}
 
-	protected void onAfterProcess() {
-	}
-
-	protected void onBeforeChildTests() {
-	}
-
-	protected void onBeforeDependentTests() {
-	}
-
-	protected void onBeforeProcess() {
-		token.ensureDriver();
-		WebDriver driver = token.getWebDriver();
-		exec = new WdExec().driver(driver).token(token).timeout(5);
-	}
-
 	protected List<WebdriverTest> getChildTests() {
 		return Arrays.stream(childTests()).map(t -> {
 			try {
@@ -444,6 +429,21 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		if (configuration != null) {
 			LooseContext.getContext().addProperties(configuration, false);
 		}
+	}
+
+	protected void onAfterProcess() {
+	}
+
+	protected void onBeforeChildTests() {
+	}
+
+	protected void onBeforeDependentTests() {
+	}
+
+	protected void onBeforeProcess() {
+		token.ensureDriver();
+		WebDriver driver = token.getWebDriver();
+		exec = new WdExec().driver(driver).token(token).timeout(5);
 	}
 
 	public static class CancelParentsException extends RuntimeException {
