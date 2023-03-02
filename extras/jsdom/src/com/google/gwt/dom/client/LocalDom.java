@@ -35,8 +35,8 @@ import cc.alcina.framework.gwt.client.logic.ClientProperties;
 
 /**
  * <p>
- * FIXME - dirndl 1x1e - Refactoring needs - there's a lot of semi-duplication
- * in the 'link remote to localdom' models - i.e. puts to remoteLookup
+ * FIXME - dirndl 1x3 - Refactoring needs - there's a lot of semi-duplication in
+ * the 'link remote to localdom' models - i.e. puts to remoteLookup
  *
  * <p>
  * Probably need just one true path
@@ -50,10 +50,15 @@ import cc.alcina.framework.gwt.client.logic.ClientProperties;
  * https://github.com/nevella/alcina/issues/23
  *
  * <p>
- * FIXME - dirndl - 1x3 - move all init out of statics if possible (to avoid
- * clinit)
+ * FIXME - dirndl - 1x3 - parsing externally, modified HTML requires
+ * verification of text node code, which may mean that it’s more
+ * efficient/simpler to just walk the dom
  *
- * Does not support IE<11
+ * <p>
+ * FIXME - dirndl - 1x3 - document split of text nodes for browser compatibility
+ * in {@link ElementLocal#checkSplitTextNodesForBrowserCompatibility},
+ * {@link HtmlParser#appendTextNodes}
+ *
  */
 public class LocalDom {
 	private static LocalDom instance;
