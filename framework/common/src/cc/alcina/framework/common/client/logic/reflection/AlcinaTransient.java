@@ -14,6 +14,18 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.util.LooseContext;
 
+/**
+ * <p>
+ * Marks a property as transient for serialization, by default in all contexts.
+ * Respected by the following serializers: AlcinaBeanSerializer,
+ * ReflectiveSerializer, FlatTreeSerializer
+ *
+ * <p>
+ * See {@link TransienceContext} for an explanation of serialization contexts.
+ *
+ * @author nick@alcina.cc
+ *
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
@@ -86,7 +98,34 @@ public @interface AlcinaTransient {
 		}
 	}
 
+	/*
+	 * Control *when* a property is transient. As an example, often properties
+	 * should be serialized on the server but not when sending to a client.
+	 */
 	public enum TransienceContext {
-		ALL, CLIENT, RPC, JOB, SERVER
+		/*
+		 * Default, transient in all contexts
+		 */
+		ALL,
+		/*
+		 * Transient when sending to or from client
+		 */
+		CLIENT,
+		/*
+		 * Transient when sending from client
+		 */
+		RPC,
+		/*
+		 * Transient when persisting a job's task
+		 */
+		JOB,
+		/*
+		 * Transient when persisting on server
+		 */
+		SERVER,
+		/*
+		 * Transient when serializing an api response
+		 */
+		API
 	}
 }
