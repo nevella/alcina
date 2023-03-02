@@ -198,7 +198,7 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	public void setPlace(BasePlace place) {
 		this.place = place;
 		if (place != null) {
-			if (text == null) {
+			if (text == null && inner == null) {
 				setText(place.toTitleString());
 			}
 			if (Objects.equals(href, INITIAL_HREF)) {
@@ -246,6 +246,7 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	public Link withInner(Object inner) {
 		this.inner = inner;
+		this.text = null;
 		return this;
 	}
 
