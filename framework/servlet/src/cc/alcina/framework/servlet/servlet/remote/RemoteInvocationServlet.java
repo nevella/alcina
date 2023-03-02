@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -99,7 +100,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 		RemoteInvocationParameters params = KryoUtils.deserializeFromBase64(
 				encodedParams, RemoteInvocationParameters.class);
 		String remoteAddress = request.getRemoteAddr();
-		String permittedAddressPattern = ResourceUtilities.get(
+		String permittedAddressPattern = Configuration.get(
 				RemoteInvocationServlet.class,
 				Ax.format("%s.permittedAddresses", params.api));
 		if (!remoteAddress.matches(permittedAddressPattern)) {

@@ -24,8 +24,8 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.mvcc.KryoSupport;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
@@ -81,8 +81,8 @@ public class RemoteInvocation {
 			LooseContext.setTrue(KryoUtils.CONTEXT_BYPASS_POOL);
 			LooseContext.setTrue(KryoSupport.CONTEXT_FORCE_ENTITY_SERIALIZER);
 			hookParams(methodName, args, params);
-			String address = Ax.blankTo(getRemoteAddress(), ResourceUtilities
-					.getBundledString(RemoteInvocation.class, "address"));
+			String address = Ax.blankTo(getRemoteAddress(),
+					Configuration.get(RemoteInvocation.class, "address"));
 			PostAndClient png = getHttpPost(new URI(address));
 			// params.username = ResourceUtilities
 			// .getBundledString(DevRemoter.class, "username");

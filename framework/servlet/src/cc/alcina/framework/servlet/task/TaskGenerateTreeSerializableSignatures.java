@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;

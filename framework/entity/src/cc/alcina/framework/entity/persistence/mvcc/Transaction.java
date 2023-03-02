@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -746,7 +746,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	void setPhase(TransactionPhase phase) {
-		if (ResourceUtilities.is(Transaction.class, "debugSetPhase")) {
+		if (Configuration.is(Transaction.class, "debugSetPhase")) {
 			logger.info("{}->{} ::\n{}", this.phase, phase,
 					SEUtilities.getCurrentThreadStacktraceSlice());
 		}

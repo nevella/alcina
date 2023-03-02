@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
@@ -19,7 +20,7 @@ public class ClassMetaInvoker {
 				.withContextClassloader(getClass().getClassLoader())
 				.call(() -> {
 					try {
-						String url = ResourceUtilities.get(
+						String url = Configuration.get(
 								ClassMetaInvoker.class, "remoteScannerUrl");
 						String json = ResourceUtilities.readUrlAsStringWithPost(
 								url, JacksonUtils.serialize(metaRequest),

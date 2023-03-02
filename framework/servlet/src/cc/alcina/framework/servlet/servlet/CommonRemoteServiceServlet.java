@@ -100,8 +100,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
@@ -346,7 +346,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 							"problem deserializing clientlogrecord:\n%s\n",
 							original);
 					e.printStackTrace();
-					if (ResourceUtilities.getBoolean(
+					if (Configuration.is(
 							CommonRemoteServiceServlet.class,
 							"throwLogClientRecordExceptions")) {
 						throw new WrappedRuntimeException(e);

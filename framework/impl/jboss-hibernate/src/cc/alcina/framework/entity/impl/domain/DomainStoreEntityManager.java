@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.search.OrderCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreQuery;
 
@@ -34,7 +34,7 @@ public class DomainStoreEntityManager implements EntityManager {
 	}
 
 	public static boolean isUseDomainStore() {
-		return ResourceUtilities.is(DomainStoreEntityManager.class,
+		return Configuration.is(DomainStoreEntityManager.class,
 				"useDomainStore")
 				|| LooseContext
 						.is(JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);

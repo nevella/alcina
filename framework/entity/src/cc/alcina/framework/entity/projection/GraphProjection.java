@@ -78,7 +78,7 @@ import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -504,7 +504,7 @@ public class GraphProjection {
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 		this.disablePerObjectPermissions = LooseContext
 				.is(CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS);
-		int maxReached = ResourceUtilities.getInteger(GraphProjection.class,
+		int maxReached = Configuration.getInt(GraphProjection.class,
 				"maxReached", Integer.MAX_VALUE);
 		if (LooseContext.has(CONTEXT_MAX_REACHED)) {
 			maxReached = Integer
@@ -651,7 +651,7 @@ public class GraphProjection {
 														"\n\t: "))
 										.collect(Collectors.joining("\t\n")));
 					}
-					if (ResourceUtilities.is(GraphProjection.class,
+					if (Configuration.is(GraphProjection.class,
 							"projectionMetrics")) {
 						System.out.format(
 								"Graph projection - %.3f ms - %s traversals %s creations\n",

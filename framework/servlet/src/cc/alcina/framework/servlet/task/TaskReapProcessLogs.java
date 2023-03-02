@@ -5,7 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.util.ProcessLogFolder;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 import cc.alcina.framework.servlet.schedule.ServerTask;
@@ -15,7 +15,7 @@ public class TaskReapProcessLogs extends ServerTask {
 	@Override
 	public void run() throws Exception {
 		List<String> omittedFolders = Arrays
-				.asList(ResourceUtilities.get("omit").split(","));
+				.asList(Configuration.get("omit").split(","));
 		Registry.query(ProcessLogFolder.class).implementations()
 				.filter(folder -> {
 					if (omittedFolders.contains(folder.getFolder())) {

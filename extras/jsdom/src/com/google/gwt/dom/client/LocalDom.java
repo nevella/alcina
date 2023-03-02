@@ -135,7 +135,7 @@ public class LocalDom {
 
 	public static void log(Level level, String template, Object... args) {
 		boolean error = level.intValue() > Level.INFO.intValue();
-		if (!error && !get().configuration.logEvents) {
+		if (!error && !get().loggingConfiguration.logEvents) {
 			return;
 		}
 		String message = Ax.format(template, args);
@@ -202,10 +202,10 @@ public class LocalDom {
 	}
 
 	public static void verifyDomEquivalence(boolean fromUserGesture) {
-		boolean logEvents = get().configuration.logEvents;
+		boolean logEvents = get().loggingConfiguration.logEvents;
 		try {
 			if (fromUserGesture) {
-				get().configuration.logEvents = true;
+				get().loggingConfiguration.logEvents = true;
 			}
 			get().mutations.verifyDomEquivalence();
 		} catch (Exception e) {
@@ -213,7 +213,7 @@ public class LocalDom {
 			topicReportException.publish(e);
 		} finally {
 			if (fromUserGesture) {
-				get().configuration.logEvents = logEvents;
+				get().loggingConfiguration.logEvents = logEvents;
 			}
 		}
 	}
@@ -319,7 +319,7 @@ public class LocalDom {
 
 	LocalDomMutations mutations;
 
-	private Configuration configuration;
+	private LoggingConfiguration loggingConfiguration;
 
 	public BrowserBehaviour browserBehaviour;
 
@@ -490,14 +490,14 @@ public class LocalDom {
 
 	private void initalizeSync(Document doc) {
 		docRemote = doc.typedRemote();
-		configuration = new Configuration();
+		loggingConfiguration = new LoggingConfiguration();
 		browserBehaviour = new BrowserBehaviour();
 		browserBehaviour.test();
 		linkRemote(docRemote, doc);
 		nodeFor0(docRemote.getDocumentElement0());
 		mutations = GWT.isClient()
 				? new LocalDomMutations(new MutationsAccess(),
-						configuration.asMutationsConfiguration())
+						loggingConfiguration.asMutationsConfiguration())
 				: null;
 	}
 
@@ -590,7 +590,7 @@ public class LocalDom {
 		// don't allow mutating ext js calls in the very first (onModuleLoad)
 		// script cycle - since disconnect/connect cycle is not setup
 		Preconditions.checkState(GWT.isScript() || !Impl.isFirstTimeClient());
-		if (configuration.mutationLogDoms) {
+		if (loggingConfiguration.mutationLogDoms) {
 			verifyDomEquivalence(false);
 		}
 		flush();
@@ -992,7 +992,7 @@ public class LocalDom {
 
 	void handleReportedException(Exception exception) {
 		String message = null;
-		if (configuration.logHistoryOnEception) {
+		if (loggingConfiguration.logHistoryOnEception) {
 			message = mutations.serializeHistory();
 		}
 		log(Level.WARNING, "local dom :: %s",
@@ -1071,7 +1071,7 @@ public class LocalDom {
 		}
 	}
 
-	public static class Configuration {
+	public static class LoggingConfiguration {
 		public boolean mutationLogDoms;
 
 		public boolean mutationLogEvents;
@@ -1080,7 +1080,7 @@ public class LocalDom {
 
 		public boolean logHistoryOnEception;
 
-		public Configuration() {
+		public LoggingConfiguration() {
 			mutationLogDoms = ClientProperties.is(LocalDom.class,
 					"mutationLogDoms", false);
 			mutationLogEvents = ClientProperties.is(LocalDom.class,
@@ -1091,8 +1091,8 @@ public class LocalDom {
 					"logHistoryOnEception", true);
 		}
 
-		public LocalDomMutations.Configuration asMutationsConfiguration() {
-			LocalDomMutations.Configuration result = new LocalDomMutations.Configuration();
+		public LocalDomMutations.LoggingConfiguration asMutationsConfiguration() {
+			LocalDomMutations.LoggingConfiguration result = new LocalDomMutations.LoggingConfiguration();
 			result.logDoms = mutationLogDoms;
 			result.logEvents = mutationLogEvents;
 			return result;

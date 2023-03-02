@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -235,7 +236,7 @@ public class UserStories {
 	}
 
 	public void persist(IUserStory incoming) {
-		if (ResourceUtilities.is("disabled")) {
+		if (Configuration.is("disabled")) {
 			return;
 		}
 		if (incoming.getStory().length() > 100000) {

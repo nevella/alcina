@@ -6,9 +6,8 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 
 @Registration.Singleton
@@ -39,7 +38,7 @@ public class InternalMetricSliceOracle {
 			return true;
 		}
 		if (imd.type == InternalMetricTypeAlcina.client && imd.type.shouldSlice()) {
-			long initialClientDelay = ResourceUtilities.getLong(
+			long initialClientDelay = Configuration.getLong(
 					InternalMetricSliceOracle.class, "initialClientDelay");
 			int sliceCount = imd.sliceCount();
 			if (sliceCount == 0) {

@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
-import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.reflection.ClassReflector;

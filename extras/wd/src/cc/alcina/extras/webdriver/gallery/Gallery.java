@@ -157,7 +157,7 @@ public class Gallery {
 
 	private void initialise() {
 		base = new File(
-				Ax.format("%s/%s/%s", ResourceUtilities.get("defaultLocalPath"),
+				Ax.format("%s/%s/%s", Configuration.get("defaultLocalPath"),
 						appName, userAgentType));
 		SEUtilities.deleteDirectory(base);
 		base.mkdirs();
@@ -208,7 +208,7 @@ public class Gallery {
 
 	private void snap0(String snapName) {
 		try {
-			Thread.sleep(ResourceUtilities.getInteger(Gallery.class,
+			Thread.sleep(Configuration.getInt(Gallery.class,
 					"preSnapPause"));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

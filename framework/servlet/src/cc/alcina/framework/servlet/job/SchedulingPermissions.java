@@ -2,7 +2,7 @@ package cc.alcina.framework.servlet.job;
 
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
@@ -48,9 +48,8 @@ class SchedulingPermissions {
 		}
 		boolean production = EntityLayerUtils.isProduction();
 		boolean scheduleClusterJobs = production
-				|| ResourceUtilities.is(JobScheduler.class, "testSchedules");
-		boolean scheduleVmLocalJobs = production || ResourceUtilities
-				.is(JobScheduler.class, "testVmLocalSchedules");
+				|| Configuration.is(JobScheduler.class, "testSchedules");
+		boolean scheduleVmLocalJobs = production || Configuration.is(JobScheduler.class, "testVmLocalSchedules");
 		return (schedule.isVmLocal() && scheduleVmLocalJobs)
 				|| (isCurrentScheduledJobExecutor() && scheduleClusterJobs);
 	}
@@ -60,10 +59,10 @@ class SchedulingPermissions {
 			return false;
 		}
 		if (EntityLayerUtils.isProduction()) {
-			return ResourceUtilities.is(JobScheduler.class,
+			return Configuration.is(JobScheduler.class,
 					"canFuturesToPending");
 		} else {
-			return ResourceUtilities.is(JobScheduler.class,
+			return Configuration.is(JobScheduler.class,
 					"testFuturesToPending");
 		}
 	}
@@ -94,7 +93,7 @@ class SchedulingPermissions {
 		return JobRegistry.get().jobExecutors.isCurrentScheduledJobExecutor()
 				&& JobRegistry.get().jobExecutors
 						.isHighestBuildNumberInCluster()
-				&& ResourceUtilities.is(JobScheduler.class,
+				&& Configuration.is(JobScheduler.class,
 						"scheduleClusterJobs")
 				&& !AppPersistenceBase.isInstanceReadOnly();
 	}

@@ -29,14 +29,14 @@ public class LocalDomMutations {
 
 	MutationHistory history;
 
-	Configuration configuration;
+	LoggingConfiguration loggingConfiguration;
 
 	boolean hadExceptions = false;
 
 	public LocalDomMutations(LocalDom.MutationsAccess mutationsAccess,
-			Configuration configuration) {
+			LoggingConfiguration configuration) {
 		this.mutationsAccess = mutationsAccess;
-		this.configuration = configuration;
+		this.loggingConfiguration = configuration;
 		history = new MutationHistory(this);
 	}
 
@@ -209,12 +209,12 @@ public class LocalDomMutations {
 		}
 	}
 
-	public static class Configuration {
+	public static class LoggingConfiguration {
 		public boolean logDoms = false;
 
 		public boolean logEvents = false;
 
-		public Configuration() {
+		public LoggingConfiguration() {
 		}
 
 		public boolean provideIsObserveHistory() {

@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.util.AlcinaParallel;
 
@@ -27,7 +27,7 @@ public class SelectionTraversalExecutorImpl
 
 	public SelectionTraversalExecutorImpl() {
 		executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-				ResourceUtilities.getInteger(
+				Configuration.getInt(
 						SelectionTraversalExecutorImpl.class, "threadCount"),
 				new NamedThreadFactory("SelectionTraversal-ExecutorImpl"));
 		resetSerial();
@@ -46,7 +46,7 @@ public class SelectionTraversalExecutorImpl
 	}
 
 	public void resetSerial() {
-		serial = ResourceUtilities.is(SelectionTraversalExecutorImpl.class,
+		serial = Configuration.is(SelectionTraversalExecutorImpl.class,
 				"serial");
 	}
 

@@ -25,8 +25,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
@@ -194,7 +194,7 @@ public class Knowns {
 	}
 
 	public static void reconcile(KnownNode node, boolean fromPersistent) {
-		if (Ax.isTest() && !ResourceUtilities.is("testPersistenceEnabled")) {
+		if (Ax.isTest() && !Configuration.is("testPersistenceEnabled")) {
 			return;
 		}
 		try {

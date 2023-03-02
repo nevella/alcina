@@ -554,9 +554,8 @@ public class JobRegistry {
 					.forEach((k, v) -> LooseContext.set(k, v));
 			contextAwaiter.latch.countDown();
 		}
-		boolean taskEnabled = !ResourceUtilities
-				.isDefined(Ax.format("%s.disabled", job.getTaskClassName()))
-				&& !ResourceUtilities.is("allJobsDisabled");
+		boolean taskEnabled = !Configuration.isDefined(Ax.format("%s.disabled", job.getTaskClassName()))
+				&& !Configuration.is("allJobsDisabled");
 		try {
 			LooseContext.push();
 			if (performer.deferMetadataPersistence(job)) {
@@ -680,7 +679,7 @@ public class JobRegistry {
 	}
 
 	protected boolean trackInternalMetrics() {
-		return ResourceUtilities.is("trackInternalMetrics");
+		return Configuration.is("trackInternalMetrics");
 	}
 
 	<JR extends JobResource> Optional<JR> getAcquiredResource(Job forJob,

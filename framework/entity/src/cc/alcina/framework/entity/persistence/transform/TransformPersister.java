@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext.DeliberatelyThrownWrapperException;
@@ -50,7 +50,7 @@ public class TransformPersister {
 					LooseContext.pushWithTrue(
 							TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
 					LooseContext.set(CONTEXT_TRANSFORM_LAYER_WRAPPER, wrapper);
-					if (ResourceUtilities.is("logAllTransforms")) {
+					if (Configuration.is("logAllTransforms")) {
 						synchronized (TransformPersister.class) {
 							Ax.err("\n\n%s================",
 									Thread.currentThread().getName());

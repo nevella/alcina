@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -130,7 +131,7 @@ class TowardsAMoreDesirableSituation {
 	}
 
 	void tend() {
-		if (!ResourceUtilities.is("enabled")) {
+		if (!Configuration.is("enabled")) {
 			return;
 		}
 		activeJobs.removeIf(

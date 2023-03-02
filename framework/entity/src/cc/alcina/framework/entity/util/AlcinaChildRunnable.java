@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -135,7 +135,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		this.permissionsManagerState = PermissionsManager.get().snapshotState();
 		this.contextClassLoader = Thread.currentThread()
 				.getContextClassLoader();
-		if (ResourceUtilities.is(AlcinaChildRunnable.class,
+		if (Configuration.is(AlcinaChildRunnable.class,
 				"traceConstruction")) {
 			Ax.out("Constructing AlcinaChildRunnable - thread id: %s name: %s\n\n%s",
 					Thread.currentThread().getId(), name, SEUtilities

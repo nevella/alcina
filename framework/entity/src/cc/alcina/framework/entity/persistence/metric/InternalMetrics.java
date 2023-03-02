@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ResettingCounter;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
@@ -130,7 +131,7 @@ public class InternalMetrics {
 			synchronized (tracker) {
 				tracker.endTime = System.currentTimeMillis();
 			}
-			if (!ResourceUtilities.is("persistEnabled")) {
+			if (!Configuration.is("persistEnabled")) {
 				trackers.remove(markerObject);
 			}
 		}
@@ -296,7 +297,7 @@ public class InternalMetrics {
 		}
 		// Get specific metrics types we want to capture
 		List<String> trackableMetrics = CommonUtils
-				.split(ResourceUtilities.get("trackableMetrics"), ",");
+				.split(Configuration.get("trackableMetrics"), ",");
 		// If there are any specifics types we want, ensure this tracker is one of them
 		if (!trackableMetrics.isEmpty()
 				&& !trackableMetrics.contains(type.toString())) {
@@ -432,18 +433,18 @@ public class InternalMetrics {
 	}
 
 	private boolean isEnabled() {
-		return ResourceUtilities.is("enabled");
+		return Configuration.is("enabled");
 	}
 
 	private void profile() {
-		String profilerPath = ResourceUtilities.get("profilerPath");
+		String profilerPath = Configuration.get("profilerPath");
 		String alloc = "--alloc 100k -t -d 5 -e alloc ";
 		String cpu = "-d 5 --cstack no -t -e cpu ";
 		try {
-			if (ResourceUtilities.is("profilerEnabled")) {
+			if (Configuration.is("profilerEnabled")) {
 				int frequency = highFrequencyProfiling ? 50 : 200;
 				MetricType type = nextIsAlloc
-						|| !ResourceUtilities.is("cpuProfilingEnabled")
+						|| !Configuration.is("cpuProfilingEnabled")
 								? MetricType.alloc
 								: MetricType.cpu;
 				String params = type == MetricType.alloc ? alloc : cpu;
@@ -495,7 +496,7 @@ public class InternalMetrics {
 				if (new File(gcLogFile).exists()) {
 					GCLogParser.Events events = new GCLogParser().parse(
 							gcLogFile, parseGcLogFrom,
-							ResourceUtilities.getInteger(getClass(),
+							Configuration.getInt(getClass(),
 									"gcEventThresholdMillis"));
 					addMetric(MetricType.gc, events.toString());
 					parseGcLogFrom = events.end;
@@ -552,14 +553,14 @@ public class InternalMetrics {
 	}
 
 	protected synchronized void persist() {
-		if (!isEnabled() || !ResourceUtilities.is("persistEnabled")) {
+		if (!isEnabled() || !Configuration.is("persistEnabled")) {
 			return;
 		}
 		LinkedHashMap<InternalMetricData, InternalMetric> toPersist = null;
 		List<InternalMetricData> toRemove = trackers.values().stream()
 				.filter(imd -> imd.isFinished() && imd.sliceCount() == 0)
 				.collect(Collectors.toList());
-		boolean persistAllMetrics = ResourceUtilities.is("persistAllMetrics");
+		boolean persistAllMetrics = Configuration.is("persistAllMetrics");
 		Predicate<InternalMetricData> requiresSliceFilter = persistAllMetrics
 				? imd -> true
 				: imd -> imd.sliceCount() > 0;

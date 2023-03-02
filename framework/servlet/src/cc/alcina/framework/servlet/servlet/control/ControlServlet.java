@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -62,7 +63,7 @@ public class ControlServlet extends AlcinaServlet {
 	}
 
 	public static String getApiKey() {
-		return ResourceUtilities.get("apiKey");
+		return Configuration.get("apiKey");
 	}
 
 	public static String invokeTask(Task task, String url, String apiKey) {
@@ -280,7 +281,7 @@ public class ControlServlet extends AlcinaServlet {
 		testContentRequest.setEmailInline(true);
 		testContentRequest.setEmailSubject(Ax.format("Test: %s :: %s",
 				EntityLayerUtils.getLocalHostName(), new Date()));
-		String emailAddress = ResourceUtilities.get("testSendmailAddress");
+		String emailAddress = Configuration.get("testSendmailAddress");
 		testContentRequest.setEmailAddress(emailAddress);
 		ByteArrayInputStream inputStream = new ByteArrayInputStream(
 				"test".getBytes(StandardCharsets.UTF_8));

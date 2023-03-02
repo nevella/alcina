@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
@@ -400,7 +400,7 @@ class JobAllocator {
 					&& jobContext.getPerformer() != null
 					&& jobContext.getPerformer().canAbort(job.getTask(),
 							timeSinceAllocation)
-					&& ResourceUtilities.is(Transactions.class,
+					&& Configuration.is(Transactions.class,
 							"cancelTimedoutTransactions")) {
 				List<Job> incompleteChildren = job.provideChildren()
 						.filter(j -> j.provideIsNotComplete()

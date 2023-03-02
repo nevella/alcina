@@ -12,7 +12,7 @@ import com.google.gwt.dev.shell.JsCodeserverTcpClientJava;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 
 public class WsTcpSession {
 	Socket socket;
@@ -23,7 +23,7 @@ public class WsTcpSession {
 
 	private JsCodeserverTcpClientJava client;
 
-	int messageLogPer = ResourceUtilities.getInteger(WsTcpSession.class,
+	int messageLogPer = Configuration.getInt(WsTcpSession.class,
 			"messageLogPer");
 
 	private Session websocketSession;
@@ -55,7 +55,7 @@ public class WsTcpSession {
 				.getParameterMap().get("gwt.codesvr").get(0);
 		socketPort = Integer
 				.parseInt(gwtCodesvr.replaceFirst(".+:(\\d+)", "$1"));
-		socket = new Socket(ResourceUtilities.get("host"), socketPort);
+		socket = new Socket(Configuration.get("host"), socketPort);
 		client = new JsCodeserverTcpClientJava(socket);
 	}
 

@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
@@ -40,7 +40,7 @@ public class RemoteDebugHandler
 	}
 
 	private static boolean enabled() {
-		return ResourceUtilities.is(RemoteDebugHandler.class, "enabled");
+		return Configuration.is(RemoteDebugHandler.class, "enabled");
 	}
 
 	@Override
@@ -137,11 +137,11 @@ public class RemoteDebugHandler
 					throw new JdbStateException("jdb already started");
 				}
 			}
-			String jdbPath = ResourceUtilities.get(RemoteDebugHandler.class,
+			String jdbPath = Configuration.get(RemoteDebugHandler.class,
 					"jdbPath");
-			String jdbPort = ResourceUtilities.get(RemoteDebugHandler.class,
+			String jdbPort = Configuration.get(RemoteDebugHandler.class,
 					"jdbPort");
-			String jdbHostname = ResourceUtilities.get(RemoteDebugHandler.class,
+			String jdbHostname = Configuration.get(RemoteDebugHandler.class,
 					"jdbHostname");
 			logger.info("Launching jdb :: {}", jdbPath);
 			String connectionString = Ax.format(

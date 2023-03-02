@@ -105,8 +105,8 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -1468,7 +1468,7 @@ public class DomainStore implements IDomainStore {
 
 		QueryPool() {
 			pool = new ForkJoinPool(
-					ResourceUtilities.getInteger(DomainStore.class,
+					Configuration.getInt(DomainStore.class,
 							"queryPoolSize"),
 					new WorkerThreadFactory(), null, false);
 			try {
@@ -1965,8 +1965,7 @@ public class DomainStore implements IDomainStore {
 		private boolean filterUnknownTransformProperties;
 
 		public InSubgraphFilter() {
-			filterUnknownTransformProperties = ResourceUtilities
-					.is(DomainStore.class, "filterUnknownTransformProperties");
+			filterUnknownTransformProperties = Configuration.is(DomainStore.class, "filterUnknownTransformProperties");
 		}
 
 		@Override

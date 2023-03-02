@@ -132,7 +132,7 @@ public class TransformCommit {
 			throws WebException {
 		CommonPersistenceLocal cp = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence();
-		boolean persistAsOneTransaction = ResourceUtilities.is(
+		boolean persistAsOneTransaction = Configuration.is(
 				TransformCommit.class,
 				"persistOfflineTransformsAsOneTransaction");
 		try {
@@ -332,8 +332,7 @@ public class TransformCommit {
 		DomainTransformRequest fullRequest = DomainTransformRequest
 				.fromString(dar.getText(), dar.getChunkUuidString());
 		int size = fullRequest.getEvents().size();
-		boolean commitAsWrapperUser = ResourceUtilities
-				.is("commitAsWrapperUser");
+		boolean commitAsWrapperUser = Configuration.is("commitAsWrapperUser");
 		boolean committingVmLocalRecord = dar
 				.getClientInstanceId() == ClientInstance.self().getId();
 		if (size > chunkSize && dar.getChunkUuidString() != null) {
@@ -551,7 +550,7 @@ public class TransformCommit {
 	}
 
 	public static boolean isCommitTestTransforms() {
-		return ResourceUtilities.is("commitTestTransforms");
+		return Configuration.is("commitTestTransforms");
 	}
 
 	public static boolean isCommitting() {
@@ -559,7 +558,7 @@ public class TransformCommit {
 	}
 
 	public static boolean isTestTransformCascade() {
-		return ResourceUtilities.is("testTransformCascade");
+		return Configuration.is("testTransformCascade");
 	}
 
 	public static void prepareHttpRequestCommitContext(long clientInstanceId,

@@ -1268,21 +1268,23 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			if (argv.length == 0) {
-				Map<String, String> map = new TreeMap<String, String>();
-				map.putAll(ResourceUtilities.getCustomProperties());
-				Ax.out(CommonUtils.join(map.entrySet(), "\n"));
-				return "";
-			}
-			String prop = SEUtilities.normalizeWhitespaceAndTrim(argv[0]);
-			Matcher m = Pattern.compile("(.+?)=(.+)").matcher(prop);
-			m.matches();
-			String key = m.group(1);
-			String existingValue = ResourceUtilities.getCustomProperties()
-					.get(key);
-			String value = m.group(2);
-			ResourceUtilities.set(key, value);
-			return Ax.format("%s : '%s' => '%s'", key, existingValue, value);
+			// FIXME - ru - unify properties
+			throw new UnsupportedOperationException();
+			// if (argv.length == 0) {
+			// Map<String, String> map = new TreeMap<String, String>();
+			// map.putAll(ResourceUtilities.getCustomProperties());
+			// Ax.out(CommonUtils.join(map.entrySet(), "\n"));
+			// return "";
+			// }
+			// String prop = SEUtilities.normalizeWhitespaceAndTrim(argv[0]);
+			// Matcher m = Pattern.compile("(.+?)=(.+)").matcher(prop);
+			// m.matches();
+			// String key = m.group(1);
+			// String existingValue = ResourceUtilities.getCustomProperties()
+			// .get(key);
+			// String value = m.group(2);
+			// ResourceUtilities.set(key, value);
+			// return Ax.format("%s : '%s' => '%s'", key, existingValue, value);
 		}
 	}
 

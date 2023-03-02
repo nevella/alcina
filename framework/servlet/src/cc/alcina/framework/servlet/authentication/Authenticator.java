@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -129,7 +129,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 			String userName) throws AuthenticationException;
 
 	public boolean validateLoginAttempt(LoginModel<U> loginModel) {
-		if (ResourceUtilities.is(Authenticator.class,
+		if (Configuration.is(Authenticator.class,
 				"validateLoginAttempts")) {
 			return new LoginAttempts().checkLockedOut(loginModel);
 		} else {
@@ -152,8 +152,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 			// Programmatic password bypass - allow
 			return true;
 		}
-		if (AppPersistenceBase.isTestServer() && ResourceUtilities
-				.is(Authenticator.class, "bypassPasswordCheck")) {
+		if (AppPersistenceBase.isTestServer() && Configuration.is(Authenticator.class, "bypassPasswordCheck")) {
 			// App server/dev instance bypass - allow
 			// Extra AppPersistenceBase.isTestServer() check to make sure we
 			// don't engage this

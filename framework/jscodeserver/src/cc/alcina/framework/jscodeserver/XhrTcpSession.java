@@ -13,6 +13,7 @@ import com.google.gwt.dev.shell.JsCodeserverTcpClientJava;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class XhrTcpSession {
@@ -83,7 +84,7 @@ public class XhrTcpSession {
 	private void initSocket(HttpServletRequest request) throws Exception {
 		socketPort = Integer.parseInt(
 				request.getHeader(XhrTcpBridge.HEADER_CODE_SERVER_PORT));
-		socket = new Socket(ResourceUtilities.get("host"), socketPort);
+		socket = new Socket(Configuration.get("host"), socketPort);
 		client = new JsCodeserverTcpClientJava(socket);
 	}
 }

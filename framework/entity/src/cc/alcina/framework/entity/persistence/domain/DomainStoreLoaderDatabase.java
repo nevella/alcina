@@ -86,6 +86,7 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -1470,7 +1471,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 			Connection create() throws SQLException {
 				String isolationLevel = "SERIALIZABLE";
-				if (ResourceUtilities.is(DomainStore.class, "warmStandbyDb")) {
+				if (Configuration.is(DomainStore.class, "warmStandbyDb")) {
 					isolationLevel = "REPEATABLE_READ";
 				}
 				if (initialWarmupConnection == null) {

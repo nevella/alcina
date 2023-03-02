@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.Reflect
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.SimpleHttp;
@@ -74,7 +75,7 @@ public class DownloadServlet extends HttpServlet {
 		DownloadRegistration registration = new DownloadRegistration(bytes,
 				fileName, mimeType, id);
 		SimpleHttp http = new SimpleHttp(
-				ResourceUtilities.get("remoteRegistrationUrl"))
+				Configuration.get("remoteRegistrationUrl"))
 						.withPostBodyQueryParameters(StringMap.properties(
 								REGISTER_DOWNLOAD, String.valueOf(true),
 								PAYLOAD,

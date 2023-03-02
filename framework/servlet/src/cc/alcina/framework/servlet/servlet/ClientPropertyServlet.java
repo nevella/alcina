@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.logic.ClientProperties;
 import cc.alcina.framework.servlet.CookieUtils;
 
@@ -63,7 +63,7 @@ public class ClientPropertyServlet extends HttpServlet {
 				UrlComponentEncoder.get().encode(map.toPropertyString()));
 		cookie.setPath("/");
 		cookie.setMaxAge(86400 * 365 * 10);
-		cookie.setSecure(ResourceUtilities.is(HttpContext.class, "secure"));
+		cookie.setSecure(Configuration.is(HttpContext.class, "secure"));
 		CookieUtils.addToRequestAndResponse(request, response, cookie);
 		String message = Ax.format("Map :: =>\n%s", map.entrySet().stream()
 				.map(Object::toString).collect(Collectors.joining("\n")));

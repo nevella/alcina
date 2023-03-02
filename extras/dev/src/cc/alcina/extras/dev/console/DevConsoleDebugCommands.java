@@ -52,6 +52,7 @@ import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
@@ -438,7 +439,7 @@ public class DevConsoleDebugCommands {
 								"problem deserializing clientlogrecord:\n%s\n",
 								original);
 						e.printStackTrace();
-						if (ResourceUtilities.getBoolean(
+						if (Configuration.is(
 								CommonRemoteServiceServlet.class,
 								"throwLogClientRecordExceptions")) {
 							throw new WrappedRuntimeException(e);

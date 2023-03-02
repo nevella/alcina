@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class DevConsoleProtocolHandler extends AbstractHandler {
@@ -164,7 +165,7 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 					String text = consoleRecord.text;
 					if (Ax.notBlank(text)) {
 						if (!text.contains("<") && !text.contains(">")
-								&& !ResourceUtilities.is("disablePathLinks")) {
+								&& !Configuration.is("disablePathLinks")) {
 							text = text.replaceAll(
 									"(?:^|\\s)(/(?:tmp|Users|~).+?)(?:\n|\t|$)",
 									"<a href='/serve-local.do?$1' target='_blank'>$1</a>");

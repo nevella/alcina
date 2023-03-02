@@ -15,8 +15,6 @@
  */
 package com.google.web.bindery.event.shared;
 
-import com.google.web.bindery.event.shared.Event.Type;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +23,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.web.bindery.event.shared.Event.Type;
 
 /**
  * Basic implementation of {@link EventBus}.

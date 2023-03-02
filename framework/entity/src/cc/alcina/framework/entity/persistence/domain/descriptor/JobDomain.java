@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
@@ -339,7 +340,7 @@ public class JobDomain {
 	}
 
 	public void onWarmupComplete(DomainStore domainStore) {
-		if (ResourceUtilities.is("logTransforms")) {
+		if (Configuration.is("logTransforms")) {
 			domainStore.getPersistenceEvents()
 					.addDomainTransformPersistenceListener(jobLogger);
 		}

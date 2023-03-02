@@ -13,7 +13,6 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricType;
-import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 
 public class InternalMetricData {
 	transient Object markerObject;

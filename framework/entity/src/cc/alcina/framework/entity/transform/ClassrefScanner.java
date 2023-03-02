@@ -44,7 +44,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreDbColumn;
@@ -206,7 +206,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 	}
 
 	private void commit(EntityManager entityManager) throws Exception {
-		if (ResourceUtilities.is("commitDisabled")) {
+		if (Configuration.is("commitDisabled")) {
 			return;
 		}
 		for (ClassrefScannerMetadata metadata : outgoingCache.classData
@@ -264,7 +264,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 					delta = true;
 					logger.trace("removing classref - {} {}\n", ref.getId(),
 							ref.getRefClassName());
-					if (ResourceUtilities.is(ClassrefScanner.class,
+					if (Configuration.is(ClassrefScanner.class,
 							"removePersistentClassrefs")) {
 						entityManager.remove(ref);
 					}

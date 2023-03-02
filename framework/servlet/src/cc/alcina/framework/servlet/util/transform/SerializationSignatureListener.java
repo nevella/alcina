@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
@@ -39,7 +39,7 @@ public class SerializationSignatureListener
 
 	public synchronized String ensureSignature() {
 		if (signature == null) {
-			if (!ResourceUtilities.is("enabled")) {
+			if (!Configuration.is("enabled")) {
 				return null;
 			}
 			CountDownLatch latch = new CountDownLatch(1);
@@ -84,7 +84,7 @@ public class SerializationSignatureListener
 	@Override
 	public void onDomainTransformRequestPersistence(
 			DomainTransformPersistenceEvent event) {
-		if (!ResourceUtilities.is("enabled")) {
+		if (!Configuration.is("enabled")) {
 			return;
 		}
 		switch (event.getPersistenceEventType()) {

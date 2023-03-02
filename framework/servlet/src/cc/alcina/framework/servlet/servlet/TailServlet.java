@@ -25,7 +25,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
 
 /**
  * <p>
@@ -55,7 +54,7 @@ public class TailServlet extends AlcinaServlet {
 			throw new RuntimeException("Access not permitted");
 		}
 		File logFile = new File(
-				ResourceUtilities.get(TailServlet.class, "file"));
+				Configuration.get(TailServlet.class, "file"));
 		String message = Ax.format("Starting tail servlet - %s", logFile);
 		String filterString = request.getQueryString();
 		Pattern filter = Ax.isBlank(filterString) ? null

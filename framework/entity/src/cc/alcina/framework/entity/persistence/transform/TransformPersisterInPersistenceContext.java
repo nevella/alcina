@@ -390,7 +390,7 @@ public class TransformPersisterInPersistenceContext {
 				subRequest.updateTransformCommitType(CommitType.ALL_COMMITTED,
 						false);
 				if (token.getPass() == Pass.TRY_COMMIT) {
-					// if (ResourceUtilities.is(TransformPersister.class,
+					// if (Configuration.is(TransformPersister.class,
 					// "flushWithEveryRequest")) {
 					// // defaults to true - remember this isn't committing -
 					// // isn't much of a speed bump given significant requests

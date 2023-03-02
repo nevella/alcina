@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.gwt.client.action.DtrSimpleAdminPersistenceAction;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
@@ -18,7 +18,7 @@ public class DtrSimpleAdminPersistenceHandler
 
 	public void commit(DeltaApplicationRecord dar) {
 		try {
-			int chunkSize = ResourceUtilities.getInteger(
+			int chunkSize = Configuration.getInt(
 					DtrSimpleAdminPersistenceHandler.class, "chunkSize", 5000);
 			TransformCommit.commitDeltaApplicationRecord(dar, chunkSize);
 			jobOk("OK");

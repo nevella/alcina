@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.LoginAttempt;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.ServletLayerUtils;
@@ -21,7 +22,7 @@ public class LoginAttempts {
 				PersistentImpl.getImplementation(LoginAttempt.class),
 				"userNameLowerCase",
 				loginModel.loginBean.getUserName().toLowerCase());
-		int maxAttempts = ResourceUtilities.getInteger(LoginAttempts.class,
+		int maxAttempts = Configuration.getInt(LoginAttempts.class,
 				"maxAttempts");
 		int maxAttemptsPeriodMins = ResourceUtilities
 				.getInteger(LoginAttempts.class, "maxAttemptsPeriodMins");
@@ -39,7 +40,7 @@ public class LoginAttempts {
 	}
 
 	protected void handleLoginResult(LoginModel loginModel) {
-		int maxAttempts = ResourceUtilities.getInteger(LoginAttempts.class,
+		int maxAttempts = Configuration.getInt(LoginAttempts.class,
 				"maxAttempts");
 		Preconditions.checkArgument(maxAttempts != 0);
 		List<LoginAttempt> attempts = (List) Domain.listByProperty(

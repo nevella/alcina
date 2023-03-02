@@ -79,6 +79,7 @@ import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
@@ -176,9 +177,9 @@ class ClassTransformer {
 		Function<ClassTransform, Runnable> mapper = ct -> () -> {
 			ct.setTransformer(this);
 			ct.init(false);
-			if (ResourceUtilities.is(ClassTransformer.class,
+			if (Configuration.is(ClassTransformer.class,
 					"checkClassCorrectness")) {
-				if (!ResourceUtilities.is(ClassTransformer.class,
+				if (!Configuration.is(ClassTransformer.class,
 						"checkClassCorrectnessForceOk")) {
 					ct.checkFieldAndMethodAccess(true, false, token);
 				}
@@ -188,12 +189,12 @@ class ClassTransformer {
 		AlcinaParallel.builder().withThreadCount(8)
 				.withThreadName("ClassTransformer-generate")
 				.withSerial(
-						!ResourceUtilities.is("checkClassCorrectnessParallel"))
+						!Configuration.is("checkClassCorrectnessParallel"))
 				.withCancelOnException(true)
 				.withRunnables(classTransforms.values().stream().map(mapper)
 						.collect(Collectors.toList()))
 				.run();
-		if (ResourceUtilities.is(ClassTransformer.class,
+		if (Configuration.is(ClassTransformer.class,
 				"cancelStartupIfInvalid")) {
 			if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
 				throw new IllegalStateException();
@@ -212,7 +213,7 @@ class ClassTransformer {
 					compilationRunnables.size(),
 					classTransforms.size() - compilationRunnables.size());
 		}
-		if (ResourceUtilities.is(ClassTransformer.class,
+		if (Configuration.is(ClassTransformer.class,
 				"checkClassCorrectness")) {
 			for (ClassTransform ct : classTransforms.values()) {
 				if (!ct.invalid) {
@@ -366,8 +367,7 @@ class ClassTransformer {
 					.allFields(originalClass).stream()
 					.collect(AlcinaCollectors.toKeyMultimap(Field::getName));
 			byName.entrySet().stream().filter(e -> e.getValue().size() > 1)
-					.filter(e -> !(e.getKey().equals("id") && ResourceUtilities
-							.is(ClassTransformer.class, "allowShadowIdField")))
+					.filter(e -> !(e.getKey().equals("id") && Configuration.is(ClassTransformer.class, "allowShadowIdField")))
 					.forEach(e -> {
 						fieldsWithProblematicAccess.add(e.getKey());
 						correctnessIssueTopic.publish(new MvccCorrectnessIssue(
@@ -518,7 +518,7 @@ class ClassTransformer {
 			try {
 				this.classSources = new ArrayList<>();
 				Class clazz = originalClass;
-				String superClassFilter = ResourceUtilities.get(
+				String superClassFilter = Configuration.get(
 						ClassTransformer.class,
 						"checkClassCorrectness.superClassFilter");
 				while (clazz != Object.class) {

@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 
 public class EntityLayerUtils {
@@ -14,12 +14,12 @@ public class EntityLayerUtils {
 	private static Pattern botUa;
 
 	public static String getApplicationHostName() {
-		return ResourceUtilities.get("applicationHostName");
+		return Configuration.get("applicationHostName");
 	}
 
 	public static String getLocalHostName() {
 		try {
-			String defined = ResourceUtilities.get(EntityLayerUtils.class,
+			String defined = Configuration.get(EntityLayerUtils.class,
 					"localHostName");
 			if (Ax.isBlank(defined)) {
 				return java.net.InetAddress.getLocalHost().getHostName();
@@ -46,7 +46,7 @@ public class EntityLayerUtils {
 							+ "|python-requests|FlipboardProxy"
 							+ "|BingPreview|Baiduspider|YandexBot|Java|rogerbot|Slackbot)",
 					Pattern.CASE_INSENSITIVE);
-			String botExtraRegex = ResourceUtilities.get(EntityLayerUtils.class,
+			String botExtraRegex = Configuration.get(EntityLayerUtils.class,
 					"botUserAgentExtra");
 			EntityLayerUtils.botExtraUa = botExtraRegex.isEmpty() ? null
 					: Pattern.compile(botExtraRegex);

@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
@@ -240,7 +239,7 @@ public class DomainStoreTransformSequencer
 					CommonUtils.joinWithNewlines(positions));
 		}
 		long end = System.nanoTime();
-		if (end - start > ResourceUtilities.getInteger(
+		if (end - start > Configuration.getInt(
 				DomainStoreTransformSequencer.class, "logRefreshTime")) {
 			logger.warn("Long refresh time: {} ids - {} ns - query {} ns - {}",
 					pendingRequestIds.size(), end - start,

@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.servlet.CookieUtils;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
@@ -58,7 +58,7 @@ public class HttpContext implements AuthenticationTokenStore {
 		cookie.setPath("/");
 		cookie.setMaxAge(86400 * 365 * 10);
 		cookie.setHttpOnly(true);
-		cookie.setSecure(ResourceUtilities.is("secure"));
+		cookie.setSecure(Configuration.is("secure"));
 		CookieUtils.addToRequestAndResponse(request, response, cookie);
 	}
 

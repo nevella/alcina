@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.gwt.client.tour.Tour;
@@ -53,7 +54,7 @@ public class UIRendererWd extends UIRenderer {
 
 	public long timeout() {
 		return System.currentTimeMillis() + (TourManager.isImmediateGet() ? 1
-				: ResourceUtilities.getInteger(UIRendererWd.class, "timeout"));
+				: Configuration.getInt(UIRendererWd.class, "timeout"));
 	}
 
 	private WebElement getElement(String selector) {

@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
@@ -118,7 +118,7 @@ class PersistentEventPopulator {
 			 * persist at end (no double-calls)
 			 */
 			if (propagationPolicy.shouldPersistEventRecord(event)
-					|| ResourceUtilities.is(
+					|| Configuration.is(
 							TransformPersisterInPersistenceContext.class,
 							"persistAllTransforms")) {
 				if (!persistTransformsDisabled) {

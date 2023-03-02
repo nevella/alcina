@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.util.JaxbUtils;
@@ -174,7 +175,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 				.getResourceAsStream(xslPath);
 		String marker = getWrapperTransformClass().getName() + "/" + xslPath
 				+ "-" + formatRequiresXml;
-		if (!ResourceUtilities.getBoolean(ContentWrapper.class,
+		if (!Configuration.is(ContentWrapper.class,
 				"cacheTransforms")) {
 			marker += Math.random();
 		}

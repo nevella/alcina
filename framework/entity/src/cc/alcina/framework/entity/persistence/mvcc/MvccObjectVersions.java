@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.Event.Type;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
@@ -601,7 +601,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (!verified) {
 			IllegalStateException exception = new IllegalStateException(
 					Ax.format("Invalid read state: %s", domainIdentity));
-			if (ResourceUtilities.is(MvccObjectVersions.class,
+			if (Configuration.is(MvccObjectVersions.class,
 					"throwOnInvalidReadState")) {
 				throw exception;
 			} else {

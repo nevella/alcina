@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -420,7 +420,7 @@ public class DomainTransformPersistenceQueue {
 				return request;
 			}
 			long id = event.requestId;
-			if (!ResourceUtilities.is(DomainTransformPersistenceQueue.class,
+			if (!Configuration.is(DomainTransformPersistenceQueue.class,
 					"clustered")) {
 				request = persistenceEvents.domainStore
 						.loadTransformRequest(id);
@@ -447,7 +447,7 @@ public class DomainTransformPersistenceQueue {
 			// Wait a maximum of 10 seconds
 			long endWaitLoop = System.currentTimeMillis()
 					+ 10 * TimeConstants.ONE_SECOND_MS;
-			if (ResourceUtilities.is(DomainTransformPersistenceQueue.class,
+			if (Configuration.is(DomainTransformPersistenceQueue.class,
 					"noDbRequestWait")) {
 				endWaitLoop = 0;
 			}

@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_LOCAL_FILESYSTEM;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.HasLocalDelivery;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.publication.FormatConverter;
@@ -41,7 +42,7 @@ public class ContentDeliveryLocalFilesystem implements ContentDelivery {
 		File folder = new File(localDeliveryFolder);
 		folder.mkdirs();
 		if (!PermissionsManager.hasAdminAccessLevel()
-				|| !ResourceUtilities.is("permitAbsoluteSuggestedPath")) {
+				|| !Configuration.is("permitAbsoluteSuggestedPath")) {
 			suggestedFileName = suggestedFileName.replace("/", "_")
 					.replace("\\", "_");
 		}

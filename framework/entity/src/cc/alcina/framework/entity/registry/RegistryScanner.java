@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
 
 /*
@@ -44,7 +44,7 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 			Collection<String> ignore, String registryName) throws Exception {
 		String cachePath = Ax.format("%s/%s-registry-cache.ser",
 				getHomeDir().getPath(), registryName);
-		if (!ResourceUtilities.is("useCache") && !Ax.isTest()
+		if (!Configuration.is("useCache") && !Ax.isTest()
 				&& !Boolean.getBoolean("RegistryScanner.useCache")
 				&& !GWT.isClient()) {
 			new File(cachePath).delete();

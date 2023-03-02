@@ -14,7 +14,7 @@ import cc.alcina.extras.webdriver.api.WDWriter;
 import cc.alcina.extras.webdriver.api.WebdriverTest;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 
 public class WDManager {
 	private static Map<String, WDToken> resultCache = new HashMap<String, WDToken>();
@@ -76,7 +76,7 @@ public class WDManager {
 			try {
 				LooseContext.push();
 				LooseContext.set(CONTEXT_TOKEN, token);
-				int timeout = ResourceUtilities.getInteger(WDManager.class,
+				int timeout = Configuration.getInt(WDManager.class,
 						"overrideTestTimeout");
 				if (timeout != 0) {
 					LooseContext.set(WDUtils.CONTEXT_OVERRIDE_TIMEOUT, timeout);
@@ -87,7 +87,7 @@ public class WDManager {
 					if (token.getRootResult()
 							.computeTreeResultType() != TestResultType.ERROR
 							|| config.closeOnError) {
-						if (ResourceUtilities.is("allowCloseBrowser")) {
+						if (Configuration.is("allowCloseBrowser")) {
 							// Ax.err("...closeAndCleanup");
 							try {
 								token.getDriverHandler().closeAndCleanup();

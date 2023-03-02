@@ -66,6 +66,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainLinker;
@@ -415,8 +416,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			getPersistentTransformRequests(long fromId, long toId,
 					Collection<Long> specificIds, boolean mostRecentOnly,
 					boolean populateTransformSourceObjects, Logger logger) {
-		boolean logTransformReadMetrics = ResourceUtilities
-				.is(CommonPersistenceBase.class, "logTransformReadMetrics");
+		boolean logTransformReadMetrics = Configuration.is(CommonPersistenceBase.class, "logTransformReadMetrics");
 		Query query = null;
 		List<DomainTransformRequestPersistent> dtrps = null;
 		if (mostRecentOnly) {

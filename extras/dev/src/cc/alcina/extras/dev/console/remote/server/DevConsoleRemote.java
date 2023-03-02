@@ -27,7 +27,7 @@ import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.jscodeserver.JsCodeServerServlet;
 
@@ -74,7 +74,7 @@ public class DevConsoleRemote {
 	}
 
 	public String getAppName() {
-		return Ax.blankTo(ResourceUtilities.get("appName"),
+		return Ax.blankTo(Configuration.get("appName"),
 				() -> devConsole.getClass().getSimpleName());
 	}
 
@@ -103,7 +103,7 @@ public class DevConsoleRemote {
 	}
 
 	public void start(boolean configLoaded) throws Exception {
-		if (!configLoaded || !ResourceUtilities.is("serve")) {
+		if (!configLoaded || !Configuration.is("serve")) {
 			return;
 		}
 		hasRemote = true;
@@ -120,7 +120,7 @@ public class DevConsoleRemote {
 	}
 
 	private void run0() throws Exception {
-		int port = Integer.parseInt(ResourceUtilities.get("port"));
+		int port = Integer.parseInt(Configuration.get("port"));
 		Ax.out("Dev console: serving on port %s", port);
 		Server server = new Server();
 		ServerConnector connector = new ServerConnector(server);

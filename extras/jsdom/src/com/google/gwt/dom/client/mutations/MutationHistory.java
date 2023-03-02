@@ -56,7 +56,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 	public MutationHistory(LocalDomMutations mutations) {
 		this.mutations = mutations;
-		if (mutations.configuration.provideIsObserveHistory()) {
+		if (mutations.loggingConfiguration.provideIsObserveHistory()) {
 			ProcessObservers.observe(this, true);
 		}
 	}
@@ -87,13 +87,13 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 	@Override
 	public void topicPublished(MutationHistory.Event event) {
-		if (mutations.configuration.logEvents) {
+		if (mutations.loggingConfiguration.logEvents) {
 			LocalDom.log(Level.INFO,
 					"mutation event %s - %s - received - %s mutations",
 					events.size(), event.type, event.records.size());
 		}
 		events.add(event);
-		if (mutations.configuration.logDoms && !hadExceptions()) {
+		if (mutations.loggingConfiguration.logDoms && !hadExceptions()) {
 			if (events.size() > RETAIN_AT_MOST_DOM_COUNT) {
 				// always retain dom0
 				events.get(events.size() - RETAIN_AT_MOST_DOM_COUNT)

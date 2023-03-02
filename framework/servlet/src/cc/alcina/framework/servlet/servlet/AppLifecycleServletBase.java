@@ -16,10 +16,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TimeZone;
-import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,10 +55,11 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TimezoneData;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.Configuration.Properties;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -235,9 +234,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	public String dumpCustomProperties() {
-		Map<String, String> map = new TreeMap<String, String>();
-		map.putAll(ResourceUtilities.getCustomProperties());
-		return CommonUtils.join(map.entrySet(), "\n");
+		return Configuration.properties().dump();
 	}
 
 	public String getDefaultLoggerLevels() {
@@ -287,8 +284,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	public void refreshProperties() {
+		// FIXME - ru - these should probably cascade/trigger via invalidation
 		loadCustomProperties();
-		ResourceUtilities.loadSystemPropertiesFromCustomProperties();
+		Configuration.properties()
+				.loadSystemPropertiesFromConfigurationProperties();
 		topicConfigurationReloaded.publish(null);
 		EntityLayerLogging.setLogLevelsFromCustomProperties();
 	}
@@ -303,7 +302,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void addImmutableSecurityProperties() {
-		ResourceUtilities.addImmutableCustomPropertyKey(
+		Configuration.properties().addImmutablePropertyKey(
 				RemoteDebugHandler.immutableSecurityProperty());
 	}
 
@@ -353,7 +352,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		PermissionsManager permissionsManager = PermissionsManager.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 		TransformManager.register(ThreadlocalTransformManager.ttmInstance());
-		ThreadlocalLooseContextProvider.setDebugStackEntry(ResourceUtilities.is(
+		ThreadlocalLooseContextProvider.setDebugStackEntry(Configuration.is(
 				AppLifecycleServletBase.class, "debugLooseContextStackEntry"));
 		ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider
 				.ttmInstance();
@@ -378,14 +377,17 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			/*
 			 * All optimised configuration property cache refreshing should go
 			 * here
+			 *
 			 */
-			ThreadlocalTransformManager.ignoreAllTransformPermissions = ResourceUtilities
+			ThreadlocalTransformManager.ignoreAllTransformPermissions = Configuration
 					.is(ThreadlocalTransformManager.class,
 							"ignoreTransformPermissions");
 		});
-		ResourceUtilities.loadSystemPropertiesFromCustomProperties();
+		// FIXME - ru - merge to 'refreshProperties'
+		Configuration.properties()
+				.loadSystemPropertiesFromConfigurationProperties();
 		topicConfigurationReloaded.publish(null);
-		if (ResourceUtilities.is("allowAllHostnameVerifier")) {
+		if (Configuration.is("allowAllHostnameVerifier")) {
 			try {
 				HttpsURLConnection.setDefaultHostnameVerifier(
 						SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
@@ -536,14 +538,15 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void launchPostInitTasks() {
 		Pattern pattern = Pattern.compile("post\\.init\\.(.+)");
-		StringMap stringMap = new StringMap(
-				ResourceUtilities.getCustomProperties());
-		stringMap.forEach((k, v) -> {
+		Properties properties = Configuration.properties();
+		properties.keys().forEach(k -> {
 			Matcher matcher = pattern.matcher(k);
 			if (matcher.matches()) {
 				String key = matcher.group(1);
-				Ax.out("Enabled post-init startup property: %s => %s", key, v);
-				ResourceUtilities.set(key, v);
+				String value = properties.get(key);
+				Ax.out("Enabled post-init startup property: %s => %s", key,
+						value);
+				ResourceUtilities.set(key, value);
 			}
 		});
 		EntityLayerLogging.setLogLevelsFromCustomProperties();
@@ -624,8 +627,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				 * throw if reflective serializer or tree serializer consistency
 				 * checks fail and production server, otherwise warn via logs
 				 */
-				boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
-						.is(AppLifecycleServletBase.class,
+				boolean cancelStartupOnSignatureGenerationFailure = Configuration.is(AppLifecycleServletBase.class,
 								"cancelStartupOnSignatureGenerationFailure")
 						|| !EntityLayerUtils.isTestServer();
 				MethodContext.instance()

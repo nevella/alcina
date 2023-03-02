@@ -1,7 +1,6 @@
 package cc.alcina.framework.entity.logic;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Appender;
@@ -17,7 +16,8 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.Configuration.Properties;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -60,7 +60,7 @@ public class EntityLayerLogging {
 	}
 
 	public static void persistentLog(Enum componentKey, String message) {
-		if (ResourceUtilities.is("useCommonPersistence")) {
+		if (Configuration.is("useCommonPersistence")) {
 			CommonPersistenceProvider.get().getCommonPersistence().log(message,
 					componentKey.toString());
 		} else {
@@ -69,7 +69,7 @@ public class EntityLayerLogging {
 	}
 
 	public static long persistentLog(Enum componentKey, Throwable t) {
-		if (ResourceUtilities.is("useCommonPersistence")) {
+		if (Configuration.is("useCommonPersistence")) {
 			return CommonPersistenceProvider.get().getCommonPersistence().log(
 					SEUtilities.getFullExceptionMessage(t),
 					componentKey.toString());
@@ -82,7 +82,7 @@ public class EntityLayerLogging {
 
 	public static void persistentLog(Exception e, Object logMessageType) {
 		try {
-			if (ResourceUtilities.is("useCommonPersistence")) {
+			if (Configuration.is("useCommonPersistence")) {
 				CommonPersistenceProvider.get().getCommonPersistence().log(
 						SEUtilities.getFullExceptionMessage(e),
 						logMessageType.toString());
@@ -95,7 +95,7 @@ public class EntityLayerLogging {
 
 	// convenience
 	public static void persistentLog(String message, Object componentKey) {
-		if (ResourceUtilities.is("useCommonPersistence")) {
+		if (Configuration.is("useCommonPersistence")) {
 			Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence()
 					.log(message, componentKey.toString());
@@ -107,7 +107,7 @@ public class EntityLayerLogging {
 	}
 
 	public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
-		if (ResourceUtilities.is(EntityLayerLogging.class,
+		if (Configuration.is(EntityLayerLogging.class,
 				"debugSetLogLevels")) {
 			Ax.out("%s => %s", slf4jlogger.getName(), level);
 		}
@@ -151,11 +151,11 @@ public class EntityLayerLogging {
 	}
 
 	public static void setLogLevelsFromCustomProperties() {
-		Map<String, String> map = ResourceUtilities.getCustomProperties();
-		map.forEach((k, v) -> {
+		Properties properties = Configuration.properties();
+		properties.keys().forEach(k -> {
 			if (k.startsWith("log.level.")) {
 				k = k.substring("log.level.".length());
-				setLevel(k, Level.toLevel(v));
+				setLevel(k, Level.toLevel(properties.get(k)));
 			}
 		});
 	}

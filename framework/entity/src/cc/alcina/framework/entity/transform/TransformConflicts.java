@@ -21,8 +21,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 
@@ -49,7 +49,7 @@ public class TransformConflicts {
 	private TransformPersistenceToken transformPersistenceToken;
 
 	public TransformConflicts() {
-		ignoreConflicts = ResourceUtilities.getBoolean(TransformConflicts.class,
+		ignoreConflicts = Configuration.is(TransformConflicts.class,
 				"ignoreConflicts")
 				|| LooseContext.getBoolean(CONTEXT_IGNORE_TRANSFORM_CONFLICTS);
 	}

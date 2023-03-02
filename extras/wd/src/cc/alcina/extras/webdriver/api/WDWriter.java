@@ -7,7 +7,7 @@ import java.io.Writer;
 
 import javax.servlet.http.HttpServletResponse;
 
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 
 public class WDWriter {
 	private Writer storageWriter = new StringWriter();
@@ -61,7 +61,7 @@ public class WDWriter {
 		sb.append(s);
 		s = sb.toString();
 		if (isStatsOnly()) {
-			if (ResourceUtilities.getBoolean(WDWriter.class,
+			if (Configuration.is(WDWriter.class,
 					"logStatsToSysOut")) {
 				System.out.println(s);
 			}

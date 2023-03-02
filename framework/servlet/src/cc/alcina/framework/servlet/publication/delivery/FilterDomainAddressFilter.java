@@ -2,11 +2,12 @@ package cc.alcina.framework.servlet.publication.delivery;
 
 import java.util.ArrayList;
 
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 
 public class FilterDomainAddressFilter implements AddressFilter {
+	@Override
 	public String[] filterAddresses(String[] addresses) {
-		String domain = ResourceUtilities.getBundledString(AddressFilter.class,
+		String domain = Configuration.get(AddressFilter.class,
 				"smtp.restrictToDomain");
 		if (domain.length() == 0) {
 			return addresses;

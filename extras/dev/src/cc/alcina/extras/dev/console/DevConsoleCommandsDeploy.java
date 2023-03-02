@@ -63,14 +63,14 @@ public class DevConsoleCommandsDeploy {
 					.get(DevConsoleCommandsDeploy.class, "servletPackageBase");
 			String targetContainerName = ResourceUtilities
 					.get(DevConsoleCommandsDeploy.class, "targetContainerName");
-			String targetDockerHostName = ResourceUtilities.get(
+			String targetDockerHostName = Configuration.get(
 					DevConsoleCommandsDeploy.class, "targetDockerHostName");
-			String targetDockerHostSshUser = ResourceUtilities.get(
+			String targetDockerHostSshUser = Configuration.get(
 					DevConsoleCommandsDeploy.class, "targetDockerHostSshUser");
-			String targetDockerHostSshPrivateKey = ResourceUtilities.get(
+			String targetDockerHostSshPrivateKey = Configuration.get(
 					DevConsoleCommandsDeploy.class,
 					"targetDockerHostSshPrivateKey");
-			String targetContainerExplodedDeployment = ResourceUtilities.get(
+			String targetContainerExplodedDeployment = Configuration.get(
 					DevConsoleCommandsDeploy.class,
 					"targetContainerExplodedDeployment");
 			String packagePath = servletPackage.replace(".", "/");
@@ -102,11 +102,11 @@ public class DevConsoleCommandsDeploy {
 		private void execRemote(String cmd) throws Exception {
 			String targetContainerName = ResourceUtilities
 					.get(DevConsoleCommandsDeploy.class, "targetContainerName");
-			String targetDockerHostName = ResourceUtilities.get(
+			String targetDockerHostName = Configuration.get(
 					DevConsoleCommandsDeploy.class, "targetDockerHostName");
-			String targetDockerHostSshUser = ResourceUtilities.get(
+			String targetDockerHostSshUser = Configuration.get(
 					DevConsoleCommandsDeploy.class, "targetDockerHostSshUser");
-			String targetDockerHostSshPrivateKey = ResourceUtilities.get(
+			String targetDockerHostSshPrivateKey = Configuration.get(
 					DevConsoleCommandsDeploy.class,
 					"targetDockerHostSshPrivateKey");
 			String script = Ax.format(

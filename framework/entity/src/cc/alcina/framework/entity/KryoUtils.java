@@ -126,7 +126,7 @@ public class KryoUtils {
 	public static void resetPool() {
 		synchronized (Kryo.class) {
 			kryosPool = new CachingMap<>(key -> new KryoPool(
-					ResourceUtilities.is(KryoUtils.class, "usePool")));
+					Configuration.is(KryoUtils.class, "usePool")));
 		}
 	}
 

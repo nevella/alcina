@@ -1,7 +1,7 @@
 package cc.alcina.extras.webdriver.tour;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.tour.condition.ReadOnlyEvaluator.ReadOnlyEvaluatorValueProvider;
 
 @Registration(
@@ -11,6 +11,6 @@ public class ReadOnlyEvaluatorValueProviderWd
 		extends ReadOnlyEvaluatorValueProvider {
 	@Override
 	public boolean isReadOnly() {
-		return ResourceUtilities.is("readOnly");
+		return Configuration.is("readOnly");
 	}
 }

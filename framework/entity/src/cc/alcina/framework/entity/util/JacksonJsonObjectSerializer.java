@@ -41,7 +41,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
 @Registration(JsonObjectSerializer.class)
@@ -76,7 +76,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	private boolean withWrapRootValue;
 
 	public JacksonJsonObjectSerializer() {
-		maxLength = ResourceUtilities.getInteger(
+		maxLength = Configuration.getInt(
 				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
 		if (LooseContext.has(MAX_LENGTH)) {
 			maxLength = LooseContext.getInteger(MAX_LENGTH);

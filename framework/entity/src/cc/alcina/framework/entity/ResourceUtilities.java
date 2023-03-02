@@ -32,25 +32,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
@@ -66,18 +59,13 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-import com.google.common.base.Preconditions;
-import com.google.gwt.core.shared.GWT;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.entity.persistence.mvcc.TransactionalCollection;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 /**
@@ -91,8 +79,6 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 public class ResourceUtilities {
 	private static Map<String, String> customProperties = new ConcurrentHashMap<String, String>();
 
-	private static boolean clientWithJvmProperties;
-
 	private static Map<String, String> cache = new ConcurrentHashMap<>();
 
 	public static final Topic<Void> propertiesInvalidated = Topic.create();
@@ -100,169 +86,6 @@ public class ResourceUtilities {
 	private static Set<String> immutableCustomProperties = new LinkedHashSet<>();
 
 	static Logger logger = LoggerFactory.getLogger(ResourceUtilities.class);
-
-	/*
-	 * Security-related properties that should not be settable post-startup
-	 */
-	public static void addImmutableCustomPropertyKey(String key) {
-		immutableCustomProperties.add(key);
-	}
-
-	public static void ensureFromSystemProperties() {
-		String property = System.getProperty("ResourceUtilities.propertyPath");
-		if (property != null) {
-			try {
-				registerCustomProperties(new FileInputStream(property));
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	public static <T> T fieldwiseClone(T t) {
-		return fieldwiseClone(t, false, false);
-	}
-
-	public static <T> T fieldwiseClone(T t, boolean withTransients,
-			boolean withCollectionProjection) {
-		try {
-			T instance = newInstanceForCopy(t);
-			return fieldwiseCopy(t, instance, withTransients,
-					withCollectionProjection);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients,
-			boolean withShallowCopiedCollections) {
-		return fieldwiseCopy(t, toInstance, withTransients,
-				withShallowCopiedCollections, null);
-	}
-
-	public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients,
-			boolean withShallowCopiedCollections,
-			Set<String> ignoreFieldNames) {
-		try {
-			List<Field> fields = getFieldsForCopyOrLog(t, withTransients,
-					ignoreFieldNames);
-			for (Field field : fields) {
-				Object value = field.get(t);
-				boolean project = false;
-				if (value != null && withShallowCopiedCollections) {
-					if (value instanceof Map || value instanceof Collection) {
-						project = !(value instanceof TransactionalCollection);
-					}
-				}
-				if (project) {
-					if (value instanceof Map) {
-						Map map = (Map) value;
-						Map newMap = (Map) map.getClass()
-								.getDeclaredConstructor().newInstance();
-						newMap.putAll(map);
-						value = newMap;
-					} else {
-						Collection collection = (Collection) value;
-						Collection newCollection = (Collection) newInstanceForCopy(
-								collection);
-						if (newCollection instanceof LiSet) {
-							// handled by newInstanceForCopy/clone
-						} else {
-							newCollection.addAll(collection);
-						}
-						Preconditions.checkState(
-								collection.size() == newCollection.size());
-						value = newCollection;
-					}
-				}
-				field.set(toInstance, value);
-			}
-			return toInstance;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static String get(Class clazz, String propertyName) {
-		return getBundledString(clazz, propertyName);
-	}
-
-	public static String get(String propertyName) {
-		return get(StackWalker
-				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass(), propertyName);
-	}
-
-	public static boolean getBoolean(Class clazz, String propertyName) {
-		String s = getBundledString(clazz, propertyName);
-		return Boolean.valueOf(s);
-	}
-
-	public static BufferedImage getBufferedImage(Class clazz,
-			String relativePath) {
-		BufferedImage img = null;
-		if (img == null) {
-			try {
-				img = ImageIO.read(clazz.getResource(relativePath));
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		return img;
-	}
-
-	public static synchronized String getBundledString(Class clazz,
-			String propertyName) {
-		String namespacedKey = (clazz == null) ? propertyName
-				: GraphProjection.classSimpleName(clazz) + "." + propertyName;
-		return cache.computeIfAbsent(namespacedKey,
-				k -> ResourceUtilities.getBundledString0(clazz, propertyName));
-	}
-
-	public static synchronized String getBundledString0(Class clazz,
-			String propertyName) {
-		String namespacedKey = (clazz == null) ? propertyName
-				: GraphProjection.classSimpleName(clazz) + "." + propertyName;
-		if (customProperties.containsKey(namespacedKey)) {
-			return customProperties.get(namespacedKey);
-		}
-		try {
-			if (GWT.isClient() && !isClientWithJvmProperties()) {
-				return null;
-			}
-		} catch (Throwable t) {
-			// suppress, no gwt on classpath
-		}
-		ResourceBundle b = null;
-		b = ResourceBundle.getBundle(clazz.getPackage().getName() + ".Bundle",
-				Locale.getDefault(), clazz.getClassLoader());
-		if (b.keySet().contains(namespacedKey)) {
-			return b.getString(namespacedKey);
-		}
-		return b.getString(propertyName);
-	}
-
-	public static Map<String, String> getCustomProperties() {
-		return customProperties;
-	}
-
-	public static int getInteger(Class clazz, String propertyName) {
-		return Integer.valueOf(getBundledString(clazz, propertyName));
-	}
-
-	public static int getInteger(Class clazz, String propertyName,
-			int defaultValue) {
-		try {
-			String s = getBundledString(clazz, propertyName);
-			return Integer.valueOf(s);
-		} catch (Exception e) {
-			return defaultValue;
-		}
-	}
-
-	public static long getLong(Class clazz, String key) {
-		return Long.parseLong(get(clazz, key));
-	}
 
 	public static byte[] gunzipBytes(byte[] bytes) {
 		try {
@@ -287,20 +110,6 @@ public class ResourceUtilities {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	public static boolean is(Class clazz, String propertyName) {
-		return getBoolean(clazz, propertyName);
-	}
-
-	public static boolean is(String propertyName) {
-		return is(StackWalker
-				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass(), propertyName);
-	}
-
-	public static boolean isClientWithJvmProperties() {
-		return clientWithJvmProperties;
 	}
 
 	public static boolean isDefined(String key) {
@@ -339,16 +148,6 @@ public class ResourceUtilities {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	public static void loadSystemPropertiesFromCustomProperties() {
-		Map<String, String> map = getCustomProperties();
-		map.forEach((k, v) -> {
-			if (k.startsWith("system.property.")) {
-				k = k.substring("system.property.".length());
-				System.setProperty(k, v);
-			}
-		});
 	}
 
 	public static DomDocument loadXmlDocFromHtmlStream(InputStream stream,
@@ -419,7 +218,8 @@ public class ResourceUtilities {
 	public static Map<String, String> primitiveFieldValues(Object t) {
 		try {
 			Map<String, String> map = new LinkedHashMap<>();
-			List<Field> fields = getFieldsForCopyOrLog(t, false, null);
+			List<Field> fields = ObjectUtil.getFieldsForCopyOrLog(t, false,
+					null);
 			for (Field field : fields) {
 				if (GraphProjection.isPrimitiveOrDataClass(field.getType())) {
 					Object value = field.get(t);
@@ -774,11 +574,6 @@ public class ResourceUtilities {
 		return existing;
 	}
 
-	public static void
-			setClientWithJvmProperties(boolean clientWithJvmProperties) {
-		ResourceUtilities.clientWithJvmProperties = clientWithJvmProperties;
-	}
-
 	public static void setField(Object object, String fieldPath,
 			Object newValue) throws Exception {
 		Object cursor = object;
@@ -934,6 +729,11 @@ public class ResourceUtilities {
 		return parser;
 	}
 
+	private static String getBundledString(Class clazz, String propertyName) {
+		return Configuration.properties()
+				.get(new Configuration.Key(clazz, propertyName));
+	}
+
 	private static InputStream getResourceAsStream(Class clazz, String path) {
 		InputStream stream = clazz.getResourceAsStream(path);
 		if (stream == null) {
@@ -941,54 +741,6 @@ public class ResourceUtilities {
 					.getResourceAsStream(path);
 		}
 		return stream;
-	}
-
-	private static <T> T newInstanceForCopy(T t)
-			throws NoSuchMethodException, InstantiationException,
-			IllegalAccessException, InvocationTargetException {
-		if (t instanceof LiSet) {
-			return (T) ((LiSet) t).clone();
-		}
-		Constructor<T> constructor = null;
-		try {
-			constructor = (Constructor<T>) t.getClass()
-					.getConstructor(new Class[0]);
-		} catch (NoSuchMethodException e) {
-			constructor = (Constructor<T>) t.getClass()
-					.getDeclaredConstructor(new Class[0]);
-		}
-		constructor.setAccessible(true);
-		T instance = constructor.newInstance();
-		return instance;
-	}
-
-	protected static <T> List<Field> getFieldsForCopyOrLog(T t,
-			boolean withTransients, Set<String> ignoreFieldNames) {
-		List<Field> result = new ArrayList<>();
-		Class c = t.getClass();
-		while (c != Object.class) {
-			Field[] fields = c.getDeclaredFields();
-			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers())) {
-					continue;
-				}
-				if (Modifier.isFinal(field.getModifiers())) {
-					continue;
-				}
-				if (Modifier.isTransient(field.getModifiers())
-						&& !withTransients) {
-					continue;
-				}
-				if (ignoreFieldNames != null
-						&& ignoreFieldNames.contains(field.getName())) {
-					continue;
-				}
-				field.setAccessible(true);
-				result.add(field);
-			}
-			c = c.getSuperclass();
-		}
-		return result;
 	}
 
 	/*

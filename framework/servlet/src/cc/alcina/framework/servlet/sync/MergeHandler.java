@@ -80,6 +80,6 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 	}
 
 	protected boolean shouldPersist() {
-		return true;// ResourceUtilities.is(getClass(), "shouldPersist");
+		return true;// Configuration.is(getClass(), "shouldPersist");
 	}
 }

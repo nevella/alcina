@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobContext;
@@ -27,8 +27,7 @@ public class TaskReapJobs extends ServerTask {
 		AtomicInteger counter = new AtomicInteger(0);
 		AtomicInteger reaped = new AtomicInteger(0);
 		AtomicInteger exceptions = new AtomicInteger(0);
-		boolean removeAllUndeserializableJobs = ResourceUtilities
-				.is("removeAllUndeserializableJobs");
+		boolean removeAllUndeserializableJobs = Configuration.is("removeAllUndeserializableJobs");
 		jobs.forEach(job -> {
 			boolean delete = false;
 			if (!job.provideCanDeserializeTask()) {

@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.servlet.authentication.Authenticator;
 
 @Registration(LoginRequestHandler.class)
@@ -100,7 +100,7 @@ public abstract class LoginRequestHandler<U extends IUser> {
 	 * states to meet security requirements
 	 */
 	protected void postRequestHandled() {
-		if (ResourceUtilities.is(LoginRequestHandler.class,
+		if (Configuration.is(LoginRequestHandler.class,
 				"recordLoginAttempts")) {
 			new LoginAttempts().handleLoginResult(loginModel);
 		}

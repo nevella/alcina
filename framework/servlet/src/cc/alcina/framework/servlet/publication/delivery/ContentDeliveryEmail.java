@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel.MailInlineIma
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_PDF;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.publication.EntityCleaner;
 import cc.alcina.framework.servlet.publication.FormatConverter;
@@ -141,19 +142,19 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			FileNotFoundException, NoSuchProviderException {
 		boolean debug = false;
 		Properties props = new Properties();
-		String host = ResourceUtilities.get(ContentDeliveryEmail.class,
+		String host = Configuration.get(ContentDeliveryEmail.class,
 				"smtp.host.name");
 		Integer port = Integer.valueOf(ResourceUtilities
 				.get(ContentDeliveryEmail.class, "smtp.host.port"));
 		Boolean authenticate = Boolean.valueOf(ResourceUtilities
 				.get(ContentDeliveryEmail.class, "smtp.authenticate"));
-		String userName = ResourceUtilities.get(ContentDeliveryEmail.class,
+		String userName = Configuration.get(ContentDeliveryEmail.class,
 				"smtp.username");
-		String password = ResourceUtilities.get(ContentDeliveryEmail.class,
+		String password = Configuration.get(ContentDeliveryEmail.class,
 				"smtp.password");
-		String fromAddress = ResourceUtilities.get(ContentDeliveryEmail.class,
+		String fromAddress = Configuration.get(ContentDeliveryEmail.class,
 				"smtp.from.address");
-		String fromName = ResourceUtilities.get(ContentDeliveryEmail.class,
+		String fromName = Configuration.get(ContentDeliveryEmail.class,
 				"smtp.from.name");
 		int maxMessageSize = ResourceUtilities
 				.getInteger(ContentDeliveryEmail.class, "smtp.maxMessageSize");
@@ -166,9 +167,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		props.put("mail.smtp.host", host);
 		props.put("mail.smtp.auth", authenticate.toString());
-		if (ResourceUtilities.is(ContentDeliveryEmail.class, "smtp.ttls")) {
+		if (Configuration.is(ContentDeliveryEmail.class, "smtp.ttls")) {
 			props.setProperty("mail.smtp.starttls.enable", "true");
-			String protocols = ResourceUtilities.get(ContentDeliveryEmail.class,
+			String protocols = Configuration.get(ContentDeliveryEmail.class,
 					"smtp.ssl.protocols");
 			if (Ax.notBlank(protocols)) {
 				props.setProperty("mail.smtp.ssl.protocols", protocols);
@@ -196,8 +197,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		String[] emailAddresses = Ax.isBlank(emailAddress) ? new String[0]
 				: emailAddress.split("(;|,| )+");
 		String[] bccEmailAddressStrings = Ax
-				.isBlank(ResourceUtilities.get("smtp.bcc")) ? new String[0]
-						: ResourceUtilities.get("smtp.bcc").split("(;|,| )+");
+				.isBlank(Configuration.get("smtp.bcc")) ? new String[0]
+						: Configuration.get("smtp.bcc").split("(;|,| )+");
 		String filterClassName = ResourceUtilities
 				.get(ContentDeliveryEmail.class, "smtp.filter.className");
 		String systemEmailAddressOfRequestor = deliveryModel
@@ -355,7 +356,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				throw new MessageSizeUndeterminedException(e);
 			}
 		}
-		if (!ResourceUtilities.is(ContentDeliveryEmail.class, "smtp.enabled")) {
+		if (!Configuration.is(ContentDeliveryEmail.class, "smtp.enabled")) {
 			Ax.sysLogHigh("ContentDeliveryEmail - disabled!");
 			return "Disabled";
 		}

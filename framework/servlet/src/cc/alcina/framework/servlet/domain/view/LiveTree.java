@@ -348,7 +348,7 @@ public class LiveTree {
 	}
 
 	private long getEvictMillis() {
-		return ResourceUtilities.getInteger(LiveTree.class, "evictSeconds")
+		return Configuration.getInt(LiveTree.class, "evictSeconds")
 				* TimeConstants.ONE_SECOND_MS;
 	}
 
@@ -653,7 +653,7 @@ public class LiveTree {
 				boolean seenStart = request
 						.getFromOffsetExclusivePath() == null;
 				int resultNodeMaxSize = Math.min(request.getCount(),
-						ResourceUtilities.getInteger(LiveTree.class,
+						Configuration.getInt(LiveTree.class,
 								"resultNodeMaxSize"));
 				while (deque.size() > 0 && result.size() < resultNodeMaxSize) {
 					LiveNode liveNode = deque.removeFirst();

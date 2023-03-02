@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObjectVersionsMvccObject;
@@ -267,7 +268,7 @@ public class Transactions {
 			throw new WrappedRuntimeException(e);
 		}
 		if (withFieldValues) {
-			ResourceUtilities.fieldwiseCopy(from, clone, false, true);
+			ObjectUtil.fieldwiseCopy(from, clone, false, true);
 		}
 		MvccObjectVersions __getMvccVersions__ = from.__getMvccVersions__();
 		clone.__setMvccVersions__(__getMvccVersions__);
@@ -275,7 +276,7 @@ public class Transactions {
 	}
 
 	static <T> void copyObjectFields(T from, T to) {
-		ResourceUtilities.fieldwiseCopy(from, to, false, true);
+		ObjectUtil.fieldwiseCopy(from, to, false, true);
 	}
 
 	static Transactions get() {
@@ -399,7 +400,7 @@ public class Transactions {
 	}
 
 	void cancelTimedOutTransactions() {
-		if (!ResourceUtilities.is(Transactions.class,
+		if (!Configuration.is(Transactions.class,
 				"cancelTimedoutTransactions")) {
 			return;
 		}
@@ -413,7 +414,7 @@ public class Transactions {
 					long age = System.currentTimeMillis()
 							- transaction.startTime;
 					if (!transaction.publishedLongRunningTxWarning
-							&& age > ResourceUtilities.getInteger(
+							&& age > Configuration.getInt(
 									Transaction.class, "warnAgeSecs")
 									* TimeConstants.ONE_SECOND_MS) {
 						transaction.publishedLongRunningTxWarning = true;

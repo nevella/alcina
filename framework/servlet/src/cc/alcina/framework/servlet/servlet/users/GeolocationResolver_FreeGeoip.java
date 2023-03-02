@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 // Gone, see freegeoip.com
@@ -14,7 +15,7 @@ public class GeolocationResolver_FreeGeoip implements GeolocationResolver {
 
 	@Override
 	public synchronized String getLocation(String ipAddress) {
-		if (ResourceUtilities.is(GeolocationResolver_FreeGeoip.class,
+		if (Configuration.is(GeolocationResolver_FreeGeoip.class,
 				"dummyResolver")) {
 			return "(dummy ip adress)";
 		}

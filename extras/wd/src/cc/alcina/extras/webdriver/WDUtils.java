@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.gwt.client.tour.TourManager;
@@ -309,10 +310,10 @@ public class WDUtils {
 			driver.manage().window().setPosition(new Point(0, 0));
 			Dimension maximizeTo = null;
 			Dimension defaultSize = new Dimension(
-					ResourceUtilities.getInteger(WDUtils.class, "width"),
-					ResourceUtilities.getInteger(WDUtils.class, "height"));
+					Configuration.getInt(WDUtils.class, "width"),
+					Configuration.getInt(WDUtils.class, "height"));
 			maximizeTo = defaultSize;
-			if (ResourceUtilities.is("maximizeToScreenSize")) {
+			if (Configuration.is("maximizeToScreenSize")) {
 				try {
 					maximizeTo = java.awt.Toolkit.getDefaultToolkit()
 							.getScreenSize();

@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -450,7 +451,7 @@ public class JobScheduler {
 							logger.warn(
 									"Aborting job {} (inactive client creator: {} - performer: {})",
 									job, job.getCreator(), job.getPerformer());
-							if (ResourceUtilities.is("abortDisabled")) {
+							if (Configuration.is("abortDisabled")) {
 								logger.warn(
 										"(Would abort job - but abortDisabled)");
 								return;
@@ -696,7 +697,7 @@ public class JobScheduler {
 		}
 
 		protected int getRetentionDays() {
-			return ResourceUtilities.getInteger(JobScheduler.class,
+			return Configuration.getInt(JobScheduler.class,
 					"defaultRetentionDays");
 		}
 

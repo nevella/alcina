@@ -13,7 +13,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base32;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 
 /*
  * https://www.javacodegeeks.com/2011/12/google-authenticator-using-it-with-your
@@ -22,7 +22,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 public class TwoFactorAuthentication {
 	public boolean checkCode(String secret, long code, long t)
 			throws NoSuchAlgorithmException, InvalidKeyException {
-		String codeOverride = ResourceUtilities.get("codeOverride");
+		String codeOverride = Configuration.get("codeOverride");
 		if (Ax.notBlank(codeOverride)
 				&& String.valueOf(code).equals(codeOverride)) {
 			return true;

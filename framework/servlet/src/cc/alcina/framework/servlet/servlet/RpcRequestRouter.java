@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationProxy;
 
@@ -28,7 +28,7 @@ public class RpcRequestRouter {
 
 	public String invokeAndEncodeResponse(Object target, RPCRequest rpcRequest)
 			throws SerializationException {
-		String requestHandlerUrl = ResourceUtilities.get(RpcRequestRouter.class,
+		String requestHandlerUrl = Configuration.get(RpcRequestRouter.class,
 				"requestHandlerUrl");
 		if (Ax.notBlank(requestHandlerUrl) && !forceServerHandler(rpcRequest)) {
 			try {
@@ -59,7 +59,7 @@ public class RpcRequestRouter {
 				if (method != null) {
 					RemoteInvocationProxy proxy = new RemoteInvocationProxy();
 					proxy.setRemoteAddress(
-							ResourceUtilities.get("requestHandlerUrl"));
+							Configuration.get("requestHandlerUrl"));
 					return proxy.createProxy(clazz);
 				}
 			}

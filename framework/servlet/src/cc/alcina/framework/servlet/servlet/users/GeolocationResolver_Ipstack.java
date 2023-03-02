@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SimpleHttp;
 
@@ -23,7 +24,7 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
 
 	@Override
 	public synchronized String getLocation(String ipAddress) {
-		if (ResourceUtilities.is(GeolocationResolver_Ipstack.class,
+		if (Configuration.is(GeolocationResolver_Ipstack.class,
 				"dummyResolver")) {
 			return "(dummy ip adress)";
 		}
