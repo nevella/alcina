@@ -419,6 +419,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		return this.initialised;
 	}
 
+	public boolean isSingleCommand() {
+		return launchConfiguration.noHttpServer
+				&& launchConfiguration.exitAfterCommand;
+	}
+
 	public void loadConfig() throws Exception {
 		// eclipse may be caching - read directly
 		if (consolePropertiesFile.exists()) {
