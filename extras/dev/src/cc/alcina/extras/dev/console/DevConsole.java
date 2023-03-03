@@ -54,9 +54,10 @@ import cc.alcina.framework.common.client.util.Diff;
 import cc.alcina.framework.common.client.util.Diff.Change;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.console.ArgParser;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -264,7 +265,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			String val = endRecordingSysout();
 			val = val.replaceAll("(https?://\\S+)", "<a href='$1'>$1</a>");
 			val = Ax.format("<pre>%s</pre>", val);
-			ResourceUtilities.writeStringToFile(val, this.outDumpFileName);
+			Io.write().string(val).toPath(this.outDumpFileName);
 			this.outDumpFileName = null;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -272,7 +273,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public void disablePathLinks(boolean disable) {
-		Runnable r = () -> ResourceUtilities.registerCustomProperty(
+		Runnable r = () -> Configuration.properties.set(
 				"MethodHandler_GET_RECORDS.disablePathLinks",
 				String.valueOf(disable));
 		if (disable) {
@@ -306,8 +307,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		setClipboardContents(transforms.toString());
 		File dumpFile = getDevFile("dumpTransforms.txt");
 		try {
-			ResourceUtilities.writeStringToFile(transforms.toString(),
-					dumpFile);
+			Io.write().string(transforms.toString()).toFile(dumpFile);
 			Ax.out("Transforms dumped to:\n\t%s", dumpFile.getPath());
 			return dumpFile.getPath();
 		} catch (Exception e) {
@@ -445,9 +445,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			strings = new DevConsoleStrings();
 		}
 		saveConfig();
-		if (props.useMountSshfsFs) {
-			devHelper.useMountSshfsFs();
-		}
 	}
 
 	@Override
@@ -565,8 +562,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			this.outDumpFileName = outDumpFileName;
 		} else {
 			try {
-				ResourceUtilities.writeStringToFile(endRecordingSysout(),
-						this.outDumpFileName);
+				Io.write().string(endRecordingSysout())
+						.toPath(this.outDumpFileName);
 				this.outDumpFileName = null;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -689,7 +686,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		if (isOsX()) {
 			try {
 				String path = "/tmp/pbcopy.txt";
-				ResourceUtilities.write(aString, path);
+				Io.write().string(aString).toPath(path);
 				new Shell().runBashScript(Ax.format("pbcopy < %s", path));
 			} catch (Exception e2) {
 				throw new WrappedRuntimeException(e2);
@@ -751,8 +748,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return JaxbUtils.xmlDeserialize(clazz,
-				ResourceUtilities.readFileToString(file));
+		return JaxbUtils.xmlDeserialize(clazz, Io.read().file(file).asString());
 	}
 
 	private boolean isOsX() {

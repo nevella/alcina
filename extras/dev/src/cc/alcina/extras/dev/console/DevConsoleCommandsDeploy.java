@@ -3,7 +3,6 @@ package cc.alcina.extras.dev.console;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.servlet.servlet.control.ControlServlet;
@@ -61,8 +60,7 @@ public class DevConsoleCommandsDeploy {
 			String servletPackage = argv[0];
 			String servletPackageBase = Configuration
 					.get(DevConsoleCommandsDeploy.class, "servletPackageBase");
-			String targetContainerName = ResourceUtilities
-					.get(DevConsoleCommandsDeploy.class, "targetContainerName");
+			String targetContainerName = Configuration.get(DevConsoleCommandsDeploy.class, "targetContainerName");
 			String targetDockerHostName = Configuration.get(
 					DevConsoleCommandsDeploy.class, "targetDockerHostName");
 			String targetDockerHostSshUser = Configuration.get(
@@ -100,8 +98,7 @@ public class DevConsoleCommandsDeploy {
 		}
 
 		private void execRemote(String cmd) throws Exception {
-			String targetContainerName = ResourceUtilities
-					.get(DevConsoleCommandsDeploy.class, "targetContainerName");
+			String targetContainerName = Configuration.get(DevConsoleCommandsDeploy.class, "targetContainerName");
 			String targetDockerHostName = Configuration.get(
 					DevConsoleCommandsDeploy.class, "targetDockerHostName");
 			String targetDockerHostSshUser = Configuration.get(

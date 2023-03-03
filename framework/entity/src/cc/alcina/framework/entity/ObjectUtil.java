@@ -1,6 +1,10 @@
 package cc.alcina.framework.entity;
 
 import java.beans.PropertyDescriptor;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -8,6 +12,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +23,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalCollection;
+import cc.alcina.framework.entity.projection.GraphProjection;
 
 public class ObjectUtil {
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
@@ -177,6 +183,63 @@ public class ObjectUtil {
 				result.add(field);
 			}
 			c = c.getSuperclass();
+		}
+		return result;
+	}
+
+	public static void setField(Object object, String fieldPath,
+			Object newValue) throws Exception {
+		Object cursor = object;
+		Field field = null;
+		String[] segments = fieldPath.split("\\.");
+		for (int idx = 0; idx < segments.length; idx++) {
+			String segment = segments[idx];
+			field = SEUtilities.getFieldByName(cursor.getClass(), segment);
+			field.setAccessible(true);
+			if (idx < segments.length - 1) {
+				cursor = field.get(cursor);
+			} else {
+				field.set(cursor, newValue);
+			}
+		}
+	}
+
+	public static String objectOrPrimitiveToString(Object object) {
+		if (object == null) {
+			return null;
+		}
+		return object.toString();
+	}
+
+	public static Map<String, String> primitiveFieldValues(Object t) {
+		try {
+			Map<String, String> map = new LinkedHashMap<>();
+			List<Field> fields = getFieldsForCopyOrLog(t, false,
+					null);
+			for (Field field : fields) {
+				if (GraphProjection.isPrimitiveOrDataClass(field.getType())) {
+					Object value = field.get(t);
+					map.put(field.getName(), String.valueOf(value));
+				}
+			}
+			return map;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static Object serialClone(Object bean) {
+		Object result = null;
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream out = new ObjectOutputStream(baos);
+			out.writeObject(bean);
+			out.close();
+			ObjectInputStream in = new ObjectInputStream(
+					new ByteArrayInputStream(baos.toByteArray()));
+			result = in.readObject();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 		return result;
 	}

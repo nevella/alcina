@@ -55,7 +55,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
@@ -112,7 +112,7 @@ public class ConvertToProxiesPerformer
 		File outFile = SEUtilities.getChildFile(packageFolder,
 				declaration.getNameAsString() + ".java");
 		try {
-			ResourceUtilities.writeStringToFile(unit.toString(), outFile);
+			Io.write().string(unit.toString()).toFile(outFile);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -218,7 +218,7 @@ public class ConvertToProxiesPerformer
 						if (f.getName().contains("ApdmFileImportUtil")) {
 							int debug = 3;
 						}
-						String source = ResourceUtilities.read(f);
+						String source = Io.read().file(f).asString();
 						if (source
 								.startsWith("package " + task.outputPackage)) {
 							return false;

@@ -6,7 +6,7 @@ import java.util.Arrays;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class FsStringCache {
 	private File root;
@@ -28,13 +28,13 @@ public class FsStringCache {
 		if (!cacheFile.exists()) {
 			try {
 				String value = contentMapper.apply(content);
-				ResourceUtilities.write(value, cacheFile);
+				Io.write().string(value).toFile(cacheFile);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
 		} else {
 		}
-		return ResourceUtilities.read(cacheFile);
+		return Io.read().file(cacheFile).asString();
 	}
 
 	public void invalidate(String path) {

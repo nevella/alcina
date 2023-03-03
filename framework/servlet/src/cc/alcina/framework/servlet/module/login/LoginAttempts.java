@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.LoginAttempt;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
@@ -24,8 +23,7 @@ public class LoginAttempts {
 				loginModel.loginBean.getUserName().toLowerCase());
 		int maxAttempts = Configuration.getInt(LoginAttempts.class,
 				"maxAttempts");
-		int maxAttemptsPeriodMins = ResourceUtilities
-				.getInteger(LoginAttempts.class, "maxAttemptsPeriodMins");
+		int maxAttemptsPeriodMins = Configuration.getInt(LoginAttempts.class, "maxAttemptsPeriodMins");
 		return attempts.stream()
 				.sorted(Entity.EntityComparator.REVERSED_INSTANCE)
 				.limit(maxAttempts).filter(a -> !a.isSuccess())

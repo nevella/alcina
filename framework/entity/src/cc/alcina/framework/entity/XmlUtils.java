@@ -666,14 +666,12 @@ public class XmlUtils {
 
 	public static Source interpolateStreamSource(InputStream trans) {
 		try {
-			String xsl = ResourceUtilities.readStreamToString(trans);
+			String xsl = Io.read().inputStream(trans).asString();
 			Pattern p = Pattern.compile("<\\?import \"res:/(.+?)\"\\?>");
 			Matcher m = p.matcher(xsl);
 			StringBuffer out = new StringBuffer();
 			while (m.find()) {
-				String toImport = ResourceUtilities
-						.readClassPathResourceAsString(XmlUtils.class,
-								m.group(1));
+				String toImport = Io.read().resource(m.group(1)).asString();
 				m.appendReplacement(out, Matcher.quoteReplacement(toImport));
 			}
 			m.appendTail(out);
@@ -686,7 +684,7 @@ public class XmlUtils {
 				out = new StringBuffer(streamXML(doc.domDoc()));
 			}
 			return new StreamSource(
-					ResourceUtilities.writeStringToInputStream(out.toString()));
+					Io.read().string(out.toString()).asInputStream());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -975,20 +973,19 @@ public class XmlUtils {
 
 	public static void logToFile(Node n) throws Exception {
 		new File("/tmp/log").mkdirs();
-		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/log/log.xml");
-		ResourceUtilities.writeStringToFile(streamXML(n), "/tmp/log/log.html");
+		Io.write().string(streamXML(n)).toPath("/tmp/log/log.xml");
+		Io.write().string(streamXML(n)).toPath("/tmp/log/log.html");
 	}
 
 	public static void logToFilePretty(Node n) throws Exception {
 		if (n instanceof DocumentFragment) {
 			new File("/tmp/log").mkdirs();
-			ResourceUtilities.writeStringToFile(
-					prettyPrintWithDOM3LS((DocumentFragment) n),
-					"/tmp/log/log.xml");
+			Io.write().string(prettyPrintWithDOM3LS((DocumentFragment) n))
+					.toPath("/tmp/log/log.xml");
 		} else {
 			new File("/tmp/log").mkdirs();
-			ResourceUtilities.writeStringToFile(prettyPrintWithDOM3LSNode(n),
-					"/tmp/log/log.xml");
+			Io.write().string(prettyPrintWithDOM3LSNode(n))
+					.toPath("/tmp/log/log.xml");
 		}
 	}
 

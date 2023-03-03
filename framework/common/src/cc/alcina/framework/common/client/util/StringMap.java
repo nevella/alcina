@@ -16,6 +16,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 
 	public static final StringMap EMPTY_PROPS = new StringMap();
 
+	// FIXME - ru - check usages
 	public static StringMap fromKvStringList(String list) {
 		return fromKvStringList(list, true);
 	}

@@ -403,7 +403,7 @@ public class EncryptionUtils {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
 		GZIPInputStream gzis = new GZIPInputStream(bais);
-		ResourceUtilities.writeStreamToStream(gzis, baos);
+		Io.Streams.copy(gzis, baos);
 		return baos.toByteArray();
 	}
 

@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.stat.DevStats;
 import cc.alcina.framework.entity.stat.DevStats.KeyedStat;
 import cc.alcina.framework.entity.stat.DevStats.LogProvider;
@@ -80,8 +80,7 @@ public class TaskReportDevMetrics extends AbstractTaskPerformer {
 	@Override
 	protected void run0() throws Exception {
 		DomDocument doc = DomDocument.basicHtmlDoc();
-		String css = ResourceUtilities
-				.readRelativeResource("res/TaskReportDevMetrics.css");
+		String css = Io.read().resource("res/TaskReportDevMetrics.css").asString();
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		List<ILogRecord> records = Registry.impl(DevMetricLogSearcher.class)
 				.search(this);

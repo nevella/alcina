@@ -5,9 +5,8 @@ import java.net.ConnectException;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SimpleHttp;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -20,11 +19,12 @@ public class ClassMetaInvoker {
 				.withContextClassloader(getClass().getClassLoader())
 				.call(() -> {
 					try {
-						String url = Configuration.get(
-								ClassMetaInvoker.class, "remoteScannerUrl");
-						String json = ResourceUtilities.readUrlAsStringWithPost(
-								url, JacksonUtils.serialize(metaRequest),
-								new StringMap());
+						String url = Configuration.get(ClassMetaInvoker.class,
+								"remoteScannerUrl");
+						String json = new SimpleHttp(url)
+								.withPostBody(
+										JacksonUtils.serialize(metaRequest))
+								.asString();
 						return JacksonUtils.deserialize(json,
 								ClassMetaResponse.class);
 					} catch (Exception e) {

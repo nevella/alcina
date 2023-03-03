@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.domain.LockUtils;
 import cc.alcina.framework.entity.persistence.domain.LockUtils.ClassStringKeyLock;
 import cc.alcina.framework.entity.util.SerializationStrategy.SerializationStrategy_Kryo;
@@ -146,13 +146,12 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 			File cacheFile = getCacheFile(path);
 			byte[] updated = serializationStrategy.serializeToByteArray(t);
 			if (cacheFile.exists()) {
-				byte[] existing = ResourceUtilities
-						.readFileToByteArray(cacheFile);
+				byte[] existing = Io.read().file(cacheFile).asBytes();
 				if (Arrays.equals(existing, updated)) {
 					return false;
 				}
 			}
-			ResourceUtilities.writeBytesToFile(updated, cacheFile);
+			Io.write().bytes(updated).toFile(cacheFile);
 			return true;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

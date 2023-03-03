@@ -42,7 +42,6 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
@@ -409,9 +408,9 @@ public class JobScheduler {
 		/*
 		 * handle flaky health/instances
 		 */
-		int minimumVisibleInstancesForOrphanProcessing = ResourceUtilities
-				.getInteger(JobScheduler.class,
-						"minimumVisibleInstancesForOrphanProcessing");
+		int minimumVisibleInstancesForOrphanProcessing = Configuration.getInt(
+				JobScheduler.class,
+				"minimumVisibleInstancesForOrphanProcessing");
 		if (activeInstances
 				.size() < minimumVisibleInstancesForOrphanProcessing) {
 			logger.info(
@@ -420,8 +419,7 @@ public class JobScheduler {
 					minimumVisibleInstancesForOrphanProcessing);
 			return;
 		}
-		String visibleInstanceRegex = ResourceUtilities
-				.get("visibleInstanceRegex");
+		String visibleInstanceRegex = Configuration.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities
 				.toOldDate(LocalDateTime.now().minusMinutes(0));
 		Date abortTime = new Date();

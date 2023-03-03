@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class XhrTcpSession {
 	Socket socket;
@@ -56,8 +56,8 @@ public class XhrTcpSession {
 				throw new UnsupportedOperationException();
 			}
 		}
-		String payload = ResourceUtilities
-				.readStreamToString(request.getInputStream());
+		String payload = Io.read().inputStream(request.getInputStream())
+				.asString();
 		byte[] bytes = Base64.getDecoder().decode(payload);
 		socket.getOutputStream().write(bytes);
 		// Ax.out(">>> to codeserver - %s bytes", bytes.length);

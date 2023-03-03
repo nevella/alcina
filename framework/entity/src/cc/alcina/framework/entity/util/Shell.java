@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 
 public class Shell {
@@ -102,7 +102,7 @@ public class Shell {
 	public File launchBashScript(String script) throws Exception {
 		File tmp = File.createTempFile("shell", getScriptExtension());
 		tmp.deleteOnExit();
-		ResourceUtilities.writeStringToFile(script, tmp);
+		Io.write().string(script).toFile(tmp);
 		launchProcess(new String[] { "/bin/bash", tmp.getPath() },
 				s -> s.length(), s -> s.length());
 		return tmp;
@@ -144,7 +144,7 @@ public class Shell {
 			throws Exception {
 		File tmp = File.createTempFile("shell", getScriptExtension());
 		tmp.deleteOnExit();
-		ResourceUtilities.writeStringToFile(script, tmp);
+		Io.write().string(script).toFile(tmp);
 		Output output = runShell(tmp.getPath(), "/bin/bash");
 		tmp.delete();
 		return output;
@@ -242,7 +242,7 @@ public class Shell {
 		return new Output(outputBuffer.getStreamResult(),
 				errorBuffer.getStreamResult(), timedOut, process.exitValue(),
 				Ax.isBlank(logToFile) ? null
-						: ResourceUtilities.read(logToFile));
+						: Io.read().path(logToFile).asString());
 	}
 
 	private String getScriptExtension() {

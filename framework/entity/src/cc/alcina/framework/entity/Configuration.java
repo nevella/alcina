@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -7,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
@@ -16,11 +18,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -34,38 +34,43 @@ import cc.alcina.framework.entity.projection.GraphProjection;
  * Class.simpleClassName to SeUtilities.getNestedSimpleName
  *
  * ... with a regression test
+ *
+ * FIXME ru iterate all classes, note if superfluous classref
  */
 public class Configuration {
-	private final static Properties properties = new Properties();
+	public final static Properties properties = new Properties();
 
 	public static String get(Class clazz, String key) {
 		return properties.get(new Key(clazz, key));
 	}
 
 	public static String get(String key) {
-		String value = get(StackWalker
+		Class clazz = StackWalker
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass(), key);
-		return value;
+				.getCallerClass();
+		return get(clazz, key);
+	}
+
+	public static int getInt(Class clazz, String key) {
+		return Integer.parseInt(get(clazz, key));
 	}
 
 	public static int getInt(String key) {
-		String value = get(StackWalker
+		Class clazz = StackWalker
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass(), key);
-		return Integer.parseInt(value);
+				.getCallerClass();
+		return getInt(clazz, key);
 	}
 
 	public static long getLong(String key) {
-		String value = get(StackWalker
+		Class clazz = StackWalker
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass(), key);
-		return Long.parseLong(value);
+				.getCallerClass();
+		return Long.parseLong(get(clazz, key));
 	}
 
 	public static boolean has(Class clazz, String keyPart) {
-		String key = clazz.getSimpleName() + "." + keyPart;
-		return ResourceUtilities.isDefined(key);
+		return new Key(clazz, keyPart).has();
 	}
 
 	public static boolean is(Class clazz, String key) {
@@ -74,10 +79,10 @@ public class Configuration {
 	}
 
 	public static boolean is(String key) {
-		String value = get(StackWalker
+		Class clazz = StackWalker
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass(), key);
-		return Boolean.valueOf(value);
+				.getCallerClass();
+		return is(clazz, key);
 	}
 
 	public static Key key(Class clazz, String keyPart) {
@@ -88,10 +93,6 @@ public class Configuration {
 		return new Key(StackWalker
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 				.getCallerClass(), keyPart);
-	}
-
-	public static Properties properties() {
-		return properties;
 	}
 
 	/*
@@ -181,9 +182,7 @@ public class Configuration {
 	 *
 	 */
 	public static class Properties {
-		static Logger logger = LoggerFactory.getLogger(ResourceUtilities.class);
-
-		public final Topic<Void> propertiesInvalidated = Topic.create();
+		public final Topic<Void> invalidated = Topic.create();
 
 		private Map<String, PropertyValues> keyValues = new ConcurrentHashMap<>();
 
@@ -214,6 +213,10 @@ public class Configuration {
 			return propertyValues == null ? null : propertyValues.resolvedValue;
 		}
 
+		public boolean has(String key) {
+			return keyValues.containsKey(key);
+		}
+
 		public Stream<String> keys() {
 			return keyValues.keySet().stream();
 		}
@@ -227,10 +230,32 @@ public class Configuration {
 			});
 		}
 
+		public void register(InputStream ios) {
+			try {
+				java.util.Properties p = new java.util.Properties();
+				p.load(ios);
+				ios.close();
+				for (Entry<Object, Object> entry : p.entrySet()) {
+					Object key = entry.getKey();
+					Object value = entry.getValue();
+					if (!(key instanceof String)
+							|| !(value instanceof String)) {
+						continue;
+					}
+					set0((String) key, (String) value);
+				}
+				invalidate();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		public String set(Class clazz, String key, String value) {
+			return set(new Key(clazz, key).toString(), value);
+		}
+
 		public String set(String key, String value) {
-			Preconditions
-					.checkState(!immutableCustomProperties.containsKey(key));
-			String prior = getSet(SystemSet.custom).get().put(key, value);
+			String prior = set0(key, value);
 			invalidate();
 			return prior;
 		}
@@ -251,6 +276,12 @@ public class Configuration {
 			// TODO Auto-generated method stub
 		}
 
+		private String set0(String key, String value) {
+			Preconditions
+					.checkState(!immutableCustomProperties.containsKey(key));
+			return getSet(SystemSet.custom).get().put(key, value);
+		}
+
 		void addSet(SystemSet systemSet) {
 			Preconditions.checkArgument(getSet(systemSet).isEmpty());
 			PropertySet set = new PropertySet(systemSet);
@@ -263,6 +294,13 @@ public class Configuration {
 			if (keyValues.containsKey(stringKey)) {
 				return keyValues.get(stringKey).resolvedValue;
 			} else {
+				if (key.clazz != null) {
+					Class superclass = key.clazz.getSuperclass();
+					if (superclass != null && superclass != Object.class) {
+						return get(new Key(superclass, key.keyPart)
+								.withContextOverride(key.contextOverride));
+					}
+				}
 				return null;
 			}
 		}

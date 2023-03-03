@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.task;
 
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskSetProperty extends ServerTask {
@@ -18,7 +18,7 @@ public class TaskSetProperty extends ServerTask {
 
 	@Override
 	public void run() throws Exception {
-		String existing = ResourceUtilities.set(key, value);
+		String existing = Configuration.properties.set(key, value);
 		logger.info("TaskSetProperty - {} - '{}' => '{}'", key, existing,
 				value);
 	}

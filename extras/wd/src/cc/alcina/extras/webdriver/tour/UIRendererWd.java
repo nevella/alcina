@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.gwt.client.tour.Tour;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
@@ -198,13 +198,10 @@ public class UIRendererWd extends UIRenderer {
 	protected void startTour(TourManager tourManager) {
 		popups.clear();
 		this.tourManager = tourManager;
-		String js = ResourceUtilities
-				.readRelativeResource("res/UIRendererWd.js");
-		String css = ResourceUtilities
-				.readRelativeResource("res/UIRendererWd.css");
+		String js = Io.read().resource("res/UIRendererWd.js").asString();
+		String css = Io.read().resource("res/UIRendererWd.css").asString();
 		if (managerWd().hidePopups) {
-			css += "\n" + ResourceUtilities
-					.readRelativeResource("res/UIRendererWd.hidePopups.css");
+			css += "\n" + Io.read().resource("res/UIRendererWd.hidePopups.css").asString();
 		}
 		String cmd = Ax.format(
 				"var __UIRendererWd_css=\"%s\";\n" + "%s\n"

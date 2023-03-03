@@ -13,7 +13,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import cc.alcina.extras.dev.console.DevConsoleCommand;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
@@ -48,7 +48,7 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 		}
 		FilterArgvParam argvParam = new FilterArgvParam(argv);
 		String specPath = argvParam.value;
-		String specXml = ResourceUtilities.read(specPath);
+		String specXml = Io.read().path(specPath).asString();
 		spec = JaxbUtils.xmlDeserialize(Spec.class, specXml);
 		TemplateGenerator gen = new TemplateGenerator();
 		gen.generateLookup();
@@ -168,8 +168,8 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 		private String basePackageName;
 
 		public void generateFile(GeneratedUnitType unitType) {
-			String template = ResourceUtilities
-					.readRelativeResource(unitType.templateRelativePath());
+			String template = Io.read()
+					.resource(unitType.templateRelativePath()).asString();
 			String out = replaceLookup.replaceSubstrings(template);
 			String outPath = unitType.outputPath(this);
 			outPath = outPath.replace("/persistent/", "/");
@@ -178,7 +178,7 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 			if (file.exists()) {
 				Ax.out("Already written: %s file: \n\t%s", unitType, outPath);
 			} else {
-				ResourceUtilities.write(out, outPath);
+				Io.write().string(out).toPath(outPath);
 				Ax.out("Wrote %s file: \n\t%s", unitType, outPath);
 			}
 		}

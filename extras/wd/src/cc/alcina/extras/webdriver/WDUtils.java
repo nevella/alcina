@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.gwt.client.tour.TourManager;
 
@@ -620,7 +620,7 @@ public class WDUtils {
 				.getScreenshotAs(OutputType.BYTES);
 		try {
 			File dataFile = File.createTempFile("webdriver-err-", ".png");
-			ResourceUtilities.writeBytesToFile(bytes, dataFile);
+			Io.write().bytes(bytes).toFile(dataFile);
 			WDToken token = WDManager.contextToken();
 			if (token != null) {
 				token.getWriter().write(

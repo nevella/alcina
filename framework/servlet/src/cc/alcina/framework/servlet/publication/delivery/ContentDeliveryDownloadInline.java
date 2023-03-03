@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_DOWNLOAD_PREVIEW;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.servlet.DownloadServlet;
@@ -31,7 +31,7 @@ public class ContentDeliveryDownloadInline implements ContentDelivery {
 		}
 		File file = File.createTempFile(suggestedFileName, "." + suffix);
 		file.deleteOnExit();
-		ResourceUtilities.writeStreamToStream(stream,
+		Io.Streams.copy(stream,
 				new FileOutputStream(file));
 		DownloadItem item = new DownloadServlet.DownloadItem(mimeType, null,
 				file.getPath());

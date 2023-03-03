@@ -52,7 +52,6 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
@@ -1288,8 +1287,7 @@ public class JobDomain {
 			}
 
 			class QueuePriorityComparator implements Comparator<String> {
-				List<String> ordered = Arrays.asList(ResourceUtilities
-						.get(JobDomain.class, "consistencyPriorityOrder")
+				List<String> ordered = Arrays.asList(Configuration.get(JobDomain.class, "consistencyPriorityOrder")
 						.split(","));
 
 				@Override

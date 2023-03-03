@@ -70,7 +70,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -196,8 +195,8 @@ public class JobRegistry {
 			if (activeInstances.contains(ClientInstance.self())) {
 				return false;
 			}
-			int minimumVisibleInstancesForOrphanProcessing = ResourceUtilities
-					.getInteger(JobScheduler.class,
+			int minimumVisibleInstancesForOrphanProcessing = Configuration
+					.getInt(JobScheduler.class,
 							"minimumVisibleInstancesForOrphanProcessing");
 			if (activeInstances
 					.size() < minimumVisibleInstancesForOrphanProcessing) {
@@ -554,7 +553,8 @@ public class JobRegistry {
 					.forEach((k, v) -> LooseContext.set(k, v));
 			contextAwaiter.latch.countDown();
 		}
-		boolean taskEnabled = !Configuration.isDefined(Ax.format("%s.disabled", job.getTaskClassName()))
+		boolean taskEnabled = !Configuration.properties
+				.has(Ax.format("%s.disabled", job.getTaskClassName()))
 				&& !Configuration.is("allJobsDisabled");
 		try {
 			LooseContext.push();

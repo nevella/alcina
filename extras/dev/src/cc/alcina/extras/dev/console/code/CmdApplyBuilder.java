@@ -17,7 +17,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 
 public class CmdApplyBuilder extends DevConsoleCommand {
@@ -57,7 +57,7 @@ public class CmdApplyBuilder extends DevConsoleCommand {
 				.findFirst().get();
 		BuilderBuilder builderBuilder = new BuilderBuilder(typeDeclaration);
 		builderBuilder.addWiths();
-		ResourceUtilities.write(unit.toString(), file);
+		Io.write().string(unit.toString()).toFile(file);
 		return "hyup";
 	}
 

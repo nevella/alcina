@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
@@ -156,15 +156,15 @@ public class Gallery {
 	}
 
 	private void initialise() {
-		base = new File(
-				Ax.format("%s/%s/%s", Configuration.get("defaultLocalPath"),
-						appName, userAgentType));
+		base = new File(Ax.format("%s/%s/%s",
+				Configuration.get("defaultLocalPath"), appName, userAgentType));
 		SEUtilities.deleteDirectory(base);
 		base.mkdirs();
 		if (this.configurationUrl != null) {
 			try {
-				String configurationXml = ResourceUtilities
-						.readStreamToString(this.configurationUrl.openStream());
+				String configurationXml = Io.read()
+						.inputStream(this.configurationUrl.openStream())
+						.asString();
 				this.galleryConfiguration = JaxbUtils.xmlDeserialize(
 						GalleryConfiguration.class, configurationXml);
 				configuration = this.galleryConfiguration.find(appName);
@@ -208,8 +208,7 @@ public class Gallery {
 
 	private void snap0(String snapName) {
 		try {
-			Thread.sleep(Configuration.getInt(Gallery.class,
-					"preSnapPause"));
+			Thread.sleep(Configuration.getInt(Gallery.class, "preSnapPause"));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -218,7 +217,7 @@ public class Gallery {
 		RemoteWebDriver remoteDriver = (RemoteWebDriver) driver;
 		try {
 			byte[] bytes = remoteDriver.getScreenshotAs(OutputType.BYTES);
-			ResourceUtilities.writeBytesToFile(bytes, toFileImage);
+			Io.write().bytes(bytes).toFile(toFileImage);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -227,8 +226,7 @@ public class Gallery {
 		String pageSource = (String) remoteDriver
 				.executeScript("return document.documentElement.outerHTML;");
 		try {
-			Document w3cdoc = ResourceUtilities
-					.loadHtmlDocumentFromString(pageSource, false);
+			Document w3cdoc = Io.read().string(pageSource).asDocument();
 			DomDocument doc = new DomDocument(w3cdoc);
 			doc.xpath("//script ").forEach(DomNode::removeFromParent);
 			List<DomNode> stylesheetNodes = doc
@@ -238,8 +236,7 @@ public class Gallery {
 				if (href.startsWith("/")) {
 					String resolved = base + href;
 					try {
-						String contents = ResourceUtilities
-								.readUrlAsString(resolved);
+						String contents = Io.read().url(resolved).asString();
 						node.builder().tag("style").text(contents)
 								.insertAfterThis();
 					} catch (Exception e) {
@@ -248,7 +245,7 @@ public class Gallery {
 					node.removeFromParent();
 				}
 			}
-			ResourceUtilities.write(doc.fullToString(), toFileHtml);
+			Io.write().string(doc.fullToString()).toFile(toFileHtml);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

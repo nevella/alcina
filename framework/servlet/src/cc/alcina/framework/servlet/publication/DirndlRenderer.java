@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -61,8 +61,8 @@ public class DirndlRenderer {
 		DomNode div = doc.html().body().builder().tag("div").append();
 		div.setInnerXml(outerHtml);
 		stylePaths.forEach(p -> {
-			String style = ResourceUtilities.read(p.styleRelativeClass,
-					p.styleRelativeFilename);
+			String style = Io.read().relativeTo(p.styleRelativeClass)
+					.resource(p.styleRelativeFilename).asString();
 			if (Ax.notBlank(style)) {
 				doc.html().appendStyleNode(style);
 			}

@@ -53,7 +53,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.console.FilterArgvParam;
@@ -439,8 +439,7 @@ public class DevConsoleDebugCommands {
 								"problem deserializing clientlogrecord:\n%s\n",
 								original);
 						e.printStackTrace();
-						if (Configuration.is(
-								CommonRemoteServiceServlet.class,
+						if (Configuration.is(CommonRemoteServiceServlet.class,
 								"throwLogClientRecordExceptions")) {
 							throw new WrappedRuntimeException(e);
 						}
@@ -488,7 +487,7 @@ public class DevConsoleDebugCommands {
 			Pattern[] trials = browser
 					.getRenderingEngine() == RenderingEngine.GECKO ? trialsFF
 							: trialsNonFF;
-			String moduleContents = ResourceUtilities.readFileToString(module);
+			String moduleContents = Io.read().file(module).asString();
 			// Matcher m2 = stp.matcher(stf);
 			LinkedHashMap<String, String> km = new LinkedHashMap<String, String>();
 			LinkedHashMap<String, String> stm = new LinkedHashMap<String, String>();
@@ -610,10 +609,7 @@ public class DevConsoleDebugCommands {
 									.entrySet()) {
 								List<String> result = new ArrayList<String>();
 								engine.put("result", result);
-								String script = ResourceUtilities
-										.readStreamToString(
-												getClass().getResourceAsStream(
-														"beautify.js"));
+								String script = Io.read().resource("beautify.js").asString();
 								// String eval = String.format(
 								// "%s\nvar
 								// js='%s';result.add(js_beautify(js));",
@@ -665,8 +661,7 @@ public class DevConsoleDebugCommands {
 			for (ClientLogRecord clientLogRecord : clrs) {
 				if (clientLogRecord.getMessage()
 						.contains("Localdom unable to parse issue debug")) {
-					ResourceUtilities.logToFile(clientLogRecord.getMessage(),
-							DevConsoleDebugCommands2.LOCAL_DOM_EXCEPTION_LOG_PATH);
+					Io.log().toFile(clientLogRecord.getMessage());
 					// just get the first
 					break;
 				}
@@ -727,7 +722,7 @@ public class DevConsoleDebugCommands {
 			Pattern modP = Pattern
 					.compile(String.format("function %s\\(.+", rgxfn));
 			for (File f : jsfDir.listFiles()) {
-				String fileContents = ResourceUtilities.readFileToString(f);
+				String fileContents = Io.read().file(f).asString();
 				int indexOf = fileContents
 						.indexOf(String.format("function %s(", fn));
 				Matcher modM = modP.matcher(fileContents);
@@ -741,7 +736,7 @@ public class DevConsoleDebugCommands {
 		private StringMap getDefJsLines(int lineNumber) throws Exception {
 			StringMap jsLines = new StringMap();
 			for (File f : jsfDir.listFiles()) {
-				String[] lines = ResourceUtilities.readFileToString(f)
+				String[] lines = Io.read().file(f).asString()
 						.split("\n");
 				if (lines.length > lineNumber) {
 					jsLines.put(f.getName(), lines[lineNumber]);
@@ -805,7 +800,7 @@ public class DevConsoleDebugCommands {
 				}
 			} else {
 				record = Registry.impl(ILogRecord.class);
-				record.setText(ResourceUtilities.readFileToString(id));
+				record.setText(Io.read().path(id).asString());
 			}
 			lastRecord = record;
 			FilterArgvParam param = new FilterArgvParam(argv, "-o");

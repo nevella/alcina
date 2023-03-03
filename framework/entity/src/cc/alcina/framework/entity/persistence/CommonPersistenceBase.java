@@ -67,7 +67,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainLinker;
 import cc.alcina.framework.entity.persistence.metric.InternalMetric;
@@ -215,14 +215,13 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		try {
 			// try WF24 path
 			String fieldPath = "jdbcConnectionAccess.connectionProvider.dataSource.delegate.cm.pool.mcf.connectionURL";
-			ResourceUtilities.setField(getEntityManager().getDelegate(),
-					fieldPath, newUrl);
+			ObjectUtil.setField(getEntityManager().getDelegate(), fieldPath,
+					newUrl);
 		} catch (Exception e) {
 			// try legacy WF8 path
 			String fieldPath = "emf.sessionFactory.jdbcServices.connectionProvider.dataSource.cm.pool.mcf.connectionURL";
 			try {
-				ResourceUtilities.setField(getEntityManager(), fieldPath,
-						newUrl);
+				ObjectUtil.setField(getEntityManager(), fieldPath, newUrl);
 			} catch (Exception e2) {
 				throw new WrappedRuntimeException(e2);
 			}
@@ -239,8 +238,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			AppPersistenceBase.checkNotReadOnly();
 			T instance = Reflections.newInstance(clazz);
 			getEntityManager().persist(instance);
-			Reflections.at(instance).property(key).set(instance,
-					value);
+			Reflections.at(instance).property(key).set(instance, value);
 			return instance;
 		} else {
 			Preconditions.checkState(list.size() == 1);
@@ -416,7 +414,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			getPersistentTransformRequests(long fromId, long toId,
 					Collection<Long> specificIds, boolean mostRecentOnly,
 					boolean populateTransformSourceObjects, Logger logger) {
-		boolean logTransformReadMetrics = Configuration.is(CommonPersistenceBase.class, "logTransformReadMetrics");
+		boolean logTransformReadMetrics = Configuration
+				.is(CommonPersistenceBase.class, "logTransformReadMetrics");
 		Query query = null;
 		List<DomainTransformRequestPersistent> dtrps = null;
 		if (mostRecentOnly) {

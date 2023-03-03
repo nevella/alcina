@@ -45,7 +45,7 @@ import com.google.gwt.util.tools.Utility;
 import com.google.gwt.util.tools.shared.StringUtils;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 /**
  * This linker uses an iframe to hold the code and a script tag to download the
@@ -670,10 +670,10 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
 				"common/FreeValueMessage.js", "common/WebSocketTransport.js",
 				"common/WebSocketTransportClient.js" };
 		for (String fn : scriptNames) {
-			String scriptContents = ResourceUtilities
-					.readClassPathResourceAsString(CrossSiteIframeLinker.class,
-							Ax.format("/cc/alcina/framework/jscodeserver/js/%s",
-									fn));
+			String scriptContents = Io.read()
+					.resource(Ax.format(
+							"/cc/alcina/framework/jscodeserver/js/%s", fn))
+					.asString();
 			buffer.append("\n");
 			buffer.append(scriptContents);
 			buffer.append("\n");
@@ -682,9 +682,9 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
 		 * Add the WebSocketTransport.js to the root
 		 */
 		{
-			String script = ResourceUtilities.readClassPathResourceAsString(
-					CrossSiteIframeLinker.class,
-					"/cc/alcina/framework/jscodeserver/js/common/WebSocketTransport.js");
+			String script = Io.read().resource(
+					"/cc/alcina/framework/jscodeserver/js/common/WebSocketTransport.js")
+					.asString();
 			EmittedArtifact devArtifact = emitString(logger, script,
 					"WebSocketTransport.js", lastModified);
 			artifacts.add(devArtifact);

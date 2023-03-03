@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
@@ -436,8 +436,7 @@ public class DevConsoleCommandTransforms {
 					List<DomainTransformEvent> dtes = new RsrowToDteConverter(
 							true).convert(rs);
 					String outPath = "/tmp/transforms.txt";
-					ResourceUtilities.writeStringToFile(dtes.toString(),
-							outPath);
+					Io.write().string(dtes.toString()).toPath(outPath);
 					Ax.out("wrote %s transforms to \n\t%s", dtes.size(),
 							outPath);
 				} else if (valuesOnly) {
@@ -462,7 +461,7 @@ public class DevConsoleCommandTransforms {
 					SqlUtils.dumpResultSet(rs, formatters);
 					String sysout = console.endRecordingSysout();
 					String outPath = "/tmp/transforms-table.txt";
-					ResourceUtilities.writeStringToFile(sysout, outPath);
+					Io.write().string(sysout).toPath(outPath);
 				}
 				rs.close();
 				ps.close();
@@ -761,7 +760,7 @@ public class DevConsoleCommandTransforms {
 			int processedIndex = 0;
 			for (; processedIndex < files.size();) {
 				File f = files.get(processedIndex++);
-				String ser = ResourceUtilities.readFileToStringGz(f);
+				String ser = Io.read().file(f).asString();
 				DeltaApplicationRecord wrapper = new DeltaApplicationRecordSerializerImpl()
 						.read(ser);
 				// no uuid, this is dev code and will never be committed

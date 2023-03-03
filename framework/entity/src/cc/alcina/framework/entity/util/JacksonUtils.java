@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class JacksonUtils {
 	public static ObjectMapper defaultGraphMapper() {
@@ -48,7 +48,7 @@ public class JacksonUtils {
 	}
 
 	public static <T> T deserializeFromFile(File file, Class<T> clazz) {
-		return deserialize(ResourceUtilities.read(file), clazz);
+		return deserialize(Io.read().file(file).asString(), clazz);
 	}
 
 	public static <T> T deserializeNoTypes(String json, Class<T> clazz) {
@@ -117,10 +117,10 @@ public class JacksonUtils {
 	public static void serializeToFile(Object object, File file) {
 		String json = serialize(object);
 		if (file.exists()
-				&& Objects.equals(ResourceUtilities.read(file), json)) {
+				&& Objects.equals(Io.read().file(file).asString(), json)) {
 			// noop
 		} else {
-			ResourceUtilities.write(json, file);
+			Io.write().string(json).toFile(file);
 		}
 	}
 

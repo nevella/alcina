@@ -4,7 +4,7 @@ import java.io.File;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.AnalyseThreadDump;
 
 public class CmdAnalyseStackTrace extends DevConsoleCommand {
@@ -36,7 +36,7 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 		String rpi = null;
 		File file = new File("/tmp/stacktrace.txt");
 		if (file.exists()) {
-			rpi = ResourceUtilities.read(file.getPath());
+			rpi = Io.read().path(file.getPath()).asString();
 		} else {
 			if (!console.isHeadless()) {
 				rpi = console.getMultilineInput(
@@ -53,8 +53,9 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 	}
 
 	public void testAnalysis() {
-		Ax.out(analyseStacktrace(ResourceUtilities.read(
-				CmdAnalyseStackTrace.class, "res/sample-stack-trace.txt"), ""));
+		Ax.out(analyseStacktrace(
+				Io.read().resource("res/sample-stack-trace.txt").asString(),
+				""));
 	}
 
 	private String analyseStacktrace(String dump, String filter) {

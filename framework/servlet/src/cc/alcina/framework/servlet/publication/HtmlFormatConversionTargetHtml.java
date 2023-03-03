@@ -4,7 +4,7 @@ import java.io.InputStream;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_HTML;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 /**
  * Passthrough interface - does no work
@@ -13,15 +13,18 @@ import cc.alcina.framework.entity.ResourceUtilities;
  */
 @Registration({ FormatConverter.class, FormatConversionTarget_HTML.class })
 public class HtmlFormatConversionTargetHtml implements FormatConverter {
+	@Override
 	public InputStream convert(PublicationContext ctx,
 			FormatConversionModel hfcm) throws Exception {
-		return ResourceUtilities.writeStringToInputStream(hfcm.html);
+		return Io.read().string(hfcm.html).asInputStream();
 	}
 
+	@Override
 	public String getFileExtension() {
 		return "html";
 	}
 
+	@Override
 	public String getMimeType() {
 		return "text/html";
 	}

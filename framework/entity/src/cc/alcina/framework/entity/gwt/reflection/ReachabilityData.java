@@ -52,7 +52,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 
 class ReachabilityData {
@@ -95,7 +95,7 @@ class ReachabilityData {
 	}
 
 	static <T> T deserialize(Class<T> clazz, File file) {
-		String json = ResourceUtilities.read(file);
+		String json = Io.read().file(file).asString();
 		return new JacksonJsonObjectSerializer().withIdRefs().deserialize(json,
 				clazz);
 	}
@@ -135,14 +135,14 @@ class ReachabilityData {
 
 	static <T> void serializeReachabilityFile(TreeLogger logger,
 			Object contents, File file) {
-		String existing = file.exists() ? ResourceUtilities.read(file) : null;
+		String existing = file.exists() ? Io.read().file(file).asString() : null;
 		String json = new String(toJsonBytes(contents));
 		if (!Objects.equals(existing, json)) {
 			if (Boolean.getBoolean("reachability.production")) {
 				logger.log(TreeLogger.Type.WARN,
 						"Not committing reachability changes (production build system)");
 			} else {
-				ResourceUtilities.write(json, file);
+				Io.write().string(json).toFile(file);
 			}
 		}
 	}

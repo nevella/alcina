@@ -14,12 +14,12 @@ import java.util.stream.StreamSupport;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class CsvCols
 		implements Iterable<CsvCols.CsvRow>, Iterator<CsvCols.CsvRow> {
 	public static CsvCols parse(File file) {
-		return new CsvCols(ResourceUtilities.read(file));
+		return new CsvCols(Io.read().file(file).asString());
 	}
 
 	public static CsvCols parse(String xsv, boolean tsv) {
@@ -147,7 +147,7 @@ public class CsvCols
 	}
 
 	public void write(String path) {
-		ResourceUtilities.write(toCsv(), path);
+		Io.write().string(toCsv()).toPath(path);
 	}
 
 	public static class CsvRow {

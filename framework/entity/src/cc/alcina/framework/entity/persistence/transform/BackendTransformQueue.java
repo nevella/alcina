@@ -43,7 +43,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
@@ -183,8 +183,7 @@ public class BackendTransformQueue {
 	}
 
 	public void start() {
-		int loopDelay = ResourceUtilities
-				.getInteger(BackendTransformQueue.class, "loopDelay");
+		int loopDelay = Configuration.getInt("loopDelay");
 		createBackendQueue(DEFAULT_QUEUE_NAME, loopDelay);
 		eventThread = new EventThread();
 		eventThread.start();

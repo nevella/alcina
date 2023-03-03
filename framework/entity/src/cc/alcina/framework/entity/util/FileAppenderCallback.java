@@ -4,7 +4,7 @@ import java.io.FileOutputStream;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class FileAppenderCallback implements Callback<String> {
 	private String prompt;
@@ -20,8 +20,7 @@ public class FileAppenderCallback implements Callback<String> {
 	public void accept(String value) {
 		try {
 			FileOutputStream fos = new FileOutputStream(path, true);
-			ResourceUtilities.writeStringToOutputStream(
-					Ax.format("%s%s\n", prompt, value), fos);
+			Io.write().string(Ax.format("%s%s\n", prompt, value)).toStream(fos);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

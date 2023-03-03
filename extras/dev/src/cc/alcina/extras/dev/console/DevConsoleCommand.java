@@ -52,7 +52,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ReportUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -612,7 +612,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String fileName = "/tmp/CmdExtractChromeCacheFile.dat";
 			BufferedOutputStream bos = new BufferedOutputStream(
 					new FileOutputStream(fileName));
-			ResourceUtilities.writeStreamToStream(
+			Io.Streams.copy(
 					new ByteArrayInputStream(baos.toByteArray()), bos);
 			System.out.format("Wrote %s bytes to \n\t'%s'\n", size, fileName);
 			return "";
@@ -1283,7 +1283,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			// String existingValue = ResourceUtilities.getCustomProperties()
 			// .get(key);
 			// String value = m.group(2);
-			// ResourceUtilities.set(key, value);
+			// Configuration.properties.set(key, value);
 			// return Ax.format("%s : '%s' => '%s'", key, existingValue, value);
 		}
 	}

@@ -40,8 +40,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.ObjectUtil;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
@@ -89,8 +89,7 @@ public class UserStories {
 			}
 		}
 		DomDocument doc = DomDocument.basicHtmlDoc();
-		String css = ResourceUtilities.readClassPathResourceAsString(
-				UserStories.class, "user-stories.css");
+		String css = Io.read().resource("user-stories.css").asString();
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		DomNode body = doc.xpath("//body").node();
 		body.builder().tag("h2").text("User Story").append();

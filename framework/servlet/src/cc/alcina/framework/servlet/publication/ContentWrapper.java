@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
@@ -57,13 +57,13 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	public static String transform(InputStream trans, Document wrappingDoc,
 			String marker, boolean formatRequiresXml) throws Exception {
-		String tSrc = ResourceUtilities.readStreamToString(trans);
+		String tSrc = Io.read().inputStream(trans).asString();
 		if (formatRequiresXml) {
 			tSrc = tSrc.replace(XSL_OUTPUT_METHOD_HTML, XSL_OUTPUT_METHOD_XML);
 		} else {
 			tSrc = tSrc.replace(XSL_OUTPUT_METHOD_XML, XSL_OUTPUT_METHOD_HTML);
 		}
-		trans = ResourceUtilities.writeStringToInputStream(tSrc);
+		trans = Io.read().string(tSrc).asInputStream();
 		Source trSource = XmlUtils.interpolateStreamSource(trans);
 		Source dataSource = new DOMSource(wrappingDoc);
 		String wrappedContent = XmlUtils.transformDocToString(dataSource,

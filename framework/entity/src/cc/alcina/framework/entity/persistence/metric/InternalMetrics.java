@@ -42,7 +42,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ResettingCounter;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
@@ -184,7 +184,7 @@ public class InternalMetrics {
 				.map(InternalMetricData::logForBlackBox)
 				.collect(Collectors.joining("\n"));
 		logger.warn(message);
-		ResourceUtilities.write(message, Ax.format("/tmp/imd-blackbox-%s.txt",
+		Io.write().string(message).toPath(Ax.format("/tmp/imd-blackbox-%s.txt",
 				System.currentTimeMillis()));
 	}
 
@@ -298,7 +298,8 @@ public class InternalMetrics {
 		// Get specific metrics types we want to capture
 		List<String> trackableMetrics = CommonUtils
 				.split(Configuration.get("trackableMetrics"), ",");
-		// If there are any specifics types we want, ensure this tracker is one of them
+		// If there are any specifics types we want, ensure this tracker is one
+		// of them
 		if (!trackableMetrics.isEmpty()
 				&& !trackableMetrics.contains(type.toString())) {
 			return;
@@ -495,9 +496,8 @@ public class InternalMetrics {
 				String gcLogFile = "/opt/jboss/gc.log";
 				if (new File(gcLogFile).exists()) {
 					GCLogParser.Events events = new GCLogParser().parse(
-							gcLogFile, parseGcLogFrom,
-							Configuration.getInt(getClass(),
-									"gcEventThresholdMillis"));
+							gcLogFile, parseGcLogFrom, Configuration.getInt(
+									getClass(), "gcEventThresholdMillis"));
 					addMetric(MetricType.gc, events.toString());
 					parseGcLogFrom = events.end;
 				}
@@ -664,15 +664,35 @@ public class InternalMetrics {
 	}
 
 	public interface InternalMetricType {
-		public boolean shouldSlice();
+		public int maxFrames();
 
 		public int maxStackLines();
 
-		public int maxFrames();
+		public boolean shouldSlice();
 	}
 
 	public enum InternalMetricTypeAlcina implements InternalMetricType {
 		client, service, health, api, servlet, job, remote_invocation, tranche;
+
+		@Override
+		public int maxFrames() {
+			switch (this) {
+			case health:
+				return 2000;
+			default:
+				return 50;
+			}
+		}
+
+		@Override
+		public int maxStackLines() {
+			switch (this) {
+			case health:
+				return 100;
+			default:
+				return 300;
+			}
+		}
 
 		@Override
 		public boolean shouldSlice() {
@@ -696,26 +716,6 @@ public class InternalMetrics {
 			default:
 				Ax.out("Unsupported metrics type: %s", this);
 				return false;
-			}
-		}
-
-		@Override
-		public int maxStackLines() {
-			switch (this) {
-			case health:
-				return 100;
-			default:
-				return 300;
-			}
-		}
-
-		@Override
-		public int maxFrames() {
-			switch (this) {
-			case health:
-				return 2000;
-			default:
-				return 50;
 			}
 		}
 	}

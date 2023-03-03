@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
@@ -80,7 +80,7 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		File dir = console.devHelper.getDevFolder();
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
-		ResourceUtilities.writeStringToFile(content, new File(outPath));
+		Io.write().string(content).toFile(new File(outPath));
 		return outPath;
 	}
 
@@ -92,7 +92,7 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		File dir = console.devHelper.getDevFolder();
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
-		ResourceUtilities.writeStreamToStream(
+		Io.Streams.copy(
 				new ByteArrayInputStream(Base64Utils.fromBase64(content)),
 				new FileOutputStream(outPath));
 		return outPath;
@@ -104,7 +104,7 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
 		;
-		ResourceUtilities.writeStreamToStream(new FileInputStream(content),
+		Io.Streams.copy(new FileInputStream(content),
 				new FileOutputStream(outPath));
 		return outPath;
 	}

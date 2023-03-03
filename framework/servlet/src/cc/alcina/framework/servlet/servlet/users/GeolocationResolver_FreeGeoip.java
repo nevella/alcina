@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 // Gone, see freegeoip.com
 public class GeolocationResolver_FreeGeoip implements GeolocationResolver {
@@ -28,7 +28,7 @@ public class GeolocationResolver_FreeGeoip implements GeolocationResolver {
 		}
 		try {
 			String url = Ax.format("http://freegeoip.net/json/%s", ipAddress);
-			String result = ResourceUtilities.readUrlAsString(url);
+			String result = Io.read().url(url).asString();
 			ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
 			if (Ax.isBlank(node.get("country_name").asText())) {
 				return "(Local address)";

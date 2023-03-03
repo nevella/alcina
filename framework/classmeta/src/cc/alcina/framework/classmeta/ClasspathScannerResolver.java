@@ -14,8 +14,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -33,10 +33,10 @@ public class ClasspathScannerResolver {
 		if (translationKey == null) {
 		} else {
 			String folder = translationKey.replaceFirst("(.+?)\\..+", "$1");
-			String translationXml = ResourceUtilities.read(
-					ClasspathScannerResolver.class,
-					Ax.format("schema/%s/meta.translation.%s.xml", folder,
-							translationKey));
+			String translationXml = Io.read()
+					.resource(Ax.format("schema/%s/meta.translation.%s.xml",
+							folder, translationKey))
+					.asString();
 			translationData = JaxbUtils.xmlDeserialize(TranslationData.class,
 					translationXml);
 		}

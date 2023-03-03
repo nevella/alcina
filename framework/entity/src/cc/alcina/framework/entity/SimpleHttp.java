@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -76,7 +74,7 @@ public class SimpleHttp {
 	}
 
 	// Request the URL and return as bytes
-	public byte[] asBytes() throws Exception {
+	public byte[] asBytes() throws IOException {
 		InputStream in = null;
 		connection = null;
 		// Ensure headers are present
@@ -136,7 +134,7 @@ public class SimpleHttp {
 			if (responseCode >= 400) {
 				InputStream err = connection.getErrorStream();
 				if (err != null) {
-					respBytes = ResourceUtilities.readStreamToByteArray(err);
+					respBytes = Io.read().inputStream(err).asBytes();
 				}
 				// If throwOnResponseCode and we get a 4xx or 5xx code
 				// throw a IOException
@@ -173,7 +171,7 @@ public class SimpleHttp {
 			} else {
 				in = connection.getInputStream();
 				// If code is good, read the stream normally
-				respBytes = ResourceUtilities.readStreamToByteArray(in);
+				respBytes = Io.read().inputStream(in).asBytes();
 			}
 			// If decodeGz and bytes are non-null, decode the gzipped data
 			if (decodeGz && respBytes != null) {
@@ -194,12 +192,6 @@ public class SimpleHttp {
 				connection.disconnect();
 			}
 		}
-	}
-
-	// Set as a PUT request
-	public SimpleHttp withPutMethod() {
-		this.method = "PUT";
-		return this;
 	}
 
 	// Request the URL and return as string
@@ -236,6 +228,18 @@ public class SimpleHttp {
 		return this.responseCode;
 	}
 
+	public String toCurlRequest() {
+		Preconditions.checkArgument(this.method.equals("GET"));
+		FormatBuilder fb = new FormatBuilder().separator(" ");
+		fb.append("curl");
+		this.headers.entrySet().forEach(h -> {
+			fb.append("--header");
+			fb.format("'%s: %s'", h.getKey(), h.getValue());
+		});
+		fb.format("'%s'", strUrl);
+		return fb.toString();
+	}
+
 	// Set Authorization header with basic authentication pair
 	public SimpleHttp withBasicAuthentication(String username,
 			String password) {
@@ -251,7 +255,7 @@ public class SimpleHttp {
 		return this;
 	}
 
-	// Set body for the request
+	// Set body for the request (but not the method)
 	public SimpleHttp withBody(String body) {
 		this.body = body;
 		return this;
@@ -273,6 +277,11 @@ public class SimpleHttp {
 	public SimpleHttp withGzip(boolean gzip) {
 		this.gzip = gzip;
 		return this;
+	}
+
+	// Set headers on request
+	public SimpleHttp withHeaders(String... keyValues) {
+		return withHeaders(StringMap.properties(keyValues));
 	}
 
 	// Set headers on request
@@ -311,6 +320,12 @@ public class SimpleHttp {
 		return this;
 	}
 
+	// Set as a PUT request
+	public SimpleHttp withPutMethod() {
+		this.method = "PUT";
+		return this;
+	}
+
 	// Set query string parameters for the request
 	public SimpleHttp
 			withQueryStringParameters(StringMap queryStringParameters) {
@@ -326,7 +341,7 @@ public class SimpleHttp {
 
 	/**
 	 * Set read/connect timeout for this request
-	 * 
+	 *
 	 * @param timeout
 	 *            Timeout to set
 	 * @return this SimpleHttp object
@@ -341,22 +356,9 @@ public class SimpleHttp {
 	// otherwise, just return the input as is
 	private byte[] maybeDecodeGzip(byte[] input) throws IOException {
 		if ("gzip".equals(connection.getHeaderField("content-encoding"))) {
-			return ResourceUtilities.readStreamToByteArray(
-					new GZIPInputStream(new ByteArrayInputStream(input)));
+			return Io.read().bytes(input).withDecompress(true).asBytes();
 		} else {
 			return input;
 		}
-	}
-
-	public String asCurl() {
-		Preconditions.checkArgument(this.method.equals("GET"));
-		FormatBuilder fb = new FormatBuilder().separator(" ");
-		fb.append("curl");
-		this.headers.entrySet().forEach(h -> {
-			fb.append("--header");
-			fb.format("'%s: %s'", h.getKey(), h.getValue());
-		});
-		fb.format("'%s'", strUrl);
-		return fb.toString();
 	}
 }

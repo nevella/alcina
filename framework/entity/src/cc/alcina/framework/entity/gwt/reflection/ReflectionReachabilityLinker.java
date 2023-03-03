@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.LegacyModuleAssignments;
@@ -269,7 +269,7 @@ public class ReflectionReachabilityLinker extends Linker {
 				BufferedInputStream stream = new BufferedInputStream(
 						new GZIPInputStream(splitPointsArtifact
 								.getContents(TreeLogger.NULL)));
-				String xml = ResourceUtilities.readStreamToString(stream);
+				String xml = Io.read().inputStream(stream).asString();
 				Pattern p = Pattern.compile(
 						"<splitpoint id=\"(\\d+)\" " + "location=\"(.+?)\"/>");
 				Matcher m = p.matcher(xml);

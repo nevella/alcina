@@ -27,8 +27,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.RegistryExcep
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -187,7 +187,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 						String out = JacksonUtils.defaultSerializer()
 								.withMaxLength(Integer.MAX_VALUE)
 								.serialize(outgoingCache);
-						ResourceUtilities.write(out, cacheFile);
+						Io.write().string(out).toFile(cacheFile);
 					} catch (Throwable t) {
 						t.printStackTrace();
 					} finally {

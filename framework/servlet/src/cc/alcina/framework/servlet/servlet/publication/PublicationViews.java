@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
@@ -39,8 +39,7 @@ public class PublicationViews {
 	public void build(long id, String delta) {
 		Publication publication = PersistentImpl.find(Publication.class, id);
 		DomDocument doc = DomDocument.basicHtmlDoc();
-		String css = ResourceUtilities.readClassPathResourceAsString(
-				PublicationViews.class, "publication-view.css");
+		String css = Io.read().resource("publication-view.css").asString();
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		DomNode body = doc.xpath("//body").node();
 		body.builder().tag("h2").text("Publication view").append();

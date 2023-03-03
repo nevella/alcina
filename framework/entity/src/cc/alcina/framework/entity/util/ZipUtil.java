@@ -14,6 +14,7 @@
 package cc.alcina.framework.entity.util;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,9 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.entity.Io;
 
 /**
  *
@@ -145,5 +151,30 @@ public class ZipUtil {
 			}
 		}
 		s.close();
+	}
+
+	public static byte[] gzipBytes(byte[] bytes) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			GZIPOutputStream gzipOutputStream = new GZIPOutputStream(baos);
+			gzipOutputStream.write(bytes);
+			gzipOutputStream.flush();
+			gzipOutputStream.close();
+			return baos.toByteArray();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static byte[] gunzipBytes(byte[] bytes) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			GZIPInputStream gzipInputStream = new GZIPInputStream(
+					new ByteArrayInputStream(bytes));
+			Io.Streams.copy(gzipInputStream, baos);
+			return baos.toByteArray();
+		} catch (Exception e) {
+			return bytes;
+		}
 	}
 }

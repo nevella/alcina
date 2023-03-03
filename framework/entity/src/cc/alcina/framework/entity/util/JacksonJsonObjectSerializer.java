@@ -49,9 +49,6 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public static final String CONTEXT_WITHOUT_MAPPER_POOL = JacksonJsonObjectSerializer.class
 			+ ".CONTEXT_NO_MAPPER";
 
-	public static final String MAX_LENGTH = JacksonJsonObjectSerializer.class
-			+ ".MAX_LENGTH";
-
 	private static CachingMap<JacksonJsonObjectSerializer, ObjectMapperPool> objectMappersPool = new CachingConcurrentMap<>(
 			serializer -> new ObjectMapperPool(serializer), 10);
 
@@ -76,11 +73,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	private boolean withWrapRootValue;
 
 	public JacksonJsonObjectSerializer() {
-		maxLength = Configuration.getInt(
-				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
-		if (LooseContext.has(MAX_LENGTH)) {
-			maxLength = LooseContext.getInteger(MAX_LENGTH);
-		}
+		maxLength = Configuration.key("maxLength").withContextOverride(true)
+				.intValue();
 	}
 
 	public <T> T deserialize(Reader reader, Class<T> clazz) {

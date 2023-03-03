@@ -12,7 +12,7 @@ import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class DevConsoleServeLocalHandler extends AbstractHandler {
 	@SuppressWarnings("unused")
@@ -28,10 +28,10 @@ public class DevConsoleServeLocalHandler extends AbstractHandler {
 			throws IOException, ServletException {
 		String path = request.getQueryString().replace("%20", " ");
 		File file = new File(path);
-		byte[] bytes = ResourceUtilities.readFileToByteArray(file);
+		byte[] bytes = Io.read().file(file).asBytes();
 		response.setContentType(
 				new MimeTypes().getMimeByExtension(file.getPath()));
-		ResourceUtilities.writeStreamToStream(new ByteArrayInputStream(bytes),
+		Io.Streams.copy(new ByteArrayInputStream(bytes),
 				response.getOutputStream());
 		response.setStatus(HttpServletResponse.SC_OK);
 		baseRequest.setHandled(true);

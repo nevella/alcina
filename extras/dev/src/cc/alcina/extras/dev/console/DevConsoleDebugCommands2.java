@@ -12,7 +12,7 @@ import com.google.gwt.dom.client.HtmlParser;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class DevConsoleDebugCommands2 {
 	public static final String LOCAL_DOM_EXCEPTION_LOG_PATH = "localdom-exception.txt";
@@ -47,8 +47,9 @@ public class DevConsoleDebugCommands2 {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String log = ResourceUtilities.read(
-					Ax.format("/tmp/log/%s", LOCAL_DOM_EXCEPTION_LOG_PATH));
+			String log = Io.read().path(
+					Ax.format("/tmp/log/%s", LOCAL_DOM_EXCEPTION_LOG_PATH))
+					.asString();
 			DebugModel model = new DebugModel();
 			model.parse(log);
 			Ax.out(model.localHtml);
@@ -56,7 +57,7 @@ public class DevConsoleDebugCommands2 {
 			Ax.out(model.diffCalc);
 			String remoteOutPath = Ax.format("/tmp/log/%s",
 					LOCAL_DOM_EXCEPTION_REMOTE_HTML_PATH);
-			ResourceUtilities.write(model.remoteHtml, remoteOutPath);
+			Io.write().string(model.remoteHtml).toPath(remoteOutPath);
 			Ax.out("Wrote file to:\n\t%s", remoteOutPath);
 			return "OK";
 		}

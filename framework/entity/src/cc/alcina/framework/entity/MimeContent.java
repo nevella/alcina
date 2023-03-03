@@ -17,7 +17,7 @@ public class MimeContent implements Serializable {
 
 	public MimeContent(InputStream content, String mimeType) {
 		try {
-			bytes = ResourceUtilities.readStreamToByteArray(content);
+			bytes = Io.read().inputStream(content).asBytes();
 			contentType = mimeType;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

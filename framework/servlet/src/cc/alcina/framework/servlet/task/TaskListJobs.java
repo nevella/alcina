@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
@@ -243,8 +243,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 	@Override
 	protected void run0() throws Exception {
 		DomDocument doc = DomDocument.basicHtmlDoc();
-		String css = ResourceUtilities
-				.readRelativeResource("res/TaskListJobs.css");
+		String css = Io.read().resource("res/TaskListJobs.css").asString();
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		{
 			Stream<QueueStat> queues = JobRegistry.get().getActiveQueueStats();

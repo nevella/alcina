@@ -42,7 +42,7 @@ import com.google.gwt.user.rebind.StringSourceWriter;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource.ResolveParent;
 
@@ -184,7 +184,7 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 				}
 			}
 			InputStream contents = resource.openContents();
-			byte[] bytes = ResourceUtilities.readStreamToByteArray(contents);
+			byte[] bytes = Io.read().inputStream(contents).asBytes();
 			String out = Base64.encodeBytes(bytes);
 			String fileName = url.replaceFirst(".+/", "");
 			String extension = fileName.replaceFirst(".+\\.", "").toLowerCase();

@@ -5,8 +5,8 @@ import java.io.File;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 
 public interface SerializationStrategy {
 	public <T> T deserializeFromFile(File cacheFile, Class<T> clazz);
@@ -40,8 +40,7 @@ public interface SerializationStrategy {
 		@Override
 		public <T> void serializeToFile(T t, File cacheFile) {
 			if (simple) {
-				ResourceUtilities.write(
-						JacksonUtils.serializeNoTypesInterchange(t), cacheFile);
+				Io.write().string(JacksonUtils.serializeNoTypesInterchange(t)).toFile(cacheFile);
 			} else {
 				JacksonUtils.serializeToFile(t, cacheFile);
 			}
@@ -81,7 +80,7 @@ public interface SerializationStrategy {
 		@Override
 		public <T> T deserializeFromFile(File cacheFile, Class<T> clazz) {
 			return JaxbUtils.xmlDeserialize(clazz,
-					ResourceUtilities.read(cacheFile));
+					Io.read().file(cacheFile).asString());
 		}
 
 		@Override
@@ -101,8 +100,7 @@ public interface SerializationStrategy {
 		@Override
 		public <T> void serializeToFile(T t, File cacheFile) {
 			try {
-				ResourceUtilities.writeBytesToFile(serializeToByteArray(t),
-						cacheFile);
+				Io.write().bytes(serializeToByteArray(t)).toFile(cacheFile);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

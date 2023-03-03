@@ -151,7 +151,7 @@ public class EntityLayerLogging {
 	}
 
 	public static void setLogLevelsFromCustomProperties() {
-		Properties properties = Configuration.properties();
+		Properties properties = Configuration.properties;
 		properties.keys().forEach(k -> {
 			if (k.startsWith("log.level.")) {
 				k = k.substring("log.level.".length());

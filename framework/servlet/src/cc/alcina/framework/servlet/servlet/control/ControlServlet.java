@@ -28,7 +28,6 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.SimpleHttp;
 import cc.alcina.framework.entity.control.ClusterStateProvider;
@@ -156,8 +155,7 @@ public class ControlServlet extends AlcinaServlet {
 			String toAddress = testSendmail();
 			String message = Ax.format(
 					"Test email sent to: %s from: %s via: %s", toAddress,
-					EntityLayerUtils.getLocalHostName(), ResourceUtilities
-							.get(ContentDeliveryEmail.class, "smtp.host.name"));
+					EntityLayerUtils.getLocalHostName(), Configuration.get(ContentDeliveryEmail.class, "smtp.host.name"));
 			logger.warn(message);
 			writeAndClose(message, response);
 			break;

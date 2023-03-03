@@ -48,7 +48,7 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget.Form
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.publication.EntityCleaner;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
@@ -86,8 +86,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 	public String deliver(final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc,
 			boolean requestorPass) throws Exception {
-		byte[] msgBytes = ResourceUtilities
-				.readStreamToByteArray(convertedContent);
+		byte[] msgBytes = Io.read().inputStream(convertedContent).asBytes();
 		String result = send(new ByteArrayInputStream(msgBytes), deliveryModel,
 				hfc, requestorPass, deliveryModel.getEmailAddress());
 		if (LooseContext.has(CONTEXT_ALSO_SEND_TO_ADDRESS)) {
@@ -103,8 +102,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc)
 			throws Exception {
-		byte[] msgBytes = ResourceUtilities
-				.readStreamToByteArray(convertedContent);
+		byte[] msgBytes = Io.read().inputStream(convertedContent).asBytes();
 		String result = deliver(new ByteArrayInputStream(msgBytes),
 				deliveryModel, hfc, false);
 		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
@@ -144,10 +142,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		Properties props = new Properties();
 		String host = Configuration.get(ContentDeliveryEmail.class,
 				"smtp.host.name");
-		Integer port = Integer.valueOf(ResourceUtilities
-				.get(ContentDeliveryEmail.class, "smtp.host.port"));
-		Boolean authenticate = Boolean.valueOf(ResourceUtilities
-				.get(ContentDeliveryEmail.class, "smtp.authenticate"));
+		Integer port = Integer.valueOf(Configuration.get(ContentDeliveryEmail.class, "smtp.host.port"));
+		Boolean authenticate = Boolean.valueOf(Configuration.get(ContentDeliveryEmail.class, "smtp.authenticate"));
 		String userName = Configuration.get(ContentDeliveryEmail.class,
 				"smtp.username");
 		String password = Configuration.get(ContentDeliveryEmail.class,
@@ -156,8 +152,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				"smtp.from.address");
 		String fromName = Configuration.get(ContentDeliveryEmail.class,
 				"smtp.from.name");
-		int maxMessageSize = ResourceUtilities
-				.getInteger(ContentDeliveryEmail.class, "smtp.maxMessageSize");
+		int maxMessageSize = Configuration.getInt(ContentDeliveryEmail.class, "smtp.maxMessageSize");
 		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
@@ -199,8 +194,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		String[] bccEmailAddressStrings = Ax
 				.isBlank(Configuration.get("smtp.bcc")) ? new String[0]
 						: Configuration.get("smtp.bcc").split("(;|,| )+");
-		String filterClassName = ResourceUtilities
-				.get(ContentDeliveryEmail.class, "smtp.filter.className");
+		String filterClassName = Configuration.get(ContentDeliveryEmail.class, "smtp.filter.className");
 		String systemEmailAddressOfRequestor = deliveryModel
 				.getSystemEmailAddressOfRequestor();
 		if (LooseContext.has(CONTEXT_OVERRIDE_TO_ADDRESS)) {
@@ -267,16 +261,14 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				pdfAttachment = new MailAttachment();
 				pdfAttachment.uid = uuid;
 				pdfAttachment.contentType = "application/pdf";
-				pdfAttachment.requestBytes = ResourceUtilities
-						.readStreamToByteArray(stream);
+				pdfAttachment.requestBytes = Io.read().inputStream(stream).asBytes();
 				pdfAttachment.dataSourceMimeType = "application/pdf";
 				pdfAttachment.suggestedFileName = deliveryModel
 						.providePropertyValue(
 								PROP_ATTACH_EMAIL_BODY_AS_PDF_FILENAME);
 				deliveryModel.addAttachment(pdfAttachment);
 			}
-			String message = ResourceUtilities
-					.readStreamToString(convertedContent);
+			String message = Io.read().inputStream(convertedContent).asString();
 			message = message.replace(PUBLICATION_REASON_MESSAGE,
 					requestorPass
 							? deliveryModel.getAttachmentMessageForRequestor()
@@ -333,7 +325,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 					deliveryModel.getSuggestedFileName(),
 					"." + hfc.getFileExtension());
 			file.deleteOnExit();
-			ResourceUtilities.writeStreamToStream(convertedContent,
+			Io.Streams.copy(convertedContent,
 					new FileOutputStream(file));
 			messageBodyPart
 					.setDataHandler(new DataHandler(new FileDataSource(file)));

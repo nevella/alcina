@@ -1,12 +1,12 @@
 /*
  * Copyright 2009 Bart Guijt and others.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,14 +25,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 /**
  * Serves the cache-manifest resource with the <code>text/cache-manifest</code>
  * MIME type.
- * 
+ *
  * @author bguijt
- * 
+ *
  *         Moved to Alcina by Nick - tx bguijt
  */
 public class CrxServlet extends HttpServlet {
@@ -44,7 +44,7 @@ public class CrxServlet extends HttpServlet {
 		resp.setContentType("application/x-chrome-extension");
 		ServletOutputStream out = resp.getOutputStream();
 		String realPath = getServletContext().getRealPath(req.getRequestURI());
-		ResourceUtilities.writeStreamToStream(
+		Io.Streams.copy(
 				new BufferedInputStream(new FileInputStream(realPath)), out);
 		resp.flushBuffer();
 	}

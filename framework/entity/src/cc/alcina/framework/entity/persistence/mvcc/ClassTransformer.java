@@ -80,7 +80,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
@@ -188,8 +188,7 @@ class ClassTransformer {
 		};
 		AlcinaParallel.builder().withThreadCount(8)
 				.withThreadName("ClassTransformer-generate")
-				.withSerial(
-						!Configuration.is("checkClassCorrectnessParallel"))
+				.withSerial(!Configuration.is("checkClassCorrectnessParallel"))
 				.withCancelOnException(true)
 				.withRunnables(classTransforms.values().stream().map(mapper)
 						.collect(Collectors.toList()))
@@ -213,8 +212,7 @@ class ClassTransformer {
 					compilationRunnables.size(),
 					classTransforms.size() - compilationRunnables.size());
 		}
-		if (Configuration.is(ClassTransformer.class,
-				"checkClassCorrectness")) {
+		if (Configuration.is(ClassTransformer.class, "checkClassCorrectness")) {
 			for (ClassTransform ct : classTransforms.values()) {
 				if (!ct.invalid) {
 					ct.persist();
@@ -277,8 +275,8 @@ class ClassTransformer {
 								clazz.getName().replace(".", "/")));
 				if (new File(toPath(sourceFileLocation)).exists()
 						&& !sourceFileLocation.toString().contains("/build/")) {
-					return ResourceUtilities
-							.readUrlAsString(sourceFileLocation.toString());
+					return Io.read().url(sourceFileLocation.toString())
+							.asString();
 				}
 				sourceFileLocation = new URL(sourceFileLocation.toString()
 						.replace("/alcina/bin/",
@@ -291,15 +289,15 @@ class ClassTransformer {
 							.replace("/build/", "/src/"));
 				}
 				if (new File(toPath(sourceFileLocation)).exists()) {
-					return ResourceUtilities
-							.readUrlAsString(sourceFileLocation.toString());
+					return Io.read().url(sourceFileLocation.toString())
+							.asString();
 				}
 				sourceFileLocation = new URL(sourceFileLocation.toString()
 						.replace("/alcina/framework/entity/src/",
 								"/alcina/framework/common/src/"));
 				if (new File(toPath(sourceFileLocation)).exists()) {
-					return ResourceUtilities
-							.readUrlAsString(sourceFileLocation.toString());
+					return Io.read().url(sourceFileLocation.toString())
+							.asString();
 				}
 				Optional<SourceFinderFsHelper> helper = Registry
 						.optional(SourceFinderFsHelper.class);
@@ -308,8 +306,8 @@ class ClassTransformer {
 							.replace("/alcina/framework/entity/src/",
 									"/alcina/framework/common/src/"));
 					if (new File(toPath(sourceFileLocation)).exists()) {
-						return ResourceUtilities
-								.readUrlAsString(sourceFileLocation.toString());
+						return Io.read().url(sourceFileLocation.toString())
+								.asString();
 					}
 				}
 				return null;
@@ -367,7 +365,8 @@ class ClassTransformer {
 					.allFields(originalClass).stream()
 					.collect(AlcinaCollectors.toKeyMultimap(Field::getName));
 			byName.entrySet().stream().filter(e -> e.getValue().size() > 1)
-					.filter(e -> !(e.getKey().equals("id") && Configuration.is(ClassTransformer.class, "allowShadowIdField")))
+					.filter(e -> !(e.getKey().equals("id") && Configuration
+							.is(ClassTransformer.class, "allowShadowIdField")))
 					.forEach(e -> {
 						fieldsWithProblematicAccess.add(e.getKey());
 						correctnessIssueTopic.publish(new MvccCorrectnessIssue(

@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 /**
  * Convert html to unicode entities for XHTML processing
@@ -145,8 +145,7 @@ public class EntityCleaner {
 
 	private void readEntityFile() {
 		try {
-			String entities = ResourceUtilities.readClassPathResourceAsString(
-					EntityCleaner.class, "htmlEntities.txt");
+			String entities = Io.read().resource("htmlEntities.txt").asString();
 			entities = entities.replace('\u00A0', ' ');
 			String regex = "(?s)<!ENTITY\\s+(\\S+)\\s+(?:CDATA)?\\s+\"&#(x)?([0-9A-F]+).+?-->";
 			Pattern p = Pattern.compile(regex, Pattern.MULTILINE

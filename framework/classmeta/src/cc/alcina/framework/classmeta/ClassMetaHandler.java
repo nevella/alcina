@@ -11,8 +11,8 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonUtils;
 
 public class ClassMetaHandler extends AbstractHandler {
@@ -25,7 +25,7 @@ public class ClassMetaHandler extends AbstractHandler {
 		try {
 			MetricLogging.get().start("class-meta");
 			ServletInputStream inputStream = request.getInputStream();
-			String json = ResourceUtilities.readStreamToString(inputStream);
+			String json = Io.read().inputStream(inputStream).asString();
 			ClassMetaRequest typedRequest = JacksonUtils.deserialize(json,
 					ClassMetaRequest.class);
 			ClassMetaResponse typedResponse = new ClassMetaResponse();
@@ -37,7 +37,7 @@ public class ClassMetaHandler extends AbstractHandler {
 				typedResponse.cache = classpathScannerResolver
 						.handle(typedRequest, translationKey, debug);
 				if (debug) {
-					ResourceUtilities.logToFile(typedResponse.cache.dump());
+					Io.log().toFile(typedResponse.cache.dump());
 				}
 				break;
 			default:

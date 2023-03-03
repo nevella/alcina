@@ -42,8 +42,8 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 
 public class StatsFilter extends CollectionProjectionFilter {
@@ -72,8 +72,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 			String string = AlcinaBeanSerializer.serializeHolder(resultObject);
 			MetricLogging.get().end("serialize-alcina");
 			out = new ByteArrayOutputStream();
-			ResourceUtilities.writeStringToOutputStream(string,
-					new GZIPOutputStream(out));
+			Io.write().string(string).toStream(new GZIPOutputStream(out));
 			System.out.format("\nkryo-ser size:%s\n\n", out.size());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

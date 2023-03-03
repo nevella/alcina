@@ -60,8 +60,8 @@ import cc.alcina.framework.common.client.util.TimezoneData;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Configuration.Properties;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
@@ -159,11 +159,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			String testJar = "jsr173_api.jar";
 			File testJarFile = new File("/tmp/" + testJar);
 			if (!testJarFile.exists()) {
-				byte[] bytes = ResourceUtilities
-						.readClassPathResourceAsByteArray(
-								AppLifecycleServletBase.class,
-								"res/" + testJar);
-				ResourceUtilities.writeBytesToFile(bytes, testJarFile);
+				byte[] bytes = Io.read()
+						.relativeTo(AppLifecycleServletBase.class)
+						.resource("res/" + testJar).asBytes();
+				Io.write().bytes(bytes).toFile(testJarFile);
 			}
 			URL url = new URL(
 					Ax.format("jar:file://%s!/javax/xml/XMLConstants.class",
@@ -234,12 +233,12 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	public String dumpCustomProperties() {
-		return Configuration.properties().dump();
+		return Configuration.properties.dump();
 	}
 
 	public String getDefaultLoggerLevels() {
-		return ResourceUtilities.read(AppLifecycleServletBase.class,
-				"loglevels.properties");
+		return Io.read().relativeTo(AppLifecycleServletBase.class)
+				.resource("loglevels.properties").asString();
 	}
 
 	public Date getStartupTime() {
@@ -286,7 +285,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	public void refreshProperties() {
 		// FIXME - ru - these should probably cascade/trigger via invalidation
 		loadCustomProperties();
-		Configuration.properties()
+		Configuration.properties
 				.loadSystemPropertiesFromConfigurationProperties();
 		topicConfigurationReloaded.publish(null);
 		EntityLayerLogging.setLogLevelsFromCustomProperties();
@@ -302,7 +301,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void addImmutableSecurityProperties() {
-		Configuration.properties().addImmutablePropertyKey(
+		Configuration.properties.addImmutablePropertyKey(
 				RemoteDebugHandler.immutableSecurityProperty());
 	}
 
@@ -384,7 +383,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 							"ignoreTransformPermissions");
 		});
 		// FIXME - ru - merge to 'refreshProperties'
-		Configuration.properties()
+		Configuration.properties
 				.loadSystemPropertiesFromConfigurationProperties();
 		topicConfigurationReloaded.publish(null);
 		if (Configuration.is("allowAllHostnameVerifier")) {
@@ -538,7 +537,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void launchPostInitTasks() {
 		Pattern pattern = Pattern.compile("post\\.init\\.(.+)");
-		Properties properties = Configuration.properties();
+		Properties properties = Configuration.properties;
 		properties.keys().forEach(k -> {
 			Matcher matcher = pattern.matcher(k);
 			if (matcher.matches()) {
@@ -546,7 +545,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				String value = properties.get(key);
 				Ax.out("Enabled post-init startup property: %s => %s", key,
 						value);
-				ResourceUtilities.set(key, value);
+				Configuration.properties.set(key, value);
 			}
 		});
 		EntityLayerLogging.setLogLevelsFromCustomProperties();
@@ -555,23 +554,23 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void loadCustomProperties() {
 		try {
 			String loggerLevels = getDefaultLoggerLevels();
-			ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
+			Configuration.properties.register(new ByteArrayInputStream(
 					loggerLevels.getBytes(StandardCharsets.UTF_8)));
 			File propertiesFile = new File(
 					AlcinaWebappConfig.get().getCustomPropertiesFilePath());
 			if (propertiesFile.exists()) {
 				FileInputStream fis = new FileInputStream(propertiesFile);
-				ResourceUtilities.registerCustomProperties(fis);
+				Configuration.properties.register(fis);
 			} else {
 				File propertiesListFile = SEUtilities.getChildFile(
 						propertiesFile.getParentFile(),
 						"alcina-properties-files.txt");
 				if (propertiesListFile.exists()) {
-					String[] paths = ResourceUtilities
-							.readFileToString(propertiesListFile).split("\n");
+					String[] paths = Io.read().file(propertiesListFile)
+							.asString().split("\n");
 					for (String path : paths) {
 						FileInputStream fis = new FileInputStream(path);
-						ResourceUtilities.registerCustomProperties(fis);
+						Configuration.properties.register(fis);
 					}
 				}
 			}
@@ -627,7 +626,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				 * throw if reflective serializer or tree serializer consistency
 				 * checks fail and production server, otherwise warn via logs
 				 */
-				boolean cancelStartupOnSignatureGenerationFailure = Configuration.is(AppLifecycleServletBase.class,
+				boolean cancelStartupOnSignatureGenerationFailure = Configuration
+						.is(AppLifecycleServletBase.class,
 								"cancelStartupOnSignatureGenerationFailure")
 						|| !EntityLayerUtils.isTestServer();
 				MethodContext.instance()
@@ -652,7 +652,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 							"Task signature generation failed: cancelling startup");
 				}
 			}
-			ResourceUtilities.propertiesInvalidated
+			Configuration.properties.invalidated
 					.add(v -> topicConfigurationReloaded.publish(null));
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();

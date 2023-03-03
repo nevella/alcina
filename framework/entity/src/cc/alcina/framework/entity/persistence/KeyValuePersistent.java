@@ -22,13 +22,13 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.PersistentObjectCache.CacheMetadata;
+import cc.alcina.framework.entity.util.ZipUtil;
 
 @MappedSuperclass
 @ObjectPermissions(
@@ -120,7 +120,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 
 	public static String toSerializableForm(Object object) {
 		byte[] bytes = KryoUtils.serializeToByteArray(object);
-		byte[] zipped = ResourceUtilities.gzipBytes(bytes);
+		byte[] zipped = ZipUtil.gzipBytes(bytes);
 		return Base64.getEncoder().encodeToString(zipped);
 	}
 
@@ -150,7 +150,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 
 	public <V> V deserializeObject(Class<V> knownType) {
 		byte[] zipped = Base64.getDecoder().decode(getValue());
-		byte[] bytes = ResourceUtilities.gunzipBytes(zipped);
+		byte[] bytes = ZipUtil.gunzipBytes(zipped);
 		return KryoUtils.deserializeFromByteArray(bytes, knownType);
 	}
 

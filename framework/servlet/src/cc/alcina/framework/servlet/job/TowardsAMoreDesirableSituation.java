@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -77,8 +76,7 @@ class TowardsAMoreDesirableSituation {
 	private boolean canAllocate() {
 		return activeJobs.size() < JobRegistry.get().jobExecutors
 				.getMaxConsistencyJobCount()
-				&& JobRegistry.get().getActiveJobCount() < ResourceUtilities
-						.getInteger(TowardsAMoreDesirableSituation.class,
+				&& JobRegistry.get().getActiveJobCount() < Configuration.getInt(TowardsAMoreDesirableSituation.class,
 								"maxVmActiveJobCount");
 	}
 

@@ -12,32 +12,11 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class JarHelper {
-	void listPaths(URL jarFileUrl) {
-		ZipFile inZip = null;
-		String jarPath = jarFileUrl.toString().replaceFirst("jar:file:(.+?)!.+",
-				"$1");
-		try {
-			inZip = new ZipFile(jarPath);
-			Enumeration<? extends ZipEntry> enumeration = inZip.entries();
-			for (ZipEntry in; enumeration.hasMoreElements();) {
-				in = enumeration.nextElement();
-				ZipEntry outEntry;
-				InputStream source;
-				String name = in.getName();
-				System.out.println(name);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				inZip.close();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
+	public InputStream openStream(URL url) {
+		return new ByteArrayInputStream(read(url));
 	}
 
 	public byte[] read(URL jarFileUrl) {
@@ -53,8 +32,8 @@ public class JarHelper {
 				inZip = new ZipFile(jarPath);
 				ZipEntry entry = inZip
 						.getEntry(entryPath.replaceFirst("^/?(.+)", "$1"));
-				return ResourceUtilities
-						.readStreamToByteArray(inZip.getInputStream(entry));
+				return Io.read().inputStream(inZip.getInputStream(entry))
+						.asBytes();
 			} finally {
 				inZip.close();
 			}
@@ -95,7 +74,7 @@ public class JarHelper {
 				outZip.putNextEntry(outEntry);
 				if (in.isDirectory()) {
 				} else {
-					ResourceUtilities.writeStreamToStream(source, outZip, true);
+					Io.Streams.copy(source, outZip, true);
 				}
 			}
 		} catch (Exception e) {
@@ -106,7 +85,7 @@ public class JarHelper {
 				outZip.close();
 				String jarPath2 = jarPath.replace(".jar", ".2.jar");
 				File tmpOut = File.createTempFile("persistent", ".jar");
-				ResourceUtilities.writeBytesToFile(out.toByteArray(), tmpOut);
+				Io.write().bytes(out.toByteArray()).toFile(tmpOut);
 				new File(jarPath).delete();
 				tmpOut.renameTo(new File(jarPath));
 			} catch (Exception e) {
@@ -115,7 +94,28 @@ public class JarHelper {
 		}
 	}
 
-	public InputStream openStream(URL url) {
-		return new ByteArrayInputStream(read(url));
+	void listPaths(URL jarFileUrl) {
+		ZipFile inZip = null;
+		String jarPath = jarFileUrl.toString().replaceFirst("jar:file:(.+?)!.+",
+				"$1");
+		try {
+			inZip = new ZipFile(jarPath);
+			Enumeration<? extends ZipEntry> enumeration = inZip.entries();
+			for (ZipEntry in; enumeration.hasMoreElements();) {
+				in = enumeration.nextElement();
+				ZipEntry outEntry;
+				InputStream source;
+				String name = in.getName();
+				System.out.println(name);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				inZip.close();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 	}
 }

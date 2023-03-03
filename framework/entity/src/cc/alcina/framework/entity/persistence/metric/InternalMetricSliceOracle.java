@@ -37,9 +37,11 @@ public class InternalMetricSliceOracle {
 		if (deadlockedThreadIds.contains(imd.thread.getId())) {
 			return true;
 		}
-		if (imd.type == InternalMetricTypeAlcina.client && imd.type.shouldSlice()) {
-			long initialClientDelay = Configuration.getLong(
-					InternalMetricSliceOracle.class, "initialClientDelay");
+		if (imd.type == InternalMetricTypeAlcina.client
+				&& imd.type.shouldSlice()) {
+			long initialClientDelay = Configuration
+					.key(InternalMetricSliceOracle.class, "initialClientDelay")
+					.longValue();
 			int sliceCount = imd.sliceCount();
 			if (sliceCount == 0) {
 				return timeFromStart > initialClientDelay;

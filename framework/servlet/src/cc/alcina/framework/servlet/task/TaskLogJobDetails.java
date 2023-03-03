@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
@@ -165,12 +165,10 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			List<Job> threadData = JobRegistry.get().getThreadData(job);
 			job.domain().ensurePopulated();
 			DomDocument doc = DomDocument.basicHtmlDoc();
-			String css = ResourceUtilities
-					.readRelativeResource("res/TaskListJobs.css");
+			String css = Io.read().resource("res/TaskListJobs.css").asString();
 			doc.xpath("//head").node().builder().tag("style").text(css)
 					.append();
-			css = ResourceUtilities
-					.readRelativeResource("res/TaskLogJobDetails.css");
+			css = Io.read().resource("res/TaskLogJobDetails.css").asString();
 			doc.xpath("//head").node().builder().tag("style").text(css)
 					.append();
 			DomNode body = doc.html().body();

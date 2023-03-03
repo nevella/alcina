@@ -27,7 +27,7 @@ import cc.alcina.framework.classmeta.ClasspathUrlTranslator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.mvcc.SourceFinder;
 import cc.alcina.framework.entity.util.ClasspathScanner;
@@ -134,8 +134,8 @@ public class JBoss7Support {
 							clazz.getName().replace(".", "/"));
 					VirtualFile child = root.getChild(childPath);
 					if (child.exists()) {
-						return ResourceUtilities
-								.readStreamToString(child.openStream());
+						return Io.read().inputStream(child.openStream())
+								.asString();
 					}
 				}
 				return null;

@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_DOWNLOAD_ATTACHMENT;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.servlet.DownloadServlet;
@@ -40,7 +40,7 @@ public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
 				"... ");
 		File file = File.createTempFile(suggestedFileName, "." + suffix);
 		file.deleteOnExit();
-		ResourceUtilities.writeStreamToStream(stream,
+		Io.Streams.copy(stream,
 				new FileOutputStream(file));
 		String fileTypeSuffix = "." + suffix;
 		if (!suggestedFileName.endsWith(fileTypeSuffix)) {

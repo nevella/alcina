@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.tour.Tour;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
@@ -92,10 +92,11 @@ public class TourManagerWd extends TourManager {
 
 	public static String readFile(String absolutePath, Class<?> clazz) {
 		try {
-			return ResourceUtilities.read(absolutePath);
+			return Io.read().path(absolutePath).asString();
 		} catch (Exception e) {
-			return ResourceUtilities.readClassPathResourceAsString(clazz,
-					"res/" + new File(absolutePath).getName());
+			return Io.read().relativeTo(clazz)
+					.resource("res/" + new File(absolutePath).getName())
+					.asString();
 		}
 	}
 
@@ -215,7 +216,7 @@ public class TourManagerWd extends TourManager {
 			if (string.startsWith("file://")) {
 				String path = string.substring("file:/".length());
 				try {
-					String contents = ResourceUtilities.read(path);
+					String contents = Io.read().path(path).asString();
 					if (path.endsWith(".md")) {
 						contents = Ax.format("%s\n%s", path, contents);
 					}

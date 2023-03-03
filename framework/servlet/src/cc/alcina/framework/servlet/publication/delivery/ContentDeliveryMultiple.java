@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.DeliveryModel.MultipleDeliveryEntry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
@@ -31,8 +31,7 @@ public class ContentDeliveryMultiple implements ContentDelivery {
 	@Override
 	public String deliver(PublicationContext ctx, InputStream convertedContent,
 			DeliveryModel deliveryModel, FormatConverter fc) throws Exception {
-		byte[] bytes = ResourceUtilities
-				.readStreamToByteArray(convertedContent);
+		byte[] bytes = Io.read().inputStream(convertedContent).asBytes();
 		String token = null;
 		for (DeliveryModel.MultipleDeliveryEntry entry : deliveryModel
 				.getMultipleDeliveryEntries()) {

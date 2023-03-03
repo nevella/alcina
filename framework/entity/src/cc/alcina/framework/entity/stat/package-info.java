@@ -74,7 +74,7 @@
   task.setWithMissed(true);
   Job performed = task.perform();
   performed.domain().ensurePopulated();
-  ResourceUtilities.logToFile(performed.getLargeResult().toString());
+  Io.log().toFile(performed.getLargeResult().toString());
 </code>
  * </pre>
  *

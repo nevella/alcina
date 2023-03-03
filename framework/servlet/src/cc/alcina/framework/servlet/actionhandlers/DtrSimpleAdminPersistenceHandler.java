@@ -19,7 +19,7 @@ public class DtrSimpleAdminPersistenceHandler
 	public void commit(DeltaApplicationRecord dar) {
 		try {
 			int chunkSize = Configuration.getInt(
-					DtrSimpleAdminPersistenceHandler.class, "chunkSize", 5000);
+					DtrSimpleAdminPersistenceHandler.class, "chunkSize");
 			TransformCommit.commitDeltaApplicationRecord(dar, chunkSize);
 			jobOk("OK");
 		} catch (Exception ex) {

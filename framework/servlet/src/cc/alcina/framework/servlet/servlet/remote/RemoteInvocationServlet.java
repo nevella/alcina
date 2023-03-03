@@ -22,9 +22,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -245,7 +245,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				customiseContextBeforePayloadWrite();
 				byte[] outBytes = KryoUtils
 						.serializeToByteArray(f_resultHolder);
-				ResourceUtilities.writeStreamToStream(
+				Io.Streams.copy(
 						new ByteArrayInputStream(outBytes),
 						response.getOutputStream());
 			} finally {

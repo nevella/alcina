@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.HasEquivalenceString;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.EncryptionUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
@@ -216,15 +216,13 @@ public class GalleryPersister {
 				Matcher.quoteReplacement(Ax.format("<script>%s</script>", js)));
 		prettyToString = prettyToString.replaceFirst("(<script/>)",
 				Ax.format("<script>%s</script>",
-						Matcher.quoteReplacement(ResourceUtilities
-								.readRelativeResource("res/viewer.js"))));
+						Matcher.quoteReplacement(Io.read().resource("res/viewer.js").asString())));
 		prettyToString = prettyToString.replaceFirst("(<style/>)",
 				Ax.format("<style>%s</style>",
-						Matcher.quoteReplacement(ResourceUtilities
-								.readRelativeResource("res/viewer.css"))));
+						Matcher.quoteReplacement(Io.read().resource("res/viewer.css").asString())));
 		File indexHtml = new File(base, "index.html");
 		File indexJson = new File(base, "index.json");
-		ResourceUtilities.write(prettyToString, indexHtml);
+		Io.write().string(prettyToString).toFile(indexHtml);
 		StringMap metadata = new StringMap();
 		metadataValues.stream().forEach(list -> metadata
 				.put(list.get(0).toString(), list.get(1).toString()));
@@ -320,7 +318,7 @@ public class GalleryPersister {
 		void upload() {
 			try {
 				id = driveAccessor.upload(folder,
-						ResourceUtilities.readFileToByteArray(file),
+						Io.read().file(file).asBytes(),
 						file.getName(), false).getId();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -382,8 +380,7 @@ public class GalleryPersister {
 			url = tuple.image.toViewUrl();
 			fileName = tuple.image.getFileName();
 			try {
-				sha1Hash = EncryptionUtils.get().SHA1(ResourceUtilities
-						.readFileToByteArray(tuple.image.file));
+				sha1Hash = EncryptionUtils.get().SHA1(Io.read().file(tuple.image.file).asBytes());
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}

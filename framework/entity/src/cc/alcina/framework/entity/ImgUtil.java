@@ -51,10 +51,10 @@ import cc.alcina.framework.common.client.util.Topic;
  *
  * @author Nick Reddel
  */
-public class ImgUtilities {
+public class ImgUtil {
 	public static final Topic<Boolean> topicMonochromeImages = Topic.create();
 
-	public static final String CONTEXT_JPEG_COMPRESSION_RATIO = ImgUtilities.class
+	public static final String CONTEXT_JPEG_COMPRESSION_RATIO = ImgUtil.class
 			.getName() + "." + "CONTEXT_PDF_JPEG_COMPRESSION_RATIO";
 
 	public static void checkMonochrome(BufferedImage cc) {
@@ -232,6 +232,35 @@ public class ImgUtilities {
 		return thumbImage;
 	}
 
+	public static OutputStream scaleImage(InputStream in, int width, int height,
+			OutputStream out) throws IOException {
+		byte[] b = Io.read().inputStream(in).asBytes();
+		ImageIcon icon = new ImageIcon(b);
+		Image image = icon.getImage();
+		int thumbWidth = width;
+		int thumbHeight = height;
+		double thumbRatio = (double) thumbWidth / (double) thumbHeight;
+		int imageWidth = image.getWidth(null);
+		int imageHeight = image.getHeight(null);
+		double imageRatio = (double) imageWidth / (double) imageHeight;
+		if (thumbRatio < imageRatio) {
+			thumbHeight = (int) (thumbWidth / imageRatio);
+		} else {
+			thumbWidth = (int) (thumbHeight * imageRatio);
+		}
+		// draw original image to thumbnail image object and
+		// scale it to the new size on-the-fly
+		BufferedImage thumbImage = new BufferedImage(thumbWidth, thumbHeight,
+				BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics2D = thumbImage.createGraphics();
+		graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		graphics2D.drawImage(image, 0, 0, thumbWidth, thumbHeight, null);
+		// save thumbnail image to OUTFILE
+		ImageIO.write(thumbImage, "png", out);
+		return out;
+	}
+
 	public static void toJpegThumbnail(File src, File tgt, int maxWidth)
 			throws Exception {
 		BufferedImage img = ImageIO.read(src);
@@ -273,7 +302,7 @@ public class ImgUtilities {
 				compressionQuality = compressionQuality != null
 						? compressionQuality
 						: LooseContext.getContext().getFloat(
-								ImgUtilities.CONTEXT_JPEG_COMPRESSION_RATIO);
+								ImgUtil.CONTEXT_JPEG_COMPRESSION_RATIO);
 				iwp.setCompressionQuality(
 						compressionQuality == null ? 0.8f : compressionQuality);
 				ImageOutputStream ios = new MemoryCacheImageOutputStream(os);
@@ -307,7 +336,7 @@ public class ImgUtilities {
 		iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 		compressionQuality = compressionQuality != null ? compressionQuality
 				: LooseContext.getContext()
-						.getFloat(ImgUtilities.CONTEXT_JPEG_COMPRESSION_RATIO);
+						.getFloat(ImgUtil.CONTEXT_JPEG_COMPRESSION_RATIO);
 		iwp.setCompressionQuality(
 				compressionQuality == null ? 0.8f : compressionQuality);
 		ImageOutputStream ios = new MemoryCacheImageOutputStream(os);
@@ -318,7 +347,7 @@ public class ImgUtilities {
 		writer.dispose();
 	}
 
-	public ImgUtilities() {
+	public ImgUtil() {
 	}
 
 	// This class overrides the setCompressionQuality() method to workaround

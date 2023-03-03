@@ -12,7 +12,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.EncryptionUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 	public static boolean USE_MD5_CHANGE_CHECK;
@@ -92,7 +92,7 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 
 	public void evalMd5(InputStream stream) {
 		try {
-			byte[] bytes = ResourceUtilities.readStreamToByteArray(stream);
+			byte[] bytes = Io.read().inputStream(stream).asBytes();
 			md5 = EncryptionUtils.MD5(bytes);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

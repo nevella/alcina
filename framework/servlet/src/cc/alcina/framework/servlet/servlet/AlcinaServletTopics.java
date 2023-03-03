@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.LengthConstrainedStringWriter;
@@ -35,7 +35,7 @@ public class AlcinaServletTopics {
 				File file = DataFolderProvider.get().getChildFile(
 						SEUtilities.getNestedSimpleName(getClass())
 								+ ".serializationOverflow.txt");
-				ResourceUtilities.write(v.preOverflowResult, file);
+				Io.write().string(v.preOverflowResult).toFile(file);
 				logger.info("Wrote overflow to {}", file);
 			}
 		}

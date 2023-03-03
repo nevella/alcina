@@ -54,8 +54,8 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -152,8 +152,8 @@ public class TransformCommit {
 					String fileName = String.format("%s_%s_ser.txt",
 							clientInstanceId, id);
 					File out = SEUtilities.getChildFile(saveDir, fileName);
-					ResourceUtilities.write(recordSerializer.write(record),
-							out);
+					Io.write().string(recordSerializer.write(record))
+							.toFile(out);
 				}
 				logger.info("Wrote {} offline/bulk records to {}",
 						records.size(), saveDir);
@@ -443,8 +443,8 @@ public class TransformCommit {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			return new DomainTransformLayerWrapper(null);
 		}
-		int maxTransformChunkSize = ResourceUtilities
-				.getInteger(TransformCommit.class, "maxTransformChunkSize");
+		int maxTransformChunkSize = Configuration.getInt(TransformCommit.class,
+				"maxTransformChunkSize");
 		/*
 		 * If context not set (by http request), it's from the server
 		 */
@@ -846,7 +846,7 @@ public class TransformCommit {
 				Ax.format("%s/%s.txt", DTR_EXCEPTION, LocalDateTime.now()
 						.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
 		file.getParentFile().mkdirs();
-		ResourceUtilities.write(response.getRequest().toString(), file);
+		Io.write().string(response.getRequest().toString()).toFile(file);
 		logger.warn(
 				Ax.format("Request with exceptions written to: \n\t%s", file));
 	}

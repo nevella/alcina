@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class GCLogParser {
 	public Events parse(String path, int from, int logPausesGtMillis) {
@@ -37,8 +37,8 @@ public class GCLogParser {
 				from = 0;
 			}
 			fis.skip(from);
-			byte[] bytes = ResourceUtilities
-					.readStreamToByteArray(new BufferedInputStream(fis));
+			byte[] bytes = Io.read().inputStream(new BufferedInputStream(fis))
+					.asBytes();
 			events.end = from + bytes.length;
 			logContents = new String(bytes, StandardCharsets.UTF_8);
 		} catch (Exception e) {

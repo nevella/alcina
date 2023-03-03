@@ -293,7 +293,7 @@ public class SEUtilities {
 		}
 		FileInputStream ins = new FileInputStream(in);
 		FileOutputStream os = new FileOutputStream(out);
-		ResourceUtilities.writeStreamToStream(ins, os);
+		Io.Streams.copy(ins, os);
 		out.setLastModified(in.lastModified());
 		ins.close();
 		return 1;
@@ -595,8 +595,8 @@ public class SEUtilities {
 				|| file1.length() != file2.length()) {
 			return false;
 		}
-		return Arrays.equals(ResourceUtilities.readFileToByteArray(file1),
-				ResourceUtilities.readFileToByteArray(file2));
+		return Arrays.equals(Io.read().file(file1).asBytes(),
+				Io.read().file(file2).asBytes());
 	}
 
 	public static <T> List<T> filterCollection(Collection<T> coll,

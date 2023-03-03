@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SimpleHttp;
 
 @Registration.Singleton(GeolocationResolver.class)
@@ -42,8 +41,7 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
 			ipAddress = m.group(1);
 		}
 		try {
-			String apiKey = ResourceUtilities
-					.get(GeolocationResolver_Ipstack.class, "apiKey");
+			String apiKey = Configuration.get(GeolocationResolver_Ipstack.class, "apiKey");
 			// Generate query
 			String url = Ax.format("http://api.ipstack.com/%s", ipAddress);
 			StringMap params = StringMap.properties("access_key", apiKey,

@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SimpleHttp;
 
 /**
@@ -48,8 +48,7 @@ public class StripAttachmentHeaderServlet extends HttpServlet {
 			byte[] bytes = query.asBytes();
 			response.setContentType(query.getContentType());
 			response.setContentLength(bytes.length);
-			ResourceUtilities
-					.writeStreamToStream(new ByteArrayInputStream(bytes), os);
+			Io.Streams.copy(new ByteArrayInputStream(bytes), os);
 		} catch (Exception e) {
 			String message = String.format("Problem requesting url: \n%s\n",
 					url);

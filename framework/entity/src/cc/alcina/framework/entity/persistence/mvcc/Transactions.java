@@ -27,7 +27,6 @@ import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ObjectUtil;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObjectVersionsMvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
@@ -94,7 +93,7 @@ public class Transactions {
 	}
 
 	public static Map<String, String> primitiveFieldValues(Object object) {
-		return ResourceUtilities.primitiveFieldValues(object);
+		return ObjectUtil.primitiveFieldValues(object);
 	}
 
 	/*
@@ -313,7 +312,7 @@ public class Transactions {
 	private Set<TransactionId> committedTransactionIds = new ObjectOpenHashSet<>();
 
 	private Transactions() {
-		ResourceUtilities.propertiesInvalidated
+		Configuration.properties.invalidated
 				.add(this::configurationInvalidated);
 		this.configurationInvalidated();
 	}
@@ -414,8 +413,8 @@ public class Transactions {
 					long age = System.currentTimeMillis()
 							- transaction.startTime;
 					if (!transaction.publishedLongRunningTxWarning
-							&& age > Configuration.getInt(
-									Transaction.class, "warnAgeSecs")
+							&& age > Configuration.getInt(Transaction.class,
+									"warnAgeSecs")
 									* TimeConstants.ONE_SECOND_MS) {
 						transaction.publishedLongRunningTxWarning = true;
 						Transaction.logger.warn(
@@ -434,9 +433,8 @@ public class Transactions {
 									"No originating thread :: {}", transaction);
 						}
 					}
-					long timeout = ResourceUtilities
-							.getInteger(Transaction.class, "maxAgeSecs")
-							* TimeConstants.ONE_SECOND_MS;
+					long timeout = Configuration.getInt(Transaction.class,
+							"maxAgeSecs") * TimeConstants.ONE_SECOND_MS;
 					if (transaction.getTimeout() == 0) {
 						seenStandardTransactionTimeout = true;
 					} else {

@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class DevConsoleProtocolHandler extends AbstractHandler {
 	private DevConsoleRemote devConsoleRemote;
@@ -47,8 +47,8 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 		try {
 			LooseContext.push();
 			response.setContentType("application/json");
-			String requestJson = ResourceUtilities
-					.readStreamToString(request.getInputStream());
+			String requestJson = Io.read().inputStream(request.getInputStream())
+					.asString();
 			if (requestJson.length() > 0) {
 				RemoteConsoleRequest consoleRequest = AlcinaBeanSerializer
 						.deserializeHolder(requestJson);

@@ -88,7 +88,6 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
@@ -1302,8 +1301,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	class ConnectionPool {
-		int maxConnections = ResourceUtilities
-				.getInteger(DomainStoreLoaderDatabase.class, "maxConnections");
+		int maxConnections = Configuration.getInt(DomainStoreLoaderDatabase.class, "maxConnections");
 
 		private Connection initialWarmupConnection;
 

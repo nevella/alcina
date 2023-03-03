@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -60,8 +59,9 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
@@ -258,7 +258,7 @@ public abstract class DevHelper {
 	}
 
 	public Set<Long> getIds(String fileName) throws Exception {
-		String idStr = ResourceUtilities.readFileToString(fileName);
+		String idStr = Io.read().path(fileName).asString();
 		Pattern p = Pattern.compile("\\d+");
 		Set<Long> ids = new LinkedHashSet<Long>();
 		Matcher m = p.matcher(idStr);
@@ -379,8 +379,8 @@ public abstract class DevHelper {
 		while (true) {
 			try {
 				configPath = getAppConfigPath(prefs);
-				ResourceUtilities.registerCustomProperties(
-						new FileInputStream(configPath));
+				Configuration.properties
+						.register(new FileInputStream(configPath));
 				configLoaded = true;
 				break;
 			} catch (Exception e) {
@@ -469,16 +469,6 @@ public abstract class DevHelper {
 	}
 
 	public abstract DevHelper solidTestEnvSecondHalf();
-
-	public void useMountSshfsFs() {
-		try {
-			FileInputStream fis = new FileInputStream(
-					"/Users/ouiji/git/jade/server/src/au/com/barnet/jade/test/sshfs.properties");
-			ResourceUtilities.registerCustomProperties(fis);
-		} catch (FileNotFoundException e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
 
 	public void writeObject(Object obj) {
 		writeObject(obj, obj.getClass().getSimpleName());

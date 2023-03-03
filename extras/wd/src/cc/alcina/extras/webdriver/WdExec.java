@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 
 public class WdExec {
 	private WebDriver driver;
@@ -285,7 +285,7 @@ public class WdExec {
 		try {
 			String url = CommonUtils.combinePaths(token.getConfiguration().uri,
 					relativeUrl);
-			return ResourceUtilities.readUrlAsString(url);
+			return Io.read().url(url).asString();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -439,10 +439,7 @@ public class WdExec {
 
 		@Override
 		public List<WebElement> findElements(SearchContext context) {
-			String js = ResourceUtilities
-					.readClassPathResourceAsStringPreferFile(WdExec.class,
-							"res/matching-text.js",
-							"/private/var/local/git/webdriver/src/au/com/barnet/webdriver/res/matching-text.js");
+			String js = Io.read().resource("res/matching-text.js").asString();
 			js = js.replace("##regex##", textMatchParent);
 			long timeoutAt = System.currentTimeMillis() + timeoutSecs * 1000;
 			while (System.currentTimeMillis() < timeoutAt) {

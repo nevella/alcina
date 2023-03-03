@@ -39,7 +39,7 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 
 	@Override
 	public DomDocument loadFromUrl(String url) {
-		return ResourceUtilities.loadXmlDocFromUrl(url);
+		return Io.read().url(url).asDomDocument();
 	}
 
 	@Override
