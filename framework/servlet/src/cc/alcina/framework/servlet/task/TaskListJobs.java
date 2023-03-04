@@ -373,8 +373,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 				filters.add(job -> job.getResultType() == jobResultType);
 			}
 			if (scheduled != null) {
-				filters.add(job -> scheduled ? job.getRunAt() != null
-						: job.getRunAt() == null);
+				filters.add(job -> scheduled ? job.root().getRunAt() != null
+						: job.root().getRunAt() == null);
 			}
 			if (filters.size() > 0) {
 				active = true;
