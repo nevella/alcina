@@ -70,6 +70,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -217,6 +218,11 @@ public class JobRegistry {
 
 	public static boolean isInitialised() {
 		return instance != null;
+	}
+
+	public static void logLargeResult(Job job) {
+		Job populated = job.domain().ensurePopulated();
+		Io.log().toFile(populated.getLargeResult().toString());
 	}
 
 	private static void checkAnnotatedPermissions(Object o) {

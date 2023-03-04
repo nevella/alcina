@@ -117,7 +117,6 @@ public class JobServlet extends AlcinaServlet {
 		Action action = Action
 				.valueOf(Ax.blankTo(request.getParameter("action"), "list"));
 		String id = request.getParameter("id");
-		String filter = request.getParameter("filter");
 		boolean returnJobId = Objects
 				.equals(request.getParameter("return_job_id"), "true");
 		Job job = null;
@@ -125,9 +124,7 @@ public class JobServlet extends AlcinaServlet {
 		switch (action) {
 		case list:
 			TaskListJobs logJobs = new TaskListJobs();
-			logJobs.setFilter(filter);
-			logJobs.setListConsistencyJobs(
-					Boolean.valueOf(request.getParameter("list-consistency")));
+			logJobs.populateFromParameters(request.getParameterMap());
 			job = logJobs.perform();
 			break;
 		case detail:
