@@ -46,6 +46,8 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
 @Registration(JsonObjectSerializer.class)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
+	public static final int DEFAULT_MAX_LENGTH = 10000000;
+
 	public static final String CONTEXT_WITHOUT_MAPPER_POOL = JacksonJsonObjectSerializer.class
 			+ ".CONTEXT_NO_MAPPER";
 
@@ -77,7 +79,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	public JacksonJsonObjectSerializer() {
 		maxLength = ResourceUtilities.getInteger(
-				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
+				JacksonJsonObjectSerializer.class, "maxLength",
+				DEFAULT_MAX_LENGTH);
 		if (LooseContext.has(MAX_LENGTH)) {
 			maxLength = LooseContext.getInteger(MAX_LENGTH);
 		}
