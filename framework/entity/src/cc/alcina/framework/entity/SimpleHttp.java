@@ -76,7 +76,7 @@ public class SimpleHttp {
 	}
 
 	// Request the URL and return as bytes
-	public byte[] asBytes() throws Exception {
+	public byte[] asBytes() throws IOException {
 		InputStream in = null;
 		connection = null;
 		// Ensure headers are present
@@ -196,10 +196,16 @@ public class SimpleHttp {
 		}
 	}
 
-	// Set as a PUT request
-	public SimpleHttp withPutMethod() {
-		this.method = "PUT";
-		return this;
+	public String asCurl() {
+		Preconditions.checkArgument(this.method.equals("GET"));
+		FormatBuilder fb = new FormatBuilder().separator(" ");
+		fb.append("curl");
+		this.headers.entrySet().forEach(h -> {
+			fb.append("--header");
+			fb.format("'%s: %s'", h.getKey(), h.getValue());
+		});
+		fb.format("'%s'", strUrl);
+		return fb.toString();
 	}
 
 	// Request the URL and return as string
@@ -311,6 +317,12 @@ public class SimpleHttp {
 		return this;
 	}
 
+	// Set as a PUT request
+	public SimpleHttp withPutMethod() {
+		this.method = "PUT";
+		return this;
+	}
+
 	// Set query string parameters for the request
 	public SimpleHttp
 			withQueryStringParameters(StringMap queryStringParameters) {
@@ -326,7 +338,7 @@ public class SimpleHttp {
 
 	/**
 	 * Set read/connect timeout for this request
-	 * 
+	 *
 	 * @param timeout
 	 *            Timeout to set
 	 * @return this SimpleHttp object
@@ -346,17 +358,5 @@ public class SimpleHttp {
 		} else {
 			return input;
 		}
-	}
-
-	public String asCurl() {
-		Preconditions.checkArgument(this.method.equals("GET"));
-		FormatBuilder fb = new FormatBuilder().separator(" ");
-		fb.append("curl");
-		this.headers.entrySet().forEach(h -> {
-			fb.append("--header");
-			fb.format("'%s: %s'", h.getKey(), h.getValue());
-		});
-		fb.format("'%s'", strUrl);
-		return fb.toString();
 	}
 }
