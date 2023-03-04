@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -22,6 +23,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -32,6 +34,39 @@ import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.JobServlet;
 
 public class TaskLogJobDetails extends AbstractTaskPerformer {
+	private long jobId;
+
+	private boolean details;
+
+	public long getJobId() {
+		return this.jobId;
+	}
+
+	public boolean isDetails() {
+		return this.details;
+	}
+
+	public TaskLogJobDetails
+			populateFromParameters(Map<String, String[]> parameterMap) {
+		StringMap map = StringMap.flatten(parameterMap);
+		jobId = Long.parseLong(map.get("id"));
+		details = map.is("details");
+		return this;
+	}
+
+	public void setDetails(boolean details) {
+		this.details = details;
+	}
+
+	public void setJobId(long jobId) {
+		this.jobId = jobId;
+	}
+
+	public TaskLogJobDetails withId(long id) {
+		this.jobId = id;
+		return this;
+	}
+
 	private DomNodeHtmlTableCellBuilder
 			date(DomNodeHtmlTableCellBuilder builder) {
 		DomNode lastNode = builder.previousElement();
@@ -44,6 +79,11 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 		DomNode lastNode = builder.previousElement();
 		lastNode.setClassName("numeric");
 		return builder;
+	}
+
+	private TaskLogJobDetails withDetails(boolean details) {
+		this.details = details;
+		return this;
 	}
 
 	protected void descendantAndSubsequentJobs(Job top, DomNode body) {
@@ -70,8 +110,8 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 					.cell(timestamp(job.getEndTime())).cell(job.getPerformer())
 					.accept(Utils::instance);
 			DomNode td = cellBuilder.append();
-			String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
-					.withValue(String.valueOf(job.getId())));
+			String href = JobServlet
+					.createTaskUrl(new TaskLogJobDetails().withId(job.getId()));
 			td.html().addLink("Details", href, "_blank");
 		});
 		body.builder().tag("hr").append();
@@ -119,8 +159,8 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 					.className("thread-data").append();
 			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 			DomNode td = builder.row().cell("Job").append();
-			String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
-					.withValue(String.valueOf(active.getId())));
+			String href = JobServlet.createTaskUrl(
+					new TaskLogJobDetails().withId(active.getId()));
 			td.html().addLink(active.toDisplayName(), href, "_blank");
 			td.builder().text("\u00a0-\u00a0").append();
 			String cancelHref = JobServlet.createTaskUrl(new TaskCancelJob()
@@ -157,13 +197,20 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 
 	@Override
 	protected void run0() throws Exception {
-		long jobId = Long.parseLong(value);
 		Job job = Job.byId(jobId);
 		if (job == null) {
 			JobContext.info("Job {} does not exist", jobId);
 		} else {
 			List<Job> threadData = JobRegistry.get().getThreadData(job);
 			job.domain().ensurePopulated();
+			if (job.getLargeResult() != null) {
+				if (details) {
+					JobContext.get().getJob()
+							.setLargeResult(job.getLargeResult().toString());
+					logger.info("Details output to job.largeResult");
+					return;
+				}
+			}
 			DomDocument doc = DomDocument.basicHtmlDoc();
 			String css = ResourceUtilities
 					.readRelativeResource("res/TaskListJobs.css");
@@ -185,6 +232,12 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 				queueDiv.text(allocationQueue.toString());
 			}
 			queueDiv.append();
+			if (job.getLargeResult() != null) {
+				DomNode div = body.builder().tag("div").append();
+				String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
+						.withId(job.getId()).withDetails(true));
+				div.html().addLink("Large result/details", href, "");
+			}
 			processData(threadData, body);
 			descendantAndSubsequentJobs(job, body);
 			fields(job, body);

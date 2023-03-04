@@ -54,8 +54,14 @@ public class JobServlet extends AlcinaServlet {
 	public static String createTaskUrl(String host, Task task) {
 		StringMap queryParameters = new StringMap();
 		if (task instanceof TaskLogJobDetails) {
-			queryParameters.put("action", "detail");
-			queryParameters.put("id", ((TaskLogJobDetails) task).value);
+			{
+				TaskLogJobDetails typed = (TaskLogJobDetails) task;
+				queryParameters.put("action", "detail");
+				queryParameters.put("id", String.valueOf(typed.getJobId()));
+				if (typed.isDetails()) {
+					queryParameters.put("details", Boolean.TRUE.toString());
+				}
+			}
 		} else if (task instanceof TaskCancelJob) {
 			queryParameters.put("action", "cancel");
 			queryParameters.put("id", ((TaskCancelJob) task).value);
@@ -123,12 +129,14 @@ public class JobServlet extends AlcinaServlet {
 		boolean outputAsHtml = false;
 		switch (action) {
 		case list:
-			TaskListJobs logJobs = new TaskListJobs();
-			logJobs.populateFromParameters(request.getParameterMap());
-			job = logJobs.perform();
+			job = new TaskListJobs()
+					.populateFromParameters(request.getParameterMap())
+					.perform();
 			break;
 		case detail:
-			job = new TaskLogJobDetails().withValue(id).perform();
+			job = new TaskLogJobDetails()
+					.populateFromParameters(request.getParameterMap())
+					.perform();
 			break;
 		case control_job:
 			job = new TaskLogJobDetails()

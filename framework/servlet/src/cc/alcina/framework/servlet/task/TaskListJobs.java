@@ -69,12 +69,14 @@ public class TaskListJobs extends AbstractTaskPerformer
 		return this.listConsistencyJobs;
 	}
 
-	public void populateFromParameters(Map<String, String[]> parameterMap) {
+	public TaskListJobs
+			populateFromParameters(Map<String, String[]> parameterMap) {
 		StringMap map = StringMap.flatten(parameterMap);
-		filterText = map.get(filterText);
+		filterText = map.get("filter");
 		listConsistencyJobs = map.is("listConsistencyJobs");
 		jobResultType = map.enumValue("jobResultType", JobResultType.class);
 		scheduled = map.containsKey("scheduled") ? map.is("scheduled") : null;
+		return this;
 	}
 
 	public void setFilterText(String filterText) {
@@ -143,9 +145,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 						.accept(Utils::large);
 				DomNode td = cellBuilder.append();
 				{
-					String href = JobServlet
-							.createTaskUrl(new TaskLogJobDetails()
-									.withValue(String.valueOf(job.getId())));
+					String href = JobServlet.createTaskUrl(
+							new TaskLogJobDetails().withId(job.getId()));
 					td.html().addLink("Details", href, "_blank");
 				}
 				td.builder().text(" - ").tag("span").append();
@@ -202,9 +203,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 						.accept(Utils::instance);
 				DomNode td = cellBuilder.append();
 				{
-					String href = JobServlet
-							.createTaskUrl(new TaskLogJobDetails()
-									.withValue(String.valueOf(job.getId())));
+					String href = JobServlet.createTaskUrl(
+							new TaskLogJobDetails().withId(job.getId()));
 					td.html().addLink("Details", href, "_blank");
 				}
 				td.builder().text(" - ").tag("span").append();
@@ -265,8 +265,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 						.cell(timestamp(job.getEndTime()))
 						.cell(job.getPerformer()).accept(Utils::instance);
 				DomNode td = cellBuilder.append();
-				String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
-						.withValue(String.valueOf(job.getId())));
+				String href = JobServlet.createTaskUrl(
+						new TaskLogJobDetails().withId(job.getId()));
 				td.html().addLink("Details", href, "_blank");
 			});
 		}
