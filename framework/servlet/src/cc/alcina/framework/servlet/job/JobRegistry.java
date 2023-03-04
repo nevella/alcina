@@ -225,6 +225,11 @@ public class JobRegistry {
 		Io.log().toFile(populated.getLargeResult().toString());
 	}
 
+	public static Job scheduleConsistency(Task task) {
+		return createBuilder().withTask(task).ensureConsistency(
+				JobDomain.DefaultConsistencyPriorities._default);
+	}
+
 	private static void checkAnnotatedPermissions(Object o) {
 		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
 		if (annotation != null) {
