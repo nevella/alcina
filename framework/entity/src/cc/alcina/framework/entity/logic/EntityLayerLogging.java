@@ -107,8 +107,7 @@ public class EntityLayerLogging {
 	}
 
 	public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
-		if (Configuration.is(EntityLayerLogging.class,
-				"debugSetLogLevels")) {
+		if (Configuration.is("debugSetLogLevels")) {
 			Ax.out("%s => %s", slf4jlogger.getName(), level);
 		}
 		if (!Ax.isTest() && slf4jlogger.getClass().getName()
@@ -152,10 +151,11 @@ public class EntityLayerLogging {
 
 	public static void setLogLevelsFromCustomProperties() {
 		Properties properties = Configuration.properties;
-		properties.keys().forEach(k -> {
+		properties.keys().sorted().forEach(k -> {
 			if (k.startsWith("log.level.")) {
-				k = k.substring("log.level.".length());
-				setLevel(k, Level.toLevel(properties.get(k)));
+				String loggerClass = k.substring("log.level.".length());
+				String sArg = properties.get(k);
+				setLevel(loggerClass, Level.toLevel(sArg));
 			}
 		});
 	}

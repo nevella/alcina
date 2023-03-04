@@ -380,7 +380,7 @@ public abstract class DevHelper {
 			try {
 				configPath = getAppConfigPath(prefs);
 				Configuration.properties
-						.register(new FileInputStream(configPath));
+						.register(Io.read().path(configPath).asString());
 				configLoaded = true;
 				break;
 			} catch (Exception e) {

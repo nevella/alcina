@@ -131,7 +131,7 @@ public class ControlServlet extends AlcinaServlet {
 		}
 		switch (csr.getCommand()) {
 		case REFRESH_CONFIG:
-			Registry.impl(AppLifecycleServletBase.class).refreshProperties();
+			Registry.impl(AppLifecycleServletBase.class).loadCustomProperties();
 			writeAndClose(
 					String.format("Properties refreshed - %s", new Date()),
 					response);
@@ -155,7 +155,8 @@ public class ControlServlet extends AlcinaServlet {
 			String toAddress = testSendmail();
 			String message = Ax.format(
 					"Test email sent to: %s from: %s via: %s", toAddress,
-					EntityLayerUtils.getLocalHostName(), Configuration.get(ContentDeliveryEmail.class, "smtp.host.name"));
+					EntityLayerUtils.getLocalHostName(), Configuration
+							.get(ContentDeliveryEmail.class, "smtp.host.name"));
 			logger.warn(message);
 			writeAndClose(message, response);
 			break;

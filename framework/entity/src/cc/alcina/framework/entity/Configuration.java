@@ -15,13 +15,16 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.Topic;
@@ -175,16 +178,20 @@ public class Configuration {
 	}
 
 	/**
+	 * <p>
 	 * Uses 'bundle' to denote a stringmap which is either a copy of a
 	 * ResourceBundle, or another Properties resource
+	 *
+	 * <p>
+	 * Synchronization - keyValues are CAS-d (and mutation is synchronous)
 	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
 	public static class Properties {
-		public final Topic<Void> invalidated = Topic.create();
+		public final Topic<Void> topicInvalidated = Topic.create();
 
-		private Map<String, PropertyValues> keyValues = new ConcurrentHashMap<>();
+		private Map<String, PropertyValues> keyValues;
 
 		private Map<String, PackageBundles> packageBundles = new ConcurrentHashMap<>();
 
@@ -194,6 +201,7 @@ public class Configuration {
 
 		public Properties() {
 			Arrays.stream(SystemSet.values()).forEach(this::addSet);
+			invalidate();
 		}
 
 		/*
@@ -201,6 +209,10 @@ public class Configuration {
 		 */
 		public void addImmutablePropertyKey(String key) {
 			immutableCustomProperties.put(key, new Object());
+		}
+
+		public void clearCustom() {
+			// TODO Auto-generated method stub
 		}
 
 		public String dump() {
@@ -250,6 +262,10 @@ public class Configuration {
 			}
 		}
 
+		public void register(String propertiesString) {
+			register(Io.read().string(propertiesString).asInputStream());
+		}
+
 		public String set(Class clazz, String key, String value) {
 			return set(new Key(clazz, key).toString(), value);
 		}
@@ -260,20 +276,37 @@ public class Configuration {
 			return prior;
 		}
 
+		/*
+		 * Locking note - concurrency (of the map) means we can update at any
+		 * time, synchronization enures we don't have duplicate, unneeded loads,
+		 * and that invalidations are sequential
+		 */
 		private void ensureBundles(Key key) {
 			String packageName = key.clazz.getPackageName();
-			// compute if absent both synchronizes creation, and populates
-			// cache
-			packageBundles.computeIfAbsent(packageName, name -> {
-				PackageBundles bundles = new PackageBundles(key.clazz);
-				packageBundles.put(packageName, bundles);
-				bundles.load();
-				return bundles;
-			});
+			if (!packageBundles.containsKey(packageName)) {
+				// double-checked
+				synchronized (this) {
+					if (!packageBundles.containsKey(packageName)) {
+						PackageBundles bundles = new PackageBundles(key.clazz);
+						packageBundles.put(packageName, bundles);
+						bundles.load();
+					}
+				}
+			}
 		}
 
-		private void invalidate() {
-			// TODO Auto-generated method stub
+		private synchronized void invalidate() {
+			Set<String> keys = new LinkedHashSet<>();
+			orderedSets.forEach(set -> set.populateKeys(keys));
+			Map<String, PropertyValues> keyValues = keys.stream().collect(
+					AlcinaCollectors.toLinkedHashMap(Function.identity(), k -> {
+						PropertyValues propertyValues = new PropertyValues(k);
+						propertyValues.resolve();
+						return propertyValues;
+					}));
+			// swap
+			this.keyValues = keyValues;
+			topicInvalidated.signal();
 		}
 
 		private String set0(String key, String value) {
@@ -288,11 +321,20 @@ public class Configuration {
 			orderedSets.add(set);
 		}
 
+		void dump(boolean flat) {
+			Map<String, PropertyValues> toDump = keyValues;
+			Map<String, String> map = toDump.keySet().stream().sorted()
+					.collect(AlcinaCollectors.toLinkedHashMap(k -> k,
+							k -> toDump.get(k).resolvedValue));
+			Ax.out(map.entrySet());
+		}
+
 		String get(Key key) {
 			String stringKey = key.toString();
 			ensureBundles(key);
-			if (keyValues.containsKey(stringKey)) {
-				return keyValues.get(stringKey).resolvedValue;
+			PropertyValues propertyValues = keyValues.get(stringKey);
+			if (propertyValues != null) {
+				return propertyValues.resolvedValue;
 			} else {
 				if (key.clazz != null) {
 					Class superclass = key.clazz.getSuperclass();
@@ -320,6 +362,8 @@ public class Configuration {
 
 			Map<PropertySet, StringMap> bundles = new LinkedHashMap<>();
 
+			StringMap unionMap = new StringMap();
+
 			private ClassLoader classLoader;
 
 			public PackageBundles(Class clazz) {
@@ -327,8 +371,19 @@ public class Configuration {
 				classLoader = clazz.getClassLoader();
 			}
 
+			public boolean containsKey(String key) {
+				return unionMap.containsKey(key);
+			}
+
+			public String getValue(String key) {
+				return unionMap.get(key);
+			}
+
+			public Set<String> keys() {
+				return unionMap.keySet();
+			}
+
 			public void load() {
-				Set<String> keys = new LinkedHashSet<>();
 				orderedSets.stream().filter(PropertySet::usesBundles)
 						.forEach(set -> {
 							String specifier = set.specifier();
@@ -344,40 +399,46 @@ public class Configuration {
 									map.put(key, bundle.getString(key));
 								});
 								bundles.put(set, map);
-								keys.addAll(map.keySet());
+								unionMap.putAll(map);
 							} catch (MissingResourceException e) {
 								if (set.isRequired()) {
 									throw e;
 								}
 							}
 						});
-				keys.forEach(key -> {
-					PropertyValues values = new PropertyValues(key);
-					values.resolve();
-					keyValues.put(key, values);
-				});
 				invalidate();
+			}
+
+			@Override
+			public String toString() {
+				return bundles.toString();
 			}
 		}
 
 		class PropertySet {
 			private String key;
 
-			private SystemSet set;
+			private SystemSet systemSet;
 
 			StringMap map;
 
 			public PropertySet(SystemSet set) {
-				this(set.name());
-				this.set = set;
+				this.key = set.name();
+				this.systemSet = set;
+				if (set.usesBundles()) {
+				} else {
+					map = new StringMap();
+				}
 			}
 
 			PropertySet(String key) {
 				this.key = key;
+				// non-system-set sets do not resolve (they're compacted
+				// (package bundles) onto the base systemset)
 			}
 
 			public boolean isRequired() {
-				return set == SystemSet.base;
+				return systemSet == SystemSet.base;
 			}
 
 			public String put(String key, String value) {
@@ -388,8 +449,12 @@ public class Configuration {
 			}
 
 			public Stream<ValueSource> resolve(String key) {
+				if (!resolves()) {
+					return Stream.empty();
+				}
 				Stream<ValueSource> result = null;
 				if (usesBundles()) {
+					result = ValueSource.fromBundles(this, key, packageBundles);
 				} else {
 					result = Stream.of(ValueSource.fromMap(this, key, map));
 				}
@@ -397,7 +462,31 @@ public class Configuration {
 			}
 
 			public String specifier() {
-				return set == SystemSet.base ? "" : "_" + key;
+				return systemSet == SystemSet.base ? "" : "_" + key;
+			}
+
+			@Override
+			public String toString() {
+				FormatBuilder format = new FormatBuilder();
+				format.format("PropertySet: %s", key);
+				format.appendIfNotBlankKv("Map", map);
+				return format.toString();
+			}
+
+			private boolean resolves() {
+				return systemSet != null;
+			}
+
+			void populateKeys(Set<String> keys) {
+				if (!resolves()) {
+					return;
+				}
+				if (usesBundles()) {
+					packageBundles.values()
+							.forEach(bundle -> keys.addAll(bundle.keys()));
+				} else {
+					keys.addAll(map.keySet());
+				}
 			}
 
 			boolean usesBundles() {
@@ -417,21 +506,48 @@ public class Configuration {
 			}
 
 			public void resolve() {
-				List<ValueSource> sources = orderedSets.stream()
-						.flatMap(set -> set.resolve(key))
+				sources = orderedSets.stream().flatMap(set -> set.resolve(key))
 						.collect(Collectors.toList());
 				resolvedValue = sources.isEmpty() ? null
 						: Ax.last(sources).value;
+			}
+
+			@Override
+			public String toString() {
+				FormatBuilder format = new FormatBuilder();
+				format.appendKeyValues(key, resolvedValue);
+				format.indent(2);
+				sources.forEach(format::line);
+				return format.toString();
 			}
 		}
 
 		enum SystemSet {
 			set_loader, base, custom;
+
+			boolean usesBundles() {
+				return this == base;
+			}
 		}
 
 		static class ValueSource {
-			public static ValueSource fromMap(PropertySet propertySet,
-					String key, StringMap map) {
+			static Stream<ValueSource> fromBundles(PropertySet propertySet,
+					String key, Map<String, PackageBundles> packageBundles) {
+				List<ValueSource> results = packageBundles.values().stream()
+						.filter(bundles -> bundles.containsKey(key))
+						.map(bundles -> new ValueSource(bundles, propertySet,
+								bundles.getValue(key)))
+						.collect(Collectors.toList());
+				if (results.size() > 1) {
+					throw new IllegalStateException(Ax.format(
+							"Incorrect configuration - multiple matches for '%s' - \n%s",
+							key, results));
+				}
+				return Stream.of(Ax.first(results));
+			}
+
+			static ValueSource fromMap(PropertySet propertySet, String key,
+					StringMap map) {
 				return map.containsKey(key)
 						? new ValueSource(null, propertySet, map.get(key))
 						: null;
@@ -443,11 +559,22 @@ public class Configuration {
 
 			String value;
 
-			public ValueSource(PackageBundles packageBundles, PropertySet set,
+			ValueSource(PackageBundles packageBundles, PropertySet set,
 					String value) {
 				this.packageBundles = packageBundles;
 				this.set = set;
 				this.value = value;
+			}
+
+			@Override
+			public String toString() {
+				FormatBuilder format = new FormatBuilder();
+				format.appendKeyValues(set.key, value);
+				if (packageBundles != null) {
+					format.indent(2);
+					format.append(packageBundles);
+				}
+				return format.toString();
 			}
 		}
 	}

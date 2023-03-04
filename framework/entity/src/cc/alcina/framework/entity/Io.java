@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -23,6 +24,8 @@ import org.apache.xerces.parsers.DOMParser;
 import org.cyberneko.html.HTMLConfiguration;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
@@ -104,8 +107,12 @@ public class Io {
 			return new DomDocument(asDocument());
 		}
 
-		public InputStream asInputStream() throws IOException {
-			return resource.getStream();
+		public InputStream asInputStream() {
+			try {
+				return resource.getStream();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
 		}
 
 		public StringMap asMap(MapType type) {
@@ -163,6 +170,7 @@ public class Io {
 		}
 
 		public ReadOp withCharset(String charsetName) {
+			Preconditions.checkNotNull(charsetName);
 			this.charsetName = charsetName;
 			return this;
 		}
@@ -310,8 +318,12 @@ public class Io {
 								.getResourceAsStream(classpathResource);
 					}
 				} else if (url != null) {
-					stream = new ByteArrayInputStream(
-							new SimpleHttp(url).asBytes());
+					if (url.startsWith("http")) {
+						stream = new ByteArrayInputStream(
+								new SimpleHttp(url).asBytes());
+					} else {
+						stream = new URL(url).openStream();
+					}
 				} else if (bytes != null) {
 					stream = new ByteArrayInputStream(bytes);
 				}
@@ -355,14 +367,15 @@ public class Io {
 
 		/*
 		 * Doesn't do a defensive copy of the internal byte array when calling
-		 * toByteArray (so toByteArray can only be used once, as the last operation
-		 * on the instance)
+		 * toByteArray (so toByteArray can only be used once, as the last
+		 * operation on the instance)
 		 */
-		static class DisposableByteArrayOutputStream extends ByteArrayOutputStream {
+		static class DisposableByteArrayOutputStream
+				extends ByteArrayOutputStream {
 			public DisposableByteArrayOutputStream(int size) {
 				super(size);
 			}
-		
+
 			@Override
 			public synchronized byte[] toByteArray() {
 				if (count == buf.length) {

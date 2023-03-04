@@ -312,7 +312,7 @@ public class Transactions {
 	private Set<TransactionId> committedTransactionIds = new ObjectOpenHashSet<>();
 
 	private Transactions() {
-		Configuration.properties.invalidated
+		Configuration.properties.topicInvalidated
 				.add(this::configurationInvalidated);
 		this.configurationInvalidated();
 	}

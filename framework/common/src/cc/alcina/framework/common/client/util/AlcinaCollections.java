@@ -22,6 +22,10 @@ public class AlcinaCollections {
 		return Registry.impl(CollectionCreators.HashSetCreator.class).create();
 	}
 
+	public static <K, V> Map<K, V> newLinkedHashMap() {
+		return CollectionCreators.Bootstrap.getHashMapCreator().create();
+	}
+
 	public static <T> Set<T> newUniqueSet() {
 		return GWT.isScript() ? JsUniqueSet.create() : newHashSet();
 	}

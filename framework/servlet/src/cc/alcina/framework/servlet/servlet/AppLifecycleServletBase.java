@@ -1,14 +1,11 @@
 package cc.alcina.framework.servlet.servlet;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -57,7 +54,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TimezoneData;
-import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Configuration.Properties;
 import cc.alcina.framework.entity.Io;
@@ -122,8 +118,6 @@ import elemental.json.impl.JsonUtil;
 @SuppressWarnings("deprecation")
 @Registration.Singleton
 public abstract class AppLifecycleServletBase extends GenericServlet {
-	private static Topic<Void> topicConfigurationReloaded = Topic.create();
-
 	public static AppLifecycleServletBase get() {
 		return Registry.impl(AppLifecycleServletBase.class);
 	}
@@ -140,10 +134,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		CollectionCreators.Bootstrap
 				.setConcurrentStringMapCreator(new ConcurrentMapCreatorJvm());
 		CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
-	}
-
-	public static final Topic<Void> topicConfigurationReloaded() {
-		return topicConfigurationReloaded;
 	}
 
 	protected ServletConfig initServletConfig;
@@ -282,12 +272,40 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		getStatusNotifier().ready();
 	}
 
+	public void loadCustomProperties() {
+		try {
+			// note that this does *not* clear existing custom properties, which
+			// would require trickier sync control
+			String loggerLevels = getDefaultLoggerLevels();
+			Configuration.properties.register(loggerLevels);
+			File propertiesFile = new File(
+					AlcinaWebappConfig.get().getCustomPropertiesFilePath());
+			if (propertiesFile.exists()) {
+				Configuration.properties
+						.register(Io.read().file(propertiesFile).asString());
+			} else {
+				File propertiesListFile = SEUtilities.getChildFile(
+						propertiesFile.getParentFile(),
+						"alcina-properties-files.txt");
+				if (propertiesListFile.exists()) {
+					String[] paths = Io.read().file(propertiesListFile)
+							.asString().split("\n");
+					for (String path : paths) {
+						Configuration.properties
+								.register(Io.read().path(path).asString());
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public void refreshProperties() {
 		// FIXME - ru - these should probably cascade/trigger via invalidation
-		loadCustomProperties();
 		Configuration.properties
 				.loadSystemPropertiesFromConfigurationProperties();
-		topicConfigurationReloaded.publish(null);
 		EntityLayerLogging.setLogLevelsFromCustomProperties();
 	}
 
@@ -372,7 +390,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected abstract void initDataFolder();
 
 	protected void initDevConsoleAndWebApp() {
-		topicConfigurationReloaded.add(v -> {
+		Configuration.properties.topicInvalidated.add(v -> {
 			/*
 			 * All optimised configuration property cache refreshing should go
 			 * here
@@ -382,10 +400,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					.is(ThreadlocalTransformManager.class,
 							"ignoreTransformPermissions");
 		});
-		// FIXME - ru - merge to 'refreshProperties'
-		Configuration.properties
-				.loadSystemPropertiesFromConfigurationProperties();
-		topicConfigurationReloaded.publish(null);
 		if (Configuration.is("allowAllHostnameVerifier")) {
 			try {
 				HttpsURLConnection.setDefaultHostnameVerifier(
@@ -395,7 +409,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						CommonUtils.toSimpleExceptionMessage(e));
 			}
 		}
-		// FIXME - reflection - remove (alcinabeanserializer -> elemental)
+		// FIXME - reflection - remove (alcinabeanserializer -> reflective)
 		Registry.register().add(AlcinaBeanSerializerS.class.getName(),
 				Collections.singletonList(AlcinaBeanSerializer.class.getName()),
 				Registration.Implementation.INSTANCE,
@@ -551,35 +565,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		EntityLayerLogging.setLogLevelsFromCustomProperties();
 	}
 
-	protected void loadCustomProperties() {
-		try {
-			String loggerLevels = getDefaultLoggerLevels();
-			Configuration.properties.register(new ByteArrayInputStream(
-					loggerLevels.getBytes(StandardCharsets.UTF_8)));
-			File propertiesFile = new File(
-					AlcinaWebappConfig.get().getCustomPropertiesFilePath());
-			if (propertiesFile.exists()) {
-				FileInputStream fis = new FileInputStream(propertiesFile);
-				Configuration.properties.register(fis);
-			} else {
-				File propertiesListFile = SEUtilities.getChildFile(
-						propertiesFile.getParentFile(),
-						"alcina-properties-files.txt");
-				if (propertiesListFile.exists()) {
-					String[] paths = Io.read().file(propertiesListFile)
-							.asString().split("\n");
-					for (String path : paths) {
-						FileInputStream fis = new FileInputStream(path);
-						Configuration.properties.register(fis);
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	protected void onAppServletInitialised() {
 		ReadonlySupportServletLayer.get();
 		if (usesJobs()) {
@@ -652,8 +637,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 							"Task signature generation failed: cancelling startup");
 				}
 			}
-			Configuration.properties.invalidated
-					.add(v -> topicConfigurationReloaded.publish(null));
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
 			Transaction.end();
