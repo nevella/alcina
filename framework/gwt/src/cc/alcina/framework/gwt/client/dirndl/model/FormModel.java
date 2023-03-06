@@ -66,7 +66,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
-// FIXME - dirndl 1x1d.1 - actions - check validation, form submit
+// FIXME - dirndl 1x1dz - actions - check validation, form submit
 @Directed(
 	receives = { DomEvents.KeyDown.class, ModelEvents.Cancel.class,
 			ModelEvents.Submit.class })
@@ -125,7 +125,8 @@ public class FormModel extends Model
 		TransformManager.get().deregisterProvisionalObject(getState().model);
 		if (currentPlace instanceof EntityPlace) {
 			/*
-			 * behaviour differs. If action was CREATE, go back - if EDIT, VIEW
+			 * behaviour differs. If action was CREATE, go back - if EDIT go to
+			 * VIEW
 			 */
 			EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
 			if (currentEntityPlace.action == EntityAction.CREATE) {
@@ -141,6 +142,29 @@ public class FormModel extends Model
 					.copy();
 			categoryNamePlace.nodeName = null;
 			categoryNamePlace.go();
+		}
+	}
+
+	public void onEditComittedRemote(EntityLocator createdLocator) {
+		if (!provideIsBound()) {
+			return;
+		}
+		Place currentPlace = Client.currentPlace();
+		EntityPlace entityPlace = null;
+		if (currentPlace instanceof EntityPlace) {
+			/*
+			 * behaviour identical for either CREATE or EDIT ( -> view)
+			 */
+			EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
+			entityPlace = (EntityPlace) Reflections
+					.newInstance(currentPlace.getClass());
+			entityPlace.id = currentEntityPlace.action == EntityAction.CREATE
+					? createdLocator.id
+					: currentEntityPlace.id;
+			entityPlace.go();
+		} else {
+			// NOOP, place has changed (since the created event should only
+			// have been fired from activity.place of type EntityPlace
 		}
 	}
 
@@ -170,36 +194,15 @@ public class FormModel extends Model
 		submit();
 	}
 
-	// FIXME - dirndl 1x1d.1 - action - cleaner would be to emit a 'created'
-	// event and let the default top-level handlers emit the new place
 	public boolean submit() {
 		Consumer<Void> onValid = o -> {
 			if (getState().model instanceof Entity) {
+				// FIXME - adjunct
 				ClientTransformManager.cast()
 						.promoteToDomainObject(getState().model);
-				Consumer<EntityLocator> callback = createdLocator -> {
-					// see somewhat similar handling in cancelhandler
-					Place currentPlace = Client.currentPlace();
-					if (currentPlace instanceof EntityPlace) {
-						/*
-						 * behaviour currently identical for either CREATE or
-						 * EDIT ( -> view)
-						 */
-						EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
-						EntityPlace entityPlace = (EntityPlace) Reflections
-								.newInstance(currentPlace.getClass());
-						entityPlace.id = currentEntityPlace.action == EntityAction.CREATE
-								? createdLocator.id
-								: currentEntityPlace.id;
-						entityPlace.go();
-					}
-					EntityPlace entityPlace = ((EntityPlace) Client
-							.currentPlace()).copy();
-					entityPlace.action = EntityAction.VIEW;
-					entityPlace.go();
-				};
 				CommitToStorageTransformListener
-						.flushAndRunWithFirstCreationConsumer(callback);
+						.flushAndRunWithFirstCreationConsumer(
+								this::onEditComittedRemote);
 			}
 			if (Client.currentPlace() instanceof EntityPlace) {
 			} else if (Client.currentPlace() instanceof CategoryNamePlace) {

@@ -44,7 +44,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
  * currentvalue (from input)
  *
  * More specifically: emit inputchanged, changed events (from DOM input/change).
- * Don't reemit those transformed events
+ * Don't reemit those transformed events (the original DOM events)
  */
 @Directed(
 	bindings = { @Binding(type = Type.INNER_HTML, from = "value"),
@@ -53,7 +53,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 				type = Type.PROPERTY,
 				literal = "true",
 				to = "contenteditable") },
-	receives = { DomEvents.Input.class, DomEvents.Focusout.class })
+	receives = { DomEvents.Input.class, DomEvents.Focusout.class },
+	emits = { ModelEvents.Input.class })
 public class EditArea extends Model
 		implements FocusOnBind, HasTag, DomEvents.Input.Handler,
 		LayoutEvents.BeforeRender.Handler, DomEvents.Focusout.Handler {

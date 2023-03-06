@@ -272,10 +272,14 @@ public class ModelEvents {
 	 * @author nick@alcina.cc
 	 *
 	 */
-	public static class Input extends ModelEvent<Object, Input.Handler> {
+	public static class Input extends ModelEvent<String, Input.Handler> {
 		@Override
 		public void dispatch(Input.Handler handler) {
 			handler.onInput(this);
+		}
+
+		public String getCurrentValue() {
+			return getModel();
 		}
 
 		@Override
