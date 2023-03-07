@@ -33,6 +33,8 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
@@ -123,6 +125,13 @@ public abstract class Model extends Bindable implements
 			bindings = new Bindings();
 		}
 		return bindings;
+	}
+
+	public void emitEvent(Class<? extends ModelEvent> clazz) {
+		if (!provideIsBound()) {
+			return;
+		}
+		NodeEvent.Context.fromNode(provideNode()).dispatch(clazz, this);
 	}
 
 	@Override
