@@ -46,6 +46,10 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
 @Registration(JsonObjectSerializer.class)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
+	public static final String MAX_LENGTH = "maxLength";
+
+	public static final int DEFAULT_MAX_LENGTH = 10000000;
+
 	public static final String CONTEXT_WITHOUT_MAPPER_POOL = JacksonJsonObjectSerializer.class
 			+ ".CONTEXT_NO_MAPPER";
 
@@ -75,7 +79,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	// FIXME - 2023 - remove maxLength - check should be for mvcc (domaingraph)
 	// objects, not length per se
 	public JacksonJsonObjectSerializer() {
-		maxLength = Configuration.key("maxLength").withContextOverride(true)
+		maxLength = Configuration.key(MAX_LENGTH).withContextOverride(true)
 				.intValue();
 	}
 
