@@ -122,7 +122,7 @@ public class Topic<T> {
 
 	/*
 	 *
-	 * Thread-safe (lookup is copy-on-write)
+	 * Thread-safe (lookup is copy-on-write, mutation is synchronized)
 	 */
 	public static class Publisher {
 		// use a list - the listener may be added/removed multiple times

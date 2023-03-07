@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.util.Collections;
 import java.util.List;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
@@ -103,11 +104,22 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Note that subclasses should *not* call the no-args constructor
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 * @param <PN>
+	 */
 	// FIXME - dirndl 1x1d - this should expect a relative, not absolute path
 	public abstract static class AbstractPathNode<PN extends AbstractPathNode>
 			extends TreeNode<PN> {
 		protected TreePath<PN> treePath;
 
+		/**
+		 * Should not be called by child constructor - but required for
+		 * serialization
+		 */
 		public AbstractPathNode() {
 		}
 
@@ -296,7 +308,9 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		// model, keep the node) and just handle the element delta
 		//
 		// also - directedlayout buffer changes - child replacer doesn't fire
-		// immediately, rather adds to queue
+		// immediately, rather adds to queue (although I think that's required
+		// by the reentrancy logic anyway - at least if there's an active layout
+		// pass)
 		public void setChildren(List<TreeNode<NM>> children) {
 			List<TreeNode<NM>> old_children = this.children;
 			this.children = children;
@@ -323,6 +337,13 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			this.selected = selected;
 			propertyChangeSupport().firePropertyChange("selected", old_selected,
 					selected);
+		}
+
+		public void sortChildren() {
+			IdentityArrayList<TreeNode<NM>> sorted = IdentityArrayList
+					.copyOf(children);
+			Collections.sort((List<? extends Comparable>) sorted);
+			setChildren(sorted);
 		}
 
 		@Directed(

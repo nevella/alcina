@@ -18,6 +18,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.xerces.parsers.DOMParser;
@@ -113,6 +114,10 @@ public class Io {
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
+		}
+
+		public List<String> asList() {
+			return Arrays.asList(asString().split("\n"));
 		}
 
 		public StringMap asMap(MapType type) {

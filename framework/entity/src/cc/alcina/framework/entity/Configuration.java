@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,11 +25,17 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
+import cc.alcina.framework.entity.Configuration.PropertyTree.PropertyNode;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.CsvCols;
+import cc.alcina.framework.entity.util.CsvCols.CsvRow;
+import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 
 /*
  * Replacement for system configuration portion of ResourceUtilities
@@ -98,10 +105,83 @@ public class Configuration {
 				.getCallerClass(), keyPart);
 	}
 
+	public static class ConfigurationFile {
+		private String path;
+
+		private String set;
+
+		private String packageName;
+
+		private String url;
+
+		String contents;
+
+		public ConfigurationFile() {
+		}
+
+		public ConfigurationFile(String base, File file, String set) {
+			this.path = file.getPath();
+			this.set = set;
+			if (base != null) {
+				this.packageName = file.getParentFile().getPath()
+						.substring(base.length()).replace("/", ".")
+						.replaceFirst("^\\.", "");
+			}
+			try {
+				this.url = file.toURI().toURL().toString();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+			load();
+		}
+
+		public String getPackageName() {
+			return this.packageName;
+		}
+
+		public String getPath() {
+			return this.path;
+		}
+
+		public String getSet() {
+			return this.set;
+		}
+
+		public boolean provideContainsNonNamespaced() {
+			return StringMap.fromPropertyString(contents).keySet().stream()
+					.anyMatch(k -> !k.contains("."));
+		}
+
+		public void setPackageName(String packageName) {
+			this.packageName = packageName;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}
+
+		public void setSet(String set) {
+			this.set = set;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s -\n\t%s", packageName, path);
+		}
+
+		private void load() {
+			contents = Io.read().url(url).asString();
+		}
+	}
+
 	/*
 	 *
 	 */
 	public static class Key {
+		private static Key stringKey(String key) {
+			return new Key(null, key, true);
+		}
+
 		private Class clazz;
 
 		private String keyPart;
@@ -110,10 +190,17 @@ public class Configuration {
 
 		private String _toString;
 
-		Key(Class clazz, String keyPart) {
-			Preconditions.checkNotNull(clazz);
+		private Key(Class clazz, String keyPart, boolean allowNullClass) {
+			Preconditions.checkState(clazz != null || allowNullClass);
 			this.clazz = clazz;
 			this.keyPart = keyPart;
+			if (clazz == null) {
+				_toString = keyPart;
+			}
+		}
+
+		Key(Class clazz, String keyPart) {
+			this(clazz, keyPart, false);
 		}
 
 		public boolean definedAndIs() {
@@ -180,10 +267,12 @@ public class Configuration {
 	/**
 	 * <p>
 	 * Uses 'bundle' to denote a stringmap which is either a copy of a
-	 * ResourceBundle, or another Properties resource
+	 * ResourceBundle, or another java.util.Properties resource
 	 *
 	 * <p>
-	 * Synchronization - keyValues are CAS-d (and mutation is synchronous)
+	 * Synchronization - a fast path checks for non-nulls in keyValues, any
+	 * mutations to keyValues (and thus packageBundles) are synchronized on the
+	 * Properties instance
 	 *
 	 * @author nick@alcina.cc
 	 *
@@ -191,10 +280,12 @@ public class Configuration {
 	public static class Properties {
 		public final Topic<Void> topicInvalidated = Topic.create();
 
-		private Map<String, PropertyValues> keyValues;
+		private Map<String, PropertyValues> keyValues = new ConcurrentHashMap();
 
-		private Map<String, PackageBundles> packageBundles = new ConcurrentHashMap<>();
+		// access is synchronized
+		private Map<String, PackageBundles> packageBundles = new LinkedHashMap<>();
 
+		// mutation is startup-only
 		private List<PropertySet> orderedSets = new ArrayList<>();
 
 		private Map<String, Object> immutableCustomProperties = new ConcurrentHashMap<>();
@@ -242,6 +333,7 @@ public class Configuration {
 			});
 		}
 
+		// FIXME - ru - to private near proj completion
 		public void register(InputStream ios) {
 			try {
 				java.util.Properties p = new java.util.Properties();
@@ -276,39 +368,23 @@ public class Configuration {
 			return prior;
 		}
 
-		/*
-		 * Locking note - concurrency (of the map) means we can update at any
-		 * time, synchronization enures we don't have duplicate, unneeded loads,
-		 * and that invalidations are sequential
-		 */
 		private void ensureBundles(Key key) {
 			String packageName = key.clazz.getPackageName();
 			if (!packageBundles.containsKey(packageName)) {
-				// double-checked
-				synchronized (this) {
-					if (!packageBundles.containsKey(packageName)) {
-						PackageBundles bundles = new PackageBundles(key.clazz);
-						packageBundles.put(packageName, bundles);
-						bundles.load();
-					}
-				}
+				PackageBundles bundles = new PackageBundles(key.clazz);
+				packageBundles.put(packageName, bundles);
+				bundles.load();
 			}
 		}
 
 		private synchronized void invalidate() {
 			Set<String> keys = new LinkedHashSet<>();
 			orderedSets.forEach(set -> set.populateKeys(keys));
-			Map<String, PropertyValues> keyValues = keys.stream().collect(
-					AlcinaCollectors.toLinkedHashMap(Function.identity(), k -> {
-						PropertyValues propertyValues = new PropertyValues(k);
-						propertyValues.resolve();
-						return propertyValues;
-					}));
-			// swap
-			this.keyValues = keyValues;
+			keys.stream().map(Key::stringKey).forEach(this::ensureValues);
 			topicInvalidated.signal();
 		}
 
+		// threadsafe - the put is a copy-on-write
 		private String set0(String key, String value) {
 			Preconditions
 					.checkState(!immutableCustomProperties.containsKey(key));
@@ -322,29 +398,58 @@ public class Configuration {
 		}
 
 		void dump(boolean flat) {
-			Map<String, PropertyValues> toDump = keyValues;
-			Map<String, String> map = toDump.keySet().stream().sorted()
+			Map<String, String> map = keyValues.keySet().stream().sorted()
 					.collect(AlcinaCollectors.toLinkedHashMap(k -> k,
-							k -> toDump.get(k).resolvedValue));
+							k -> keyValues.get(k).resolvedValue));
 			Ax.out(map.entrySet());
 		}
 
-		String get(Key key) {
+		PropertyValues ensureValues(Key key) {
 			String stringKey = key.toString();
-			ensureBundles(key);
 			PropertyValues propertyValues = keyValues.get(stringKey);
 			if (propertyValues != null) {
-				return propertyValues.resolvedValue;
+				return propertyValues;
 			} else {
-				if (key.clazz != null) {
-					Class superclass = key.clazz.getSuperclass();
-					if (superclass != null && superclass != Object.class) {
-						return get(new Key(superclass, key.keyPart)
-								.withContextOverride(key.contextOverride));
+				// could be optimisation miss, check
+				synchronized (this) {
+					propertyValues = keyValues.get(stringKey);
+					if (propertyValues != null) {
+						return propertyValues;
 					}
+					Key cursor = key;
+					while (true) {
+						Class clazz = cursor.clazz;
+						if (clazz != null) {
+							ensureBundles(cursor);
+						}
+						propertyValues = keyValues.get(cursor.toString());
+						if (propertyValues != null) {
+							if (cursor != key) {
+								keyValues.put(stringKey,
+										propertyValues.copyFor(stringKey));
+							}
+							return propertyValues;
+						}
+						if (clazz == null) {
+							break;
+						}
+						clazz = clazz.getSuperclass();
+						if (cursor == null || clazz == Object.class) {
+							break;
+						}
+						Key parentKey = new Key(clazz, cursor.keyPart)
+								.withContextOverride(cursor.contextOverride);
+					}
+					// unresolved, PropertyValues.resolvedValue==null
+					propertyValues = new PropertyValues(stringKey);
+					keyValues.put(cursor.toString(), propertyValues);
+					return propertyValues;
 				}
-				return null;
 			}
+		}
+
+		String get(Key key) {
+			return ensureValues(key).resolvedValue;
 		}
 
 		Optional<PropertySet> getSet(Object key) {
@@ -354,7 +459,7 @@ public class Configuration {
 		}
 
 		boolean has(Key key) {
-			return false;
+			return ensureValues(key).exists();
 		}
 
 		class PackageBundles {
@@ -501,8 +606,21 @@ public class Configuration {
 
 			private String key;
 
+			String registeredAt;
+
 			public PropertyValues(String key) {
 				this.key = key;
+				resolve();
+			}
+
+			public PropertyValues copyFor(String stringKey) {
+				PropertyValues result = new PropertyValues(key);
+				result.registeredAt = stringKey;
+				return result;
+			}
+
+			public boolean exists() {
+				return resolvedValue != null;
 			}
 
 			public void resolve() {
@@ -576,6 +694,165 @@ public class Configuration {
 				}
 				return format.toString();
 			}
+		}
+	}
+
+	public static class PropertyTree extends Tree<PropertyNode> {
+		public PropertyTree() {
+			PropertyNode root = new PropertyNode(null, "", "");
+			setRoot(root);
+		}
+
+		public void add(ConfigurationFile file) {
+			StringMap map = StringMap.fromPropertyString(file.contents);
+			if (Ax.notBlank(file.packageName)) {
+				PropertyNode packageNode = ensurePackageNode(file.packageName);
+				packageNode.addValues(file, map);
+			} else {
+				// FIXME - app-specific conf
+			}
+		}
+
+		public String asCsv() {
+			List<PropertyNode> walker = getRoot().depthFirst();
+			walker.stream().collect(Collectors.toList())
+					.forEach(PropertyNode::sortChildren);
+			CsvCols cols = new CsvCols("");
+			Stream.of(Header.values()).forEach(cols::addColumn);
+			walker.stream().forEach(node -> node.addTo(cols));
+			return cols.toCsv();
+		}
+
+		private PropertyNode ensurePackageNode(String packageName) {
+			PropertyNode cursor = getRoot();
+			List<String> list = Arrays.stream(packageName.split("\\."))
+					.filter(Ax::notBlank).collect(Collectors.toList());
+			for (String segment : list) {
+				PropertyNode child = cursor.getPackageSegmentChild(segment);
+				if (child != null) {
+					cursor = child;
+				} else {
+					child = new PropertyNode(cursor, segment, null);
+					cursor.getChildren().add(child);
+					cursor = child;
+				}
+			}
+			return cursor;
+		}
+
+		public class PropertyNode extends Tree.TreeNode<PropertyNode>
+				implements Comparable<PropertyNode> {
+			String packageSegment;
+
+			String key;
+
+			List<FileValue> values = new ArrayList<>();
+
+			private PropertyNode parent;
+
+			public PropertyNode(PropertyNode parent, String packageSegment,
+					String key) {
+				this.parent = parent;
+				this.packageSegment = packageSegment;
+				this.key = key;
+			}
+
+			public void addValues(ConfigurationFile file, StringMap map) {
+				map.forEach((k, v) -> ensureKeyChild(k).addValue(file, v));
+			}
+
+			@Override
+			public int compareTo(PropertyNode o) {
+				{
+					int cmp = CommonUtils.compareWithNullMinusOne(
+							packageSegment, o.packageSegment);
+					if (cmp != 0) {
+						return cmp;
+					}
+				}
+				{
+					int cmp = CommonUtils.compareWithNullMinusOne(key, o.key);
+					return cmp;
+				}
+			}
+
+			private PropertyNode ensureKeyChild(String key) {
+				PropertyNode child = getKeyChild(key);
+				if (child != null) {
+					return child;
+				} else {
+					child = new PropertyNode(this, null, key);
+					getChildren().add(child);
+					return child;
+				}
+			}
+
+			private String packageName() {
+				PropertyNode cursor = this;
+				List<String> segments = new ArrayList<>();
+				while (cursor != null) {
+					segments.add(0, cursor.packageSegment);
+					cursor = cursor.parent;
+				}
+				return segments.stream().filter(Ax::notBlank)
+						.collect(Collectors.joining("."));
+			}
+
+			void addTo(CsvCols cols) {
+				CsvRow row = cols.addRow();
+				if (key == null) {
+					row.set(Header.Package, packageName());
+				} else {
+					row.set(Header.Key, key);
+					int idx = 0;
+					for (FileValue value : values) {
+						if (idx++ > 0) {
+							row = cols.addRow();
+						}
+						row.set(Header.File, value.file.path);
+						row.set(Header.Value, value.value);
+					}
+				}
+			}
+
+			void addValue(ConfigurationFile file, String value) {
+				values.add(new FileValue(file, value));
+			}
+
+			List<PropertyNode> depthFirst() {
+				Function<PropertyNode, List<PropertyNode>> childSupplier = n -> (List) n
+						.getChildren();
+				DepthFirstTraversal<PropertyNode> traversal = new DepthFirstTraversal<PropertyNode>(
+						this, childSupplier, false);
+				return traversal.stream().collect(Collectors.toList());
+			}
+
+			PropertyNode getKeyChild(String key) {
+				return getChildren().stream().map(n -> (PropertyNode) n)
+						.filter(c -> Objects.equals(c.key, key)).findFirst()
+						.orElse(null);
+			}
+
+			PropertyNode getPackageSegmentChild(String segment) {
+				return getChildren().stream().map(n -> (PropertyNode) n)
+						.filter(c -> Objects.equals(c.packageSegment, segment))
+						.findFirst().orElse(null);
+			}
+		}
+
+		static class FileValue {
+			ConfigurationFile file;
+
+			String value;
+
+			FileValue(ConfigurationFile file, String value) {
+				this.file = file;
+				this.value = value;
+			}
+		}
+
+		enum Header {
+			Package, Key, File, Value;
 		}
 	}
 }

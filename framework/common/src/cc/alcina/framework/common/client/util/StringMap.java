@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
+
 public class StringMap extends LinkedHashMap<String, String> {
 	private static final transient long serialVersionUID = 8219302205025519855L;
 
@@ -54,6 +56,12 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return map;
 	}
 
+	/**
+	 * Constructs a string map from a properties string (e.g. a resourcebundle).
+	 * Properties are separated by newlines, the key/value separator is the
+	 * first '=' character in the line. Backslashes, equals and \n characters
+	 * are unescaped
+	 */
 	public static StringMap fromPropertyString(String props) {
 		return fromPropertyString(props, false);
 	}
@@ -85,6 +93,10 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return map;
 	}
 
+	/**
+	 * Constructs a string map from a list of string keys, with value "true" for
+	 * each key
+	 */
 	public static StringMap fromStringList(String list) {
 		StringMap map = new StringMap();
 		if (list == null) {
@@ -98,7 +110,11 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return map;
 	}
 
+	/**
+	 * Constructs a string map from a even-length array of key/value pairs
+	 */
 	public static StringMap properties(String... kvs) {
+		Preconditions.checkState(kvs.length % 2 == 0);
 		StringMap map = new StringMap();
 		for (int i = 0; i < kvs.length; i += 2) {
 			map.put(kvs[i], kvs[i + 1]);
@@ -106,6 +122,9 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return map;
 	}
 
+	/**
+	 * Constructs a string map from asingle key and value
+	 */
 	public static StringMap property(String key, String value) {
 		StringMap map = new StringMap();
 		map.put(key, value);
