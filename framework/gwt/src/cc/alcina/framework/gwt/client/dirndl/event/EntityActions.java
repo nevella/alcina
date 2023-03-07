@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.entity.view;
+package cc.alcina.framework.gwt.client.dirndl.event;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -12,9 +12,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.TopLevelHandler;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Create;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Delete;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Edit;
@@ -23,6 +21,13 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 
+/**
+ * These are enabled by default, disable by overriding with a higher-priority
+ * registration
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class EntityActions {
 	@Registration({ TopLevelHandler.class, ModelEvents.Create.class })
 	public static class CreateHandler

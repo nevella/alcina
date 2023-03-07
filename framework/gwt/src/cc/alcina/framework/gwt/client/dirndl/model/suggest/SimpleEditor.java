@@ -1,17 +1,16 @@
 package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorAsk;
 
-@Directed(receives = DomEvents.Input.class, emits = EditorAsk.class)
+@Directed(receives = ModelEvents.Input.class, emits = EditorAsk.class)
 public class SimpleEditor extends Model
-		implements Suggestor.Editor, DomEvents.Input.Handler {
+		implements Suggestor.Editor, ModelEvents.Input.Handler {
 	private final StringInput input;
 
 	public SimpleEditor(Suggestor.SuggestorConfiguration configuration) {
@@ -33,7 +32,7 @@ public class SimpleEditor extends Model
 	}
 
 	@Override
-	public void onInput(Input event) {
+	public void onInput(ModelEvents.Input event) {
 		event.reemitAs(this, EditorAsk.class, computeAsk());
 	}
 

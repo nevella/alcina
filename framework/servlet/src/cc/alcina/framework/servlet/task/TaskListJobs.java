@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.task;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
@@ -26,6 +27,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -39,26 +41,58 @@ import cc.alcina.framework.servlet.servlet.TaskWithHtmlResult;
 
 public class TaskListJobs extends AbstractTaskPerformer
 		implements TaskWithHtmlResult {
-	private String filter;
+	private String filterText;
 
 	private transient Pattern filterPattern;
 
 	private boolean listConsistencyJobs;
 
-	public String getFilter() {
-		return this.filter;
+	private JobResultType jobResultType;
+
+	private Boolean scheduled;
+
+	transient Filter filter;
+
+	public String getFilterText() {
+		return this.filterText;
+	}
+
+	public JobResultType getJobResultType() {
+		return this.jobResultType;
+	}
+
+	public Boolean getScheduled() {
+		return this.scheduled;
 	}
 
 	public boolean isListConsistencyJobs() {
 		return this.listConsistencyJobs;
 	}
 
-	public void setFilter(String filter) {
-		this.filter = filter;
+	public TaskListJobs
+			populateFromParameters(Map<String, String[]> parameterMap) {
+		StringMap map = StringMap.flatten(parameterMap);
+		filterText = map.get("filter");
+		listConsistencyJobs = map.is("listConsistencyJobs");
+		jobResultType = map.enumValue("jobResultType", JobResultType.class);
+		scheduled = map.containsKey("scheduled") ? map.is("scheduled") : null;
+		return this;
+	}
+
+	public void setFilterText(String filterText) {
+		this.filterText = filterText;
+	}
+
+	public void setJobResultType(JobResultType jobResultType) {
+		this.jobResultType = jobResultType;
 	}
 
 	public void setListConsistencyJobs(boolean listConsistencyJobs) {
 		this.listConsistencyJobs = listConsistencyJobs;
+	}
+
+	public void setScheduled(Boolean scheduled) {
+		this.scheduled = scheduled;
 	}
 
 	private void addConsistency(DomDocument doc) {
@@ -111,9 +145,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 						.accept(Utils::large);
 				DomNode td = cellBuilder.append();
 				{
-					String href = JobServlet
-							.createTaskUrl(new TaskLogJobDetails()
-									.withValue(String.valueOf(job.getId())));
+					String href = JobServlet.createTaskUrl(
+							new TaskLogJobDetails().withId(job.getId()));
 					td.html().addLink("Details", href, "_blank");
 				}
 				td.builder().text(" - ").tag("span").append();
@@ -151,8 +184,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 					.accept(Utils::large).cell("Started").accept(Utils::date)
 					.cell("Thread").accept(Utils::medium).cell("Performer")
 					.accept(Utils::instance).cell("Links").accept(Utils::links);
-			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
-					job.getTaskSerialized());
+			Predicate<Job> textFilter = job -> filter.test(job)
+					&& filter(job.getTaskClassName(), job.getTaskSerialized());
 			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
 					.filter(textFilter).filter(sectionFilter);
 			ObjectWrapper<Stream<? extends Entity>> streamRef = ObjectWrapper
@@ -170,9 +203,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 						.accept(Utils::instance);
 				DomNode td = cellBuilder.append();
 				{
-					String href = JobServlet
-							.createTaskUrl(new TaskLogJobDetails()
-									.withValue(String.valueOf(job.getId())));
+					String href = JobServlet.createTaskUrl(
+							new TaskLogJobDetails().withId(job.getId()));
 					td.html().addLink("Details", href, "_blank");
 				}
 				td.builder().text(" - ").tag("span").append();
@@ -197,24 +229,24 @@ public class TaskListJobs extends AbstractTaskPerformer
 					.accept(Utils::large).cell("Started").accept(Utils::date)
 					.cell("Finished").accept(Utils::date).cell("Performer")
 					.accept(Utils::instance).cell("Link").accept(Utils::links);
-			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
-					job.getTaskSerialized(),
-					Optional.ofNullable(job.getPerformer())
-							.map(ClientInstance::toString)
-							.orElse("--unmatched--"));
+			Predicate<Job> textFilter = job -> filter.test(job)
+					&& filter(job.getTaskClassName(), job.getTaskSerialized(),
+							Optional.ofNullable(job.getPerformer())
+									.map(ClientInstance::toString)
+									.orElse("--unmatched--"));
 			Predicate<? extends Job> topLevelAdditional = topLevel
 					? Job::provideIsFirstInSequence
 					: job -> true;
 			Stream<? extends Job> recentlyCompletedJobs = JobDomain.get()
 					.getRecentlyCompletedJobs(topLevel);
-			if (Ax.notBlank(filter)) {
+			if (filter.active) {
 				recentlyCompletedJobs = recentlyCompletedJobs.parallel();
 			}
 			Stream<? extends Job> stream = recentlyCompletedJobs
 					.filter(textFilter).filter((Predicate) topLevelAdditional)
 					.limit(limit);
 			boolean parallel = false;
-			if (Ax.notBlank(filter)) {
+			if (filter.active) {
 				stream = stream.sorted(
 						Comparator.comparing(Job::getEndTime).reversed());
 				parallel = true;
@@ -233,8 +265,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 						.cell(timestamp(job.getEndTime()))
 						.cell(job.getPerformer()).accept(Utils::instance);
 				DomNode td = cellBuilder.append();
-				String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
-						.withValue(String.valueOf(job.getId())));
+				String href = JobServlet.createTaskUrl(
+						new TaskLogJobDetails().withId(job.getId()));
 				td.html().addLink("Details", href, "_blank");
 			});
 		}
@@ -242,6 +274,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 
 	@Override
 	protected void run0() throws Exception {
+		filter = new Filter();
 		DomDocument doc = DomDocument.basicHtmlDoc();
 		String css = Io.read().resource("res/TaskListJobs.css").asString();
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
@@ -307,11 +340,11 @@ public class TaskListJobs extends AbstractTaskPerformer
 	}
 
 	boolean filter(String... tests) {
-		if (filter == null) {
+		if (filterText == null) {
 			return true;
 		}
 		if (filterPattern == null) {
-			filterPattern = Pattern.compile(filter);
+			filterPattern = Pattern.compile(filterText);
 		}
 		return Arrays.stream(tests).filter(Objects::nonNull)
 				.anyMatch(test -> filterPattern.matcher(test).find());
@@ -319,5 +352,41 @@ public class TaskListJobs extends AbstractTaskPerformer
 
 	String timestamp(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP_HUMAN);
+	}
+
+	class Filter implements Predicate<Job> {
+		List<Predicate<Job>> filters = new ArrayList<>();
+
+		Predicate<Job> cumulative = null;
+
+		boolean active;
+
+		Filter() {
+			// the noop filter for filtertext signifies "yes filtering, but
+			// filter elsewhere" (since different result sets filter different
+			// job fields)
+			if (Ax.notBlank(filterText)) {
+				filters.add(job -> true);
+			}
+			if (jobResultType != null) {
+				filters.add(job -> job.getResultType() == jobResultType);
+			}
+			if (scheduled != null) {
+				filters.add(job -> scheduled ? job.root().getRunAt() != null
+						: job.root().getRunAt() == null);
+			}
+			if (filters.size() > 0) {
+				active = true;
+				cumulative = filters.get(0);
+				for (int idx = 1; idx < filters.size(); idx++) {
+					cumulative = cumulative.and(filters.get(idx));
+				}
+			}
+		}
+
+		@Override
+		public boolean test(Job t) {
+			return active ? cumulative.test(t) : true;
+		}
 	}
 }

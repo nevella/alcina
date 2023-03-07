@@ -8,6 +8,10 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 
+/*
+ * // FIXME - 2023 - remove maxLength - check should be for mvcc (domaingraph)
+ * // objects, not length per se
+ */
 public class LengthConstrainedStringWriter extends StringWriter {
 	public static final String CONTEXT_MAX_LENGTH = LengthConstrainedStringWriter.class
 			.getName() + ".CONTEXT_MAX_LENGTH";

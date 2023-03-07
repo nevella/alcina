@@ -17,6 +17,16 @@ public class StringMap extends LinkedHashMap<String, String> {
 	public static final StringMap EMPTY_PROPS = new StringMap();
 
 	// FIXME - ru - check usages
+	public static StringMap flatten(Map<String, String[]> parameterMap) {
+		StringMap result = new StringMap();
+		parameterMap.forEach((k, v) -> {
+			if (v.length > 0) {
+				result.put(k, v[0]);
+			}
+		});
+		return result;
+	}
+
 	public static StringMap fromKvStringList(String list) {
 		return fromKvStringList(list, true);
 	}
@@ -136,6 +146,10 @@ public class StringMap extends LinkedHashMap<String, String> {
 
 	public boolean contains(String s1, String s2) {
 		return containsKey(s1) && Objects.equals(get(s1), s2);
+	}
+
+	public <E extends Enum> E enumValue(String key, Class<E> clazz) {
+		return CommonUtils.getEnumValueOrNull(clazz, get(key), true, null);
 	}
 
 	public boolean existsAndIsBooleanFalse(String key) {

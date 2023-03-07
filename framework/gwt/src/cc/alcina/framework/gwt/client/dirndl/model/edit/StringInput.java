@@ -44,13 +44,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
  * @author nick@alcina.cc
  *
  */
-/*
- * FIXME - dirndl 1x1d - should handle DOM input + change events, have r/o
- * currentvalue (from input)
- *
- * More specifically: emit inputchanged, changed events (from DOM input/change).
- * Don't reemit those transformed events
- */
 @Directed(
 	bindings = { @Binding(type = Type.PROPERTY, from = "value"),
 			@Binding(type = Type.PROPERTY, from = "placeholder"),
@@ -58,7 +51,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 			@Binding(type = Type.PROPERTY, from = "spellcheck"),
 			@Binding(type = Type.PROPERTY, from = "autocomplete"),
 			@Binding(type = Type.INNER_TEXT, from = "innerText") },
-	receives = { DomEvents.Change.class, DomEvents.Input.class })
+	receives = { DomEvents.Change.class, DomEvents.Input.class },
+	emits = { ModelEvents.Change.class, ModelEvents.Input.class })
 public class StringInput extends Model
 		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
 		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler {
@@ -162,7 +156,7 @@ public class StringInput extends Model
 	@Override
 	public void onInput(Input event) {
 		currentValue = elementValue();
-		event.reemitAs(this, ModelEvents.Input.class);
+		event.reemitAs(this, ModelEvents.Input.class, currentValue);
 	}
 
 	@Override

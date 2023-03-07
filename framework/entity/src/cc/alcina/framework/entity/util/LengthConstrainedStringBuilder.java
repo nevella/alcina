@@ -13,6 +13,9 @@ import cc.alcina.framework.entity.util.LengthConstrainedStringWriter.OverflowExc
  *
  * @author nick@alcina.cc
  *
+ *         // FIXME - 2023 - remove check should be for mvcc (domaingraph) //
+ *         objects, not length per se
+ *
  */
 public class LengthConstrainedStringBuilder {
 	public static final transient String CONTEXT_MAX_LENGTH = LengthConstrainedStringBuilder.class

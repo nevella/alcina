@@ -158,7 +158,7 @@ class TowardsAMoreDesirableSituation {
 									futureToPending(next);
 									break;
 								} else {
-									skipCount.incrementAndGet();
+									break;
 								}
 							}
 						});

@@ -72,6 +72,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private boolean withWrapRootValue;
 
+	// FIXME - 2023 - remove maxLength - check should be for mvcc (domaingraph)
+	// objects, not length per se
 	public JacksonJsonObjectSerializer() {
 		maxLength = Configuration.key("maxLength").withContextOverride(true)
 				.intValue();

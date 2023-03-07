@@ -12,10 +12,6 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
 /*
- * FIXME - dirndl 1x1d - make abstract, per-action subclasses
- *
- * FIXME - dirndl 1x1d - extract out 'NamedPlace' - ActionPlace with no params
- * (defined only by name -- no prefix)
  */
 @Registration(NamedPlace.class)
 public abstract class NamedPlace extends BasePlace {

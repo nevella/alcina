@@ -81,6 +81,7 @@ public interface Feature {
 			Class<? extends Feature.Status> value();
 		}
 	}
+
 	public interface Type{
 		public interface Logic_support extends Type{}
 		@Retention(RetentionPolicy.RUNTIME)
