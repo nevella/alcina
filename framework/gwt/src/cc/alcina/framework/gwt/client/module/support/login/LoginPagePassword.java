@@ -47,8 +47,8 @@ public class LoginPagePassword extends LoginPage {
 	}
 
 	@Override
-	protected void onForwardValidated() {
+	protected void onNextValidated() {
 		loginConsort.request.setPassword(getEnteredText());
-		super.onForwardValidated();
+		super.onNextValidated();
 	}
 }

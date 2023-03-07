@@ -63,8 +63,8 @@ public class LoginPageUsername extends LoginPage
 	}
 
 	@Override
-	protected void onForwardValidated() {
+	protected void onNextValidated() {
 		loginConsort.request.setUserName(getEnteredText());
-		super.onForwardValidated();
+		super.onNextValidated();
 	}
 }

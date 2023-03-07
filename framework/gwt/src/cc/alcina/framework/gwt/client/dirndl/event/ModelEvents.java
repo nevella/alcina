@@ -340,6 +340,22 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Next extends ModelEvent<Object, Next.Handler> {
+		@Override
+		public void dispatch(Next.Handler handler) {
+			handler.onNext(this);
+		}
+
+		@Override
+		public Class<Next.Handler> getHandlerClass() {
+			return Next.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onNext(Next event);
+		}
+	}
+
 	public static class Options extends ModelEvent<Object, Options.Handler> {
 		@Override
 		public void dispatch(Options.Handler handler) {
