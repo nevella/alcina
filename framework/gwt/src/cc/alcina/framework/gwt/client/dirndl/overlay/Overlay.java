@@ -362,7 +362,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		}
 
 		public Actions withClose() {
-			add(new Link().withNamingModelEvent(ModelEvents.Close.class));
+			add(new Link().withModelEvent(ModelEvents.Close.class)
+					.withTextFromModelEvent());
 			return this;
 		}
 

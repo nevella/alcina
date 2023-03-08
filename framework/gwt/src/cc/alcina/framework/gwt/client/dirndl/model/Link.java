@@ -254,8 +254,7 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		return this;
 	}
 
-	public Link withNamingModelEvent(Class<? extends ModelEvent> modelEvent) {
-		this.modelEvent = modelEvent;
+	public Link withTextFromModelEvent() {
 		this.text = ModelEvent.staticDisplayName(modelEvent);
 		return this;
 	}
