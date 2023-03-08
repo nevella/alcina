@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.InputEnterCommit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Forward;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Next;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.PropertyNameTags;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
@@ -22,12 +22,11 @@ import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 
 @Directed(
 	cssClass = "login-page",
-	receives = { ModelEvents.Forward.class,
+	receives = { ModelEvents.Next.class,
 			InferredDomEvents.InputEnterCommit.class })
 @TypeSerialization(reflectiveSerializable = false)
-public abstract class LoginPage extends Model
-		implements ModelEvents.Forward.Handler,
-		InferredDomEvents.InputEnterCommit.Handler {
+public abstract class LoginPage extends Model implements
+		ModelEvents.Next.Handler, InferredDomEvents.InputEnterCommit.Handler {
 	protected LoginConsort loginConsort;
 
 	private final HeadingArea headingArea;
@@ -74,18 +73,18 @@ public abstract class LoginPage extends Model
 	}
 
 	@Override
-	public void onForward(Forward event) {
-		if (!validate()) {
-			return;
-		}
-		onForwardValidated();
-	}
-
-	@Override
 	public void onInputEnterCommit(InputEnterCommit event) {
 		// caused by an enter on a form field. Equivalent to "next" since
 		// single-input
-		onForward(null);
+		onNext(null);
+	}
+
+	@Override
+	public void onNext(Next event) {
+		if (!validate()) {
+			return;
+		}
+		onNextValidated();
 	}
 
 	public void setContents(Object contents) {
@@ -107,13 +106,13 @@ public abstract class LoginPage extends Model
 
 	protected abstract Validator getValidator();
 
-	protected void onForwardValidated() {
+	protected void onNextValidated() {
 		loginConsort.onClickNext();
 	}
 
 	protected void populateNavigation() {
-		defaultButton = new Link().withText("Next").withClassName("primary")
-				.withModelEvent(Forward.class);
+		defaultButton = new Link().withClassName("primary")
+				.withModelEvent(Next.class);
 		// FIXME - ui2 1x0 - definitely want progress here
 		// .withAsyncTopic(controller.topicCallingRemote);
 		navigation.put(defaultButton, NavArea.NEXT);

@@ -183,11 +183,6 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	public void setModelEvent(Class<? extends ModelEvent> modelEvent) {
 		this.modelEvent = modelEvent;
-		if (modelEvent != null) {
-			if (text == null) {
-				setText(ModelEvent.staticDisplayName(modelEvent));
-			}
-		}
 	}
 
 	public void setNonStandardObjectAction(
@@ -246,7 +241,6 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	public Link withInner(Object inner) {
 		this.inner = inner;
-		this.text = null;
 		return this;
 	}
 
@@ -256,7 +250,13 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	}
 
 	public Link withModelEvent(Class<? extends ModelEvent> modelEvent) {
-		setModelEvent(modelEvent);
+		this.modelEvent = modelEvent;
+		return this;
+	}
+
+	public Link withNamingModelEvent(Class<? extends ModelEvent> modelEvent) {
+		this.modelEvent = modelEvent;
+		this.text = ModelEvent.staticDisplayName(modelEvent);
 		return this;
 	}
 
