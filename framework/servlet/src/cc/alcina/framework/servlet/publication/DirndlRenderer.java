@@ -2,14 +2,16 @@ package cc.alcina.framework.servlet.publication;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
-import com.google.gwt.user.client.ui.Widget;
+import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -33,14 +35,20 @@ public class DirndlRenderer {
 		return this;
 	}
 
-	public DomDocument render() {
-		try {
-			LooseContext.push();
-			DocumentContextProviderImpl.get().registerContextFrame();
-			return render0();
-		} finally {
-			LooseContext.pop();
-		}
+	/**
+	 * Render, return an html doc containing the rendered element and any style
+	 * nodes
+	 */
+	public DomDocument asDocument() {
+		return render(this::renderDocument);
+	}
+
+	/**
+	 * Render, just return the rendered element
+	 */
+	public DomNode asNode() {
+		Preconditions.checkState(stylePaths.isEmpty());
+		return render(() -> DomNode.from(renderElement()));
 	}
 
 	public DirndlRenderer withRenderable(Model renderable) {
@@ -53,21 +61,37 @@ public class DirndlRenderer {
 		return this;
 	}
 
-	private DomDocument render0() {
-		Widget widget = new DirectedLayout().render(contextResolver,
-				renderable);
-		String outerHtml = widget.getElement().getOuterHtml();
+	private <T> T render(Supplier<T> supplier) {
+		try {
+			LooseContext.push();
+			DocumentContextProviderImpl.get().registerContextFrame();
+			return supplier.get();
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	private DomDocument renderDocument() {
+		Element element = renderElement();
+		String outerHtml = element.getOuterHtml();
+		outerHtml = EntityCleaner.get().htmlToUnicodeEntities(outerHtml);
 		DomDocument doc = DomDocument.basicHtmlDoc();
 		DomNode div = doc.html().body().builder().tag("div").append();
 		div.setInnerXml(outerHtml);
 		stylePaths.forEach(p -> {
-			String style = ResourceUtilities.read(p.styleRelativeClass,
-					p.styleRelativeFilename);
+			String style = Io.read().relativeTo(p.styleRelativeClass)
+					.resource(p.styleRelativeFilename).asString();
 			if (Ax.notBlank(style)) {
 				doc.html().appendStyleNode(style);
 			}
 		});
 		return doc;
+	}
+
+	private Element renderElement() {
+		Element element = new DirectedLayout()
+				.render(contextResolver, renderable).getElement();
+		return element;
 	}
 
 	static class StylePath {
