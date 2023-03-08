@@ -193,7 +193,7 @@ public class ConvertToProxiesPerformer
 		SingletonCache<CompilationUnits> cache = FsObjectCache
 				.singletonCache(CompilationUnits.class, getClass())
 				.asSingletonCache();
-		compUnits = CompilationUnits.load(cache, classPaths,
+		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
 				DeclarationVisitor::new, task.refreshCompilationUnits);
 		compUnits.units.forEach(this::instrumentClass);
 		compUnits.writeDirty(task.isDryRun());

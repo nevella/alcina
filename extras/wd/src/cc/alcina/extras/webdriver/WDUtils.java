@@ -364,19 +364,8 @@ public class WDUtils {
 	public static void sendChanged(WDToken token, WebDriver driver,
 			WebElement elt) {
 		try {
-			switch (token.getConfiguration().driverType) {
-			case IE11:
-			case IE9:
-				executeScript(driver, elt,
-						" var event = document.createEvent('Event');"
-								+ "event.initEvent('change', true, true);"
-								+ "arguments[0].dispatchEvent(event);");
-				break;
-			default:
-				executeScript(driver, elt,
-						"arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }))");
-				break;
-			}
+			executeScript(driver, elt,
+					"arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }))");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -414,21 +403,9 @@ public class WDUtils {
 	public static void setSelectedIndex(WDToken token, WebDriver driver,
 			WebElement elt, int idx) {
 		try {
-			switch (token.getConfiguration().driverType) {
-			case IE11:
-			case IE9:
-				executeScript(driver, elt, Ax.format(
-						"arguments[0].selectedIndex=%s; var event = document.createEvent('Event');"
-								+ "event.initEvent('change', true, true);"
-								+ "arguments[0].dispatchEvent(event);",
-						idx));
-				break;
-			default:
-				executeScript(driver, elt, Ax.format(
-						"arguments[0].selectedIndex=%s;arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }))",
-						idx));
-				break;
-			}
+			executeScript(driver, elt, Ax.format(
+					"arguments[0].selectedIndex=%s;arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }))",
+					idx));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -437,31 +414,14 @@ public class WDUtils {
 	public static void setSelectedText(WDToken token, WebDriver driver,
 			WebElement elt, String text) {
 		try {
-			switch (token.getConfiguration().driverType) {
-			case IE11:
-			case IE9:
-				executeScript(driver, elt,
-						Ax.format("var options = arguments[0].options;"
-								+ "var text = '%s';"
-								+ "for (var idx=0;idx<options.length;idx++){"
-								+ "if(options[idx].text==text){"
-								+ "arguments[0].selectedIndex=idx;"
-								+ "var event = document.createEvent('Event');"
-								+ "event.initEvent('change', true, true);"
-								+ "arguments[0].dispatchEvent(event);" + "}"
-								+ "}", text));
-				break;
-			default:
-				executeScript(driver, elt,
-						Ax.format("var options = arguments[0].options;"
-								+ "var text = '%s';"
-								+ "for (var idx=0;idx<options.length;idx++){"
-								+ "if(options[idx].text==text){"
-								+ "arguments[0].selectedIndex=idx;"
-								+ "arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }));"
-								+ "}" + "}", text));
-				break;
-			}
+			executeScript(driver, elt,
+					Ax.format("var options = arguments[0].options;"
+							+ "var text = '%s';"
+							+ "for (var idx=0;idx<options.length;idx++){"
+							+ "if(options[idx].text==text){"
+							+ "arguments[0].selectedIndex=idx;"
+							+ "arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }));"
+							+ "}" + "}", text));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

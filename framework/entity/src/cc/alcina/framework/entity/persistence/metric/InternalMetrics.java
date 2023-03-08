@@ -496,8 +496,8 @@ public class InternalMetrics {
 				String gcLogFile = "/opt/jboss/gc.log";
 				if (new File(gcLogFile).exists()) {
 					GCLogParser.Events events = new GCLogParser().parse(
-							gcLogFile, parseGcLogFrom, Configuration.getInt(
-									getClass(), "gcEventThresholdMillis"));
+							gcLogFile, parseGcLogFrom,
+							Configuration.getInt("gcEventThresholdMillis"));
 					addMetric(MetricType.gc, events.toString());
 					parseGcLogFrom = events.end;
 				}

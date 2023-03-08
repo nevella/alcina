@@ -148,8 +148,10 @@ public class Configuration {
 		}
 
 		public boolean provideContainsNonNamespaced() {
-			return StringMap.fromPropertyString(contents).keySet().stream()
-					.anyMatch(k -> !k.contains("."));
+			List<String> keys = StringMap.fromPropertyString(contents).keySet()
+					.stream().filter(k -> !k.contains("."))
+					.collect(Collectors.toList());
+			return keys.size() > 0;
 		}
 
 		public void setPackageName(String packageName) {
@@ -178,7 +180,9 @@ public class Configuration {
 	 *
 	 */
 	public static class Key {
-		private static Key stringKey(String key) {
+		// public for tooling, can remove once migration
+		// (TaskRefactorConfigSets) complete
+		public static Key stringKey(String key) {
 			return new Key(null, key, true);
 		}
 
@@ -724,14 +728,31 @@ public class Configuration {
 			}
 		}
 
+		public List<String> allKeys() {
+			List<PropertyNode> nodes = getRoot().depthFirst();
+			nodes.stream().collect(Collectors.toList())
+					.forEach(PropertyNode::sortChildren);
+			return nodes.stream().map(node -> node.key).filter(Ax::notBlank)
+					.map(Object::toString).distinct().sorted()
+					.collect(Collectors.toList());
+		}
+
 		public String asCsv() {
 			List<PropertyNode> nodes = getRoot().depthFirst();
 			nodes.stream().collect(Collectors.toList())
 					.forEach(PropertyNode::sortChildren);
 			CsvCols cols = new CsvCols("");
+			nodes = getRoot().depthFirst();
 			Stream.of(Header.values()).forEach(cols::addColumn);
 			nodes.stream().forEach(node -> node.addTo(cols));
 			return cols.toCsv();
+		}
+
+		public void removeKeys(Set<String> remove) {
+			List<PropertyNode> nodes = getRoot().depthFirst();
+			nodes.forEach(n -> n.removeKeys(remove));
+			nodes.stream().filter(PropertyNode::canRemove)
+					.forEach(PropertyNode::removeFromParent);
 		}
 
 		private PropertyNode ensurePackageNode(String packageName) {
@@ -787,6 +808,17 @@ public class Configuration {
 				}
 			}
 
+			public void removeKeys(Set<String> remove) {
+				if (Ax.notBlank(key) && remove.contains(key)) {
+					values.clear();
+				}
+			}
+
+			@Override
+			public String toString() {
+				return Ax.notBlank(packageSegment) ? packageSegment : key;
+			}
+
 			private PropertyNode ensureKeyChild(String key) {
 				PropertyNode child = getKeyChild(key);
 				if (child != null) {
@@ -822,12 +854,17 @@ public class Configuration {
 						}
 						row.set(Header.File, value.file.path);
 						row.set(Header.Value, value.value);
+						row.set(Header.InputSet, value.file.set);
 					}
 				}
 			}
 
 			void addValue(ConfigurationFile file, String value) {
 				values.add(new FileValue(file, value));
+			}
+
+			boolean canRemove() {
+				return values.isEmpty() && getChildren().isEmpty();
 			}
 
 			List<PropertyNode> depthFirst() {
@@ -849,6 +886,10 @@ public class Configuration {
 						.filter(c -> Objects.equals(c.packageSegment, segment))
 						.findFirst().orElse(null);
 			}
+
+			void removeFromParent() {
+				parent.getChildren().remove(this);
+			}
 		}
 
 		static class FileValue {
@@ -863,7 +904,7 @@ public class Configuration {
 		}
 
 		enum Header {
-			Package, Key, File, Value, Comment, Set;
+			Package, Key, File, Value, Comment, InputSet, OutputSet;
 		}
 	}
 }

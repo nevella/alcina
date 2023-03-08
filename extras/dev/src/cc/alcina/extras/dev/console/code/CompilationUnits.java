@@ -3,6 +3,7 @@ package cc.alcina.extras.dev.console.code;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,7 +33,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
@@ -43,6 +44,9 @@ public class CompilationUnits {
 			.getName() + ".CONTEXT_COMP_UNITS";
 
 	public static Set<String> invalidSuperclassFqns = new LinkedHashSet<>();
+
+	public static final transient String CONTEXT_LOG_SUPERCLASS_FQN_EXCEPTIONS = CompilationUnits.class
+			.getName() + ".CONTEXT_LOG_SUPERCLASS_FQN_EXCEPTIONS";
 
 	public static String genericPart(String typeFqn) {
 		String regex = ".+<([^,]+?)>";
@@ -58,7 +62,7 @@ public class CompilationUnits {
 	}
 
 	public static CompilationUnits load(SingletonCache<CompilationUnits> cache,
-			StringMap classPaths,
+			Collection<String> classPaths,
 			BiFunction<CompilationUnits, CompilationUnitWrapper, CompilationUnitWrapperVisitor> visitorCreator,
 			boolean refresh) throws Exception {
 		CompilationUnits units = load0(cache, classPaths, visitorCreator,
@@ -107,14 +111,15 @@ public class CompilationUnits {
 	}
 
 	private static CompilationUnits load0(
-			SingletonCache<CompilationUnits> cache, StringMap classPaths,
+			SingletonCache<CompilationUnits> cache,
+			Collection<String> classPaths,
 			BiFunction<CompilationUnits, CompilationUnitWrapper, CompilationUnitWrapperVisitor> visitorCreator,
 			boolean refresh) throws Exception {
 		if (!refresh && cache.get() != null) {
 			return cache.get();
 		}
 		CompilationUnits units = new CompilationUnits();
-		for (String classPath : classPaths.keySet()) {
+		classPaths.parallelStream().forEach(classPath -> {
 			List<File> files = SEUtilities.listFilesRecursive(classPath,
 					new FileFilter() {
 						@Override
@@ -133,16 +138,20 @@ public class CompilationUnits {
 					CompilationUnitWrapper unit = new CompilationUnitWrapper(
 							file);
 					unit.unit().accept(visitorCreator.apply(units, unit), null);
-					units.units.add(unit);
-					unit.declarations.stream().filter(d -> d.hasFlags())
-							.forEach(d -> {
-								units.declarations.put(d.qualifiedSourceName,
-										d);
-							});
+					synchronized (units) {
+						units.units.add(unit);
+						unit.declarations.stream().filter(d -> d.hasFlags())
+								.forEach(d -> {
+									units.declarations
+											.put(d.qualifiedSourceName, d);
+								});
+						unit.declarations.forEach(
+								d -> units.declarationsByName.add(d.name, d));
+					}
 					counter.tick();
 				}
 			}
-		}
+		});
 		cache.set(units);
 		cache.persist();
 		return units;
@@ -215,19 +224,26 @@ public class CompilationUnits {
 
 	public Map<String, ClassOrInterfaceDeclarationWrapper> declarations = new LinkedHashMap<>();
 
+	private Multimap<String, List<ClassOrInterfaceDeclarationWrapper>> declarationsByName = new Multimap<>();
+
 	public CompilationUnits() {
 		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
 		typeSolver.add(new ClassLoaderTypeSolver(getClass().getClassLoader()));
 		this.solver = JavaParserFacade.get(typeSolver);
 	}
 
-	public ClassOrInterfaceDeclarationWrapper
-			declarationWrapperForClass(Class<?> clazz) {
-		return declByFqn(clazz.getCanonicalName());
+	public ClassOrInterfaceDeclarationWrapper declarationByFqn(String typeFqn) {
+		return declarations.get(typeFqn);
 	}
 
-	public ClassOrInterfaceDeclarationWrapper declByFqn(String typeFqn) {
-		return declarations.get(typeFqn);
+	public List<ClassOrInterfaceDeclarationWrapper>
+			declarationByName(String simpleName) {
+		return declarationsByName.get(simpleName);
+	}
+
+	public ClassOrInterfaceDeclarationWrapper
+			declarationWrapperForClass(Class<?> clazz) {
+		return declarationByFqn(clazz.getCanonicalName());
 	}
 
 	public SolverUtils solverUtils() {
@@ -251,7 +267,7 @@ public class CompilationUnits {
 	}
 
 	public static class ClassOrInterfaceDeclarationWrapper {
-		public static transient boolean evaluateSuperclassFqn = true;
+		public static transient boolean evaluateSuperclassFqn = false;
 
 		private transient ClassOrInterfaceDeclaration declaration;
 
@@ -293,8 +309,10 @@ public class CompilationUnits {
 						superclassFqn = fqn(unit, exType);
 					} catch (Exception e) {
 						invalidSuperclassFqns.add(exType.getNameAsString());
-						Ax.out("%s: %s", e.getMessage(),
-								exType.getNameAsString());
+						if (LooseContext.is(CONTEXT_COMP_UNITS)) {
+							Ax.out("%s: %s", e.getMessage(),
+									exType.getNameAsString());
+						}
 					}
 				}
 			}
@@ -325,6 +343,10 @@ public class CompilationUnits {
 
 		public void ensureImport(String name) {
 			unitWrapper.ensureImport(name);
+		}
+
+		public boolean exists() {
+			return new File(unitWrapper.path).exists();
 		}
 
 		public ClassOrInterfaceDeclaration getDeclaration() {

@@ -30,8 +30,7 @@ import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskRefactorDisplayName
-		extends ServerTask {
+public class TaskRefactorDisplayName extends ServerTask {
 	private boolean overwriteOriginals;
 
 	private String classPathList;
@@ -64,6 +63,29 @@ public class TaskRefactorDisplayName
 		return this.test;
 	}
 
+	@Override
+	public void run() throws Exception {
+		StringMap classPaths = StringMap.fromStringList(classPathList);
+		SingletonCache<CompilationUnits> cache = FsObjectCache
+				.singletonCache(CompilationUnits.class, getClass())
+				.asSingletonCache();
+		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
+				DeclarationVisitor::new, isRefresh());
+		switch (getAction()) {
+		case LIST_INTERESTING: {
+			compUnits.declarations.values().stream()
+					.filter(dec -> dec.hasFlag(Type.DisplayAnnotations))
+					.forEach(dec -> Ax.out("%s - %s",
+							dec.clazz().getSimpleName(), dec.typeFlags));
+			break;
+		}
+		case UPDATE_ANNOTATIONS: {
+			ensureAnnotations();
+			break;
+		}
+		}
+	}
+
 	public void setAction(Action action) {
 		this.action = action;
 	}
@@ -89,30 +111,6 @@ public class TaskRefactorDisplayName
 				.filter(dec -> dec.hasFlag(Type.DisplayAnnotations))
 				.forEach(dec -> SourceMods.cleanDisplayAnnotations(dec));
 		compUnits.writeDirty(isTest());
-	}
-
-	@Override
-	public void run()
-			throws Exception {
-		StringMap classPaths = StringMap.fromStringList(classPathList);
-		SingletonCache<CompilationUnits> cache = FsObjectCache
-				.singletonCache(CompilationUnits.class, getClass())
-				.asSingletonCache();
-		compUnits = CompilationUnits.load(cache, classPaths,
-				DeclarationVisitor::new, isRefresh());
-		switch (getAction()) {
-		case LIST_INTERESTING: {
-			compUnits.declarations.values().stream()
-					.filter(dec -> dec.hasFlag(Type.DisplayAnnotations))
-					.forEach(dec -> Ax.out("%s - %s",
-							dec.clazz().getSimpleName(), dec.typeFlags));
-			break;
-		}
-		case UPDATE_ANNOTATIONS: {
-			ensureAnnotations();
-			break;
-		}
-		}
 	}
 
 	public enum Action {

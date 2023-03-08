@@ -34,8 +34,7 @@ import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskRefactorRegistrations
-		extends ServerTask {
+public class TaskRefactorRegistrations extends ServerTask {
 	private boolean overwriteOriginals;
 
 	private String classPathList;
@@ -68,6 +67,25 @@ public class TaskRefactorRegistrations
 		return this.test;
 	}
 
+	@Override
+	public void run() throws Exception {
+		ClassOrInterfaceDeclarationWrapper.evaluateSuperclassFqn = false;
+		StringMap classPaths = StringMap.fromStringList(classPathList);
+		SingletonCache<CompilationUnits> cache = FsObjectCache
+				.singletonCache(CompilationUnits.class, getClass())
+				.asSingletonCache();
+		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
+				DeclarationVisitor::new, isRefresh());
+		switch (getAction()) {
+		case TRANSLATE_LOCATIONS: {
+			ensureRegistrations();
+			break;
+		}
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	public void setAction(Action action) {
 		this.action = action;
 	}
@@ -94,26 +112,6 @@ public class TaskRefactorRegistrations
 				.forEach(declarationWrapper -> new RegistrationsModifier(
 						declarationWrapper).modify());
 		compUnits.writeDirty(isTest());
-	}
-
-	@Override
-	public void run()
-			throws Exception {
-		ClassOrInterfaceDeclarationWrapper.evaluateSuperclassFqn = false;
-		StringMap classPaths = StringMap.fromStringList(classPathList);
-		SingletonCache<CompilationUnits> cache = FsObjectCache
-				.singletonCache(CompilationUnits.class, getClass())
-				.asSingletonCache();
-		compUnits = CompilationUnits.load(cache, classPaths,
-				DeclarationVisitor::new, isRefresh());
-		switch (getAction()) {
-		case TRANSLATE_LOCATIONS: {
-			ensureRegistrations();
-			break;
-		}
-		default:
-			throw new UnsupportedOperationException();
-		}
 	}
 
 	boolean hasRegistryLocationAnnotations(

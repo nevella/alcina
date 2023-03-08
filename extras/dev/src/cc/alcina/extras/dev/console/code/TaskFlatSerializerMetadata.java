@@ -58,8 +58,7 @@ import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.entity.util.SerializationStrategy.SerializationStrategy_WrappedObject;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskFlatSerializerMetadata
-		extends ServerTask {
+public class TaskFlatSerializerMetadata extends ServerTask {
 	private boolean overwriteOriginals;
 
 	private String classPathList;
@@ -105,6 +104,41 @@ public class TaskFlatSerializerMetadata
 
 	public boolean isTest() {
 		return this.test;
+	}
+
+	@Override
+	public void run() throws Exception {
+		StringMap classPaths = StringMap.fromStringList(classPathList);
+		SingletonCache<CompilationUnits> cache = FsObjectCache
+				.singletonCache(CompilationUnits.class, getClass())
+				.asSingletonCache();
+		FsObjectCache<FlatSerializationConfigurations> flatSerializationConfigurationsCache = FsObjectCache
+				.singletonCache(FlatSerializationConfigurations.class,
+						getClass());
+		flatSerializationConfigurationsCache.setSerializationStrategy(
+				new SerializationStrategy_WrappedObject());
+		flatSerializationConfigurations = flatSerializationConfigurationsCache
+				.asSingletonCache();
+		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
+				DeclarationVisitor::new, isRefresh());
+		switch (getAction()) {
+		case LIST_INTERESTING: {
+			compUnits.declarations.values().forEach(dec -> Ax.out("%s - %s",
+					dec.clazz().getSimpleName(), dec.typeFlags));
+			break;
+		}
+		case ENUMERATE_SEARCH_DEFINITIONS: {
+			enumerateSearchDefinitions();
+			break;
+		}
+		case ENSURE_ANNOTATIONS:
+			ensureAnnotations();
+			flatSerializationConfigurations.persist();
+			break;
+		case CREATE_TASK_HIERARCHY:
+			createTaskHierarchy();
+			break;
+		}
 	}
 
 	public void setAction(Action action) {
@@ -309,42 +343,6 @@ public class TaskFlatSerializerMetadata
 					.withCriterionHandlers(criterionHandlers)
 					.withSearchDefinitionClass(clazz).modify();
 		});
-	}
-
-	@Override
-	public void run()
-			throws Exception {
-		StringMap classPaths = StringMap.fromStringList(classPathList);
-		SingletonCache<CompilationUnits> cache = FsObjectCache
-				.singletonCache(CompilationUnits.class, getClass())
-				.asSingletonCache();
-		FsObjectCache<FlatSerializationConfigurations> flatSerializationConfigurationsCache = FsObjectCache
-				.singletonCache(FlatSerializationConfigurations.class,
-						getClass());
-		flatSerializationConfigurationsCache.setSerializationStrategy(
-				new SerializationStrategy_WrappedObject());
-		flatSerializationConfigurations = flatSerializationConfigurationsCache
-				.asSingletonCache();
-		compUnits = CompilationUnits.load(cache, classPaths,
-				DeclarationVisitor::new, isRefresh());
-		switch (getAction()) {
-		case LIST_INTERESTING: {
-			compUnits.declarations.values().forEach(dec -> Ax.out("%s - %s",
-					dec.clazz().getSimpleName(), dec.typeFlags));
-			break;
-		}
-		case ENUMERATE_SEARCH_DEFINITIONS: {
-			enumerateSearchDefinitions();
-			break;
-		}
-		case ENSURE_ANNOTATIONS:
-			ensureAnnotations();
-			flatSerializationConfigurations.persist();
-			break;
-		case CREATE_TASK_HIERARCHY:
-			createTaskHierarchy();
-			break;
-		}
 	}
 
 	<T> Class<? extends T> getHighestImplementor(Class<? extends T> clazz,
