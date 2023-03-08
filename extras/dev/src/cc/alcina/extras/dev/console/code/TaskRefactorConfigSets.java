@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -27,7 +26,11 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 	private PropertyTree tree;
 
-	private Function<String, String> classpathEntryToSet;
+	public void addProperties(String set, String path) {
+		ConfigurationFile configurationFile = new Configuration.ConfigurationFile(
+				null, new File(path), set);
+		classpathConfigurationFiles.add(configurationFile);
+	}
 
 	public List<Configuration.ConfigurationFile> getAppPropertyFileEntries() {
 		return this.appPropertyFileEntries;
@@ -39,10 +42,6 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 	public List<String> getClasspathEntries() {
 		return this.classpathEntries;
-	}
-
-	public Function<String, String> getClasspathEntryToSet() {
-		return this.classpathEntryToSet;
 	}
 
 	@Override
@@ -68,11 +67,6 @@ public class TaskRefactorConfigSets extends ServerTask {
 		this.classpathEntries = classpathEntries;
 	}
 
-	public void setClasspathEntryToSet(
-			Function<String, String> classpathEntryToSet) {
-		this.classpathEntryToSet = classpathEntryToSet;
-	}
-
 	private void checkConfigurationFilesValid() {
 		List<ConfigurationFile> nonNamespaced = classpathConfigurationFiles
 				.stream()
@@ -87,7 +81,7 @@ public class TaskRefactorConfigSets extends ServerTask {
 	/*
 	 * Traverse classpathentries
 	 *
-	 * Scane for matching filter
+	 * Scan for matching filter
 	 *
 	 * Construct - relative path == package
 	 *
@@ -107,8 +101,7 @@ public class TaskRefactorConfigSets extends ServerTask {
 						if (file.getName()
 								.matches(classpathConfigurationFileFilter)) {
 							ConfigurationFile configurationFile = new Configuration.ConfigurationFile(
-									path, file,
-									classpathEntryToSet.apply(path));
+									path, file, null);
 							classpathConfigurationFiles.add(configurationFile);
 						}
 					}

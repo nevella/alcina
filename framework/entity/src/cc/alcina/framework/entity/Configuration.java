@@ -709,17 +709,28 @@ public class Configuration {
 				PropertyNode packageNode = ensurePackageNode(file.packageName);
 				packageNode.addValues(file, map);
 			} else {
-				// FIXME - app-specific conf
+				// if matching an existing class.property key, add, otherwise
+				// add to the root package
+				List<PropertyNode> packageNodes = getRoot().depthFirst();
+				Map<String, PropertyNode> byKey = packageNodes.stream()
+						.collect(AlcinaCollectors.toKeyMap(n -> n.key));
+				map.forEach((key, value) -> {
+					if (byKey.containsKey(key)) {
+						byKey.get(key).addValue(file, value);
+					} else {
+						getRoot().ensureKeyChild(key).addValue(file, value);
+					}
+				});
 			}
 		}
 
 		public String asCsv() {
-			List<PropertyNode> walker = getRoot().depthFirst();
-			walker.stream().collect(Collectors.toList())
+			List<PropertyNode> nodes = getRoot().depthFirst();
+			nodes.stream().collect(Collectors.toList())
 					.forEach(PropertyNode::sortChildren);
 			CsvCols cols = new CsvCols("");
 			Stream.of(Header.values()).forEach(cols::addColumn);
-			walker.stream().forEach(node -> node.addTo(cols));
+			nodes.stream().forEach(node -> node.addTo(cols));
 			return cols.toCsv();
 		}
 
@@ -852,7 +863,7 @@ public class Configuration {
 		}
 
 		enum Header {
-			Package, Key, File, Value;
+			Package, Key, File, Value, Comment, Set;
 		}
 	}
 }
