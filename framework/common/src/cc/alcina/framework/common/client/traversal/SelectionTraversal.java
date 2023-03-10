@@ -206,8 +206,11 @@ public class SelectionTraversal
 		generationTraversal.select(selection);
 	}
 
+	/*
+	 * Add to both new and old (1,2) selection trackers
+	 */
 	public void select(Selection selection) {
-		// select(nextGeneration, selection);
+		select(nextGeneration, selection);
 		state.selections.add(selection);
 	}
 
@@ -227,11 +230,10 @@ public class SelectionTraversal
 	}
 
 	public void setRootSelection(Selection rootSelection) {
-		throw new UnsupportedOperationException();
-		// this.rootSelection = rootSelection;
+		this.rootSelection = rootSelection;
 	}
 
-	public void traverse() {
+	public void traverse1() {
 		Preconditions.checkState(generations.size() > 0);
 		GenerationTraversal firstGeneration = generations.values().iterator()
 				.next();
@@ -261,10 +263,9 @@ public class SelectionTraversal
 									selection)) {
 								submitted++;
 								submittedBySelector++;
-								throw new UnsupportedOperationException();
-								// executor.submit(() -> processSelection(
-								// generationTraversal, selector,
-								// selection));
+								executor.submit(() -> processSelection1(
+										generationTraversal, selector,
+										selection));
 							}
 						}
 						executor.awaitCompletion();
@@ -364,6 +365,37 @@ public class SelectionTraversal
 						.publish(new SelectionException(selection, e));
 				logger.warn(Ax.format("Selection exception :: %s", selection),
 						e);
+			}
+		} finally {
+			exitSelectionContext(selection);
+			selection.processNode().setSelfComplete(true);
+			releaseCompletedSelections(selection);
+			selectionProcessed.publish(selection);
+		}
+	}
+
+	private void processSelection1(GenerationTraversal generationTraversal,
+			Selector selector, Selection selection) {
+		try {
+			enterSelectionContext(selection);
+			selection.processNode().select(null, this);
+			if (!generationTraversal.testFilter(selection)) {
+				// skip processing if, for instance, the traversal has hit max
+				// exceptions
+				return;
+			}
+			if (selector.handles(selection)) {
+				try {
+					beforeSelectionProcessed.publish(selection);
+					selector.process(this, selection);
+				} catch (Exception e) {
+					selectionExceptions.put(selection, e);
+					selection.processNode().onException(e);
+					selectionException
+							.publish(new SelectionException(selection, e));
+					// TODO blah blah
+					e.printStackTrace();
+				}
 			}
 		} finally {
 			exitSelectionContext(selection);
