@@ -145,7 +145,7 @@ public class FormModel extends Model
 		}
 	}
 
-	// FIXME - dirndl 1x1d - not sure where to put the handlers here. On the
+	// FIXME - dirndl 1x1h - not sure where to put the handlers here. On the
 	// form...yes, I think this is better but I need to justify why. Ditto the
 	// CategoryNamePlace handling in submit()
 	public void onEditComittedRemote(EntityLocator createdLocator) {

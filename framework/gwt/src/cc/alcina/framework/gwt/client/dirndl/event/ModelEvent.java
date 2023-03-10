@@ -52,8 +52,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent<H>
 		implements NodeEvent.WithoutDomBinding, Registration.Ensure {
-	public static void dispatch(Context context,
-			Class<? extends ModelEvent> type, Object model) {
+	public static String staticDisplayName(Class<? extends ModelEvent> clazz) {
+		return Ax.friendly(clazz.getSimpleName().replaceFirst("Event$", ""));
+	}
+
+	// Although this is the one 'dispatch' call, access it via context (since
+	// context is always required)
+	static void dispatch(Context context, Class<? extends ModelEvent> type,
+			Object model) {
 		ModelEvent modelEvent = Reflections.newInstance(type);
 		context.setNodeEvent(modelEvent);
 		modelEvent.setModel(model);
@@ -73,10 +79,6 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 				return;
 			}
 		}
-	}
-
-	public static String staticDisplayName(Class<? extends ModelEvent> clazz) {
-		return Ax.friendly(clazz.getSimpleName().replaceFirst("Event$", ""));
 	}
 
 	private boolean handled;

@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * <p>
@@ -38,13 +39,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
  *
  * @author nick@alcina.cc
  *
- */
-/*
- * FIXME - dirndl 1x1d - should handle DOM input + change events, have r/o
- * currentvalue (from input)
- *
- * More specifically: emit inputchanged, changed events (from DOM input/change).
- * Don't reemit those transformed events (the original DOM events)
  */
 @Directed(
 	bindings = { @Binding(type = Type.INNER_HTML, from = "value"),
@@ -121,6 +115,7 @@ public class EditArea extends Model
 	@Override
 	public void onInput(Input event) {
 		currentValue = elementValue();
+		WidgetUtils.squelchCurrentEvent();
 		event.reemitAs(this, ModelEvents.Input.class);
 	}
 

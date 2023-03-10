@@ -20,8 +20,10 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
- * FIXME - dirndl 1x1d - the topic payload should be a [Model,String] tuple -
- * and possibly reduce topics to just one (plus a variant)
+ * FIXME - dirndl 1x3 - the topic payload should be a [Model,String] tuple - and
+ * possibly reduce topics to just one (plus a variant)
+ *
+ *
  *
  * @author Nick Reddel
  */
