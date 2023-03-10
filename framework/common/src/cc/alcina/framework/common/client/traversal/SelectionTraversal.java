@@ -210,8 +210,11 @@ public class SelectionTraversal
 	 * Add to both new and old (1,2) selection trackers
 	 */
 	public void select(Selection selection) {
-		select(nextGeneration, selection);
-		state.selections.add(selection);
+		if (nextGeneration != null) {
+			select(nextGeneration, selection);
+		} else {
+			state.selections.add(selection);
+		}
 	}
 
 	public void setExecutor(Executor executor) {
@@ -287,6 +290,9 @@ public class SelectionTraversal
 	public void traverse2() {
 		state.layerTraversal = new DepthFirstTraversal<Layer>(state.rootLayer,
 				Layer::getChildren, false);
+		// FIXME - to console tool
+		// String tree = state.layerTraversal.toTreeString();
+		// Ax.out(tree);
 		/*
 		 * layers with sublayers will compute their outputs after sublayer
 		 * traversal
@@ -306,6 +312,7 @@ public class SelectionTraversal
 			Layer untyped = layer;
 			state.currentLayer = layer;
 			layer.onBeforeTraversal(state);
+			// FIXME
 			ProcessObservers.publish(GenerationEntry.class,
 					() -> new GenerationEntry());
 			for (;;) {
@@ -326,6 +333,7 @@ public class SelectionTraversal
 				}
 			}
 		}
+		// FIXME
 		ProcessObservers.publish(GenerationExit.class,
 				() -> new GenerationExit());
 	}
@@ -682,6 +690,10 @@ public class SelectionTraversal
 		Layer rootLayer;
 
 		Selections selections = new Selections();
+
+		public void select(Selection selection) {
+			SelectionTraversal.this.select(selection);
+		}
 	}
 
 	public static class StatsLogger {

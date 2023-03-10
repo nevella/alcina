@@ -81,6 +81,11 @@ public abstract class Layer<S extends Selection> implements
 		return submitted;
 	}
 
+	@Override
+	public String toString() {
+		return name.toString();
+	}
+
 	public void withParent(Layer parent) {
 		parent.children.add(this);
 		this.parent = parent;
@@ -103,6 +108,10 @@ public abstract class Layer<S extends Selection> implements
 
 	protected void onBeforeIteration() {
 		state.iterationSubmitted = 0;
+	}
+
+	protected void select(Selection selection) {
+		state.traversalState.select(selection);
 	}
 
 	protected <T extends Selection> T selection(Class<T> clazz) {
