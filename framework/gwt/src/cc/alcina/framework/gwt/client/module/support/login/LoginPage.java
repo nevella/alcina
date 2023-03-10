@@ -112,7 +112,7 @@ public abstract class LoginPage extends Model implements
 
 	protected void populateNavigation() {
 		defaultButton = new Link().withClassName("primary")
-				.withModelEvent(Next.class);
+				.withModelEvent(Next.class).withTextFromModelEvent();
 		// FIXME - ui2 1x0 - definitely want progress here
 		// .withAsyncTopic(controller.topicCallingRemote);
 		navigation.put(defaultButton, NavArea.NEXT);

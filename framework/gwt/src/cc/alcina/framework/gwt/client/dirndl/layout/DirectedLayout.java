@@ -463,7 +463,7 @@ public class DirectedLayout implements AlcinaProcess {
 		public void dispatch(Class<? extends ModelEvent> modelEventClass,
 				Object data) {
 			Context context = NodeEvent.Context.fromNode(this);
-			ModelEvent.dispatch(context, modelEventClass, data);
+			context.dispatch(modelEventClass, data);
 		}
 
 		public AnnotationLocation getAnnotationLocation() {
@@ -842,8 +842,8 @@ public class DirectedLayout implements AlcinaProcess {
 		 * </pre>
 		 *
 		 * <p>
-		 * TODO - should these in fact be two different bindings - say a base
-		 * class and subclass?
+		 * FIXME - dirndl 1x1h - should these in fact be two different bindings
+		 * - say a base class and subclass?
 		 */
 		class NodeEventBinding {
 			/*
@@ -852,14 +852,6 @@ public class DirectedLayout implements AlcinaProcess {
 			 * allows a really useful inversion for one-off event handling
 			 */
 			Class<? extends NodeEvent> type;
-			// FIXME - dirndl 1x1d - why binding? why not bound event?
-			// also .... shouldn't we create these events on demand, and just
-			// use type? or call it 'template'?
-			//
-			// Actually, the event provides access to - essentially - metadata
-			// about the event. So that'd need to either go elsewhere, or keep
-			// the current behaviour (with maybe more specific naming)
-			// NodeEvent<? extends EventHandler> eventInstance;
 
 			private int receiverIndex;
 
@@ -881,9 +873,11 @@ public class DirectedLayout implements AlcinaProcess {
 						type.getSimpleName());
 			}
 
-			// this method contains devmode checks that a binding exists (if the
-			// type does not implement WithoutDomBinding), and that the
-			// DomBinding subclass is an inner class of the NodeEvent subclass
+			/*
+			 * this method contains devmode checks that a binding exists (if the
+			 * type does not implement WithoutDomBinding), and that the
+			 * DomBinding subclass is an inner class of the NodeEvent subclass
+			 */
 			private void bind() {
 				Optional<DomBinding> bindingOptional = Registry
 						.optional(DomBinding.class, type);
@@ -903,12 +897,19 @@ public class DirectedLayout implements AlcinaProcess {
 				domBinding.bind(getBindingWidget(), model, true);
 			}
 
-			// FIXME - dirndl 1x1h - receive/reemit merging - document how to
-			// reemit from StringInput (annotation merge should fail if
-			// receive/reemit pair - instead, add just receipt and manually
-			// reemit)
-			//
-			//
+			/*
+			 * FIXME - dirndl 1x1h - receive/reemit merging - document how to
+			 * reemit from StringInput (annotation merge should fail if
+			 * receive/reemit pair - instead, add just receipt and manually
+			 * reemit)
+			 *
+			 * What this (opaque) comment is saying is that there *was* an issue
+			 * with the StringInput @Directed annotation - or a subclass?
+			 * Anyway, merging receive [z] to superclass receive[x]/reemit[y] is
+			 * obviously problematic. Solution is to disallow that with an
+			 * informative exception (as above)
+			 *
+			 */
 			private void fireEvent(Class<? extends NodeEvent> actualEventType,
 					Context context, Object model) {
 				NodeEvent nodeEvent = Reflections.newInstance(actualEventType);
@@ -936,8 +937,7 @@ public class DirectedLayout implements AlcinaProcess {
 							.receives().length == directed.reemits().length);
 					Class<? extends ModelEvent> emitType = (Class<? extends ModelEvent>) directed
 							.reemits()[receiverIndex];
-					ModelEvent.dispatch(eventContext, emitType,
-							Node.this.getModel());
+					eventContext.dispatch(emitType, Node.this.getModel());
 				}
 			}
 

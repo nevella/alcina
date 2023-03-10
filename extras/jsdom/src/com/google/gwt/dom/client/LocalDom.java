@@ -345,7 +345,7 @@ public class LocalDom {
 
 	boolean syncing;
 
-	boolean markTextNodesAsResolvedOnResolve;
+	boolean markNonStructuralNodesAsResolvedOnResolve;
 
 	private LocalDom() {
 		if (GWT.isScript()) {
@@ -680,7 +680,7 @@ public class LocalDom {
 		if (node != null) {
 			return node;
 		}
-		if (remote.provideIsTextOrComment()) {
+		if (remote.provideIsNonStructural()) {
 			// FIXME - dirndl 1x1e - non-performant, but rare (exception
 			// for selectionish)
 			ElementRemote parentRemote = (ElementRemote) remote
@@ -690,7 +690,7 @@ public class LocalDom {
 			if (parent.getChildCount() == parentRemote.getChildCount()) {
 				Node childNode = parent.getChild(index);
 				linkRemote(remote, childNode);
-				if (markTextNodesAsResolvedOnResolve
+				if (markNonStructuralNodesAsResolvedOnResolve
 						&& !childNode.wasResolved()) {
 					childNode.resolved(resolutionEventId);
 				}
@@ -1127,12 +1127,12 @@ public class LocalDom {
 			return (Element) nodeForNoResolve(remote);
 		}
 
-		public void markAsResolved(List<NodeRemote> ancestors) {
+		public void markAsResolved(NodeRemote ancestor) {
 			try {
-				markTextNodesAsResolvedOnResolve = true;
-				ancestors.forEach(LocalDom::nodeFor);
+				markNonStructuralNodesAsResolvedOnResolve = true;
+				LocalDom.nodeFor(ancestor);
 			} finally {
-				markTextNodesAsResolvedOnResolve = false;
+				markNonStructuralNodesAsResolvedOnResolve = false;
 			}
 		}
 

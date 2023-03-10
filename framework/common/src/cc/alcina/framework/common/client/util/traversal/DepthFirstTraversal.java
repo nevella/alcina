@@ -12,6 +12,9 @@ import java.util.stream.StreamSupport;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Topic;
+
 /**
  * <p>
  * One-off iterable/iterator tuple, models descent of a tree (often composed of
@@ -35,14 +38,21 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 
 	private boolean lastFirst;
 
+	private boolean writeOnce;
+
 	private Function<T, List<T>> childrenSupplier;
 
 	TraversalNode current;
 
 	TraversalNode next;
 
+	public Topic<T> topicNodeExit = Topic.create();
+
+	private T root;
+
 	public DepthFirstTraversal(T root, Function<T, List<T>> childrenSupplier,
 			boolean lastFirst) {
+		this.root = root;
 		this.lastFirst = lastFirst;
 		this.childrenSupplier = childrenSupplier;
 		next = new TraversalNode(root);
@@ -81,6 +91,19 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 				iterator(), Spliterator.ORDERED), false);
 	}
 
+	public String toTreeString() {
+		DepthFirstTraversal<T> toStringTraversal = new DepthFirstTraversal<>(
+				root, childrenSupplier, false);
+		// assumes non-generative
+		toStringTraversal.writeOnce = true;
+		FormatBuilder format = new FormatBuilder();
+		for (T t : toStringTraversal) {
+			format.indent(toStringTraversal.current.depth());
+			format.line(t);
+		}
+		return format.toString();
+	}
+
 	private void prepareNext() {
 		next = current.next();
 	}
@@ -102,7 +125,7 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 		}
 
 		public void add(T t, boolean duringIteration) {
-			if (duringIteration && lastFirst) {
+			if (duringIteration && (lastFirst || writeOnce)) {
 				throw new ConcurrentModificationException();
 			}
 			TraversalNode node = new TraversalNode(t);
@@ -138,10 +161,25 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 				}
 			}
 			// children exhausted, try parent.next (child)
+			topicNodeExit.publish(value);
 			if (parent != null) {
 				return parent.next();
 			}
 			return null;
+		}
+
+		int depth() {
+			TraversalNode cursor = this;
+			int depth = 0;
+			for (;;) {
+				if (cursor.parent == null) {
+					break;
+				} else {
+					cursor = cursor.parent;
+					depth++;
+				}
+			}
+			return depth;
 		}
 	}
 }

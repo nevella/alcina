@@ -121,6 +121,12 @@ public class JobContext {
 		}
 	}
 
+	public static TreeProcess.Node getSelectedProcessNode() {
+		TreeProcess treeProcess = has() ? get().getTreeProcess()
+				: new TreeProcess(JobContext.class);
+		return treeProcess.getSelectedNode();
+	}
+
 	public static boolean has() {
 		return get() != null;
 	}

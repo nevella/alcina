@@ -10,8 +10,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSe
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*
- * FIXME - dirndl 1x1d - uniquemap anywhere? this is both optimise for
- * jdk[fastutil] vs js/gwt [hashmap] and optimise for gwt [uniquemap]
+ * FIXME - dirndl 1x3 - cleanup? Also move refs to CollectionCreators.Bootstrap
+ * to here
+ *
+ * This class optimises for both jdk[fastutil] vs js/gwt [hashmap] and for gwt
+ * [uniquemap]
  */
 public class AlcinaCollections {
 	public static <K, V> Map<K, V> newHashMap() {

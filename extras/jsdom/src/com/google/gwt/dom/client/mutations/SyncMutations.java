@@ -282,11 +282,33 @@ class SyncMutations {
 				// will terminate, no need to test (if the logic is correct)
 			}
 			if (populateAncestors) {
-				// FIXME - dirndl 1x1d - this is a little questionable (have to
-				// think it through -- basically list states + transitions of
-				// Node.resolved). Without this, exceptions are thrown when
-				// editing text of created subtrees in later mutation cycles
-				mutationsAccess.markAsResolved(ancestors);
+				{
+					/*
+					 * FIXME - dirndl 1x3 - this is a little questionable (have
+					 * to think it through -- I basically need to list (add
+					 * documentation about) states + transitions of
+					 * Node.resolved). Without this, exceptions are thrown when
+					 * editing text of created subtrees in later mutation
+					 * records within one mutation replay (say entering text in
+					 * a contetneditable with BOLD or ITALIC set - the browser
+					 * does some fairly fancy mutating all by itself).
+					 *
+					 * 'Resolved' means 'there's s verified exact correspondence
+					 * between the local and remote node of the Node' ... I
+					 * think ... which will certainly be true by the *end* of
+					 * the replay (and subtree sync), but may only be true for
+					 * subtree ancestors midway
+					 *
+					 * That said, it's ok to mark non-element nodes as resolved
+					 * (since they have no structure so are 'resolved enough'),
+					 *
+					 * So limited improvement might be just 'mark as resolved if
+					 * non-structural'...done, punting to 1x3
+					 */
+					ancestors.stream()
+							.filter(remote -> remote.provideIsNonStructural())
+							.forEach(mutationsAccess::markAsResolved);
+				}
 				applyStructuralMutations
 						.add(mutationSubtreeParent.remoteNode());
 				ancestors.stream().filter(syncedChildren::add)

@@ -39,4 +39,4 @@
  * </ul>
  *
  */
-package cc.alcina.framework.entity.parser.layered;
+package cc.alcina.framework.common.client.traversal.layer;

@@ -11,6 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
@@ -31,6 +34,7 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * A generalised engine for rule-based transformation.
@@ -74,6 +78,8 @@ public class SelectionTraversal
 
 	public Topic<Selection> beforeSelectionProcessed = Topic.create();
 
+	private State state = new State();
+
 	Selection rootSelection;
 
 	Map<Generation, GenerationTraversal> generations = new LinkedHashMap<>();
@@ -91,6 +97,8 @@ public class SelectionTraversal
 	private Executor executor = new Executor.CurrentThreadExecutor();
 
 	private Selector currentSelector;
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public SelectionTraversal() {
 	}
@@ -198,8 +206,15 @@ public class SelectionTraversal
 		generationTraversal.select(selection);
 	}
 
+	/*
+	 * Add to both new and old (1,2) selection trackers
+	 */
 	public void select(Selection selection) {
-		select(nextGeneration, selection);
+		if (nextGeneration != null) {
+			select(nextGeneration, selection);
+		} else {
+			state.selections.add(selection);
+		}
 	}
 
 	public void setExecutor(Executor executor) {
@@ -213,11 +228,15 @@ public class SelectionTraversal
 		this.filter = filter;
 	}
 
+	public void setRootLayer(Layer rootLayer) {
+		state.rootLayer = rootLayer;
+	}
+
 	public void setRootSelection(Selection rootSelection) {
 		this.rootSelection = rootSelection;
 	}
 
-	public void traverse() {
+	public void traverse1() {
 		Preconditions.checkState(generations.size() > 0);
 		GenerationTraversal firstGeneration = generations.values().iterator()
 				.next();
@@ -247,7 +266,7 @@ public class SelectionTraversal
 									selection)) {
 								submitted++;
 								submittedBySelector++;
-								executor.submit(() -> processSelection(
+								executor.submit(() -> processSelection1(
 										generationTraversal, selector,
 										selection));
 							}
@@ -268,6 +287,57 @@ public class SelectionTraversal
 		}
 	}
 
+	public void traverse2() {
+		state.layerTraversal = new DepthFirstTraversal<Layer>(state.rootLayer,
+				Layer::getChildren, false);
+		// FIXME - to console tool
+		// String tree = state.layerTraversal.toTreeString();
+		// Ax.out(tree);
+		/*
+		 * layers with sublayers will compute their outputs after sublayer
+		 * traversal
+		 */
+		state.layerTraversal.topicNodeExit.add(Layer::onAfterTraversal);
+		/*
+		 * @formatter:off
+		 *
+		 * - get rid of current, next generation
+		 * - use layer state
+		 * - layer *parser* emits slices, layer *selector* emits selections
+		 *
+		 * @formatter:on
+		 *
+		 */
+		for (Layer<?> layer : state.layerTraversal) {
+			Layer untyped = layer;
+			state.currentLayer = layer;
+			layer.onBeforeTraversal(state);
+			// FIXME
+			ProcessObservers.publish(GenerationEntry.class,
+					() -> new GenerationEntry());
+			for (;;) {
+				layer.onBeforeIteration();
+				try {
+					for (Selection selection : layer) {
+						if (untyped.submit(selection)) {
+							executor.submit(() -> processSelection(selection));
+						}
+					}
+					executor.awaitCompletion();
+				} finally {
+					layer.onAfterIteration();
+				}
+				if (layer.isComplete()) {
+					layer.onAfterInputsProcessed();
+					break;
+				}
+			}
+		}
+		// FIXME
+		ProcessObservers.publish(GenerationExit.class,
+				() -> new GenerationExit());
+	}
+
 	private Generation computeSubmittedGeneration(Selection selection) {
 		return generations.values().stream()
 				.filter(generation -> generation.wasSubmitted(selection))
@@ -282,7 +352,37 @@ public class SelectionTraversal
 		selection.ancestorSelections().forEach(Selection::exitContext);
 	}
 
-	private void processSelection(GenerationTraversal generationTraversal,
+	private void processSelection(Selection selection) {
+		try {
+			Layer layer = state.currentLayer;
+			enterSelectionContext(selection);
+			selection.processNode().select(null, this);
+			if (!layer.testFilter(selection)) {
+				// skip processing if, for instance, the traversal has hit max
+				// exceptions
+				return;
+			}
+			try {
+				beforeSelectionProcessed.publish(selection);
+				// FIXME - upa - remove 'this'
+				((Layer) layer).process(this, selection);
+			} catch (Exception e) {
+				selectionExceptions.put(selection, e);
+				selection.processNode().onException(e);
+				selectionException
+						.publish(new SelectionException(selection, e));
+				logger.warn(Ax.format("Selection exception :: %s", selection),
+						e);
+			}
+		} finally {
+			exitSelectionContext(selection);
+			selection.processNode().setSelfComplete(true);
+			releaseCompletedSelections(selection);
+			selectionProcessed.publish(selection);
+		}
+	}
+
+	private void processSelection1(GenerationTraversal generationTraversal,
 			Selector selector, Selection selection) {
 		try {
 			enterSelectionContext(selection);
@@ -424,10 +524,6 @@ public class SelectionTraversal
 			this.generation = generation;
 		}
 
-		public void onBeforeSelectorTraversal(Selector selector) {
-			selectionsBySelector.getAndEnsure(selector);
-		}
-
 		public PriorGenerationSelections
 				getPriorGenerationSelections(boolean includeCurrentGeneration) {
 			return new PriorGenerationSelections(
@@ -445,6 +541,10 @@ public class SelectionTraversal
 		public boolean hasSelections(Class<? extends Selection> clazz,
 				Object value) {
 			return selectionsByClassValue.containsKey(clazz, value);
+		}
+
+		public void onBeforeSelectorTraversal(Selector selector) {
+			selectionsBySelector.getAndEnsure(selector);
 		}
 
 		public Stream<Selection> provideEmittedSelections() {
@@ -565,6 +665,34 @@ public class SelectionTraversal
 		public SelectionException(Selection selection, Exception exception) {
 			this.selection = selection;
 			this.exception = exception;
+		}
+	}
+
+	public class Selections {
+		private Multiset<Class<? extends Selection>, Set<Selection>> byClass = new Multiset<>();
+
+		synchronized boolean add(Selection selection) {
+			return byClass.add(selection.getClass(), selection);
+		}
+
+		synchronized <S extends Selection> List<S>
+				get(Class<? extends S> clazz) {
+			return byClass.getAndEnsure(clazz).stream()
+					.collect(Collectors.toList());
+		}
+	}
+
+	public class State {
+		public Layer<?> currentLayer;
+
+		DepthFirstTraversal<Layer> layerTraversal;
+
+		Layer rootLayer;
+
+		Selections selections = new Selections();
+
+		public void select(Selection selection) {
+			SelectionTraversal.this.select(selection);
 		}
 	}
 

@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * <p>
@@ -156,6 +157,7 @@ public class StringInput extends Model
 	@Override
 	public void onInput(Input event) {
 		currentValue = elementValue();
+		WidgetUtils.squelchCurrentEvent();
 		event.reemitAs(this, ModelEvents.Input.class, currentValue);
 	}
 

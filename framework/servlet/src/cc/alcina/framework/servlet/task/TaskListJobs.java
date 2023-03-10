@@ -53,12 +53,18 @@ public class TaskListJobs extends AbstractTaskPerformer
 
 	transient Filter filter;
 
+	private int limit;
+
 	public String getFilterText() {
 		return this.filterText;
 	}
 
 	public JobResultType getJobResultType() {
 		return this.jobResultType;
+	}
+
+	public int getLimit() {
+		return this.limit;
 	}
 
 	public Boolean getScheduled() {
@@ -85,6 +91,10 @@ public class TaskListJobs extends AbstractTaskPerformer
 
 	public void setJobResultType(JobResultType jobResultType) {
 		this.jobResultType = jobResultType;
+	}
+
+	public void setLimit(int limit) {
+		this.limit = limit;
 	}
 
 	public void setListConsistencyJobs(boolean listConsistencyJobs) {
@@ -332,8 +342,9 @@ public class TaskListJobs extends AbstractTaskPerformer
 		}
 		addActive(doc, "top-level - active", Job::provideIsTopLevel);
 		addActive(doc, "child - active", Job::provideIsNotTopLevel);
-		addCompleted(doc, "top-level", true, 20);
-		addCompleted(doc, "child", false, 20);
+		limit = 20;
+		addCompleted(doc, "top-level", true, limit);
+		addCompleted(doc, "child", false, limit);
 		addConsistency(doc);
 		JobContext.get().getJob().setLargeResult(doc.prettyToString());
 		logger.info("Log output to job.largeResult");

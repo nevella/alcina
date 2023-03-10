@@ -114,7 +114,7 @@ import elemental.json.impl.JsonUtil;
  * baseline
  *
  * <p>
- * FIXME - dirndl 1x1d - use a ringbuffer (and fix ringbuffer rotation)
+ * FIXME - dirndl 1x1f - use a ringbuffer (and fix ringbuffer rotation)
  *
  * @author nick@alcina.cc
  */

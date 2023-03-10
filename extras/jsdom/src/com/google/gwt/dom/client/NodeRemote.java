@@ -212,6 +212,11 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 		return LocalDom.nodeFor(this);
 	}
 
+	public final boolean provideIsNonStructural() {
+		return getNodeType() == Node.TEXT_NODE
+				|| getNodeType() == Node.COMMENT_NODE;
+	}
+
 	@Override
 	public final Node removeAllChildren() {
 		return DomNodeStatic.removeAllChildren(this);
@@ -420,10 +425,5 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
 
 	final boolean provideIsElement() {
 		return getNodeType() == Node.ELEMENT_NODE;
-	}
-
-	final boolean provideIsTextOrComment() {
-		return getNodeType() == Node.TEXT_NODE
-				|| getNodeType() == Node.COMMENT_NODE;
 	}
 }

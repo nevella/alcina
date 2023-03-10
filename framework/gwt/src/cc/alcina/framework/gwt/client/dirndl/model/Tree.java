@@ -111,7 +111,12 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	 *
 	 * @param <PN>
 	 */
-	// FIXME - dirndl 1x1d - this should expect a relative, not absolute path
+	/*
+	 * FIXME - dirndl 1x1dy - this should expect a relative, not absolute path -
+	 * at the moment it expects an absolute path, which is just 'get path from
+	 * parent'
+	 *
+	 */
 	public abstract static class AbstractPathNode<PN extends AbstractPathNode>
 			extends TreeNode<PN> {
 		protected TreePath<PN> treePath;
@@ -193,7 +198,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 				fired = true;
 				Context context = NodeEvent.Context
 						.fromContext(event.getContext(), null);
-				ModelEvent.dispatch(context, PaginatorVisible.class, null);
+				context.dispatch(PaginatorVisible.class, null);
 			}
 		}
 

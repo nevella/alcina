@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.traversal;
+package cc.alcina.framework.common.client.traversal.cache;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
