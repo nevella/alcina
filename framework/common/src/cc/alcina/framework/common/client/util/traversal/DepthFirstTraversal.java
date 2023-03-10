@@ -12,6 +12,8 @@ import java.util.stream.StreamSupport;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.util.Topic;
+
 /**
  * <p>
  * One-off iterable/iterator tuple, models descent of a tree (often composed of
@@ -40,6 +42,8 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 	TraversalNode current;
 
 	TraversalNode next;
+
+	public Topic<T> topicNodeExit = Topic.create();
 
 	public DepthFirstTraversal(T root, Function<T, List<T>> childrenSupplier,
 			boolean lastFirst) {
@@ -138,6 +142,7 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 				}
 			}
 			// children exhausted, try parent.next (child)
+			topicNodeExit.publish(value);
 			if (parent != null) {
 				return parent.next();
 			}

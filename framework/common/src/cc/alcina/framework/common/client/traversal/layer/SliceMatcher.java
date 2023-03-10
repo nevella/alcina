@@ -1,9 +1,9 @@
-package cc.alcina.framework.entity.parser.layered;
+package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cc.alcina.framework.entity.parser.layered.LayeredTokenParser.LayerState.InputState;
+import cc.alcina.framework.common.client.traversal.layer.LayerParser.InputState;
 
 public class SliceMatcher {
 	private InputState inputState;
@@ -12,7 +12,7 @@ public class SliceMatcher {
 		this.inputState = inputState;
 	}
 
-	public Slice match(Token token, Pattern pattern) {
+	public Slice match(LayerToken token, Pattern pattern) {
 		String text = inputState.inputContent();
 		Matcher matcher = pattern.matcher(text);
 		if (matcher.find()) {

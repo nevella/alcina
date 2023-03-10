@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.parser.layered;
+package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.traversal.AbstractSelection;
+import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class Slice extends Location.Range {
-	public final Token token;
+	public final LayerToken token;
 
 	/**
 	 * Additional match information
@@ -22,7 +24,7 @@ public class Slice extends Location.Range {
 
 	private Slice aliasedFrom;
 
-	public Slice(Location start, Location end, Token token) {
+	public Slice(Location start, Location end, LayerToken token) {
 		super(start, end);
 		this.token = token;
 	}
@@ -40,12 +42,16 @@ public class Slice extends Location.Range {
 		return alias;
 	}
 
-	public Slice childSlice(Token... tokens) {
+	public Selection asSelection(Selection parent) {
+		return new SliceSelection(parent, this);
+	}
+
+	public Slice childSlice(LayerToken... tokens) {
 		return childSlices(tokens).findFirst().orElse(null);
 	}
 
-	public Stream<Slice> childSlices(Token... tokens) {
-		List<Token> list = Arrays.asList(tokens);
+	public Stream<Slice> childSlices(LayerToken... tokens) {
+		List<LayerToken> list = Arrays.asList(tokens);
 		return children.stream().filter(s -> list.contains(s.token));
 	}
 
@@ -61,7 +67,7 @@ public class Slice extends Location.Range {
 		this.data = data;
 	}
 
-	public Slice subSlice(int start, int end, Token token) {
+	public Slice subSlice(int start, int end, LayerToken token) {
 		Location subStart = this.start.createRelativeLocation(start);
 		Location subEnd = this.end.createRelativeLocation(-(length() - end));
 		Slice subSlice = new Slice(subStart, subEnd, token);
@@ -74,5 +80,16 @@ public class Slice extends Location.Range {
 		String aliasMarker = aliasedFrom != null ? " (alias)" : "";
 		return Ax.format("[%s,%s]%s :: %s :: %s", start.index, end.index,
 				aliasMarker, token, text());
+	}
+
+	public static class SliceSelection extends AbstractSelection<Slice> {
+		public SliceSelection(Selection parent, Slice slice) {
+			super(parent, slice, slice.toString());
+		}
+
+		public SliceSelection(Selection parent, Slice slice,
+				String pathSegment) {
+			super(parent, slice, pathSegment);
+		}
 	}
 }
