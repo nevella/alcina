@@ -60,6 +60,8 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 	private List<String> removeKeys;
 
+	private int dirtyWriteLimit = 0;
+
 	public void addProperties(String set, String path) {
 		ConfigurationFile configurationFile = new Configuration.ConfigurationFile(
 				null, new File(path), set);
@@ -76,6 +78,10 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 	public List<String> getClasspathEntries() {
 		return this.classpathEntries;
+	}
+
+	public int getDirtyWriteLimit() {
+		return this.dirtyWriteLimit;
 	}
 
 	@AlcinaTransient
@@ -124,6 +130,10 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 	public void setClasspathEntries(List<String> classpathEntries) {
 		this.classpathEntries = classpathEntries;
+	}
+
+	public void setDirtyWriteLimit(int dirtyWriteLimit) {
+		this.dirtyWriteLimit = dirtyWriteLimit;
 	}
 
 	public void setNameResolver(NameResolver nameResolver) {
@@ -210,6 +220,10 @@ public class TaskRefactorConfigSets extends ServerTask {
 		this.seenKeys = sourceHandler.refs.stream()
 				.flatMap(ref -> ref.keys.stream()).map(key -> key.toString())
 				.collect(Collectors.toList());
+		if (dirtyWriteLimit != 0) {
+			sourceHandler.removeSuperfluousClassLiterals();
+			compUnits.writeDirty(false, dirtyWriteLimit);
+		}
 	}
 
 	public interface NameResolver {
@@ -257,6 +271,11 @@ public class TaskRefactorConfigSets extends ServerTask {
 			declarationWrapper.getDeclaration().accept(lister, null);
 		}
 
+		public void removeSuperfluousClassLiterals() {
+			refs.stream().filter(ref -> ref.superfluousExplicitClass)
+					.forEach(Ref::removeExplicitClassRef);
+		}
+
 		class ConfigurationCallLister extends VoidVisitorAdapter<Void> {
 			private ClassOrInterfaceDeclarationWrapper declarationWrapper;
 
@@ -289,6 +308,8 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 			MethodCallExpr expr;
 
+			private ClassExpr superfluousArgument;
+
 			public Ref(MethodCallExpr expr,
 					ClassOrInterfaceDeclarationWrapper declarationWrapper) {
 				this.expr = expr;
@@ -315,9 +336,6 @@ public class TaskRefactorConfigSets extends ServerTask {
 							.getDeclaration()
 							.getFieldByName(keyNameExpr.toString());
 					if (fieldByName.isPresent()) {
-						if (keyNameExpr.toString().contains("GENERATE")) {
-							int debug = 3;
-						}
 						VariableDeclarator variable = fieldByName.get()
 								.getVariable(0);
 						Optional<Expression> initializer = variable
@@ -356,6 +374,7 @@ public class TaskRefactorConfigSets extends ServerTask {
 					} else {
 						if (classDeclByName == declarationWrapper) {
 							superfluousExplicitClass = true;
+							superfluousArgument = argument;
 						}
 						classParamWrapper = classDeclByName;
 					}
@@ -367,7 +386,6 @@ public class TaskRefactorConfigSets extends ServerTask {
 						.map(n -> Configuration.Key
 								.stringKey(Ax.format("%s.%s", n, f_keyName)))
 						.collect(Collectors.toList());
-				int debug = 3;
 			}
 
 			private void checkNonLiteral() {
@@ -444,6 +462,11 @@ public class TaskRefactorConfigSets extends ServerTask {
 					return nameResolver.resolve(declarationByName,
 							SourceHandler.this, name);
 				}
+			}
+
+			void removeExplicitClassRef() {
+				superfluousArgument.remove();
+				declarationWrapper.dirty();
 			}
 		}
 	}

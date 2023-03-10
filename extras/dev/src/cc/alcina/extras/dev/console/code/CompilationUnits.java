@@ -251,19 +251,23 @@ public class CompilationUnits {
 	}
 
 	public void writeDirty(boolean test) {
-		writeDirty(test, null);
+		writeDirty(test, null, Integer.MAX_VALUE);
 	}
 
 	public void writeDirty(boolean test,
-			Function<CompilationUnitWrapper, String> mapper) {
+			Function<CompilationUnitWrapper, String> mapper, int writeLimit) {
 		File outDir = new File("/tmp/refactor");
 		SEUtilities.deleteDirectory(outDir);
 		outDir.mkdirs();
 		long dirtyCount = units.stream().filter(u -> u.dirty).count();
 		Ax.out("Writing: %s/%s units dirty", dirtyCount, units.size());
-		units.stream().filter(u -> u.dirty).forEach(u -> {
+		units.stream().filter(u -> u.dirty).limit(writeLimit).forEach(u -> {
 			u.writeTo(test ? outDir : null, mapper);
 		});
+	}
+
+	public void writeDirty(boolean test, int writeLimit) {
+		writeDirty(test, null, writeLimit);
 	}
 
 	public static class ClassOrInterfaceDeclarationWrapper {
