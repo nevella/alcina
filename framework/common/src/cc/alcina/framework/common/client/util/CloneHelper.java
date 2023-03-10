@@ -67,8 +67,7 @@ public class CloneHelper {
 	 */
 	public void copyBeanProperties(Object source, Object target,
 			Set<String> excludeProperties) {
-		for (Property property : Reflections.at(source)
-				.properties()) {
+		for (Property property : Reflections.at(source).properties()) {
 			if (property.isReadOnly() || property.isWriteOnly()) {
 				continue;
 			}

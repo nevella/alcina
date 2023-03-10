@@ -135,7 +135,8 @@ class ReachabilityData {
 
 	static <T> void serializeReachabilityFile(TreeLogger logger,
 			Object contents, File file) {
-		String existing = file.exists() ? Io.read().file(file).asString() : null;
+		String existing = file.exists() ? Io.read().file(file).asString()
+				: null;
 		String json = new String(toJsonBytes(contents));
 		if (!Objects.equals(existing, json)) {
 			if (Boolean.getBoolean("reachability.production")) {

@@ -309,9 +309,8 @@ public class WDUtils {
 		try {
 			driver.manage().window().setPosition(new Point(0, 0));
 			Dimension maximizeTo = null;
-			Dimension defaultSize = new Dimension(
-					Configuration.getInt(WDUtils.class, "width"),
-					Configuration.getInt(WDUtils.class, "height"));
+			Dimension defaultSize = new Dimension(Configuration.getInt("width"),
+					Configuration.getInt("height"));
 			maximizeTo = defaultSize;
 			if (Configuration.is("maximizeToScreenSize")) {
 				try {
@@ -503,7 +502,8 @@ public class WDUtils {
 		int j = 0;
 		timeout = maybeOverrideTimeout(timeout);
 		long start = System.currentTimeMillis();
-		;// always ...just in case there are stale elements arround
+		// always ...just in case there are stale elements arround
+		;
 		while (System.currentTimeMillis() - start < timeout * 1000) {
 			if (forceTimeout) {
 				throw new TimedOutException("forced timeout");

@@ -21,9 +21,9 @@ public class LoginAttempts {
 				PersistentImpl.getImplementation(LoginAttempt.class),
 				"userNameLowerCase",
 				loginModel.loginBean.getUserName().toLowerCase());
-		int maxAttempts = Configuration.getInt(LoginAttempts.class,
-				"maxAttempts");
-		int maxAttemptsPeriodMins = Configuration.getInt(LoginAttempts.class, "maxAttemptsPeriodMins");
+		int maxAttempts = Configuration.getInt("maxAttempts");
+		int maxAttemptsPeriodMins = Configuration
+				.getInt("maxAttemptsPeriodMins");
 		return attempts.stream()
 				.sorted(Entity.EntityComparator.REVERSED_INSTANCE)
 				.limit(maxAttempts).filter(a -> !a.isSuccess())
@@ -38,8 +38,7 @@ public class LoginAttempts {
 	}
 
 	protected void handleLoginResult(LoginModel loginModel) {
-		int maxAttempts = Configuration.getInt(LoginAttempts.class,
-				"maxAttempts");
+		int maxAttempts = Configuration.getInt("maxAttempts");
 		Preconditions.checkArgument(maxAttempts != 0);
 		List<LoginAttempt> attempts = (List) Domain.listByProperty(
 				PersistentImpl.getImplementation(LoginAttempt.class),

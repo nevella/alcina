@@ -175,8 +175,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 				.getResourceAsStream(xslPath);
 		String marker = getWrapperTransformClass().getName() + "/" + xslPath
 				+ "-" + formatRequiresXml;
-		if (!Configuration.is(ContentWrapper.class,
-				"cacheTransforms")) {
+		if (!Configuration.is("cacheTransforms")) {
 			marker += Math.random();
 		}
 		wrappedContent = transform(trans, wrappingDoc, marker,

@@ -76,8 +76,7 @@ public class WDManager {
 			try {
 				LooseContext.push();
 				LooseContext.set(CONTEXT_TOKEN, token);
-				int timeout = Configuration.getInt(WDManager.class,
-						"overrideTestTimeout");
+				int timeout = Configuration.getInt("overrideTestTimeout");
 				if (timeout != 0) {
 					LooseContext.set(WDUtils.CONTEXT_OVERRIDE_TIMEOUT, timeout);
 				}

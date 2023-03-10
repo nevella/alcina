@@ -415,7 +415,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 					Collection<Long> specificIds, boolean mostRecentOnly,
 					boolean populateTransformSourceObjects, Logger logger) {
 		boolean logTransformReadMetrics = Configuration
-				.is(CommonPersistenceBase.class, "logTransformReadMetrics");
+				.is("logTransformReadMetrics");
 		Query query = null;
 		List<DomainTransformRequestPersistent> dtrps = null;
 		if (mostRecentOnly) {

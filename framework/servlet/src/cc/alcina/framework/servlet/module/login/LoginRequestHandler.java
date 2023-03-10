@@ -100,8 +100,7 @@ public abstract class LoginRequestHandler<U extends IUser> {
 	 * states to meet security requirements
 	 */
 	protected void postRequestHandled() {
-		if (Configuration.is(LoginRequestHandler.class,
-				"recordLoginAttempts")) {
+		if (Configuration.is("recordLoginAttempts")) {
 			new LoginAttempts().handleLoginResult(loginModel);
 		}
 		if (loginResponse.isOk()) {

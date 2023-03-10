@@ -40,8 +40,7 @@ public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
 				"... ");
 		File file = File.createTempFile(suggestedFileName, "." + suffix);
 		file.deleteOnExit();
-		Io.Streams.copy(stream,
-				new FileOutputStream(file));
+		Io.Streams.copy(stream, new FileOutputStream(file));
 		String fileTypeSuffix = "." + suffix;
 		if (!suggestedFileName.endsWith(fileTypeSuffix)) {
 			suggestedFileName += fileTypeSuffix;

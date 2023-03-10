@@ -23,8 +23,7 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
 
 	@Override
 	public synchronized String getLocation(String ipAddress) {
-		if (Configuration.is(GeolocationResolver_Ipstack.class,
-				"dummyResolver")) {
+		if (Configuration.is("dummyResolver")) {
 			return "(dummy ip adress)";
 		}
 		return ipToLocation.get(ipAddress);
@@ -41,7 +40,7 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
 			ipAddress = m.group(1);
 		}
 		try {
-			String apiKey = Configuration.get(GeolocationResolver_Ipstack.class, "apiKey");
+			String apiKey = Configuration.get("apiKey");
 			// Generate query
 			String url = Ax.format("http://api.ipstack.com/%s", ipAddress);
 			StringMap params = StringMap.properties("access_key", apiKey,

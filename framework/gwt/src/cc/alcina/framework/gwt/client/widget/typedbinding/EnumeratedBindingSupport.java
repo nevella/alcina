@@ -80,8 +80,8 @@ public class EnumeratedBindingSupport {
 			throw new IllegalStateException(
 					"binding should not be exposed for null object");
 		}
-		Reflections.at(related)
-				.property(enumeratedBinding.getBoundPath()).set(related, value);
+		Reflections.at(related).property(enumeratedBinding.getBoundPath())
+				.set(related, value);
 	}
 
 	private Optional<EnumeratedBinding> bindingForPath(String propertyName) {

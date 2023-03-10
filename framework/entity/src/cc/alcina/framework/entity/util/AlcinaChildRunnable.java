@@ -135,8 +135,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		this.permissionsManagerState = PermissionsManager.get().snapshotState();
 		this.contextClassLoader = Thread.currentThread()
 				.getContextClassLoader();
-		if (Configuration.is(AlcinaChildRunnable.class,
-				"traceConstruction")) {
+		if (Configuration.is("traceConstruction")) {
 			Ax.out("Constructing AlcinaChildRunnable - thread id: %s name: %s\n\n%s",
 					Thread.currentThread().getId(), name, SEUtilities
 							.getStacktraceSlice(Thread.currentThread(), 30, 2));

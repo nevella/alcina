@@ -15,8 +15,7 @@ public class GeolocationResolver_FreeGeoip implements GeolocationResolver {
 
 	@Override
 	public synchronized String getLocation(String ipAddress) {
-		if (Configuration.is(GeolocationResolver_FreeGeoip.class,
-				"dummyResolver")) {
+		if (Configuration.is("dummyResolver")) {
 			return "(dummy ip adress)";
 		}
 		return ipToLocation.get(ipAddress);

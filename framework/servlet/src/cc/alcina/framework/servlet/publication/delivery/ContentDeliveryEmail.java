@@ -140,19 +140,15 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			FileNotFoundException, NoSuchProviderException {
 		boolean debug = false;
 		Properties props = new Properties();
-		String host = Configuration.get(ContentDeliveryEmail.class,
-				"smtp.host.name");
-		Integer port = Integer.valueOf(Configuration.get(ContentDeliveryEmail.class, "smtp.host.port"));
-		Boolean authenticate = Boolean.valueOf(Configuration.get(ContentDeliveryEmail.class, "smtp.authenticate"));
-		String userName = Configuration.get(ContentDeliveryEmail.class,
-				"smtp.username");
-		String password = Configuration.get(ContentDeliveryEmail.class,
-				"smtp.password");
-		String fromAddress = Configuration.get(ContentDeliveryEmail.class,
-				"smtp.from.address");
-		String fromName = Configuration.get(ContentDeliveryEmail.class,
-				"smtp.from.name");
-		int maxMessageSize = Configuration.getInt(ContentDeliveryEmail.class, "smtp.maxMessageSize");
+		String host = Configuration.get("smtp.host.name");
+		Integer port = Integer.valueOf(Configuration.get("smtp.host.port"));
+		Boolean authenticate = Boolean
+				.valueOf(Configuration.get("smtp.authenticate"));
+		String userName = Configuration.get("smtp.username");
+		String password = Configuration.get("smtp.password");
+		String fromAddress = Configuration.get("smtp.from.address");
+		String fromName = Configuration.get("smtp.from.name");
+		int maxMessageSize = Configuration.getInt("smtp.maxMessageSize");
 		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
@@ -162,10 +158,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		props.put("mail.smtp.host", host);
 		props.put("mail.smtp.auth", authenticate.toString());
-		if (Configuration.is(ContentDeliveryEmail.class, "smtp.ttls")) {
+		if (Configuration.is("smtp.ttls")) {
 			props.setProperty("mail.smtp.starttls.enable", "true");
-			String protocols = Configuration.get(ContentDeliveryEmail.class,
-					"smtp.ssl.protocols");
+			String protocols = Configuration.get("smtp.ssl.protocols");
 			if (Ax.notBlank(protocols)) {
 				props.setProperty("mail.smtp.ssl.protocols", protocols);
 			}
@@ -194,7 +189,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		String[] bccEmailAddressStrings = Ax
 				.isBlank(Configuration.get("smtp.bcc")) ? new String[0]
 						: Configuration.get("smtp.bcc").split("(;|,| )+");
-		String filterClassName = Configuration.get(ContentDeliveryEmail.class, "smtp.filter.className");
+		String filterClassName = Configuration.get("smtp.filter.className");
 		String systemEmailAddressOfRequestor = deliveryModel
 				.getSystemEmailAddressOfRequestor();
 		if (LooseContext.has(CONTEXT_OVERRIDE_TO_ADDRESS)) {
@@ -261,7 +256,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				pdfAttachment = new MailAttachment();
 				pdfAttachment.uid = uuid;
 				pdfAttachment.contentType = "application/pdf";
-				pdfAttachment.requestBytes = Io.read().inputStream(stream).asBytes();
+				pdfAttachment.requestBytes = Io.read().inputStream(stream)
+						.asBytes();
 				pdfAttachment.dataSourceMimeType = "application/pdf";
 				pdfAttachment.suggestedFileName = deliveryModel
 						.providePropertyValue(
@@ -325,8 +321,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 					deliveryModel.getSuggestedFileName(),
 					"." + hfc.getFileExtension());
 			file.deleteOnExit();
-			Io.Streams.copy(convertedContent,
-					new FileOutputStream(file));
+			Io.Streams.copy(convertedContent, new FileOutputStream(file));
 			messageBodyPart
 					.setDataHandler(new DataHandler(new FileDataSource(file)));
 			messageBodyPart.setFileName(fileName);
@@ -348,7 +343,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				throw new MessageSizeUndeterminedException(e);
 			}
 		}
-		if (!Configuration.is(ContentDeliveryEmail.class, "smtp.enabled")) {
+		if (!Configuration.is("smtp.enabled")) {
 			Ax.sysLogHigh("ContentDeliveryEmail - disabled!");
 			return "Disabled";
 		}

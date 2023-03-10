@@ -31,8 +31,7 @@ public class ContentDeliveryDownloadInline implements ContentDelivery {
 		}
 		File file = File.createTempFile(suggestedFileName, "." + suffix);
 		file.deleteOnExit();
-		Io.Streams.copy(stream,
-				new FileOutputStream(file));
+		Io.Streams.copy(stream, new FileOutputStream(file));
 		DownloadItem item = new DownloadServlet.DownloadItem(mimeType, null,
 				file.getPath());
 		return DownloadServlet.add(item);

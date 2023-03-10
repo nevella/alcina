@@ -19,8 +19,7 @@ public class EntityLayerUtils {
 
 	public static String getLocalHostName() {
 		try {
-			String defined = Configuration.get(EntityLayerUtils.class,
-					"localHostName");
+			String defined = Configuration.get("localHostName");
 			if (Ax.isBlank(defined)) {
 				return java.net.InetAddress.getLocalHost().getHostName();
 			} else {
@@ -46,8 +45,7 @@ public class EntityLayerUtils {
 							+ "|python-requests|FlipboardProxy"
 							+ "|BingPreview|Baiduspider|YandexBot|Java|rogerbot|Slackbot)",
 					Pattern.CASE_INSENSITIVE);
-			String botExtraRegex = Configuration.get(EntityLayerUtils.class,
-					"botUserAgentExtra");
+			String botExtraRegex = Configuration.get("botUserAgentExtra");
 			EntityLayerUtils.botExtraUa = botExtraRegex.isEmpty() ? null
 					: Pattern.compile(botExtraRegex);
 		}

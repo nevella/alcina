@@ -358,8 +358,8 @@ public class Transaction implements Comparable<Transaction> {
 	private String originatingThreadName;
 
 	boolean ended;
-	// for debugging
 
+	// for debugging
 	@SuppressWarnings("unused")
 	private Timestamp databaseCommitTimestamp;
 
@@ -746,7 +746,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	void setPhase(TransactionPhase phase) {
-		if (Configuration.is(Transaction.class, "debugSetPhase")) {
+		if (Configuration.is("debugSetPhase")) {
 			logger.info("{}->{} ::\n{}", this.phase, phase,
 					SEUtilities.getCurrentThreadStacktraceSlice());
 		}

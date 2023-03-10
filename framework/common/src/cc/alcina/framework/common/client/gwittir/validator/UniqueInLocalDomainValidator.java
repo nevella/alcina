@@ -69,9 +69,8 @@ public class UniqueInLocalDomainValidator
 			if (EntityHelper.equals(sourceObject, entity)) {
 				continue;
 			}
-			if (!(value.equals(entity))
-					&& value.equals(Reflections.at(entity)
-							.property(propertyName).get(entity))) {
+			if (!(value.equals(entity)) && value.equals(Reflections.at(entity)
+					.property(propertyName).get(entity))) {
 				throw new ValidationException("Value must be unique",
 						UniqueInLocalDomainValidator.class);
 			}

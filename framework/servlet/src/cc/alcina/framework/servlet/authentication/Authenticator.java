@@ -129,8 +129,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 			String userName) throws AuthenticationException;
 
 	public boolean validateLoginAttempt(LoginModel<U> loginModel) {
-		if (Configuration.is(Authenticator.class,
-				"validateLoginAttempts")) {
+		if (Configuration.is("validateLoginAttempts")) {
 			return new LoginAttempts().checkLockedOut(loginModel);
 		} else {
 			return true;
@@ -152,7 +151,8 @@ public abstract class Authenticator<U extends Entity & IUser> {
 			// Programmatic password bypass - allow
 			return true;
 		}
-		if (AppPersistenceBase.isTestServer() && Configuration.is(Authenticator.class, "bypassPasswordCheck")) {
+		if (AppPersistenceBase.isTestServer()
+				&& Configuration.is("bypassPasswordCheck")) {
 			// App server/dev instance bypass - allow
 			// Extra AppPersistenceBase.isTestServer() check to make sure we
 			// don't engage this

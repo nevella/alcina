@@ -408,9 +408,8 @@ public class JobScheduler {
 		/*
 		 * handle flaky health/instances
 		 */
-		int minimumVisibleInstancesForOrphanProcessing = Configuration.getInt(
-				JobScheduler.class,
-				"minimumVisibleInstancesForOrphanProcessing");
+		int minimumVisibleInstancesForOrphanProcessing = Configuration
+				.getInt("minimumVisibleInstancesForOrphanProcessing");
 		if (activeInstances
 				.size() < minimumVisibleInstancesForOrphanProcessing) {
 			logger.info(

@@ -285,6 +285,15 @@ public class TaskRefactorConfigSets extends ServerTask {
 			}
 
 			@Override
+			public void visit(ClassOrInterfaceDeclaration n, Void arg) {
+				if (n != declarationWrapper.getDeclaration()) {
+					// stop (don't visit inner classes)
+				} else {
+					super.visit(n, arg);
+				}
+			}
+
+			@Override
 			public void visit(MethodCallExpr expr, Void arg) {
 				if (expr.toString()
 						.matches("(?s)Configuration\\.(has|is|get|key).*")) {
@@ -373,6 +382,12 @@ public class TaskRefactorConfigSets extends ServerTask {
 						throw new UnsupportedOperationException();
 					} else {
 						if (classDeclByName == declarationWrapper) {
+							if (classDeclByName.toString()
+									.contains("Connection")
+									|| classDeclByName.toString()
+											.contains("DomainStoreLoader")) {
+								int debug = 3;
+							}
 							superfluousExplicitClass = true;
 							superfluousArgument = argument;
 						}

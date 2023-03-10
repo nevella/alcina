@@ -132,9 +132,8 @@ public class TransformCommit {
 			throws WebException {
 		CommonPersistenceLocal cp = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence();
-		boolean persistAsOneTransaction = Configuration.is(
-				TransformCommit.class,
-				"persistOfflineTransformsAsOneTransaction");
+		boolean persistAsOneTransaction = Configuration
+				.is("persistOfflineTransformsAsOneTransaction");
 		try {
 			// save a copy of the records
 			{
@@ -443,8 +442,8 @@ public class TransformCommit {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			return new DomainTransformLayerWrapper(null);
 		}
-		int maxTransformChunkSize = Configuration.getInt(TransformCommit.class,
-				"maxTransformChunkSize");
+		int maxTransformChunkSize = Configuration
+				.getInt("maxTransformChunkSize");
 		/*
 		 * If context not set (by http request), it's from the server
 		 */

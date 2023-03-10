@@ -56,7 +56,6 @@ import cc.alcina.framework.entity.transform.ClassrefScanner.ClassrefScannerMetad
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
 /**
- *
  * @author Nick Reddel
  */
 public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
@@ -264,8 +263,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 					delta = true;
 					logger.trace("removing classref - {} {}\n", ref.getId(),
 							ref.getRefClassName());
-					if (Configuration.is(ClassrefScanner.class,
-							"removePersistentClassrefs")) {
+					if (Configuration.is("removePersistentClassrefs")) {
 						entityManager.remove(ref);
 					}
 					ClassRef.remove(ref);

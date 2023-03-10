@@ -27,7 +27,8 @@ public class TaskReapJobs extends ServerTask {
 		AtomicInteger counter = new AtomicInteger(0);
 		AtomicInteger reaped = new AtomicInteger(0);
 		AtomicInteger exceptions = new AtomicInteger(0);
-		boolean removeAllUndeserializableJobs = Configuration.is("removeAllUndeserializableJobs");
+		boolean removeAllUndeserializableJobs = Configuration
+				.is("removeAllUndeserializableJobs");
 		jobs.forEach(job -> {
 			boolean delete = false;
 			if (!job.provideCanDeserializeTask()) {

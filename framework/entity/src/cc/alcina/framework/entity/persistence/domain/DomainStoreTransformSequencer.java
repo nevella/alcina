@@ -30,8 +30,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueu
 import cc.alcina.framework.entity.util.OffThreadLogger;
 
 /**
- *
- *
  * A postgres-specific class to order applications of transformrequests to the
  * domain by db transactionCommitTime. It uses pg_xact_commit_timestamp(xmin) to
  * order these correctly.
@@ -41,11 +39,7 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
  * As it now is, COMMIT_ERRROR dtr events are fired (and ignored) on
  * non-originating servers - remove?
  *
- *
- *
  * @author nick@alcina.cc
- *
- *
  */
 public class DomainStoreTransformSequencer
 		implements DomainTransformPersistenceQueue.Sequencer {
@@ -239,8 +233,7 @@ public class DomainStoreTransformSequencer
 					CommonUtils.joinWithNewlines(positions));
 		}
 		long end = System.nanoTime();
-		if (end - start > Configuration.getInt(
-				DomainStoreTransformSequencer.class, "logRefreshTime")) {
+		if (end - start > Configuration.getInt("logRefreshTime")) {
 			logger.warn("Long refresh time: {} ids - {} ns - query {} ns - {}",
 					pendingRequestIds.size(), end - start,
 					queryFirst - queryStart,
@@ -309,16 +302,8 @@ public class DomainStoreTransformSequencer
 	private long waitForWritableTransactionsToTerminate0(Connection conn)
 			throws SQLException, InterruptedException {
 		//@formatter:off
-		String sql =""+
-		"SELECT 	* " +
-		"	FROM " +
-		"	    pg_stat_activity " +
-		"	WHERE " +
-		"	    backend_xid is not null" +
-		"	    AND xact_start < ? " +
-		"	    AND pid <> pg_backend_pid()" +
-		"	    AND state <> 'idle';	  " ;
-		//@formatter:on
+        String sql = "" + "SELECT 	* " + "	FROM " + "	    pg_stat_activity " + "	WHERE " + "	    backend_xid is not null" + "	    AND xact_start < ? " + "	    AND pid <> pg_backend_pid()" + "	    AND state <> 'idle';	  ";
+        //@formatter:on
 		long start = System.currentTimeMillis();
 		PreparedStatement statement = conn.prepareStatement(sql);
 		long logFrequencyMillis = 1000;

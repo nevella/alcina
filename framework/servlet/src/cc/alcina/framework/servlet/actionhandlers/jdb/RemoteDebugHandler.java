@@ -30,7 +30,6 @@ import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
  * 8787 on each instance
  *
  * @author nick@alcina.cc
- *
  */
 @Registration({ TaskPerformer.class, RemoteDebugAction.class })
 public class RemoteDebugHandler
@@ -40,7 +39,7 @@ public class RemoteDebugHandler
 	}
 
 	private static boolean enabled() {
-		return Configuration.is(RemoteDebugHandler.class, "enabled");
+		return Configuration.is("enabled");
 	}
 
 	@Override

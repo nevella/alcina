@@ -31,57 +31,50 @@ import cc.alcina.framework.entity.util.JaxbUtils;
  * See {@link GalleryConfiguration} for configuration schema details <div>
  *
  * <pre>
- * <code>
+ *  <code>
  *
- * <h3>Devconsole properties (in addition to the persistence configuration xml):</h3>
-GalleryPersister.persistToGoogle=true
-Gallery.defaultLocalPath=/tmp/barpub/gallery
-Gallery.preSnapPause=200
-Gallery.snap=true
+ *  <h3>Devconsole properties (in addition to the persistence configuration xml):</h3>
+ * GalleryPersister.persistToGoogle=true
+ * Gallery.defaultLocalPath=/tmp/barpub/gallery
+ * Gallery.preSnapPause=200
+ * Gallery.snap=true
  *
+ * //set up the gallery
  *
-//set up the gallery
+ * Gallery.begin(
+ * "my-app", "desktop",
+ * //the configuration file is a jaxb/xml serialized instance of GalleryConfiguration
+ * "/tmp/gallery-configuration.xml");
+ * Gallery.putDriver((RemoteWebDriver) token.getWebDriver());
  *
-Gallery.begin(
-"my-app", "desktop",
-//the configuration file is a jaxb/xml serialized instance of GalleryConfiguration
-"/tmp/gallery-configuration.xml");
-Gallery.putDriver((RemoteWebDriver) token.getWebDriver());
-
-	...
-
-//take snapshots (in this case using a TourWd json tour test series)
+ * 	...
  *
-protected void onStepRendered(Step step) {
-List<? extends PopupInfo> popups = step.providePopups();
-if (popups.size() > 0) {
-	Gallery.snap(popups.get(0).getCaption());
-	try {
-		Thread.sleep(200);
-	} catch (Exception e) {
-		throw new WrappedRuntimeException(e);
-	}
-}
-}
-
-...
-
-//upload etc if so configured
-
-Gallery.end();
+ * //take snapshots (in this case using a TourWd json tour test series)
  *
+ * protected void onStepRendered(Step step) {
+ * List<? extends PopupInfo> popups = step.providePopups();
+ * if (popups.size() > 0) {
+ * 	Gallery.snap(popups.get(0).getCaption());
+ * 	try {
+ * 		Thread.sleep(200);
+ * 	} catch (Exception e) {
+ * 		throw new WrappedRuntimeException(e);
+ * 	}
+ * }
+ * }
  *
- * </code>
+ * ...
+ *
+ * //upload etc if so configured
+ *
+ * Gallery.end();
+ *
+ *  </code>
  * </pre>
  *
  * </div>
  *
- *
- *
- *
- *
  * @author nick@alcina.cc
- *
  */
 public class Gallery {
 	public static final String DEVICE = "device";
@@ -208,7 +201,7 @@ public class Gallery {
 
 	private void snap0(String snapName) {
 		try {
-			Thread.sleep(Configuration.getInt(Gallery.class, "preSnapPause"));
+			Thread.sleep(Configuration.getInt("preSnapPause"));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

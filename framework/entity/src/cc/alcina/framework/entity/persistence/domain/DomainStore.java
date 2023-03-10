@@ -1468,8 +1468,7 @@ public class DomainStore implements IDomainStore {
 
 		QueryPool() {
 			pool = new ForkJoinPool(
-					Configuration.getInt(DomainStore.class,
-							"queryPoolSize"),
+					Configuration.getInt(DomainStore.class, "queryPoolSize"),
 					new WorkerThreadFactory(), null, false);
 			try {
 				Field workerNamePrefix = ForkJoinPool.class
@@ -1965,7 +1964,8 @@ public class DomainStore implements IDomainStore {
 		private boolean filterUnknownTransformProperties;
 
 		public InSubgraphFilter() {
-			filterUnknownTransformProperties = Configuration.is(DomainStore.class, "filterUnknownTransformProperties");
+			filterUnknownTransformProperties = Configuration
+					.is(DomainStore.class, "filterUnknownTransformProperties");
 		}
 
 		@Override

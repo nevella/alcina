@@ -39,8 +39,7 @@ public class InternalMetricSliceOracle {
 		}
 		if (imd.type == InternalMetricTypeAlcina.client
 				&& imd.type.shouldSlice()) {
-			long initialClientDelay = Configuration
-					.key(InternalMetricSliceOracle.class, "initialClientDelay")
+			long initialClientDelay = Configuration.key("initialClientDelay")
 					.longValue();
 			int sliceCount = imd.sliceCount();
 			if (sliceCount == 0) {

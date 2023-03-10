@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.Configuration;
  * <b>2022-05-27</b> TailServlet supports a regex filter as a querystring
  * parameter, so /tail?foo will only emit lines containing 'foo'
  * </p>
- * 
+ *
  * @author Nick Reddel
  */
 public class TailServlet extends AlcinaServlet {
@@ -53,8 +53,7 @@ public class TailServlet extends AlcinaServlet {
 		if (!isPermitted()) {
 			throw new RuntimeException("Access not permitted");
 		}
-		File logFile = new File(
-				Configuration.get(TailServlet.class, "file"));
+		File logFile = new File(Configuration.get("file"));
 		String message = Ax.format("Starting tail servlet - %s", logFile);
 		String filterString = request.getQueryString();
 		Pattern filter = Ax.isBlank(filterString) ? null

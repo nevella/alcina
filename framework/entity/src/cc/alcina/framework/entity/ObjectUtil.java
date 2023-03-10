@@ -214,8 +214,7 @@ public class ObjectUtil {
 	public static Map<String, String> primitiveFieldValues(Object t) {
 		try {
 			Map<String, String> map = new LinkedHashMap<>();
-			List<Field> fields = getFieldsForCopyOrLog(t, false,
-					null);
+			List<Field> fields = getFieldsForCopyOrLog(t, false, null);
 			for (Field field : fields) {
 				if (GraphProjection.isPrimitiveOrDataClass(field.getType())) {
 					Object value = field.get(t);

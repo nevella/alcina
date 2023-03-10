@@ -12,8 +12,7 @@ import cc.alcina.framework.servlet.domain.view.LiveTree;
 import cc.alcina.framework.servlet.domain.view.LiveTree.ProcessLoggerImpl;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskPeristDomainViewLog
-		extends ServerTask {
+public class TaskPeristDomainViewLog extends ServerTask {
 	private EntityLocator rootEntity;
 
 	public transient ProcessLoggerImpl processLoggerImpl;

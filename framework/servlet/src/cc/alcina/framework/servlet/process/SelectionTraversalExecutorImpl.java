@@ -27,8 +27,7 @@ public class SelectionTraversalExecutorImpl
 
 	public SelectionTraversalExecutorImpl() {
 		executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-				Configuration.getInt(
-						SelectionTraversalExecutorImpl.class, "threadCount"),
+				Configuration.getInt("threadCount"),
 				new NamedThreadFactory("SelectionTraversal-ExecutorImpl"));
 		resetSerial();
 	}
@@ -46,8 +45,7 @@ public class SelectionTraversalExecutorImpl
 	}
 
 	public void resetSerial() {
-		serial = Configuration.is(SelectionTraversalExecutorImpl.class,
-				"serial");
+		serial = Configuration.is("serial");
 	}
 
 	public void setSerial(boolean serial) {

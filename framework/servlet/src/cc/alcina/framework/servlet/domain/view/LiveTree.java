@@ -101,8 +101,6 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
  * <p>
  * to generate PathChange objects.
  * </p>
- *
- *
  */
 public class LiveTree {
 	public static final transient String CONTEXT_LIVE_NODE_JUST_VALUE = LiveTree.class
@@ -348,7 +346,7 @@ public class LiveTree {
 	}
 
 	private long getEvictMillis() {
-		return Configuration.getInt(LiveTree.class, "evictSeconds")
+		return Configuration.getInt("evictSeconds")
 				* TimeConstants.ONE_SECOND_MS;
 	}
 
@@ -375,7 +373,6 @@ public class LiveTree {
 	}
 
 	/**
-	 *
 	 * <p>
 	 * Note: Alcina index updates work by - for a given entity E - removing the
 	 * index entry for E pre transform application, then inserting an index
@@ -422,8 +419,6 @@ public class LiveTree {
 	 * <p>
 	 * <b>Phase 3</b>: bottom-up generate nodes of dirty paths
 	 * </p>
-	 *
-	 *
 	 */
 	private void processEvents() {
 		// modelchange collation
@@ -653,8 +648,7 @@ public class LiveTree {
 				boolean seenStart = request
 						.getFromOffsetExclusivePath() == null;
 				int resultNodeMaxSize = Math.min(request.getCount(),
-						Configuration.getInt(LiveTree.class,
-								"resultNodeMaxSize"));
+						Configuration.getInt("resultNodeMaxSize"));
 				while (deque.size() > 0 && result.size() < resultNodeMaxSize) {
 					LiveNode liveNode = deque.removeFirst();
 					if (liveNode == null) {
@@ -770,8 +764,9 @@ public class LiveTree {
 		public List<Transform> generateTransformResult() {
 			List<Transform> result = new ArrayList<>();
 			if (treeCreation && !logCreationTransforms()) {
-				return result;// not needed (will always walk the tree for first
-								// 'get')
+				// not needed (will always walk the tree for first
+				return result;
+				// 'get')
 			}
 			transactionResult.forEach(path -> {
 				LiveNode liveNode = path.getValue();
@@ -1098,15 +1093,15 @@ public class LiveTree {
 		 * This should wrap child addition in a try/catch - so:
 		 *
 		 * <code>
-		 * rootGenerator.getCitableStream().forEach(citable -> {
-			try {
-				this.delta(context, citable, true);
-			} catch (Exception e) {
-				liveNode.addExceptionChild(citable, e);
-				e.printStackTrace();
-			}
-		});
-		 * </code>
+		 *  rootGenerator.getCitableStream().forEach(citable -> {
+		 * 			try {
+		 * 				this.delta(context, citable, true);
+		 * 			} catch (Exception e) {
+		 * 				liveNode.addExceptionChild(citable, e);
+		 * 				e.printStackTrace();
+		 * 			}
+		 * 		});
+		 *  </code>
 		 */
 		public void onTreeAddition(GeneratorContext context, LiveNode liveNode);
 
@@ -1140,7 +1135,6 @@ public class LiveTree {
 	 * Enable by setting LiveTree.processLoggerEnabled to true
 	 *
 	 * @author nick@alcina.cc
-	 *
 	 */
 	public static class ProcessLoggerImpl extends ProcessLogger<LiveTree> {
 		public static ProcessLoggerImpl context() {
@@ -1211,7 +1205,7 @@ public class LiveTree {
 
 			public String toLogText() {
 				return toString();
-			};
+			}
 		}
 
 		static class ExceptionEvent extends Event {
@@ -1301,7 +1295,8 @@ public class LiveTree {
 				try {
 					InputStream inputStream = new GZIPInputStream(
 							new ByteArrayInputStream(data));
-					String serializedEvents = Io.read().inputStream(inputStream).asString();
+					String serializedEvents = Io.read().inputStream(inputStream)
+							.asString();
 					DomainTransformRequestPersistent request = PersistentImpl
 							.getImplementation(
 									DomainTransformRequestPersistent.class)

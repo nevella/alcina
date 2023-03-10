@@ -399,8 +399,7 @@ public class Transactions {
 	}
 
 	void cancelTimedOutTransactions() {
-		if (!Configuration.is(Transactions.class,
-				"cancelTimedoutTransactions")) {
+		if (!Configuration.is("cancelTimedoutTransactions")) {
 			return;
 		}
 		synchronized (transactionMetadataLock) {

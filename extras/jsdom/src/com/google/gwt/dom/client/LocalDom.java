@@ -1091,7 +1091,8 @@ public class LocalDom {
 					"logHistoryOnEception", true);
 		}
 
-		public LocalDomMutations.LoggingConfiguration asMutationsConfiguration() {
+		public LocalDomMutations.LoggingConfiguration
+				asMutationsConfiguration() {
 			LocalDomMutations.LoggingConfiguration result = new LocalDomMutations.LoggingConfiguration();
 			result.logDoms = mutationLogDoms;
 			result.logEvents = mutationLogEvents;

@@ -80,7 +80,8 @@ public class TaskReportDevMetrics extends AbstractTaskPerformer {
 	@Override
 	protected void run0() throws Exception {
 		DomDocument doc = DomDocument.basicHtmlDoc();
-		String css = Io.read().resource("res/TaskReportDevMetrics.css").asString();
+		String css = Io.read().resource("res/TaskReportDevMetrics.css")
+				.asString();
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		List<ILogRecord> records = Registry.impl(DevMetricLogSearcher.class)
 				.search(this);

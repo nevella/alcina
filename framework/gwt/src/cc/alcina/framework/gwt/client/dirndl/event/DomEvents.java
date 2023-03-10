@@ -204,7 +204,7 @@ public class DomEvents {
 				} else if (element.getTagName().equalsIgnoreCase("textarea")) {
 					value = ((TextAreaElement) element).getValue();
 				} else {
-					//contenteditable
+					// contenteditable
 					value = null;
 				}
 			}

@@ -609,7 +609,8 @@ public class DevConsoleDebugCommands {
 									.entrySet()) {
 								List<String> result = new ArrayList<String>();
 								engine.put("result", result);
-								String script = Io.read().resource("beautify.js").asString();
+								String script = Io.read()
+										.resource("beautify.js").asString();
 								// String eval = String.format(
 								// "%s\nvar
 								// js='%s';result.add(js_beautify(js));",
@@ -736,8 +737,7 @@ public class DevConsoleDebugCommands {
 		private StringMap getDefJsLines(int lineNumber) throws Exception {
 			StringMap jsLines = new StringMap();
 			for (File f : jsfDir.listFiles()) {
-				String[] lines = Io.read().file(f).asString()
-						.split("\n");
+				String[] lines = Io.read().file(f).asString().split("\n");
 				if (lines.length > lineNumber) {
 					jsLines.put(f.getName(), lines[lineNumber]);
 				}

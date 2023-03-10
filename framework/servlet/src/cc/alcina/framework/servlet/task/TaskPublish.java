@@ -13,8 +13,7 @@ import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 @TypeSerialization(flatSerializable = false)
-public class TaskPublish extends ServerTask
-		implements ServletAwaitTask {
+public class TaskPublish extends ServerTask implements ServletAwaitTask {
 	private ContentRequestBase publicationRequest;
 
 	private boolean copyContentToLargeResult;

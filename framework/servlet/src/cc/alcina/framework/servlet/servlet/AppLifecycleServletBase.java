@@ -113,7 +113,6 @@ import elemental.json.impl.JsonUtil;
  * app/classloader
  *
  * @author nick@alcina.cc
- *
  */
 @SuppressWarnings("deprecation")
 @Registration.Singleton
@@ -369,8 +368,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		PermissionsManager permissionsManager = PermissionsManager.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 		TransformManager.register(ThreadlocalTransformManager.ttmInstance());
-		ThreadlocalLooseContextProvider.setDebugStackEntry(Configuration.is(
-				AppLifecycleServletBase.class, "debugLooseContextStackEntry"));
+		ThreadlocalLooseContextProvider.setDebugStackEntry(
+				Configuration.is("debugLooseContextStackEntry"));
 		ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider
 				.ttmInstance();
 		LooseContext.register(ttmInstance);
@@ -594,10 +593,13 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			 * (initCustom) and don't override
 			 * LifecycleService.onApplicationStartup
 			 */
-			Registry.query(LifecycleService.class).registrations()
-					// each class implementing LifecycleService must also have a
-					// @Registration.Singleton
-					.map(Registry::impl).forEach(service -> {
+			Registry.query(LifecycleService.class).registrations().// each class
+																	// implementing
+																	// LifecycleService
+																	// must also
+																	// have a
+			// @Registration.Singleton
+					map(Registry::impl).forEach(service -> {
 						try {
 							service.onApplicationStartup();
 						} catch (Exception e) {
@@ -612,8 +614,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				 * checks fail and production server, otherwise warn via logs
 				 */
 				boolean cancelStartupOnSignatureGenerationFailure = Configuration
-						.is(AppLifecycleServletBase.class,
-								"cancelStartupOnSignatureGenerationFailure")
+						.is("cancelStartupOnSignatureGenerationFailure")
 						|| !EntityLayerUtils.isTestServer();
 				MethodContext.instance()
 						.withRunInNewThread(

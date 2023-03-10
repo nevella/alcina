@@ -40,7 +40,8 @@ public interface SerializationStrategy {
 		@Override
 		public <T> void serializeToFile(T t, File cacheFile) {
 			if (simple) {
-				Io.write().string(JacksonUtils.serializeNoTypesInterchange(t)).toFile(cacheFile);
+				Io.write().string(JacksonUtils.serializeNoTypesInterchange(t))
+						.toFile(cacheFile);
 			} else {
 				JacksonUtils.serializeToFile(t, cacheFile);
 			}

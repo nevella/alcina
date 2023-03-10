@@ -346,9 +346,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 							"problem deserializing clientlogrecord:\n%s\n",
 							original);
 					e.printStackTrace();
-					if (Configuration.is(
-							CommonRemoteServiceServlet.class,
-							"throwLogClientRecordExceptions")) {
+					if (Configuration.is("throwLogClientRecordExceptions")) {
 						throw new WrappedRuntimeException(e);
 					}
 					return null;
@@ -469,12 +467,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	public final
-	/*
-	 * Cannot be overridden - since it does some complex context arrangements.
-	 * To change behaviour, add subclass hooks (e.g.
-	 * afterAlcinaServletContextInitialisation)
-	 */
+	public final /*
+					 * Cannot be overridden - since it does some complex context
+					 * arrangements. To change behaviour, add subclass hooks
+					 * (e.g. afterAlcinaServletContextInitialisation)
+					 */
 	/*
 	 * Does not create a LooseContext instance, relies on creation via
 	 * alcinaServletContext.begin

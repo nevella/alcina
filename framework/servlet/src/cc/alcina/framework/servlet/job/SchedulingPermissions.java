@@ -49,7 +49,8 @@ class SchedulingPermissions {
 		boolean production = EntityLayerUtils.isProduction();
 		boolean scheduleClusterJobs = production
 				|| Configuration.is(JobScheduler.class, "testSchedules");
-		boolean scheduleVmLocalJobs = production || Configuration.is(JobScheduler.class, "testVmLocalSchedules");
+		boolean scheduleVmLocalJobs = production
+				|| Configuration.is(JobScheduler.class, "testVmLocalSchedules");
 		return (schedule.isVmLocal() && scheduleVmLocalJobs)
 				|| (isCurrentScheduledJobExecutor() && scheduleClusterJobs);
 	}
@@ -59,11 +60,9 @@ class SchedulingPermissions {
 			return false;
 		}
 		if (EntityLayerUtils.isProduction()) {
-			return Configuration.is(JobScheduler.class,
-					"canFuturesToPending");
+			return Configuration.is(JobScheduler.class, "canFuturesToPending");
 		} else {
-			return Configuration.is(JobScheduler.class,
-					"testFuturesToPending");
+			return Configuration.is(JobScheduler.class, "testFuturesToPending");
 		}
 	}
 
@@ -93,8 +92,7 @@ class SchedulingPermissions {
 		return JobRegistry.get().jobExecutors.isCurrentScheduledJobExecutor()
 				&& JobRegistry.get().jobExecutors
 						.isHighestBuildNumberInCluster()
-				&& Configuration.is(JobScheduler.class,
-						"scheduleClusterJobs")
+				&& Configuration.is(JobScheduler.class, "scheduleClusterJobs")
 				&& !AppPersistenceBase.isInstanceReadOnly();
 	}
 }

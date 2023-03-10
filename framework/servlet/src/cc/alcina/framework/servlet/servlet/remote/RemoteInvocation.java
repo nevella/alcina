@@ -82,7 +82,7 @@ public class RemoteInvocation {
 			LooseContext.setTrue(KryoSupport.CONTEXT_FORCE_ENTITY_SERIALIZER);
 			hookParams(methodName, args, params);
 			String address = Ax.blankTo(getRemoteAddress(),
-					Configuration.get(RemoteInvocation.class, "address"));
+					Configuration.get("address"));
 			PostAndClient png = getHttpPost(new URI(address));
 			// params.username = ResourceUtilities
 			// .getBundledString(DevRemoter.class, "username");

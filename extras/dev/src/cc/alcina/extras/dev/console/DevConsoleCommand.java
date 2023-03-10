@@ -612,8 +612,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String fileName = "/tmp/CmdExtractChromeCacheFile.dat";
 			BufferedOutputStream bos = new BufferedOutputStream(
 					new FileOutputStream(fileName));
-			Io.Streams.copy(
-					new ByteArrayInputStream(baos.toByteArray()), bos);
+			Io.Streams.copy(new ByteArrayInputStream(baos.toByteArray()), bos);
 			System.out.format("Wrote %s bytes to \n\t'%s'\n", size, fileName);
 			return "";
 		}

@@ -23,8 +23,7 @@ public class WsTcpSession {
 
 	private JsCodeserverTcpClientJava client;
 
-	int messageLogPer = Configuration.getInt(WsTcpSession.class,
-			"messageLogPer");
+	int messageLogPer = Configuration.getInt("messageLogPer");
 
 	private Session websocketSession;
 

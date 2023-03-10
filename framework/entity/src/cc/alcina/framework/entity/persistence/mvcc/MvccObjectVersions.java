@@ -30,7 +30,6 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * the method level. This does not include the fast path access to cached
  * resolution
  *
- *
  * Complexities related to lazy load (e.g.
  * TransformCommit.getLocatorMapForClient) - two lazy-loaded mvcc objects,
  * identical class/id, are non-identical. The MvccObject (entity) is unique
@@ -47,8 +46,6 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  *
  * @author nick@alcina.cc
  *
- *
- *
  * @param <T>
  */
 public abstract class MvccObjectVersions<T> implements Vacuumable {
@@ -64,33 +61,33 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		@Override
 		public void clear() {
 			throw new UnsupportedOperationException();
-		};
+		}
 
 		@Override
 		public ObjectVersion put(Transaction key, ObjectVersion value) {
 			throw new UnsupportedOperationException();
-		};
+		}
 
 		@Override
 		public void
 				putAll(Map<? extends Transaction, ? extends ObjectVersion> m) {
 			throw new UnsupportedOperationException();
-		};
+		}
 
 		@Override
 		public ObjectVersion putIfAbsent(Transaction key, ObjectVersion value) {
 			throw new UnsupportedOperationException();
-		};
+		}
 
 		@Override
 		public ObjectVersion remove(Object key) {
 			throw new UnsupportedOperationException();
-		};
+		}
 
 		@Override
 		public boolean remove(Object key, Object value) {
 			throw new UnsupportedOperationException();
-		};
+		}
 	};
 
 	static final Object MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR = new Object();
@@ -601,8 +598,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (!verified) {
 			IllegalStateException exception = new IllegalStateException(
 					Ax.format("Invalid read state: %s", domainIdentity));
-			if (Configuration.is(MvccObjectVersions.class,
-					"throwOnInvalidReadState")) {
+			if (Configuration.is("throwOnInvalidReadState")) {
 				throw exception;
 			} else {
 				notifyInvalidReadStateCount--;

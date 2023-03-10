@@ -26,7 +26,6 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**
- *
  * <h2>Model consistency</h2>
  * <p>
  * The following may not be fully implemented
@@ -76,8 +75,8 @@ class TowardsAMoreDesirableSituation {
 	private boolean canAllocate() {
 		return activeJobs.size() < JobRegistry.get().jobExecutors
 				.getMaxConsistencyJobCount()
-				&& JobRegistry.get().getActiveJobCount() < Configuration.getInt(TowardsAMoreDesirableSituation.class,
-								"maxVmActiveJobCount");
+				&& JobRegistry.get().getActiveJobCount() < Configuration
+						.getInt("maxVmActiveJobCount");
 	}
 
 	private void futureToPending(Optional<Job> next) {
@@ -217,6 +216,6 @@ class TowardsAMoreDesirableSituation {
 	}
 
 	enum Type {
-		SCHEDULER_EVENT, SHUTDOWN;
+		SCHEDULER_EVENT, SHUTDOWN
 	}
 }

@@ -65,9 +65,8 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 		 */
 		public void dispatchModelEvent(Node node,
 				Class<? extends ModelEvent> clazz) {
-			distinct().lambda(
-					() -> NodeEvent.Context.fromNode(node).dispatch(clazz, null))
-					.dispatch();
+			distinct().lambda(() -> NodeEvent.Context.fromNode(node)
+					.dispatch(clazz, null)).dispatch();
 		}
 
 		public QueuedEvent distinct() {

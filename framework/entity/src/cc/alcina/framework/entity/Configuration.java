@@ -438,10 +438,11 @@ public class Configuration {
 							break;
 						}
 						clazz = clazz.getSuperclass();
-						if (cursor == null || clazz == Object.class) {
+						if (cursor == null
+								|| clazz.getPackageName().startsWith("java")) {
 							break;
 						}
-						Key parentKey = new Key(clazz, cursor.keyPart)
+						cursor = new Key(clazz, cursor.keyPart)
 								.withContextOverride(cursor.contextOverride);
 					}
 					// unresolved, PropertyValues.resolvedValue==null

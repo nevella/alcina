@@ -61,8 +61,7 @@ public class WDWriter {
 		sb.append(s);
 		s = sb.toString();
 		if (isStatsOnly()) {
-			if (Configuration.is(WDWriter.class,
-					"logStatsToSysOut")) {
+			if (Configuration.is("logStatsToSysOut")) {
 				System.out.println(s);
 			}
 			return;

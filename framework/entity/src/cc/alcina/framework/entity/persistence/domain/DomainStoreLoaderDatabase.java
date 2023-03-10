@@ -1301,7 +1301,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	class ConnectionPool {
-		int maxConnections = Configuration.getInt(DomainStoreLoaderDatabase.class, "maxConnections");
+		int maxConnections = Configuration
+				.getInt(DomainStoreLoaderDatabase.class, "maxConnections");
 
 		private Connection initialWarmupConnection;
 

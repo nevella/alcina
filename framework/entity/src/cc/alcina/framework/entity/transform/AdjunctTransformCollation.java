@@ -47,31 +47,38 @@ public class AdjunctTransformCollation extends TransformCollation {
 	}
 
 	/**
-	 * <li>Call a consumer function with a value from before the original transaction.</li>
+	 * <li>Call a consumer function with a value from before the original
+	 * transaction.</li>
 	 * 
-	 * <li>No entity modifications should be made in the preEntityCallable, as this is a 
-	 * snapshot transaction.</li>
-	 * @param <E> Entity type that was transformed
-	 * @param <U> Value type to extract from pre-transaction entity
-	 * @param result QueryResult containing entity
-	 * @param preEntityCallable Function to extract value from pre-transaction entity
-	 * @param callable Function to consume extracted value
+	 * <li>No entity modifications should be made in the preEntityCallable, as
+	 * this is a snapshot transaction.</li>
+	 * 
+	 * @param <E>
+	 *            Entity type that was transformed
+	 * @param <U>
+	 *            Value type to extract from pre-transaction entity
+	 * @param result
+	 *            QueryResult containing entity
+	 * @param preEntityCallable
+	 *            Function to extract value from pre-transaction entity
+	 * @param callable
+	 *            Function to consume extracted value
 	 */
-	public <E extends Entity, U> void callWithPreEntityValue(
-			QueryResult result, Function<E, U> preEntityValueSupplier, ThrowingConsumer<U> callable) {
+	public <E extends Entity, U> void callWithPreEntityValue(QueryResult result,
+			Function<E, U> preEntityValueSupplier,
+			ThrowingConsumer<U> callable) {
 		try {
-			// Get value from original entity by calling 
+			// Get value from original entity by calling
 			// preEntityValueSupplier inside a snapshot transaction
-			U preEntityValue = Transaction
-				.callInSnapshotTransaction(() -> {
-					// Can only act on the entity if it's been persisted,
-					// otherwise return null
-					if (result.getEntity().domain().wasPersisted()) {
-						return preEntityValueSupplier.apply(result.getEntity());
-					} else {
-						return null;
-					}
-				});
+			U preEntityValue = Transaction.callInSnapshotTransaction(() -> {
+				// Can only act on the entity if it's been persisted,
+				// otherwise return null
+				if (result.getEntity().domain().wasPersisted()) {
+					return preEntityValueSupplier.apply(result.getEntity());
+				} else {
+					return null;
+				}
+			});
 			// Call callable with returned value
 			callable.accept(preEntityValue);
 		} catch (Exception e) {

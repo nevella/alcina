@@ -307,8 +307,8 @@ public class ObjectTreeRenderer {
 				int depth, boolean soleChild, TreeRenderer node,
 				Binding parentBinding) {
 			String propertyName = node.renderablePropertyName();
-			Class type = Reflections.at(renderable)
-					.property(propertyName).getType();
+			Class type = Reflections.at(renderable).property(propertyName)
+					.getType();
 			Field f = GwittirBridge.get().getField(renderable.getClass(),
 					propertyName, true, false);
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(

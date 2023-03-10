@@ -30,7 +30,6 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
  * Can be plugged into TLTM to check for versioning conflicts
  *
  * @author nick@alcina.cc
- *
  */
 public class TransformConflicts {
 	private static final String CHECK_TRANSFORM_CONFLICTS_QUERY = "check transform conflicts query";
@@ -49,8 +48,7 @@ public class TransformConflicts {
 	private TransformPersistenceToken transformPersistenceToken;
 
 	public TransformConflicts() {
-		ignoreConflicts = Configuration.is(TransformConflicts.class,
-				"ignoreConflicts")
+		ignoreConflicts = Configuration.is("ignoreConflicts")
 				|| LooseContext.getBoolean(CONTEXT_IGNORE_TRANSFORM_CONFLICTS);
 	}
 

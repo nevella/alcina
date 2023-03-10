@@ -49,8 +49,7 @@ public class ContentDeliveryLocalFilesystem implements ContentDelivery {
 		File file = suggestedFileName.startsWith("/")
 				? new File(suggestedFileName)
 				: SEUtilities.getChildFile(folder, suggestedFileName);
-		Io.Streams.copy(convertedContent,
-				new FileOutputStream(file));
+		Io.Streams.copy(convertedContent, new FileOutputStream(file));
 		logger.info("Wrote publication to local path: {}", file);
 		logger.info("  --  ", file);
 		return file.getPath();

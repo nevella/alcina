@@ -156,8 +156,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 			if (pcp != null) {
 				String associationPropertyName = pcp.getProperty()
 						.annotation(Association.class).propertyName();
-				Reflections.at(newObj)
-						.property(associationPropertyName)
+				Reflections.at(newObj).property(associationPropertyName)
 						.set(newObj, pcp.getDomainObject());
 			}
 		}

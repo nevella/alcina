@@ -19,8 +19,7 @@ public class ClassMetaInvoker {
 				.withContextClassloader(getClass().getClassLoader())
 				.call(() -> {
 					try {
-						String url = Configuration.get(ClassMetaInvoker.class,
-								"remoteScannerUrl");
+						String url = Configuration.get("remoteScannerUrl");
 						String json = new SimpleHttp(url)
 								.withPostBody(
 										JacksonUtils.serialize(metaRequest))

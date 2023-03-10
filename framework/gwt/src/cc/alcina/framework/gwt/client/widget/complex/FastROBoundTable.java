@@ -286,8 +286,7 @@ public class FastROBoundTable extends BoundTableExt {
 		final BoundWidget widget;
 		Field col = this.columns[colIndex];
 		if (!wpMap.containsKey(col.getPropertyName())) {
-			Property p = Reflections.at(target)
-					.property(col.getPropertyName());
+			Property p = Reflections.at(target).property(col.getPropertyName());
 			BoundWidgetProvider wp = this.factory
 					.getWidgetProvider(p.getType());
 			pMap.put(col.getPropertyName(), p);

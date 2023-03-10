@@ -215,11 +215,11 @@ public class GalleryPersister {
 		prettyToString = prettyToString.replaceFirst("(<script/>)",
 				Matcher.quoteReplacement(Ax.format("<script>%s</script>", js)));
 		prettyToString = prettyToString.replaceFirst("(<script/>)",
-				Ax.format("<script>%s</script>",
-						Matcher.quoteReplacement(Io.read().resource("res/viewer.js").asString())));
+				Ax.format("<script>%s</script>", Matcher.quoteReplacement(
+						Io.read().resource("res/viewer.js").asString())));
 		prettyToString = prettyToString.replaceFirst("(<style/>)",
-				Ax.format("<style>%s</style>",
-						Matcher.quoteReplacement(Io.read().resource("res/viewer.css").asString())));
+				Ax.format("<style>%s</style>", Matcher.quoteReplacement(
+						Io.read().resource("res/viewer.css").asString())));
 		File indexHtml = new File(base, "index.html");
 		File indexJson = new File(base, "index.json");
 		Io.write().string(prettyToString).toFile(indexHtml);
@@ -318,8 +318,8 @@ public class GalleryPersister {
 		void upload() {
 			try {
 				id = driveAccessor.upload(folder,
-						Io.read().file(file).asBytes(),
-						file.getName(), false).getId();
+						Io.read().file(file).asBytes(), file.getName(), false)
+						.getId();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -380,7 +380,8 @@ public class GalleryPersister {
 			url = tuple.image.toViewUrl();
 			fileName = tuple.image.getFileName();
 			try {
-				sha1Hash = EncryptionUtils.get().SHA1(Io.read().file(tuple.image.file).asBytes());
+				sha1Hash = EncryptionUtils.get()
+						.SHA1(Io.read().file(tuple.image.file).asBytes());
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}

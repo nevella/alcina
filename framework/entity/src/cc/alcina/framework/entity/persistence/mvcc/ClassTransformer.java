@@ -177,10 +177,8 @@ class ClassTransformer {
 		Function<ClassTransform, Runnable> mapper = ct -> () -> {
 			ct.setTransformer(this);
 			ct.init(false);
-			if (Configuration.is(ClassTransformer.class,
-					"checkClassCorrectness")) {
-				if (!Configuration.is(ClassTransformer.class,
-						"checkClassCorrectnessForceOk")) {
+			if (Configuration.is("checkClassCorrectness")) {
+				if (!Configuration.is("checkClassCorrectnessForceOk")) {
 					ct.checkFieldAndMethodAccess(true, false, token);
 				}
 			}
@@ -193,8 +191,7 @@ class ClassTransformer {
 				.withRunnables(classTransforms.values().stream().map(mapper)
 						.collect(Collectors.toList()))
 				.run();
-		if (Configuration.is(ClassTransformer.class,
-				"cancelStartupIfInvalid")) {
+		if (Configuration.is("cancelStartupIfInvalid")) {
 			if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
 				throw new IllegalStateException();
 			}
@@ -212,7 +209,7 @@ class ClassTransformer {
 					compilationRunnables.size(),
 					classTransforms.size() - compilationRunnables.size());
 		}
-		if (Configuration.is(ClassTransformer.class, "checkClassCorrectness")) {
+		if (Configuration.is("checkClassCorrectness")) {
 			for (ClassTransform ct : classTransforms.values()) {
 				if (!ct.invalid) {
 					ct.persist();
@@ -566,8 +563,8 @@ class ClassTransformer {
 			private String containingClassName;
 
 			@SuppressWarnings("unused")
-			// for debugging
-			private MethodCallExpr visiting;
+			private MethodCallExpr // for debugging
+			visiting;
 
 			private ClassOrInterfaceDeclaration classOrInterfaceDeclaration;
 
@@ -583,10 +580,7 @@ class ClassTransformer {
 			}
 
 			@Override
-			// checkd as a subtype of 'NameExpr' checks (since field access can
-			// be without a this.xxx form)
-			//
-			/*
+			public /*
 			 *
 			 *
 			 * Transactional access::
@@ -620,7 +614,7 @@ class ClassTransformer {
 			 *
 			 *
 			 */
-			public void visit(FieldAccessExpr expr, Void arg) {
+			void visit(FieldAccessExpr expr, Void arg) {
 				super.visit(expr, arg);
 				if (isDefinedOk(expr)) {
 					// annotation etc
@@ -1026,7 +1020,6 @@ class ClassTransformer {
 		 * </ul>
 		 *
 		 * @author nick@alcina.cc
-		 *
 		 */
 		class ClassWriter {
 			public void generateMvccClassTask() {

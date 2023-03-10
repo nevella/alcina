@@ -245,8 +245,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				customiseContextBeforePayloadWrite();
 				byte[] outBytes = KryoUtils
 						.serializeToByteArray(f_resultHolder);
-				Io.Streams.copy(
-						new ByteArrayInputStream(outBytes),
+				Io.Streams.copy(new ByteArrayInputStream(outBytes),
 						response.getOutputStream());
 			} finally {
 				LooseContext.pop();

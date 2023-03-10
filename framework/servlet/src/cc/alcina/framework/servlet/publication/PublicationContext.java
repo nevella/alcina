@@ -104,7 +104,6 @@ public class PublicationContext {
 			}
 			modelString = MethodContext.instance().withWrappingTransaction()
 					.call(() -> deliveryModel.toString());
-			
 		} catch (Exception e2) {
 			e2.printStackTrace();
 		}

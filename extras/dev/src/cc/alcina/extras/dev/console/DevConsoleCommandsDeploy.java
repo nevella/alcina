@@ -60,7 +60,8 @@ public class DevConsoleCommandsDeploy {
 			String servletPackage = argv[0];
 			String servletPackageBase = Configuration
 					.get(DevConsoleCommandsDeploy.class, "servletPackageBase");
-			String targetContainerName = Configuration.get(DevConsoleCommandsDeploy.class, "targetContainerName");
+			String targetContainerName = Configuration
+					.get(DevConsoleCommandsDeploy.class, "targetContainerName");
 			String targetDockerHostName = Configuration.get(
 					DevConsoleCommandsDeploy.class, "targetDockerHostName");
 			String targetDockerHostSshUser = Configuration.get(
@@ -98,7 +99,8 @@ public class DevConsoleCommandsDeploy {
 		}
 
 		private void execRemote(String cmd) throws Exception {
-			String targetContainerName = Configuration.get(DevConsoleCommandsDeploy.class, "targetContainerName");
+			String targetContainerName = Configuration
+					.get(DevConsoleCommandsDeploy.class, "targetContainerName");
 			String targetDockerHostName = Configuration.get(
 					DevConsoleCommandsDeploy.class, "targetDockerHostName");
 			String targetDockerHostSshUser = Configuration.get(

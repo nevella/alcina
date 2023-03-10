@@ -54,7 +54,7 @@ public class UIRendererWd extends UIRenderer {
 
 	public long timeout() {
 		return System.currentTimeMillis() + (TourManager.isImmediateGet() ? 1
-				: Configuration.getInt(UIRendererWd.class, "timeout"));
+				: Configuration.getInt("timeout"));
 	}
 
 	private WebElement getElement(String selector) {
@@ -201,7 +201,8 @@ public class UIRendererWd extends UIRenderer {
 		String js = Io.read().resource("res/UIRendererWd.js").asString();
 		String css = Io.read().resource("res/UIRendererWd.css").asString();
 		if (managerWd().hidePopups) {
-			css += "\n" + Io.read().resource("res/UIRendererWd.hidePopups.css").asString();
+			css += "\n" + Io.read().resource("res/UIRendererWd.hidePopups.css")
+					.asString();
 		}
 		String cmd = Ax.format(
 				"var __UIRendererWd_css=\"%s\";\n" + "%s\n"

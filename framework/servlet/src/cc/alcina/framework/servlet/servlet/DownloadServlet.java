@@ -146,8 +146,7 @@ public class DownloadServlet extends HttpServlet {
 			}
 		}
 		try {
-			Io.Streams.copy(
-					new BufferedInputStream(new FileInputStream(f)),
+			Io.Streams.copy(new BufferedInputStream(new FileInputStream(f)),
 					response.getOutputStream());
 			TimerService.get().schedule(() -> {
 				items.remove(id);

@@ -34,10 +34,8 @@ public class DomainStoreEntityManager implements EntityManager {
 	}
 
 	public static boolean isUseDomainStore() {
-		return Configuration.is(DomainStoreEntityManager.class,
-				"useDomainStore")
-				|| LooseContext
-						.is(JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
+		return Configuration.is("useDomainStore") || LooseContext
+				.is(JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
 	}
 
 	public static String orderHandlerHint(OrderCriterion orderCriterion) {
