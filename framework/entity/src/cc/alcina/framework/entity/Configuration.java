@@ -249,6 +249,11 @@ public class Configuration {
 			return has() ? Optional.of(this) : Optional.empty();
 		}
 
+		public Key required() {
+			Ax.checkNotBlank(get());
+			return this;
+		}
+
 		public void set(String value) {
 			LooseContext.set(toString(), value);
 		}

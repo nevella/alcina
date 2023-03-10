@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
@@ -32,6 +34,11 @@ public class Ax {
 
 	public static String blankToEmpty(String string) {
 		return blankTo(string, "");
+	}
+
+	public static String checkNotBlank(String string) {
+		Preconditions.checkState(notBlank(string));
+		return string;
 	}
 
 	public static String clip(String string, int maxLength) {
