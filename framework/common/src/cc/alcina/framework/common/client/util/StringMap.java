@@ -196,13 +196,9 @@ public class StringMap extends LinkedHashMap<String, String> {
 		put(Ax.format("%s.%s", clazz.getSimpleName(), key), value);
 	}
 
-	public String put(String key, Boolean value) {
-		return put(key, value.toString());
-	}
-
 	public void putIfTrue(String key, boolean value) {
 		if (value) {
-			put(key, value);
+			setBoolean(key, value);
 		}
 	}
 
