@@ -366,6 +366,7 @@ public abstract class DevHelper {
 		loadJbossConfig(new ConsolePrompter());
 	}
 
+	// FIXME - ru - remove
 	public void loadJbossConfig(StringPrompter prompter) {
 		if (configLoaded) {
 			return;

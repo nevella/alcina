@@ -347,7 +347,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		public void sortChildren() {
 			IdentityArrayList<TreeNode<NM>> sorted = IdentityArrayList
 					.copyOf(children);
-			Collections.sort((List<? extends Comparable>) sorted);
+			Collections.sort((List<? extends Comparable>) (List<?>) sorted);
 			setChildren(sorted);
 		}
 

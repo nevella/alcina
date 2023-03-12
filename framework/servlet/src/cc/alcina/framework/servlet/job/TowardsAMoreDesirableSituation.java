@@ -116,11 +116,11 @@ class TowardsAMoreDesirableSituation {
 	}
 
 	void start() {
+		filter = ConsistencyJobFilter.get();
+		filter.setLocallyEnqueuedConsistencyJobs(activeJobs);
 		thread = new ProcessorThread();
 		thread.start();
 		scheduler.eventOcurred.add(v -> addSchedulerEvent());
-		filter = ConsistencyJobFilter.get();
-		filter.setLocallyEnqueuedConsistencyJobs(activeJobs);
 	}
 
 	void stopService() {

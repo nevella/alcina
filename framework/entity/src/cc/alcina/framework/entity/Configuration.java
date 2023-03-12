@@ -1,7 +1,6 @@
 package cc.alcina.framework.entity;
 
 import java.io.File;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -9,7 +8,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,6 +15,8 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -289,6 +289,10 @@ public class Configuration {
 	public static class Properties {
 		public final Topic<Void> topicInvalidated = Topic.create();
 
+		private ClassLoader classLoader;
+
+		private boolean useSets;
+
 		private Map<String, PropertyValues> keyValues = new ConcurrentHashMap();
 
 		// access is synchronized
@@ -298,6 +302,9 @@ public class Configuration {
 		private List<PropertySet> orderedSets = new ArrayList<>();
 
 		private Map<String, Object> immutableCustomProperties = new ConcurrentHashMap<>();
+
+		Pattern includePattern = Pattern
+				.compile("include\\.(resource|file)=(.+)");
 
 		public Properties() {
 			Arrays.stream(SystemSet.values()).forEach(this::addSet);
@@ -325,8 +332,16 @@ public class Configuration {
 			return propertyValues == null ? null : propertyValues.resolvedValue;
 		}
 
+		public ClassLoader getClassLoader() {
+			return this.classLoader;
+		}
+
 		public boolean has(String key) {
 			return keyValues.containsKey(key);
+		}
+
+		public boolean isUseSets() {
+			return this.useSets;
 		}
 
 		public Stream<String> keys() {
@@ -342,29 +357,9 @@ public class Configuration {
 			});
 		}
 
-		// FIXME - ru - to private near proj completion
-		public void register(InputStream ios) {
-			try {
-				java.util.Properties p = new java.util.Properties();
-				p.load(ios);
-				ios.close();
-				for (Entry<Object, Object> entry : p.entrySet()) {
-					Object key = entry.getKey();
-					Object value = entry.getValue();
-					if (!(key instanceof String)
-							|| !(value instanceof String)) {
-						continue;
-					}
-					set0((String) key, (String) value);
-				}
-				invalidate();
-			} catch (Exception e) {
-				throw WrappedRuntimeException.wrap(e);
-			}
-		}
-
 		public void register(String propertiesString) {
-			register(Io.read().string(propertiesString).asInputStream());
+			register0(propertiesString);
+			invalidate();
 		}
 
 		public String set(Class clazz, String key, String value) {
@@ -375,6 +370,14 @@ public class Configuration {
 			String prior = set0(key, value);
 			invalidate();
 			return prior;
+		}
+
+		public void setClassLoader(ClassLoader classLoader) {
+			this.classLoader = classLoader;
+		}
+
+		public void setUseSets(boolean useSets) {
+			this.useSets = useSets;
 		}
 
 		private void ensureBundles(Key key) {
@@ -391,6 +394,61 @@ public class Configuration {
 			orderedSets.forEach(set -> set.populateKeys(keys));
 			keys.stream().map(Key::stringKey).forEach(this::ensureValues);
 			topicInvalidated.signal();
+		}
+
+		private boolean processInclude(String line) {
+			Matcher matcher = includePattern.matcher(line);
+			if (matcher.matches()) {
+				String type = matcher.group(1);
+				String path = matcher.group(2);
+				String contents = null;
+				switch (type) {
+				case "resource": {
+					// trim leading slash, required for
+					// classloader.getResourceAsStream() (but not
+					// class.getResourceAsStream
+					String trimmedPath = path.substring(1);
+					contents = Io.read()
+							.inputStream(provideClassLoader()
+									.getResourceAsStream(trimmedPath))
+							.asString();
+					break;
+				}
+				case "file": {
+					contents = Io.read().path(path).asString();
+					break;
+				}
+				default:
+					throw new UnsupportedOperationException();
+				}
+				register0(contents);
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		private ClassLoader provideClassLoader() {
+			return classLoader != null ? classLoader
+					: getClass().getClassLoader();
+		}
+
+		private void register0(String propertiesString) {
+			FormatBuilder nonIncludeBuilder = new FormatBuilder();
+			// expand includes
+			Arrays.stream(propertiesString.split("\n")).forEach(line -> {
+				if (processInclude(line)) {
+					//
+				} else {
+					nonIncludeBuilder.line(line);
+				}
+			});
+			// register non-includes
+			StringMap map = StringMap
+					.fromPropertyString(nonIncludeBuilder.toString());
+			map.forEach((key, value) -> {
+				set0(key, value);
+			});
 		}
 
 		// threadsafe - the put is a copy-on-write
@@ -472,6 +530,9 @@ public class Configuration {
 			return ensureValues(key).exists();
 		}
 
+		// FIXME - ru - originally intended for multiple bundles - now per-set
+		// properties are defined in a single file. So can be renamed to
+		// PackageBundle (and simplified)
 		class PackageBundles {
 			String packageName;
 
@@ -502,9 +563,10 @@ public class Configuration {
 				orderedSets.stream().filter(PropertySet::usesBundles)
 						.forEach(set -> {
 							String specifier = set.specifier();
-							// FIXME - ru - Bundle -> Configuration
+							String baseName = useSets ? "configuration"
+									: "Bundle";
 							String base = Ax.format("%s.%s%s", packageName,
-									"Bundle", specifier);
+									baseName, specifier);
 							try {
 								ResourceBundle bundle = ResourceBundle
 										.getBundle(base, Locale.getDefault(),
