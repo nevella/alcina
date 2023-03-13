@@ -681,7 +681,7 @@ public class SelectionTraversal
 
 		synchronized <S extends Selection> List<S>
 				get(Class<? extends S> clazz) {
-			return byClass.getAndEnsure(clazz).stream().map(clazz::cast)
+			return (List<S>) byClass.getAndEnsure(clazz).stream()
 					.collect(Collectors.toList());
 		}
 	}
