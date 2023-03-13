@@ -5,8 +5,13 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * <p>
@@ -53,6 +58,16 @@ public abstract class Layer<S extends Selection> implements
 		return state.traversalState.selections.get(signature.input).iterator();
 	}
 
+	public int depth() {
+		int depth = 0;
+		Layer cursor = this;
+		while (cursor.parent != null) {
+			cursor = cursor.parent;
+			depth++;
+		}
+		return depth;
+	}
+
 	public List<Layer> getChildren() {
 		return this.children;
 	}
@@ -67,8 +82,11 @@ public abstract class Layer<S extends Selection> implements
 	}
 
 	@Override
-	public abstract void process(SelectionTraversal traversal, S selection)
-			throws Exception;
+	public void process(SelectionTraversal traversal, S selection)
+			throws Exception {
+		// if this layer processes no inputs, its children must
+		Preconditions.checkState(children.size() > 0);
+	}
 
 	/*
 	 * Ensure a given input is only processed once
@@ -81,9 +99,15 @@ public abstract class Layer<S extends Selection> implements
 		return submitted;
 	}
 
+	public String toDebugString() {
+		DepthFirstTraversal<Layer> debugTraversal = new DepthFirstTraversal<Layer>(
+				this, Layer::getChildren, false);
+		return debugTraversal.toTreeString();
+	}
+
 	@Override
 	public String toString() {
-		return name.toString();
+		return Ax.format("%s :: %s", name, signature);
 	}
 
 	public void withParent(Layer parent) {
@@ -157,7 +181,8 @@ public abstract class Layer<S extends Selection> implements
 
 			@Override
 			public String toString() {
-				return NestedNameProvider.get(this.clazz);
+				return NestedNameProvider.get(this.clazz)
+						.replaceFirst("(.+)Layer$", "$1");
 			}
 		}
 	}
@@ -171,6 +196,13 @@ public abstract class Layer<S extends Selection> implements
 				Class<? extends Selection>... outputs) {
 			this.input = input;
 			this.outputs = List.of(outputs);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s => %s", NestedNameProvider.get(input),
+					outputs.stream().map(NestedNameProvider::get)
+							.collect(Collectors.toList()));
 		}
 	}
 

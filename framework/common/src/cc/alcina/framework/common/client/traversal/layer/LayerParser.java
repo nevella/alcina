@@ -1,8 +1,11 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.layer.Slice.SliceSelection;
 import cc.alcina.framework.common.client.util.Ax;
@@ -69,6 +72,8 @@ public class LayerParser {
 
 		private String inputContent = null;
 
+		XpathMatches xpathMatches = null;
+
 		public InputState(Slice input) {
 			this.input = input;
 			this.location = input.start;
@@ -99,6 +104,10 @@ public class LayerParser {
 			}
 		}
 
+		public List<Slice> getMatches() {
+			return this.matches;
+		}
+
 		public int getOffsetInInput() {
 			return location.index - input.start.index;
 		}
@@ -118,6 +127,17 @@ public class LayerParser {
 			return sliceMatcher;
 		}
 
+		public Slice nextXpathMatch(String xpath, LayerToken token) {
+			XpathMatches matches = ensureMatches(xpath);
+			if (matches.itr.hasNext()) {
+				DomNode node = matches.itr.next();
+				Location.Range range = node.asRange();
+				return new Slice(range.start, range.end, token);
+			} else {
+				return null;
+			}
+		}
+
 		@Override
 		public String toString() {
 			return Ax.format(
@@ -125,9 +145,31 @@ public class LayerParser {
 					getOffsetInInput(), inputContent, matches);
 		}
 
+		private XpathMatches ensureMatches(String xpath) {
+			if (xpathMatches == null
+					|| !Objects.equals(xpathMatches.xpath, xpath)) {
+				xpathMatches = new XpathMatches(xpath);
+			}
+			return xpathMatches;
+		}
+
 		void onBeforeTokenMatch() {
 			bestMatch = null;
 			inputContent = input.text().substring(getOffsetInInput());
+		}
+
+		class XpathMatches {
+			String xpath;
+
+			Iterator<DomNode> itr;
+
+			XpathMatches(String xpath) {
+				this.xpath = xpath;
+				DomNode node = input.start.containingNode();
+				List<DomNode> nodes = node.xpath(xpath)
+						.nodes();
+				itr = nodes.iterator();
+			}
 		}
 	}
 }

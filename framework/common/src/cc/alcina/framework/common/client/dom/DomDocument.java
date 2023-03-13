@@ -353,6 +353,18 @@ public class DomDocument extends DomNode {
 					.toArray(new Location[byNode.size()]);
 		}
 
+		Location asLocation(DomNode domNode) {
+			return byNode.get(domNode);
+		}
+
+		Location.Range asRange(DomNode domNode) {
+			Location start = byNode.get(domNode);
+			Location end = createRelativeLocation(start,
+					contentLengths.get(domNode));
+			end.after = true;
+			return new Location.Range(start, end);
+		}
+
 		Location getContainingLocation(Location test) {
 			// binary search location array
 			int index = Arrays.binarySearch(locations, test);

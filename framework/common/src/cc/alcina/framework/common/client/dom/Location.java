@@ -32,6 +32,7 @@ public class Location implements Comparable<Location> {
 	transient LocationContext locationContext;
 
 	public Location(int treeIndex, int index, boolean after) {
+		this(treeIndex, index, after, null, null);
 	}
 
 	public Location(int treeIndex, int index, boolean after,

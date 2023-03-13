@@ -290,9 +290,6 @@ public class SelectionTraversal
 	public void traverse2() {
 		state.layerTraversal = new DepthFirstTraversal<Layer>(state.rootLayer,
 				Layer::getChildren, false);
-		// FIXME - to console tool
-		// String tree = state.layerTraversal.toTreeString();
-		// Ax.out(tree);
 		/*
 		 * layers with sublayers will compute their outputs after sublayer
 		 * traversal
@@ -671,7 +668,14 @@ public class SelectionTraversal
 	public class Selections {
 		private Multiset<Class<? extends Selection>, Set<Selection>> byClass = new Multiset<>();
 
+		private Multiset<Layer, Set<Selection>> byLayer = new Multiset<>();
+
+		public Set<Selection> byLayer(Layer layer) {
+			return byLayer.getAndEnsure(layer);
+		}
+
 		synchronized boolean add(Selection selection) {
+			byLayer.add(state.currentLayer, selection);
 			return byClass.add(selection.getClass(), selection);
 		}
 
@@ -704,39 +708,55 @@ public class SelectionTraversal
 		}
 
 		void execute() {
-			List<Entry> entries = new ArrayList<>();
-			entries.add(new Entry(selectionTraversal.rootSelection));
-			selectionTraversal.generations.values().forEach(traversal -> {
-				entries.add(new Entry(traversal));
-				if (traversal.selectionsBySelector.keySet().size() > 1) {
-					traversal.selectionsBySelector.keySet()
-							.forEach(selector -> {
-								entries.add(new Entry(traversal, selector));
-							});
-				}
-			});
-			String log = ReflectionUtils.logBeans(Entry.class, entries);
-			Ax.out(log);
+			if (selectionTraversal.state.layerTraversal == null) {
+				// V1
+				List<GenerationEntry> entries = new ArrayList<>();
+				entries.add(
+						new GenerationEntry(selectionTraversal.rootSelection));
+				selectionTraversal.generations.values().forEach(traversal -> {
+					entries.add(new GenerationEntry(traversal));
+					if (traversal.selectionsBySelector.keySet().size() > 1) {
+						traversal.selectionsBySelector.keySet()
+								.forEach(selector -> {
+									entries.add(new GenerationEntry(traversal,
+											selector));
+								});
+					}
+				});
+				String log = ReflectionUtils.logBeans(GenerationEntry.class,
+						entries);
+				Ax.out(log);
+			} else {
+				DepthFirstTraversal<Layer> debugTraversal = new DepthFirstTraversal<Layer>(
+						selectionTraversal.state.rootLayer, Layer::getChildren,
+						false);
+				List<LayerEntry> entries = debugTraversal.stream()
+						.map(LayerEntry::new).collect(Collectors.toList());
+				String log = ReflectionUtils.logBeans(LayerEntry.class,
+						entries);
+				Ax.out(log);
+			}
 		}
 
-		@PropertyOrder({ "key", "outgoing" })
-		public static class Entry {
+		@PropertyOrder({ "key", "outputs" })
+		public static class GenerationEntry {
 			private GenerationTraversal traversal;
 
 			private Selector selector;
 
 			private Selection rootSelection;
 
-			public Entry(GenerationTraversal traversal) {
+			public GenerationEntry(GenerationTraversal traversal) {
 				this(traversal, null);
 			}
 
-			public Entry(GenerationTraversal traversal, Selector selector) {
+			public GenerationEntry(GenerationTraversal traversal,
+					Selector selector) {
 				this.traversal = traversal;
 				this.selector = selector;
 			}
 
-			public Entry(Selection rootSelection) {
+			public GenerationEntry(Selection rootSelection) {
 				this.rootSelection = rootSelection;
 			}
 
@@ -751,7 +771,7 @@ public class SelectionTraversal
 				}
 			}
 
-			public int getOutgoing() {
+			public int getOutputs() {
 				if (rootSelection != null) {
 					return 1;
 				} else if (selector == null) {
@@ -759,6 +779,27 @@ public class SelectionTraversal
 				} else {
 					return traversal.selectionsBySelector.get(selector).size();
 				}
+			}
+		}
+
+		@PropertyOrder({ "key", "outputs" })
+		public class LayerEntry {
+			private Layer layer;
+
+			public LayerEntry(Layer layer) {
+				this.layer = layer;
+			}
+
+			public String getKey() {
+				FormatBuilder keyBuilder = new FormatBuilder();
+				keyBuilder.indent(layer.depth());
+				keyBuilder.append(layer.name);
+				return keyBuilder.toString();
+			}
+
+			public int getOutputs() {
+				return selectionTraversal.state.selections.byLayer(layer)
+						.size();
 			}
 		}
 	}

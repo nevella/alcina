@@ -4,9 +4,9 @@ import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomEnvironment;
 import cc.alcina.framework.common.client.traversal.DomSelection.Document;
 
-public abstract class HttpUrlSelector<I extends UrlSelection, O extends Selection>
+public abstract class HttpUrlSelector<I extends AbstractUrlSelection, O extends Selection>
 		implements Selector<I, O> {
-	public static class Dom<I extends UrlSelection, O extends DomSelection.Document>
+	public static class Dom<I extends AbstractUrlSelection, O extends DomSelection.Document>
 			extends HttpUrlSelector<I, O> {
 		@Override
 		public void process(SelectionTraversal traversal, I selection) {

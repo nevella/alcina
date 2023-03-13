@@ -153,6 +153,14 @@ public class DomNode {
 		return this.getClass() == DomNode.class ? this : document.nodeFor(node);
 	}
 
+	public Location asLocation() {
+		return document.locations().asLocation(this);
+	}
+
+	public Location.Range asRange() {
+		return document.locations().asRange(this);
+	}
+
 	public String attr(String name) {
 		if (!isElement()) {
 			return null;
