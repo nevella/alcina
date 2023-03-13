@@ -125,7 +125,7 @@ public class Io {
 			switch (type) {
 			case EXISTENCE:
 				return StringMap.fromStringList(contents);
-			case KEY_VALUE:
+			case KEYLINE_VALUELINE:
 				return StringMap.fromKvStringList(contents, true);
 			case PROPERTY:
 				return StringMap.fromPropertyString(contents);
@@ -237,7 +237,7 @@ public class Io {
 		}
 
 		public enum MapType {
-			EXISTENCE, KEY_VALUE, PROPERTY
+			EXISTENCE, KEYLINE_VALUELINE, PROPERTY
 		}
 
 		public class Resource {

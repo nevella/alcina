@@ -11,6 +11,7 @@ import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.MethodContext;
 
+// FIXME - ru - delete project
 public class ClassMetaInvoker {
 	public ClassMetaResponse invoke(ClassMetaRequest metaRequest) {
 		return MethodContext.instance()

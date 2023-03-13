@@ -62,6 +62,8 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 	private int dirtyWriteLimit = 0;
 
+	private boolean justBundleTree;
+
 	public void addProperties(String set, String path) {
 		ConfigurationFile configurationFile = new Configuration.ConfigurationFile(
 				null, new File(path), set);
@@ -97,6 +99,10 @@ public class TaskRefactorConfigSets extends ServerTask {
 		return this.removeKeys;
 	}
 
+	public boolean isJustBundleTree() {
+		return this.justBundleTree;
+	}
+
 	public boolean isRefresh() {
 		return this.refresh;
 	}
@@ -104,18 +110,26 @@ public class TaskRefactorConfigSets extends ServerTask {
 	@Override
 	public void run() throws Exception {
 		locateConfigurationFiles();
-		checkConfigurationFilesValid();
-		scanCodeRefs();
+		if (justBundleTree) {
+			//
+		} else {
+			checkConfigurationFilesValid();
+			scanCodeRefs();
+		}
 		populateTree();
 		String csv = tree.asCsv();
 		Io.write().string(csv).toPath("/tmp/tree.csv");
-		List<String> keys = tree.allKeys();
-		ThreeWaySetResult<String> split = CommonUtils.threeWaySplit(keys,
-				seenKeys);
-		Io.write()
-				.string(split.firstOnly.stream()
-						.collect(Collectors.joining("\n")))
-				.toPath("/tmp/not-seen.txt");
+		if (justBundleTree) {
+			//
+		} else {
+			List<String> keys = tree.allKeys();
+			ThreeWaySetResult<String> split = CommonUtils.threeWaySplit(keys,
+					seenKeys);
+			Io.write()
+					.string(split.firstOnly.stream()
+							.collect(Collectors.joining("\n")))
+					.toPath("/tmp/not-seen.txt");
+		}
 	}
 
 	public void setAppPropertyFileEntries(
@@ -134,6 +148,10 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 	public void setDirtyWriteLimit(int dirtyWriteLimit) {
 		this.dirtyWriteLimit = dirtyWriteLimit;
+	}
+
+	public void setJustBundleTree(boolean justBundleTree) {
+		this.justBundleTree = justBundleTree;
 	}
 
 	public void setNameResolver(NameResolver nameResolver) {
