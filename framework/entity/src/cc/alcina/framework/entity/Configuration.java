@@ -392,6 +392,7 @@ public class Configuration {
 		private synchronized void invalidate() {
 			Set<String> keys = new LinkedHashSet<>();
 			orderedSets.forEach(set -> set.populateKeys(keys));
+			keyValues.clear();
 			keys.stream().map(Key::stringKey).forEach(this::ensureValues);
 			topicInvalidated.signal();
 		}
