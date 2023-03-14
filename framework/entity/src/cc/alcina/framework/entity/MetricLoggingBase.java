@@ -65,16 +65,16 @@ public class MetricLoggingBase {
 		}
 	}
 
-	public void end(String key) {
-		end(key, "");
+	public long end(String key) {
+		return end(key, "");
 	}
 
-	public void end(String key, Logger logger) {
-		end(key, null, logger);
+	public long end(String key, Logger logger) {
+		return end(key, null, logger);
 	}
 
-	public void end(String key, String extraInfo) {
-		end(key, extraInfo, null);
+	public long end(String key, String extraInfo) {
+		return end(key, extraInfo, null);
 	}
 
 	public void endTicks(String key) {
@@ -128,12 +128,12 @@ public class MetricLoggingBase {
 		ticks.put(key, System.nanoTime());
 	}
 
-	private synchronized void end(String key, String extraInfo,
+	private synchronized long end(String key, String extraInfo,
 			Logger overrideLogger) {
 		key = keyWithParents(key, true);
 		if (!metricStart.containsKey(key) && !ticksSum.containsKey(key)) {
 			System.out.println("Warning - metric end without start - " + key);
-			return;
+			return -1;
 		}
 		long delta = ticksSum.containsKey(key) ? ticksSum.get(key) / 1000000
 				: System.currentTimeMillis() - metricStart.get(key);
@@ -152,6 +152,7 @@ public class MetricLoggingBase {
 		averageCount.put(key, averageCount.get(key) + 1);
 		sum.put(key, sum.get(key) + delta);
 		terminated.add(key);
+		return delta;
 	}
 
 	private Long getCurrentThreadId() {
