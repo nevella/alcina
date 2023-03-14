@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.traversal;
 
+import java.util.function.Function;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.Location;
@@ -49,5 +51,22 @@ public abstract class DocumentSelection extends Slice.SliceSelection {
 
 	public interface Loader {
 		DomDocument load(AbstractUrlSelection selection) throws Exception;
+	}
+
+	public abstract static class TransformLayer<I extends Selection, O extends DocumentSelection>
+			extends Layer<I> {
+		private Function<I, O> transform;
+
+		public TransformLayer(Class<I> input, Class<O> output,
+				Function<I, O> transform) {
+			super(input, output);
+			this.transform = transform;
+		}
+
+		@Override
+		public void process(SelectionTraversal traversal, I selection)
+				throws Exception {
+			traversal.select(transform.apply(selection));
+		}
 	}
 }

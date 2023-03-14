@@ -7,6 +7,8 @@ import java.util.Objects;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
+import cc.alcina.framework.common.client.traversal.DocumentSelection;
 import cc.alcina.framework.common.client.traversal.layer.Slice.SliceSelection;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -79,6 +81,11 @@ public class LayerParser {
 			this.location = input.start;
 		}
 
+		public String absoluteHref(String relativeHref) {
+			return selection.ancestorSelection(AbstractUrlSelection.class)
+					.absoluteHref(relativeHref);
+		}
+
 		public void emitUnmatchedSegmentsAs(LayerToken token) {
 			Location start = input.start;
 			Location end = null;
@@ -104,12 +111,20 @@ public class LayerParser {
 			}
 		}
 
+		public DocumentSelection getDocument() {
+			return selection.ancestorSelection(DocumentSelection.class);
+		}
+
 		public List<Slice> getMatches() {
 			return this.matches;
 		}
 
 		public int getOffsetInInput() {
 			return location.index - input.start.index;
+		}
+
+		public Slice.SliceSelection getSelection() {
+			return selection;
 		}
 
 		public String inputContent() {
@@ -166,8 +181,7 @@ public class LayerParser {
 			XpathMatches(String xpath) {
 				this.xpath = xpath;
 				DomNode node = input.start.containingNode();
-				List<DomNode> nodes = node.xpath(xpath)
-						.nodes();
+				List<DomNode> nodes = node.xpath(xpath).nodes();
 				itr = nodes.iterator();
 			}
 		}

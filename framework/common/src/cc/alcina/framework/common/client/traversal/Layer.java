@@ -31,7 +31,7 @@ public abstract class Layer<S extends Selection> implements
 		SelectionTraversal.Generation, Selector<S, Selection>, Iterable<S> {
 	public final Name name;
 
-	List<Layer> children = new ArrayList<>();
+	List<Layer<?>> children = new ArrayList<>();
 
 	Layer parent;
 
@@ -68,7 +68,15 @@ public abstract class Layer<S extends Selection> implements
 		return depth;
 	}
 
-	public List<Layer> getChildren() {
+	public Layer firstLeaf() {
+		Layer<?> cursor = this;
+		while (cursor.getChildren().size() > 0) {
+			cursor = cursor.getChildren().get(0);
+		}
+		return cursor;
+	}
+
+	public List<Layer<?>> getChildren() {
 		return this.children;
 	}
 

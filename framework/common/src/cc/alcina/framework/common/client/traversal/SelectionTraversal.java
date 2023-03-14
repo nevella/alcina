@@ -797,9 +797,20 @@ public class SelectionTraversal
 				return keyBuilder.toString();
 			}
 
-			public int getOutputs() {
-				return selectionTraversal.state.selections.byLayer(layer)
+			public String getOutputs() {
+				int size = selectionTraversal.state.selections.byLayer(layer)
 						.size();
+				if (size != 0) {
+					return String.valueOf(size);
+				}
+				Layer firstLeaf = layer.firstLeaf();
+				int firstLeafSize = selectionTraversal.state.selections
+						.byLayer(firstLeaf).size();
+				if (firstLeafSize != 0) {
+					return "-";
+				} else {
+					return "0";
+				}
 			}
 		}
 	}

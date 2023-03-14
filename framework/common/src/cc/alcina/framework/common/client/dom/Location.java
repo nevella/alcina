@@ -116,6 +116,11 @@ public class Location implements Comparable<Location> {
 			this.end = end;
 		}
 
+		// FIXME - selection - throw if start.node != end.node?
+		public DomNode containingNode() {
+			return start.containingNode();
+		}
+
 		public int length() {
 			return text().length();
 		}
