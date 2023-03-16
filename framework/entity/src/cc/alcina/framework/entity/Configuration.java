@@ -192,15 +192,15 @@ public class Configuration {
 
 		private boolean contextOverride = false;
 
-		private String _toString;
+		String stringRepresentation;
 
 		private Key(Class clazz, String keyPart, boolean allowNullClass) {
 			Preconditions.checkState(clazz != null || allowNullClass);
 			this.clazz = clazz;
 			this.keyPart = keyPart;
-			if (clazz == null) {
-				_toString = keyPart;
-			}
+			stringRepresentation = clazz == null ? keyPart
+					: Ax.format("%s.%s", GraphProjection.classSimpleName(clazz),
+							keyPart);
 		}
 
 		Key(Class clazz, String keyPart) {
@@ -260,11 +260,7 @@ public class Configuration {
 
 		@Override
 		public String toString() {
-			if (_toString == null) {
-				_toString = Ax.format("%s.%s",
-						GraphProjection.classSimpleName(clazz), keyPart);
-			}
-			return _toString;
+			return stringRepresentation;
 		}
 
 		public Key withContextOverride(boolean contextOverride) {
@@ -363,7 +359,7 @@ public class Configuration {
 		}
 
 		public String set(Class clazz, String key, String value) {
-			return set(new Key(clazz, key).toString(), value);
+			return set(new Key(clazz, key).stringRepresentation, value);
 		}
 
 		public String set(String key, String value) {
@@ -473,7 +469,7 @@ public class Configuration {
 		}
 
 		PropertyValues ensureValues(Key key) {
-			String stringKey = key.toString();
+			String stringKey = key.stringRepresentation;
 			PropertyValues propertyValues = keyValues.get(stringKey);
 			if (propertyValues != null) {
 				return propertyValues;
@@ -490,7 +486,8 @@ public class Configuration {
 						if (clazz != null) {
 							ensureBundles(cursor);
 						}
-						propertyValues = keyValues.get(cursor.toString());
+						propertyValues = keyValues
+								.get(cursor.stringRepresentation);
 						if (propertyValues != null) {
 							if (cursor != key) {
 								keyValues.put(stringKey,
@@ -511,7 +508,7 @@ public class Configuration {
 					}
 					// unresolved, PropertyValues.resolvedValue==null
 					propertyValues = new PropertyValues(stringKey);
-					keyValues.put(cursor.toString(), propertyValues);
+					keyValues.put(cursor.stringRepresentation, propertyValues);
 					return propertyValues;
 				}
 			}
