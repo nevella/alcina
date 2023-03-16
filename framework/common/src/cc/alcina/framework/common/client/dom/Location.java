@@ -71,6 +71,11 @@ public class Location implements Comparable<Location> {
 		return locationContext.createRelativeLocation(this, offset);
 	}
 
+	public void detach() {
+		containingNode = null;
+		locationContext = null;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Location) {
@@ -119,6 +124,12 @@ public class Location implements Comparable<Location> {
 		// FIXME - selection - throw if start.node != end.node?
 		public DomNode containingNode() {
 			return start.containingNode();
+		}
+
+		public void detach() {
+			start.detach();
+			end.detach();
+			textContent = null;
 		}
 
 		public int length() {

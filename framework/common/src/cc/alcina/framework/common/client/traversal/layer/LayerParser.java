@@ -25,8 +25,21 @@ public class LayerParser {
 		inputState = new InputState(selection.get());
 	}
 
+	public void detachSlices() {
+		selection.get().detach();
+		inputState.matches.forEach(Slice::detach);
+	}
+
+	public DomNode getDocumentNode() {
+		return selection.get().containingNode();
+	}
+
 	public List<Slice> getOutputs() {
 		return inputState.outputs;
+	}
+
+	public boolean hadMatches() {
+		return inputState.matches.size() > 0;
 	}
 
 	/*
@@ -59,6 +72,12 @@ public class LayerParser {
 		inputState.outputs = inputState.outputs;
 	}
 
+	public void selectMatches() {
+		inputState.matches.stream()
+				.map(slice -> slice.token.select(inputState, slice))
+				.forEach(parserPeer.traversal::select);
+	}
+
 	public class InputState {
 		SliceMatcher sliceMatcher = new SliceMatcher(this);
 
@@ -84,6 +103,10 @@ public class LayerParser {
 		public String absoluteHref(String relativeHref) {
 			return selection.ancestorSelection(AbstractUrlSelection.class)
 					.absoluteHref(relativeHref);
+		}
+
+		public boolean contains(Location other) {
+			return location.isBefore(other);
 		}
 
 		public void emitUnmatchedSegmentsAs(LayerToken token) {
@@ -146,8 +169,7 @@ public class LayerParser {
 			XpathMatches matches = ensureMatches(xpath);
 			if (matches.itr.hasNext()) {
 				DomNode node = matches.itr.next();
-				Location.Range range = node.asRange();
-				return new Slice(range.start, range.end, token);
+				return Slice.fromNode(node, token);
 			} else {
 				return null;
 			}

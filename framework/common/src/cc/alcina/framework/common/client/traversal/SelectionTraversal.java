@@ -156,6 +156,11 @@ public class SelectionTraversal
 		return this.rootSelection;
 	}
 
+	public <S extends Selection> List<S>
+			getSelections(Class<? extends S> clazz) {
+		return state.selections.get(clazz);
+	}
+
 	public void logTraversalStats() {
 		new StatsLogger(this).execute();
 	}
@@ -354,7 +359,7 @@ public class SelectionTraversal
 			Layer layer = state.currentLayer;
 			enterSelectionContext(selection);
 			selection.processNode().select(null, this);
-			if (!layer.testFilter(selection)) {
+			if (!layer.testFilter(selection) || !testLayerFilter(selection)) {
 				// skip processing if, for instance, the traversal has hit max
 				// exceptions
 				return;
@@ -423,6 +428,29 @@ public class SelectionTraversal
 			} else {
 				break;
 			}
+		}
+	}
+
+	private boolean testLayerFilter(Selection selection) {
+		if (filter == null) {
+			return true;
+		}
+		if (filter.getMaxExceptions() > 0
+				&& selectionExceptions.size() >= filter.getMaxExceptions()) {
+			return false;
+		}
+		String generationName = state.currentLayer.name.toString();
+		if (filter.hasGenerationFilter(generationName)) {
+			if (filter.matchesGenerationFilter(generationName,
+					selection.getFilterableSegments())) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			int allGenerationsLimit = filter.getAllGenerationsLimit();
+			return allGenerationsLimit == 0
+					|| allGenerationsLimit > state.selections.size();
 		}
 	}
 
@@ -670,13 +698,23 @@ public class SelectionTraversal
 
 		private Multiset<Layer, Set<Selection>> byLayer = new Multiset<>();
 
+		int size;
+
 		public Set<Selection> byLayer(Layer layer) {
 			return byLayer.getAndEnsure(layer);
 		}
 
+		public int size() {
+			return size;
+		}
+
 		synchronized boolean add(Selection selection) {
 			byLayer.add(state.currentLayer, selection);
-			return byClass.add(selection.getClass(), selection);
+			boolean add = byClass.add(selection.getClass(), selection);
+			if (add) {
+				size++;
+			}
+			return add;
 		}
 
 		synchronized <S extends Selection> List<S>

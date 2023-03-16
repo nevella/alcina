@@ -5,12 +5,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 
+// FIXME - selection - slice extends HasSelection? or hasParentSelection?
 public class Slice extends Location.Range {
+	public static Slice fromNode(DomNode node, LayerToken token) {
+		Location.Range range = node.asRange();
+		return new Slice(range.start, range.end, token);
+	}
+
 	public final LayerToken token;
 
 	/**

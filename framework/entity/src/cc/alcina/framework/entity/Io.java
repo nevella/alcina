@@ -223,7 +223,8 @@ public class Io {
 				InputStream stream = resource.getStream();
 				InputSource isrc = null;
 				if (charset == null) {
-					isrc = new InputSource(stream);
+					isrc = new InputSource(new InputStreamReader(stream,
+							StandardCharsets.UTF_8));
 				} else {
 					isrc = new InputSource(
 							new InputStreamReader(stream, charset));
