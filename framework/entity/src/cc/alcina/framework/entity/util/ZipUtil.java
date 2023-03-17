@@ -122,14 +122,22 @@ public class ZipUtil {
 			if (!oDir.exists()) {
 				oDir.mkdirs();
 			}
-			File inf = new File(outputFn);
-			if (fileName.length() != 0) {
-				if (inf.exists()) {
-					// unset readonly inf.
-				} else {
-					inf.createNewFile();
+			if (theEntry.isDirectory()) {
+				oDir.setLastModified(theEntry.getTime());
+			} else {
+				FileOutputStream streamWriter = null;
+				int suffixCount = 0;
+				File file = null;
+				while (true) {
+					String suffix = suffixCount++ == 0 ? "" : "-" + suffixCount;
+					String path = outputFn + suffix;
+					file = new File(path);
+					if (!file.exists()) {
+						file.createNewFile();
+						streamWriter = new FileOutputStream(path);
+						break;
+					}
 				}
-				FileOutputStream streamWriter = new FileOutputStream(outputFn);
 				int size = 2048;
 				byte[] data = new byte[2048];
 				while (true) {
@@ -141,7 +149,7 @@ public class ZipUtil {
 					}
 				}
 				streamWriter.close();
-				inf.setLastModified(theEntry.getTime());
+				file.setLastModified(theEntry.getTime());
 			}
 		}
 		s.close();
