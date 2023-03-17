@@ -39,7 +39,8 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 	public EntityAction action = EntityAction.VIEW;
 
 	public EntityLocator asLocator() {
-		return new EntityLocator(provideEntityClass(), id, 0);
+		return entity != null ? entity.toLocator()
+				: new EntityLocator(provideEntityClass(), id, 0);
 	}
 
 	@Override

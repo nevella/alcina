@@ -3,7 +3,6 @@ package cc.alcina.framework.servlet.domain.view;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
@@ -48,6 +47,14 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.HandlerData;
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.Type;
 
+/**
+ * Notes: adjunct transforms are processed on current thread (and cleaned up)
+ *
+ * FIXME - livetree - make that a little prettier
+ *
+ * @author nick@alcina.cc
+ *
+ */
 @Registration.Singleton
 public abstract class DomainViews {
 	public static DomainViews get() {
@@ -56,9 +63,9 @@ public abstract class DomainViews {
 
 	protected LiveListener liveListener;
 
-	private Map<Key, LiveTree> trees = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Key, LiveTree> trees = new ConcurrentHashMap<>();
 
-	private Map<DomainTransformPersistenceEvent, Transaction> preCommitTransactions = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<DomainTransformPersistenceEvent, Transaction> preCommitTransactions = new ConcurrentHashMap<>();
 
 	private BlockingQueue<ViewsTask> tasks = new LinkedBlockingQueue<>();
 
@@ -129,7 +136,11 @@ public abstract class DomainViews {
 		ViewsTask task = new ViewsTask();
 		task.type = ViewsTask.Type.HANDLE_PATH_REQUEST;
 		task.handlerData.request = request;
-		queueTask(task);
+		if (Transaction.current().isAdjunct()) {
+			processEvent(task);
+		} else {
+			queueTask(task);
+		}
 		task.await();
 		if (task.handlerData.exception == null) {
 			if (task.handlerData.response != null
@@ -226,10 +237,13 @@ public abstract class DomainViews {
 	private void processRequest(ViewsTask task) {
 		HandlerData handlerData = task.handlerData;
 		boolean awaitingTask = false;
+		Key key = null;
 		try {
-			Transaction.end();
-			Transaction.join(handlerData.transaction);
-			Key key = new Key(handlerData.request);
+			if (!Transaction.current().isAdjunct()) {
+				Transaction.end();
+				Transaction.join(handlerData.transaction);
+			}
+			key = new Key(handlerData.request);
 			LiveTree tree = trees.get(key);
 			if (handlerData.request
 					.getWaitPolicy() == WaitPolicy.CANCEL_WAITS) {
@@ -264,7 +278,13 @@ public abstract class DomainViews {
 		} catch (RuntimeException e) {
 			handlerData.exception = e;
 		} finally {
-			Transaction.end();
+			if (!Transaction.current().isAdjunct()) {
+				Transaction.end();
+			} else {
+				if (key != null) {
+					trees.remove(key);
+				}
+			}
 			if (!awaitingTask) {
 				task.latch.countDown();
 			}
@@ -296,7 +316,7 @@ public abstract class DomainViews {
 		}
 	}
 
-	void processEvent(ViewsTask task) {
+	synchronized void processEvent(ViewsTask task) {
 		switch (task.type) {
 		case MODEL_CHANGE:
 			logger.info(
@@ -349,8 +369,10 @@ public abstract class DomainViews {
 	void queueTask(ViewsTask task) {
 		try {
 			addTaskLock.lock();
-			task.handlerData.transaction = Transaction
-					.createSnapshotTransaction();
+			Transaction currentTransaction = Transaction.current();
+			task.handlerData.transaction = currentTransaction.isAdjunct()
+					? currentTransaction
+					: Transaction.createSnapshotTransaction();
 			tasks.add(task);
 		} finally {
 			addTaskLock.unlock();

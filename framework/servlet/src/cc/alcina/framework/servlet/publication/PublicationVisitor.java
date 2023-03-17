@@ -7,9 +7,9 @@ import cc.alcina.framework.servlet.publication.ContentWrapper.WrapperModel;
 
 /**
  * To allow custom behaviour/composition in the publication pipeline
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  *         p.s. I almost named this 'PublicationAccompanist' - in keeping with
  *         other music-themed naming such as 'Consort' - it's not really a
  *         visitor, it's more a way to encapsulate customisations of a process,
@@ -28,6 +28,10 @@ public class PublicationVisitor {
 		return suggested;
 	}
 
+	public void afterPrepareContent(ContentModelHandler cmh) {
+		// TODO Auto-generated method stub
+	}
+
 	public void afterPublicationPersistence(long publicationId)
 			throws Exception {
 	}
@@ -42,6 +46,10 @@ public class PublicationVisitor {
 	}
 
 	public void beforeWrapContent() {
+	}
+
+	public PublicationContext context() {
+		return PublicationContext.get();
 	}
 
 	public void customCss(WrapperModel wrapper) throws Exception {

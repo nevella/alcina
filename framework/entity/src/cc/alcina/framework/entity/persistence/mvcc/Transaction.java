@@ -467,6 +467,10 @@ public class Transaction implements Comparable<Transaction> {
 		return id.hashCode();
 	}
 
+	public boolean isAdjunct() {
+		return this.phase == TransactionPhase.ADJUNCT;
+	}
+
 	public boolean isBaseTransaction() {
 		return this.baseTransaction;
 	}
@@ -533,13 +537,20 @@ public class Transaction implements Comparable<Transaction> {
 		this.timeout = timeout;
 	}
 
+	public void toAdjunct() {
+		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
+				&& TransformManager.get().getTransforms().isEmpty()));
+		this.phase = TransactionPhase.ADJUNCT;
+	}
+
 	public void toDbAborted() {
 		// allow 'to aborted' when already aborted - for bubbling exception
 		// handling
 		Preconditions.checkState(getPhase() == TransactionPhase.TO_DB_PERSISTING
 				|| getPhase() == TransactionPhase.TO_DB_PREPARING
 				|| getPhase() == TransactionPhase.TO_DB_ABORTED
-				|| getPhase() == TransactionPhase.READ_ONLY);
+				|| getPhase() == TransactionPhase.READ_ONLY
+				|| getPhase() == TransactionPhase.ADJUNCT);
 		setPhase(TransactionPhase.TO_DB_ABORTED);
 	}
 
@@ -663,6 +674,7 @@ public class Transaction implements Comparable<Transaction> {
 		case VACUUM_ENDED:
 		case READ_ONLY:
 		case TO_DB_PREPARING:
+		case ADJUNCT:
 			break;
 		default:
 			// we used to throw to an exception if there were

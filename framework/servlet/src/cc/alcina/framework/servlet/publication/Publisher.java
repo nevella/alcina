@@ -150,6 +150,8 @@ public class Publisher {
 		ContentModelHandler cmh = Registry.impl(ContentModelHandler.class,
 				contentDefinition.getClass());
 		cmh.prepareContent(contentDefinition, deliveryModel);
+		PublicationVisitor visitor = ctx.getVisitorOrNoop();
+		visitor.afterPrepareContent(cmh);
 		if (!cmh.hasResults) {
 			// throw exception??
 			return null;
@@ -173,8 +175,7 @@ public class Publisher {
 			publicationUserId = persister.getNextPublicationIdForUser(user);
 			persist(contentDefinition, deliveryModel, publicationUserId,
 					original, result);
-			ctx.getVisitorOrNoop()
-					.afterPublicationPersistence(result.getPublicationId());
+			visitor.afterPublicationPersistence(result.getPublicationId());
 		} else {
 			if (result.getPublicationUid() == null) {
 				result.setPublicationUid(SEUtilities.generateId());
@@ -184,7 +185,7 @@ public class Publisher {
 		long publicationId = CommonUtils.lv(result.getPublicationId());
 		ContentRenderer crh = Registry.impl(ContentRenderer.class,
 				publicationContent.getClass());
-		ctx.getVisitorOrNoop().beforeRenderContent();
+		visitor.beforeRenderContent();
 		publicationContent = ctx.publicationContent;
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
 				publicationId, publicationUserId);
@@ -195,10 +196,10 @@ public class Publisher {
 		}
 		ContentWrapper cw = Registry.impl(ContentWrapper.class,
 				publicationContent.getClass());
-		ctx.getVisitorOrNoop().beforeWrapContent();
+		visitor.beforeWrapContent();
 		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
 				crh.getResults(), publicationId, publicationUserId);
-		ctx.getVisitorOrNoop().afterWrapContent(cw);
+		visitor.afterWrapContent(cw);
 		if (deliveryModel.provideContentDeliveryType().getClass() == null) {
 			return null;
 		}
@@ -224,9 +225,8 @@ public class Publisher {
 		fcm.fileExtension = fc.getFileExtension();
 		fcm.mimeType = fc.getMimeType();
 		InputStream convertedContent = fc.convert(ctx, fcm);
-		convertedContent = ctx.getVisitorOrNoop()
-				.transformConvertedContent(convertedContent);
-		ctx.getVisitorOrNoop().beforeDelivery();
+		convertedContent = visitor.transformConvertedContent(convertedContent);
+		visitor.beforeDelivery();
 		ContentDelivery deliverer = Registry.query(ContentDelivery.class)
 				.setKeys(ContentDeliveryType.class,
 						deliveryModel.provideContentDeliveryType().getClass())
@@ -246,7 +246,7 @@ public class Publisher {
 		if (deliverer.returnsDownloadToken()) {
 			result.setContentToken(token);
 		}
-		ctx.getVisitorOrNoop().publicationFinished(result);
+		visitor.publicationFinished(result);
 		return result;
 	}
 

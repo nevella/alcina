@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
@@ -119,16 +120,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	private List<MultipleDeliveryEntry> multipleDeliveryEntries = new ArrayList<>();
 
 	private RepositoryConnection repositoryConnection = new RepositoryConnection();
-
-	@Override
-	public RepositoryConnection getRepositoryConnection() {
-		return this.repositoryConnection;
-	}
-
-	public void
-			setRepositoryConnection(RepositoryConnection repositoryConnection) {
-		this.repositoryConnection = repositoryConnection;
-	}
 
 	@Override
 	public String getAttachmentMessage() {
@@ -245,6 +236,11 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public Long getRandomSeed() {
 		return this.randomSeed;
+	}
+
+	@Override
+	public RepositoryConnection getRepositoryConnection() {
+		return this.repositoryConnection;
 	}
 
 	public int getResultCount() {
@@ -368,6 +364,14 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public PublicationResult publish() throws WebException {
 		return PublicationRequestHandler.get().publish(this);
+	}
+
+	public PublicationResult publishUnchecked() {
+		try {
+			return publish();
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	public void putContentDeliveryType(ContentDeliveryType type) {
@@ -523,6 +527,11 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public void setRandomSeed(Long randomSeed) {
 		this.randomSeed = randomSeed;
+	}
+
+	public void
+			setRepositoryConnection(RepositoryConnection repositoryConnection) {
+		this.repositoryConnection = repositoryConnection;
 	}
 
 	public void setResultCount(int resultCount) {
