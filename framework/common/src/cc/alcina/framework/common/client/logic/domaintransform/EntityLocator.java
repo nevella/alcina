@@ -215,6 +215,10 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		this.localId = localId;
 	}
 
+	public String toIdPairCommaString() {
+		return Ax.format("%s,%s", id, localId);
+	}
+
 	public String toIdPairString() {
 		return Ax.format("%s/%s", id, localId);
 	}

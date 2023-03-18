@@ -25,6 +25,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
@@ -165,7 +166,16 @@ public class TreePath<T> extends Model
 	}
 
 	public <E extends Entity> E find(Class<E> clazz) {
-		return Domain.find(clazz, segmentAsLong());
+		String segment = getSegment();
+		if (segment.matches("\\d+")) {
+			long id = Long.parseLong(segment);
+			return Domain.find(clazz, id);
+		} else if (segment.matches("0,(\\d+)")) {
+			long id = Long.parseLong(segment.replaceFirst("0,(\\d+)", "$1"));
+			return Domain.find(new EntityLocator(clazz, 0L, id));
+		} else {
+			throw new IllegalArgumentException(segment);
+		}
 	}
 
 	public Optional<TreePath<T>> getChildPath(Object segment) {
@@ -359,7 +369,7 @@ public class TreePath<T> extends Model
 			return (String) object;
 		}
 		if (object instanceof Entity) {
-			return String.valueOf(((Entity) object).getId());
+			return ((Entity) object).toLocator().toIdPairCommaString();
 		} else {
 			return CommonUtils.friendlyConstant(object, "_").toLowerCase();
 		}
@@ -389,10 +399,6 @@ public class TreePath<T> extends Model
 			parent.recalculateCount();
 		}
 		parent = null;
-	}
-
-	private long segmentAsLong() {
-		return Long.parseLong(getSegment());
 	}
 
 	private int subtreeSize(Predicate<TreePath> treePredicate) {
