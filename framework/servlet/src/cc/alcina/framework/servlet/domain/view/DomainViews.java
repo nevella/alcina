@@ -136,7 +136,7 @@ public abstract class DomainViews {
 		ViewsTask task = new ViewsTask();
 		task.type = ViewsTask.Type.HANDLE_PATH_REQUEST;
 		task.handlerData.request = request;
-		if (Transaction.current().isAdjunct()) {
+		if (Transaction.current().isNonCommital()) {
 			processEvent(task);
 		} else {
 			queueTask(task);
@@ -239,7 +239,7 @@ public abstract class DomainViews {
 		boolean awaitingTask = false;
 		Key key = null;
 		try {
-			if (!Transaction.current().isAdjunct()) {
+			if (!Transaction.current().isNonCommital()) {
 				Transaction.end();
 				Transaction.join(handlerData.transaction);
 			}
@@ -278,7 +278,7 @@ public abstract class DomainViews {
 		} catch (RuntimeException e) {
 			handlerData.exception = e;
 		} finally {
-			if (!Transaction.current().isAdjunct()) {
+			if (!Transaction.current().isNonCommital()) {
 				Transaction.end();
 			} else {
 				if (key != null) {
@@ -370,7 +370,7 @@ public abstract class DomainViews {
 		try {
 			addTaskLock.lock();
 			Transaction currentTransaction = Transaction.current();
-			task.handlerData.transaction = currentTransaction.isAdjunct()
+			task.handlerData.transaction = currentTransaction.isNonCommital()
 					? currentTransaction
 					: Transaction.createSnapshotTransaction();
 			tasks.add(task);

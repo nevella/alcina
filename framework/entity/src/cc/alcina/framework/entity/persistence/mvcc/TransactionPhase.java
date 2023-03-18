@@ -7,7 +7,7 @@ enum TransactionPhase {
 	/**
 	 * Entities can be created but not committed
 	 */
-	ADJUNCT;
+	NON_COMMITAL;
 
 	boolean isComplete() {
 		switch (this) {

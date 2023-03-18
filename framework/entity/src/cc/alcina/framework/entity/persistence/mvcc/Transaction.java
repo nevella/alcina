@@ -467,8 +467,8 @@ public class Transaction implements Comparable<Transaction> {
 		return id.hashCode();
 	}
 
-	public boolean isAdjunct() {
-		return this.phase == TransactionPhase.ADJUNCT;
+	public boolean isNonCommital() {
+		return this.phase == TransactionPhase.NON_COMMITAL;
 	}
 
 	public boolean isBaseTransaction() {
@@ -537,10 +537,10 @@ public class Transaction implements Comparable<Transaction> {
 		this.timeout = timeout;
 	}
 
-	public void toAdjunct() {
+	public void toNonCommital() {
 		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
 				&& TransformManager.get().getTransforms().isEmpty()));
-		this.phase = TransactionPhase.ADJUNCT;
+		this.phase = TransactionPhase.NON_COMMITAL;
 	}
 
 	public void toDbAborted() {
@@ -550,7 +550,7 @@ public class Transaction implements Comparable<Transaction> {
 				|| getPhase() == TransactionPhase.TO_DB_PREPARING
 				|| getPhase() == TransactionPhase.TO_DB_ABORTED
 				|| getPhase() == TransactionPhase.READ_ONLY
-				|| getPhase() == TransactionPhase.ADJUNCT);
+				|| getPhase() == TransactionPhase.NON_COMMITAL);
 		setPhase(TransactionPhase.TO_DB_ABORTED);
 	}
 
@@ -674,7 +674,7 @@ public class Transaction implements Comparable<Transaction> {
 		case VACUUM_ENDED:
 		case READ_ONLY:
 		case TO_DB_PREPARING:
-		case ADJUNCT:
+		case NON_COMMITAL:
 			break;
 		default:
 			// we used to throw to an exception if there were
