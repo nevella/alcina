@@ -48,7 +48,9 @@ public class DirndlRenderer {
 	 */
 	public DomNode asNode() {
 		Preconditions.checkState(stylePaths.isEmpty());
-		return render(() -> DomNode.from(renderElement()));
+		DomDocument document = asDocument();
+		return document.html().body().children.firstElement().children
+				.firstElement();
 	}
 
 	public DirndlRenderer withRenderable(Model renderable) {
