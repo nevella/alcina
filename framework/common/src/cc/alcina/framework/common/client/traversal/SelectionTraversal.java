@@ -184,6 +184,11 @@ public class SelectionTraversal
 	}
 
 	public SelectionFilter provideExceptionSelectionFilter() {
+		SelectionFilter filter = new SelectionFilter();
+		if (generations.isEmpty()) {
+			// FIXME - switch to layers
+			return filter;
+		}
 		Multimap<Generation, List<String>> generationSegments = new Multimap<>();
 		selectionExceptions.keySet().forEach(selection -> {
 			Selection cursor = selection;
@@ -195,7 +200,6 @@ public class SelectionTraversal
 				cursor = cursor.parentSelection();
 			}
 		});
-		SelectionFilter filter = new SelectionFilter();
 		generationSegments.forEach((k, v) -> {
 			String pathSegmentRegex = Ax.format("^(%s)$",
 					v.stream().distinct().map(CommonUtils::escapeRegex)

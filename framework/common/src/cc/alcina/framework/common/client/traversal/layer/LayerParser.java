@@ -75,7 +75,7 @@ public class LayerParser {
 	public void selectMatches() {
 		inputState.matches.stream()
 				.map(slice -> slice.token.select(inputState, slice))
-				.forEach(parserPeer.traversal::select);
+				.filter(Objects::nonNull).forEach(parserPeer.traversal::select);
 	}
 
 	public class InputState {

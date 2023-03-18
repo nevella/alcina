@@ -26,19 +26,26 @@ public abstract class DocumentSelection extends Slice.SliceSelection {
 		documentToSlice();
 	}
 
+	public DomDocument ensureDocument() {
+		try {
+			if (document == null) {
+				document = loader
+						.load(ancestorSelection(loader.selectionClass()));
+			}
+			return document;
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
 	@Override
 	public Slice get() {
 		Slice value = super.get();
 		if (value != null) {
 			return value;
 		} else {
-			try {
-				document = loader
-						.load(ancestorSelection(AbstractUrlSelection.class));
-				return documentToSlice();
-			} catch (Exception e) {
-				throw WrappedRuntimeException.wrap(e);
-			}
+			ensureDocument();
+			return documentToSlice();
 		}
 	}
 
@@ -49,8 +56,10 @@ public abstract class DocumentSelection extends Slice.SliceSelection {
 		return slice;
 	}
 
-	public interface Loader {
-		DomDocument load(AbstractUrlSelection selection) throws Exception;
+	public interface Loader<S extends Selection> {
+		DomDocument load(S selection) throws Exception;
+
+		Class<S> selectionClass();
 	}
 
 	public abstract static class TransformLayer<I extends Selection, O extends DocumentSelection>
