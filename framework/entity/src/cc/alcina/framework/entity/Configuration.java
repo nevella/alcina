@@ -499,7 +499,7 @@ public class Configuration {
 							break;
 						}
 						clazz = clazz.getSuperclass();
-						if (cursor == null
+						if (clazz == null
 								|| clazz.getPackageName().startsWith("java")) {
 							break;
 						}
