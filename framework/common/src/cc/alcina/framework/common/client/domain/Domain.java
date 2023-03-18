@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -149,6 +150,13 @@ public class Domain {
 	public static <V extends Entity> List<V> listByProperty(Class<V> clazz,
 			String propertyName, Object value) {
 		return handler.listByProperty(clazz, propertyName, value);
+	}
+
+	/**
+	 * domain-store-only -
+	 */
+	public static void logTree(Entity entity, String... paths) {
+		EntityTreeLogger.get().log(entity, paths);
 	}
 
 	public static boolean notRemoved(Entity entity) {
@@ -289,5 +297,13 @@ public class Domain {
 		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	public interface EntityTreeLogger {
+		public static Domain.EntityTreeLogger get() {
+			return Registry.impl(Domain.EntityTreeLogger.class);
+		}
+
+		public void log(Entity entity, String... paths);
 	}
 }

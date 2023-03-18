@@ -382,6 +382,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return getId() == 0 && getLocalId() == 0;
 		}
 
+		public void log(String... paths) {
+			Domain.logTree(Entity.this, paths);
+		}
+
 		public boolean notRemoved() {
 			return Domain.notRemoved(Entity.this);
 		}

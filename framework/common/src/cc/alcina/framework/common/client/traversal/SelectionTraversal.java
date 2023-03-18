@@ -68,6 +68,9 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *
  *
  */
+/*
+ * FIXME - st - reinstate filters for layer-based traversal
+ */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {
 	public Topic<Selection> selectionAdded = Topic.create();

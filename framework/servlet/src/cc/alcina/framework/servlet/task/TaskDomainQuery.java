@@ -10,8 +10,10 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
+import cc.alcina.framework.common.client.domain.Domain.EntityTreeLogger;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -56,6 +58,20 @@ public class TaskDomainQuery extends ServerTask {
 
 	public boolean isWithEntityToString() {
 		return this.withEntityToString;
+	}
+
+	@Override
+	public void run() {
+		Entity entity = from.find();
+		if (resultPaths == null || resultPaths.isEmpty()) {
+			resultPaths = List.of("*");
+		}
+		pathSegments = new PathSegments();
+		fb.line("Entity: %s", from);
+		fb.line("Paths: %s", resultPaths);
+		fb.line("=============================================");
+		logPath(entity, 0);
+		logger.info(fb.toString());
 	}
 
 	public void setFrom(EntityLocator from) {
@@ -176,18 +192,12 @@ public class TaskDomainQuery extends ServerTask {
 				});
 	}
 
-	@Override
-	public void run() throws Exception {
-		Entity entity = from.find();
-		if (resultPaths == null) {
-			resultPaths = List.of("*");
+	@Registration(EntityTreeLogger.class)
+	public static class EntityTreeLoggerImpl implements EntityTreeLogger {
+		@Override
+		public void log(Entity entity, String... paths) {
+			new TaskDomainQuery().withFrom(entity).withResultPaths(paths).run();
 		}
-		pathSegments = new PathSegments();
-		fb.line("Entity: %s", from);
-		fb.line("Paths: %s", resultPaths);
-		fb.line("=============================================");
-		logPath(entity, 0);
-		logger.info(fb.toString());
 	}
 
 	class PathSegment {
