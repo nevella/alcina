@@ -59,6 +59,15 @@ import cc.alcina.framework.gwt.client.logic.ClientProperties;
  * in {@link ElementLocal#checkSplitTextNodesForBrowserCompatibility},
  * {@link HtmlParser#appendTextNodes}
  *
+ * <p>
+ * FIXME - dirndl - 1x3 -
+ * <ul>
+ * <li>next steps: cleanup localdom.nodefor0 (abandon fallback, basically -since
+ * we're toast by then anyway)
+ * <li>edgecase - setting a localdom unconnected Text node to >65536 chars will
+ * desync
+ *
+ *
  */
 public class LocalDom {
 	private static LocalDom instance;
@@ -1071,6 +1080,23 @@ public class LocalDom {
 		}
 	}
 
+	public static class LocalDomCollections {
+		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
+			return new LinkedHashMap<>();
+		}
+
+		public Map<String, String> createStringMap() {
+			return createIdentityEqualsMap(String.class);
+		}
+	}
+
+	public static class LocalDomCollections_Script extends LocalDomCollections {
+		@Override
+		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
+			return JsUniqueMap.create();
+		}
+	}
+
 	public static class LoggingConfiguration {
 		public boolean mutationLogDoms;
 
@@ -1097,23 +1123,6 @@ public class LocalDom {
 			result.logDoms = mutationLogDoms;
 			result.logEvents = mutationLogEvents;
 			return result;
-		}
-	}
-
-	public static class LocalDomCollections {
-		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
-			return new LinkedHashMap<>();
-		}
-
-		public Map<String, String> createStringMap() {
-			return createIdentityEqualsMap(String.class);
-		}
-	}
-
-	public static class LocalDomCollections_Script extends LocalDomCollections {
-		@Override
-		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
-			return JsUniqueMap.create();
 		}
 	}
 
