@@ -75,8 +75,23 @@ public class StringMap extends LinkedHashMap<String, String> {
 		char[] from = { 'n', '=', '\\' };
 		String[] to = { "\n", "=", "\\" };
 		for (String line : props.split("\n")) {
-			int idx = line.indexOf("=");
-			if (idx != -1 && !line.startsWith("#")) {
+			if (line.startsWith("#")) {
+				continue;
+			}
+			int idx = 0;
+			int len = line.length();
+			char last = ' ';
+			for (; idx < len; idx++) {
+				char aChar = line.charAt(idx);
+				if (aChar == '=' || aChar == ':') {
+					if (last != '\\') {
+						break;
+					}
+				} else {
+					last = aChar;
+				}
+			}
+			if (idx != len) {
 				int end = line.length();
 				int idx1 = idx + 1;
 				if (unQuote && idx1 < line.length() && line.charAt(idx1) == '\"'
@@ -86,7 +101,8 @@ public class StringMap extends LinkedHashMap<String, String> {
 				}
 				String value = line.substring(idx1, end);
 				String unescaped = replacer.unescapeBackslahed(value, from, to);
-				String key = line.substring(0, idx);
+				String key = replacer.unescapeBackslahed(line.substring(0, idx),
+						from, to);
 				map.put(key, unescaped);
 			}
 		}
@@ -253,10 +269,12 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return sb.toString();
 	}
 
+	// see java.util.Properties.saveConvert(String, boolean, boolean)
 	public String toPropertyString() {
 		StringBuilder sb = new StringBuilder();
-		char[] from = { '\n', '=', '\\' };
-		String[] to = { "\\n", "\\=", "\\\\" };
+		char[] from = { '\n', '\r', '\t', '\f', '=', ':', '#', '!', '\\' };
+		String[] to = { "\\n", "\\r", "\\t", "\\f", "\\=", "\\:", "\\#", "\\!",
+				"\\\\" };
 		for (Map.Entry<String, String> entry : entrySet()) {
 			String value = entry.getValue();
 			if (value == null) {
@@ -266,7 +284,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 				sb.append("\n");
 			}
 			String key = entry.getKey();
-			sb.append(key);
+			sb.append(new Escaper().escape(key, from, to));
 			sb.append('=');
 			sb.append(new Escaper().escape(value, from, to));
 		}
@@ -281,28 +299,40 @@ public class StringMap extends LinkedHashMap<String, String> {
 
 	public static class Escaper {
 		public String escape(String string, char[] from, String[] to) {
-			StringBuilder sb = new StringBuilder();
+			StringBuilder outBuffer = new StringBuilder(string.length() * 2);
 			int end = string.length();
 			for (int idx = 0; idx < end;) {
-				char c = string.charAt(idx++);
+				char aChar = string.charAt(idx++);
 				boolean replaced = false;
 				for (int idx1 = 0; idx1 < from.length; idx1++) {
 					char check = from[idx1];
-					if (c == check) {
-						sb.append(to[idx1]);
+					if (aChar == check) {
+						outBuffer.append(to[idx1]);
 						replaced = true;
 						break;
 					}
 				}
 				if (!replaced) {
-					sb.append(c);
+					if ((aChar < 0x0020) || (aChar > 0x007e)) {
+						outBuffer.append("\\u");
+						String hex = Integer.toHexString((int) aChar);
+						if (hex.length() < 4) {
+							outBuffer.append("0000".substring(hex.length()));
+						}
+						outBuffer.append(hex);
+					} else {
+						outBuffer.append(aChar);
+					}
 				}
 			}
-			return sb.toString();
+			return outBuffer.toString();
 		}
 
 		public String unescapeBackslahed(String string, char[] from,
 				String[] to) {
+			if (!string.contains("\\")) {
+				return string;
+			}
 			StringBuilder sb = new StringBuilder();
 			int end = string.length() - 1;
 			int idx = 0;
