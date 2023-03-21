@@ -123,7 +123,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 		protected synchronized Object initialValue() {
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager
 					.ttmInstance();
-			tm.resetTltm(null, null, false, true);
+			tm.resetTltm(null, null, false, true, true);
 			return tm;
 		}
 	};
@@ -536,14 +536,20 @@ public class ThreadlocalTransformManager extends TransformManager {
 	 * subsequent transforms in this tx will not be picked up)
 	 */
 	public void resetTltm(EntityLocatorMap locatorMap) {
-		resetTltm(locatorMap, null, false);
+		resetTltm(locatorMap, null, false, true);
 	}
 
 	public void resetTltm(EntityLocatorMap locatorMap,
 			PersistenceLayerTransformExceptionPolicy exceptionPolicy,
-			boolean keepExplicitlyPermittedAndFlushAfterTransforms) {
+			boolean keepExplicitlyPermittedAndFlushAfterTransforms,
+			boolean emitWarnings) {
 		resetTltm(locatorMap, exceptionPolicy,
-				keepExplicitlyPermittedAndFlushAfterTransforms, false);
+				keepExplicitlyPermittedAndFlushAfterTransforms, false,
+				emitWarnings);
+	}
+
+	public void resetTltmNonCommitalTx() {
+		resetTltm(null, null, false, false);
 	}
 
 	public void
@@ -762,7 +768,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 	private void resetTltm(EntityLocatorMap locatorMap,
 			PersistenceLayerTransformExceptionPolicy exceptionPolicy,
 			boolean keepExplicitlyPermittedAndFlushAfterTransforms,
-			boolean initialising) {
+			boolean initialising, boolean emitWarnings) {
 		if (LooseContext.is(CONTEXT_THROW_ON_RESET_TLTM) && !initialising) {
 			throw new RuntimeException("Invalid reset");
 		}
@@ -798,7 +804,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 		listeningTo = new IdentityHashMap<>();
 		Set<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN);
-		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()) {
+		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()
+				&& emitWarnings) {
 			Ax.out("**WARNING ** TLTM - cleared (but still pending) transforms [%s]:\n %s",
 					pendingTransforms.size(), pendingTransforms.stream()
 							.limit(1000).collect(Collectors.toList()));

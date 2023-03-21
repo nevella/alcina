@@ -182,7 +182,7 @@ public class TransformPersisterInPersistenceContext {
 			// We know this is thread-local, so we can clear the tm transforms
 			// add the entity version checker now
 			tlTransformManager.resetTltm(locatorMap,
-					token.getTransformExceptionPolicy(), true);
+					token.getTransformExceptionPolicy(), true, true);
 			token.getTransformCollation().refreshFromRequest();
 			tlTransformManager.setEntityManager(getEntityManager());
 			ClientInstance persistentClientInstance = (ClientInstance) commonPersistenceBase

@@ -467,10 +467,6 @@ public class Transaction implements Comparable<Transaction> {
 		return id.hashCode();
 	}
 
-	public boolean isNonCommital() {
-		return this.phase == TransactionPhase.NON_COMMITAL;
-	}
-
 	public boolean isBaseTransaction() {
 		return this.baseTransaction;
 	}
@@ -484,6 +480,10 @@ public class Transaction implements Comparable<Transaction> {
 
 	public boolean isEnded() {
 		return this.ended;
+	}
+
+	public boolean isNonCommital() {
+		return this.phase == TransactionPhase.NON_COMMITAL;
 	}
 
 	public boolean isPopulatingPureTransactional() {
@@ -535,12 +535,6 @@ public class Transaction implements Comparable<Transaction> {
 	public void setTimeout(long timeout) {
 		logger.debug("{} :: Setting timeout to {}", this, timeout);
 		this.timeout = timeout;
-	}
-
-	public void toNonCommital() {
-		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
-				&& TransformManager.get().getTransforms().isEmpty()));
-		this.phase = TransactionPhase.NON_COMMITAL;
 	}
 
 	public void toDbAborted() {
@@ -607,6 +601,12 @@ public class Transaction implements Comparable<Transaction> {
 		this.databaseCommitTimestamp = timestamp;
 		storeTransactions.get(store).committingSequenceId = sequenceId;
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
+	}
+
+	public void toNonCommital() {
+		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
+				&& TransformManager.get().getTransforms().isEmpty()));
+		this.phase = TransactionPhase.NON_COMMITAL;
 	}
 
 	public void toReadonly() {
@@ -694,9 +694,16 @@ public class Transaction implements Comparable<Transaction> {
 			if (transformManager.getTransforms().size() == 0) {
 			} else {
 				// FIXME - mvcc.5 - mvcc exception (after cleanup)
-				logger.warn(
-						"Ending transaction with uncommitted transforms: {} {}",
-						endPhase, transformManager.getTransforms().size());
+				switch (endPhase) {
+				case NON_COMMITAL:
+					// no warning, transforms allowed - in fact expected
+					break;
+				default:
+					logger.warn(
+							"Ending transaction with uncommitted transforms: {} {}",
+							endPhase, transformManager.getTransforms().size());
+					break;
+				}
 			}
 		}
 		// need to do this even if transforms == 0 - to clear listeners
@@ -707,7 +714,14 @@ public class Transaction implements Comparable<Transaction> {
 		if (endPhase != TransactionPhase.READ_ONLY) {
 			try {
 				LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
-				ThreadlocalTransformManager.cast().resetTltm(null);
+				switch (endPhase) {
+				case NON_COMMITAL:
+					ThreadlocalTransformManager.cast().resetTltmNonCommitalTx();
+					break;
+				default:
+					ThreadlocalTransformManager.cast().resetTltm(null);
+					break;
+				}
 			} finally {
 				LooseContext.pop();
 			}
