@@ -222,7 +222,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	public String dumpCustomProperties() {
-		return Configuration.properties.dump();
+		return Configuration.properties.asString(true);
 	}
 
 	public String getDefaultLoggerLevels() {
@@ -275,6 +275,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		try {
 			// note that this does *not* clear existing custom properties, which
 			// would require trickier sync control
+			// FIXME - ru - see if that's now easier
 			String loggerLevels = getDefaultLoggerLevels();
 			Configuration.properties.register(loggerLevels);
 			File propertiesFile = new File(
@@ -289,9 +290,19 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				if (propertiesListFile.exists()) {
 					String[] paths = Io.read().file(propertiesListFile)
 							.asString().split("\n");
+					int idx = 0;
 					for (String path : paths) {
-						Configuration.properties
-								.register(Io.read().path(path).asString());
+						String file = Io.read().path(path).asString();
+						if (idx++ == 0) {
+							if (file.contains("include.resource=")) {
+								Configuration.properties.setUseSets(true);
+								Configuration.properties.setClassLoader(
+										getClass().getClassLoader());
+								// re-register in v2 mode
+								Configuration.properties.register(loggerLevels);
+							}
+						}
+						Configuration.properties.register(file);
 					}
 				}
 			}

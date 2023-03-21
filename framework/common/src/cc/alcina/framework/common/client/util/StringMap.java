@@ -269,12 +269,29 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return sb.toString();
 	}
 
-	// see java.util.Properties.saveConvert(String, boolean, boolean)
 	public String toPropertyString() {
+		return toPropertyString(false);
+	}
+
+	/*
+	 * without allEscapes, this will escape fewer chars (but be more legible).
+	 * All escapes matches the behaviour of
+	 * java.util.Properties.saveConvert(String, boolean, boolean)
+	 *
+	 */
+	public String toPropertyString(boolean allEscapes) {
 		StringBuilder sb = new StringBuilder();
-		char[] from = { '\n', '\r', '\t', '\f', '=', ':', '#', '!', '\\' };
-		String[] to = { "\\n", "\\r", "\\t", "\\f", "\\=", "\\:", "\\#", "\\!",
-				"\\\\" };
+		char[] from = null;
+		String[] to = null;
+		if (allEscapes) {
+			from = new char[] { '\n', '\r', '\t', '\f', '=', ':', '#', '!',
+					'\\' };
+			to = new String[] { "\\n", "\\r", "\\t", "\\f", "\\=", "\\:", "\\#",
+					"\\!", "\\\\" };
+		} else {
+			from = new char[] { '\n', '=', '\\' };
+			to = new String[] { "\\n", "\\=", "\\\\" };
+		}
 		for (Map.Entry<String, String> entry : entrySet()) {
 			String value = entry.getValue();
 			if (value == null) {

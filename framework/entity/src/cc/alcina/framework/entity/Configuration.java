@@ -314,12 +314,20 @@ public class Configuration {
 			immutableCustomProperties.put(key, new Object());
 		}
 
+		public String asString(boolean flat) {
+			Map<String, String> map = keyValues.keySet().stream().sorted()
+					.collect(AlcinaCollectors.toLinkedHashMap(k -> k,
+							k -> keyValues.get(k).resolvedValue));
+			return map.entrySet().stream().map(Object::toString)
+					.collect(Collectors.joining("\n"));
+		}
+
 		public void clearCustom() {
 			// TODO Auto-generated method stub
 		}
 
-		public String dump() {
-			return "yup;";
+		public void dump() {
+			Ax.out(asString(true));
 		}
 
 		// use Configuration.get() where possible
@@ -459,13 +467,6 @@ public class Configuration {
 			Preconditions.checkArgument(getSet(systemSet).isEmpty());
 			PropertySet set = new PropertySet(systemSet);
 			orderedSets.add(set);
-		}
-
-		void dump(boolean flat) {
-			Map<String, String> map = keyValues.keySet().stream().sorted()
-					.collect(AlcinaCollectors.toLinkedHashMap(k -> k,
-							k -> keyValues.get(k).resolvedValue));
-			Ax.out(map.entrySet());
 		}
 
 		PropertyValues ensureValues(Key key) {
