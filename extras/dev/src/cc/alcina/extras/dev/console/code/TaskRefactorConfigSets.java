@@ -44,6 +44,8 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 	private String classpathConfigurationFileFilter = "Bundle\\.properties";
 
+	private String classpathConfigurationFileIgnorePackageFilter = "ignore-no-packages";
+
 	transient List<Configuration.ConfigurationFile> classpathConfigurationFiles = new ArrayList<>();
 
 	private PropertyTree tree;
@@ -76,6 +78,10 @@ public class TaskRefactorConfigSets extends ServerTask {
 
 	public String getClasspathConfigurationFileFilter() {
 		return this.classpathConfigurationFileFilter;
+	}
+
+	public String getClasspathConfigurationFileIgnorePackageFilter() {
+		return this.classpathConfigurationFileIgnorePackageFilter;
 	}
 
 	public List<String> getClasspathEntries() {
@@ -142,6 +148,11 @@ public class TaskRefactorConfigSets extends ServerTask {
 		this.classpathConfigurationFileFilter = classpathConfigurationFileFilter;
 	}
 
+	public void setClasspathConfigurationFileIgnorePackageFilter(
+			String classpathConfigurationFileIgnorePackageFilter) {
+		this.classpathConfigurationFileIgnorePackageFilter = classpathConfigurationFileIgnorePackageFilter;
+	}
+
 	public void setClasspathEntries(List<String> classpathEntries) {
 		this.classpathEntries = classpathEntries;
 	}
@@ -205,7 +216,12 @@ public class TaskRefactorConfigSets extends ServerTask {
 								.matches(classpathConfigurationFileFilter)) {
 							ConfigurationFile configurationFile = new Configuration.ConfigurationFile(
 									path, file, null);
-							classpathConfigurationFiles.add(configurationFile);
+							if (configurationFile.getPackageName().matches(
+									classpathConfigurationFileIgnorePackageFilter)) {
+							} else {
+								classpathConfigurationFiles
+										.add(configurationFile);
+							}
 						}
 					}
 				}

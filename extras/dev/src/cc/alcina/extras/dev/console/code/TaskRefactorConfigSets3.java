@@ -37,6 +37,8 @@ public class TaskRefactorConfigSets3 extends ServerTask {
 
 	private String output;
 
+	private String keyPackages;
+
 	transient String packageName;
 
 	transient String key;
@@ -45,6 +47,10 @@ public class TaskRefactorConfigSets3 extends ServerTask {
 
 	public List<String> getConfigFilePaths() {
 		return this.configFilePaths;
+	}
+
+	public String getKeyPackages() {
+		return this.keyPackages;
 	}
 
 	public String getOutput() {
@@ -57,6 +63,7 @@ public class TaskRefactorConfigSets3 extends ServerTask {
 
 	@Override
 	public void run() throws Exception {
+		StringMap keysByPackage = new StringMap();
 		{
 			CsvCols cols = CsvCols.parseCsv(propertiesCsv);
 			propertyRows = cols.stream().map(PropertyRow::new)
@@ -64,14 +71,22 @@ public class TaskRefactorConfigSets3 extends ServerTask {
 			propertyRows.stream().filter(
 					pr -> Ax.notBlank(pr.key) && Ax.isBlank(pr.inputSet))
 					.forEach(pr -> map.put(pr.key, normalise(pr.value)));
+			propertyRows.stream().filter(
+					pr -> Ax.notBlank(pr.key) && Ax.isBlank(pr.inputSet))
+					.forEach(pr -> keysByPackage.put(pr.key, pr.packageName));
 		}
 		configFilePaths.stream().map(Io.read()::path)
 				.map(op -> op.asMap(MapType.PROPERTY)).forEach(map::putAll);
 		output = map.sorted().toPropertyString();
+		keyPackages = keysByPackage.sorted().toPropertyString();
 	}
 
 	public void setConfigFilePaths(List<String> configFilePaths) {
 		this.configFilePaths = configFilePaths;
+	}
+
+	public void setKeyPackages(String keyPackages) {
+		this.keyPackages = keyPackages;
 	}
 
 	public void setOutput(String output) {
