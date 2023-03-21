@@ -1,10 +1,10 @@
 package cc.alcina.framework.servlet;
 
-import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
@@ -28,8 +29,8 @@ public class ServletLayerUtils {
 		return SEUtilities.getFullExceptionMessage(e).contains("Broken pipe");
 	}
 
-	/*
-	 * Clean unhelpful intermediate proxies (e.g. AWS network load balancers...)
+	/**
+	 * Clean unhelpful intermediate proxies (e.g. AWS network load balancers, CloudFlare)
 	 */
 	public static String cleanForwardedFor(String forwardedFor) {
 		if (Ax.isBlank(forwardedFor)) {
@@ -37,9 +38,21 @@ public class ServletLayerUtils {
 		}
 		String cleanRegex = Configuration.get("cleanFromForwardedFor");
 		if (Ax.notBlank(cleanRegex)) {
-			forwardedFor = Arrays.stream(forwardedFor.split(", ?"))
-					.filter(part -> !part.matches(cleanRegex))
-					.collect(Collectors.joining(", "));
+			// Go through all the addresses in reverse order
+			List<String> forwardedAddresses = CommonUtils.split(forwardedFor, ", ");
+			ListIterator<String> it = forwardedAddresses.listIterator(forwardedAddresses.size());
+			while (it.hasPrevious()) {
+				String address = (String) it.previous();
+				// Remove any addresses that match the clean-up regex,
+				//  stop if you hit any that don't need a clean-up
+				if (address.matches(cleanRegex)) {
+					it.remove();
+				} else {
+					break;
+				}
+			}
+			// Recreate the X-Forwarded-For header using the cleaned list
+			forwardedFor = CommonUtils.join(forwardedAddresses, ", ");
 		}
 		return forwardedFor;
 	}
