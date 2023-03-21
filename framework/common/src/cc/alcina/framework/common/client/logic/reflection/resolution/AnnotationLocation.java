@@ -313,12 +313,12 @@ public class AnnotationLocation {
 			return getClass().hashCode();
 		}
 
-		public synchronized <A extends Annotation> A resolveAnnotation(
+		public <A extends Annotation> A resolveAnnotation(
 				Class<A> annotationClass, AnnotationLocation location) {
 			return (A) Ax.first(resolveAnnotations(annotationClass, location));
 		}
 
-		public <A extends Annotation> List<A> resolveAnnotations(
+		public synchronized <A extends Annotation> List<A> resolveAnnotations(
 				Class<A> annotationClass, AnnotationLocation location) {
 			return (List<A>) resolvedCache.ensure(
 					() -> resolveAnnotations0(annotationClass, location),

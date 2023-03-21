@@ -192,6 +192,10 @@ public class Domain {
 		return handler.resolveEntityClass(clazz);
 	}
 
+	public static <T extends Entity> Stream<T> reversed(Class<T> clazz) {
+		return stream(clazz).sorted(EntityComparator.REVERSED_INSTANCE);
+	}
+
 	public static <V extends Entity> int size(Class<V> clazz) {
 		return handler.size(clazz);
 	}
