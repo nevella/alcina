@@ -39,7 +39,7 @@ public class ServletLayerUtils {
 		String cleanRegex = Configuration.get("cleanFromForwardedFor");
 		if (Ax.notBlank(cleanRegex)) {
 			// Go through all the addresses in reverse order
-			List<String> forwardedAddresses = CommonUtils.split(forwardedFor, ", ");
+			List<String> forwardedAddresses = CommonUtils.splitByRegex(forwardedFor, ", ?");
 			ListIterator<String> it = forwardedAddresses.listIterator(forwardedAddresses.size());
 			while (it.hasPrevious()) {
 				String address = (String) it.previous();

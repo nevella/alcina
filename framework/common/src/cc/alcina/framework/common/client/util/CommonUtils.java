@@ -1642,6 +1642,13 @@ public class CommonUtils {
 		return result;
 	}
 
+	public static List<String> splitByRegex(String content, String regex) {
+		List<String> result = new ArrayList<String>();
+		String[] splits = content.split(regex);
+		Collections.addAll(result, splits);
+		return result;
+	}
+
 	public static String tabify(String value, int charsPerLine, int tabCount) {
 		int fuzz = 15;
 		StringBuilder sb = new StringBuilder();
