@@ -81,6 +81,8 @@ public class Io {
 
 		private boolean base64;
 
+		private boolean decompressIfDotGz;
+
 		public byte[] asBytes() {
 			try {
 				InputStream stream = resource.getStream();
@@ -147,7 +149,7 @@ public class Io {
 		}
 
 		public String asString() {
-			decompress = true;
+			decompressIfDotGz = true;
 			byte[] bytes = asBytes();
 			try {
 				return new String(bytes, charsetName);
@@ -310,12 +312,11 @@ public class Io {
 
 			private InputStream getStream() throws IOException {
 				ensureFile();
+				boolean decompress = ReadOp.this.decompress;
 				if (file != null) {
 					stream = new FileInputStream(file);
-					if (file.getName().endsWith(".gz") && decompress) {
-						stream = new GZIPInputStream(
-								new BufferedInputStream(stream));
-					}
+					decompress |= decompressIfDotGz
+							&& file.getName().endsWith(".gz");
 				} else if (classpathRelative != null) {
 					stream = classpathRelative
 							.getResourceAsStream(classpathResource);
@@ -333,7 +334,11 @@ public class Io {
 				} else if (bytes != null) {
 					stream = new ByteArrayInputStream(bytes);
 				}
-				return Io.Streams.maybeWrapInBufferedStream(stream);
+				stream = Io.Streams.maybeWrapInBufferedStream(stream);
+				if (decompress) {
+					stream = new GZIPInputStream(stream);
+				}
+				return stream;
 			}
 		}
 	}
