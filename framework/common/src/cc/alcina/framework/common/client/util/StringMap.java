@@ -316,6 +316,9 @@ public class StringMap extends LinkedHashMap<String, String> {
 
 	public static class Escaper {
 		public String escape(String string, char[] from, String[] to) {
+			if (string == null) {
+				return null;
+			}
 			StringBuilder outBuffer = new StringBuilder(string.length() * 2);
 			int end = string.length();
 			for (int idx = 0; idx < end;) {

@@ -229,15 +229,27 @@ public class SimpleHttp {
 	}
 
 	public String toCurlRequest() {
-		Preconditions.checkArgument(this.method.equals("GET"));
-		FormatBuilder fb = new FormatBuilder().separator(" ");
-		fb.append("curl");
-		this.headers.entrySet().forEach(h -> {
-			fb.append("--header");
-			fb.format("'%s: %s'", h.getKey(), h.getValue());
-		});
-		fb.format("'%s'", strUrl);
-		return fb.toString();
+		Preconditions.checkState(queryStringParameters == null);
+		if (this.method.equals("GET")) {
+			FormatBuilder fb = new FormatBuilder().separator(" ");
+			fb.append("curl");
+			this.headers.entrySet().forEach(h -> {
+				fb.append("--header");
+				fb.format("'%s: %s'", h.getKey(), h.getValue());
+			});
+			fb.format("'%s'", strUrl);
+			return fb.toString();
+		} else {
+			throw new UnsupportedOperationException();
+			// FormatBuilder fb = new FormatBuilder().separator(" ");
+			// fb.append("curl");
+			// this.headers.entrySet().forEach(h -> {
+			// fb.append("--header");
+			// fb.line("'%s: %s' \\", h.getKey(), h.getValue());
+			// });
+			// fb.format("'%s'", strUrl);
+			// return fb.toString();
+		}
 	}
 
 	// Set Authorization header with basic authentication pair

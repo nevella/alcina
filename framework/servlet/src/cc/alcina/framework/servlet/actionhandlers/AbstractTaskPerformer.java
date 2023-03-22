@@ -10,6 +10,10 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 
+/*
+ * This class should eventually go away (replaced by ServerTask, which is
+ * leaner, meaner and more typed) - but that's a long-term effort
+ */
 public abstract class AbstractTaskPerformer
 		implements Runnable, Task, TaskPerformer {
 	protected transient Logger logger = LoggerFactory.getLogger(getClass());
