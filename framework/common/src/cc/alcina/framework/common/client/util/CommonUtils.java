@@ -1626,8 +1626,14 @@ public class CommonUtils {
 		return result;
 	}
 
-	public static List<String> split(String content, String split) {
-		List<String> result = new ArrayList<String>();
+	/**
+	 * <li>Split a string by separators</li>
+	 * @param content String to split
+	 * @param split Separator to split by
+	 * @return ArrayList of separated strings
+	 */
+	public static ArrayList<String> split(String content, String split) {
+		ArrayList<String> result = new ArrayList<String>();
 		int idx0 = 0;
 		int idx1 = 0;
 		while (true) {
@@ -1642,8 +1648,14 @@ public class CommonUtils {
 		return result;
 	}
 
-	public static List<String> splitByRegex(String content, String regex) {
-		List<String> result = new ArrayList<String>();
+	/**
+	 * <li>Split a string by a regex expression</li>
+	 * @param content String to split
+	 * @param regex Regex to split by
+	 * @return ArrayList of separated strings
+	 */
+	public static ArrayList<String> splitByRegex(String content, String regex) {
+		ArrayList<String> result = new ArrayList<String>();
 		String[] splits = content.split(regex);
 		Collections.addAll(result, splits);
 		return result;
