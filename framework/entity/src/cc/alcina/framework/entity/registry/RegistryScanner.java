@@ -14,6 +14,7 @@
 package cc.alcina.framework.entity.registry;
 
 import java.io.File;
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,7 +101,8 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 		return out;
 	}
 
-	public static class RegistryScannerLazyRegistration {
+	public static class RegistryScannerLazyRegistration
+			implements Serializable {
 		String registeringClassClassName;
 
 		List<String> keys;

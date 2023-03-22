@@ -605,6 +605,7 @@ public abstract class DevHelper {
 		return null;
 	}
 
+	// FIXME - ru - unify template copying, properties startup
 	protected String getPropertyFilePath() {
 		return null;
 	}

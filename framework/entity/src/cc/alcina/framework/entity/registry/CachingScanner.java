@@ -16,7 +16,6 @@ package cc.alcina.framework.entity.registry;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.ConnectException;
 import java.util.List;
 import java.util.Set;
 
@@ -26,13 +25,10 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
-import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.MethodContext;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
@@ -40,14 +36,8 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
  *
  * @author Nick Reddel
  *
- *         FIXME - reflection.2 - invalidate on superclass/interface change
  */
 public abstract class CachingScanner<T extends ClassMetadata> {
-	public static boolean useKryo() {
-		return Boolean.getBoolean(
-				"cc.alcina.framework.entity.registry.CachingScanner.useKryo");
-	}
-
 	int cc = 0;
 
 	long loadClassNanos = 0;
@@ -178,22 +168,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		new Thread(Ax.format("caching-scanner-write-%s", cacheFile.getName())) {
 			@Override
 			public void run() {
-				if (useKryo()) {
-					KryoUtils.serializeToFile(outgoingCache, cacheFile);
-				} else {
-					try {
-						LooseContext.pushWithTrue(
-								JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL);
-						String out = JacksonUtils.defaultSerializer()
-								.withMaxLength(Integer.MAX_VALUE)
-								.serialize(outgoingCache);
-						Io.write().string(out).toFile(cacheFile);
-					} catch (Throwable t) {
-						t.printStackTrace();
-					} finally {
-						LooseContext.pop();
-					}
-				}
+				Io.write().object(outgoingCache).toFile(cacheFile);
 			};
 		}.start();
 	}
@@ -207,21 +182,12 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 				.withContextClassloader(getClass().getClassLoader())
 				.call(() -> {
 					try {
-						if (useKryo()) {
-							return KryoUtils.deserializeFromFile(cacheFile,
-									ClassMetadataCache.class);
-						} else {
-							return JacksonUtils.deserializeFromFile(cacheFile,
-									ClassMetadataCache.class);
-						}
+						return Io.read().file(cacheFile).asObject();
 					} catch (Exception e) {
 						if (cacheFile.exists()) {
 							cacheFile.delete();
 						}
 						if (CommonUtils.extractCauseOfClass(e,
-								ConnectException.class) != null) {
-							logger.warn("ClassMetaServer not reachable");
-						} else if (CommonUtils.extractCauseOfClass(e,
 								FileNotFoundException.class) != null) {
 							logger.info("No cache found, creating");
 						}
