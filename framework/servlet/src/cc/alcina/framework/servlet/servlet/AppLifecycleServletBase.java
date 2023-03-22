@@ -39,6 +39,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -566,6 +567,15 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			Matcher matcher = pattern.matcher(k);
 			if (matcher.matches()) {
 				String key = matcher.group(1);
+				try {
+					Class<Task> taskClass = Reflections.forName(key);
+					Reflections.at(taskClass).newInstance().schedule();
+					Ax.out("Launched post-init task: %s", key);
+					return;
+				} catch (Exception e) {
+					// ignore
+				}
+				// non-task
 				String value = properties.get(key);
 				Ax.out("Enabled post-init startup property: %s => %s", key,
 						value);
