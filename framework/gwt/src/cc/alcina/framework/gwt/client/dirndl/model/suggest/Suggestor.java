@@ -36,6 +36,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * TODO - there's probably a better general way of handling the perennial "is
  * {@code value} a collection of T or a T" question
  *
+ * <p>
+ * FIXME - dirndl 1x1dz - switch SuggestorConfiguration to a builder
+ *
  * @author nick@alcina.cc
  *
  */
