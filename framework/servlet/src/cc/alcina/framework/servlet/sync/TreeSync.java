@@ -40,6 +40,11 @@ import cc.alcina.framework.servlet.sync.TreeSync.SyncAction.Type;
  *
  */
 public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
+	public static TreeSync.SyncContainer createDummyContainer() {
+		TreeSync sync = new TreeSync(null, null);
+		return sync.createDummyContainer0();
+	}
+
 	private TreeProcess syncProcess;
 
 	private Predicate<Node> exitTest = n -> false;
@@ -86,6 +91,12 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 		return this;
 	}
 
+	private SyncContainer createDummyContainer0() {
+		TreeSync<T>.SyncPosition position = new SyncPosition(null, null);
+		position.left.position = position;
+		return position.left;
+	}
+
 	private void init() {
 		SyncPosition firstPosition = new SyncPosition(from, to);
 		syncProcess = new TreeProcess(this);
@@ -120,10 +131,14 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 
 	/*
 	 * Run prior to sync (to say optionally update cached remote values)
+	 *
+	 * syncContainer is required, generate a dummy if calling from outside the
+	 * process via
 	 */
 	public interface Preparer<U extends TreeSyncable> {
 		default U prepare(TreeSync.SyncContainer syncContainer, U u,
 				boolean from) {
+			Preconditions.checkNotNull(syncContainer);
 			Context context = new Context(syncContainer, u, from);
 			ProcessObservers.context().publish(context);
 			if (context.syncContainer != null
