@@ -599,9 +599,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		boolean hasCallableNoArgsConstructor;
 
-		boolean isAbstract;
+		boolean abstractModifier;
 
-		boolean isFinal;
+		boolean finalModifier;
 
 		Pattern getterPattern = Pattern.compile("(?:is|get)([A-Z].*)");
 
@@ -622,9 +622,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		@Override
 		protected void prepare() {
-			isAbstract = type.isAbstract();
-			isFinal = type.isFinal();
-			hasCallableNoArgsConstructor = !isAbstract
+			abstractModifier = type.isAbstract();
+			finalModifier = type.isFinal();
+			hasCallableNoArgsConstructor = !abstractModifier
 					&& !type.getQualifiedSourceName().equals("java.lang.Class")
 					&& (type.isStatic() || !type.isMemberType())
 					&& Arrays.stream(type.getConstructors())
@@ -641,7 +641,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			// properties are needed even for abstract classes (for annotation
 			// access)
 			prepareProperties();
-			if (!isAbstract) {
+			if (!abstractModifier) {
 				prepareRegistrations();
 			}
 		}
@@ -719,8 +719,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						i.getQualifiedSourceName());
 			});
 			// will probably need to adjust
-			sourceWriter.println("boolean isAbstract = %s;", isAbstract);
-			sourceWriter.println("boolean isFinal = %s;", isFinal);
+			sourceWriter.println("boolean isAbstract = %s;", abstractModifier);
+			sourceWriter.println("boolean isFinal = %s;", finalModifier);
 			sourceWriter.println("init(clazz, properties, byName, provider,"
 					+ " supplier, assignableTo, interfaces,  isAbstract, isFinal);");
 			sourceWriter.outdent();

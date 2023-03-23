@@ -108,6 +108,10 @@ public class Property implements HasAnnotations {
 		return setter != null;
 	}
 
+	public boolean isReadWrite() {
+		return getter != null && setter != null;
+	}
+
 	public boolean isWriteOnly() {
 		return getter == null;
 	}

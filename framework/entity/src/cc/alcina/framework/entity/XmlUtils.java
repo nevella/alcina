@@ -171,6 +171,7 @@ public class XmlUtils {
 
 	public static String balanceForXhtml(String htmlContent) {
 		htmlContent = htmlContent.replaceAll("(?i)<META(.*?)>", "<META$1/>");
+		htmlContent = htmlContent.replaceAll("(?i)<BR(.*?)>", "<BR$1/>");
 		return htmlContent;
 	}
 

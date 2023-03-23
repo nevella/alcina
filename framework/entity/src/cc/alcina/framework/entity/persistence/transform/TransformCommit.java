@@ -452,8 +452,7 @@ public class TransformCommit {
 						EntityLayerObjects.get().getServerAsClientInstance()
 								.getId(),
 						PermissionsManager.get().getUserId(), "0.0.0.0"));
-		long persistentTransformRecordCount = Registry
-				.impl(TransformPropagationPolicy.class)
+		long persistentTransformRecordCount = TransformPropagationPolicy.get()
 				.getProjectedPersistentCount(TransformManager.get()
 						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
 						.stream());
