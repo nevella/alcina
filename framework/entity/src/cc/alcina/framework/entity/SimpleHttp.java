@@ -235,20 +235,22 @@ public class SimpleHttp {
 			fb.append("curl");
 			this.headers.entrySet().forEach(h -> {
 				fb.append("--header");
-				fb.format("'%s: %s'", h.getKey(), h.getValue());
+				fb.format("'%s: %s'", h.getKey(), escapeBash(h.getValue()));
 			});
 			fb.format("'%s'", strUrl);
 			return fb.toString();
 		} else {
-			throw new UnsupportedOperationException();
-			// FormatBuilder fb = new FormatBuilder().separator(" ");
-			// fb.append("curl");
-			// this.headers.entrySet().forEach(h -> {
-			// fb.append("--header");
-			// fb.line("'%s: %s' \\", h.getKey(), h.getValue());
-			// });
-			// fb.format("'%s'", strUrl);
-			// return fb.toString();
+			FormatBuilder fb = new FormatBuilder().separator(" ");
+			fb.line("curl '%s' \\", strUrl);
+			this.headers.entrySet().forEach(h -> {
+				fb.append("\t--header ");
+				fb.line("'%s: %s' \\", h.getKey(), h.getValue());
+			});
+			fb.line(" --data-raw '%s'", escapeBash(body));
+			if (gzip) {
+				fb.line(" --compressed");
+			}
+			return fb.toString();
 		}
 	}
 
@@ -361,6 +363,10 @@ public class SimpleHttp {
 	public SimpleHttp withTimeout(int timeout) {
 		this.timeout = timeout;
 		return this;
+	}
+
+	private String escapeBash(String value) {
+		return value.replace("'", "'\\''");
 	}
 
 	// If the request reports a Content-Encoding of gzip, decode request as
