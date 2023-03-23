@@ -26,6 +26,23 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class EntityLocator implements Serializable, TreeSerializable {
 	static final transient long serialVersionUID = 1L;
 
+	public static <E extends Entity> E find(Class<E> clazz, String string) {
+		if (string.matches("\\d+")) {
+			long id = Long.parseLong(string);
+			return (E) Domain.find(clazz, id);
+		} else if (string.matches("(\\d+),(\\d+)")) {
+			long clientInstanceId = Long
+					.parseLong(string.replaceFirst("(\\d+),(\\d+)", "$1"));
+			long localId = Long
+					.parseLong(string.replaceFirst("(\\d+),(\\d+)", "$2"));
+			EntityLocator locator = new EntityLocator(clazz, 0L, localId);
+			locator.setClientInstanceId(clientInstanceId);
+			return (E) Domain.find(locator);
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	public static EntityLocator instanceLocator(Entity entity) {
 		return entity == null ? null : new EntityLocator(entity);
 	}
@@ -215,6 +232,14 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		this.localId = localId;
 	}
 
+	/**
+	 * Return a string that can be used to locate an entity (either uncommitted
+	 * or committed), if the clazz is known (comma-separated)
+	 */
+	public String toClazzLocatableString() {
+		return toRecoverableNumericString0(',');
+	}
+
 	public String toIdPairCommaString() {
 		return Ax.format("%s,%s", id, localId);
 	}
@@ -230,12 +255,12 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return Ax.format("%s/%s/%s", id, localId, clazz.getName());
 	}
 
+	/**
+	 * Return a string that can be used to locate an entity (either uncommitted
+	 * or committed), if the clazz is known (slash-separated)
+	 */
 	public String toRecoverableNumericString() {
-		if (id != 0) {
-			return String.valueOf(id);
-		}
-		return Ax.format("%s/%s",
-				PermissionsManager.get().getClientInstanceId(), localId);
+		return toRecoverableNumericString0('/');
 	}
 
 	public String toRecoverableString(long clientInstanceId) {
@@ -265,5 +290,14 @@ public class EntityLocator implements Serializable, TreeSerializable {
 
 	public boolean wasRemoved() {
 		return find() == null;
+	}
+
+	private String toRecoverableNumericString0(char separator) {
+		if (id != 0) {
+			return String.valueOf(id);
+		}
+		return Ax.format("%s%s%s",
+				PermissionsManager.get().getClientInstanceId(), separator,
+				localId);
 	}
 }

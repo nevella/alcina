@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -167,12 +166,8 @@ public class TreePath<T> extends Model
 
 	public <E extends Entity> E find(Class<E> clazz) {
 		String segment = getSegment();
-		if (segment.matches("\\d+")) {
-			long id = Long.parseLong(segment);
-			return Domain.find(clazz, id);
-		} else if (segment.matches("0,(\\d+)")) {
-			long id = Long.parseLong(segment.replaceFirst("0,(\\d+)", "$1"));
-			return Domain.find(new EntityLocator(clazz, 0L, id));
+		if (segment.matches("\\d+") || segment.matches("(\\d+),(\\d+)")) {
+			return EntityLocator.find(clazz, segment);
 		} else {
 			throw new IllegalArgumentException(segment);
 		}
@@ -369,7 +364,7 @@ public class TreePath<T> extends Model
 			return (String) object;
 		}
 		if (object instanceof Entity) {
-			return ((Entity) object).toLocator().toIdPairCommaString();
+			return ((Entity) object).toLocator().toClazzLocatableString();
 		} else {
 			return CommonUtils.friendlyConstant(object, "_").toLowerCase();
 		}

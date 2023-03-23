@@ -343,7 +343,13 @@ public abstract class DomainViews {
 			task.modelChange.event.getTransformPersistenceToken()
 					.getTransformCollation()
 					.query(PersistentImpl.getImplementation(DomainView.class))
-					.stream().filter(QueryResult::hasNoDeleteTransform)
+					.stream().
+					// don't bother processing if about to delete
+					filter(QueryResult::hasNoDeleteTransform)
+					// the entity will not exist, yet, if the entitycollation
+					// contains a creation (i.e. the entity was created during
+					// the modelChange.event)
+					.filter(QueryResult::hasNoCreateTransform)
 					.filter(this::filterViewTransformCollation)
 					.forEach(qr -> onViewModified(qr.<DomainView> getEntity()));
 			liveTrees
