@@ -15,19 +15,6 @@ public class PersistentObjectCriterion extends SearchCriterion {
 
 	private transient String propertyName;
 
-	public String getPropertyName() {
-		return this.propertyName;
-	}
-
-	public void setPropertyName(String propertyName) {
-		this.propertyName = propertyName;
-	}
-
-	public PersistentObjectCriterion withPropertyName(String propertyName) {
-		this.propertyName = propertyName;
-		return this;
-	}
-
 	public PersistentObjectCriterion() {
 	}
 
@@ -68,6 +55,11 @@ public class PersistentObjectCriterion extends SearchCriterion {
 		return classRef == null ? ""
 				: "class: "
 						+ CommonUtils.simpleClassName(classRef.getRefClass());
+	}
+
+	public PersistentObjectCriterion withPropertyName(String propertyName) {
+		this.propertyName = propertyName;
+		return this;
 	}
 
 	public PersistentObjectCriterion withValue(ClassRef value) {

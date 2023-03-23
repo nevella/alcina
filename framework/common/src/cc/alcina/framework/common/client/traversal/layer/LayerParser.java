@@ -38,6 +38,10 @@ public class LayerParser {
 		return inputState.outputs;
 	}
 
+	public SliceSelection getSelection() {
+		return this.selection;
+	}
+
 	public boolean hadMatches() {
 		return inputState.matches.size() > 0;
 	}

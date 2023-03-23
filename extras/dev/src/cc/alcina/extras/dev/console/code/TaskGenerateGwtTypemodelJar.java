@@ -13,7 +13,7 @@ import cc.alcina.framework.entity.util.ZipUtil;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskGenerateGwtTypemodelJar extends ServerTask {
-	String outPath = "/tmp/gwt-typemodel";
+	transient String outPath = "/tmp/gwt-typemodel";
 
 	@Override
 	public void run() throws Exception {
@@ -22,19 +22,25 @@ public class TaskGenerateGwtTypemodelJar extends ServerTask {
 		File outJar = new File(outPath + ".jar");
 		SEUtilities.deleteDirectory(outFolder);
 		outFolder.mkdirs();
-		new ZipUtil().unzip(outFolder, new BufferedInputStream(new FileInputStream(path)));
+		new ZipUtil().unzip(outFolder,
+				new BufferedInputStream(new FileInputStream(path)));
 		List<File> files = SEUtilities.listFilesRecursive(outPath, null);
-		files.stream().filter(f -> f.isFile()).filter(f -> !this.isTypeModel(f)).forEach(File::delete);
-		List<File> list = files.stream().filter(f -> f.isDirectory()).filter(f -> !this.isTypeModel(f))
-				.sorted(Comparator.comparing(f -> f.getPath().length())).collect(Collectors.toList());
+		files.stream().filter(f -> f.isFile()).filter(f -> !this.isTypeModel(f))
+				.forEach(File::delete);
+		List<File> list = files.stream().filter(f -> f.isDirectory())
+				.filter(f -> !this.isTypeModel(f))
+				.sorted(Comparator.comparing(f -> f.getPath().length()))
+				.collect(Collectors.toList());
 		Collections.reverse(list);
 		list.forEach(File::delete);
 		new ZipUtil().createZip(outJar, outFolder, Collections.emptyMap());
 	}
 
 	boolean isTypeModel(File f) {
-		String packageFragment = "com.google.gwt.core.ext.typeinfo".replace(".", "/");
+		String packageFragment = "com.google.gwt.core.ext.typeinfo".replace(".",
+				"/");
 		String pathFilter = f.getAbsolutePath().replace(outPath + "/", "");
-		return packageFragment.contains(pathFilter) || pathFilter.contains(packageFragment);
+		return packageFragment.contains(pathFilter)
+				|| pathFilter.contains(packageFragment);
 	}
 }
