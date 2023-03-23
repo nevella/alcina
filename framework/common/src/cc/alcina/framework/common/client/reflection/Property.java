@@ -23,14 +23,12 @@ public class Property implements HasAnnotations {
 	private final Class declaringType;
 
 	public Property(Property property) {
-		this(property.name, property.getter, property.setter, property.type,
-				property.owningType, property.declaringType,
-				property.annotationResolver);
+		this(property.name, property.getter, property.setter, property.type, property.owningType,
+				property.declaringType, property.annotationResolver);
 	}
 
-	public Property(String name, Method getter, Method setter,
-			Class propertyType, Class owningType, Class declaringType,
-			AnnotationProvider annotationResolver) {
+	public Property(String name, Method getter, Method setter, Class propertyType, Class owningType,
+			Class declaringType, AnnotationProvider annotationResolver) {
 		this.name = name;
 		this.getter = getter;
 		this.setter = setter;
@@ -108,10 +106,6 @@ public class Property implements HasAnnotations {
 		return setter != null;
 	}
 
-	public boolean isReadWrite() {
-		return getter != null && setter != null;
-	}
-
 	public boolean isWriteOnly() {
 		return getter == null;
 	}
@@ -140,18 +134,15 @@ public class Property implements HasAnnotations {
 
 	@Override
 	public String toString() {
-		return Ax.format("%s.%s : %s", owningType.getSimpleName(), name,
-				type.getSimpleName());
+		return Ax.format("%s.%s : %s", owningType.getSimpleName(), name, type.getSimpleName());
 	}
 
 	protected Method resolveGetter(Object bean) {
-		return bean.getClass() == owningType ? getter
-				: Reflections.at(bean).property(name).getter;
+		return bean.getClass() == owningType ? getter : Reflections.at(bean).property(name).getter;
 	}
 
 	protected Method resolveSetter(Object bean) {
-		return bean.getClass() == owningType ? setter
-				: Reflections.at(bean).property(name).setter;
+		return bean.getClass() == owningType ? setter : Reflections.at(bean).property(name).setter;
 	}
 
 	public static class NameComparator implements Comparator<Property> {
