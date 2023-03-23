@@ -57,7 +57,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	public static String transform(InputStream trans, Document wrappingDoc,
 			String marker, boolean formatRequiresXml) throws Exception {
-		String tSrc = Io.read().inputStream(trans).asString();
+		String tSrc = Io.read().fromStream(trans).asString();
 		if (formatRequiresXml) {
 			tSrc = tSrc.replace(XSL_OUTPUT_METHOD_HTML, XSL_OUTPUT_METHOD_XML);
 		} else {

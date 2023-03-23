@@ -32,7 +32,7 @@ public class JarHelper {
 				inZip = new ZipFile(jarPath);
 				ZipEntry entry = inZip
 						.getEntry(entryPath.replaceFirst("^/?(.+)", "$1"));
-				return Io.read().inputStream(inZip.getInputStream(entry))
+				return Io.read().fromStream(inZip.getInputStream(entry))
 						.asBytes();
 			} finally {
 				inZip.close();

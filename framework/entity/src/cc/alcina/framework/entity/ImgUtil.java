@@ -234,7 +234,7 @@ public class ImgUtil {
 
 	public static OutputStream scaleImage(InputStream in, int width, int height,
 			OutputStream out) throws IOException {
-		byte[] b = Io.read().inputStream(in).asBytes();
+		byte[] b = Io.read().fromStream(in).asBytes();
 		ImageIcon icon = new ImageIcon(b);
 		Image image = icon.getImage();
 		int thumbWidth = width;

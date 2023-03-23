@@ -414,7 +414,7 @@ public class Configuration {
 					// class.getResourceAsStream
 					String trimmedPath = path.substring(1);
 					contents = Io.read()
-							.inputStream(provideClassLoader()
+							.fromStream(provideClassLoader()
 									.getResourceAsStream(trimmedPath))
 							.asString();
 					break;

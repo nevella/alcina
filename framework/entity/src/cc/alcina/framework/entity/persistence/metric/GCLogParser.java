@@ -37,7 +37,7 @@ public class GCLogParser {
 				from = 0;
 			}
 			fis.skip(from);
-			byte[] bytes = Io.read().inputStream(new BufferedInputStream(fis))
+			byte[] bytes = Io.read().fromStream(new BufferedInputStream(fis))
 					.asBytes();
 			events.end = from + bytes.length;
 			logContents = new String(bytes, StandardCharsets.UTF_8);

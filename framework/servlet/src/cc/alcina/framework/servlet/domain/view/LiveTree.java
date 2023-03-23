@@ -1295,7 +1295,7 @@ public class LiveTree {
 				try {
 					InputStream inputStream = new GZIPInputStream(
 							new ByteArrayInputStream(data));
-					String serializedEvents = Io.read().inputStream(inputStream)
+					String serializedEvents = Io.read().fromStream(inputStream)
 							.asString();
 					DomainTransformRequestPersistent request = PersistentImpl
 							.getImplementation(

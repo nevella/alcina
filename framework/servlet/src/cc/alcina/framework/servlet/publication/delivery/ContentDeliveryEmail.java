@@ -86,7 +86,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 	public String deliver(final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc,
 			boolean requestorPass) throws Exception {
-		byte[] msgBytes = Io.read().inputStream(convertedContent).asBytes();
+		byte[] msgBytes = Io.read().fromStream(convertedContent).asBytes();
 		String result = send(new ByteArrayInputStream(msgBytes), deliveryModel,
 				hfc, requestorPass, deliveryModel.getEmailAddress());
 		if (LooseContext.has(CONTEXT_ALSO_SEND_TO_ADDRESS)) {
@@ -102,7 +102,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc)
 			throws Exception {
-		byte[] msgBytes = Io.read().inputStream(convertedContent).asBytes();
+		byte[] msgBytes = Io.read().fromStream(convertedContent).asBytes();
 		String result = deliver(new ByteArrayInputStream(msgBytes),
 				deliveryModel, hfc, false);
 		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
@@ -256,7 +256,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				pdfAttachment = new MailAttachment();
 				pdfAttachment.uid = uuid;
 				pdfAttachment.contentType = "application/pdf";
-				pdfAttachment.requestBytes = Io.read().inputStream(stream)
+				pdfAttachment.requestBytes = Io.read().fromStream(stream)
 						.asBytes();
 				pdfAttachment.dataSourceMimeType = "application/pdf";
 				pdfAttachment.suggestedFileName = deliveryModel
@@ -264,7 +264,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 								PROP_ATTACH_EMAIL_BODY_AS_PDF_FILENAME);
 				deliveryModel.addAttachment(pdfAttachment);
 			}
-			String message = Io.read().inputStream(convertedContent).asString();
+			String message = Io.read().fromStream(convertedContent).asString();
 			message = message.replace(PUBLICATION_REASON_MESSAGE,
 					requestorPass
 							? deliveryModel.getAttachmentMessageForRequestor()

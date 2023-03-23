@@ -56,7 +56,7 @@ public class XhrTcpSession {
 				throw new UnsupportedOperationException();
 			}
 		}
-		String payload = Io.read().inputStream(request.getInputStream())
+		String payload = Io.read().fromStream(request.getInputStream())
 				.asString();
 		byte[] bytes = Base64.getDecoder().decode(payload);
 		socket.getOutputStream().write(bytes);

@@ -667,7 +667,7 @@ public class XmlUtils {
 
 	public static Source interpolateStreamSource(InputStream trans) {
 		try {
-			String xsl = Io.read().inputStream(trans).asString();
+			String xsl = Io.read().fromStream(trans).asString();
 			Pattern p = Pattern.compile("<\\?import \"res:/(.+?)\"\\?>");
 			Matcher m = p.matcher(xsl);
 			StringBuffer out = new StringBuffer();
