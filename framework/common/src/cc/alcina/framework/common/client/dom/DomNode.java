@@ -527,6 +527,10 @@ public class DomNode {
 		return false;
 	}
 
+	public DomNodeText text() {
+		return new DomNodeText();
+	}
+
 	public boolean textContains(String string) {
 		return textContent().toLowerCase().contains(string.toLowerCase());
 	}
@@ -1235,6 +1239,40 @@ public class DomNode {
 				}
 			}
 			return builder.toString();
+		}
+	}
+
+	public class DomNodeText {
+		public SplitResult split(int from, int to) {
+			SplitResult result = new SplitResult();
+			Preconditions.checkState(isText());
+			DomNode cursor = DomNode.this;
+			result.contents = cursor;
+			if (from > 0) {
+				result.before = cursor;
+				result.contents = cursor.builder()
+						.text(cursor.textContent().substring(from))
+						.insertAfterThis();
+				cursor.setText(cursor.textContent().substring(0, from));
+				cursor = result.contents;
+				to -= from;
+				from = 0;
+			}
+			if (to < cursor.textContent().length()) {
+				result.after = cursor.builder()
+						.text(cursor.textContent().substring(to))
+						.insertAfterThis();
+				cursor.setText(cursor.textContent().substring(0, to));
+			}
+			return result;
+		}
+
+		public class SplitResult {
+			public DomNode before;
+
+			public DomNode contents;
+
+			public DomNode after;
 		}
 	}
 

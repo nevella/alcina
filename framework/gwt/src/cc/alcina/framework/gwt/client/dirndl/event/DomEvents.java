@@ -4,7 +4,10 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent;
 import com.google.gwt.dom.client.TextAreaElement;
+import com.google.gwt.event.dom.client.BeforeInputEvent;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -23,6 +26,43 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 
 public class DomEvents {
+	public static class BeforeInput extends NodeEvent<BeforeInput.Handler> {
+		private NativeBeforeInputEvent nativeBeforeInputEvent;
+
+		@Override
+		public void dispatch(BeforeInput.Handler handler) {
+			if (nativeBeforeInputEvent == null) {
+				NativeEvent nativeEvent = ((BeforeInputEvent) getContext()
+						.getGwtEvent()).getNativeEvent();
+				this.nativeBeforeInputEvent = nativeEvent
+						.getNativeBeforeInputEvent();
+			}
+			handler.onBeforeInput(this);
+		}
+
+		@Override
+		public Class<BeforeInput.Handler> getHandlerClass() {
+			return BeforeInput.Handler.class;
+		}
+
+		public NativeBeforeInputEvent getNativeBeforeInputEvent() {
+			return this.nativeBeforeInputEvent;
+		}
+
+		@Registration({ DomBinding.class, BeforeInput.class })
+		public static class BindingImpl extends DomBinding {
+			@Override
+			protected HandlerRegistration bind1(Widget widget) {
+				return widget.addDomHandler(this::fireEvent,
+						BeforeInputEvent.getType());
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBeforeInput(BeforeInput event);
+		}
+	}
+
 	public static class Blur extends NodeEvent<Blur.Handler> {
 		@Override
 		public void dispatch(Blur.Handler handler) {

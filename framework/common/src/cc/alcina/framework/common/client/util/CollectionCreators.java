@@ -30,6 +30,8 @@ public class CollectionCreators {
 
 		private static HashMapCreator hashMapCreator = new HashMapCreator();
 
+		private static LinkedMapCreator linkedMapCreator = new LinkedMapCreator();
+
 		private static ConcurrentMapCreator concurrentStringMapCreator = new ConcurrentMapCreator();
 
 		public static <T> Map<Class, T> createConcurrentClassMap() {
@@ -44,6 +46,10 @@ public class CollectionCreators {
 			return hashMapCreator;
 		}
 
+		public static LinkedMapCreator getLinkedMapCreator() {
+			return linkedMapCreator;
+		}
+
 		public static void setConcurrentClassMapCreator(
 				ConcurrentMapCreator concurrentClassMapCreator) {
 			CollectionCreators.Bootstrap.concurrentClassMapCreator = concurrentClassMapCreator;
@@ -56,6 +62,11 @@ public class CollectionCreators {
 
 		public static void setHashMapCreator(HashMapCreator hashMapCreator) {
 			Bootstrap.hashMapCreator = hashMapCreator;
+		}
+
+		public static void
+				setLinkedMapCreator(LinkedMapCreator linkedMapCreator) {
+			Bootstrap.linkedMapCreator = linkedMapCreator;
 		}
 	}
 

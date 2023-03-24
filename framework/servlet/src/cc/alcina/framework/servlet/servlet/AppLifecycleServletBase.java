@@ -84,6 +84,7 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashMapCreatorJvm;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.LinkedHashMapCreatorJvm;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -134,6 +135,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		CollectionCreators.Bootstrap
 				.setConcurrentStringMapCreator(new ConcurrentMapCreatorJvm());
 		CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
+		CollectionCreators.Bootstrap
+				.setLinkedMapCreator(new LinkedHashMapCreatorJvm());
 	}
 
 	protected ServletConfig initServletConfig;

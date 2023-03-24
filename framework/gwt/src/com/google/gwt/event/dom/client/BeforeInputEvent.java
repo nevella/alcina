@@ -18,22 +18,22 @@ package com.google.gwt.event.dom.client;
 import com.google.gwt.dom.client.BrowserEvents;
 
 /**
- * Represents a native input event.
+ * Represents a native beforeinput event.
  */
-public class InputEvent extends DomEvent<InputHandler> {
+public class BeforeInputEvent extends DomEvent<BeforeInputHandler> {
 	/**
-	 * Event type for input events. Represents the meta-data associated with
-	 * this event.
+	 * Event type for beforeinput events. Represents the meta-data associated
+	 * with this event.
 	 */
-	private static final Type<InputHandler> TYPE = new Type<InputHandler>(
-			BrowserEvents.INPUT, new InputEvent());
+	private static final Type<BeforeInputHandler> TYPE = new Type<BeforeInputHandler>(
+			BrowserEvents.BEFOREINPUT, new BeforeInputEvent());
 
 	/**
 	 * Gets the event type associated with change events.
 	 *
 	 * @return the handler type
 	 */
-	public static Type<InputHandler> getType() {
+	public static Type<BeforeInputHandler> getType() {
 		return TYPE;
 	}
 
@@ -42,16 +42,16 @@ public class InputEvent extends DomEvent<InputHandler> {
 	 * {@link DomEvent#fireNativeEvent(com.google.gwt.dom.client.NativeEvent, com.google.gwt.event.shared.HasHandlers)}
 	 * to fire change events.
 	 */
-	protected InputEvent() {
+	protected BeforeInputEvent() {
 	}
 
 	@Override
-	public final Type<InputHandler> getAssociatedType() {
+	public final Type<BeforeInputHandler> getAssociatedType() {
 		return TYPE;
 	}
 
 	@Override
-	protected void dispatch(InputHandler handler) {
-		handler.onInput(this);
+	protected void dispatch(BeforeInputHandler handler) {
+		handler.onBeforeInput(this);
 	}
 }

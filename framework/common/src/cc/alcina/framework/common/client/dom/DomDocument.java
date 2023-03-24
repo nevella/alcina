@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.dom;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,15 +20,15 @@ import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
-import cc.alcina.framework.common.client.util.CollectionCreators.LinkedMapCreator;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.Topic;
 
 public class DomDocument extends DomNode {
-	private static transient PerDocumentSupplier perDocumentSupplier = Registry
-			.impl(PerDocumentSupplier.class);
+	private static transient PerDocumentSupplier perDocumentSupplier;
 
 	public static DomDocument basicHtmlDoc() {
 		return new DomDocument("<html><head></head><body></body></html>");
@@ -46,6 +47,10 @@ public class DomDocument extends DomNode {
 	}
 
 	public static DomDocument documentFor(Document document) {
+		synchronized (DomDocument.class) {
+			if (perDocumentSupplier == null)
+				perDocumentSupplier = Registry.impl(PerDocumentSupplier.class);
+		}
 		return perDocumentSupplier.get(document);
 	}
 
@@ -231,6 +236,14 @@ public class DomDocument extends DomNode {
 	void register(DomNode xmlNode) {
 	}
 
+	public interface MutableDocument {
+		Topic<Void> topicMutationOccurred();
+	}
+
+	public interface MutableDocumentDecorator {
+		MutableDocument asMutableDocument(DomDocument document);
+	}
+
 	@Reflected
 	@Registration.Singleton
 	public static class PerDocumentSupplier {
@@ -289,24 +302,40 @@ public class DomDocument extends DomNode {
 		}
 	}
 
+	/*
+	 * Mutation support notes:
+	 *
+	 * Location must reference mutation generation and initially throw if
+	 * referencing an older generation
+	 *
+	 *
+	 */
 	class Locations implements LocationContext {
-		Map<DomNode, Location> byNode;
+		private Map<DomNode, Location> byNode;
 
-		Map<DomNode, Integer> contentLengths;
+		private Map<Integer, DomNode> byTreeIndex;
 
-		Location[] locations;
+		private Map<DomNode, Integer> contentLengths;
 
-		String contents;
+		private Location[] locations;
+
+		private String contents;
 
 		Locations() {
-			Preconditions.checkState(readonly);
+			// Preconditions.checkState(readonly);
+			// FIXME - 1 - add document mutation support
+			//
 			generateLookups();
+			if (!readonly) {
+				attachMutationListener();
+			}
 		}
 
 		@Override
-		public Location createRelativeLocation(Location location, int offset) {
+		public Location createRelativeLocation(Location location, int offset,
+				boolean after) {
 			int index = location.index + offset;
-			Location test = new Location(0, index, location.after);
+			Location test = new Location(-1, index, after);
 			Location containingLocation = getContainingLocation(test);
 			return new Location(containingLocation.treeIndex, index,
 					location.after, containingLocation.containingNode, this);
@@ -319,19 +348,40 @@ public class DomDocument extends DomNode {
 
 		@Override
 		public String textContent(Location.Range range) {
+			ensureLookups();
 			return contents.substring(range.start.index, range.end.index);
 		}
 
+		private void attachMutationListener() {
+			MutableDocument mutableDocument = Registry
+					.impl(MutableDocumentDecorator.class)
+					.asMutableDocument(document);
+			mutableDocument.topicMutationOccurred()
+					.add(() -> invalidateLookups());
+		}
+
+		private void ensureLookups() {
+			if (byNode == null) {
+				generateLookups();
+			}
+		}
+
 		private void generateLookups() {
-			byNode = LinkedMapCreator.get().create();
-			contentLengths = LinkedMapCreator.get().create();
+			byNode = AlcinaCollections.newLinkedHashMap();
+			byTreeIndex = AlcinaCollections.newLinkedHashMap();
+			contentLengths = AlcinaCollections.newLinkedHashMap();
 			StringBuilder content = new StringBuilder();
 			List<DomNode> openNodes = new ArrayList<>();
-			getDocumentElementNode().stream().forEach(node -> {
-				int depth = node.depth() - 1;
-				Location location = new Location(depth, content.length(), false,
-						node, this);
+			DomNode root = getDocumentElementNode();
+			// browser dom root has no (Document) parent
+			int rootOffset = root.parent() == null ? 0 : -1;
+			root.stream().forEach(node -> {
+				int depth = node.depth() - rootOffset;
+				int treeIndex = byNode.size();
+				Location location = new Location(treeIndex, content.length(),
+						false, node, this);
 				byNode.put(node, location);
+				byTreeIndex.put(treeIndex, node);
 				contentLengths.put(node, 0);
 				if (depth == openNodes.size()) {
 					openNodes.add(node);
@@ -353,30 +403,89 @@ public class DomDocument extends DomNode {
 					.toArray(new Location[byNode.size()]);
 		}
 
+		private void invalidateLookups() {
+			byNode = null;
+		}
+
 		Location asLocation(DomNode domNode) {
+			ensureLookups();
 			return byNode.get(domNode);
 		}
 
 		Location.Range asRange(DomNode domNode) {
-			Location start = byNode.get(domNode);
+			Location start = asLocation(domNode);
 			Location end = createRelativeLocation(start,
-					contentLengths.get(domNode));
+					contentLengths.get(domNode), true);
 			end.after = true;
 			return new Location.Range(start, end);
 		}
 
 		Location getContainingLocation(Location test) {
-			// binary search location array
-			int index = Arrays.binarySearch(locations, test);
+			ensureLookups();
+			if (test.treeIndex != -1) {
+				DomNode node = byTreeIndex.get(test.treeIndex);
+				return byNode.get(node);
+			}
+			int index = -1;
+			// searches for the lowest text node containing location
+			index = Arrays.binarySearch(locations, test,
+					new IndexOnlyComparator());
+			if (index < 0) {
+				throw new UnsupportedOperationException();
+			}
+			int cursor = index;
+			if (test.after) {
+				// there's no non-empty text node ending at index 0
+				Preconditions.checkArgument(test.index != 0);
+				while (cursor >= 0) {
+					Location found = locations[cursor];
+					// will loop until found.index < test.index (which will
+					// be the text node that ends at test.index)
+					if (found.index < test.index) {
+						index = cursor;
+						break;
+					} else {
+						cursor--;
+					}
+				}
+			} else {
+				// there's no non-empty text node starting at index
+				// [contents.length]
+				Preconditions.checkArgument(test.index != contents.length());
+				while (cursor < locations.length) {
+					Location found = locations[cursor];
+					// will loop until found.index > test.index (which will
+					// be the node immediately following the containing text
+					// node)
+					if (found.index > test.index) {
+						index = cursor - 1;
+						break;
+					} else {
+						cursor++;
+					}
+				}
+				// edge case, last text node
+				if (index == -1) {
+					index = locations.length - 1;
+				}
+			}
 			return locations[index];
 		}
 
 		Location.Range getDocumentRange() {
+			ensureLookups();
 			DomNode documentElementNode = getDocumentElementNode();
 			Location start = byNode.get(documentElementNode);
 			Location end = new Location(0, contents.length(), true,
 					documentElementNode, this);
 			return new Location.Range(start, end);
+		}
+
+		class IndexOnlyComparator implements Comparator<Location> {
+			@Override
+			public int compare(Location l1, Location l2) {
+				return compareIndexOnly(l1, l2);
+			}
 		}
 	}
 }
