@@ -76,10 +76,11 @@ public class CollectionCreatorsJvm {
 		}
 	}
 
+	@Reflected
 	@Registration.Singleton(
-		value = LinkedMapCreator.class,
+		value = CollectionCreators.LinkedMapCreator.class,
 		priority = Registration.Priority.PREFERRED_LIBRARY)
-	public static class LinkedMapCreatorJvm extends LinkedMapCreator {
+	public static class LinkedHashMapCreatorJvm extends LinkedMapCreator {
 		@Override
 		public <K, V> Map<K, V> create() {
 			return new Object2ObjectLinkedOpenHashMap<>();

@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.dom;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -67,8 +69,12 @@ public class Location implements Comparable<Location> {
 		return containingNode;
 	}
 
-	public Location createRelativeLocation(int offset) {
-		return locationContext.createRelativeLocation(this, offset);
+	public Content content() {
+		return new Content();
+	}
+
+	public Location createRelativeLocation(int offset, boolean after) {
+		return locationContext.createRelativeLocation(this, offset, after);
 	}
 
 	public void detach() {
@@ -106,7 +112,33 @@ public class Location implements Comparable<Location> {
 
 	@Override
 	public String toString() {
-		return Ax.format("[%s/%s:%s]", treeIndex, index, after ? ">" : "<");
+		return Ax.format("[node:%s - txt:%s - %s]", treeIndex, index,
+				after ? ">" : "<");
+	}
+
+	// Feature group class for content access
+	public class Content {
+		/**
+		 * returns a relative substring of the containing Text node's text, or
+		 * null if the relative offsets are out of bounds (of the text node)
+		 */
+		public String relativeString(int startOffset, int endOffset) {
+			DomNode node = Location.this.containingNode();
+			Preconditions.checkState(node.isText());
+			String textContent = node.textContent();
+			int end = textContent.length();
+			Location base = node.asLocation();
+			int relativeOffset = index - base.index;
+			// check bounds
+			if (startOffset + relativeOffset < 0) {
+				return null;
+			}
+			if (endOffset + relativeOffset > end) {
+				return null;
+			}
+			return textContent.substring(startOffset + relativeOffset,
+					endOffset + relativeOffset);
+		}
 	}
 
 	public static class Range {

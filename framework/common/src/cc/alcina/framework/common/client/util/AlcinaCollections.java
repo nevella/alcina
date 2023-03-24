@@ -26,7 +26,7 @@ public class AlcinaCollections {
 	}
 
 	public static <K, V> Map<K, V> newLinkedHashMap() {
-		return CollectionCreators.Bootstrap.getHashMapCreator().create();
+		return CollectionCreators.Bootstrap.getLinkedMapCreator().create();
 	}
 
 	public static <T> Set<T> newUniqueSet() {

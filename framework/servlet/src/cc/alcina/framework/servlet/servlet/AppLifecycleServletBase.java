@@ -84,6 +84,7 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashMapCreatorJvm;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.LinkedHashMapCreatorJvm;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -134,6 +135,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		CollectionCreators.Bootstrap
 				.setConcurrentStringMapCreator(new ConcurrentMapCreatorJvm());
 		CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
+		CollectionCreators.Bootstrap
+				.setLinkedMapCreator(new LinkedHashMapCreatorJvm());
 	}
 
 	protected ServletConfig initServletConfig;
@@ -567,13 +570,17 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			Matcher matcher = pattern.matcher(k);
 			if (matcher.matches()) {
 				String key = matcher.group(1);
-				try {
-					Class<Task> taskClass = Reflections.forName(key);
-					Reflections.at(taskClass).newInstance().schedule();
-					Ax.out("Launched post-init task: %s", key);
-					return;
-				} catch (Exception e) {
-					// ignore
+				if (key.contains("Task")) {
+					try {
+						Class<Task> taskClass = Reflections.forName(key);
+						Ax.out("Launching post-init task: %s", key);
+						Reflections.at(taskClass).newInstance().schedule();
+						Ax.out("Launched post-init task: %s", key);
+						return;
+					} catch (Exception e) {
+						e.printStackTrace();
+						// ignore
+					}
 				}
 				// non-task
 				String value = properties.get(key);

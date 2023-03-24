@@ -75,8 +75,9 @@ public class Slice extends Location.Range {
 	}
 
 	public Slice subSlice(int start, int end, LayerToken token) {
-		Location subStart = this.start.createRelativeLocation(start);
-		Location subEnd = this.end.createRelativeLocation(-(length() - end));
+		Location subStart = this.start.createRelativeLocation(start, false);
+		Location subEnd = this.end.createRelativeLocation(-(length() - end),
+				true);
 		Slice subSlice = new Slice(subStart, subEnd, token);
 		subSlice.parent = this;
 		return subSlice;

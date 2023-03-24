@@ -13,6 +13,7 @@ import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Topic;
 
 public class LocalDomMutations {
 	MutationsAccess mutationsAccess;
@@ -33,15 +34,13 @@ public class LocalDomMutations {
 
 	boolean hadExceptions = false;
 
+	Topic<Void> topicMutationOccurred = Topic.create();
+
 	public LocalDomMutations(LocalDom.MutationsAccess mutationsAccess,
 			LoggingConfiguration configuration) {
 		this.mutationsAccess = mutationsAccess;
 		this.loggingConfiguration = configuration;
 		history = new MutationHistory(this);
-	}
-
-	public void verifyDomEquivalence() {
-		history.verifyDomEquivalence();
 	}
 
 	public boolean hadExceptions() {
@@ -105,6 +104,10 @@ public class LocalDomMutations {
 		} catch (RuntimeException e) {
 			LocalDom.onRelatedException(e);
 		}
+	}
+
+	public void verifyDomEquivalence() {
+		history.verifyDomEquivalence();
 	}
 
 	private native void checkReceivedRecords() /*-{
@@ -207,6 +210,7 @@ public class LocalDomMutations {
 			e.printStackTrace();
 			throw e;
 		}
+		topicMutationOccurred.signal();
 	}
 
 	public static class LoggingConfiguration {

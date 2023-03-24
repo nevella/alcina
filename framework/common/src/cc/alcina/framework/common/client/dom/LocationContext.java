@@ -58,7 +58,11 @@ public interface LocationContext {
 		}
 	}
 
-	Location createRelativeLocation(Location location, int offset);
+	default int compareIndexOnly(Location l1, Location l2) {
+		return l1.index - l2.index;
+	}
+
+	Location createRelativeLocation(Location location, int offset, boolean end);
 
 	DomNode getContainingNode(Location location);
 

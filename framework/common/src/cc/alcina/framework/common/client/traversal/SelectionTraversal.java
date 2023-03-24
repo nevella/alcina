@@ -69,7 +69,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *
  */
 /*
- * FIXME - st - reinstate filters for layer-based traversal
+ * FIXME - st - reinstate filters for layer-based traversal - also progress...?
  */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {

@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.xml;
+package cc.alcina.framework.gwt.client.xml;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -72,6 +72,16 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 
 	@Override
 	public String toXml(Node node) {
-		throw new UnsupportedOperationException();
+		com.google.gwt.dom.client.Node clientNode = (com.google.gwt.dom.client.Node) node;
+		short nodeType = clientNode.getNodeType();
+		switch (nodeType) {
+		case Node.TEXT_NODE:
+		case Node.COMMENT_NODE:
+			return clientNode.getNodeValue();
+		case Node.ELEMENT_NODE:
+			return ((com.google.gwt.dom.client.Element) node).getOuterHtml();
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 }
