@@ -194,7 +194,7 @@ public class Io {
 
 		public WriteOp.Resource write() {
 			try {
-				return Io.write().inputStream(resource.getStream());
+				return Io.write().fromStream(resource.getStream());
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
@@ -268,7 +268,7 @@ public class Io {
 				return ReadOp.this;
 			}
 
-			public ReadOp inputStream(InputStream stream) {
+			public ReadOp fromStream(InputStream stream) {
 				this.stream = stream;
 				return ReadOp.this;
 			}
@@ -418,7 +418,7 @@ public class Io {
 						byte[] existingBytes = Io.read().file(resource.file)
 								.asBytes();
 						byte[] outputBytes = Io.read()
-								.inputStream(contents.getStream()).asBytes();
+								.fromStream(contents.getStream()).asBytes();
 						if (Arrays.equals(existingBytes, outputBytes)) {
 							return;
 						}
@@ -445,7 +445,7 @@ public class Io {
 				return WriteOp.this.resource;
 			}
 
-			public Resource inputStream(InputStream inputStream) {
+			public Resource fromStream(InputStream inputStream) {
 				this.inputStream = inputStream;
 				return WriteOp.this.resource;
 			}

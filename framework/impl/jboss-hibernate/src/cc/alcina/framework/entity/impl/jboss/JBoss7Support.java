@@ -134,7 +134,7 @@ public class JBoss7Support {
 							clazz.getName().replace(".", "/"));
 					VirtualFile child = root.getChild(childPath);
 					if (child.exists()) {
-						return Io.read().inputStream(child.openStream())
+						return Io.read().fromStream(child.openStream())
 								.asString();
 					}
 				}

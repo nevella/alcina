@@ -92,7 +92,7 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 
 	public void evalMd5(InputStream stream) {
 		try {
-			byte[] bytes = Io.read().inputStream(stream).asBytes();
+			byte[] bytes = Io.read().fromStream(stream).asBytes();
 			md5 = EncryptionUtils.MD5(bytes);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

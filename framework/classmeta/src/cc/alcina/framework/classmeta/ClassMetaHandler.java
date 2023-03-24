@@ -25,7 +25,7 @@ public class ClassMetaHandler extends AbstractHandler {
 		try {
 			MetricLogging.get().start("class-meta");
 			ServletInputStream inputStream = request.getInputStream();
-			String json = Io.read().inputStream(inputStream).asString();
+			String json = Io.read().fromStream(inputStream).asString();
 			ClassMetaRequest typedRequest = JacksonUtils.deserialize(json,
 					ClassMetaRequest.class);
 			ClassMetaResponse typedResponse = new ClassMetaResponse();

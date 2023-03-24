@@ -269,7 +269,7 @@ public class ReflectionReachabilityLinker extends Linker {
 				BufferedInputStream stream = new BufferedInputStream(
 						new GZIPInputStream(splitPointsArtifact
 								.getContents(TreeLogger.NULL)));
-				String xml = Io.read().inputStream(stream).asString();
+				String xml = Io.read().fromStream(stream).asString();
 				Pattern p = Pattern.compile(
 						"<splitpoint id=\"(\\d+)\" " + "location=\"(.+?)\"/>");
 				Matcher m = p.matcher(xml);

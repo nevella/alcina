@@ -156,7 +156,7 @@ public class Gallery {
 		if (this.configurationUrl != null) {
 			try {
 				String configurationXml = Io.read()
-						.inputStream(this.configurationUrl.openStream())
+						.fromStream(this.configurationUrl.openStream())
 						.asString();
 				this.galleryConfiguration = JaxbUtils.xmlDeserialize(
 						GalleryConfiguration.class, configurationXml);

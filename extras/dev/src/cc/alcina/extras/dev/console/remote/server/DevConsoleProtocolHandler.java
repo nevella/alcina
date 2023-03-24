@@ -47,7 +47,7 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 		try {
 			LooseContext.push();
 			response.setContentType("application/json");
-			String requestJson = Io.read().inputStream(request.getInputStream())
+			String requestJson = Io.read().fromStream(request.getInputStream())
 					.asString();
 			if (requestJson.length() > 0) {
 				RemoteConsoleRequest consoleRequest = AlcinaBeanSerializer

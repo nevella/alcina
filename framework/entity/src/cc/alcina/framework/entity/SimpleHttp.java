@@ -134,7 +134,7 @@ public class SimpleHttp {
 			if (responseCode >= 400) {
 				InputStream err = connection.getErrorStream();
 				if (err != null) {
-					respBytes = Io.read().inputStream(err).asBytes();
+					respBytes = Io.read().fromStream(err).asBytes();
 				}
 				// If throwOnResponseCode and we get a 4xx or 5xx code
 				// throw a IOException
@@ -171,7 +171,7 @@ public class SimpleHttp {
 			} else {
 				in = connection.getInputStream();
 				// If code is good, read the stream normally
-				respBytes = Io.read().inputStream(in).asBytes();
+				respBytes = Io.read().fromStream(in).asBytes();
 			}
 			// If decodeGz and bytes are non-null, decode the gzipped data
 			if (decodeGz && respBytes != null) {

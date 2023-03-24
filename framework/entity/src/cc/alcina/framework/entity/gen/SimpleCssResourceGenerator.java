@@ -184,7 +184,7 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 				}
 			}
 			InputStream contents = resource.openContents();
-			byte[] bytes = Io.read().inputStream(contents).asBytes();
+			byte[] bytes = Io.read().fromStream(contents).asBytes();
 			String out = Base64.encodeBytes(bytes);
 			String fileName = url.replaceFirst(".+/", "");
 			String extension = fileName.replaceFirst(".+\\.", "").toLowerCase();

@@ -31,7 +31,7 @@ public class ContentDeliveryMultiple implements ContentDelivery {
 	@Override
 	public String deliver(PublicationContext ctx, InputStream convertedContent,
 			DeliveryModel deliveryModel, FormatConverter fc) throws Exception {
-		byte[] bytes = Io.read().inputStream(convertedContent).asBytes();
+		byte[] bytes = Io.read().fromStream(convertedContent).asBytes();
 		String token = null;
 		for (DeliveryModel.MultipleDeliveryEntry entry : deliveryModel
 				.getMultipleDeliveryEntries()) {
