@@ -118,6 +118,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public static final String CONTEXT_LOADING_FOR_TRANSFORM = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_LOADING_FOR_TRANSFORM";
 
+	public static final String CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS";
+
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
@@ -747,21 +750,27 @@ public class ThreadlocalTransformManager extends TransformManager {
 	private void listenTo(Entity entity) {
 		if (!listeningTo.containsKey(entity)) {
 			Transaction current = Transaction.current();
-			Preconditions.checkState(!current.isReadOnly());
-			TransactionId transactionId = current.getId();
-			if (listeningToTransactionId == null) {
-				listeningToTransactionId = transactionId;
+			if (current.isReadOnly() && LooseContext
+					.is(CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS)) {
+				// edge-case for lazy-external-dev-load
 			} else {
-				if (!Objects.equals(listeningToTransactionId, transactionId)) {
-					logger.warn(
-							"DEVEX:0 - Listening to object from wrong tx: {} - current : {} - incoming : {}",
-							entity.toStringEntity(), listeningToTransactionId,
-							current);
-					throw new IllegalStateException();
+				Preconditions.checkState(!current.isReadOnly());
+				TransactionId transactionId = current.getId();
+				if (listeningToTransactionId == null) {
+					listeningToTransactionId = transactionId;
+				} else {
+					if (!Objects.equals(listeningToTransactionId,
+							transactionId)) {
+						logger.warn(
+								"DEVEX:0 - Listening to object from wrong tx: {} - current : {} - incoming : {}",
+								entity.toStringEntity(),
+								listeningToTransactionId, current);
+						throw new IllegalStateException();
+					}
 				}
+				listeningTo.put(entity, entity);
+				entity.addPropertyChangeListener(this);
 			}
-			listeningTo.put(entity, entity);
-			entity.addPropertyChangeListener(this);
 		}
 	}
 

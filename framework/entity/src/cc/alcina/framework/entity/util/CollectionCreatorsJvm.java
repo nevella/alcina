@@ -78,7 +78,7 @@ public class CollectionCreatorsJvm {
 
 	@Reflected
 	@Registration.Singleton(
-		value = CollectionCreators.HashMapCreator.class,
+		value = CollectionCreators.LinkedMapCreator.class,
 		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class LinkedHashMapCreatorJvm extends LinkedMapCreator {
 		@Override

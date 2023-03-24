@@ -570,13 +570,17 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			Matcher matcher = pattern.matcher(k);
 			if (matcher.matches()) {
 				String key = matcher.group(1);
-				try {
-					Class<Task> taskClass = Reflections.forName(key);
-					Reflections.at(taskClass).newInstance().schedule();
-					Ax.out("Launched post-init task: %s", key);
-					return;
-				} catch (Exception e) {
-					// ignore
+				if (key.contains("Task")) {
+					try {
+						Class<Task> taskClass = Reflections.forName(key);
+						Ax.out("Launching post-init task: %s", key);
+						Reflections.at(taskClass).newInstance().schedule();
+						Ax.out("Launched post-init task: %s", key);
+						return;
+					} catch (Exception e) {
+						e.printStackTrace();
+						// ignore
+					}
 				}
 				// non-task
 				String value = properties.get(key);
