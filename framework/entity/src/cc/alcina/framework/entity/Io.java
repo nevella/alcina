@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.xerces.parsers.DOMParser;
 import org.cyberneko.html.HTMLConfiguration;
@@ -86,15 +87,12 @@ public class Io {
 		public byte[] asBytes() {
 			try {
 				InputStream stream = resource.getStream();
-				int bufLength = stream.available() <= 1024 ? 1024 * 64
-						: stream.available();
-				ByteArrayOutputStream baos = new Streams.DisposableByteArrayOutputStream(
-						bufLength);
+				int bufLength = stream.available() <= 1024 ? 1024 * 64 : stream.available();
+				ByteArrayOutputStream baos = new Streams.DisposableByteArrayOutputStream(bufLength);
 				Io.Streams.copy(stream, baos);
 				byte[] bytes = baos.toByteArray();
 				if (base64) {
-					bytes = Base64.getDecoder()
-							.decode(new String(bytes, StandardCharsets.UTF_8));
+					bytes = Base64.getDecoder().decode(new String(bytes, StandardCharsets.UTF_8));
 				}
 				return bytes;
 			} catch (Exception e) {
@@ -138,8 +136,7 @@ public class Io {
 
 		public <T> T asObject() throws IOException {
 			byte[] bytes = asBytes();
-			try (ObjectInputStream in = new ObjectInputStream(
-					new ByteArrayInputStream(bytes))) {
+			try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
 				try {
 					return (T) in.readObject();
 				} catch (Exception e) {
@@ -203,16 +200,10 @@ public class Io {
 		private DOMParser createDOMParser() {
 			DOMParser parser = new DOMParser(new HTMLConfiguration());
 			try {
-				parser.setFeature(
-						"http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
-						true);
-				parser.setFeature(
-						"http://cyberneko.org/html/features/scanner/ignore-specified-charset",
-						true);
+				parser.setFeature("http://cyberneko.org/html/features/scanner/fix-mswindows-refs", true);
+				parser.setFeature("http://cyberneko.org/html/features/scanner/ignore-specified-charset", true);
 				if (!uppercaseTags) {
-					parser.setProperty(
-							"http://cyberneko.org/html/properties/names/elems",
-							"lower");
+					parser.setProperty("http://cyberneko.org/html/properties/names/elems", "lower");
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -225,11 +216,9 @@ public class Io {
 				InputStream stream = resource.getStream();
 				InputSource isrc = null;
 				if (charset == null) {
-					isrc = new InputSource(new InputStreamReader(stream,
-							StandardCharsets.UTF_8));
+					isrc = new InputSource(new InputStreamReader(stream, StandardCharsets.UTF_8));
 				} else {
-					isrc = new InputSource(
-							new InputStreamReader(stream, charset));
+					isrc = new InputSource(new InputStreamReader(stream, charset));
 				}
 				DOMParser parser = createDOMParser();
 				parser.parse(isrc);
@@ -286,9 +275,7 @@ public class Io {
 			public ReadOp resource(String classpathResource) {
 				this.classpathResource = classpathResource;
 				if (classpathRelative == null) {
-					classpathRelative = StackWalker
-							.getInstance(
-									StackWalker.Option.RETAIN_CLASS_REFERENCE)
+					classpathRelative = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 							.getCallerClass();
 				}
 				return ReadOp.this;
@@ -315,19 +302,15 @@ public class Io {
 				boolean decompress = ReadOp.this.decompress;
 				if (file != null) {
 					stream = new FileInputStream(file);
-					decompress |= decompressIfDotGz
-							&& file.getName().endsWith(".gz");
+					decompress |= decompressIfDotGz && file.getName().endsWith(".gz");
 				} else if (classpathRelative != null) {
-					stream = classpathRelative
-							.getResourceAsStream(classpathResource);
+					stream = classpathRelative.getResourceAsStream(classpathResource);
 					if (stream == null) {
-						stream = Thread.currentThread().getContextClassLoader()
-								.getResourceAsStream(classpathResource);
+						stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(classpathResource);
 					}
 				} else if (url != null) {
 					if (url.startsWith("http")) {
-						stream = new ByteArrayInputStream(
-								new SimpleHttp(url).asBytes());
+						stream = new ByteArrayInputStream(new SimpleHttp(url).asBytes());
 					} else {
 						stream = new URL(url).openStream();
 					}
@@ -344,17 +327,13 @@ public class Io {
 	}
 
 	public static class Streams {
-		public static void copy(InputStream is, OutputStream os)
-				throws IOException {
+		public static void copy(InputStream is, OutputStream os) throws IOException {
 			copy(is, os, false);
 		}
 
-		public static void copy(InputStream in, OutputStream os,
-				boolean keepOutputOpen) throws IOException {
-			OutputStream bos = os instanceof ByteArrayOutputStream ? os
-					: new BufferedOutputStream(os);
-			int bufLength = in.available() <= 1024 ? 1024 * 64
-					: Math.min(1024 * 1024, in.available());
+		public static void copy(InputStream in, OutputStream os, boolean keepOutputOpen) throws IOException {
+			OutputStream bos = os instanceof ByteArrayOutputStream ? os : new BufferedOutputStream(os);
+			int bufLength = in.available() <= 1024 ? 1024 * 64 : Math.min(1024 * 1024, in.available());
 			byte[] buffer = new byte[bufLength];
 			int result;
 			while ((result = in.read(buffer)) != -1) {
@@ -367,8 +346,7 @@ public class Io {
 			in.close();
 		}
 
-		public static InputStream
-				maybeWrapInBufferedStream(InputStream stream) {
+		public static InputStream maybeWrapInBufferedStream(InputStream stream) {
 			if (stream instanceof FileInputStream) {
 				return new BufferedInputStream(stream, 64 * 1024);
 			} else {
@@ -381,8 +359,7 @@ public class Io {
 		 * toByteArray (so toByteArray can only be used once, as the last
 		 * operation on the instance)
 		 */
-		static class DisposableByteArrayOutputStream
-				extends ByteArrayOutputStream {
+		static class DisposableByteArrayOutputStream extends ByteArrayOutputStream {
 			public DisposableByteArrayOutputStream(int size) {
 				super(size);
 			}
@@ -405,7 +382,9 @@ public class Io {
 
 		private Resource resource = new Resource();
 
-		public boolean noUpdate;
+		private boolean noUpdate;
+
+		private boolean compress;
 
 		public void toFile(File file) {
 		}
@@ -415,16 +394,13 @@ public class Io {
 				if (noUpdate) {
 					resource.ensureFile();
 					if (resource.file != null && resource.file.exists()) {
-						byte[] existingBytes = Io.read().file(resource.file)
-								.asBytes();
-						byte[] outputBytes = Io.read()
-								.fromStream(contents.getStream()).asBytes();
+						byte[] existingBytes = Io.read().file(resource.file).asBytes();
+						byte[] outputBytes = Io.read().fromStream(contents.getStream()).asBytes();
 						if (Arrays.equals(existingBytes, outputBytes)) {
 							return;
 						}
 						contents = new Contents();
-						contents.inputStream = new ByteArrayInputStream(
-								outputBytes);
+						contents.inputStream = new ByteArrayInputStream(outputBytes);
 					}
 				}
 				Io.Streams.copy(contents.getStream(), resource.getStream());
@@ -452,13 +428,11 @@ public class Io {
 
 			public Resource object(Object object) {
 				try {
-					ByteArrayOutputStream baos = new Streams.DisposableByteArrayOutputStream(
-							1024);
+					ByteArrayOutputStream baos = new Streams.DisposableByteArrayOutputStream(1024);
 					ObjectOutputStream oos = new ObjectOutputStream(baos);
 					oos.writeObject(object);
 					oos.close();
-					this.inputStream = new ByteArrayInputStream(
-							baos.toByteArray());
+					this.inputStream = new ByteArrayInputStream(baos.toByteArray());
 					return WriteOp.this.resource;
 				} catch (Exception e) {
 					throw WrappedRuntimeException.wrap(e);
@@ -472,8 +446,8 @@ public class Io {
 
 			private InputStream getStream() {
 				if (inputStream == null) {
-					inputStream = new ByteArrayInputStream(bytes != null ? bytes
-							: string.getBytes(StandardCharsets.UTF_8));
+					inputStream = new ByteArrayInputStream(
+							bytes != null ? bytes : string.getBytes(StandardCharsets.UTF_8));
 				}
 				return inputStream;
 			}
@@ -490,8 +464,7 @@ public class Io {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				this.stream = baos;
 				WriteOp.this.write();
-				String asB64 = Base64.getEncoder()
-						.encodeToString(baos.toByteArray());
+				String asB64 = Base64.getEncoder().encodeToString(baos.toByteArray());
 				return asB64;
 			}
 
@@ -510,6 +483,11 @@ public class Io {
 				WriteOp.this.write();
 			}
 
+			public Resource withCompress(boolean compress) {
+				WriteOp.this.compress = compress;
+				return this;
+			}
+
 			public Resource withNoUpdate(boolean noUpdate) {
 				WriteOp.this.noUpdate = noUpdate;
 				return this;
@@ -523,7 +501,13 @@ public class Io {
 
 			private OutputStream getStream() throws IOException {
 				ensureFile();
-				return stream != null ? stream : new FileOutputStream(file);
+				if (stream == null) {
+					stream = new BufferedOutputStream(new FileOutputStream(file));
+				}
+				if(compress){
+					stream=new GZIPOutputStream(stream);
+				}
+				return stream;
 			}
 		}
 	}
