@@ -9,6 +9,7 @@ import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.LayoutEventListener;
 
+// FIXME - 2023 - remove?
 public abstract class LayoutManagerBase
 		implements LayoutEventListener, ResizeHandler {
 	private boolean displayInitialised = false;
@@ -29,6 +30,7 @@ public abstract class LayoutManagerBase
 		return !displayInitialised;
 	}
 
+	@Override
 	public void onLayoutEvent(LayoutEvent event) {
 		if (isLayoutInitialising()) {
 			return;
@@ -37,6 +39,7 @@ public abstract class LayoutManagerBase
 				false);
 	}
 
+	@Override
 	public void onResize(ResizeEvent event) {
 		onWindowResized(Window.getClientWidth(), Window.getClientHeight(),
 				true);
