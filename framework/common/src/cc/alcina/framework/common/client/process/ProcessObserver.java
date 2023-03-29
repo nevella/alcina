@@ -18,13 +18,17 @@ public interface ProcessObserver<T extends ProcessObservable>
 	/**
 	 * A marker that models whole app process observation. Usage: as the parent
 	 * of non-VCS implementations which provide debugger hooks (for say
-	 * intercepting failed test runs/steps in long test processes)
+	 * intercepting failed test runs/steps in long test processes, or dirndl
+	 * debugging)
 	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
 	@Registration.Singleton
 	public abstract static class AppDebug implements HasObservers {
+		public void attach() {
+			ProcessObservers.observe(this);
+		}
 	}
 
 	public interface HasObservers {
