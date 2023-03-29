@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
+
 /**
  * <p>
  * A collection of standard logical events. See naming notes in
@@ -60,7 +62,8 @@ public class ModelEvents {
 		}
 	}
 
-	public static class Change extends ModelEvent<Object, Change.Handler> {
+	public static class Change extends ModelEvent<Object, Change.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Change.Handler handler) {
 			handler.onChange(this);
@@ -276,7 +279,8 @@ public class ModelEvents {
 	 * @author nick@alcina.cc
 	 *
 	 */
-	public static class Input extends ModelEvent<String, Input.Handler> {
+	public static class Input extends ModelEvent<String, Input.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Input.Handler handler) {
 			handler.onInput(this);

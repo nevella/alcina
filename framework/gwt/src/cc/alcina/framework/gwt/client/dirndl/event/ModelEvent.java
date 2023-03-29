@@ -130,6 +130,17 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 				&& getContext().getPrevious().reemission == node;
 	}
 
+	/**
+	 * Marks a ModelEvent subclass as not requiring a handler - there are only a
+	 * few (Input, Change) - in almost all other cases a model event without a
+	 * handler is a dev issue.
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	public interface NoHandlerRequired {
+	}
+
 	public static interface TopLevelCatchallHandler {
 		void handle(ModelEvent unhandledEvent);
 	}
