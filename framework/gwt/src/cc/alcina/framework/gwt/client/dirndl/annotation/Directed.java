@@ -10,6 +10,8 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -375,6 +377,13 @@ public @interface Directed {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD })
+	/*
+	 * This allows resolution during render of the Transform.value property
+	 */
+	@Resolution(
+		inheritance = { Inheritance.CLASS, Inheritance.INTERFACE,
+				Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
+		mergeStrategy = Transform.MergeStrategy.class)
 	@interface Transform {
 		boolean transformsNull() default false;
 
@@ -409,6 +418,11 @@ public @interface Directed {
 				this.value = value;
 				return this;
 			}
+		}
+
+		@Reflected
+		public static class MergeStrategy extends
+				AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOrClass<Transform> {
 		}
 	}
 

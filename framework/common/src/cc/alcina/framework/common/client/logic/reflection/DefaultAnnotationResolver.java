@@ -4,6 +4,8 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -21,6 +23,12 @@ public class DefaultAnnotationResolver extends Resolver {
 	@Override
 	public <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location) {
+		return resolveAnnotations0(annotationClass, location, null);
+	}
+
+	public <A extends Annotation> List<A> resolveAnnotations0(
+			Class<A> annotationClass, AnnotationLocation location,
+			ClassResolver classResolver) {
 		Resolution resolution = Reflections.at(annotationClass)
 				.annotation(Resolution.class);
 		if (resolution == null) {
@@ -33,13 +41,22 @@ public class DefaultAnnotationResolver extends Resolver {
 		List<Inheritance> inheritance = Arrays.asList(resolution.inheritance());
 		List<A> propertyAnnotations = location.resolutionState.resolvedPropertyAnnotations != null
 				? (List<A>) location.resolutionState.resolvedPropertyAnnotations
+						.stream()
+						.filter(a -> a.annotationType() == annotationClass)
+						.collect(Collectors.toList())
 				: mergeStrategy.resolveProperty(annotationClass,
 						location.property, inheritance);
+		Class resolvedLocationClass = classResolver != null
+				? resolvedLocationClass = classResolver.apply(location)
+				: location.classLocation;
 		List<A> classAnnotations = mergeStrategy.resolveClass(annotationClass,
-				location.classLocation, inheritance);
+				resolvedLocationClass, inheritance);
 		List<A> merged = mergeStrategy.merge(classAnnotations,
 				propertyAnnotations);
 		mergeStrategy.finish(merged);
 		return merged;
+	}
+
+	public interface ClassResolver extends Function<AnnotationLocation, Class> {
 	}
 }

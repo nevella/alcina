@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 /**
  * <p>
@@ -52,21 +51,11 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	protected DirectedLayout layout;
 
-	private Object rootModel;
+	Object rootModel;
 
-	DefaultAnnotationResolver annotationResolver = (DefaultAnnotationResolver) AnnotationLocation.Resolver
-			.get();
+	DefaultAnnotationResolver annotationResolver = new DefaultAnnotationResolver();
 
-	/**
-	 * For descendant resolvers, use the second constructor or the create() call
-	 */
 	public ContextResolver() {
-	}
-
-	public void fromLayoutNode(Node node) {
-		parent = node.getResolver();
-		layout = parent.layout;
-		rootModel = node.model;
 	}
 
 	public <T> T getRootModel() {
@@ -78,13 +67,26 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		return null;
 	}
 
+	protected void init(ContextResolver parent, DirectedLayout layout,
+			Object rootModel) {
+		this.parent = parent;
+		this.layout = layout;
+		this.rootModel = rootModel;
+	}
+
+	protected void init(DirectedLayout.Node node) {
+		this.parent = node.getResolver();
+		this.layout = this.parent.layout;
+		this.rootModel = node.getModel();
+	}
+
 	@Override
 	protected <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location) {
 		// route via default (strategy-based) resolver, not superclass (which
 		// does not use merge strategies)
-		return annotationResolver.resolveAnnotations0(annotationClass,
-				location);
+		return annotationResolver.resolveAnnotations0(annotationClass, location,
+				this::resolveLocationClass);
 	}
 
 	protected Property resolveDirectedProperty0(Property property) {
@@ -93,6 +95,35 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 				|| property.has(Directed.Wrap.class)
 				|| property.has(Directed.Delegating.class)
 				|| property.has(Directed.Transform.class) ? property : null;
+	}
+
+	/**
+	 * Used to get custom annotations from an annotation template class - e.g:
+	 * 
+	 * <code><pre>
+	 * 
+	 * 
+	 * 
+	&#64;Directed.Multiple({ @Directed(tag = "li", cssClass = "es-toolbar-item"),
+	&#64;Directed(tag = "button", cssClass = "es-button") })
+	public static class ButtonLink extends Link {
+	}
+	 * </pre></code>
+	 */
+	protected <A extends Annotation> Class
+			resolveLocationClass(AnnotationLocation location) {
+		return location.classLocation;
+	}
+
+	/**
+	 * Avoid this *if you can*, but at the end of the day this gives total
+	 * (albeit nastily imperative) control over the transformation. An example
+	 * of a reasonable usage would be "set the tag of each Link instance to
+	 * 'button'" - since there's no declarative (annotation modification) way to
+	 * change the tag of all links in a subtree
+	 */
+	protected Object resolveModel(Object model) {
+		return model;
 	}
 
 	/**

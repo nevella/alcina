@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -56,6 +57,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -494,6 +496,20 @@ public class DirectedLayout implements AlcinaProcess {
 			return Optional.ofNullable(annotation(clazz));
 		}
 
+		public Node provideMostSpecificNodeForModel() {
+			Node cursor = this;
+			while (true) {
+				if (cursor.children.size() == 1) {
+					Node firstChild = cursor.children.get(0);
+					if (firstChild.model == model) {
+						cursor = firstChild;
+						continue;
+					}
+				}
+				return cursor;
+			}
+		}
+
 		public <T> T resolveRenderContextProperty(String key) {
 			return getResolver().resolveRenderContextProperty(key);
 		}
@@ -828,7 +844,7 @@ public class DirectedLayout implements AlcinaProcess {
 		 * <code>
 		 *
 		 *
-		 * @Override
+		 * &#64;Override
 		 * public void onSubmitted(Submitted event) {
 		 * 	// this occurs when enter is clicked, so handle here, but also propagate
 		 * 	// to the containing form
@@ -902,6 +918,10 @@ public class DirectedLayout implements AlcinaProcess {
 			 * reemit from StringInput (annotation merge should fail if
 			 * receive/reemit pair - instead, add just receipt and manually
 			 * reemit)
+			 * 
+			 * FIXME - dirndl 1x1h - Also: warn if a model implements a handler
+			 * but has no receive (reverse will be a ClassCast, so no need to
+			 * check)
 			 *
 			 * What this (opaque) comment is saying is that there *was* an issue
 			 * with the StringInput @Directed annotation - or a subclass?
@@ -960,6 +980,10 @@ public class DirectedLayout implements AlcinaProcess {
 
 			Widget getBindingWidget() {
 				return verifySingleWidget();
+			}
+
+			Node getNode() {
+				return Node.this;
 			}
 		}
 
@@ -1039,21 +1063,31 @@ public class DirectedLayout implements AlcinaProcess {
 									: binding.to();
 					if (value == null || (value instanceof Boolean
 							&& !((Boolean) value).booleanValue())) {
-						element.removeAttribute(propertyName);
+						// if ++ 'class', don't remove (special-case)
+						if (Ax.isBlank(lastValue)
+								&& Objects.equals(propertyName, "class")) {
+							// don't overwrite @Directed.cssClass
+						} else {
+							element.removeAttribute(propertyName);
+						}
 					} else {
 						element.setAttribute(propertyName, stringValue);
+						lastValue = stringValue;
 					}
 					break;
 				}
 				case CSS_CLASS: {
 					if (hasTransform) {
-						// only place we need to store the last value
+						// almost (see class_property) only place we need to
+						// store the last value
 						// We'd either have to store the "added" value, or
 						// assume readonly
 						boolean present = value != null;
 						if (present) {
-							element.setClassName(stringValue, true);
-							lastValue = stringValue;
+							if (stringValue.length() > 0) {
+								element.setClassName(stringValue, true);
+								lastValue = stringValue;
+							}
 						} else {
 							if (Ax.notBlank(lastValue)) {
 								element.setClassName(lastValue, false);
@@ -1143,6 +1177,12 @@ public class DirectedLayout implements AlcinaProcess {
 	/**
 	 * Instances act as an input and process state token for the
 	 * layout/transformation algorithm
+	 * 
+	 * Note that the resolver is modified (if at all) *after* init,
+	 * so @DirectedContextResolver applies to children, not the node itself.
+	 * This simplifies processing, but makes customisation a little more work in
+	 * certain cases - see {@link Choices.Select}
+	 * 
 	 *
 	 * @author nick@alcina.cc
 	 *
@@ -1257,19 +1297,7 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void beforeRender() {
-			DirectedContextResolver directedContextResolver = location
-					.getAnnotation(DirectedContextResolver.class);
-			if (directedContextResolver != null) {
-				ContextResolver resolver = Reflections
-						.newInstance(directedContextResolver.value());
-				resolver.fromLayoutNode(node);
-				// legal (modifying the node's resolver, etc)! note that new
-				// resolver will have an empty resolution
-				// cache
-				node.resolver = resolver;
-				this.resolver = resolver;
-				location.setResolver(resolver);
-			}
+			this.model = resolver.resolveModel(model);
 			if (model instanceof LayoutEvents.BeforeRender.Handler) {
 				((LayoutEvents.BeforeRender.Handler) model)
 						.onBeforeRender(new LayoutEvents.BeforeRender(node));
@@ -1291,8 +1319,20 @@ public class DirectedLayout implements AlcinaProcess {
 		void init(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
+			DirectedContextResolver directedContextResolver = location
+					.getAnnotation(DirectedContextResolver.class);
+			if (directedContextResolver != null) {
+				ContextResolver newResolver = Reflections
+						.newInstance(directedContextResolver.value());
+				newResolver.init(resolver, resolver.layout, model);
+				resolver = newResolver;
+				// legal (modifying the location's resolver)! note that new
+				// resolver will have an empty resolution
+				// cache
+				location.setResolver(resolver);
+			}
 			this.resolver = resolver;
-			this.model = model;
+			this.model = resolver.resolveModel(model);
 			this.location = location;
 			this.parentNode = parentNode;
 			this.directeds = directeds != null ? directeds
