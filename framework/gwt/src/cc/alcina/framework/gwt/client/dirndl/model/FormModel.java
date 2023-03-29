@@ -426,9 +426,9 @@ public class FormModel extends Model
 			if (state.adjunct) {
 				new Link().withModelEvent(ModelEvents.Submit.class)
 						.withClassName(Link.PRIMARY_ACTION)
-						.addTo(formModel.actions);
+						.withTextFromModelEvent().addTo(formModel.actions);
 				new Link().withModelEvent(ModelEvents.Cancel.class)
-						.addTo(formModel.actions);
+						.withTextFromModelEvent().addTo(formModel.actions);
 			} else {
 				if (state.presentationModel != null) {
 					ObjectActions actions = Reflections
@@ -441,6 +441,9 @@ public class FormModel extends Model
 								.forEach(clazz -> {
 									new Link()
 											.withNonstandardObjectAction(clazz)
+											.withText(Reflections
+													.newInstance(clazz)
+													.getActionName())
 											.addTo(formModel.actions);
 								});
 					}

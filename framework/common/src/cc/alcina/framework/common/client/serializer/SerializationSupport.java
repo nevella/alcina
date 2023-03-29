@@ -42,7 +42,7 @@ class SerializationSupport {
 				// so this code says "yes, effectively final if a non-abstract
 				// entity subclass
 				//
-								!classReflector.isAbstract());
+				!classReflector.isAbstract());
 			}
 			if (effectivelyFinal) {
 				return valueClass;

@@ -30,8 +30,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 @Documented
 @ClientVisible
 @Target({ ElementType.METHOD })
-@Resolution(inheritance = {
-		Inheritance.PROPERTY }, mergeStrategy = ModalDisplay.MergeStrategy.class)
+@Resolution(
+	inheritance = { Inheritance.PROPERTY },
+	mergeStrategy = ModalDisplay.MergeStrategy.class)
 public @interface ModalDisplay {
 	Modal[] value();
 

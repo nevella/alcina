@@ -1628,8 +1628,11 @@ public class CommonUtils {
 
 	/**
 	 * <li>Split a string by separators</li>
-	 * @param content String to split
-	 * @param split Separator to split by
+	 * 
+	 * @param content
+	 *            String to split
+	 * @param split
+	 *            Separator to split by
 	 * @return ArrayList of separated strings
 	 */
 	public static ArrayList<String> split(String content, String split) {
@@ -1650,8 +1653,11 @@ public class CommonUtils {
 
 	/**
 	 * <li>Split a string by a regex expression</li>
-	 * @param content String to split
-	 * @param regex Regex to split by
+	 * 
+	 * @param content
+	 *            String to split
+	 * @param regex
+	 *            Regex to split by
 	 * @return ArrayList of separated strings
 	 */
 	public static ArrayList<String> splitByRegex(String content, String regex) {

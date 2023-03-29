@@ -6,6 +6,10 @@ package cc.alcina.framework.gwt.client.dirndl.event;
  * {@code ModelEvents} - note that I have no idea when to use {@code Commit} vs
  * {@code Submit}, working on it...at the moment, rule of thumb is "Submit if
  * there's likely to be a form involved".
+ * 
+ * <p>
+ * Note that these 'events' are really english language imperative verb forms
+ * (or infinitives without 'to') - that's the shortest...
  */
 public class ModelEvents {
 	public static class Add extends ModelEvent<Object, Add.Handler> {
@@ -495,6 +499,28 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onToggle(Toggle event);
+		}
+	}
+
+	/**
+	 * The nested model knows (with its cleverness) that it's the source of the
+	 * transform. But of course the ancestor decides whether it should refresh
+	 * the transform
+	 */
+	public static class TransformSourceModified
+			extends ModelEvent<Object, TransformSourceModified.Handler> {
+		@Override
+		public void dispatch(TransformSourceModified.Handler handler) {
+			handler.onTransformSourceModified(this);
+		}
+
+		@Override
+		public Class<TransformSourceModified.Handler> getHandlerClass() {
+			return TransformSourceModified.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onTransformSourceModified(TransformSourceModified event);
 		}
 	}
 
