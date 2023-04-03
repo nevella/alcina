@@ -54,7 +54,6 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -72,10 +71,13 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.entity.ClassUtil;
-import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator.ClassReflectorGenerator.PropertyGenerator;
+import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator.ClassReflectorGeneratorClient.PropertyGenerator;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
+import cc.alcina.framework.entity.gwt.reflection.reflector.AnnotationReflection;
+import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
+import cc.alcina.framework.entity.gwt.reflection.reflector.VisibleAnnotationFilter;
 
 /*
  * Documentation notes - note module assignment (unknown, not_reached, excluded)
@@ -213,6 +215,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	AnnotationLocationTypeInfo.Resolver annotationResolver = new AnnotationLocationTypeInfo.Resolver();
 
 	boolean reflectUnknownInInitialModule;
+
+	VisibleAnnotationFilterClient visibleAnnotationFilter;
 
 	@Override
 	public RebindResult generateIncrementally(TreeLogger logger,
@@ -405,8 +409,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			}
 			sourceWriter.print("}");
 		} else if (declaredType.isAnnotation()) {
-			new AnnotationExpressionWriter((Annotation) value)
-					.writeExpression(sourceWriter);
+			new AnnotationExpressionWriter(
+					new AnnotationReflection((Annotation) value))
+							.writeExpression(sourceWriter);
 		} else if (clazz.equals(Class.class)) {
 			if (quoted) {
 				sourceWriter.print(((Class) value).getSimpleName() + ".class");
@@ -424,18 +429,12 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
-	class AnnotationExpressionWriter
-			implements Comparable<AnnotationExpressionWriter> {
-		Annotation annotation;
+	class AnnotationExpressionWriter {
+		AnnotationReflection reflection;
 
-		public AnnotationExpressionWriter(Annotation annotation) {
-			this.annotation = annotation;
-		}
-
-		@Override
-		public int compareTo(AnnotationExpressionWriter o) {
-			return annotation.annotationType().getCanonicalName().compareTo(
-					o.annotation.annotationType().getCanonicalName());
+		public AnnotationExpressionWriter(
+				AnnotationReflection annotationReflection) {
+			this.reflection = annotationReflection;
 		}
 
 		protected void write(SourceWriter sourceWriter) {
@@ -446,12 +445,14 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			sourceWriter.println(";");
 			sourceWriter.println(
 					"provider.annotations.put(%s.class,annotation);",
-					annotation.annotationType().getCanonicalName());
+					reflection.getAnnotation().annotationType()
+							.getCanonicalName());
 			sourceWriter.outdent();
 			sourceWriter.println("}");
 		}
 
 		void writeExpression(SourceWriter sourceWriter) {
+			Annotation annotation = reflection.getAnnotation();
 			Class<? extends Annotation> annotationType = annotation
 					.annotationType();
 			List<Method> declaredMethods = new ArrayList<Method>(
@@ -587,21 +588,13 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
-	class ClassReflectorGenerator extends UnitGenerator
-			implements Comparable<ClassReflectorGenerator> {
+	class ClassReflectorGeneratorClient extends UnitGenerator
+			implements Comparable<ClassReflectorGeneratorClient> {
 		Map<String, PropertyGenerator> propertyGenerators = new LinkedHashMap<>();
-
-		List<AnnotationExpressionWriter> annotationExpressionWriters = new ArrayList<>();
 
 		List<PropertyGenerator> sortedPropertyGenerators;
 
 		JClassType type;
-
-		boolean hasCallableNoArgsConstructor;
-
-		boolean abstractModifier;
-
-		boolean finalModifier;
 
 		Pattern getterPattern = Pattern.compile("(?:is|get)([A-Z].*)");
 
@@ -609,41 +602,24 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		List<Registration> registrations = new ArrayList<>();
 
-		public ClassReflectorGenerator(JClassType type) {
+		private ClassReflection reflection;
+
+		public ClassReflectorGeneratorClient(JClassType type) {
 			super(type, classReflectorType, false);
+			this.reflection = new ClassReflection(type,
+					visibleAnnotationFilter);
 			this.type = type;
 		}
 
 		@Override
-		public int compareTo(ClassReflectorGenerator o) {
+		public int compareTo(ClassReflectorGeneratorClient o) {
 			return type.getQualifiedSourceName()
 					.compareTo(o.type.getQualifiedSourceName());
 		}
 
 		@Override
 		protected void prepare() {
-			abstractModifier = type.isAbstract();
-			finalModifier = type.isFinal();
-			hasCallableNoArgsConstructor = !abstractModifier
-					&& !type.getQualifiedSourceName().equals("java.lang.Class")
-					&& (type.isStatic() || !type.isMemberType())
-					&& Arrays.stream(type.getConstructors())
-							.filter(c -> c.getParameters().length == 0)
-							.findFirst().filter(c -> c.isPublic()).isPresent();
-			Arrays.stream(type.getAnnotations())
-					.filter(a -> a.annotationType() != Registration.class && a
-							.annotationType() != Registration.Singleton.class
-							&& a.annotationType() != Registrations.class
-							&& visibleAnnotationTypes
-									.contains(a.annotationType()))
-					.map(AnnotationExpressionWriter::new).sorted()
-					.forEach(annotationExpressionWriters::add);
-			// properties are needed even for abstract classes (for annotation
-			// access)
-			prepareProperties();
-			if (!abstractModifier) {
-				prepareRegistrations();
-			}
+			reflection.prepare();
 		}
 
 		@Override
@@ -672,6 +648,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 							.getCanonicalName());
 			composerFactory.addImport(Registration.class.getName());
 			composerFactory.addImport(Override.class.getName());
+			boolean hasCallableNoArgsConstructor = reflection
+					.isHasCallableNoArgsConstructor();
 			if (hasCallableNoArgsConstructor) {
 				composerFactory
 						.addImplementedInterface(Supplier.class.getName());
@@ -697,9 +675,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			sourceWriter.println("List<Class> interfaces = new ArrayList<>();");
 			sourceWriter.println(
 					"AnnotationProvider.LookupProvider provider = new AnnotationProvider.LookupProvider();");
-			annotationExpressionWriters.stream()
-					.filter(aew -> filter.emitAnnotation(type,
-							aew.annotation.annotationType()))
+			reflection.getAnnotationReflections().stream()
+					.filter(annRefl -> filter.emitAnnotation(type,
+							annRefl.getAnnotation().annotationType()))
+					.map(AnnotationExpressionWriter::new)
 					.forEach(expressionWriter -> expressionWriter
 							.write(sourceWriter));
 			sourceWriter.println(
@@ -719,8 +698,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						i.getQualifiedSourceName());
 			});
 			// will probably need to adjust
-			sourceWriter.println("boolean isAbstract = %s;", abstractModifier);
-			sourceWriter.println("boolean isFinal = %s;", finalModifier);
+			sourceWriter.println("boolean isAbstract = %s;",
+					reflection.isHasAbstractModifier());
+			sourceWriter.println("boolean isFinal = %s;",
+					reflection.isHasFinalModifier());
 			sourceWriter.println("init(clazz, properties, byName, provider,"
 					+ " supplier, assignableTo, interfaces,  isAbstract, isFinal);");
 			sourceWriter.outdent();
@@ -812,11 +793,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		void writeRegisterRegistrations(SourceWriter sourceWriter) {
 			registrations.stream().sorted(REGISTRY_LOCATION_COMPARATOR)
-					.forEach(l -> {
+					.forEach(registryLocation -> {
 						sourceWriter.print("Registry.register().add(%s.class,",
 								type.getQualifiedSourceName());
 						AnnotationExpressionWriter instanceGenerator = new AnnotationExpressionWriter(
-								l);
+								new AnnotationReflection(registryLocation));
 						instanceGenerator.writeExpression(sourceWriter);
 						sourceWriter.println(");");
 					});
@@ -869,6 +850,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						: Arrays.stream(getter.method.getAnnotations())
 								.filter(a -> visibleAnnotationTypes
 										.contains(a.annotationType()))
+								.map(AnnotationReflection::new)
 								.map(AnnotationExpressionWriter::new).sorted()
 								.collect(Collectors.toList());
 			}
@@ -894,7 +876,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				sourceWriter.println("Class propertyType = %s.class;",
 						propertyType.getQualifiedSourceName());
 				sourceWriter.println("Class owningType = %s.class;",
-						ClassReflectorGenerator.this.type
+						ClassReflectorGeneratorClient.this.type
 								.getQualifiedSourceName());
 				sourceWriter.println("Class declaringType = %s.class;",
 						declaringType.getQualifiedSourceName());
@@ -1151,9 +1133,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	class ModuleReflectionGenerator extends UnitGenerator {
 		List<AnnotationImplementationGenerator> annotationImplementations = new ArrayList<>();
 
-		Map<JClassType, ClassReflectorGenerator> classReflectors = new LinkedHashMap<>();
+		Map<JClassType, ClassReflectorGeneratorClient> classReflectors = new LinkedHashMap<>();
 
-		List<ClassReflectorGenerator> writeReflectors;
+		List<ClassReflectorGeneratorClient> writeReflectors;
 
 		boolean alreadyWritten = false;
 
@@ -1163,6 +1145,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				JClassType superClassOrInterfaceType) {
 			super(null, superClassOrInterfaceType.getPackage().getName(),
 					implementationName, superClassOrInterfaceType);
+			visibleAnnotationFilter = new VisibleAnnotationFilterClient();
 		}
 
 		/*
@@ -1239,7 +1222,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		private Set<JClassType> computeSetterArguments(JClassType type) {
-			ClassReflectorGenerator reflectorGenerator = classReflectors
+			ClassReflectorGeneratorClient reflectorGenerator = classReflectors
 					.get(type.getErasedType());
 			if (reflectorGenerator == null) {
 				return Collections.emptySet();
@@ -1295,9 +1278,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			prepareAnnotationImplementationGenerators();
 			List<JClassType> types = computeReachableTypes();
 			filter.updateReachableTypes(types);
-			types.stream().map(ClassReflectorGenerator::new)
+			types.stream().map(ClassReflectorGeneratorClient::new)
 					.forEach(crg -> classReflectors.put(crg.type, crg));
-			classReflectors.values().forEach(ClassReflectorGenerator::prepare);
+			classReflectors.values()
+					.forEach(ClassReflectorGeneratorClient::prepare);
 			writeReflectors = classReflectors.values().stream()
 					.filter(r -> filter.emitType(r.type))
 					.collect(Collectors.toList());
@@ -1374,12 +1358,12 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		void writeClassReflectors() {
-			writeReflectors.forEach(ClassReflectorGenerator::write);
+			writeReflectors.forEach(ClassReflectorGeneratorClient::write);
 		}
 
 		void writeForClassReflectors(String methodName, String methodArguments,
 				String returnType,
-				Consumer<ClassReflectorGenerator> perReflector) {
+				Consumer<ClassReflectorGeneratorClient> perReflector) {
 			boolean voidMethod = returnType.equals("void");
 			String methodArgumentName = methodArguments.isEmpty() ? ""
 					: methodArguments.replaceFirst(".+ (.+)", "$1");
@@ -1548,6 +1532,14 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		protected String reflectedTypeFqn() {
 			return reflectedType.getQualifiedSourceName();
+		}
+	}
+
+	class VisibleAnnotationFilterClient implements VisibleAnnotationFilter {
+		@Override
+		public boolean test(Class<? extends Annotation> clazz) {
+			return !Registration.Support.isRegistrationAnnotation(clazz)
+					&& visibleAnnotationTypes.contains(clazz);
 		}
 	}
 }

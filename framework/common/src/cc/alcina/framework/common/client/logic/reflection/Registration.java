@@ -319,4 +319,12 @@ public @interface Registration {
 
 		Class[] value() default {};
 	}
+
+	public static class Support {
+		public static boolean
+				isRegistrationAnnotation(Class<? extends Annotation> clazz) {
+			return clazz == Registration.class || clazz == Registrations.class
+					|| clazz == Singleton.class;
+		}
+	}
 }
