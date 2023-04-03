@@ -17,6 +17,9 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 	/*
 	 * as per implemented method, 'lower' is lower in the resolution stack,
 	 * higher precedence
+	 * 
+	 * FIXME - dirndl 1x1e - reverse lower + higher (top of stack -- most
+	 * specific frame - is 'higher', not lower)
 	 */
 	@Override
 	public List<Directed> merge(List<Directed> higher, List<Directed> lower) {
@@ -35,8 +38,11 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		// higher[0]
 		//
 		// merge via Directed.Impl
-		Preconditions.checkArgument(higher.size() == 1 || lower.size() == 1);
 		Directed lowest = Ax.last(lower);
+		if (!lowest.merge()) {
+			return lower;
+		}
+		Preconditions.checkArgument(higher.size() == 1 || lower.size() == 1);
 		Directed.Impl lowestImpl = Directed.Impl.wrap(lowest);
 		List<Directed> result = new ArrayList<>();
 		lower.stream().limit(lower.size() - 1).forEach(result::add);

@@ -6,7 +6,6 @@ import java.util.Objects;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.History;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
@@ -21,8 +20,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -122,6 +123,10 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		return this.place;
 	}
 
+	public String getTag() {
+		return this.tag;
+	}
+
 	public String getTarget() {
 		return this.target;
 	}
@@ -144,9 +149,9 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 			} else if (nonStandardObjectAction != null) {
 				WidgetUtils.squelchCurrentEvent();
 				DefaultPermissibleActionHandler.handleAction(
-						(Widget) event.getSource(),
+						((DirectedLayout.Node) event.getSource()).getWidget(),
 						Reflections.newInstance(nonStandardObjectAction),
-						Client.currentPlace());
+						((EntityPlace) Client.currentPlace()).provideEntity());
 			} else {
 				// propagate href
 				if (!Objects.equals(tag, "a") && Ax.notBlank(href)) {
@@ -202,6 +207,10 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		}
 	}
 
+	public void setTag(String tag) {
+		this.tag = tag;
+	}
+
 	public void setTarget(String target) {
 		this.target = target;
 	}
@@ -254,11 +263,6 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		return this;
 	}
 
-	public Link withTextFromModelEvent() {
-		this.text = ModelEvent.staticDisplayName(modelEvent);
-		return this;
-	}
-
 	public Link withNewTab(boolean newTab) {
 		if (newTab) {
 			setTarget("_blank");
@@ -293,6 +297,11 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	public Link withText(String text) {
 		this.text = text;
+		return this;
+	}
+
+	public Link withTextFromModelEvent() {
+		this.text = ModelEvent.staticDisplayName(modelEvent);
 		return this;
 	}
 

@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
-import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -299,7 +298,7 @@ public abstract class DirectedRenderer {
 					.properties();
 			properties = properties.stream().collect(Collectors.toList());
 			for (Property property : properties) {
-				HasAnnotations directedProperty = input.resolver
+				Property directedProperty = input.resolver
 						.resolveDirectedProperty(property);
 				if (directedProperty != null) {
 					Object childModel = property.get(input.model);
@@ -307,8 +306,8 @@ public abstract class DirectedRenderer {
 					Class locationType = childModel == null ? void.class
 							: childModel.getClass();
 					input.enqueueInput(input.resolver, childModel,
-							new AnnotationLocation(locationType, property,
-									input.resolver),
+							new AnnotationLocation(locationType,
+									directedProperty, input.resolver),
 							null, input.node);
 				}
 			}

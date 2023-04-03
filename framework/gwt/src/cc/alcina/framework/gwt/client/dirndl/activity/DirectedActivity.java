@@ -9,7 +9,6 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.csobjects.HasChanges;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.MultipleImplementationsException;
@@ -36,7 +35,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  */
 @Registration(DirectedActivity.class)
 public class DirectedActivity<P extends BasePlace> extends Model
-		implements Activity, HasPlace<P>, HasChanges {
+		implements Activity, HasPlace<P> {
 	public static final Topic<DirectedActivity> topicActivityStarted = Topic
 			.create();
 
@@ -96,8 +95,6 @@ public class DirectedActivity<P extends BasePlace> extends Model
 		return directedActivity;
 	}
 
-	private Topic<Void> topicChanged = Topic.create();
-
 	protected P place;
 
 	public DirectedActivity() {
@@ -131,11 +128,6 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
 		// ask the framework to render this activity
 		topicActivityStarted.publish(this);
-	}
-
-	@Override
-	public Topic<Void> topicChanged() {
-		return topicChanged;
 	}
 
 	public <DA extends DirectedActivity> DA withPlace(P place) {

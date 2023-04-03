@@ -32,7 +32,7 @@ public class WDManager {
 		return LooseContext.get(CONTEXT_TOKEN);
 	}
 
-	// private WDToken checkCache(WDConfigurationItem config) {
+	// private WDToken checkCache(WDConfiguration config) {
 	// WDToken token = resultCache.get(config.topLevelClassName);
 	// if (token != null
 	// && (System.currentTimeMillis() - config.usedCacheIfFresherThan) < token

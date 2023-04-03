@@ -9,18 +9,28 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.gwt.dom.client.SelectElement;
+
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 
-@Directed(tag = "choices", receives = ModelEvents.Selected.class)
+@Directed(tag = "choices", receives = { ModelEvents.Selected.class })
 /*
  * I'm not entirely happy with 'Choices' firing 'Selection' events (could it not
  * be "chosen" events - or revert to "Selections/Selection") - even though
@@ -158,6 +168,74 @@ public abstract class Choices<T> extends Model
 			if (!Objects.equals(oldValues, newValues)) {
 				NodeEvent.Context.fromNode(provideNode())
 						.dispatch(ModelEvents.SelectionChanged.class, null);
+			}
+		}
+	}
+
+	@Directed(tag = "select", receives = DomEvents.Change.class)
+	public static class Select<T> extends Single<T>
+			implements DomEvents.Change.Handler {
+		@Override
+		public void onChange(Change event) {
+			DirectedLayout.Node node = provideNode()
+					.provideMostSpecificNodeForModel();
+			SelectElement selectElement = (SelectElement) node.getWidget()
+					.getElement();
+			int index = selectElement.getSelectedIndex();
+			T value = index >= 0 ? choices.get(index).getValue() : null;
+			setSelectedValue(value);
+			event.reemitAs(this, ModelEvents.Selected.class, value);
+		}
+	}
+
+	/**
+	 * Transforms a Choices model into an HTML Select. Note that the property of
+	 * type Choices must have tag="select", since the resolver currently applies
+	 * to child inputs, not the input on which it is declared
+	 */
+	public static class SelectResolver extends ContextResolver {
+		@Override
+		protected Property resolveDirectedProperty0(Property property) {
+			if (property.getDeclaringType() == Choices.class
+					&& property.getName().equals("choices")) {
+				return Reflections.at(Select.class)
+						.property(property.getName());
+			} else {
+				return super.resolveDirectedProperty0(property);
+			}
+		}
+
+		/*
+		 * Override to customize the default
+		 */
+		protected String transformOptionName(Choice choice) {
+			return HasDisplayName.displayName(choice.getValue());
+		}
+
+		public static class Option extends Choices.Choice<String> {
+			public Option(String displayName) {
+				super(displayName);
+			}
+
+			public static class Transform extends
+					AbstractContextSensitiveModelTransform<Choices.Choice, Option> {
+				@Override
+				public Option apply(Choice choice) {
+					SelectResolver resolver = (SelectResolver) node
+							.getResolver();
+					return new Option(resolver.transformOptionName(choice));
+				}
+			}
+		}
+
+		/*
+		 * Style template
+		 */
+		@Bean
+		public static class Select {
+			@Directed.Transform(Option.Transform.class)
+			public List<Choices.Choice> getChoices() {
+				return null;
 			}
 		}
 	}

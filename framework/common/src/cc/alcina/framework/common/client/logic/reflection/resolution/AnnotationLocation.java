@@ -289,31 +289,28 @@ public class AnnotationLocation {
 		}
 	}
 
+	/**
+	 * Resolves annotations (really, returns declarative information packaged in
+	 * annotation instances) at a class/property location
+	 * 
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static abstract class Resolver {
-		private static MultikeyMap<List<? extends Annotation>> resolvedCache = new UnsortedMultikeyMap<>(
-				2);
-
-		/*
-		 * Must be bootstrapped by imperative code
-		 */
 		public static AnnotationLocation.Resolver get() {
+			/*
+			 * Must be bootstrapped by imperative code
+			 */
 			return Registry.impl(AnnotationLocation.Resolver.class);
 		}
 
-		@Override
-		public /*
-				 * Make sure this is correct in children
-				 */
-		boolean equals(Object obj) {
-			return obj.getClass() == getClass();
-		}
+		private MultikeyMap<List<? extends Annotation>> resolvedCache = new UnsortedMultikeyMap<>(
+				2);
 
-		@Override
-		public int hashCode() {
-			return getClass().hashCode();
-		}
-
-		public <A extends Annotation> A resolveAnnotation(
+		/**
+		 * Don't (can't) override this - override resolveAnnotations
+		 */
+		public final <A extends Annotation> A resolveAnnotation(
 				Class<A> annotationClass, AnnotationLocation location) {
 			return (A) Ax.first(resolveAnnotations(annotationClass, location));
 		}

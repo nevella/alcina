@@ -115,6 +115,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		return true;
 	}
 
+	public boolean hasDefaultPlace() {
+		return !Reflections.at(getTokenizedClass()).isAbstract();
+	}
+
 	public boolean isCanonicalModelClassTokenizer() {
 		return true;
 	}

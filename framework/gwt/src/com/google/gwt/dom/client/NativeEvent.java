@@ -130,7 +130,8 @@ public class NativeEvent extends JavaScriptObject {
 	public final NativeBeforeInputEvent getNativeBeforeInputEvent() {
 		return new NativeBeforeInputEvent(this);
 	}
-	public static class NativeBeforeInputEvent{
+
+	public static class NativeBeforeInputEvent {
 		private NativeEvent event;
 
 		NativeBeforeInputEvent(NativeEvent event) {
@@ -152,8 +153,8 @@ public class NativeEvent extends JavaScriptObject {
 		public native boolean getIsComposing() /*-{
       return event.isComposing;
 		}-*/;
-		
 	}
+
 	/**
 	 * Returns the element that was the actual target of the given event.
 	 * 

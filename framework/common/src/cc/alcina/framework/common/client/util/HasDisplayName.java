@@ -33,6 +33,13 @@ public interface HasDisplayName {
 
 	public String displayName();
 
+	/*
+	 * Used for registration lookup (e.g. display name of modeleventclasses)
+	 */
+	@Reflected
+	public static abstract class ClassDisplayName implements HasDisplayName {
+	}
+
 	public static class HasDisplayNameComparator
 			implements Comparator<HasDisplayName> {
 		@Override

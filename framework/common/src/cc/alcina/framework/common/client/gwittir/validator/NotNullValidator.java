@@ -38,8 +38,10 @@ public class NotNullValidator implements Validator {
 	public NotNullValidator() {
 	}
 
+	@Override
 	public Object validate(Object value) throws ValidationException {
-		if (value == null) {
+		if (value == null
+				|| (value instanceof String && value.toString().isEmpty())) {
 			throw new ValidationException("Value cannot be empty.",
 					NotNullValidator.class);
 		}

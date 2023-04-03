@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
+import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
@@ -34,6 +35,14 @@ public class LoginPagePassword extends LoginPage {
 	@Override
 	protected String getEnteredText() {
 		return input.getValue();
+	}
+
+	@Override
+	protected String getMessage(ValidationException e) {
+		if (e.getValidatorClass() == NotNullValidator.class) {
+			return "Password is required";
+		}
+		return super.getMessage(e);
 	}
 
 	@Override

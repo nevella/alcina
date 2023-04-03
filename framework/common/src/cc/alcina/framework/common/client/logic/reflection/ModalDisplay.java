@@ -7,6 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -83,7 +84,7 @@ public @interface ModalDisplay {
 
 		private ModalResolver(Node node, Mode mode) {
 			super();
-			fromLayoutNode(node);
+			init(node);
 			this.node = node;
 			this.mode = Registry.impl(ModeTransformer.class).apply(mode);
 		}
@@ -109,16 +110,16 @@ public @interface ModalDisplay {
 		}
 
 		@Override
-		public <A extends Annotation> A resolveAnnotation(
+		public synchronized <A extends Annotation> List<A> resolveAnnotations(
 				Class<A> annotationClass, AnnotationLocation location) {
 			if (location == node.getAnnotationLocation()) {
-				return parent.resolveAnnotation(annotationClass, location);
+				return parent.resolveAnnotations(annotationClass, location);
 			}
 			boolean customResolution = annotationClass == Display.class
 					|| annotationClass == Custom.class
 					|| annotationClass == Validator.class;
-			A defaultResolution = super.resolveAnnotation(annotationClass,
-					location);
+			List<A> defaultResolution = super.resolveAnnotations(
+					annotationClass, location);
 			if (customResolution) {
 				RequireSpecified requireSpecified = Reflections
 						.at(location.classLocation)
@@ -144,7 +145,7 @@ public @interface ModalDisplay {
 					}
 				}
 				if (modalResolution != null) {
-					return modalResolution;
+					return List.of(modalResolution);
 				} else {
 					if (requireSpecified == null
 							|| Arrays.stream(requireSpecified.value())
@@ -152,7 +153,7 @@ public @interface ModalDisplay {
 							|| matchingModal.isPresent()) {
 						return defaultResolution;
 					} else {
-						return null;
+						return List.of();
 					}
 				}
 			} else {

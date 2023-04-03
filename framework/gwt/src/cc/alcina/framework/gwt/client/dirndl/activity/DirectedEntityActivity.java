@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -54,7 +55,11 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 				if (e == null) {
 					setEntityNotFound(true);
 				}
-				topicChanged().signal();
+				if (provideIsBound()) {
+					// entity rendering is normally tree-shaped
+					provideNode().dispatch(
+							ModelEvents.TransformSourceModified.class, e);
+				}
 			};
 			if (provideIsCreate()) {
 				onCreate(e, postCreate);
