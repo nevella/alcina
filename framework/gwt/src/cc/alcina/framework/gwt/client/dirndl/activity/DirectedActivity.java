@@ -23,11 +23,13 @@ import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 /**
- * <h2>HasChanges implementation</h2>
+ * <h2>TransformSourceModified.Handler implementation</h2>
  * <p>
  * Implementations may require additional (remote) data before rendering - the
- * simplest way to implement that full re-render is via {@code topicChanged()}
- * pubsub
+ * dirndl way to implement that is via emission of a TransformSourceModified
+ * event (which both DirectedEntityActivity and DirectedBindableSearchActivity
+ * do), and interception/re-render (via property change) by the container or the
+ * activity subclass itself
  *
  * @author nick@alcina.cc
  *

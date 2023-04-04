@@ -8,7 +8,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
  * {@code ModelEvents} - note that I have no idea when to use {@code Commit} vs
  * {@code Submit}, working on it...at the moment, rule of thumb is "Submit if
  * there's likely to be a form involved".
- * 
+ *
  * <p>
  * Note that these 'events' are really english language imperative verb forms
  * (or infinitives without 'to') - that's the shortest...
@@ -510,6 +510,13 @@ public class ModelEvents {
 	 * The nested model knows (with its cleverness) that it's the source of the
 	 * transform. But of course the ancestor decides whether it should refresh
 	 * the transform
+	 *
+	 * FIXME - dirndl 1x1e - for top-level properties of a transformed object,
+	 * should be replaced by a listener controlled and defined by the transform.
+	 * Use only for deeper properties of an object that have essentially a
+	 * computed representation (a direct representation will be handled by the
+	 * property's propertychangelistener)
+	 *
 	 */
 	public static class TransformSourceModified
 			extends ModelEvent<Object, TransformSourceModified.Handler> {
