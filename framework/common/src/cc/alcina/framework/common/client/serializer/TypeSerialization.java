@@ -34,9 +34,13 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 @Target({ ElementType.TYPE })
 @ClientVisible
 public @interface TypeSerialization {
+	/**
+	 * This switch is to *disable* flatSerializable - only required if the
+	 * annotated type implements {@link TreeSerializable}
+	 */
 	boolean flatSerializable() default true;
 
-	/*
+	/**
 	 * Specialised aliasing (for say criteriagroup/criteria tuples)
 	 */
 	String[] keyPrefixMappings() default {};
@@ -47,7 +51,7 @@ public @interface TypeSerialization {
 
 	boolean reflectiveSerializable() default true;
 
-	/*
+	/**
 	 * Unique per path segment (including default resolution). Not required for
 	 * root types
 	 */

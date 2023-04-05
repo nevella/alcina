@@ -70,6 +70,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * an input change (e.g. any property of User) is observed. That's a blunt
  * instrument, but in the absence of more granular (propertychange) binding
  * possibilities, it's reasonable.
+ * <p>
+ * ...some time later - HasChanges was removed from DirectedActivity - of
+ * course, we have the mechanism! ModelEvents...
  *
  *
  * <p>
@@ -134,6 +137,10 @@ public abstract class Model extends Bindable implements
 		NodeEvent.Context.fromNode(provideNode()).dispatch(clazz, this);
 	}
 
+	/**
+	 * Subclasses should call super.onBeforeRender at the *end* of their
+	 * handling
+	 */
 	@Override
 	public void onBeforeRender(BeforeRender event) {
 		if (bindings != null) {

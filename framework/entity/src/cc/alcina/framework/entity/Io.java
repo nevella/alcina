@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.xerces.parsers.DOMParser;
 import org.cyberneko.html.HTMLConfiguration;
@@ -405,7 +406,9 @@ public class Io {
 
 		private Resource resource = new Resource();
 
-		public boolean noUpdate;
+		private boolean noUpdate;
+
+		private boolean compress;
 
 		public void toFile(File file) {
 		}
@@ -510,6 +513,15 @@ public class Io {
 				WriteOp.this.write();
 			}
 
+			/**
+			 * Careful! If writing to an http stream, you'll need to add
+			 * Content-Encoding: gzp
+			 */
+			public Resource withCompress(boolean compress) {
+				WriteOp.this.compress = compress;
+				return this;
+			}
+
 			public Resource withNoUpdate(boolean noUpdate) {
 				WriteOp.this.noUpdate = noUpdate;
 				return this;
@@ -523,7 +535,14 @@ public class Io {
 
 			private OutputStream getStream() throws IOException {
 				ensureFile();
-				return stream != null ? stream : new FileOutputStream(file);
+				if (stream == null) {
+					stream = new BufferedOutputStream(
+							new FileOutputStream(file));
+				}
+				if (compress) {
+					stream = new GZIPOutputStream(stream);
+				}
+				return stream;
 			}
 		}
 	}

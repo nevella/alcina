@@ -9,7 +9,6 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.csobjects.HasChanges;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.MultipleImplementationsException;
@@ -24,11 +23,13 @@ import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 /**
- * <h2>HasChanges implementation</h2>
+ * <h2>TransformSourceModified.Handler implementation</h2>
  * <p>
  * Implementations may require additional (remote) data before rendering - the
- * simplest way to implement that full re-render is via {@code topicChanged()}
- * pubsub
+ * dirndl way to implement that is via emission of a TransformSourceModified
+ * event (which both DirectedEntityActivity and DirectedBindableSearchActivity
+ * do), and interception/re-render (via property change) by the container or the
+ * activity subclass itself
  *
  * @author nick@alcina.cc
  *
@@ -36,7 +37,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  */
 @Registration(DirectedActivity.class)
 public class DirectedActivity<P extends BasePlace> extends Model
-		implements Activity, HasPlace<P>, HasChanges {
+		implements Activity, HasPlace<P> {
 	public static final Topic<DirectedActivity> topicActivityStarted = Topic
 			.create();
 
@@ -96,8 +97,6 @@ public class DirectedActivity<P extends BasePlace> extends Model
 		return directedActivity;
 	}
 
-	private Topic<Void> topicChanged = Topic.create();
-
 	protected P place;
 
 	public DirectedActivity() {
@@ -131,11 +130,6 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
 		// ask the framework to render this activity
 		topicActivityStarted.publish(this);
-	}
-
-	@Override
-	public Topic<Void> topicChanged() {
-		return topicChanged;
 	}
 
 	public <DA extends DirectedActivity> DA withPlace(P place) {

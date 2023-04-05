@@ -30,7 +30,8 @@ public class ServletLayerUtils {
 	}
 
 	/**
-	 * Clean unhelpful intermediate proxies (e.g. AWS network load balancers, CloudFlare)
+	 * Clean unhelpful intermediate proxies (e.g. AWS network load balancers,
+	 * CloudFlare)
 	 */
 	public static String cleanForwardedFor(String forwardedFor) {
 		if (Ax.isBlank(forwardedFor)) {
@@ -39,12 +40,14 @@ public class ServletLayerUtils {
 		String cleanRegex = Configuration.get("cleanFromForwardedFor");
 		if (Ax.notBlank(cleanRegex)) {
 			// Go through all the addresses in reverse order
-			List<String> forwardedAddresses = CommonUtils.splitByRegex(forwardedFor, ", ?");
-			ListIterator<String> it = forwardedAddresses.listIterator(forwardedAddresses.size());
+			List<String> forwardedAddresses = CommonUtils
+					.splitByRegex(forwardedFor, ", ?");
+			ListIterator<String> it = forwardedAddresses
+					.listIterator(forwardedAddresses.size());
 			while (it.hasPrevious()) {
 				String address = (String) it.previous();
 				// Remove any addresses that match the clean-up regex,
-				//  stop if you hit any that don't need a clean-up
+				// stop if you hit any that don't need a clean-up
 				if (address.matches(cleanRegex)) {
 					it.remove();
 				} else {

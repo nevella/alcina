@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -15,6 +16,8 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObserver;
+import cc.alcina.framework.common.client.process.ProcessObserver.AppDebug;
 import cc.alcina.framework.common.client.reflection.ClientReflectorFactory;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -129,8 +132,16 @@ public abstract class Client {
 		public static void init() {
 			preRegistry();
 			registry();
-			// initialise localdom, mutations
+			/*
+			 * initialise localdom, mutations
+			 */
 			Document.get();
+			/*
+			 * Attach non-vcs process debugging
+			 */
+			Optional<AppDebug> appDebug = Registry
+					.optional(ProcessObserver.AppDebug.class);
+			appDebug.ifPresent(AppDebug::attach);
 		}
 
 		public static boolean isComplete() {

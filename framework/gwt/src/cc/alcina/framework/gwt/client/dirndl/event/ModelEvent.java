@@ -11,6 +11,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ClassSerialization;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.common.client.util.HasDisplayName.ClassDisplayName;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -53,7 +55,14 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent<H>
 		implements NodeEvent.WithoutDomBinding, Registration.Ensure {
 	public static String staticDisplayName(Class<? extends ModelEvent> clazz) {
-		return Ax.friendly(clazz.getSimpleName().replaceFirst("Event$", ""));
+		Optional<ClassDisplayName> classDisplayName = Registry
+				.optional(HasDisplayName.ClassDisplayName.class, clazz);
+		if (classDisplayName.isPresent()) {
+			return classDisplayName.get().displayName();
+		} else {
+			return Ax
+					.friendly(clazz.getSimpleName().replaceFirst("Event$", ""));
+		}
 	}
 
 	// Although this is the one 'dispatch' call, access it via context (since

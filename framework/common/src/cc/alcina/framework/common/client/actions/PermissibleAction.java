@@ -19,7 +19,6 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -53,9 +52,6 @@ public abstract class PermissibleAction implements Permissible {
 	}
 
 	public String provideId() {
-		if (Ax.notBlank(getActionName())) {
-			return getActionName();
-		}
 		return CommonUtils.restId(
 				getClass().getSimpleName().replaceFirst("(.+)Action", "$1"));
 	}

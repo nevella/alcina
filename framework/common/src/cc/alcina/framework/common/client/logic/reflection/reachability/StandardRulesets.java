@@ -190,6 +190,7 @@ public class StandardRulesets {
 	        com.google.gwt.user.client.ui.Composite.class,
 	        com.google.gwt.user.client.ui.UIObject.class,
 	        com.google.gwt.user.client.ui.Widget.class,
+	        com.google.gwt.user.client.ui.FlowPanel.class,
 	        com.google.web.bindery.event.shared.Event.class,
 	        com.google.gwt.activity.shared.Activity.class,
 	        com.google.gwt.event.dom.client.ClickHandler.class,
