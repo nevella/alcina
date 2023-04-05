@@ -165,7 +165,7 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	protected void run1() throws Exception {
 		txLatch = new CountDownLatch(3);
 		tx1Latch1 = new CountDownLatch(1);
 		tx1Latch2 = new CountDownLatch(1);

@@ -101,7 +101,7 @@ public class MvccEntityTransactionalTrieTest<IU extends Entity & IUser, IG exten
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	protected void run1() throws Exception {
 		projection = Registry.impl(TestSupport.class).getTrieProjection();
 		key = "jajajamoew" + System.currentTimeMillis() + "@nodomain.com";
 		testKey = "moew";

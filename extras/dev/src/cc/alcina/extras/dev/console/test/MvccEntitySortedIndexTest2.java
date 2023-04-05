@@ -42,7 +42,7 @@ public class MvccEntitySortedIndexTest2<IU extends Entity & IUser, IG extends En
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	protected void run1() throws Exception {
 		ReverseDateProjection projection = Registry.impl(TestSupport.class)
 				.getReversedDateProjection();
 		Date date = new Date();

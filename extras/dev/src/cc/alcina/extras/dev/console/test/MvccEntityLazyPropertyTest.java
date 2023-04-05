@@ -26,7 +26,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor.TestS
 public class MvccEntityLazyPropertyTest<IU extends Entity & IUser, IG extends Entity & IGroup>
 		extends MvccEntityTransactionTest {
 	@Override
-	protected void run0() throws Exception {
+	protected void run1() throws Exception {
 		Class<? extends Entity> clazz = Registry.impl(TestSupport.class)
 				.getTypeWithLazyProperties();
 		List<PropertyDescriptor> withLazy = SEUtilities

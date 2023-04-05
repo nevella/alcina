@@ -66,7 +66,7 @@ public class MvccEntitySortedIndexTest3<IU extends Entity & IUser, IG extends En
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	protected void run1() throws Exception {
 		Transaction.ensureEnded();
 		thread0 = new Thread0();
 		thread1 = new Thread1();

@@ -8,14 +8,19 @@ import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 import cc.alcina.framework.servlet.servlet.JobServlet;
 
-public class TaskRunJob extends AbstractTaskPerformer {
+public class TaskRunJob extends ServerTask {
+	private long jobId;
+
+	public long getJobId() {
+		return this.jobId;
+	}
+
 	@Override
-	protected void run0() throws Exception {
-		long jobId = Long.parseLong(value);
+	public void run() throws Exception {
 		Job job = Job.byId(jobId);
 		if (job == null) {
 			logger.info("Job {} does not exist", jobId);
@@ -37,10 +42,19 @@ public class TaskRunJob extends AbstractTaskPerformer {
 					.attr("style", "font-family:monospace").append();
 			p.builder().tag("span").text("Job details: ").append();
 			String id = String.valueOf(job.getId());
-			Task task = new TaskLogJobDetails().withValue(id);
+			Task task = new TaskLogJobDetails().withJobId(jobId);
 			p.html().addLink(id, JobServlet.createTaskUrl(task), null);
 			JobContext.setLargeResult(doc.prettyToString());
 			Transaction.commit();
 		}
+	}
+
+	public void setJobId(long jobId) {
+		this.jobId = jobId;
+	}
+
+	public TaskRunJob withJobId(long jobId) {
+		this.jobId = jobId;
+		return this;
 	}
 }

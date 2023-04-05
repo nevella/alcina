@@ -135,7 +135,7 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	protected void run1() throws Exception {
 		minDeletionId = Domain.stream(getUserClass()).map(HasId::getId)
 				.max(Comparator.naturalOrder()).get();
 		for (int idx = 0; idx < 5; idx++) {

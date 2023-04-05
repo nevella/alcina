@@ -1037,12 +1037,12 @@ public class JobRegistry {
 
 		public Date runAt;
 
-		public String jobId;
+		public long jobId;
 
 		FutureStat(Job job) {
 			taskName = job.getTaskClassName();
 			runAt = job.getRunAt();
-			jobId = String.valueOf(job.getId());
+			jobId = job.getId();
 		}
 	}
 

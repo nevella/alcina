@@ -22,10 +22,10 @@ import cc.alcina.framework.entity.stat.DevStats.KeyedStat;
 import cc.alcina.framework.entity.stat.DevStats.LogProvider;
 import cc.alcina.framework.entity.stat.DevStats.LogProvider.StringLogProvider;
 import cc.alcina.framework.entity.stat.DevStats.StatResults;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 import cc.alcina.framework.servlet.job.JobContext;
 
-public class TaskReportDevMetrics extends AbstractTaskPerformer {
+public class TaskReportDevMetrics extends ServerTask {
 	private Date from = new Date(
 			System.currentTimeMillis() - TimeConstants.ONE_DAY_MS);
 
@@ -78,7 +78,7 @@ public class TaskReportDevMetrics extends AbstractTaskPerformer {
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	public void run() throws Exception  {
 		DomDocument doc = DomDocument.basicHtmlDoc();
 		String css = Io.read().resource("res/TaskReportDevMetrics.css")
 				.asString();

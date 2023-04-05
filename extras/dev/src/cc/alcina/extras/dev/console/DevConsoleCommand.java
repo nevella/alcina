@@ -433,12 +433,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		private DevConsoleRunnable runnable;
 
 		@Override
-		public void cancel() {
-			super.cancel();
-			runnable.cancel();
-		}
-
-		@Override
 		public boolean canUseProductionConn() {
 			return runnable.canUseProductionConn();
 		}
@@ -473,7 +467,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					runnable = (DevConsoleRunnable) clazz
 							.getDeclaredConstructor().newInstance();
 					runnable.command = this;
-					runnable.value = argv.length == 1 ? null : argv[1];
 					runnable.argv = argv;
 					boolean runSuccess = false;
 					IUser pushedUser = null;

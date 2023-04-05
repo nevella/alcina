@@ -17,7 +17,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 public class MvccEntityLocalPromotionTest<IU extends Entity & IUser, IG extends Entity & IGroup>
 		extends MvccEntityTransactionTest {
 	@Override
-	protected void run0() throws Exception {
+	protected void run1() throws Exception {
 		Class<IG> groupClass = (Class<IG>) PersistentImpl
 				.getImplementation(IGroup.class);
 		Class<IU> userClass = (Class<IU>) PersistentImpl

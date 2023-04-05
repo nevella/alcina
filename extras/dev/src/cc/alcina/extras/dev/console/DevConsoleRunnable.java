@@ -13,11 +13,11 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 
 @TypeSerialization(flatSerializable = false)
 @Registration(DevConsoleRunnable.class)
-public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
+public abstract class DevConsoleRunnable extends ServerTask {
 	public static final String CONTEXT_ACTION_RESULT = CmdExecRunnable.class
 			.getName() + ".CONTEXT_ACTION_RESULT";
 
@@ -39,24 +39,23 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		return true;
 	}
 
-	@Override
-	public void run() {
-		try {
-			run0();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	public void runAsSubcommand(DevConsoleRunnable parentRunnable) {
 		command = parentRunnable.command;
 		argv = new String[0];// don't pass through - this is all devvy
-		run();
+		try {
+			run();
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	public void runFromCommand(DevConsoleCommand command, String[] argv) {
 		this.argv = argv;
-		run();
+		try {
+			run();
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	// typed a lot - so alias
@@ -65,11 +64,6 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 	}
 
 	public abstract String[] tagStrings();
-
-	@Override
-	public DevConsoleRunnable withValue(String value) {
-		return (DevConsoleRunnable) super.withValue(value);
-	}
 
 	protected void logJobResultFiles() {
 		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");
