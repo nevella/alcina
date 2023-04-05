@@ -413,6 +413,7 @@ public class Configuration {
 					// classloader.getResourceAsStream() (but not
 					// class.getResourceAsStream
 					String trimmedPath = path.substring(1);
+					Ax.out("Loading config path: %s", trimmedPath);
 					contents = Io.read()
 							.fromStream(provideClassLoader()
 									.getResourceAsStream(trimmedPath))
