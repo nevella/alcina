@@ -169,6 +169,18 @@
 			<fileset dir="${project.src.dir.4}">
 				<patternset refid="project.war.resource.exports" />
 			</fileset>
+			<fileset dir="${project.src.dir.5}">
+				<patternset refid="project.war.resource.exports" />
+			</fileset>
+			<fileset dir="${project.src.dir.6}">
+				<patternset refid="project.war.resource.exports" />
+			</fileset>
+			<fileset dir="${project.src.dir.7}">
+				<patternset refid="project.war.resource.exports" />
+			</fileset>
+			<fileset dir="${project.src.dir.8}">
+				<patternset refid="project.war.resource.exports" />
+			</fileset>
 			<fileset dir="${project.client.src.dir}">
 				<patternset refid="project.war.resource.client-src.exports" />
 			</fileset>
@@ -233,7 +245,7 @@
 	</target>
 	<target name="compile-gwt" description="Compile the GWT app" depends="compile-client,compile-gwt-nodeps" />
 	<target name="compile-gwt-nodeps" description="Compile the GWT app (no dependencies)" depends="">
-		<echo message="${gwt.sdk.dir}"/>
+		<echo message="${gwt.sdk.dir}" />
 		<property name="project.gwt.compile.jvmarg1" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg2" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg3" value="-Dblank" />
