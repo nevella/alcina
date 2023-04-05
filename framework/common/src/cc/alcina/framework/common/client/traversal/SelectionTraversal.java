@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.web.bindery.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
@@ -246,6 +247,13 @@ public class SelectionTraversal
 
 	public void setRootSelection(Selection rootSelection) {
 		this.rootSelection = rootSelection;
+	}
+
+	public void throwExceptions() {
+		if (selectionExceptions.size() > 0) {
+			throw new UmbrellaException(selectionExceptions.values().stream()
+					.collect(AlcinaCollectors.toLinkedHashSet()));
+		}
 	}
 
 	public void traverse1() {
