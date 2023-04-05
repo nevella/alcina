@@ -374,7 +374,7 @@ public class DomDocument extends DomNode {
 			List<DomNode> openNodes = new ArrayList<>();
 			DomNode root = getDocumentElementNode();
 			// browser dom root has no (Document) parent
-			int rootOffset = root.parent() == null ? 0 : -1;
+			int rootOffset = root.parent() == null ? 0 : 1;
 			root.stream().forEach(node -> {
 				int depth = node.depth() - rootOffset;
 				int treeIndex = byNode.size();
@@ -431,7 +431,25 @@ public class DomDocument extends DomNode {
 			index = Arrays.binarySearch(locations, test,
 					new IndexOnlyComparator());
 			if (index < 0) {
-				throw new UnsupportedOperationException();
+				// may be contained in the last text node, check
+				Location lastTextNode = null;
+				int idx = locations.length - 1;
+				for (; idx >= 0; idx--) {
+					Location location = locations[idx];
+					if (location.containingNode.isText()) {
+						lastTextNode = location;
+						break;
+					}
+				}
+				if (lastTextNode != null) {
+					String content = lastTextNode.containingNode.textContent();
+					if (lastTextNode.index + content.length() >= test.index) {
+						index = idx;
+					}
+				}
+				if (index == -1) {
+					throw new UnsupportedOperationException();
+				}
 			}
 			int cursor = index;
 			if (test.after) {
