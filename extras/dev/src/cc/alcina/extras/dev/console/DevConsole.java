@@ -59,6 +59,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.console.ArgParser;
+import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
@@ -829,6 +830,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		AppLifecycleServletBase.setupBootstrapJvmServices();
 		Registry.register().singleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
+		JvmReflections.init();
 		Reflections.init();
 		createDevHelper();
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());

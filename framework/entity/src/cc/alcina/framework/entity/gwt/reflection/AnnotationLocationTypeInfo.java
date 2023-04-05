@@ -29,7 +29,9 @@ import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo.Abst
 
 /*
  * Essentially a copy/paste, replacing Class with JClassType - it was either
- * that or *really* abstract the standard java implementation
+ * that or *really* abstract the standard java implementation. This
+ * implementation is only used during client reflection generation for
+ * resolution of registration annotations
  */
 public class AnnotationLocationTypeInfo extends AnnotationLocation {
 	private JClassType type;
@@ -229,25 +231,7 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		}
 	}
 
-	interface MergeStrategyTypeinfo<A extends Annotation>
-			extends MergeStrategy<A> {
-		@Override
-		default List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
-				List<Inheritance> inheritance) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		default List<A> resolveProperty(Class<A> annotationClass,
-				Property property, List<Inheritance> inheritance) {
-			throw new UnsupportedOperationException();
-		}
-
-		List<A> resolveType(Class<A> annotationClass, JClassType clazz,
-				List<Inheritance> inheritance);
-	}
-
-	static class Resolver extends AnnotationLocation.Resolver {
+	public static class Resolver extends AnnotationLocation.Resolver {
 		@Override
 		protected <A extends Annotation> List<A> resolveAnnotations0(
 				Class<A> annotationClass, AnnotationLocation location) {
@@ -275,5 +259,23 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			mergeStrategy.finish(typeAnnotations);
 			return typeAnnotations;
 		}
+	}
+
+	interface MergeStrategyTypeinfo<A extends Annotation>
+			extends MergeStrategy<A> {
+		@Override
+		default List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
+				List<Inheritance> inheritance) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		default List<A> resolveProperty(Class<A> annotationClass,
+				Property property, List<Inheritance> inheritance) {
+			throw new UnsupportedOperationException();
+		}
+
+		List<A> resolveType(Class<A> annotationClass, JClassType clazz,
+				List<Inheritance> inheritance);
 	}
 }

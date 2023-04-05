@@ -61,6 +61,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
+import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -360,6 +361,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		setupBootstrapJvmServices();
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
+		JvmReflections.init();
 		Reflections.init();
 		Registry.register().singleton(AlcinaWebappConfig.class, config);
 		Registry.register().singleton(AppLifecycleServletBase.class, this);

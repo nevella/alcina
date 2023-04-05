@@ -19,8 +19,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,10 +33,7 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
-import com.google.gwt.core.ext.typeinfo.JField;
-import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
-import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JRawType;
 import com.google.gwt.core.ext.typeinfo.JRealClassType;
 import com.google.gwt.core.ext.typeinfo.JType;
@@ -46,13 +41,9 @@ import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
-import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainCollections;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
-import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
@@ -67,16 +58,15 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ToStringComparator;
-import cc.alcina.framework.entity.ClassUtil;
-import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator.ClassReflectorGeneratorClient.PropertyGenerator;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
 import cc.alcina.framework.entity.gwt.reflection.reflector.AnnotationReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
+import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection;
+import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyMethod;
 import cc.alcina.framework.entity.gwt.reflection.reflector.VisibleAnnotationFilter;
 
 /*
@@ -112,14 +102,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	private static final long GENERATOR_VERSION_ID = 1L;
 
-	static final Predicate<Registration> CLIENT_VISIBLE_ANNOTATION_FILTER = new Predicate<Registration>() {
-		@Override
-		public boolean test(Registration o) {
-			return o.value()[0]
-					.getAnnotation(NonClientRegistryPointType.class) == null;
-		}
-	};
-
 	private static final String CACHED_TYPE_INFORMATION = "cached-type-info";
 
 	static final String REF_IMPL = "__refImpl";
@@ -136,22 +118,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		if (Registry.optional(DomainCollections.class).isEmpty()) {
 			Registry.register().singleton(DomainCollections.class,
 					new DomainCollections());
-		}
-	}
-
-	static JClassType erase(JClassType t) {
-		if (t.isParameterized() != null) {
-			return t.isParameterized().getBaseType().getErasedType();
-		} else {
-			return t.getErasedType();
-		}
-	}
-
-	static JType erase(JType t) {
-		if (t.isClass() != null) {
-			return erase((JClassType) t);
-		} else {
-			return t;
 		}
 	}
 
@@ -588,33 +554,20 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
-	class ClassReflectorGeneratorClient extends UnitGenerator
-			implements Comparable<ClassReflectorGeneratorClient> {
-		Map<String, PropertyGenerator> propertyGenerators = new LinkedHashMap<>();
-
-		List<PropertyGenerator> sortedPropertyGenerators;
-
-		JClassType type;
-
-		Pattern getterPattern = Pattern.compile("(?:is|get)([A-Z].*)");
-
-		Pattern setterPattern = Pattern.compile("(?:set)([A-Z].*)");
-
-		List<Registration> registrations = new ArrayList<>();
-
+	class ClassReflectorGenerator extends UnitGenerator
+			implements Comparable<ClassReflectorGenerator> {
 		private ClassReflection reflection;
 
-		public ClassReflectorGeneratorClient(JClassType type) {
+		public ClassReflectorGenerator(JClassType type) {
 			super(type, classReflectorType, false);
 			this.reflection = new ClassReflection(type,
 					visibleAnnotationFilter);
-			this.type = type;
 		}
 
 		@Override
-		public int compareTo(ClassReflectorGeneratorClient o) {
-			return type.getQualifiedSourceName()
-					.compareTo(o.type.getQualifiedSourceName());
+		public int compareTo(ClassReflectorGenerator o) {
+			return reflection.type.getQualifiedSourceName()
+					.compareTo(o.reflection.type.getQualifiedSourceName());
 		}
 
 		@Override
@@ -668,15 +621,16 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			sourceWriter.println("Class clazz = %s.class;", reflectedTypeFqn());
 			sourceWriter
 					.println("List<Property> properties = new ArrayList<>();");
-			sortedPropertyGenerators()
-					.filter(propertyGenerator -> filter.emitProperty(type,
-							propertyGenerator.name))
+			reflection.getSortedPropertyReflections().stream()
+					.filter(propertyReflector -> filter.emitProperty(
+							reflection.type, propertyReflector.name))
+					.map(PropertyGenerator::new)
 					.forEach(PropertyGenerator::write);
 			sourceWriter.println("List<Class> interfaces = new ArrayList<>();");
 			sourceWriter.println(
 					"AnnotationProvider.LookupProvider provider = new AnnotationProvider.LookupProvider();");
 			reflection.getAnnotationReflections().stream()
-					.filter(annRefl -> filter.emitAnnotation(type,
+					.filter(annRefl -> filter.emitAnnotation(reflection.type,
 							annRefl.getAnnotation().annotationType()))
 					.map(AnnotationExpressionWriter::new)
 					.forEach(expressionWriter -> expressionWriter
@@ -693,10 +647,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			}
 			sourceWriter.println(
 					"Predicate<Class> assignableTo = c -> ClientReflections.isAssignableFrom(c,clazz);");
-			Arrays.stream(type.getImplementedInterfaces()).forEach(i -> {
-				sourceWriter.println("interfaces.add(%s.class);",
-						i.getQualifiedSourceName());
-			});
+			Arrays.stream(reflection.type.getImplementedInterfaces())
+					.forEach(i -> {
+						sourceWriter.println("interfaces.add(%s.class);",
+								i.getQualifiedSourceName());
+					});
 			// will probably need to adjust
 			sourceWriter.println("boolean isAbstract = %s;",
 					reflection.isHasAbstractModifier());
@@ -710,71 +665,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			return true;
 		}
 
-		void prepareProperties() {
-			boolean hasReflectableProperties = has(type, Bean.class);
-			if (hasReflectableProperties) {
-				Arrays.stream(type.getInheritableMethods())
-						.map(this::toPropertyMethod).filter(Objects::nonNull)
-						.forEach(m -> {
-							PropertyGenerator propertyGenerator = propertyGenerators
-									.computeIfAbsent(m.propertyName,
-											PropertyGenerator::new);
-							propertyGenerator.addMethod(m);
-						});
-			}
-			propertyGenerators.entrySet()
-					.removeIf(e -> e.getValue().getter != null
-							&& e.getValue().getter.method
-									.getAnnotation(Omit.class) != null);
-			propertyGenerators.values().stream().sorted()
-					.forEach(PropertyGenerator::prepare);
-		}
-
-		void prepareRegistrations() {
-			List<Registration> annotations = new AnnotationLocationTypeInfo(
-					type, annotationResolver)
-							.getAnnotations(Registration.class);
-			annotations.stream().filter(CLIENT_VISIBLE_ANNOTATION_FILTER)
-					.forEach(registrations::add);
-		}
-
-		Stream<PropertyGenerator> sortedPropertyGenerators() {
-			if (sortedPropertyGenerators == null) {
-				sortedPropertyGenerators = propertyGenerators.values().stream()
-						.sorted(new PropertyOrdering())
-						.collect(Collectors.toList());
-			}
-			return sortedPropertyGenerators.stream();
-		}
-
-		PropertyMethod toPropertyMethod(JMethod method) {
-			if (method.getName().equals("getClass")) {
-				return null;
-			}
-			if (!method.isPublic()) {
-				return null;
-			}
-			// getter
-			if (method.getParameters().length == 0) {
-				Matcher m = getterPattern.matcher(method.getName());
-				if (m.matches()) {
-					return new PropertyMethod(CommonUtils.lcFirst(m.group(1)),
-							true, method);
-				}
-			}
-			if (method.getParameters().length == 1
-					&& method.getReturnType() == JPrimitiveType.VOID) {
-				Matcher m = setterPattern.matcher(method.getName());
-				if (m.matches()) {
-					return new PropertyMethod(CommonUtils.lcFirst(m.group(1)),
-							false, method);
-				}
-			}
-			return null;
-		}
-
 		void writeForNameCase(SourceWriter sourceWriter) {
-			sourceWriter.println("case \"%s\":", type.getQualifiedBinaryName());
+			sourceWriter.println("case \"%s\":",
+					reflection.type.getQualifiedBinaryName());
 			sourceWriter.indent();
 			sourceWriter.println("return %s.class;", reflectedTypeFqn());
 			sourceWriter.outdent();
@@ -792,10 +685,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		void writeRegisterRegistrations(SourceWriter sourceWriter) {
-			registrations.stream().sorted(REGISTRY_LOCATION_COMPARATOR)
+			reflection.getRegistrations().stream()
+					.sorted(REGISTRY_LOCATION_COMPARATOR)
 					.forEach(registryLocation -> {
 						sourceWriter.print("Registry.register().add(%s.class,",
-								type.getQualifiedSourceName());
+								reflection.type.getQualifiedSourceName());
 						AnnotationExpressionWriter instanceGenerator = new AnnotationExpressionWriter(
 								new AnnotationReflection(registryLocation));
 						instanceGenerator.writeExpression(sourceWriter);
@@ -803,56 +697,17 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					});
 		}
 
-		class PropertyGenerator extends ReflectorGenerator
-				implements Comparable<PropertyGenerator> {
-			List<AnnotationExpressionWriter> annotationExpressionWriters;
+		class PropertyGenerator extends ReflectorGenerator {
+			private PropertyReflection reflection;
 
-			PropertyMethod getter;
-
-			PropertyMethod setter;
-
-			String name;
-
-			JType propertyType;
-
-			public PropertyGenerator(String name) {
-				this.name = name;
-			}
-
-			public void addMethod(PropertyMethod method) {
-				if (method.getter) {
-					getter = method;
-					propertyType = method.method.getReturnType();
-				} else {
-					setter = method;
-					propertyType = method.method.getParameters()[0].getType();
-				}
-				propertyType = erase(propertyType);
-			}
-
-			@Override
-			public int compareTo(PropertyGenerator o) {
-				return name.compareTo(o.name);
-			}
-
-			public String getName() {
-				return this.name;
-			}
-
-			@Override
-			public String toString() {
-				return name;
+			public PropertyGenerator(PropertyReflection reflection) {
+				this.reflection = reflection;
 			}
 
 			@Override
 			protected void prepare() {
-				annotationExpressionWriters = getter == null ? new ArrayList<>()
-						: Arrays.stream(getter.method.getAnnotations())
-								.filter(a -> visibleAnnotationTypes
-										.contains(a.annotationType()))
-								.map(AnnotationReflection::new)
-								.map(AnnotationExpressionWriter::new).sorted()
-								.collect(Collectors.toList());
+				// noop, all done by PropertyReflection
+				throw new UnsupportedOperationException();
 			}
 
 			@Override
@@ -861,22 +716,23 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				sourceWriter.indent();
 				sourceWriter.println(
 						"AnnotationProvider.LookupProvider provider = new AnnotationProvider.LookupProvider();");
-				annotationExpressionWriters
+				reflection.getAnnotationReflections().stream()
+						.map(AnnotationExpressionWriter::new)
 						.forEach(expressionWriter -> expressionWriter
 								.write(sourceWriter));
 				sourceWriter.println("String name = %s;",
-						stringLiteral(name, false));
+						stringLiteral(reflection.name, false));
 				sourceWriter.print("Method getter = ");
-				printMethodRef(getter);
+				printMethodRef(reflection.getter);
 				sourceWriter.print("Method setter = ");
-				printMethodRef(setter);
-				JClassType declaringType = getter != null
-						? getter.method.getEnclosingType()
-						: setter.method.getEnclosingType();
+				printMethodRef(reflection.setter);
+				JClassType declaringType = reflection.getter != null
+						? reflection.getter.method.getEnclosingType()
+						: reflection.setter.method.getEnclosingType();
 				sourceWriter.println("Class propertyType = %s.class;",
-						propertyType.getQualifiedSourceName());
+						reflection.propertyType.getQualifiedSourceName());
 				sourceWriter.println("Class owningType = %s.class;",
-						ClassReflectorGeneratorClient.this.type
+						reflection.classReflection.type
 								.getQualifiedSourceName());
 				sourceWriter.println("Class declaringType = %s.class;",
 						declaringType.getQualifiedSourceName());
@@ -884,8 +740,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						"Property property = new Property(name, getter, setter, propertyType, owningType, declaringType, provider)");
 				sourceWriter.println("{");
 				sourceWriter.indent();
-				printMethodHoist(getter);
-				printMethodHoist(setter);
+				printMethodHoist(reflection.getter);
+				printMethodHoist(reflection.setter);
 				sourceWriter.outdent();
 				sourceWriter.println("};");
 				sourceWriter.println("");
@@ -896,27 +752,24 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				return true;
 			}
 
-			boolean isSerializable() {
-				return getter != null && setter != null && !getter.method
-						.isAnnotationPresent(AlcinaTransient.class);
-			}
-
 			// unused, can remove
 			void printMethodFunction(PropertyMethod method) {
 				if (method == null) {
 					sourceWriter.print("null");
 					return;
 				}
+				PropertyMethodGenerator methodGenerator = new PropertyMethodGenerator(
+						method);
 				sourceWriter.print("new Method(");
 				// doesn't intern - so fairly bulky for final artifact
 				// String toString = Ax.format("[Method: %s]",
 				// method.method.getName());
 				// sourceWriter.print(stringLiteral(toString));
 				sourceWriter.print("null , ");
-				method.printInvoker();
+				methodGenerator.printInvoker();
 				sourceWriter.print(", ");
 				sourceWriter.print("%s.class",
-						erase(method.method.getReturnType())
+						ClassReflection.erase(method.method.getReturnType())
 								.getQualifiedSourceName());
 				sourceWriter.print(")");
 			}
@@ -925,7 +778,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				if (method == null) {
 					return;
 				}
-				method.printHoist();
+				PropertyMethodGenerator methodGenerator = new PropertyMethodGenerator(
+						method);
+				methodGenerator.printHoist();
 			}
 
 			void printMethodRef(PropertyMethod method) {
@@ -939,28 +794,22 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			}
 		}
 
-		class PropertyMethod {
-			String propertyName;
+		class PropertyMethodGenerator {
+			private PropertyMethod propertyMethod;
 
-			boolean getter;
-
-			JMethod method;
-
-			PropertyMethod(String propertyName, boolean getter,
-					JMethod method) {
-				this.propertyName = propertyName;
-				this.getter = getter;
-				this.method = method;
+			PropertyMethodGenerator(PropertyMethod propertyMethod) {
+				this.propertyMethod = propertyMethod;
 			}
 
 			public void printHoist() {
-				if (getter) {
+				if (propertyMethod.getter) {
 					sourceWriter.println("@Override");
 					sourceWriter.println("public Object get(Object bean){");
 					sourceWriter.indent();
 					sourceWriter.print("return  ((%s)bean).%s();",
-							method.getEnclosingType().getQualifiedSourceName(),
-							method.getName());
+							propertyMethod.method.getEnclosingType()
+									.getQualifiedSourceName(),
+							propertyMethod.method.getName());
 					sourceWriter.outdent();
 					sourceWriter.println("}");
 				} else {
@@ -969,118 +818,32 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 							"public void set(Object bean,Object value){");
 					sourceWriter.indent();
 					sourceWriter.print("  ((%s)bean).%s((%s)value);",
-							method.getEnclosingType().getQualifiedSourceName(),
-							method.getName(), method.getParameters()[0]
-									.getType().getQualifiedSourceName());
+							propertyMethod.method.getEnclosingType()
+									.getQualifiedSourceName(),
+							propertyMethod.method.getName(),
+							propertyMethod.method.getParameters()[0].getType()
+									.getQualifiedSourceName());
 					sourceWriter.outdent();
 					sourceWriter.println("}");
 				}
 			}
 
 			public void printInvoker() {
-				if (getter) {
+				if (propertyMethod.getter) {
 					sourceWriter.print("(target,args) -> ((%s)target).%s()",
-							method.getEnclosingType().getQualifiedSourceName(),
-							method.getName());
+							propertyMethod.method.getEnclosingType()
+									.getQualifiedSourceName(),
+							propertyMethod.method.getName());
 				} else {
 					sourceWriter.print("(target,args) -> {((%s)target).%s(",
-							method.getEnclosingType().getQualifiedSourceName(),
-							method.getName());
+							propertyMethod.method.getEnclosingType()
+									.getQualifiedSourceName(),
+							propertyMethod.method.getName());
 					sourceWriter.print("(%s)((Object[])args)[0]",
-							method.getParameters()[0].getType()
+							propertyMethod.method.getParameters()[0].getType()
 									.getQualifiedSourceName());
 					sourceWriter.print("); return null;}");
 				}
-			}
-		}
-
-		/*
-		 * Parallels cc.alcina.framework.entity.SEUtilities.
-		 * getPropertyDescriptorsSortedByField(Class<?>)
-		 */
-		class PropertyOrdering implements Comparator<PropertyGenerator> {
-			private Map<String, Integer> fieldOrdinals;
-
-			private PropertyOrder propertyOrder;
-
-			private PropertyOrder.Custom customOrder;
-
-			public PropertyOrdering() {
-				Multimap<JClassType, List<JField>> declaredFieldsByClass = new Multimap<>();
-				JClassType cursor = type;
-				while (cursor != null
-						&& !ReachabilityData.isObjectType(cursor)) {
-					declaredFieldsByClass.put(cursor,
-							Arrays.stream(cursor.getFields())
-									.collect(Collectors.toList()));
-					cursor = cursor.getSuperclass();
-				}
-				List<JClassType> classOrder = declaredFieldsByClass.keySet()
-						.stream().collect(Collectors.toList());
-				Comparator<JClassType> classOrderComparator = new Comparator<JClassType>() {
-					@Override
-					public int compare(JClassType o1, JClassType o2) {
-						JClassType ancestor = o1.isAssignableFrom(o2) ? o1 : o2;
-						JClassType descendant = o1.isAssignableFrom(o2) ? o2
-								: o1;
-						if (descendant.getSuperclass() == ancestor) {
-							return o1 == ancestor ? -1 : 1;
-						} else {
-							return o1 == ancestor ? -1 : 1;
-						}
-					}
-				};
-				Collections.sort(classOrder, classOrderComparator);
-				List<JField> fieldOrder = new ArrayList<>();
-				for (JClassType classOrdered : classOrder) {
-					declaredFieldsByClass.get(classOrdered)
-							.forEach(fieldOrder::add);
-				}
-				fieldOrdinals = new LinkedHashMap<>();
-				fieldOrder.stream().map(JField::getName).distinct().forEach(
-						name -> fieldOrdinals.put(name, fieldOrdinals.size()));
-				propertyOrder = type.getAnnotation(PropertyOrder.class);
-				customOrder = PropertyOrder.Support.customOrder(propertyOrder,
-						ClassUtil.NO_ARGS_INSTANTIATOR);
-			}
-
-			@Override
-			public int compare(PropertyGenerator o1, PropertyGenerator o2) {
-				if (customOrder != null) {
-					int custom = customOrder.compare(o1.getName(),
-							o2.getName());
-					if (custom != 0) {
-						return custom;
-					}
-				}
-				if (propertyOrder != null && propertyOrder.value().length > 0) {
-					int idx1 = Arrays.asList(propertyOrder.value())
-							.indexOf(o1.getName());
-					int idx2 = Arrays.asList(propertyOrder.value())
-							.indexOf(o2.getName());
-					if (idx1 == -1) {
-						if (idx2 == -1) {
-							// fall through
-						} else {
-							return 1;
-						}
-					} else {
-						if (idx2 == -1) {
-							return -1;
-						} else {
-							return idx1 - idx2;
-						}
-					}
-				}
-				int ordinal1 = fieldOrdinals.computeIfAbsent(o1.getName(),
-						key -> -1);
-				int ordinal2 = fieldOrdinals.computeIfAbsent(o2.getName(),
-						key -> -1);
-				int i = ordinal1 - ordinal2;
-				if (i != 0) {
-					return i;
-				}
-				return o1.getName().compareTo(o2.getName());
 			}
 		}
 	}
@@ -1133,9 +896,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	class ModuleReflectionGenerator extends UnitGenerator {
 		List<AnnotationImplementationGenerator> annotationImplementations = new ArrayList<>();
 
-		Map<JClassType, ClassReflectorGeneratorClient> classReflectors = new LinkedHashMap<>();
+		Map<JClassType, ClassReflectorGenerator> classReflectors = new LinkedHashMap<>();
 
-		List<ClassReflectorGeneratorClient> writeReflectors;
+		List<ClassReflectorGenerator> writeReflectors;
 
 		boolean alreadyWritten = false;
 
@@ -1222,14 +985,14 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		private Set<JClassType> computeSetterArguments(JClassType type) {
-			ClassReflectorGeneratorClient reflectorGenerator = classReflectors
+			ClassReflectorGenerator reflectorGenerator = classReflectors
 					.get(type.getErasedType());
 			if (reflectorGenerator == null) {
 				return Collections.emptySet();
 			}
-			Set<JClassType> computed = reflectorGenerator
-					.sortedPropertyGenerators()
-					.filter(PropertyGenerator::isSerializable)
+			Set<JClassType> computed = reflectorGenerator.reflection
+					.getSortedPropertyReflections().stream()
+					.filter(PropertyReflection::isSerializable)
 					.map(generator -> generator.setter.method)
 					.flatMap(m -> Arrays.stream(m.getParameterTypes())
 							.flatMap(t -> ReachabilityData
@@ -1278,12 +1041,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			prepareAnnotationImplementationGenerators();
 			List<JClassType> types = computeReachableTypes();
 			filter.updateReachableTypes(types);
-			types.stream().map(ClassReflectorGeneratorClient::new)
-					.forEach(crg -> classReflectors.put(crg.type, crg));
-			classReflectors.values()
-					.forEach(ClassReflectorGeneratorClient::prepare);
+			types.stream().map(ClassReflectorGenerator::new).forEach(
+					crg -> classReflectors.put(crg.reflection.type, crg));
+			classReflectors.values().forEach(ClassReflectorGenerator::prepare);
 			writeReflectors = classReflectors.values().stream()
-					.filter(r -> filter.emitType(r.type))
+					.filter(r -> filter.emitType(r.reflection.type))
 					.collect(Collectors.toList());
 		}
 
@@ -1315,9 +1077,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			return Arrays.stream(context.getTypeOracle().getTypes())
 					.filter(t -> isReflectable(t))
 					.map(JClassType::getFlattenedSupertypeHierarchy)
-					.flatMap(Collection::stream)
-					.map(ClientReflectionGenerator::erase).distinct()
-					.filter(t -> t.isPublic()).collect(Collectors.toList());
+					.flatMap(Collection::stream).map(ClassReflection::erase)
+					.distinct().filter(t -> t.isPublic())
+					.collect(Collectors.toList());
 		}
 
 		Stream<TypeHierarchy> computeReflectableTypes() {
@@ -1328,8 +1090,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			return Arrays.stream(context.getTypeOracle().getTypes())
 					.filter(t -> isReflectable(t))
 					.map(JClassType::getFlattenedSupertypeHierarchy)
-					.flatMap(Collection::stream)
-					.map(ClientReflectionGenerator::erase).distinct()
+					.flatMap(Collection::stream).map(ClassReflection::erase)
+					.distinct()
 					.filter(t -> !t.getQualifiedSourceName()
 							.equals(Object.class.getCanonicalName()))
 					.filter(t -> t.isPublic()).map(t -> new TypeHierarchy(t,
@@ -1339,7 +1101,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		List<JClassType> computeRegistryTypes() {
 			return Arrays.stream(context.getTypeOracle().getTypes())
 					.filter(t -> hasRegistrations(t))
-					.map(ClientReflectionGenerator::erase).distinct()
+					.map(ClassReflection::erase).distinct()
 					// only interested in instantiable types
 					.filter(t -> t.isPublic() && !t.isAbstract())
 					.collect(Collectors.toList());
@@ -1358,12 +1120,12 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		void writeClassReflectors() {
-			writeReflectors.forEach(ClassReflectorGeneratorClient::write);
+			writeReflectors.forEach(ClassReflectorGenerator::write);
 		}
 
 		void writeForClassReflectors(String methodName, String methodArguments,
 				String returnType,
-				Consumer<ClassReflectorGeneratorClient> perReflector) {
+				Consumer<ClassReflectorGenerator> perReflector) {
 			boolean voidMethod = returnType.equals("void");
 			String methodArgumentName = methodArguments.isEmpty() ? ""
 					: methodArguments.replaceFirst(".+ (.+)", "$1");
