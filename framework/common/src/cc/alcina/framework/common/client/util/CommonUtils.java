@@ -1628,7 +1628,7 @@ public class CommonUtils {
 
 	/**
 	 * <li>Split a string by separators</li>
-	 * 
+	 *
 	 * @param content
 	 *            String to split
 	 * @param split
@@ -1653,7 +1653,7 @@ public class CommonUtils {
 
 	/**
 	 * <li>Split a string by a regex expression</li>
-	 * 
+	 *
 	 * @param content
 	 *            String to split
 	 * @param regex
@@ -1893,12 +1893,16 @@ public class CommonUtils {
 		if (isNullOrEmpty(s)) {
 			return s;
 		}
+		if (s.contains("CALLA")) {
+			int debug = 3;
+		}
 		String pre = "";
 		if (s.length() > 1 && s.matches("[({\\[].+")) {
 			pre += s.substring(0, 1);
 			s = s.substring(1);
 		}
-		if (s.length() > 2 && s.matches("[A-Z]['’].+")) {
+		// question mark is bad unicode conversion possibility
+		if (s.length() > 2 && s.matches("[A-Z]['’?].+")) {
 			pre += s.substring(0, 2);
 			s = s.substring(2);
 		}
@@ -1908,6 +1912,15 @@ public class CommonUtils {
 		}
 		return pre + s.substring(0, 1).toUpperCase()
 				+ s.substring(1).toLowerCase();
+	}
+
+	public static String upperCaseFirstLetterOnlyWords(String s) {
+		if (isNullOrEmpty(s)) {
+			return s;
+		}
+		return Arrays.stream(s.split(" "))
+				.map(CommonUtils::upperCaseFirstLetterOnly)
+				.collect(Collectors.joining(" "));
 	}
 
 	// see also
