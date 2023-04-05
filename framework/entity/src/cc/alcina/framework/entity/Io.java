@@ -103,12 +103,12 @@ public class Io {
 			}
 		}
 
-		public Document asDocument() {
-			return loadDocument();
+		public DomDocument asDomDocument() {
+			return new DomDocument(asHtmlDocument());
 		}
 
-		public DomDocument asDomDocument() {
-			return new DomDocument(asDocument());
+		public Document asHtmlDocument() {
+			return loadDocument();
 		}
 
 		public InputStream asInputStream() {
@@ -154,6 +154,14 @@ public class Io {
 			byte[] bytes = asBytes();
 			try {
 				return new String(bytes, charsetName);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		public Document asXmlDocument() {
+			try {
+				return XmlUtils.loadDocument(resource.getStream());
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
