@@ -339,7 +339,7 @@ public class SelectionTraversal
 		 *
 		 * - get rid of current, next generation
 		 * - use layer state
-		 * - layer *parser* emits slices, layer *selector* emits selections
+		 * - layer *parser* emits measures, layer *selector* emits selections
 		 *
 		 * @formatter:on
 		 *

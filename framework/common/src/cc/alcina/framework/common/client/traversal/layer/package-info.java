@@ -15,9 +15,10 @@
  * <ul>
  * <li>Token - a LayeredParserToken
  * <li>Range - corresponds to a DOM range
- * <li>Slice - a tuple of [Token, Range]
- * <li>Larger/smaller - in the sense of the slice.range containment relationship
- * with another slice - so a HEAD slice might contain a METADATA:DOCTITLE slice
+ * <li>Measure - a tuple of [Token, Range]
+ * <li>Larger/smaller - in the sense of the measur.range containment
+ * relationship with another measure - so a HEAD measure might contain a
+ * METADATA:DOCTITLE measure
  * <li>Layer - a feature recognition layer
  * </ul>
  * <h2>Layers</h2>

@@ -4,16 +4,17 @@ import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.HasUrl;
 
-public abstract class AbstractUrlSliceSlection extends AbstractUrlSelection
+public abstract class AbstractUrlMeasureSlection extends AbstractUrlSelection
 		implements HasUrl {
-	private final Slice slice;
+	private final Measure measure;
 
-	public AbstractUrlSliceSlection(Selection parent, Slice slice, String url) {
+	public AbstractUrlMeasureSlection(Selection parent, Measure measure,
+			String url) {
 		super(parent, url, url);
-		this.slice = slice;
+		this.measure = measure;
 	}
 
-	public Slice getSlice() {
-		return this.slice;
+	public Measure getMeasure() {
+		return this.measure;
 	}
 }
