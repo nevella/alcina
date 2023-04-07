@@ -1,7 +1,5 @@
 package cc.alcina.framework.common.client.util;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 public interface HasUrl {
 	public String provideUrl();
 

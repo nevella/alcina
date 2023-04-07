@@ -99,7 +99,7 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	protected void run1() throws Exception {
 		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
 		txLatch = new CountDownLatch(2);
 		tx1Latch1 = new CountDownLatch(1);

@@ -24,10 +24,10 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SqlUtils;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 import cc.alcina.framework.servlet.job.JobContext;
 
-public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
+public class TaskReapNonPersistentTransforms extends ServerTask {
 	private static final transient int SLICE_SIZE = 1000;
 
 	public static final transient String TRANSFORM_REAPER_2_LAST_RQ_ID = "TRANSFORM_REAPER_2_LAST_RQ_ID";
@@ -116,7 +116,7 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	public void run() throws Exception  {
 		// run as root, otherwise shouldPersistEventRecord will always return
 		// true
 		MethodContext.instance().withRootPermissions(true).run(this::reap);

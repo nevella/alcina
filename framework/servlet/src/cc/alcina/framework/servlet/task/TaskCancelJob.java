@@ -2,12 +2,17 @@ package cc.alcina.framework.servlet.task;
 
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskCancelJob extends AbstractTaskPerformer {
+public class TaskCancelJob extends ServerTask {
+	private long jobId;
+
+	public long getJobId() {
+		return this.jobId;
+	}
+
 	@Override
-	protected void run0() throws Exception {
-		long jobId = Long.parseLong(value);
+	public void run() throws Exception {
 		Job job = Job.byId(jobId);
 		if (job == null) {
 			logger.info("Job {} does not exist", jobId);
@@ -18,5 +23,14 @@ public class TaskCancelJob extends AbstractTaskPerformer {
 			Transaction.commit();
 			logger.info("Job {} cancelled", jobId);
 		}
+	}
+
+	public void setJobId(long jobId) {
+		this.jobId = jobId;
+	}
+
+	public TaskCancelJob withJobId(long jobId) {
+		this.jobId = jobId;
+		return this;
 	}
 }

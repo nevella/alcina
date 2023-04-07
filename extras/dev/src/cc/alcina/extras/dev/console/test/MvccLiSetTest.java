@@ -11,11 +11,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class MvccLiSetTest extends AbstractTaskPerformer {
+public class MvccLiSetTest extends ServerTask {
 	@Override
-	protected void run0() throws Exception {
+	public void run() throws Exception {
 		Transaction.end();
 		Ax.err(getClass().getSimpleName());
 		Class<? extends ClientInstance> clazz = PersistentImpl

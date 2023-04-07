@@ -2,9 +2,9 @@ package cc.alcina.framework.servlet.task;
 
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskSwitchPostgresUrl extends AbstractTaskPerformer {
+public class TaskSwitchPostgresUrl extends ServerTask {
 	private String newUrl;
 
 	private String descriptorClassName;
@@ -26,7 +26,7 @@ public class TaskSwitchPostgresUrl extends AbstractTaskPerformer {
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	public void run() throws Exception  {
 		DomainStore store = DomainStore.stores().storeFor(descriptorClassName);
 		store.setConnectionUrl(newUrl);
 		if (store == DomainStore.writableStore()) {

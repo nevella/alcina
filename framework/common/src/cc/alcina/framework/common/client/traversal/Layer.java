@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -68,6 +69,19 @@ public abstract class Layer<S extends Selection> implements
 		return depth;
 	}
 
+	public Layer findHandlingLayer(Class<? extends Selection> clazz) {
+		Stack<Layer> layers = new Stack<>();
+		layers.push(this);
+		while (layers.size() > 0) {
+			Layer<?> layer = layers.pop();
+			if (layer.signature.input == clazz) {
+				return layer;
+			}
+			layer.getChildren().forEach(layers::push);
+		}
+		return null;
+	}
+
 	public Layer firstLeaf() {
 		Layer<?> cursor = this;
 		while (cursor.getChildren().size() > 0) {
@@ -85,6 +99,18 @@ public abstract class Layer<S extends Selection> implements
 		return computeInputs();
 	}
 
+	public String layerPath() {
+		List<Integer> offsets = new ArrayList<>();
+		Layer cursor = this;
+		while (cursor.parent != null) {
+			offsets.add(0, cursor.parent.children.indexOf(cursor));
+			cursor = cursor.parent;
+		}
+		return offsets.isEmpty() ? "0"// root
+				: offsets.stream().map(String::valueOf)
+						.collect(Collectors.joining("."));
+	}
+
 	public void onBeforeTraversal(SelectionTraversal.State traversalState) {
 		state = new State(traversalState);
 	}
@@ -94,6 +120,14 @@ public abstract class Layer<S extends Selection> implements
 			throws Exception {
 		// if this layer processes no inputs, its children must
 		Preconditions.checkState(children.size() > 0);
+	}
+
+	public Layer root() {
+		Layer cursor = this;
+		while (cursor.parent != null) {
+			cursor = cursor.parent;
+		}
+		return cursor;
 	}
 
 	/*

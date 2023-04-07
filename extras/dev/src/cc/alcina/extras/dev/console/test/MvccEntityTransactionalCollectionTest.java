@@ -137,7 +137,7 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	protected void run1() throws Exception {
 		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
 		initialSize = Domain.stream(userClass).count();
 		Ax.err("Initial size: %s", initialSize);

@@ -5,10 +5,10 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.traversal.layer.Slice;
+import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.util.Ax;
 
-public abstract class DocumentSelection extends Slice.SliceSelection {
+public abstract class DocumentSelection extends Measure.MeasureSelection {
 	protected DomDocument document;
 
 	protected Loader loader;
@@ -23,7 +23,7 @@ public abstract class DocumentSelection extends Slice.SliceSelection {
 		super(parent, null, parent.getClass().getName());
 		String text = Ax.ntrim(parent.get());
 		document = DomDocument.createTextContainer(text);
-		documentToSlice();
+		documentToMeasure();
 	}
 
 	public DomDocument ensureDocument() {
@@ -39,21 +39,22 @@ public abstract class DocumentSelection extends Slice.SliceSelection {
 	}
 
 	@Override
-	public Slice get() {
-		Slice value = super.get();
+	public Measure get() {
+		Measure value = super.get();
 		if (value != null) {
 			return value;
 		} else {
 			ensureDocument();
-			return documentToSlice();
+			return documentToMeasure();
 		}
 	}
 
-	private Slice documentToSlice() {
+	private Measure documentToMeasure() {
 		Location.Range documentRange = document.getLocationRange();
-		Slice slice = new Slice(documentRange.start, documentRange.end, null);
-		set(slice);
-		return slice;
+		Measure measure = new Measure(documentRange.start, documentRange.end,
+				null);
+		set(measure);
+		return measure;
 	}
 
 	public interface Loader<S extends Selection> {

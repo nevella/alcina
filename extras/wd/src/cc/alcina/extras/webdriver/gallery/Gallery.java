@@ -219,7 +219,7 @@ public class Gallery {
 		String pageSource = (String) remoteDriver
 				.executeScript("return document.documentElement.outerHTML;");
 		try {
-			Document w3cdoc = Io.read().string(pageSource).asDocument();
+			Document w3cdoc = Io.read().string(pageSource).asHtmlDocument();
 			DomDocument doc = new DomDocument(w3cdoc);
 			doc.xpath("//script ").forEach(DomNode::removeFromParent);
 			List<DomNode> stylesheetNodes = doc

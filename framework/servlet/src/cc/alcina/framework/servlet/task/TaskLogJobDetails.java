@@ -28,12 +28,12 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 import cc.alcina.framework.servlet.servlet.JobServlet;
 
-public class TaskLogJobDetails extends AbstractTaskPerformer {
+public class TaskLogJobDetails extends ServerTask {
 	private long jobId;
 
 	private boolean details;
@@ -54,6 +54,55 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 		return this;
 	}
 
+	@Override
+	public void run() throws Exception {
+		Job job = Job.byId(jobId);
+		if (job == null) {
+			JobContext.info("Job {} does not exist", jobId);
+		} else {
+			List<Job> threadData = JobRegistry.get().getThreadData(job);
+			job.domain().ensurePopulated();
+			if (job.getLargeResult() != null) {
+				if (details) {
+					JobContext.get().getJob()
+							.setLargeResult(job.getLargeResult().toString());
+					logger.info("Details output to job.largeResult");
+					return;
+				}
+			}
+			DomDocument doc = DomDocument.basicHtmlDoc();
+			String css = Io.read().resource("res/TaskListJobs.css").asString();
+			doc.xpath("//head").node().builder().tag("style").text(css)
+					.append();
+			css = Io.read().resource("res/TaskLogJobDetails.css").asString();
+			doc.xpath("//head").node().builder().tag("style").text(css)
+					.append();
+			DomNode body = doc.html().body();
+			body.builder().tag("h2").text("Allocator").append();
+			DomNodeBuilder queueDiv = body.builder().tag("div")
+					.className("allocation-queue");
+			AllocationQueue allocationQueue = JobDomain.get()
+					.getAllocationQueue(job);
+			if (allocationQueue == null) {
+				queueDiv.text("(No allocation queue)");
+			} else {
+				queueDiv.text(allocationQueue.toString());
+			}
+			queueDiv.append();
+			if (job.getLargeResult() != null) {
+				DomNode div = body.builder().tag("div").append();
+				String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
+						.withJobId(job.getId()).withDetails(true));
+				div.html().addLink("Large result/details", href, "");
+			}
+			processData(threadData, body);
+			descendantAndSubsequentJobs(job, body);
+			fields(job, body);
+			JobContext.get().getJob().setLargeResult(doc.fullToString());
+			logger.info("Details output to job.largeResult");
+		}
+	}
+
 	public void setDetails(boolean details) {
 		this.details = details;
 	}
@@ -62,8 +111,8 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 		this.jobId = jobId;
 	}
 
-	public TaskLogJobDetails withId(long id) {
-		this.jobId = id;
+	public TaskLogJobDetails withJobId(long jobId) {
+		this.jobId = jobId;
 		return this;
 	}
 
@@ -110,8 +159,8 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 					.cell(timestamp(job.getEndTime())).cell(job.getPerformer())
 					.accept(Utils::instance);
 			DomNode td = cellBuilder.append();
-			String href = JobServlet
-					.createTaskUrl(new TaskLogJobDetails().withId(job.getId()));
+			String href = JobServlet.createTaskUrl(
+					new TaskLogJobDetails().withJobId(job.getId()));
 			td.html().addLink("Details", href, "_blank");
 		});
 		body.builder().tag("hr").append();
@@ -160,11 +209,11 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 			DomNode td = builder.row().cell("Job").append();
 			String href = JobServlet.createTaskUrl(
-					new TaskLogJobDetails().withId(active.getId()));
+					new TaskLogJobDetails().withJobId(active.getId()));
 			td.html().addLink(active.toDisplayName(), href, "_blank");
 			td.builder().text("\u00a0-\u00a0").append();
-			String cancelHref = JobServlet.createTaskUrl(new TaskCancelJob()
-					.withValue(String.valueOf(active.getId())));
+			String cancelHref = JobServlet.createTaskUrl(
+					new TaskCancelJob().withJobId(active.getId()));
 			td.html().addLink("Cancel", cancelHref, "_blank");
 			if (messageState == null) {
 				builder.row().cell("Response").cell("(No state response)");
@@ -192,55 +241,6 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 						.cell(messageState.getStackTrace());
 			}
 			body.builder().tag("hr").append();
-		}
-	}
-
-	@Override
-	protected void run0() throws Exception {
-		Job job = Job.byId(jobId);
-		if (job == null) {
-			JobContext.info("Job {} does not exist", jobId);
-		} else {
-			List<Job> threadData = JobRegistry.get().getThreadData(job);
-			job.domain().ensurePopulated();
-			if (job.getLargeResult() != null) {
-				if (details) {
-					JobContext.get().getJob()
-							.setLargeResult(job.getLargeResult().toString());
-					logger.info("Details output to job.largeResult");
-					return;
-				}
-			}
-			DomDocument doc = DomDocument.basicHtmlDoc();
-			String css = Io.read().resource("res/TaskListJobs.css").asString();
-			doc.xpath("//head").node().builder().tag("style").text(css)
-					.append();
-			css = Io.read().resource("res/TaskLogJobDetails.css").asString();
-			doc.xpath("//head").node().builder().tag("style").text(css)
-					.append();
-			DomNode body = doc.html().body();
-			body.builder().tag("h2").text("Allocator").append();
-			DomNodeBuilder queueDiv = body.builder().tag("div")
-					.className("allocation-queue");
-			AllocationQueue allocationQueue = JobDomain.get()
-					.getAllocationQueue(job);
-			if (allocationQueue == null) {
-				queueDiv.text("(No allocation queue)");
-			} else {
-				queueDiv.text(allocationQueue.toString());
-			}
-			queueDiv.append();
-			if (job.getLargeResult() != null) {
-				DomNode div = body.builder().tag("div").append();
-				String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
-						.withId(job.getId()).withDetails(true));
-				div.html().addLink("Large result/details", href, "");
-			}
-			processData(threadData, body);
-			descendantAndSubsequentJobs(job, body);
-			fields(job, body);
-			JobContext.get().getJob().setLargeResult(doc.fullToString());
-			logger.info("Details output to job.largeResult");
 		}
 	}
 

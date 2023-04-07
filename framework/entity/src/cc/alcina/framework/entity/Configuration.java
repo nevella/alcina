@@ -302,8 +302,12 @@ public class Configuration {
 		Pattern includePattern = Pattern
 				.compile("include\\.(resource|file)=(.+)");
 
+		boolean logResourceLoad;
+
 		public Properties() {
 			Arrays.stream(SystemSet.values()).forEach(this::addSet);
+			logResourceLoad = Boolean.getBoolean(
+					"cc.alcina.framework.entity.Configuration.Properties.logResourceLoad");
 			invalidate();
 		}
 
@@ -412,7 +416,13 @@ public class Configuration {
 					// trim leading slash, required for
 					// classloader.getResourceAsStream() (but not
 					// class.getResourceAsStream
+					//
+					// trace with jvm property
+					// -Dcc.alcina.framework.entity.Configuration.Properties.logResourceLoad=true
 					String trimmedPath = path.substring(1);
+					if (logResourceLoad) {
+						Ax.out("Loading config path: %s", trimmedPath);
+					}
 					contents = Io.read()
 							.fromStream(provideClassLoader()
 									.getResourceAsStream(trimmedPath))

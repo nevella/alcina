@@ -9,36 +9,37 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
-import cc.alcina.framework.common.client.traversal.layer.Slice.SliceSelection;
+import cc.alcina.framework.common.client.traversal.layer.Measure.MeasureSelection;
+import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class LayerParser {
 	InputState inputState;
 
-	SliceSelection selection;
+	MeasureSelection selection;
 
 	private LayerParserPeer parserPeer;
 
-	public LayerParser(SliceSelection selection, LayerParserPeer parserPeer) {
+	public LayerParser(MeasureSelection selection, LayerParserPeer parserPeer) {
 		this.selection = selection;
 		this.parserPeer = parserPeer;
 		inputState = new InputState(selection.get());
 	}
 
-	public void detachSlices() {
+	public void detachMeasures() {
 		selection.get().detach();
-		inputState.matches.forEach(Slice::detach);
+		inputState.matches.forEach(Measure::detach);
 	}
 
 	public DomNode getDocumentNode() {
 		return selection.get().containingNode();
 	}
 
-	public List<Slice> getOutputs() {
+	public List<Measure> getOutputs() {
 		return inputState.outputs;
 	}
 
-	public SliceSelection getSelection() {
+	public MeasureSelection getSelection() {
 		return this.selection;
 	}
 
@@ -52,13 +53,13 @@ public class LayerParser {
 	public void parse() {
 		while (inputState.location.isBefore(inputState.input.end)) {
 			inputState.onBeforeTokenMatch();
-			for (LayerToken token : parserPeer.tokens) {
-				Slice slice = token.match(inputState);
-				if (slice != null) {
+			for (Token token : parserPeer.tokens) {
+				Measure measure = token.match(inputState);
+				if (measure != null) {
 					if (inputState.bestMatch == null
 							|| inputState.bestMatch.start
-									.isAfter(slice.start)) {
-						inputState.bestMatch = slice;
+									.isAfter(measure.start)) {
+						inputState.bestMatch = measure;
 					}
 				}
 			}
@@ -78,28 +79,28 @@ public class LayerParser {
 
 	public void selectMatches() {
 		inputState.matches.stream()
-				.map(slice -> slice.token.select(inputState, slice))
+				.map(measure -> measure.token.select(inputState, measure))
 				.filter(Objects::nonNull).forEach(parserPeer.traversal::select);
 	}
 
 	public class InputState {
-		SliceMatcher sliceMatcher = new SliceMatcher(this);
+		MeasureMatcher measureMatcher = new MeasureMatcher(this);
 
-		public Slice input;
+		public Measure input;
 
 		Location location;
 
-		Slice bestMatch;
+		Measure bestMatch;
 
-		List<Slice> matches = new ArrayList<>();
+		List<Measure> matches = new ArrayList<>();
 
-		List<Slice> outputs = new ArrayList<>();
+		List<Measure> outputs = new ArrayList<>();
 
 		private String inputContent = null;
 
 		XpathMatches xpathMatches = null;
 
-		public InputState(Slice input) {
+		public InputState(Measure input) {
 			this.input = input;
 			this.location = input.start;
 		}
@@ -113,7 +114,7 @@ public class LayerParser {
 			return location.isBefore(other);
 		}
 
-		public void emitUnmatchedSegmentsAs(LayerToken token) {
+		public void emitUnmatchedSegmentsAs(Token token) {
 			Location start = input.start;
 			Location end = null;
 			int matchesIdx = 0;
@@ -123,7 +124,7 @@ public class LayerParser {
 				} else {
 					end = matches.get(matchesIdx).start;
 				}
-				Slice segment = input.subSlice(start.index, end.index, token);
+				Measure segment = input.subMeasure(start.index, end.index, token);
 				if (segment.provideIsPoint()) {
 					// empty
 				} else {
@@ -142,7 +143,7 @@ public class LayerParser {
 			return selection.ancestorSelection(DocumentSelection.class);
 		}
 
-		public List<Slice> getMatches() {
+		public List<Measure> getMatches() {
 			return this.matches;
 		}
 
@@ -150,7 +151,7 @@ public class LayerParser {
 			return location.index - input.start.index;
 		}
 
-		public Slice.SliceSelection getSelection() {
+		public Measure.MeasureSelection getSelection() {
 			return selection;
 		}
 
@@ -158,22 +159,22 @@ public class LayerParser {
 			return inputContent;
 		}
 
-		public boolean isAtEnd(Slice match) {
+		public boolean isAtEnd(Measure match) {
 			if (match == null) {
 				return false;
 			}
 			return match.end.index == input.end.index;
 		}
 
-		public SliceMatcher matcher() {
-			return sliceMatcher;
+		public MeasureMatcher matcher() {
+			return measureMatcher;
 		}
 
-		public Slice nextXpathMatch(String xpath, LayerToken token) {
+		public Measure nextXpathMatch(String xpath, Token token) {
 			XpathMatches matches = ensureMatches(xpath);
 			if (matches.itr.hasNext()) {
 				DomNode node = matches.itr.next();
-				return Slice.fromNode(node, token);
+				return Measure.fromNode(node, token);
 			} else {
 				return null;
 			}

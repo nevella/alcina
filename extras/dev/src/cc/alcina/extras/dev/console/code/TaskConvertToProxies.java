@@ -3,7 +3,7 @@ package cc.alcina.extras.dev.console.code;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.job.RootTask;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 
 /**
@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
  *
  *
  */
-public class TaskConvertToProxies implements Task {
+public class TaskConvertToProxies implements RootTask {
 	String importMatcherRegex;
 
 	String outputPackage;

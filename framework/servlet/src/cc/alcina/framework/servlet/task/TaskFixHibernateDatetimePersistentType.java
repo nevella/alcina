@@ -12,12 +12,12 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase.CommonPersistenceConnectionProvider;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.SqlUtils;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskFixHibernateDatetimePersistentType
-		extends AbstractTaskPerformer {
+		extends ServerTask {
 	@Override
-	protected void run0() throws Exception {
+	public void run() throws Exception  {
 		try (Connection conn = Registry
 				.impl(CommonPersistenceConnectionProvider.class)
 				.getConnection()) {

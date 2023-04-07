@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -120,21 +121,39 @@ public class SelectionTraversal
 		FormatBuilder position = new FormatBuilder().separator(" > ");
 		List<Node> selectionPath = node.asNodePath();
 		Node last = CommonUtils.last(selectionPath);
-		Object value = last.getValue();
-		List<Generation> list = generations.keySet().stream()
-				.collect(Collectors.toList());
-		for (int idx = 0; idx < list.size(); idx++) {
-			Generation generation = list.get(idx);
-			GenerationTraversal generationData = generations.get(generation);
-			Set<Selection> selections = generationData.selections;
-			if (selections.contains(value)) {
-				int level = idx;
-				position.format("Generation: [%s/%s]", idx + 1, list.size());
-				IntPair pair = new IntPair(generationIndicies.get(value),
-						selections.size());
+		Selection value = (Selection) last.getValue();
+		{
+			List<Generation> list = generations.keySet().stream()
+					.collect(Collectors.toList());
+			for (int idx = 0; idx < list.size(); idx++) {
+				Generation generation = list.get(idx);
+				GenerationTraversal generationData = generations
+						.get(generation);
+				Set<Selection> selections = generationData.selections;
+				if (selections.contains(value)) {
+					int level = idx;
+					position.format("Generation: [%s/%s]", idx + 1,
+							list.size());
+					IntPair pair = new IntPair(generationIndicies.get(value),
+							selections.size());
+					position.append(pair);
+					position.separator(" :: ");
+					position.append(generation);
+					position.append(last.displayName());
+					String positionMessage = position.toString();
+					return positionMessage;
+				}
+			}
+		}
+		{
+			Layer layer = state.findLayerHandlingInput(value);
+			if (layer != null) {
+				position.format("Layer: [%s/%s]", layer.layerPath(),
+						layer.root().getChildren().size());
+				IntPair pair = state.selections.getSelectionPosition(value);
 				position.append(pair);
 				position.separator(" :: ");
-				position.append(generation);
+				position.append(layer);
 				position.append(last.displayName());
 				String positionMessage = position.toString();
 				return positionMessage;
@@ -320,7 +339,7 @@ public class SelectionTraversal
 		 *
 		 * - get rid of current, next generation
 		 * - use layer state
-		 * - layer *parser* emits slices, layer *selector* emits selections
+		 * - layer *parser* emits measures, layer *selector* emits selections
 		 *
 		 * @formatter:on
 		 *
@@ -737,6 +756,18 @@ public class SelectionTraversal
 			return (List<S>) byClass.getAndEnsure(clazz).stream()
 					.collect(Collectors.toList());
 		}
+
+		synchronized IntPair getSelectionPosition(Selection value) {
+			for (Entry<Layer, Set<Selection>> entry : byLayer.entrySet()) {
+				Set<Selection> set = entry.getValue();
+				if (set.contains(value)) {
+					return new IntPair(
+							CommonUtils.indexOf(set.iterator(), value) + 1,
+							set.size());
+				}
+			}
+			return null;
+		}
 	}
 
 	public class State {
@@ -747,6 +778,10 @@ public class SelectionTraversal
 		Layer rootLayer;
 
 		Selections selections = new Selections();
+
+		public Layer findLayerHandlingInput(Selection value) {
+			return rootLayer.findHandlingLayer(value.getClass());
+		}
 
 		public void select(Selection selection) {
 			SelectionTraversal.this.select(selection);

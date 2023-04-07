@@ -5,38 +5,36 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public abstract class MvccEntityTransactionTest extends AbstractTaskPerformer {
+public abstract class MvccEntityTransactionTest extends ServerTask {
 	transient private Exception lastThreadException;
 
-	protected void notifyThreadException(Exception e) {
-		TransformManager.get().clearTransforms();
-		lastThreadException = e;
-	}
-
 	@Override
-	protected void run(boolean throwExceptions) {
+	public void run() throws Exception {
 		try {
 			Ax.err(getClass().getSimpleName());
 			LooseContext.push();
 			Transaction.ensureEnded();
 			Transaction.begin();
 			logger.info("Started job: {}", getClass().getName());
-			run0();
+			run1();
 			if (lastThreadException != null) {
 				throw lastThreadException;
 			}
 		} catch (Exception e) {
 			TransformManager.get().clearTransforms();
-			if (throwExceptions) {
-				throw WrappedRuntimeException.wrap(e);
-			} else {
-				e.printStackTrace();
-			}
+			throw WrappedRuntimeException.wrap(e);
 		} finally {
 			Transaction.endAndBeginNew();
 			LooseContext.pop();
 		}
 	}
+
+	protected void notifyThreadException(Exception e) {
+		TransformManager.get().clearTransforms();
+		lastThreadException = e;
+	}
+
+	protected abstract void run1() throws Exception;
 }

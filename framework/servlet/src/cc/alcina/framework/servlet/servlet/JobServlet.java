@@ -64,10 +64,12 @@ public class JobServlet extends AlcinaServlet {
 			}
 		} else if (task instanceof TaskCancelJob) {
 			queryParameters.put("action", "cancel");
-			queryParameters.put("id", ((TaskCancelJob) task).value);
+			queryParameters.put("id",
+					String.valueOf(((TaskCancelJob) task).getJobId()));
 		} else if (task instanceof TaskRunJob) {
 			queryParameters.put("action", "run");
-			queryParameters.put("id", ((TaskRunJob) task).value);
+			queryParameters.put("id",
+					String.valueOf(((TaskRunJob) task).getJobId()));
 		} else {
 			queryParameters.put("action", "task");
 			String serialized = TransformManager.serialize(task);
@@ -139,16 +141,15 @@ public class JobServlet extends AlcinaServlet {
 					.perform();
 			break;
 		case control_job:
-			job = new TaskLogJobDetails()
-					.withValue(String.valueOf(JobRegistry.get()
-							.getLaunchedFromControlServlet().getId()))
+			job = new TaskLogJobDetails().withJobId(
+					JobRegistry.get().getLaunchedFromControlServlet().getId())
 					.perform();
 			break;
 		case cancel:
-			job = new TaskCancelJob().withValue(id).perform();
+			job = new TaskCancelJob().withJobId(Long.parseLong(id)).perform();
 			break;
 		case run:
-			job = new TaskRunJob().withValue(id).perform();
+			job = new TaskRunJob().withJobId(Long.parseLong(id)).perform();
 			break;
 		case wakeup:
 			job = new TaskWakeupJobScheduler().perform();
@@ -180,8 +181,8 @@ public class JobServlet extends AlcinaServlet {
 					response.getWriter().write(String.valueOf(job.getId()));
 					response.flushBuffer();
 				} else {
-					String href = createTaskUrl(new TaskLogJobDetails()
-							.withValue(String.valueOf(job.getId())));
+					String href = createTaskUrl(
+							new TaskLogJobDetails().withJobId(job.getId()));
 					outputAsHtml = task instanceof TaskWithHtmlResult;
 					response.setContentType(
 							outputAsHtml ? "text/html" : "text/plain");
