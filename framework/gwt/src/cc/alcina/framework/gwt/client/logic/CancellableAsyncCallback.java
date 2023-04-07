@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.logic;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.IsCancellable;
 
 public abstract class CancellableAsyncCallback<T>
@@ -11,6 +12,11 @@ public abstract class CancellableAsyncCallback<T>
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
+	}
+
+	@Override
+	public void onFailure(Throwable caught) {
+		throw WrappedRuntimeException.wrap(caught);
 	}
 
 	@Override

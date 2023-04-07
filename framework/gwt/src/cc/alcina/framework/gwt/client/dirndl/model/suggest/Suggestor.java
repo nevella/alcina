@@ -2,12 +2,9 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -49,16 +46,20 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 public class Suggestor extends Model
 		implements SuggestorEvents.EditorAsk.Handler,
 		ModelEvents.SelectionChanged.Handler, HasSelectedValue {
+	public static Builder builder() {
+		return new Builder();
+	}
+
 	protected Editor editor;
 
 	protected Suggestions suggestions;
 
-	protected SuggestorConfiguration configuration;
+	protected Builder builder;
 
 	private Object value;
 
-	public Suggestor(SuggestorConfiguration configuration) {
-		this.configuration = configuration;
+	private Suggestor(Builder builder) {
+		this.builder = builder;
 		initFields();
 	}
 
@@ -83,7 +84,7 @@ public class Suggestor extends Model
 		if (!event.isBound()) {
 			suggestions.toState(State.UNBOUND);
 		} else {
-			if (configuration.isSuggestOnBind()) {
+			if (builder.isSuggestOnBind()) {
 				Client.eventBus().queued().lambda(() -> editor.emitAsk())
 						.dispatch();
 				;
@@ -95,7 +96,7 @@ public class Suggestor extends Model
 	@Override
 	public void onEditorAsk(EditorAsk event) {
 		suggestions.toState(State.LOADING);
-		configuration.answer.ask(event.getModel(), this::onAnswers,
+		builder.answer.ask(event.getModel(), this::onAnswers,
 				this::onAskException);
 	}
 
@@ -120,7 +121,8 @@ public class Suggestor extends Model
 	}
 
 	protected void initFields() {
-		editor = new SimpleEditor(configuration);
+		editor = builder.editorSupplier.get();
+		editor.withBuilder(builder);
 		suggestions = new SuggestionChoices(this);
 	}
 
@@ -192,6 +194,99 @@ public class Suggestor extends Model
 		IntPair getResultRange();
 	}
 
+	public static class Builder {
+		private String inputPrompt;
+
+		List<Class<? extends Model>> logicalAncestors = List.of();
+
+		private boolean focusOnBind;
+
+		private boolean selectAllOnBind;
+
+		private Answer<?> answer;
+
+		private OverlayPosition.Position suggestionXAlign = Position.START;
+
+		private boolean suggestOnBind;
+
+		private Supplier<? extends Editor> editorSupplier = InputEditor::new;
+
+		public Suggestor build() {
+			return new Suggestor(this);
+		}
+
+		public Answer getAnswer() {
+			return this.answer;
+		}
+
+		public String getInputPrompt() {
+			return this.inputPrompt;
+		}
+
+		public List<Class<? extends Model>> getLogicalAncestors() {
+			return this.logicalAncestors;
+		}
+
+		public OverlayPosition.Position getSuggestionXAlign() {
+			return this.suggestionXAlign;
+		}
+
+		public boolean isFocusOnBind() {
+			return this.focusOnBind;
+		}
+
+		public boolean isSelectAllOnBind() {
+			return this.selectAllOnBind;
+		}
+
+		public boolean isSuggestOnBind() {
+			return this.suggestOnBind;
+		}
+
+		public Builder withAnswer(Answer answer) {
+			this.answer = answer;
+			return this;
+		}
+
+		public Builder
+				withEditorSupplier(Supplier<? extends Editor> editorSupplier) {
+			this.editorSupplier = editorSupplier;
+			return this;
+		}
+
+		public Builder withFocusOnBind(boolean focusOnBind) {
+			this.focusOnBind = focusOnBind;
+			return this;
+		}
+
+		public Builder withInputPrompt(String inputPrompt) {
+			this.inputPrompt = inputPrompt;
+			return this;
+		}
+
+		public Builder withLogicalAncestors(
+				List<Class<? extends Model>> logicalAncestors) {
+			this.logicalAncestors = logicalAncestors;
+			return this;
+		}
+
+		public Builder withSelectAllOnBind(boolean selectAllOnBind) {
+			this.selectAllOnBind = selectAllOnBind;
+			return this;
+		}
+
+		public Builder withSuggestionXAlign(
+				OverlayPosition.Position suggestionXAlign) {
+			this.suggestionXAlign = suggestionXAlign;
+			return this;
+		}
+
+		public Builder withSuggestOnBind(boolean suggestOnBind) {
+			this.suggestOnBind = suggestOnBind;
+			return this;
+		}
+	}
+
 	/*
 	 * Should emit an editorask event on dom input (possibly debounced)
 	 *
@@ -201,6 +296,8 @@ public class Suggestor extends Model
 	@Directed(emits = EditorAsk.class)
 	public interface Editor {
 		void emitAsk();
+
+		void withBuilder(Suggestor.Builder builder);
 	}
 
 	public enum Property implements PropertyEnum {
@@ -291,78 +388,6 @@ public class Suggestor extends Model
 			public void setModel(Object model) {
 				this.model = model;
 			}
-
-			public static class StringAskAnswer<T> {
-				public Answers ask(StringAsk ask, List<T> models,
-						Function<T, String> stringRepresentation) {
-					Answers result = new Answers();
-					models.stream().map(model -> {
-						String string = stringRepresentation.apply(model);
-						MarkupMatch match = new MarkupMatch(string,
-								ask.getValue());
-						if (match.hasMatches()) {
-							Suggestion.Default suggestion = new Suggestion.Default();
-							suggestion.setMarkup(match.toMarkup());
-							suggestion.setMatch(true);
-							suggestion.setModel(model);
-							return suggestion;
-						} else {
-							return null;
-						}
-					}).filter(Objects::nonNull).forEach(suggestion -> result
-							.add(suggestion, ask.getResultRange()));
-					return result;
-				}
-
-				static class MarkupMatch {
-					List<IntPair> matches = new ArrayList<>();
-
-					private String string;
-
-					boolean emptyMatch = false;
-
-					public MarkupMatch(String string, String value) {
-						this.string = string;
-						if (value.isEmpty()) {
-							emptyMatch = true;
-							return;
-						}
-						String matchString = string.toLowerCase();
-						String matchValue = value.toLowerCase();
-						int idx = 0;
-						while (true) {
-							int matchIdx = matchString.indexOf(matchValue, idx);
-							if (matchIdx == -1) {
-								break;
-							} else {
-								int end = matchIdx + value.length();
-								matches.add(new IntPair(matchIdx, end));
-								idx = end;
-							}
-						}
-					}
-
-					boolean hasMatches() {
-						return emptyMatch || matches.size() > 0;
-					}
-
-					String toMarkup() {
-						SafeHtmlBuilder builder = new SafeHtmlBuilder();
-						int idx = 0;
-						for (IntPair match : matches) {
-							builder.appendEscaped(
-									string.substring(idx, match.i1));
-							builder.appendHtmlConstant("<match>");
-							builder.appendEscaped(
-									string.substring(match.i1, match.i2));
-							builder.appendHtmlConstant("</match>");
-							idx = match.i2;
-						}
-						builder.appendEscaped(string.substring(idx));
-						return builder.toSafeHtml().asString();
-					}
-				}
-			}
 		}
 	}
 
@@ -381,88 +406,6 @@ public class Suggestor extends Model
 
 		public static enum State {
 			LOADING, LOADED, EXCEPTION, UNBOUND
-		}
-	}
-
-	public static class SuggestorConfiguration {
-		private String inputPrompt;
-
-		List<Class<? extends Model>> logicalAncestors = List.of();
-
-		private boolean focusOnBind;
-
-		private boolean selectAllOnBind;
-
-		private Answer<?> answer;
-
-		private OverlayPosition.Position suggestionXAlign = Position.START;
-
-		private boolean suggestOnBind;
-
-		public Answer getAnswer() {
-			return this.answer;
-		}
-
-		public String getInputPrompt() {
-			return this.inputPrompt;
-		}
-
-		public List<Class<? extends Model>> getLogicalAncestors() {
-			return this.logicalAncestors;
-		}
-
-		public OverlayPosition.Position getSuggestionXAlign() {
-			return this.suggestionXAlign;
-		}
-
-		public boolean isFocusOnBind() {
-			return this.focusOnBind;
-		}
-
-		public boolean isSelectAllOnBind() {
-			return this.selectAllOnBind;
-		}
-
-		public boolean isSuggestOnBind() {
-			return this.suggestOnBind;
-		}
-
-		public SuggestorConfiguration withAnswer(Answer answer) {
-			this.answer = answer;
-			return this;
-		}
-
-		public SuggestorConfiguration withFocusOnBind(boolean focusOnBind) {
-			this.focusOnBind = focusOnBind;
-			return this;
-		}
-
-		public SuggestorConfiguration withInputPrompt(String inputPrompt) {
-			this.inputPrompt = inputPrompt;
-			return this;
-		}
-
-		public SuggestorConfiguration withLogicalAncestors(
-				List<Class<? extends Model>> logicalAncestors) {
-			this.logicalAncestors = logicalAncestors;
-			return this;
-		}
-
-		public SuggestorConfiguration
-				withSelectAllOnBind(boolean selectAllOnBind) {
-			this.selectAllOnBind = selectAllOnBind;
-			return this;
-		}
-
-		public SuggestorConfiguration withSuggestionXAlign(
-				OverlayPosition.Position suggestionXAlign) {
-			this.suggestionXAlign = suggestionXAlign;
-			return this;
-		}
-
-		public SuggestorConfiguration withSuggestOnBind(boolean suggestOnBind) {
-			this.suggestOnBind = suggestOnBind;
-			return this;
 		}
 	}
 }

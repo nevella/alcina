@@ -20,4 +20,21 @@ public class SuggestorEvents {
 			void onEditorAsk(EditorAsk event);
 		}
 	}
+
+	public static class EditorExit
+			extends ModelEvent<Object, EditorExit.Handler> {
+		@Override
+		public void dispatch(EditorExit.Handler handler) {
+			handler.onEditorExit(this);
+		}
+
+		@Override
+		public Class<EditorExit.Handler> getHandlerClass() {
+			return EditorExit.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEditorExit(EditorExit event);
+		}
+	}
 }

@@ -71,10 +71,10 @@ public class SuggestionChoices implements Suggestor.Suggestions {
 		if (ensure) {
 			if (overlay == null) {
 				Builder builder = Overlay.builder();
-				builder.dropdown(suggestor.configuration.getSuggestionXAlign(),
+				builder.dropdown(suggestor.builder.getSuggestionXAlign(),
 						suggestor.provideElement().getBoundingClientRect(),
 						suggestor, contents).withLogicalAncestors(
-								suggestor.configuration.getLogicalAncestors());
+								suggestor.builder.getLogicalAncestors());
 				overlay = builder.build();
 				overlay.open();
 			}

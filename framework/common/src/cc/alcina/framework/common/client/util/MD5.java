@@ -94,8 +94,12 @@ public class MD5 {
 
 	public static String toHexString(byte[] b) {
 		StringBuilder sb = new StringBuilder();
+		String hexDigits = "0123456789ABCDEF";
 		for (int i = 0; i < b.length; i++) {
-			sb.append(String.format("%02X", b[i] & 0xFF));
+			int nibble0 = b[i] & 0xF;
+			int nibble1 = (b[i] & 0xFF) >> 4;
+			sb.append(hexDigits.charAt(nibble1));
+			sb.append(hexDigits.charAt(nibble0));
 		}
 		return sb.toString();
 	}

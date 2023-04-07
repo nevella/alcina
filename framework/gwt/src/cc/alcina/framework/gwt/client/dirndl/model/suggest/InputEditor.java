@@ -8,17 +8,16 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorAsk;
 
+/**
+ * A suggestion editor which suggests based on the contents of an input tag
+ *
+ * @author nick@alcina.cc
+ *
+ */
 @Directed(receives = ModelEvents.Input.class, emits = EditorAsk.class)
-public class SimpleEditor extends Model
+public class InputEditor extends Model
 		implements Suggestor.Editor, ModelEvents.Input.Handler {
-	private final StringInput input;
-
-	public SimpleEditor(Suggestor.SuggestorConfiguration configuration) {
-		input = new StringInput();
-		input.setPlaceholder(configuration.getInputPrompt());
-		input.setFocusOnBind(configuration.isFocusOnBind());
-		input.setSelectAllOnBind(configuration.isSelectAllOnBind());
-	}
+	private StringInput input;
 
 	@Override
 	public void emitAsk() {
@@ -34,6 +33,14 @@ public class SimpleEditor extends Model
 	@Override
 	public void onInput(ModelEvents.Input event) {
 		event.reemitAs(this, EditorAsk.class, computeAsk());
+	}
+
+	@Override
+	public void withBuilder(Suggestor.Builder builder) {
+		input = new StringInput();
+		input.setPlaceholder(builder.getInputPrompt());
+		input.setFocusOnBind(builder.isFocusOnBind());
+		input.setSelectAllOnBind(builder.isSelectAllOnBind());
 	}
 
 	private StringAsk computeAsk() {

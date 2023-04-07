@@ -17,6 +17,7 @@ import com.google.gwt.core.ext.typeinfo.NotFoundException;
 import com.google.gwt.core.ext.typeinfo.TypeOracleException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 
 public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 	private final Map<String, JPackage> packages = new HashMap<>();
@@ -36,25 +37,36 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 		}
 		String regex = "(?:(.*?)\\.)?([A-Z].*)";
 		Matcher matcher = Pattern.compile(regex).matcher(className);
-		matcher.matches();
-		int idx = className.lastIndexOf(".");
-		String pkgName = matcher.group(1);
-		String typeName = matcher.group(2);
-		return findType(pkgName, typeName);
+		boolean matches = matcher.matches();
+		if (matches) {
+			int idx = className.lastIndexOf(".");
+			String pkgName = matcher.group(1);
+			String typeName = matcher.group(2);
+			return findType(pkgName, typeName);
+		} else {
+			// default package
+			return findType("", className);
+		}
 	}
 
 	@Override
 	public synchronized JClassType findType(String pkgName, String typeName) {
-		String className = pkgName + "." + typeName.replace(".", "$");
+		String className = pkgName.isEmpty() ? typeName
+				: pkgName + "." + typeName.replace(".", "$");
 		try {
-			Class<?> clazz = Class.forName(className);
 			JClassType existingValue = classes.get(className);
 			if (existingValue != null) {
 				return existingValue;
 			}
-			return classes.computeIfAbsent(className, name -> {
-				return new JRealClassType(this, clazz);
-			});
+			Class<?> clazz = null;
+			if (ClassReflector.primitiveClassMap.containsKey(className)) {
+				clazz = ClassReflector.primitiveClassMap.get(className);
+			} else {
+				clazz = Class.forName(className);
+			}
+			JRealClassType realClassType = new JRealClassType(this, clazz);
+			classes.put(className, realClassType);
+			return realClassType;
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
 		}
