@@ -5,12 +5,11 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.InputState;
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 
 public abstract class LayerParserPeer {
 	protected SelectionTraversal traversal;
 
-	public List<Token> tokens = new ArrayList<>();
+	public List<MatchingToken> tokens = new ArrayList<>();
 
 	public LayerParserPeer(SelectionTraversal traversal) {
 		this.traversal = traversal;

@@ -53,7 +53,7 @@ public class LayerParser {
 	public void parse() {
 		while (inputState.location.isBefore(inputState.input.end)) {
 			inputState.onBeforeTokenMatch();
-			for (Token token : parserPeer.tokens) {
+			for (MatchingToken token : parserPeer.tokens) {
 				Measure measure = token.match(inputState);
 				if (measure != null) {
 					if (inputState.bestMatch == null
@@ -79,7 +79,8 @@ public class LayerParser {
 
 	public void selectMatches() {
 		inputState.matches.stream()
-				.map(measure -> measure.token.select(inputState, measure))
+				.map(measure -> ((MatchingToken) measure.token)
+						.select(inputState, measure))
 				.filter(Objects::nonNull).forEach(parserPeer.traversal::select);
 	}
 
@@ -124,7 +125,8 @@ public class LayerParser {
 				} else {
 					end = matches.get(matchesIdx).start;
 				}
-				Measure segment = input.subMeasure(start.index, end.index, token);
+				Measure segment = input.subMeasure(start.index, end.index,
+						token);
 				if (segment.provideIsPoint()) {
 					// empty
 				} else {

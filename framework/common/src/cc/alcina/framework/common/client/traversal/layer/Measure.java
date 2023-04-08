@@ -2,8 +2,8 @@ package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.LayerParser.InputState;
 import cc.alcina.framework.common.client.util.Ax;
 
 // FIXME - selection - Measure extends HasSelection? or hasParentSelection?
@@ -85,6 +84,30 @@ public class Measure extends Location.Range {
 		return children.stream().filter(m -> list.contains(m.token));
 	}
 
+	public boolean contains(Measure o, Token.Order order) {
+		boolean nonEquivalent = false;
+		{
+			int cmp = start.compareTo(o.start);
+			if (cmp > 0) {
+				return false;
+			}
+			nonEquivalent |= cmp < 0;
+		}
+		{
+			int cmp = end.compareTo(o.end);
+			if (cmp < 0) {
+				// later end (and same start) implies this contains o - so order
+				// before
+				return false;
+			}
+			nonEquivalent |= cmp > 0;
+		}
+		if (nonEquivalent) {
+			return true;
+		}
+		return order.compare(token, o.token) < 0;
+	}
+
 	public Object getData() {
 		return this.data;
 	}
@@ -122,32 +145,26 @@ public class Measure extends Location.Range {
 				String pathSegment) {
 			super(parent, measure, pathSegment);
 		}
+
+		public boolean contains(MeasureSelection o, Token.Order order) {
+			return get().contains(o.get(), order);
+		}
 	}
 
+	/**
+	 * The type of Measure
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public interface Token {
-		Measure match(InputState state);
-
-		Selection select(InputState state, Measure measure);
-
-		public static abstract class SingleMatch implements Token {
-			private Optional<DomNode> match;
-
-			@Override
-			public Measure match(InputState state) {
-				if (match == null) {
-					DomNode document = state.getDocument().get()
-							.containingNode();
-					this.match = getMatch(document);
-				}
-				if (match.isPresent()
-						&& state.contains(match.get().asLocation())) {
-					return Measure.fromNode(match.get(), this);
-				} else {
-					return null;
+		public interface Order extends Comparator<Token> {
+			public static class Throw implements Order {
+				@Override
+				public int compare(Token o1, Token o2) {
+					throw new UnsupportedOperationException();
 				}
 			}
-
-			protected abstract Optional<DomNode> getMatch(DomNode document);
 		}
 	}
 }
