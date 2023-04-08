@@ -26,6 +26,12 @@ public abstract class DocumentSelection extends Measure.MeasureSelection {
 		documentToMeasure();
 	}
 
+	public DocumentSelection(Selection parent, DomDocument document) {
+		super(parent, null, parent.getClass().getName());
+		this.document = document;
+		documentToMeasure();
+	}
+
 	public DomDocument ensureDocument() {
 		try {
 			if (document == null) {

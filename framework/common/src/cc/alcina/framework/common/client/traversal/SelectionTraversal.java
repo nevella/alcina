@@ -738,6 +738,12 @@ public class SelectionTraversal
 			return byLayer.getAndEnsure(layer);
 		}
 
+		public synchronized <S extends Selection> List<S>
+				get(Class<? extends S> clazz) {
+			return (List<S>) byClass.getAndEnsure(clazz).stream()
+					.collect(Collectors.toList());
+		}
+
 		public int size() {
 			return size;
 		}
@@ -749,12 +755,6 @@ public class SelectionTraversal
 				size++;
 			}
 			return add;
-		}
-
-		synchronized <S extends Selection> List<S>
-				get(Class<? extends S> clazz) {
-			return (List<S>) byClass.getAndEnsure(clazz).stream()
-					.collect(Collectors.toList());
 		}
 
 		synchronized IntPair getSelectionPosition(Selection value) {
@@ -777,7 +777,7 @@ public class SelectionTraversal
 
 		Layer rootLayer;
 
-		Selections selections = new Selections();
+		public Selections selections = new Selections();
 
 		public Layer findLayerHandlingInput(Selection value) {
 			return rootLayer.findHandlingLayer(value.getClass());
