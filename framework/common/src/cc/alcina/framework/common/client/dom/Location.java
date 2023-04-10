@@ -141,7 +141,7 @@ public class Location implements Comparable<Location> {
 		}
 	}
 
-	public static class Range {
+	public static class Range implements Comparable<Range> {
 		public final Location start;
 
 		public final Location end;
@@ -151,6 +151,25 @@ public class Location implements Comparable<Location> {
 		public Range(Location start, Location end) {
 			this.start = start;
 			this.end = end;
+		}
+
+		@Override
+		public int compareTo(Range o) {
+			{
+				int cmp = start.compareTo(o.start);
+				if (cmp != 0) {
+					return cmp;
+				}
+			}
+			{
+				int cmp = end.compareTo(o.end);
+				if (cmp != 0) {
+					// later end (and same start) implies this contains o - so
+					// order before
+					return -cmp;
+				}
+			}
+			return 0;
 		}
 
 		// FIXME - selection - throw if start.node != end.node?

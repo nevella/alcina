@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -55,8 +56,8 @@ public abstract class Layer<S extends Selection> implements
 		children.add(child);
 	}
 
-	public Iterator<S> computeInputs() {
-		return state.traversalState.selections.get(signature.input).iterator();
+	public Collection<S> computeInputs() {
+		return state.traversalState.selections.get(signature.input);
 	}
 
 	public int depth() {
@@ -96,7 +97,7 @@ public abstract class Layer<S extends Selection> implements
 
 	@Override
 	public Iterator<S> iterator() {
-		return computeInputs();
+		return computeInputs().iterator();
 	}
 
 	public String layerPath() {
@@ -164,6 +165,11 @@ public abstract class Layer<S extends Selection> implements
 	protected void onAfterInputsProcessed() {
 	}
 
+	/**
+	 * Called immediately after input traversal - subclasses should use this to
+	 * flush any state which might emit a final selection, then call
+	 * super.onAfterIteration()
+	 */
 	protected void onAfterIteration() {
 		state.complete = state.iterationSubmitted == 0;
 		state.iterationCount++;

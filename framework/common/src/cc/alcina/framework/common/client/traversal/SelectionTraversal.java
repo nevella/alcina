@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -332,6 +333,7 @@ public class SelectionTraversal
 		/*
 		 * layers with sublayers will compute their outputs after sublayer
 		 * traversal
+		 *
 		 */
 		state.layerTraversal.topicNodeExit.add(Layer::onAfterTraversal);
 		/*
@@ -738,6 +740,24 @@ public class SelectionTraversal
 			return byLayer.getAndEnsure(layer);
 		}
 
+		public synchronized <S extends Selection> List<S>
+				get(Class<? extends S> clazz) {
+			return get(clazz, false);
+		}
+
+		public synchronized <S extends Selection> List<S>
+				get(Class<? extends S> clazz, boolean includeSubclasses) {
+			if (includeSubclasses) {
+				return (List<S>) byClass.keySet().stream()
+						.filter(clazz::isAssignableFrom).map(byClass::get)
+						.flatMap(Collection::stream)
+						.collect(Collectors.toList());
+			} else {
+				return (List<S>) byClass.getAndEnsure(clazz).stream()
+						.collect(Collectors.toList());
+			}
+		}
+
 		public int size() {
 			return size;
 		}
@@ -747,14 +767,9 @@ public class SelectionTraversal
 			boolean add = byClass.add(selection.getClass(), selection);
 			if (add) {
 				size++;
+				selectionAdded.publish(selection);
 			}
 			return add;
-		}
-
-		synchronized <S extends Selection> List<S>
-				get(Class<? extends S> clazz) {
-			return (List<S>) byClass.getAndEnsure(clazz).stream()
-					.collect(Collectors.toList());
 		}
 
 		synchronized IntPair getSelectionPosition(Selection value) {
@@ -777,7 +792,7 @@ public class SelectionTraversal
 
 		Layer rootLayer;
 
-		Selections selections = new Selections();
+		public Selections selections = new Selections();
 
 		public Layer findLayerHandlingInput(Selection value) {
 			return rootLayer.findHandlingLayer(value.getClass());
