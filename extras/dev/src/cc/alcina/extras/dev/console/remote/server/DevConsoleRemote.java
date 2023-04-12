@@ -102,8 +102,8 @@ public class DevConsoleRemote {
 		devConsole.performCommand(commandString);
 	}
 
-	public void start(boolean configLoaded) throws Exception {
-		if (!configLoaded || !Configuration.is("serve")) {
+	public void start() throws Exception {
+		if (!Configuration.is("serve")) {
 			return;
 		}
 		hasRemote = true;

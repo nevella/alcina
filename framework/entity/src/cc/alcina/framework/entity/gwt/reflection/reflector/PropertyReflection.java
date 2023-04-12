@@ -1,14 +1,21 @@
 package cc.alcina.framework.entity.gwt.reflection.reflector;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JType;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.reflection.AnnotationProvider;
+import cc.alcina.framework.common.client.reflection.Method;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesJavaType;
 
 /**
  */
@@ -24,26 +31,40 @@ public class PropertyReflection extends ReflectionElement
 
 	public JType propertyType;
 
-	private VisibleAnnotationFilter visibleAnnotationFilter;
+	private ReflectionVisibility reflectionVisibility;
 
 	public final ClassReflection classReflection;
 
+	public JClassType declaringType;
+
 	public PropertyReflection(ClassReflection classReflection, String name,
-			VisibleAnnotationFilter visibleAnnotationFilter) {
+			ReflectionVisibility reflectionVisibility) {
 		this.classReflection = classReflection;
 		this.name = name;
-		this.visibleAnnotationFilter = visibleAnnotationFilter;
+		this.reflectionVisibility = reflectionVisibility;
 	}
 
 	public void addMethod(PropertyMethod method) {
+		if (method.toString().contains("DtrSimpleAdminPersistenceAction")) {
+			int debug = 3;
+		}
 		if (method.getter) {
 			getter = method;
-			propertyType = method.method.getReturnType();
+			updatePropertyType(method.method.getReturnType());
 		} else {
 			setter = method;
-			propertyType = method.method.getParameters()[0].getType();
+			updatePropertyType(method.method.getParameters()[0].getType());
 		}
 		propertyType = ClassReflection.erase(propertyType);
+	}
+
+	public Property asProperty() {
+		return new Property(name, ProvidesMethod.asMethod(getter),
+				ProvidesMethod.asMethod(setter),
+				((ProvidesJavaType) propertyType).provideJavaType(),
+				((ProvidesJavaType) classReflection.type).provideJavaType(),
+				((ProvidesJavaType) declaringType).provideJavaType(),
+				new AnnotationProviderImpl());
 	}
 
 	@Override
@@ -68,10 +89,34 @@ public class PropertyReflection extends ReflectionElement
 	public void prepare() {
 		annotationReflections = getter == null ? new ArrayList<>()
 				: Arrays.stream(getter.method.getAnnotations())
-						.filter(ann -> visibleAnnotationFilter
-								.test(ann.annotationType()))
+						.filter(ann -> reflectionVisibility
+								.isVisibleAnnotation(ann.annotationType()))
 						.map(AnnotationReflection::new).sorted()
 						.collect(Collectors.toList());
+		declaringType = getter != null ? getter.method.getEnclosingType()
+				: setter.method.getEnclosingType();
+	}
+
+	@Override
+	public String toString() {
+		JClassType declaringType = getter != null
+				? getter.method.getEnclosingType()
+				: setter.method.getEnclosingType();
+		return Ax.format("%s.%s : %s", declaringType.getName(), name,
+				propertyType.getSimpleSourceName());
+	}
+
+	private void updatePropertyType(JType candidate) {
+		candidate = ClassReflection.erase(candidate);
+		if (this.propertyType != null
+				&& this.propertyType instanceof JClassType) {
+			JClassType existingClassType = (JClassType) this.propertyType;
+			JClassType candidateClassType = (JClassType) candidate;
+			if (candidateClassType.isAssignableFrom(existingClassType)) {
+				return;// covariant, do not update
+			}
+		}
+		this.propertyType = candidate;
 	}
 
 	public static class PropertyMethod {
@@ -85,6 +130,32 @@ public class PropertyReflection extends ReflectionElement
 			this.propertyName = propertyName;
 			this.getter = getter;
 			this.method = method;
+		}
+
+		@Override
+		public String toString() {
+			return method.toString();
+		}
+	}
+
+	public interface ProvidesMethod {
+		static Method asMethod(PropertyMethod propertyMethod) {
+			if (propertyMethod == null) {
+				return null;
+			} else {
+				return ((ProvidesMethod) propertyMethod.method).provideMethod();
+			}
+		}
+
+		Method provideMethod();
+	}
+
+	class AnnotationProviderImpl implements AnnotationProvider {
+		@Override
+		public <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass) {
+			return getter == null ? null
+					: getter.method.getAnnotation(annotationClass);
 		}
 	}
 }

@@ -67,7 +67,7 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.AnnotationReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyMethod;
-import cc.alcina.framework.entity.gwt.reflection.reflector.VisibleAnnotationFilter;
+import cc.alcina.framework.entity.gwt.reflection.reflector.ReflectionVisibility;
 
 /*
  * Documentation notes - note module assignment (unknown, not_reached, excluded)
@@ -726,16 +726,13 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				printMethodRef(reflection.getter);
 				sourceWriter.print("Method setter = ");
 				printMethodRef(reflection.setter);
-				JClassType declaringType = reflection.getter != null
-						? reflection.getter.method.getEnclosingType()
-						: reflection.setter.method.getEnclosingType();
 				sourceWriter.println("Class propertyType = %s.class;",
 						reflection.propertyType.getQualifiedSourceName());
 				sourceWriter.println("Class owningType = %s.class;",
 						reflection.classReflection.type
 								.getQualifiedSourceName());
 				sourceWriter.println("Class declaringType = %s.class;",
-						declaringType.getQualifiedSourceName());
+						reflection.declaringType.getQualifiedSourceName());
 				sourceWriter.print(
 						"Property property = new Property(name, getter, setter, propertyType, owningType, declaringType, provider)");
 				sourceWriter.println("{");
@@ -1297,11 +1294,18 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
-	class VisibleAnnotationFilterClient implements VisibleAnnotationFilter {
+	class VisibleAnnotationFilterClient implements ReflectionVisibility {
 		@Override
-		public boolean test(Class<? extends Annotation> clazz) {
-			return !Registration.Support.isRegistrationAnnotation(clazz)
-					&& visibleAnnotationTypes.contains(clazz);
+		public boolean isVisibleAnnotation(
+				Class<? extends Annotation> annotationType) {
+			return !Registration.Support
+					.isRegistrationAnnotation(annotationType)
+					&& visibleAnnotationTypes.contains(annotationType);
+		}
+
+		@Override
+		public boolean isVisibleType(JType type) {
+			return ClassReflection.has((JClassType) type, Bean.class);
 		}
 	}
 }

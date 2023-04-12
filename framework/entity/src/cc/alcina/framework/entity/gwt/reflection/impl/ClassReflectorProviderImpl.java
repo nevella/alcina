@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
@@ -26,18 +26,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.TypeOracle;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
-import cc.alcina.framework.entity.gwt.reflection.reflector.VisibleAnnotationFilter;
+import cc.alcina.framework.entity.gwt.reflection.reflector.ReflectionVisibility;
 
 public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 	/*
 	 * Permit all
 	 */
-	private VisibleAnnotationFilter visibleAnnotationFilter = new VisibleAnnotationFilter() {
-		@Override
-		public boolean test(Class<? extends Annotation> t) {
-			return true;
-		}
-	};
+	private ReflectionVisibility visibleAnnotationFilter = new ReflectionVisibilityAll();
 
 	private TypeOracle typeOracle;
 
@@ -47,50 +42,11 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 
 	@Override
 	public ClassReflector getClassReflector(Class clazz) {
-		JClassType type = typeOracle.findType(clazz.getCanonicalName());
-		new ClassReflection(type, visibleAnnotationFilter);
-		List<PropertyDescriptor> descriptors = SEUtilities
-				.getPropertyDescriptorsSortedByField(clazz);
-		List<Property> properties = descriptors.stream().filter(
-				d -> d.getReadMethod() != null || d.getWriteMethod() != null)
-				.map(d -> createProperty(clazz, d))
-				.collect(Collectors.toList());
-		Map<String, Property> byName = properties.stream()
-				.collect(AlcinaCollectors.toKeyMap(Property::getName));
-		Supplier supplier = null;
-		boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
-		boolean isFinal = Modifier.isFinal(clazz.getModifiers());
-		if (!isAbstract && !CommonUtils.isStandardJavaClassOrEnum(clazz)
-				&& clazz != Class.class) {
-			try {
-				Constructor constructor = Arrays.stream(clazz.getConstructors())
-						.filter(c -> c.getParameterCount() == 0).findFirst()
-						.orElse(null);
-				if (constructor == null) {
-					supplier = () -> {
-						throw new IllegalArgumentException(Ax.format(
-								"Class '%s' has no no-args constructor",
-								clazz.getName()));
-					};
-				} else {
-					supplier = () -> {
-						try {
-							return constructor.newInstance();
-						} catch (Exception e) {
-							throw new WrappedRuntimeException(e);
-						}
-					};
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
+		try {
+			return getClassReflector0(clazz);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
 		}
-		Predicate<Class> assignableTo = c -> c.isAssignableFrom(clazz);
-		ClassAnnotationProvider annotationResolver = new ClassAnnotationProvider(
-				clazz);
-		List<Class> interfaces = Arrays.asList(clazz.getInterfaces());
-		return new ClassReflector(clazz, properties, byName, annotationResolver,
-				supplier, assignableTo, interfaces, isAbstract, isFinal);
 	}
 
 	private Method createMethod(java.lang.reflect.Method reflectMethod) {
@@ -113,6 +69,68 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		}
 	}
 
+	private ClassReflector getClassReflector0(Class clazz) throws Exception {
+		JType type = typeOracle.parse(clazz.getCanonicalName());
+		ClassReflection reflection = new ClassReflection(type,
+				visibleAnnotationFilter);
+		reflection.prepare();
+		ClassReflector<?> typemodelReflector = reflection.asReflector();
+		List<PropertyDescriptor> descriptors = SEUtilities
+				.getPropertyDescriptorsSortedByField(clazz);
+		List<Property> properties = descriptors.stream().filter(d -> {
+			java.lang.reflect.Method method = d.getReadMethod() != null
+					? d.getReadMethod()
+					: d.getWriteMethod();
+			// ignore method names like "setup" - require setUp
+			return method != null && method.getName()
+					.matches("get[A-Z].*|set[A-Z].*|is[A-Z].*");
+		}).filter(d -> !d.getName().equals("propertyChangeListeners"))
+				.map(d -> createProperty(clazz, d))
+				.collect(Collectors.toList());
+		Map<String, Property> byName = properties.stream()
+				.collect(AlcinaCollectors.toKeyMap(Property::getName));
+		Supplier supplier = null;
+		boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
+		boolean isFinal = Modifier.isFinal(clazz.getModifiers());
+		if (!isAbstract && !CommonUtils.isStandardJavaClassOrEnum(clazz)
+				&& clazz != Class.class) {
+			Constructor constructor = Arrays.stream(clazz.getConstructors())
+					.filter(c -> c.getParameterCount() == 0).findFirst()
+					.orElse(null);
+			if (constructor == null) {
+				supplier = () -> {
+					throw new IllegalArgumentException(
+							Ax.format("Class '%s' has no no-args constructor",
+									clazz.getName()));
+				};
+			} else {
+				supplier = () -> {
+					try {
+						return constructor.newInstance();
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				};
+			}
+		}
+		Predicate<Class> assignableTo = c -> c.isAssignableFrom(clazz);
+		ClassAnnotationProvider annotationResolver = new ClassAnnotationProvider(
+				clazz);
+		List<Class> interfaces = Arrays.asList(clazz.getInterfaces());
+		ClassReflector<?> legacyReflector = new ClassReflector(clazz,
+				properties, byName, annotationResolver, supplier, assignableTo,
+				interfaces, isAbstract, isFinal);
+		List<String> names1 = typemodelReflector.properties().stream()
+				.map(Property::getName).collect(Collectors.toList());
+		List<String> names2 = legacyReflector.properties().stream()
+				.map(Property::getName).collect(Collectors.toList());
+		if (!names1.equals(names2)) {
+			Ax.err("%s :: \n\t %s \n\t %s", type, names1, names2);
+		}
+		return legacyReflector;
+		// typemodelReflector;
+	}
+
 	Property createProperty(Class clazz, PropertyDescriptor descriptor) {
 		return new Property(descriptor.getName(),
 				createMethod(descriptor.getReadMethod()),
@@ -132,6 +150,20 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		public <A extends Annotation> A
 				getAnnotation(Class<A> annotationClass) {
 			return (A) clazz.getAnnotation(annotationClass);
+		}
+	}
+
+	private final class ReflectionVisibilityAll
+			implements ReflectionVisibility {
+		@Override
+		public boolean isVisibleAnnotation(
+				Class<? extends Annotation> annotationType) {
+			return true;
+		}
+
+		@Override
+		public boolean isVisibleType(JType type) {
+			return true;
 		}
 	}
 

@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -749,8 +750,9 @@ public class SelectionTraversal
 				get(Class<? extends S> clazz, boolean includeSubclasses) {
 			if (includeSubclasses) {
 				return (List<S>) byClass.keySet().stream()
-						.filter(clazz::isAssignableFrom).map(byClass::get)
-						.flatMap(Collection::stream)
+						.filter(selectionClass -> Reflections.at(selectionClass)
+								.isAssignableTo(clazz))
+						.map(byClass::get).flatMap(Collection::stream)
 						.collect(Collectors.toList());
 			} else {
 				return (List<S>) byClass.getAndEnsure(clazz).stream()

@@ -10,11 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JConstructor;
 import com.google.gwt.core.ext.typeinfo.JField;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
@@ -24,8 +26,11 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.reflection.AnnotationProvider;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ClassUtil;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
@@ -62,6 +67,11 @@ public class ClassReflection extends ReflectionElement {
 		}
 	}
 
+	public static <A extends Annotation> boolean has(JClassType t,
+			Class<A> annotationClass) {
+		return t.getAnnotation(annotationClass) != null;
+	}
+
 	static boolean isObjectType(JClassType type) {
 		return type.getQualifiedSourceName()
 				.equals(Object.class.getCanonicalName());
@@ -69,11 +79,13 @@ public class ClassReflection extends ReflectionElement {
 
 	AnnotationLocationTypeInfo.Resolver annotationResolver = new AnnotationLocationTypeInfo.Resolver();
 
+	public final JType jType;
+
 	public final JClassType type;
 
-	private VisibleAnnotationFilter visibleAnnotationFilter;
+	private ReflectionVisibility reflectionVisibility;
 
-	boolean hasCallableNoArgsConstructor;
+	JConstructor noArgsConstructor;
 
 	boolean hasAbstractModifier;
 
@@ -91,10 +103,31 @@ public class ClassReflection extends ReflectionElement {
 
 	List<Registration> registrations = new ArrayList<>();
 
-	public ClassReflection(JClassType type,
-			VisibleAnnotationFilter visibleAnnotationFilter) {
-		this.type = type;
-		this.visibleAnnotationFilter = visibleAnnotationFilter;
+	public ClassReflection(JType type,
+			ReflectionVisibility reflectionVisibility) {
+		this.jType = type;
+		this.type = type instanceof JClassType ? (JClassType) type : null;
+		this.reflectionVisibility = reflectionVisibility;
+	}
+
+	public ClassReflector asReflector() {
+		List<Property> properties = sortedPropertyReflections.stream()
+				.map(PropertyReflection::asProperty)
+				.collect(Collectors.toList());
+		Supplier supplier = noArgsConstructor == null ? () -> {
+			throw new IllegalArgumentException(Ax.format(
+					"Class '%s' has no no-args constructor", type.getName()));
+		} : (Supplier) noArgsConstructor;
+		Predicate<Class> assignableTo = ((ProvidesAssignableTo) type)
+				.provideAssignableTo();
+		List<Class> interfaces = ((ProvidesInterfaces) type)
+				.provideInterfaces();
+		Class javaType = ((ProvidesJavaType) type).provideJavaType();
+		return new ClassReflector(javaType, properties,
+				properties.stream()
+						.collect(AlcinaCollectors.toKeyMap(Property::getName)),
+				new AnnotationProviderImpl(), supplier, assignableTo,
+				interfaces, type.isAbstract(), type.isFinal());
 	}
 
 	public List<AnnotationReflection> getAnnotationReflections() {
@@ -114,7 +147,7 @@ public class ClassReflection extends ReflectionElement {
 	}
 
 	public boolean isHasCallableNoArgsConstructor() {
-		return this.hasCallableNoArgsConstructor;
+		return this.noArgsConstructor != null;
 	}
 
 	public boolean isHasFinalModifier() {
@@ -123,16 +156,23 @@ public class ClassReflection extends ReflectionElement {
 
 	@Override
 	public void prepare() {
+		if (type == null) {
+			// primitive
+			return;
+		}
 		hasAbstractModifier = type.isAbstract();
 		hasFinalModifier = type.isFinal();
-		hasCallableNoArgsConstructor = !hasAbstractModifier
+		noArgsConstructor = !hasAbstractModifier
 				&& !type.getQualifiedSourceName().equals("java.lang.Class")
 				&& (type.isStatic() || !type.isMemberType())
-				&& Arrays.stream(type.getConstructors())
-						.filter(c -> c.getParameters().length == 0).findFirst()
-						.filter(c -> c.isPublic()).isPresent();
+						? Arrays.stream(type.getConstructors())
+								.filter(c -> c.getParameters().length == 0)
+								.filter(c -> c.isPublic()).findFirst()
+								.orElse(null)
+						: null;
 		Arrays.stream(type.getAnnotations())
-				.filter(a -> visibleAnnotationFilter.test(a.annotationType()))
+				.filter(a -> reflectionVisibility
+						.isVisibleAnnotation(a.annotationType()))
 				.map(AnnotationReflection::new).sorted()
 				.forEach(annotationReflections::add);
 		// properties are needed even for abstract classes (for annotation
@@ -143,16 +183,37 @@ public class ClassReflection extends ReflectionElement {
 		}
 	}
 
+	private String methodNamePartToPropertyName(String s) {
+		if (s.length() == 0) {
+			return s;
+		}
+		String first = s.substring(0, 1);
+		if (first.equals(first.toLowerCase())) {
+			return s;
+		}
+		if (s.length() > 1) {
+			String second = s.substring(1, 2);
+			if (second.equals(second.toUpperCase())
+					&& second.matches("[A-Z]")) {
+				// acronym
+				return s;
+			}
+		}
+		return first.toLowerCase() + s.substring(1);
+	}
+
 	private void prepareProperties() {
-		boolean hasReflectableProperties = has(type, Bean.class);
+		boolean hasReflectableProperties = reflectionVisibility
+				.isVisibleType(type);
 		if (hasReflectableProperties) {
 			Arrays.stream(type.getInheritableMethods())
+					.filter(reflectionVisibility::isVisibleMethod)
 					.map(this::toPropertyMethod).filter(Objects::nonNull)
 					.forEach(m -> {
 						PropertyReflection propertyReflection = propertyReflections
 								.computeIfAbsent(m.propertyName,
 										name -> new PropertyReflection(this,
-												name, visibleAnnotationFilter));
+												name, reflectionVisibility));
 						propertyReflection.addMethod(m);
 					});
 		}
@@ -162,11 +223,9 @@ public class ClassReflection extends ReflectionElement {
 		sortedPropertyReflections = propertyReflections.values().stream()
 				.sorted(new PropertyOrdering()).collect(Collectors.toList());
 		sortedPropertyReflections.forEach(PropertyReflection::prepare);
-		// TODO Auto-generated method stub
-	}
-
-	<A extends Annotation> boolean has(JClassType t, Class<A> annotationClass) {
-		return t.getAnnotation(annotationClass) != null;
+		if (sortedPropertyReflections.size() > 0) {
+			sortedPropertyReflections.get(0).toString();
+		}
 	}
 
 	void prepareRegistrations() {
@@ -177,10 +236,10 @@ public class ClassReflection extends ReflectionElement {
 	}
 
 	PropertyReflection.PropertyMethod toPropertyMethod(JMethod method) {
-		if (method.getName().equals("getClass")) {
+		if (!method.isPublic()) {
 			return null;
 		}
-		if (!method.isPublic()) {
+		if (method.isStatic()) {
 			return null;
 		}
 		// getter
@@ -188,18 +247,44 @@ public class ClassReflection extends ReflectionElement {
 			Matcher m = getterPattern.matcher(method.getName());
 			if (m.matches()) {
 				return new PropertyReflection.PropertyMethod(
-						CommonUtils.lcFirst(m.group(1)), true, method);
+						methodNamePartToPropertyName(m.group(1)), true, method);
 			}
 		}
+		// setter
 		if (method.getParameters().length == 1
-				&& method.getReturnType() == JPrimitiveType.VOID) {
+				// jvm version has no primitive types
+				&& (method.getReturnType() == JPrimitiveType.VOID
+						|| method.getReturnType().getQualifiedSourceName()
+								.equals("void"))) {
 			Matcher m = setterPattern.matcher(method.getName());
 			if (m.matches()) {
 				return new PropertyReflection.PropertyMethod(
-						CommonUtils.lcFirst(m.group(1)), false, method);
+						methodNamePartToPropertyName(m.group(1)), false,
+						method);
 			}
 		}
+		// not a property method
 		return null;
+	}
+
+	public interface ProvidesAssignableTo {
+		Predicate<Class> provideAssignableTo();
+	}
+
+	public interface ProvidesInterfaces {
+		List<Class> provideInterfaces();
+	}
+
+	public interface ProvidesJavaType {
+		Class provideJavaType();
+	}
+
+	class AnnotationProviderImpl implements AnnotationProvider {
+		@Override
+		public <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass) {
+			return (A) type.getAnnotation(annotationClass);
+		}
 	}
 
 	/*

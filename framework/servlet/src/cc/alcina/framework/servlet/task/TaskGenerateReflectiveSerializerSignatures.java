@@ -103,10 +103,14 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 				Property property = reflector.property(field.getName());
 				if (property != null && !property.has(AlcinaTransient.class)
 						&& !property.has(Omit.class)) {
-					incorrectProperty.add(property);
+					addPropertyIssue(property);
 				}
 			}
 		}
+	}
+
+	private void addPropertyIssue(Property property) {
+		incorrectProperty.add(property);
 	}
 
 	private void checkSerializationIssues(Class<?> clazz) {
@@ -166,7 +170,7 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 							&& !type.getAnnotation(TypeSerialization.class)
 									.reflectiveSerializable();
 					if (!result) {
-						incorrectProperty.add(property);
+						addPropertyIssue(property);
 					}
 				});
 	}

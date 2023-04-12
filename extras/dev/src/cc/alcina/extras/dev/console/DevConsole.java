@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
-import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -836,7 +835,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		devHelper.doParallelEarlyClassInit();
 		devHelper.copyTemplates();
-		devHelper.loadJbossConfig(new ConsolePrompter());
+		devHelper.loadJbossConfig();
 		devHelper.initLightweightServices();
 		long statEndInitLightweightServices = System.currentTimeMillis();
 		devHelper.getTestLogger();
@@ -860,14 +859,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		// triggered by first publication
 		long statEndInitJaxbServices = System.currentTimeMillis();
 		initState();
-		devHelper.loadJbossConfig(null);
-		boolean waitForUi = !devHelper.configLoaded;
 		remote = new DevConsoleRemote(this);
 		if (launchConfiguration.noHttpServer) {
 			Ax.out("STARTUP\t no-http: not serving console over http");
 			this.headless = true;
 		} else {
-			remote.start(devHelper.configLoaded);
+			remote.start();
 			this.headless = remote.isHasRemote();
 			devOut.s1 = new PrintStream(
 					new WriterOutputStream(remote.getOutWriter()));

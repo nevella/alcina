@@ -69,7 +69,7 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	private AnnotationProvider annotationProvider;
 
-	private Supplier<T> constructor;
+	private Supplier<T> noArgsConstructor;
 
 	private Predicate<Class> assignableTo;
 
@@ -134,7 +134,7 @@ public class ClassReflector<T> implements HasAnnotations {
 	}
 
 	public T newInstance() {
-		return constructor.get();
+		return noArgsConstructor.get();
 	}
 
 	public List<Property> properties() {
@@ -172,7 +172,7 @@ public class ClassReflector<T> implements HasAnnotations {
 		this.properties = properties;
 		this.byName = byName;
 		this.annotationProvider = annotationProvider;
-		this.constructor = constructor;
+		this.noArgsConstructor = constructor;
 		this.assignableTo = assignableTo;
 		this.isAbstract = isAbstract;
 		this.interfaces = interfaces;
