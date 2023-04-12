@@ -574,7 +574,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					try {
 						Class<Task> taskClass = Reflections.forName(key);
 						Ax.out("Launching post-init task: %s", key);
+						Transaction.ensureBegun();
 						Reflections.at(taskClass).newInstance().schedule();
+						Transaction.commit();
+						Transaction.ensureEnded();
 						Ax.out("Launched post-init task: %s", key);
 						return;
 					} catch (Exception e) {
