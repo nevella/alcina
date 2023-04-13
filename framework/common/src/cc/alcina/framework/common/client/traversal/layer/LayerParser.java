@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
-import cc.alcina.framework.common.client.traversal.layer.Measure.MeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -153,7 +152,7 @@ public class LayerParser {
 			return location.index - input.start.index;
 		}
 
-		public Measure.MeasureSelection getSelection() {
+		public MeasureSelection getSelection() {
 			return selection;
 		}
 

@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -134,21 +133,6 @@ public class Measure extends Location.Range {
 		String aliasMarker = aliasedFrom != null ? " (alias)" : "";
 		return Ax.format("[%s,%s]%s :: %s :: %s", start.index, end.index,
 				aliasMarker, token, text());
-	}
-
-	public static class MeasureSelection extends AbstractSelection<Measure> {
-		public MeasureSelection(Selection parent, Measure measure) {
-			super(parent, measure, measure.toString());
-		}
-
-		public MeasureSelection(Selection parent, Measure measure,
-				String pathSegment) {
-			super(parent, measure, pathSegment);
-		}
-
-		public boolean contains(MeasureSelection o, Token.Order order) {
-			return get().contains(o.get(), order);
-		}
 	}
 
 	/**
