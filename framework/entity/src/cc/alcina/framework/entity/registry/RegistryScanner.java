@@ -28,7 +28,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
 
 /*
@@ -41,12 +40,20 @@ import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetada
  * @author Nick Reddel
  */
 public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
+	/**
+	 * Load cached registry data directly (when generated at build- rather than
+	 * run-time)
+	 */
+	public void load(ClassMetadataCache<?> classDataCache) {
+		outgoingCache = (ClassMetadataCache<RegistryScannerMetadata>) classDataCache;
+		commit();
+	}
+
 	public void scan(ClassMetadataCache<ClassMetadata> classDataCache,
 			Collection<String> ignore, String registryName) throws Exception {
 		String cachePath = Ax.format("%s/%s-registry-cache.ser",
 				getHomeDir().getPath(), registryName);
-		if (!Configuration.is("useCache") && !Ax.isTest()
-				&& !Boolean.getBoolean("RegistryScanner.useCache")
+		if (!Ax.isTest() && !Boolean.getBoolean("RegistryScanner.useCache")
 				&& !GWT.isClient()) {
 			new File(cachePath).delete();
 		}
@@ -103,6 +110,8 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 
 	public static class RegistryScannerLazyRegistration
 			implements Serializable {
+		private static final long serialVersionUID = 1L;
+
 		String registeringClassClassName;
 
 		List<String> keys;

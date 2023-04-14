@@ -125,13 +125,11 @@ public abstract class Client {
 	protected abstract void createPlaceController();
 
 	public static class Init {
-		public static long startTime;
-
-		private static boolean complete;
+		static Init instance = new Init();
 
 		public static void init() {
-			preRegistry();
-			registry();
+			instance.preRegistry();
+			instance.registry();
 			/*
 			 * initialise localdom, mutations
 			 */
@@ -145,10 +143,14 @@ public abstract class Client {
 		}
 
 		public static boolean isComplete() {
-			return Init.complete;
+			return instance.complete;
 		}
 
-		private static void preRegistry() {
+		public long startTime;
+
+		private boolean complete;
+
+		private void preRegistry() {
 			startTime = System.currentTimeMillis();
 			CommonUtils.setSupplier = () -> new LightSet();
 			if (GWT.isScript()) {
@@ -158,11 +160,11 @@ public abstract class Client {
 			JavascriptKeyableLookup.initJs();
 		}
 
-		private static void registry() {
+		private void registry() {
 			Reflections.init();
 			ModuleReflector moduleReflector = ClientReflectorFactory.create();
 			moduleReflector.register();
-			Init.complete = true;
+			complete = true;
 		}
 	}
 

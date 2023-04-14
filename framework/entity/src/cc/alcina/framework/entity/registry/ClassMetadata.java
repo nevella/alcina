@@ -15,6 +15,8 @@ import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.Io;
 
 public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
+	private static final long serialVersionUID = 1L;
+
 	public static boolean USE_MD5_CHANGE_CHECK;
 
 	public static ClassMetadata fromRelativeSourcePath(String relativeClassPath,
