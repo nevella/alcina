@@ -95,6 +95,10 @@ public class ClasspathScanner {
 		sanitizePackage(pkg);
 	}
 
+	public ClassMetadataCache getClassDataCache() {
+		return this.classDataCache;
+	}
+
 	public ClassMetadataCache getClasses() throws Exception {
 		getClassNames();
 		return classDataCache;
@@ -138,6 +142,11 @@ public class ClasspathScanner {
 
 	public boolean isRecur() {
 		return recur;
+	}
+
+	public void scanDirectory(String path) throws Exception {
+		URL url = new File(path).toURI().toURL();
+		new DirectoryVisitor(this).enumerateClasses(url);
 	}
 
 	private void sanitizePackage(String pkgName) {
@@ -336,7 +345,8 @@ public class ClasspathScanner {
 		public boolean handles(URL url) {
 			return !scanner.isIgnoreJars()
 					&& url.getProtocol().equals(PROTOCOL_FILE)
-					&& url.getFile().endsWith(".jar");
+					&& (url.getFile().endsWith(".jar")
+							|| url.getFile().endsWith(".apk"));
 		}
 	}
 
