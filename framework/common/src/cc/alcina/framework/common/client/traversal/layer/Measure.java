@@ -6,10 +6,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -136,21 +137,6 @@ public class Measure extends Location.Range {
 				aliasMarker, token, text());
 	}
 
-	public static class MeasureSelection extends AbstractSelection<Measure> {
-		public MeasureSelection(Selection parent, Measure measure) {
-			super(parent, measure, measure.toString());
-		}
-
-		public MeasureSelection(Selection parent, Measure measure,
-				String pathSegment) {
-			super(parent, measure, pathSegment);
-		}
-
-		public boolean contains(MeasureSelection o, Token.Order order) {
-			return get().contains(o.get(), order);
-		}
-	}
-
 	/**
 	 * The type of Measure
 	 *
@@ -158,13 +144,61 @@ public class Measure extends Location.Range {
 	 *
 	 */
 	public interface Token {
+		/*
+		 * Parser instruction - parser should traverse node-by-node when
+		 * matching tokens of this type
+		 */
+		public interface NodeTraversalToken extends Token {
+		}
+
+		/*
+		 * Used in output containment ordering
+		 */
+		public interface NoPossibleChildren extends Token {
+		}
+
 		public interface Order extends Comparator<Token> {
+			/*
+			 * Undesirable, but use for dev
+			 */
+			public static class Passthrough implements Order {
+				@Override
+				public int compare(Token o1, Token o2) {
+					{
+						int c1 = noPossibleChildrenWeight(o1);
+						int c2 = noPossibleChildrenWeight(o2);
+						if (c1 != c2) {
+							return c1 - c2;
+						}
+						// NoPossibleChildren tokens can't overlap
+						Preconditions.checkState(c1 == 0);
+					}
+					{
+						// provide some sort of ordering
+						String c1 = o1.getClass().getName();
+						String c2 = o1.getClass().getName();
+						return c1.compareTo(c2);
+					}
+				}
+
+				private int noPossibleChildrenWeight(Token o) {
+					return o instanceof NoPossibleChildren ? 1 : 0;
+				}
+			}
+
 			public static class Throw implements Order {
 				@Override
 				public int compare(Token o1, Token o2) {
 					throw new UnsupportedOperationException();
 				}
 			}
+		}
+
+		/*
+		 * For output, only measures with tokens of this subtype can contain
+		 * text DOM nodes
+		 */
+		public interface TextContainer extends Token {
 		}
 	}
 }

@@ -89,7 +89,7 @@ public class Shell {
 
 	private boolean terminated;
 
-	boolean logLaunchMessage = true;
+	public boolean logLaunchMessage = true;
 
 	public Process getProcess() {
 		return this.process;
