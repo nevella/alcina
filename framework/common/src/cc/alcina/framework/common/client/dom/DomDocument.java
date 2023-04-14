@@ -17,6 +17,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
+import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -347,6 +348,162 @@ public class DomDocument extends DomNode {
 		}
 
 		@Override
+		public Location getRelativeLocation(Location location,
+				RelativeDirection direction) {
+			/*
+			 * @formatter:off
+			 *
+			 * (bf1) El1                                                                           (af1)
+			 *       (bf2)  E2                                (af2)  (bf4) E4 (af4)  (bf5) E5 (af5)
+			 *              (bf3) T3                     (af3)
+			 *                    (bf3.0)  'a' 'b' (af3.1)
+			 *
+			 * @formatter:on
+			 *
+			 * Traversal is the 'tree' of bf/afs (before/after) shown above
+			 */
+			DomNode node = location.containingNode();
+			int targetTreeIndex = location.treeIndex;
+			int targetIndex = location.index;
+			boolean targetAfter = !location.after;
+			Location baseLocation = byNode.get(node);
+			Location parentLocation = byNode.get(node.parent());
+			boolean nodeTraversalRequired = false;
+			if (node.isText()) {
+				int relativeIndex = location.index - baseLocation.index;
+				switch (direction) {
+				case NEXT_LOCATION: {
+					if (location.after) {
+						if (relativeIndex == node.textContent().length()) {
+							nodeTraversalRequired = true;
+						} else {
+							targetIndex++;
+						}
+					} else {
+						// just switching from before->after
+					}
+					break;
+				}
+				case PREVIOUS_LOCATION: {
+					if (location.after) {
+						// just switching from after->before
+					} else {
+						if (relativeIndex == 0) {
+							nodeTraversalRequired = true;
+						} else {
+							targetIndex--;
+						}
+					}
+					break;
+				}
+				case PREVIOUS_DOMNODE_START: {
+					nodeTraversalRequired = true;
+					break;
+				}
+				case NEXT_DOMNODE_START: {
+					nodeTraversalRequired = true;
+					break;
+				}
+				default:
+					throw new UnsupportedOperationException();
+				}
+			} else {
+				nodeTraversalRequired = true;
+			}
+			if (nodeTraversalRequired) {
+				switch (direction) {
+				case NEXT_LOCATION: {
+					if (location.after) {
+						DomNode nextSibling = node.relative().nextSibling();
+						if (nextSibling == null) {
+							// last, ascend
+							targetTreeIndex = parentLocation != null
+									? parentLocation.treeIndex
+									: -1;
+							targetAfter = true;
+						} else {
+							targetTreeIndex = byNode.get(nextSibling).treeIndex;
+						}
+					} else {
+						DomNode nextLogicalNode = node.relative()
+								.nextLogicalNode();
+						if (nextLogicalNode == null) {
+							// last, ascend
+							targetTreeIndex = parentLocation != null
+									? parentLocation.treeIndex
+									: -1;
+						} else {
+							targetTreeIndex = byNode
+									.get(nextLogicalNode).treeIndex;
+							targetAfter = false;
+						}
+					}
+					break;
+				}
+				case PREVIOUS_LOCATION: {
+					if (!location.after) {
+						DomNode previousSibling = node.relative()
+								.previousSibling();
+						if (previousSibling == null) {
+							// last, ascend
+							targetTreeIndex = parentLocation != null
+									? parentLocation.treeIndex
+									: -1;
+							targetAfter = false;
+						} else {
+							targetTreeIndex = byNode
+									.get(previousSibling).treeIndex;
+						}
+					} else {
+						DomNode lastChild = node.children.lastNode();
+						if (lastChild == null) {
+							// just the start of the current node
+						} else {
+							// end of the last child
+							targetTreeIndex = byNode.get(lastChild).treeIndex;
+							targetAfter = true;
+						}
+					}
+					break;
+				}
+				case PREVIOUS_DOMNODE_START: {
+					// if at start, go to previous logical node - if at end, go
+					// to last descendant
+					targetAfter = false;
+					targetIndex = -1;
+					if (!location.after) {
+						targetTreeIndex--;
+					} else {
+						DomNode lastDescendant = node.relative()
+								.lastDescendant();
+						if (lastDescendant != null) {
+							targetTreeIndex = byNode
+									.get(lastDescendant).treeIndex;
+						} else {
+							targetTreeIndex--;
+						}
+					}
+					break;
+				}
+				case NEXT_DOMNODE_START: {
+					targetAfter = false;
+					targetIndex = -1;
+					targetTreeIndex++;
+					break;
+				}
+				default:
+					throw new UnsupportedOperationException();
+				}
+			}
+			DomNode containingNode = byTreeIndex.get(targetTreeIndex);
+			if (targetIndex == -1) {
+				return byNode.get(containingNode);
+			}
+			return new Location(targetTreeIndex, targetIndex, targetAfter,
+					containingNode, this);
+		}
+
+		@Override
 		public String textContent(Location.Range range) {
 			ensureLookups();
 			return contents.substring(range.start.index, range.end.index);
@@ -414,8 +571,14 @@ public class DomDocument extends DomNode {
 
 		Location.Range asRange(DomNode domNode) {
 			Location start = asLocation(domNode);
-			Location end = createRelativeLocation(start,
-					contentLengths.get(domNode), true);
+			Location end = null;
+			if (domNode.isText()) {
+				end = createRelativeLocation(start, contentLengths.get(domNode),
+						true);
+			} else {
+				end = asLocation(domNode).clone();
+				end.index += contentLengths.get(domNode);
+			}
 			end.after = true;
 			return new Location.Range(start, end);
 		}

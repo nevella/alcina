@@ -183,7 +183,12 @@ public class SelectionTraversal
 
 	public <S extends Selection> List<S>
 			getSelections(Class<? extends S> clazz) {
-		return state.selections.get(clazz);
+		return getSelections(clazz, false);
+	}
+
+	public <S extends Selection> List<S> getSelections(Class<? extends S> clazz,
+			boolean includeSubclasses) {
+		return state.selections.get(clazz, includeSubclasses);
 	}
 
 	public void logTraversalStats() {
@@ -739,11 +744,6 @@ public class SelectionTraversal
 
 		public Set<Selection> byLayer(Layer layer) {
 			return byLayer.getAndEnsure(layer);
-		}
-
-		public synchronized <S extends Selection> List<S>
-				get(Class<? extends S> clazz) {
-			return get(clazz, false);
 		}
 
 		public synchronized <S extends Selection> List<S>

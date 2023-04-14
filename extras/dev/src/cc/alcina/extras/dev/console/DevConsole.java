@@ -62,6 +62,7 @@ import cc.alcina.framework.entity.console.ArgParser;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
+import cc.alcina.framework.entity.stat.DevStats;
 import cc.alcina.framework.entity.stat.StatCategory;
 import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole;
@@ -224,7 +225,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public void atEndOfDomainStoreLoad() {
 		new StatCategory_Console.PostDomainStore().emit();
 		new StatCategory_Console().emit();
-		// new DevStats().parse(logProvider).dump(true);
+		if (Configuration.is("logStartupMetrics")) {
+			new DevStats().parse(logProvider).dump(true);
+		}
 		logger.info("Domain stores loaded - time from launch {} ms",
 				System.currentTimeMillis() - startupTime);
 		logProvider.startRemote();

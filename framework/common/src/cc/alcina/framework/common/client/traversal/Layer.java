@@ -57,7 +57,7 @@ public abstract class Layer<S extends Selection> implements
 	}
 
 	public Collection<S> computeInputs() {
-		return state.traversalState.selections.get(signature.input);
+		return state.traversalState.selections.get(signature.input, false);
 	}
 
 	public int depth() {
@@ -191,7 +191,7 @@ public abstract class Layer<S extends Selection> implements
 	}
 
 	protected <T extends Selection> List<T> selections(Class<T> clazz) {
-		return state.traversalState.selections.get(clazz);
+		return state.traversalState.selections.get(clazz, false);
 	}
 
 	protected boolean testFilter(S selection) {

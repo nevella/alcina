@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.dom;
 
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 
 public interface LocationContext {
 	default int compare(Location l1, Location l2) {
@@ -63,6 +64,9 @@ public interface LocationContext {
 	}
 
 	Location createRelativeLocation(Location location, int offset, boolean end);
+
+	Location getRelativeLocation(Location location,
+			RelativeDirection direction);
 
 	DomNode getContainingNode(Location location);
 

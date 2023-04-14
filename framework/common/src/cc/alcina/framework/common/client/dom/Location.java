@@ -52,6 +52,12 @@ public class Location implements Comparable<Location> {
 	Location() {
 	}
 
+	@Override
+	public Location clone() {
+		return new Location(treeIndex, index, after, containingNode,
+				locationContext);
+	}
+
 	/**
 	 * Identical to a depth-first traversal position comparison
 	 */
@@ -106,14 +112,20 @@ public class Location implements Comparable<Location> {
 		return compareTo(other) < 0;
 	}
 
+	public Location relativeLocation(RelativeDirection direction) {
+		return locationContext.getRelativeLocation(this, direction);
+	}
+
 	public void setLocationContext(LocationContext locationSupplier) {
 		this.locationContext = locationSupplier;
 	}
 
 	@Override
 	public String toString() {
-		return Ax.format("[node:%s - txt:%s - %s]", treeIndex, index,
-				after ? ">" : "<");
+		String nodeName = containingNode == null ? ""
+				: " - " + containingNode.name();
+		return Ax.format("[node:%s - txt:%s - %s%s]", treeIndex, index,
+				after ? ">" : "<", nodeName);
 	}
 
 	// Feature group class for content access
@@ -197,5 +209,10 @@ public class Location implements Comparable<Location> {
 			}
 			return textContent;
 		}
+	}
+
+	public enum RelativeDirection {
+		NEXT_LOCATION, NEXT_DOMNODE_START, PREVIOUS_LOCATION,
+		PREVIOUS_DOMNODE_START
 	}
 }
