@@ -127,6 +127,10 @@ public abstract class Client {
 	public static class Init {
 		static Init instance = new Init();
 
+		public static long getStartTime() {
+			return instance.startTime;
+		}
+
 		public static void init() {
 			instance.preRegistry();
 			instance.registry();
@@ -146,7 +150,7 @@ public abstract class Client {
 			return instance.complete;
 		}
 
-		public long startTime;
+		private long startTime;
 
 		private boolean complete;
 
