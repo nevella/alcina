@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.publication;
+package cc.alcina.framework.entity.dirndl;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -49,7 +49,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.servlet.publication.EntityCleaner;
+import cc.alcina.framework.entity.dirndl.EntityCleaner;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
