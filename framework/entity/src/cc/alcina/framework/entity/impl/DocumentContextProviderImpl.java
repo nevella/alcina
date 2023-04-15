@@ -1,6 +1,6 @@
-package cc.alcina.framework.servlet.impl;
+package cc.alcina.framework.entity.impl;
 
-import com.github.javaparser.quality.Preconditions;
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.servlet.impl.DocumentContextProviderImpl.DocumentFrame;
+import cc.alcina.framework.entity.impl.DocumentContextProviderImpl.DocumentFrame;
 
 @Registration.Singleton(DocumentContextProviderImpl.class)
 public class DocumentContextProviderImpl implements

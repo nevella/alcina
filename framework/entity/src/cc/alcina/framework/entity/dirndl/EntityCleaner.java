@@ -145,7 +145,8 @@ public class EntityCleaner {
 
 	private void readEntityFile() {
 		try {
-			String entities = Io.read().resource("htmlEntities.txt").asString();
+			String entities = Io.read().relativeTo(EntityCleaner.class)
+					.resource("htmlEntities.txt").asString();
 			entities = entities.replace('\u00A0', ' ');
 			String regex = "(?s)<!ENTITY\\s+(\\S+)\\s+(?:CDATA)?\\s+\"&#(x)?([0-9A-F]+).+?-->";
 			Pattern p = Pattern.compile(regex, Pattern.MULTILINE

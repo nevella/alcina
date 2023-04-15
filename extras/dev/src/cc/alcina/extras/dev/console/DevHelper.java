@@ -63,6 +63,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
+import cc.alcina.framework.entity.impl.DocumentContextProviderImpl;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -83,7 +84,6 @@ import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.ServletLayerObjects;
-import cc.alcina.framework.servlet.impl.DocumentContextProviderImpl;
 import elemental.json.impl.JsonUtil;
 
 @SuppressWarnings("deprecation")

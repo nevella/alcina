@@ -238,6 +238,7 @@
 			<fileset dir="${framework.entity.base.dir}/src">
 				<include name="**/*.java" />
 				<include name="**/*.properties" />
+				<include name="**/*.txt" />
 				<exclude name="org/w3c/dom/**/*.*" />
 			</fileset>
 			<fileset dir="${framework.classmeta.build.dir}">

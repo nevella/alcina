@@ -828,7 +828,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		instance = this;
 		Registry.Internals
 				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
-		JvmReflections.setupBootstrapJvmServices();
+		JvmReflections.configureBootstrapJvmServices();
 		Registry.register().singleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
 		JvmReflections.init();

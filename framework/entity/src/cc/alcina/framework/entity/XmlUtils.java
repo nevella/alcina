@@ -1436,9 +1436,8 @@ public class XmlUtils {
 		if (cacheMarker == null) {
 			cacheMarker = TRANSFORMER_CACHE_MARKER_NULL;
 		}
-		if (cacheMarker != TRANSFORMER_CACHE_MARKER_STREAM_XML
-				&& (noTransformerCaching
-						|| cacheMarker == TRANSFORMER_CACHE_MARKER_NULL)) {
+		if (noTransformerCaching
+				|| cacheMarker == TRANSFORMER_CACHE_MARKER_NULL) {
 			pool = new TransformerPool(false);
 		} else {
 			pool = transformersPool.get(cacheMarker);

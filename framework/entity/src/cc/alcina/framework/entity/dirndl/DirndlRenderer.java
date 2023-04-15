@@ -12,10 +12,10 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.impl.DocumentContextProviderImpl;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.impl.DocumentContextProviderImpl;
 
 public class DirndlRenderer {
 	public static DirndlRenderer instance() {

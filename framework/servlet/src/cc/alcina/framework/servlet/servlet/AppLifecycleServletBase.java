@@ -34,14 +34,12 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
-import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -52,15 +50,14 @@ import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TimezoneData;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Configuration.Properties;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
+import cc.alcina.framework.entity.impl.DocumentContextProviderImpl;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -71,7 +68,6 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMet
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.DbAppender;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
-import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
@@ -85,12 +81,10 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
-import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
-import cc.alcina.framework.servlet.impl.DocumentContextProviderImpl;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
@@ -99,7 +93,6 @@ import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatures;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
-import elemental.json.impl.JsonUtil;
 
 /**
  * <p>
@@ -341,7 +334,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void initBootstrapRegistry() {
 		setupAppServerBootstrapJvmServices();
-		JvmReflections.setupBootstrapJvmServices();
+		JvmReflections.configureBootstrapJvmServices();
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
 		JvmReflections.init();
@@ -373,11 +366,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider
 				.ttmInstance();
 		LooseContext.register(ttmInstance);
-		Registry.register().singleton(TimerWrapperProvider.class,
-				new TimerWrapperProviderJvm());
-		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
-		GWT.setBridge(new GWTBridgeHeadless());
-		JsonUtil.FAST_STRINGIFY = true;
+		JvmReflections.initJvmServices();
 	}
 
 	protected abstract void initContainerBridge();

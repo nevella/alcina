@@ -1,21 +1,25 @@
 package cc.alcina.framework.entity.gwt.reflection.impl;
 
+import com.google.gwt.core.shared.GWT;
+
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
 import cc.alcina.framework.common.client.reflection.impl.ForName;
 import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
+import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.LinkedHashMapCreatorJvm;
+import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
+import elemental.json.impl.JsonUtil;
 
+@SuppressWarnings("deprecation")
 public class JvmReflections {
-	public static void init() {
-		ForName.setImpl(new ForNameImpl());
-		ClassReflectorProvider.setImpl(new ClassReflectorProviderImpl());
-	}
-
-	public static void setupBootstrapJvmServices() {
+	public static void configureBootstrapJvmServices() {
 		Registry.Internals
 				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
 		CollectionCreators.Bootstrap
@@ -25,5 +29,18 @@ public class JvmReflections {
 		CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
 		CollectionCreators.Bootstrap
 				.setLinkedMapCreator(new LinkedHashMapCreatorJvm());
+	}
+
+	public static void init() {
+		ForName.setImpl(new ForNameImpl());
+		ClassReflectorProvider.setImpl(new ClassReflectorProviderImpl());
+	}
+
+	public static void initJvmServices() {
+		Registry.register().singleton(TimerWrapperProvider.class,
+				new TimerWrapperProviderJvm());
+		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
+		GWT.setBridge(new GWTBridgeHeadless());
+		JsonUtil.FAST_STRINGIFY = true;
 	}
 }
