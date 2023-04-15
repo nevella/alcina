@@ -54,6 +54,12 @@ public class Reflections {
 		return get().applicationName;
 	}
 
+	// here for android compatibility
+	public static String getPackageName(Class clazz) {
+		Package _package = clazz.getPackage();
+		return _package == null ? "" : _package.getName();
+	}
+
 	public static void init() {
 		ForName.init();
 		theInstance = new Reflections();

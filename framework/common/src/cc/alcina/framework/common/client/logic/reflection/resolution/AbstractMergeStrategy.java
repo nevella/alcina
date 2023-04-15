@@ -97,7 +97,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			Property property);
 
 	boolean permitPackages(Class clazz) {
-		switch (clazz.getPackageName()) {
+		switch (Reflections.getPackageName(clazz)) {
 		case "javax.swing":
 			return false;
 		default:

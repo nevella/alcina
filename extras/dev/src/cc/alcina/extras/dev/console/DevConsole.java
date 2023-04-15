@@ -79,7 +79,6 @@ import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
-import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
 /*
@@ -829,7 +828,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		instance = this;
 		Registry.Internals
 				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
-		AppLifecycleServletBase.setupBootstrapJvmServices();
+		JvmReflections.setupBootstrapJvmServices();
 		Registry.register().singleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
 		JvmReflections.init();

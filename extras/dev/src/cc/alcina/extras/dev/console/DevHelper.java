@@ -354,6 +354,7 @@ public abstract class DevHelper {
 
 	public abstract void loadDefaultLoggingProperties();
 
+	// FIXME - ru - rename to loadConfig
 	public void loadJbossConfig() {
 		String configPath = getConfigFilePath();
 		if (!new File(configPath).exists()) {
@@ -537,6 +538,7 @@ public abstract class DevHelper {
 
 	protected abstract String getConfigFilePath();
 
+	// FIXME - ru - delete
 	protected abstract String getJbossConfigPrompt(String path);
 
 	protected String getNonVcsJavaDevmodeProcessObserverFilePath() {

@@ -21,6 +21,7 @@ import com.google.gwt.core.ext.typeinfo.JTypeParameter;
 import com.google.gwt.core.ext.typeinfo.JWildcardType;
 import com.google.gwt.core.ext.typeinfo.NotFoundException;
 
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesAssignableTo;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesInterfaces;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesJavaType;
@@ -42,7 +43,8 @@ public abstract class JClassType
 		this.typeOracle = typeOracle;
 		this.clazz = clazz;
 		this.modifierBits = clazz.getModifiers();
-		this.jPackage = typeOracle.findPackage(clazz.getPackageName());
+		this.jPackage = typeOracle
+				.findPackage(Reflections.getPackageName(clazz));
 	}
 
 	@Override
