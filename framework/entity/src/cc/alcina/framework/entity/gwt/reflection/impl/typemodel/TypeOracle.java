@@ -23,6 +23,8 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
+	public static boolean reverseFieldOrder = false;
+
 	private final Map<String, JPackage> packages = new HashMap<>();
 
 	private final Map<String, JClassType> jclasses = new HashMap<>();

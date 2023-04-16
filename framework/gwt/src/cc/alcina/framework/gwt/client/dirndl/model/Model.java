@@ -233,20 +233,6 @@ public abstract class Model extends Bindable implements
 					rightPropertyName, rightToLeftConverter);
 		}
 
-		/*
-		 * Recomputes on any property change
-		 */
-		public void add(Object leftPropertyName,
-				SourcesPropertyChangeEvents right) {
-			BaseSourcesPropertyChangeEvents source = (BaseSourcesPropertyChangeEvents) getSource();
-			RemovablePropertyChangeListener listener = new RemovablePropertyChangeListener(
-					right, null, evt -> {
-						source.firePropertyChange(null, evt.getOldValue(),
-								evt.getNewValue());
-					});
-			add(listener);
-		}
-
 		public void add(Object leftPropertyName,
 				SourcesPropertyChangeEvents right, Object rightPropertyName) {
 			add(leftPropertyName, null, right, rightPropertyName, null);
@@ -289,6 +275,24 @@ public abstract class Model extends Bindable implements
 		public void addRegistration(
 				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
 			listenerBindings.add(asBinding(handlerRegistrationSupplier));
+		}
+
+		/*
+		 * This recomputes source.leftPropertyName on any property change to
+		 * right. It does *not* create a 1-1 property binding
+		 * 
+		 * in fact - this looks incorrectly implemented (leftPropertyName is
+		 * unused)...possibly remove
+		 */
+		public void addUnspecified(Object leftPropertyName,
+				SourcesPropertyChangeEvents right) {
+			BaseSourcesPropertyChangeEvents source = (BaseSourcesPropertyChangeEvents) getSource();
+			RemovablePropertyChangeListener listener = new RemovablePropertyChangeListener(
+					right, null, evt -> {
+						source.firePropertyChange(null, evt.getOldValue(),
+								evt.getNewValue());
+					});
+			add(listener);
 		}
 
 		public void bind() {
