@@ -861,7 +861,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		// triggered by first publication
 		long statEndInitJaxbServices = System.currentTimeMillis();
 		initState();
-		remote = new DevConsoleRemote(this);
+		remote = DevConsoleRemote.get();
+		remote.setDevConsole(this);
 		if (launchConfiguration.noHttpServer) {
 			Ax.out("STARTUP\t no-http: not serving console over http");
 			this.headless = true;

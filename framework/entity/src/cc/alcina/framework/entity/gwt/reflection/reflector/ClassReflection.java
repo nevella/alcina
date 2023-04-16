@@ -175,8 +175,6 @@ public class ClassReflection extends ReflectionElement {
 						.isVisibleAnnotation(a.annotationType()))
 				.map(AnnotationReflection::new).sorted()
 				.forEach(annotationReflections::add);
-		// properties are needed even for abstract classes (for annotation
-		// access)
 		prepareProperties();
 		if (!hasAbstractModifier) {
 			prepareRegistrations();
@@ -246,8 +244,15 @@ public class ClassReflection extends ReflectionElement {
 		if (method.getParameters().length == 0) {
 			Matcher m = getterPattern.matcher(method.getName());
 			if (m.matches()) {
-				return new PropertyReflection.PropertyMethod(
-						methodNamePartToPropertyName(m.group(1)), true, method);
+				boolean ignoreableIs = method.getName().startsWith("is")
+						&& !Objects.equals(
+								method.getReturnType().getQualifiedSourceName(),
+								"boolean");
+				if (!ignoreableIs) {
+					return new PropertyReflection.PropertyMethod(
+							methodNamePartToPropertyName(m.group(1)), true,
+							method);
+				}
 			}
 		}
 		// setter

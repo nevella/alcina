@@ -25,15 +25,22 @@ import org.eclipse.jetty.util.resource.Resource;
 import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.jscodeserver.JsCodeServerServlet;
 
+@Registration.Singleton(DevConsoleRemote.class)
 public class DevConsoleRemote {
 	public static final transient String CONTEXT_CALLER_CLIENT_INSTANCE_UID = DevConsoleRemote.class
 			.getName() + ".CONTEXT_CALLER_CLIENT_INSTANCE_UID";
+
+	public static DevConsoleRemote get() {
+		return Registry.impl(DevConsoleRemote.class);
+	}
 
 	ConsoleWriter out = new ConsoleWriter(false);
 
@@ -52,10 +59,6 @@ public class DevConsoleRemote {
 	private boolean hasRemote;
 
 	Map<String, Integer> perClientInstanceRecordOffsets = new LinkedHashMap<>();
-
-	public DevConsoleRemote(DevConsole devConsole) {
-		this.devConsole = devConsole;
-	}
 
 	public void addClearEvent() {
 		ConsoleRecord record = new ConsoleRecord();
@@ -76,6 +79,10 @@ public class DevConsoleRemote {
 	public String getAppName() {
 		return Ax.blankTo(Configuration.get("appName"),
 				() -> devConsole.getClass().getSimpleName());
+	}
+
+	public DevConsole getDevConsole() {
+		return this.devConsole;
 	}
 
 	public Writer getErrWriter() {
@@ -100,6 +107,10 @@ public class DevConsoleRemote {
 	public void performCommand(String commandString) {
 		devConsole.echoCommand(commandString);
 		devConsole.performCommand(commandString);
+	}
+
+	public void setDevConsole(DevConsole devConsole) {
+		this.devConsole = devConsole;
 	}
 
 	public void start() throws Exception {
@@ -161,6 +172,7 @@ public class DevConsoleRemote {
 					new ServletHolder(new JsCodeServerServlet()), "/*");
 			jsCodeServerHandler.setAllowNullPathInfo(true);
 		}
+		addSubclassHandlers(handlers);
 		{
 			ServletContextHandler resourceHandler = new ServletContextHandler(
 					ServletContextHandler.SESSIONS);
@@ -184,6 +196,9 @@ public class DevConsoleRemote {
 		server.start();
 		// server.dumpStdErr();
 		server.join();
+	}
+
+	protected void addSubclassHandlers(HandlerCollection handlers) {
 	}
 
 	synchronized void addRecord(ConsoleRecord record) {
