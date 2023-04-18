@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -411,6 +412,10 @@ public abstract class JClassType
 			fields = Arrays.stream(clazz.getDeclaredFields())
 					.map(f -> new JField(typeOracle, f))
 					.collect(Collectors.toList());
+			if (TypeOracle.reverseFieldOrder) {
+				// android
+				Collections.reverse(fields);
+			}
 			methods = Arrays.stream(clazz.getDeclaredMethods())
 					.map(m -> new JMethod(typeOracle, m))
 					.collect(Collectors.toList());

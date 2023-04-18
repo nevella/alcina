@@ -61,6 +61,14 @@ public @interface Binding {
 	}
 
 	@Reflected
+	public static class UnitPercent implements ToStringFunction<Integer> {
+		@Override
+		public String apply(Integer percent) {
+			return percent + "%";
+		}
+	}
+
+	@Reflected
 	public static class UnitPx implements ToStringFunction<Integer> {
 		@Override
 		public String apply(Integer px) {

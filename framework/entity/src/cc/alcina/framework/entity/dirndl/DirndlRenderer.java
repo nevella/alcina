@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.impl.DocumentContextProviderImpl;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -77,6 +78,7 @@ public class DirndlRenderer {
 		Element element = renderElement();
 		String outerHtml = element.getOuterHtml();
 		outerHtml = EntityCleaner.get().htmlToUnicodeEntities(outerHtml);
+		outerHtml = XmlUtils.balanceForXhtml(outerHtml);
 		DomDocument doc = DomDocument.basicHtmlDoc();
 		DomNode div = doc.html().body().builder().tag("div").append();
 		div.setInnerXml(outerHtml);

@@ -153,4 +153,22 @@ public class BaseSourcesPropertyChangeEvents
 	protected boolean hasPropertyChangeSupport() {
 		return propertyChangeSupport != null;
 	}
+
+	protected <V> void set(PropertyEnum propertyName, V oldValue, V newValue,
+			Runnable setter) {
+		set(propertyName.name(), oldValue, newValue, setter);
+	}
+
+	protected <V> void set(String propertyName, V oldValue, V newValue,
+			Runnable setter) {
+		if (oldValue == newValue) {
+			return;
+		}
+		setter.run();
+		if (propertyChangeSupport == null) {
+			return;
+		}
+		propertyChangeSupport.firePropertyChange(propertyName, oldValue,
+				newValue);
+	}
 }
