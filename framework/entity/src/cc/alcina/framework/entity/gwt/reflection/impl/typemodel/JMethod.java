@@ -17,6 +17,7 @@ package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.function.BiFunction;
 
 import com.google.gwt.core.ext.typeinfo.JType;
@@ -31,8 +32,8 @@ public class JMethod extends JAbstractMethod
 		implements com.google.gwt.core.ext.typeinfo.JMethod, ProvidesMethod {
 	private Method method;
 
-	public JMethod(TypeOracle typeOracle, Method method) {
-		super(typeOracle, method);
+	public JMethod(TypeOracle typeOracle, Type declaringType, Method method) {
+		super(typeOracle, declaringType, method);
 		this.method = method;
 	}
 
@@ -44,7 +45,8 @@ public class JMethod extends JAbstractMethod
 
 	@Override
 	public JType getReturnType() {
-		return typeOracle.getType(method.getReturnType());
+		return typeOracle.resolveType(declaringType,
+				method.getGenericReturnType());
 	}
 
 	@Override

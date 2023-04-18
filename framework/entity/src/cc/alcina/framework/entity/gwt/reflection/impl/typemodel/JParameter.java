@@ -18,8 +18,9 @@ package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 
-import com.google.gwt.core.ext.typeinfo.JAbstractMethod;
 import com.google.gwt.core.ext.typeinfo.JType;
+
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Represents a parameter in a declaration.
@@ -65,12 +66,18 @@ public class JParameter implements com.google.gwt.core.ext.typeinfo.JParameter {
 
 	@Override
 	public JType getType() {
-		return typeOracle.getType(parameter.getType());
+		return typeOracle.resolveType(jMethod.declaringType,
+				parameter.getParameterizedType());
 	}
 
 	@Override
 	public boolean
 			isAnnotationPresent(Class<? extends Annotation> annotationClass) {
 		return getAnnotation(annotationClass) == null;
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("[%s] :: %s", parameter, jMethod);
 	}
 }

@@ -15,43 +15,42 @@
  */
 package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
-import com.google.gwt.core.ext.typeinfo.JParameterizedType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+
+import com.google.gwt.core.ext.typeinfo.JGenericType;
 
 /**
  * Type declaration that has type parameters.
  */
-public class JGenericType extends JRealClassType
-		implements com.google.gwt.core.ext.typeinfo.JGenericType {
-	private JRawType lazyRawType = null;
+public class JParameterizedType extends JClassType<ParameterizedType>
+		implements com.google.gwt.core.ext.typeinfo.JParameterizedType {
+	private JClassType[] typeArguments;
 
-	private JTypeParameter[] typeParameters;
-
-	public JGenericType(TypeOracle typeOracle, Class clazz,
-			JTypeParameter[] typeParameters) {
-		super(typeOracle, clazz);
-		this.typeParameters = typeParameters;
+	public JParameterizedType(TypeOracle typeOracle, ParameterizedType type,
+			JClassType[] typeArguments) {
+		super(typeOracle, type);
+		this.typeArguments = typeArguments;
 	}
 
 	@Override
-	public JParameterizedType asParameterizedByWildcards() {
-		throw new UnsupportedOperationException();
+	public JGenericType getBaseType() {
+		Type rawType = type.getRawType();
+		return (JGenericType) typeOracle.getType(rawType);
 	}
 
 	@Override
 	public JClassType getErasedType() {
-		return getRawType();
+		return typeOracle.getType(type.getRawType());
 	}
 
 	@Override
-	public JRawType getRawType() {
-		if (lazyRawType == null) {
-			lazyRawType = new JRawType(this);
-		}
-		return lazyRawType;
+	public JClassType getRawType() {
+		return getErasedType();
 	}
 
 	@Override
-	public JTypeParameter[] getTypeParameters() {
-		return typeParameters;
+	public JClassType[] getTypeArgs() {
+		return typeArguments;
 	}
 }

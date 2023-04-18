@@ -1,7 +1,12 @@
 package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,9 +32,11 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.Provi
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesInterfaces;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesJavaType;
 
-public abstract class JClassType
+public abstract class JClassType<T extends Type>
 		implements com.google.gwt.core.ext.typeinfo.JClassType,
 		ProvidesAssignableTo, ProvidesInterfaces, ProvidesJavaType {
+	T type;
+
 	Class clazz;
 
 	Members members;
@@ -40,12 +47,19 @@ public abstract class JClassType
 
 	private int modifierBits;
 
-	public JClassType(TypeOracle typeOracle, Class clazz) {
+	public JClassType(TypeOracle typeOracle, T type) {
 		this.typeOracle = typeOracle;
-		this.clazz = clazz;
-		this.modifierBits = clazz.getModifiers();
-		this.jPackage = typeOracle
-				.findPackage(Reflections.getPackageName(clazz));
+		this.type = type;
+		if (type instanceof Class) {
+			this.clazz = (Class) type;
+		} else if (type instanceof ParameterizedType) {
+			this.clazz = (Class) ((ParameterizedType) type).getRawType();
+		}
+		if (clazz != null) {
+			this.modifierBits = clazz.getModifiers();
+			this.jPackage = typeOracle
+					.findPackage(Reflections.getPackageName(clazz));
+		}
 	}
 
 	@Override
@@ -227,7 +241,14 @@ public abstract class JClassType
 
 	@Override
 	public JClassType getSuperclass() {
-		return typeOracle.getType(clazz.getSuperclass());
+		if (clazz.getName().contains("OpsolUserPlace")) {
+			AnnotatedType annotatedSuperclass = clazz.getAnnotatedSuperclass();
+			TypeVariable[] typeParameters = clazz.getTypeParameters();
+			AnnotatedType annotatedSuperclass2 = Class.class
+					.getAnnotatedSuperclass();
+			int debug = 3;
+		}
+		return typeOracle.getType(clazz.getGenericSuperclass());
 	}
 
 	@Override
@@ -409,15 +430,22 @@ public abstract class JClassType
 		List<JClassType> implementedInterfaces;
 
 		Members() {
+			if (type instanceof ParameterizedType) {
+				Type rawType = ((java.lang.reflect.ParameterizedType) type)
+						.getRawType();
+				Method[] declaredMethods = ((Class) rawType)
+						.getDeclaredMethods();
+				int debug = 3;
+			}
 			fields = Arrays.stream(clazz.getDeclaredFields())
-					.map(f -> new JField(typeOracle, f))
+					.map(f -> new JField(typeOracle, type, f))
 					.collect(Collectors.toList());
 			if (TypeOracle.reverseFieldOrder) {
 				// android
 				Collections.reverse(fields);
 			}
 			methods = Arrays.stream(clazz.getDeclaredMethods())
-					.map(m -> new JMethod(typeOracle, m))
+					.map(m -> new JMethod(typeOracle, type, m))
 					.collect(Collectors.toList());
 			constructors = Arrays.stream(clazz.getDeclaredConstructors())
 					.map(c -> new JConstructor(typeOracle, c))

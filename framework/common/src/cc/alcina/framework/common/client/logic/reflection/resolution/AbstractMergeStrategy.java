@@ -98,6 +98,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 
 	boolean permitPackages(Class clazz) {
 		switch (Reflections.getPackageName(clazz)) {
+		// FIXME - reflection - typemodel - remove? generalise?
 		case "javax.swing":
 			return false;
 		default:

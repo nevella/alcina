@@ -18,6 +18,7 @@ package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JEnumConstant;
@@ -33,8 +34,11 @@ public class JField implements com.google.gwt.core.ext.typeinfo.JField {
 
 	private int modifierBits;
 
-	public JField(TypeOracle typeOracle, Field field) {
+	private Type declaringType;
+
+	public JField(TypeOracle typeOracle, Type declaringType, Field field) {
 		this.typeOracle = typeOracle;
+		this.declaringType = declaringType;
 		this.field = field;
 		modifierBits = field.getModifiers();
 	}
@@ -56,7 +60,7 @@ public class JField implements com.google.gwt.core.ext.typeinfo.JField {
 
 	@Override
 	public JClassType getEnclosingType() {
-		return typeOracle.getType(field.getDeclaringClass());
+		return typeOracle.getType(declaringType);
 	}
 
 	@Override
@@ -66,7 +70,8 @@ public class JField implements com.google.gwt.core.ext.typeinfo.JField {
 
 	@Override
 	public JType getType() {
-		return typeOracle.getType(field.getType());
+		Type genericType = field.getGenericType();
+		return typeOracle.resolveType(declaringType, genericType);
 	}
 
 	@Override

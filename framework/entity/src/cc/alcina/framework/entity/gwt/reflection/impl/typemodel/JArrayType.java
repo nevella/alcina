@@ -29,6 +29,7 @@ public class JArrayType extends JClassType
 	@Override
 	public JType getComponentType() {
 		Class c = clazz;
+		// FIXME - tm - this erases any parameters in the component type
 		while (c.isArray()) {
 			c = c.getComponentType();
 		}

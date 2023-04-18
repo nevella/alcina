@@ -18,6 +18,7 @@ package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -42,8 +43,12 @@ public class JAbstractMethod
 
 	protected List<JParameter> parameters;
 
-	JAbstractMethod(TypeOracle typeOracle, Executable executable) {
+	protected Type declaringType;
+
+	JAbstractMethod(TypeOracle typeOracle, Type declaringType,
+			Executable executable) {
 		this.typeOracle = typeOracle;
+		this.declaringType = declaringType;
 		this.executable = executable;
 		this.modifierBits = executable.getModifiers();
 		this.parameters = Arrays.stream(executable.getParameters())
@@ -168,5 +173,10 @@ public class JAbstractMethod
 	@Override
 	public boolean isVarArgs() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String toString() {
+		return executable.toString();
 	}
 }

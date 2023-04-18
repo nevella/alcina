@@ -45,9 +45,6 @@ public class PropertyReflection extends ReflectionElement
 	}
 
 	public void addMethod(PropertyMethod method) {
-		if (method.toString().contains("DtrSimpleAdminPersistenceAction")) {
-			int debug = 3;
-		}
 		if (method.getter) {
 			getter = method;
 			updatePropertyType(method.method.getReturnType());
