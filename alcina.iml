@@ -48,7 +48,7 @@
     <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-metamodel-generator-3.20.0.jar!/" />
     <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-serialization-3.20.0.jar!/" />
     <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/javassist-3.18.1-GA.jar!/" />
-    <libelement value="jar://$MODULE_DIR$/lib/framework/servlet/scrypt-1.4.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/servlet/scrypt-1.4.0-patched.jar!/" />
     <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-api-client-1.25.0.jar!/" />
     <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-api-client-jackson2-1.25.0.jar!/" />
     <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-api-client-java6-1.25.0.jar!/" />
@@ -579,9 +579,9 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="scrypt-1.4.0.jar">
+      <library name="scrypt-1.4.0-patched.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/framework/servlet/scrypt-1.4.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/framework/servlet/scrypt-1.4.0-patched.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
