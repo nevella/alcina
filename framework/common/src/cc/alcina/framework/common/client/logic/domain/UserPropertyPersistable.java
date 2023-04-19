@@ -52,7 +52,15 @@ public interface UserPropertyPersistable
 			if (persistable == null && !Serializers.isSerializing()) {
 				// properties may be simple strings, not objects, in which case
 				// return null
+				/*
+				 * Deserializable properties will have a legal java classname as
+				 * the 'key' value
+				 */
 				try {
+					if (Ax.blankToEmpty(property.getKey()).contains(":")) {
+						// not a legal classname - e.g. a type signature record
+						return null;
+					}
 					persistable = (UserPropertyPersistable) property
 							.deserialize();
 					if (persistable != null) {
