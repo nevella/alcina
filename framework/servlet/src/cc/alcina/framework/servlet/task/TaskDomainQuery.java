@@ -175,8 +175,9 @@ public class TaskDomainQuery extends ServerTask {
 		fb.indent(depth * 4);
 		fb.line("Entity: %s", entity.toStringId());
 		int propertyNameMaxLength = 20;
-		properties.stream().sorted(new Property.NameComparator())
-				.filter(Property::provideNotDefaultIgnoreable).forEach(p -> {
+		properties.stream().filter(Property::provideNotDefaultIgnoreable)
+				.filter(Property::isReadable)
+				.sorted(new Property.NameComparator()).forEach(p -> {
 					fb.indent(depth * 4 + 2);
 					String name = CommonUtils.trimToWsChars(p.getName(),
 							propertyNameMaxLength);
