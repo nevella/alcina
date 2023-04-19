@@ -65,7 +65,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 		Node n = null;
 		peer.resetContext(true);
 		SurroundingBlockTuple lastSurroundingTuple = null;
-		long nodeCount = new DomDocument(doc).children.stream().count();
+		long nodeCount = DomDocument.from(doc).children.stream().count();
 		int nodeIndex = 0;
 		while ((n = walker.nextNode()) != null) {
 			ParserContext<T, S> context = peer.getContext();

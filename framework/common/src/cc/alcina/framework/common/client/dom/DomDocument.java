@@ -32,27 +32,31 @@ public class DomDocument extends DomNode {
 	private static transient PerDocumentSupplier perDocumentSupplier;
 
 	public static DomDocument basicHtmlDoc() {
-		return new DomDocument("<html><head></head><body></body></html>");
+		return DomDocument.from("<html><head></head><body></body></html>");
 	}
 
 	public static DomNode createDocumentElement(String tag) {
-		return new DomDocument(Ax.format("<%s/>", tag))
+		return DomDocument.from(Ax.format("<%s/>", tag))
 				.getDocumentElementNode();
 	}
 
 	public static DomDocument createTextContainer(String text) {
-		DomDocument document = new DomDocument("<container/>");
+		DomDocument document = DomDocument.from("<container/>");
 		document.getDocumentElementNode().setText(text);
 		document.setReadonly(true);
 		return document;
 	}
 
-	public static DomDocument documentFor(Document document) {
+	public static DomDocument from(Document document) {
 		synchronized (DomDocument.class) {
 			if (perDocumentSupplier == null)
 				perDocumentSupplier = Registry.impl(PerDocumentSupplier.class);
 		}
 		return perDocumentSupplier.get(document);
+	}
+
+	public static DomDocument from(Document document, boolean ignoreCache) {
+		return new DomDocument(document);
 	}
 
 	public static DomDocument from(String xml) {
@@ -75,19 +79,15 @@ public class DomDocument extends DomNode {
 
 	private Locations locations;
 
-	public DomDocument(Document w3cDocument) {
-		this(w3cDocument, 0);
-	}
-
-	public DomDocument(Document domDocument, int contentLength) {
+	private DomDocument(Document domDocument) {
 		super(null, null);
-		initNodes(contentLength);
+		initNodes(1000);
 		this.node = domDocument;
 		nodes.put(this.node, this);
 		this.document = this;
 	}
 
-	public DomDocument(String xml) {
+	private DomDocument(String xml) {
 		super(null, null);
 		loadFromXml(xml);
 	}
@@ -247,6 +247,10 @@ public class DomDocument extends DomNode {
 
 	@Reflected
 	@Registration.Singleton
+	/*
+	 * Note that the map is not weak (so suitable only for single-doc, i.e.
+	 * GWT). JVM version uses CoreDocument.userData to avoid reference map use
+	 */
 	public static class PerDocumentSupplier {
 		private Map<Document, DomDocument> perDocument;
 
@@ -284,7 +288,7 @@ public class DomDocument extends DomNode {
 		public synchronized DomDocument get(String xml) {
 			DomDocument doc = docs.get(xml);
 			if (doc == null) {
-				doc = new DomDocument(xml);
+				doc = DomDocument.from(xml);
 				doc.setReadonly(true);
 				docs.put(xml, doc);
 				missCount++;

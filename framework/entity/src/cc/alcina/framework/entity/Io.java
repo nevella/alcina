@@ -104,7 +104,7 @@ public class Io {
 		}
 
 		public DomDocument asDomDocument() {
-			return new DomDocument(asHtmlDocument());
+			return DomDocument.from(asHtmlDocument());
 		}
 
 		public Document asHtmlDocument() {
