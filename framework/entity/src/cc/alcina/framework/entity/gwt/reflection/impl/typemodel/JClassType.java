@@ -388,7 +388,7 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public Predicate<Class> provideAssignableTo() {
-		return test -> clazz.isAssignableFrom(test);
+		return test -> test.isAssignableFrom(clazz);
 	}
 
 	@Override

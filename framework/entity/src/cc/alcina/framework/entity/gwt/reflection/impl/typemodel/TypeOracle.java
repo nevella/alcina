@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +38,8 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 	Stack<Class> generatingGenericTypes = new Stack();
 
 	Stack<ParameterizedType> generatingParameterizedTypes = new Stack();
+
+	ConcurrentMap<TypeVariable, GenericDeclaration> genericDeclarations = new ConcurrentHashMap<>();
 
 	@Override
 	public synchronized JPackage findPackage(String pkgName) {
@@ -186,8 +190,9 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 			} else if (possiblyParameterizedDeclaringType instanceof ParameterizedType) {
 				// note - not handling nested types etc...yet
 				ParameterizedType parameterizedType = (ParameterizedType) possiblyParameterizedDeclaringType;
-				GenericDeclaration genericDeclaration = typeVariable
-						.getGenericDeclaration();
+				GenericDeclaration genericDeclaration = genericDeclarations
+						.computeIfAbsent(typeVariable,
+								TypeVariable::getGenericDeclaration);
 				TypeVariable<?>[] typeParameters = genericDeclaration
 						.getTypeParameters();
 				// see if the type variable can be resolved
