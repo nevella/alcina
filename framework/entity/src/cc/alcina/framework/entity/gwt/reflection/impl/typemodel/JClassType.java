@@ -2,7 +2,6 @@ package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -10,7 +9,9 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -148,6 +149,11 @@ public abstract class JClassType<T extends Type>
 	public JClassType[] getImplementedInterfaces() {
 		return ensureMembers().implementedInterfaces
 				.toArray(new JClassType[members.implementedInterfaces.size()]);
+	}
+
+	public JField[] getInheritableFields() {
+		return ensureMembers().inheritableFields
+				.toArray(new JField[members.inheritableFields.size()]);
 	}
 
 	@Override
@@ -425,18 +431,15 @@ public abstract class JClassType<T extends Type>
 
 		List<JMethod> inheritableMethods;
 
+		List<JField> inheritableFields;
+
 		List<JConstructor> constructors;
 
 		List<JClassType> implementedInterfaces;
 
+		TypeParameterResolution resolution = new TypeParameterResolution();
+
 		Members() {
-			if (type instanceof ParameterizedType) {
-				Type rawType = ((java.lang.reflect.ParameterizedType) type)
-						.getRawType();
-				Method[] declaredMethods = ((Class) rawType)
-						.getDeclaredMethods();
-				int debug = 3;
-			}
 			fields = Arrays.stream(clazz.getDeclaredFields())
 					.map(f -> new JField(typeOracle, type, f))
 					.collect(Collectors.toList());
@@ -457,15 +460,25 @@ public abstract class JClassType<T extends Type>
 			while (cursor != null) {
 				Members members = cursor == JClassType.this ? this
 						: cursor.ensureMembers();
-				// as per JClassType.getInheritableMethods javadoc, only retain
-				// the most-derived (i.e. subclass overides super)
+				/*
+				 * as per JClassType.getInheritableMethods javadoc, only retain
+				 * the most-derived (i.e. subclass overides super)
+				 *
+				 * the stream calls resolution::resolve to replace the inherited
+				 * method with a possibly specialised version, determined by
+				 * type paremeter resolution
+				 */
 				members.methods.stream().filter(m -> !m.isPrivate())
+						.map(resolution::resolve)
 						.filter(candidateMethod -> !inheritableMethods.stream()
 								.anyMatch(
 										existingMethod -> sameCallingSignature(
 												existingMethod,
 												candidateMethod)))
 						.forEach(inheritableMethods::add);
+				members.fields.stream().filter(m -> !m.isPrivate())
+						.map(resolution::resolve)
+						.forEach(inheritableFields::add);
 				cursor = cursor.getSuperclass();
 			}
 		}
@@ -487,6 +500,23 @@ public abstract class JClassType<T extends Type>
 			}
 			// only allow exact (not covariant) matches
 			return m1.getReturnType() == m2.getReturnType();
+		}
+	}
+
+	class TypeParameterResolution {
+		Map<Type, Type> resolvedTypeParameters = new LinkedHashMap<>();
+
+		JField resolve(JField field) {
+			return field;
+		}
+
+		JMethod resolve(JMethod method) {
+			return method;
+		}
+
+		// WIP
+		Type resolve(Type type) {
+			return type;
 		}
 	}
 }
