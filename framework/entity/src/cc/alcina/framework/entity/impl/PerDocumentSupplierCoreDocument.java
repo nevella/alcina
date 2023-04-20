@@ -21,14 +21,14 @@ public class PerDocumentSupplierCoreDocument extends PerDocumentSupplier {
 	public DomDocument get(Document document) {
 		synchronized (document) {
 			CoreDocumentImpl impl = (CoreDocumentImpl) document;
-			DomDocument userData = (DomDocument) impl.getUserData(impl,
+			DomDocument domDocument = (DomDocument) impl.getUserData(impl,
 					CORE_DOCUMENT_DOM_DOC_KEY);
-			if (userData == null) {
-				userData = new DomDocument(document);
-				impl.setUserData(impl, CORE_DOCUMENT_DOM_DOC_KEY, userData,
+			if (domDocument == null) {
+				domDocument = DomDocument.from(document, true);
+				impl.setUserData(impl, CORE_DOCUMENT_DOM_DOC_KEY, domDocument,
 						null);
 			}
-			return userData;
+			return domDocument;
 		}
 	}
 }

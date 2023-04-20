@@ -314,7 +314,10 @@ public class LayerParser {
 							RelativeDirection.PREVIOUS_DOMNODE_START);
 			Location boundary = forwardsTraversalOrder ? input.end
 					: input.start;
-			while (location != null && location != boundary) {
+			Supplier<Boolean> afterTraversalBoundary = () -> forwardsTraversalOrder
+					? location.compareTo(boundary) >= 0
+					: location.compareTo(boundary) <= 0;
+			while (location != null && !afterTraversalBoundary.get()) {
 				onBeforeTokenMatch();
 				for (MatchingToken token : parserPeer.tokens) {
 					Measure measure = token.match(inputState);

@@ -33,7 +33,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 			LooseContext.push();
 			openNodes = new Stack<>();
 			this.tokens = tokens;
-			DomDocument outDoc = new DomDocument("<root/>");
+			DomDocument outDoc = DomDocument.from("<root/>");
 			XmlTokenOutput out = new XmlTokenOutput(outDoc);
 			LooseContext.set(DomNode.CONTEXT_DEBUG_SUPPORT, out);
 			context.out = out;

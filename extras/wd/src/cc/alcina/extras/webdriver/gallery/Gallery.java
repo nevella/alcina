@@ -220,7 +220,7 @@ public class Gallery {
 				.executeScript("return document.documentElement.outerHTML;");
 		try {
 			Document w3cdoc = Io.read().string(pageSource).asHtmlDocument();
-			DomDocument doc = new DomDocument(w3cdoc);
+			DomDocument doc = DomDocument.from(w3cdoc);
 			doc.xpath("//script ").forEach(DomNode::removeFromParent);
 			List<DomNode> stylesheetNodes = doc
 					.xpath("//link[@rel='stylesheet'] ").nodes();

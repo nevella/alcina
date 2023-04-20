@@ -175,7 +175,7 @@ public class XmlTokenOutput implements DomNodeDebugSupport {
 	}
 
 	public void writeXml(String xmlString) {
-		DomDocument insert = new DomDocument(xmlString);
+		DomDocument insert = DomDocument.from(xmlString);
 		DomNode documentElementNode = insert.getDocumentElementNode();
 		if (documentElementNode.tagIs("strip")) {
 			documentElementNode.children.nodes()

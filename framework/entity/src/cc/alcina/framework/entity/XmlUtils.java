@@ -180,7 +180,7 @@ public class XmlUtils {
 	}
 
 	public static void cleanNamespacedAttributes(Document doc) {
-		DomDocument.documentFor(doc).children.stream()
+		DomDocument.from(doc).children.stream()
 				.filter(DomNode::isElement).forEach(n -> {
 					if (n.domElement().hasAttributes()) {
 						n.attributes().keySet().stream()
@@ -567,7 +567,7 @@ public class XmlUtils {
 
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
 			StyleResolver blockResolver) {
-		DomDocument xmlDoc = new DomDocument(node.getOwnerDocument());
+		DomDocument xmlDoc = DomDocument.from(node.getOwnerDocument());
 		DomNode prev = xmlDoc.nodeFor(node);
 		DomNode next = prev;
 		SurroundingBlockTuple tuple = new SurroundingBlockTuple(prev.domNode());
@@ -677,7 +677,7 @@ public class XmlUtils {
 			}
 			m.appendTail(out);
 			if (LooseContext.is(CONTEXT_XSL_STRIP_WHITESPACE)) {
-				DomDocument doc = new DomDocument(out.toString());
+				DomDocument doc = DomDocument.from(out.toString());
 				doc.children.stream().filter(DomNode::isText).forEach(
 						n -> n.setText(trimAndNormaliseWrappingNewlines(
 								n.parent().nameIs("xsl:text"),

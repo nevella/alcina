@@ -66,7 +66,7 @@
 	<classpathentry kind="lib" path="lib/framework/entity/javax.transaction-api-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/tools.jar" sourcepath="/g/minor/jdk"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javassist-3.18.1-GA.jar" sourcepath="/g/minor/javassist"/>
-	<classpathentry kind="lib" path="lib/framework/servlet/scrypt-1.4.0-patched.jar"/>
+	<classpathentry kind="lib" path="lib/framework/servlet/scrypt-1.4.0-patched.jar" sourcepath="/g/minor/scrypt-1.4.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/framework/google/google-api-client-1.25.0.jar" sourcepath="/g/minor/google-api-java-client"/>
 	<classpathentry kind="lib" path="lib/framework/google/google-api-client-jackson2-1.25.0.jar"/>
 	<classpathentry kind="lib" path="lib/framework/google/google-api-client-java6-1.25.0.jar"/>

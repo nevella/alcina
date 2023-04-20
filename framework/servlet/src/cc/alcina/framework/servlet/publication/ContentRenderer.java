@@ -78,7 +78,7 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 		m.marshal(wrapper, doc);
 		boolean logDocXml = false;
 		if (logDocXml) {
-			new DomDocument(doc).logPretty();
+			DomDocument.from(doc).logPretty();
 		}
 	}
 

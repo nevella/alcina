@@ -95,7 +95,7 @@ public class DomNode {
 		} else {
 			document = node.getOwnerDocument();
 		}
-		return DomDocument.documentFor(document).nodeFor(node);
+		return DomDocument.from(document).nodeFor(node);
 	}
 
 	protected Node node;
@@ -442,7 +442,7 @@ public class DomNode {
 	}
 
 	public void setInnerXml(String xml) {
-		DomDocument importDoc = new DomDocument(xml);
+		DomDocument importDoc = DomDocument.from(xml);
 		children.importFrom(importDoc.getDocumentElementNode());
 	}
 
