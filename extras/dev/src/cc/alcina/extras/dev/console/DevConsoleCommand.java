@@ -20,6 +20,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -32,9 +34,13 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.extras.dev.console.DevConsoleProperties.SetPropInfo;
 import cc.alcina.extras.dev.console.DevConsoleStrings.DevConsoleString;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -409,6 +415,53 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			for (File file : files) {
 				System.out.format("\t%s\n", file.getName());
 			}
+		}
+	}
+
+	public static class CmdDomainQuery extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "dq" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Query the domain";
+		}
+
+		@Override
+		public String getUsage() {
+			return "dq <class-simple-name> <id> <paths> - e.g. dq MyUser 1 email";
+		}
+
+		@Override
+		public boolean ignoreForCommandHistory() {
+			return false;
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			console.ensureDomainStore();
+			Preconditions.checkArgument(argv.length == 2 || argv.length == 3);
+			String className = argv[0];
+			String idStr = argv[1];
+			String paths = argv.length == 2 ? null : argv[2];
+			Optional<Class<? extends Entity>> clazz = Registry
+					.query(Entity.class).registrations()
+					.filter(c -> Objects.equals(c.getSimpleName(), className))
+					.findFirst();
+			if (clazz.isEmpty()) {
+				throw new IllegalArgumentException(
+						Ax.format("Entity class not found: %s", className));
+			}
+			Entity entity = Domain.find(clazz.get(), Long.parseLong(idStr));
+			if (entity == null) {
+				throw new IllegalArgumentException(Ax.format(
+						"Entity does not exist: %s/%s", className, idStr));
+			}
+			entity.domain()
+					.log(paths == null ? new String[0] : paths.split(","));
+			return "";
 		}
 	}
 
