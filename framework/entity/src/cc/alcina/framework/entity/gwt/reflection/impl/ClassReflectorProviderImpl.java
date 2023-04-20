@@ -29,7 +29,7 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ReflectionVisibility;
 
 public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
-	private static boolean useBeanDescriptors = true;
+	private static boolean useBeanDescriptors = false;
 
 	public static boolean isUseBeanDescriptors() {
 		return useBeanDescriptors;
@@ -84,9 +84,9 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		ClassReflector reflector = null;
 		ClassReflection reflection = new ClassReflection(type,
 				visibleAnnotationFilter);
-		reflection.prepare();
-		ClassReflector<?> typemodelReflector = reflection.asReflector();
-		reflector = typemodelReflector;
+		// reflection.prepare();
+		// ClassReflector<?> typemodelReflector = reflection.asReflector();
+		// reflector = typemodelReflector;
 		// Android JDK doesn't provide Introspector, so avoid for that platform
 		if (useBeanDescriptors) {
 			List<PropertyDescriptor> descriptors = SEUtilities
@@ -134,14 +134,20 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 			ClassReflector<?> legacyReflector = new ClassReflector(clazz,
 					properties, byName, annotationResolver, supplier,
 					assignableTo, interfaces, isAbstract, isFinal);
-			List<String> names1 = typemodelReflector.properties().stream()
-					.map(Property::getName).collect(Collectors.toList());
-			List<String> names2 = legacyReflector.properties().stream()
-					.map(Property::getName).collect(Collectors.toList());
-			if (!names1.equals(names2)) {
-				Ax.err("%s :: \n\t %s \n\t %s", type, names1, names2);
-			}
+			// List<String> names1 = typemodelReflector.properties().stream()
+			// .map(Property::getName).collect(Collectors.toList());
+			// List<String> names2 = legacyReflector.properties().stream()
+			// .map(Property::getName).collect(Collectors.toList());
+			// if (!names1.equals(names2)) {
+			// Ax.err("%s :: \n\t %s \n\t %s", type, names1, names2);
+			// }
 			reflector = legacyReflector;
+		} else {
+			reflection.prepare();
+			ClassReflector<?> typemodelReflector = reflection.asReflector();
+			reflector = typemodelReflector;
+			// Android JDK doesn't provide Introspector, so avoid for that
+			// platform
 		}
 		return reflector;
 	}

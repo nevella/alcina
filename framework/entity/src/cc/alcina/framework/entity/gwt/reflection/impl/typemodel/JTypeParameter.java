@@ -89,11 +89,7 @@ public class JTypeParameter extends JClassType
 	@Override
 	public String getQualifiedSourceName() {
 		if (clazz == null) {
-			TypeVariable typeVariable = (TypeVariable) type;
-			Type[] bounds = typeVariable.getBounds();
-			Class boundingType = bounds.length > 0 ? (Class) bounds[0]
-					: Object.class;
-			return boundingType.getName();
+			return typeOracle.simpleBoundType(type).getName();
 		} else {
 			return super.getQualifiedSourceName();
 		}

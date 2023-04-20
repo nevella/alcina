@@ -160,7 +160,6 @@ public class ClassReflection extends ReflectionElement {
 			// primitive
 			return;
 		}
-		Ax.out(type.getName());
 		hasAbstractModifier = type.isAbstract();
 		hasFinalModifier = type.isFinal();
 		noArgsConstructor = !hasAbstractModifier

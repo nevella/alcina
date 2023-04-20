@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,10 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 	private final Map<String, JClassType> jclasses = new HashMap<>();
 
 	private final Map<Type, JClassType> jclassesByType = new HashMap<>();
+
+	Stack<Class> generatingGenericTypes = new Stack();
+
+	Stack<ParameterizedType> generatingParameterizedTypes = new Stack();
 
 	@Override
 	public synchronized JPackage findPackage(String pkgName) {
@@ -190,7 +195,7 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 				int ordinal = 0;
 				for (; ordinal < typeParameters.length; ordinal++) {
 					TypeVariable<?> test = typeParameters[ordinal];
-					if (test == typeVariable) {
+					if (test.equals(typeVariable)) {
 						break;
 					}
 				}
@@ -215,37 +220,16 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 		return getType(boundingType);
 	}
 
-	private Class simpleBoundType(Type jdkType) {
-		if (jdkType instanceof Class) {
-			return (Class) jdkType;
-		} else if (jdkType instanceof ParameterizedType) {
-			return (Class) ((ParameterizedType) jdkType).getRawType();
-		} else if (jdkType instanceof TypeVariable) {
-			TypeVariable typeVariable = (TypeVariable) jdkType;
-			Type[] bounds = typeVariable.getBounds();
-			if (bounds.length == 0) {
-				return Object.class;
-			} else {
-				Type firstBound = bounds[0];
-				if (firstBound instanceof Class) {
-					return (Class) firstBound;
-				} else {
-					return simpleBoundType(firstBound);
-				}
-			}
-		} else {
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	synchronized JGenericType
-			generateGenericType(Class clazzWithTypeParameters) {
+	synchronized JGenericType ensureGenericType(Class clazzWithTypeParameters) {
 		JClassType type = jclassesByType.get(clazzWithTypeParameters);
-		if (type != null) {
-			return (JGenericType) type;
-		} else {
+		if (type == null) {
+			JGenericType jGenericType = new JGenericType(this,
+					clazzWithTypeParameters);
+			type = jGenericType;
+			jclassesByType.put(clazzWithTypeParameters, type);
 			Type[] typeArguments = clazzWithTypeParameters.getTypeParameters();
-			// type definitions can't be recursive, so any parameterized type
+			// type definitions can't be recursive, so any parameterized
+			// type
 			// model generation caused by
 			// this mapping will be finite
 			JTypeParameter[] parameterizedJTypeArguments = new JTypeParameter[typeArguments.length];
@@ -254,19 +238,22 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 				parameterizedJTypeArguments[idx] = new JTypeParameter(this,
 						typeArgument, idx);
 			}
-			return new JGenericType(this, clazzWithTypeParameters,
-					parameterizedJTypeArguments);
+			jGenericType.setTypeParameters(parameterizedJTypeArguments);
 		}
+		return (JGenericType) type;
 	}
 
 	synchronized JParameterizedType
-			generateParameterizedType(ParameterizedType jdkType) {
+			ensureParameterizedType(ParameterizedType jdkType) {
 		JClassType type = jclassesByType.get(jdkType);
-		if (type != null) {
-			return (JParameterizedType) type;
-		} else {
+		if (type == null) {
+			JParameterizedType jParameterizedType = new JParameterizedType(this,
+					jdkType);
+			type = jParameterizedType;
+			jclassesByType.put(jdkType, type);
 			Type[] typeArguments = jdkType.getActualTypeArguments();
-			// type definitions can't be recursive, so any parameterized type
+			// type definitions can't be recursive, so any parameterized
+			// type
 			// model generation caused by
 			// this mapping will be finite
 			JClassType[] jTypeArguments = new JClassType[typeArguments.length];
@@ -275,8 +262,9 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 				JClassType jTypeArgument = getType(typeArgument, idx);
 				jTypeArguments[idx] = jTypeArgument;
 			}
-			return new JParameterizedType(this, jdkType, jTypeArguments);
+			jParameterizedType.setTypeArguments(jTypeArguments);
 		}
+		return (JParameterizedType) type;
 	}
 
 	synchronized JWildcardType generateWildcardType(WildcardType jdkType) {
@@ -315,7 +303,7 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 					if (typeVariables.length == 0) {
 						type = new JRealClassType(this, clazz);
 					} else {
-						type = generateGenericType(clazz);
+						type = ensureGenericType(clazz);
 					}
 				} else {
 					// FIXME - reflection - typemodel - doesn't handle generic
@@ -326,7 +314,7 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 				}
 				jclasses.put(unmodifiedClassName, type);
 			} else if (jdkType instanceof ParameterizedType) {
-				type = generateParameterizedType((ParameterizedType) jdkType);
+				type = ensureParameterizedType((ParameterizedType) jdkType);
 			} else if (jdkType instanceof WildcardType) {
 				type = generateWildcardType((WildcardType) jdkType);
 			} else if (jdkType instanceof TypeVariable) {
@@ -346,5 +334,28 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 			jclassesByType.put(jdkType, type);
 		}
 		return type;
+	}
+
+	Class simpleBoundType(Type jdkType) {
+		if (jdkType instanceof Class) {
+			return (Class) jdkType;
+		} else if (jdkType instanceof ParameterizedType) {
+			return (Class) ((ParameterizedType) jdkType).getRawType();
+		} else if (jdkType instanceof TypeVariable) {
+			TypeVariable typeVariable = (TypeVariable) jdkType;
+			Type[] bounds = typeVariable.getBounds();
+			if (bounds.length == 0) {
+				return Object.class;
+			} else {
+				Type firstBound = bounds[0];
+				if (firstBound instanceof Class) {
+					return (Class) firstBound;
+				} else {
+					return simpleBoundType(firstBound);
+				}
+			}
+		} else {
+			throw new UnsupportedOperationException();
+		}
 	}
 }

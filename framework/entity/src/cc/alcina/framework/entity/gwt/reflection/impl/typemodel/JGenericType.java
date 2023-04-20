@@ -26,10 +26,8 @@ public class JGenericType extends JRealClassType
 
 	private JTypeParameter[] typeParameters;
 
-	public JGenericType(TypeOracle typeOracle, Class clazz,
-			JTypeParameter[] typeParameters) {
+	public JGenericType(TypeOracle typeOracle, Class clazz) {
 		super(typeOracle, clazz);
-		this.typeParameters = typeParameters;
 	}
 
 	@Override
@@ -53,5 +51,9 @@ public class JGenericType extends JRealClassType
 	@Override
 	public JTypeParameter[] getTypeParameters() {
 		return typeParameters;
+	}
+
+	public void setTypeParameters(JTypeParameter[] typeParameters) {
+		this.typeParameters = typeParameters;
 	}
 }

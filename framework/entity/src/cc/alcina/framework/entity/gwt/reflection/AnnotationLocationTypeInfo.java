@@ -219,9 +219,14 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 						// see
 						// com.google.gwt.dev.javac.CompilationUnitTypeOracleUpdater.getAnnotationClass(TreeLogger,
 						// AnnotationData)
+						ClassLoader classLoader = Thread.currentThread()
+								.getContextClassLoader();
+						if (classLoader == null) {
+							classLoader = getClass().getClassLoader();
+						}
 						Class<?> clazz = Class.forName(
 								declaringType.getQualifiedBinaryName(), false,
-								Thread.currentThread().getContextClassLoader());
+								classLoader);
 						return new Class[] { clazz };
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);

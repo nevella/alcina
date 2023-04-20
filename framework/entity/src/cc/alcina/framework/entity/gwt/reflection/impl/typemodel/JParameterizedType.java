@@ -27,10 +27,8 @@ public class JParameterizedType extends JClassType<ParameterizedType>
 		implements com.google.gwt.core.ext.typeinfo.JParameterizedType {
 	private JClassType[] typeArguments;
 
-	public JParameterizedType(TypeOracle typeOracle, ParameterizedType type,
-			JClassType[] typeArguments) {
+	public JParameterizedType(TypeOracle typeOracle, ParameterizedType type) {
 		super(typeOracle, type);
-		this.typeArguments = typeArguments;
 	}
 
 	@Override
@@ -52,5 +50,13 @@ public class JParameterizedType extends JClassType<ParameterizedType>
 	@Override
 	public JClassType[] getTypeArgs() {
 		return typeArguments;
+	}
+
+	public JClassType[] getTypeArguments() {
+		return this.typeArguments;
+	}
+
+	public void setTypeArguments(JClassType[] typeArguments) {
+		this.typeArguments = typeArguments;
 	}
 }
