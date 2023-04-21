@@ -45,6 +45,9 @@ public class JMethod extends JAbstractMethod
 
 	@Override
 	public JType getReturnType() {
+		if (method.getName().equals("getPayload")) {
+			int debug = 3;
+		}
 		return typeOracle.resolveType(declaringType,
 				method.getGenericReturnType());
 	}
