@@ -87,7 +87,7 @@ public final class Class<T> implements Type {
   @DoNotInline
   static <T> Class<T> createForAnonymousClass(Class<? super T> superclass,
       JavaScriptObject typeId) {
-    return createForClass(superclass.getPackageName(),"anon_"+typeId.toString(),typeId,superclass);
+    return createForClass(superclass.getPackage().getName(),"anon_"+typeId.toString(),typeId,superclass);
   }
   /**
    * Create a Class object for an enum.
@@ -410,10 +410,7 @@ public final class Class<T> implements Type {
     return enumSuperclass;
   }
   
-  /**
-   * NR - added 
-   */
-  public String getPackageName() {
-    return packageName;
-  }
+ public Package getPackage(){
+	 return Package.getPackage(packageName);
+ }
 }
