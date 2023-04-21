@@ -161,7 +161,15 @@ public class Measure extends Location.Range {
 			/*
 			 * Undesirable, but use for dev
 			 */
-			public static class Passthrough implements Order {
+			public static class Dev extends Order.Simple {
+				@Override
+				protected int classOrdering(Class<? extends Token> class1,
+						Class<? extends Token> class2) {
+					return class1.getName().compareTo(class2.getName());
+				}
+			}
+
+			public abstract static class Simple implements Order {
 				@Override
 				public int compare(Token o1, Token o2) {
 					{
@@ -173,17 +181,16 @@ public class Measure extends Location.Range {
 						// NoPossibleChildren tokens can't overlap
 						Preconditions.checkState(c1 == 0);
 					}
-					{
-						// provide some sort of ordering
-						String c1 = o1.getClass().getName();
-						String c2 = o1.getClass().getName();
-						return c1.compareTo(c2);
-					}
+					return classOrdering(o1.getClass(), o2.getClass());
 				}
 
 				private int noPossibleChildrenWeight(Token o) {
 					return o instanceof NoPossibleChildren ? 1 : 0;
 				}
+
+				protected abstract int classOrdering(
+						Class<? extends Token> class1,
+						Class<? extends Token> class2);
 			}
 
 			public static class Throw implements Order {

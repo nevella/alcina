@@ -266,6 +266,13 @@ public class Ax {
 		return CommonUtils.trimToWsChars(s, maxChars, true);
 	}
 
+	public static String trimForLogging(Object object) {
+		if (object == null) {
+			return null;
+		}
+		return trim(object.toString().replace("\n", "\\n"), 1000);
+	}
+
 	public static double twoPlaces(double d) {
 		return CommonUtils.roundNumeric(d, 2);
 	}

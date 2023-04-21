@@ -155,13 +155,14 @@ public class BackendTransformQueue {
 				new Queue(normaliseQueueName, maxDelayMs));
 	}
 
-	public void enqueue(List<DomainTransformEvent> transforms,
+	public int enqueue(List<DomainTransformEvent> transforms,
 			String queueName) {
 		long now = System.currentTimeMillis();
 		events.add(new Event(transforms, normaliseQueueName(queueName), now));
+		return transforms.size();
 	}
 
-	public void enqueue(Runnable runnable, String queueName) {
+	public int enqueue(Runnable runnable, String queueName) {
 		CollectingListener collectingListener = new CollectingListener();
 		try {
 			TransformManager.get()
@@ -169,7 +170,7 @@ public class BackendTransformQueue {
 			runnable.run();
 			collectingListener.transforms
 					.forEach(TransformManager.get()::removeTransform);
-			enqueue(collectingListener.transforms, queueName);
+			return enqueue(collectingListener.transforms, queueName);
 		} finally {
 			TransformManager.get()
 					.removeDomainTransformListener(collectingListener);

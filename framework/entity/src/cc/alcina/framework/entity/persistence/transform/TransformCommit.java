@@ -536,11 +536,12 @@ public class TransformCommit {
 		return -1;
 	}
 
-	public static void enqueueTransforms(String transformQueueName,
+	public static int enqueueTransforms(String transformQueueName,
 			Class<? extends Entity>... entityClassNames) {
 		List<DomainTransformEvent> transforms = removeTransforms(
 				entityClassNames);
-		BackendTransformQueue.get().enqueue(transforms, transformQueueName);
+		return BackendTransformQueue.get().enqueue(transforms,
+				transformQueueName);
 	}
 
 	public static TransformCommit get() {
