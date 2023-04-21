@@ -415,8 +415,8 @@ public class SelectionTraversal
 				selection.processNode().onException(e);
 				selectionException
 						.publish(new SelectionException(selection, e));
-				logger.warn(Ax.format("Selection exception :: %s", selection),
-						e);
+				logger.warn(Ax.format("Selection exception :: %s",
+						Ax.trimForLogging(selection)), e);
 			}
 		} finally {
 			exitSelectionContext(selection);

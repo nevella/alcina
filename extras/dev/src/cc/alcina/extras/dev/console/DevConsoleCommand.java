@@ -50,6 +50,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -68,6 +69,7 @@ import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.servlet.task.TaskDomainQuery;
 
 @Registration(DevConsoleCommand.class)
 @Directed(tag = "asdeee")
@@ -953,6 +955,54 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		@Override
 		public String run(String[] argv) throws Exception {
 			System.exit(0);
+			return "";
+		}
+	}
+
+	public static class CmdRemoteDomainQuery extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "rdq" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Query the remote domain";
+		}
+
+		@Override
+		public String getUsage() {
+			return "rdq <class-simple-name> <id> <paths> - e.g. dq MyUser 1 email";
+		}
+
+		@Override
+		public boolean ignoreForCommandHistory() {
+			return false;
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			Preconditions.checkArgument(argv.length == 2 || argv.length == 3);
+			String className = argv[0];
+			String idStr = argv[1];
+			String paths = argv.length == 2 ? null : argv[2];
+			Optional<Class<? extends Entity>> clazz = Registry
+					.query(Entity.class).registrations()
+					.filter(c -> Objects.equals(c.getSimpleName(), className))
+					.findFirst();
+			if (clazz.isEmpty()) {
+				throw new IllegalArgumentException(
+						Ax.format("Entity class not found: %s", className));
+			}
+			Entity entity = Reflections.at(clazz.get()).newInstance();
+			entity.setId(Long.parseLong(idStr));
+			String[] pathsArray = paths == null ? new String[0]
+					: paths.split(",");
+			TaskDomainQuery task = new TaskDomainQuery().withFrom(entity)
+					.withResultPaths(pathsArray);
+			String response = DevConsoleCommandsDeploy.invokeRemoteTask(task,
+					true);
+			Ax.out(response);
 			return "";
 		}
 	}
