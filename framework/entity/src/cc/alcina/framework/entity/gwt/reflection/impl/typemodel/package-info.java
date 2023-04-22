@@ -90,5 +90,9 @@ public static class TypeModel3 {
  * reflection) -- in progress
  * <li>Completeness - see FIXME - reflection - typemodel
  * </ul>
+ * <p>
+ * Status: properties of parameterized types are working. See FIXME - reflection
+ * - revisit for further work
+ *
  */
 package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;

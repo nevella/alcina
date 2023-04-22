@@ -44,11 +44,26 @@ public class PropertyReflection extends ReflectionElement
 		this.reflectionVisibility = reflectionVisibility;
 	}
 
+	/*
+	 * ignore methods if they're overridden by existing getter/setter
+	 */
 	public void addMethod(PropertyMethod method) {
+		if (method.method.getEnclosingType().getName()
+				.contains("LongCriterion")) {
+			int debug = 3;
+		}
 		if (method.getter) {
+			if (getter != null && method.method.getEnclosingType()
+					.isAssignableFrom(getter.method.getEnclosingType())) {
+				return;
+			}
 			getter = method;
 			updatePropertyType(method.method.getReturnType());
 		} else {
+			if (setter != null && method.method.getEnclosingType()
+					.isAssignableFrom(setter.method.getEnclosingType())) {
+				return;
+			}
 			setter = method;
 			updatePropertyType(method.method.getParameters()[0].getType());
 		}

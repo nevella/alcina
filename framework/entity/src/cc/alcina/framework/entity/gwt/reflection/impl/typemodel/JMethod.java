@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.ext.typeinfo.JType;
 
@@ -32,9 +33,19 @@ public class JMethod extends JAbstractMethod
 		implements com.google.gwt.core.ext.typeinfo.JMethod, ProvidesMethod {
 	private Method method;
 
-	public JMethod(TypeOracle typeOracle, Type declaringType, Method method) {
-		super(typeOracle, declaringType, method);
+	private JType returnType;
+
+	public JMethod(TypeOracle typeOracle, Method method) {
+		super(typeOracle, method);
 		this.method = method;
+	}
+
+	@Override
+	public JMethod clone() {
+		JMethod clone = new JMethod(typeOracle, method);
+		clone.parameters = parameters.stream().map(JParameter::clone)
+				.collect(Collectors.toList());
+		return clone;
 	}
 
 	@Override
@@ -45,11 +56,11 @@ public class JMethod extends JAbstractMethod
 
 	@Override
 	public JType getReturnType() {
-		if (method.getName().equals("getPayload")) {
-			int debug = 3;
+		if (returnType == null) {
+			Type genericReturnType = method.getGenericReturnType();
+			returnType = typeOracle.getType(genericReturnType);
 		}
-		return typeOracle.resolveType(declaringType,
-				method.getGenericReturnType());
+		return returnType;
 	}
 
 	@Override
@@ -81,6 +92,10 @@ public class JMethod extends JAbstractMethod
 	public cc.alcina.framework.common.client.reflection.Method provideMethod() {
 		return new cc.alcina.framework.common.client.reflection.Method(method,
 				new MethodInvokerImpl(method), method.getReturnType());
+	}
+
+	public void setReturnType(JType returnType) {
+		this.returnType = returnType;
 	}
 
 	@Override

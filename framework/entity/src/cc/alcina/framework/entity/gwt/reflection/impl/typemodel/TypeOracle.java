@@ -2,7 +2,6 @@ package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -11,9 +10,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,12 +30,6 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 	private final Map<String, JClassType> jclasses = new HashMap<>();
 
 	private final Map<Type, JClassType> jclassesByType = new HashMap<>();
-
-	Stack<Class> generatingGenericTypes = new Stack();
-
-	Stack<ParameterizedType> generatingParameterizedTypes = new Stack();
-
-	ConcurrentMap<TypeVariable, GenericDeclaration> genericDeclarations = new ConcurrentHashMap<>();
 
 	@Override
 	public synchronized JPackage findPackage(String pkgName) {
@@ -82,7 +72,12 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 					.containsKey(binaryClassName)) {
 				clazz = ClassReflector.primitiveClassMap.get(binaryClassName);
 			} else {
-				clazz = Class.forName(binaryClassName);
+				ClassLoader classLoader = Thread.currentThread()
+						.getContextClassLoader();
+				if (classLoader == null) {
+					classLoader = getClass().getClassLoader();
+				}
+				clazz = classLoader.loadClass(binaryClassName);
 			}
 			return getType(clazz);
 		} catch (Exception e) {
@@ -174,55 +169,6 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 	@Override
 	public synchronized JType parse(String type) throws TypeOracleException {
 		return findType(type);
-	}
-
-	// WIP - probably hopelessly wrong...but getting started
-	public JType resolveType(Type possiblyParameterizedDeclaringType,
-			Type possiblyParameterizedType) {
-		Type boundingType = possiblyParameterizedType;
-		if (possiblyParameterizedType instanceof TypeVariable) {
-			TypeVariable typeVariable = (TypeVariable) possiblyParameterizedType;
-			if (possiblyParameterizedDeclaringType instanceof Class) {
-				boundingType = simpleBoundType(typeVariable);
-			} else if (possiblyParameterizedDeclaringType instanceof TypeVariable) {
-				// FIXME - probably totes incorrect - illegalstate
-				int debug = 3;
-			} else if (possiblyParameterizedDeclaringType instanceof ParameterizedType) {
-				// note - not handling nested types etc...yet
-				ParameterizedType parameterizedType = (ParameterizedType) possiblyParameterizedDeclaringType;
-				GenericDeclaration genericDeclaration = genericDeclarations
-						.computeIfAbsent(typeVariable,
-								TypeVariable::getGenericDeclaration);
-				TypeVariable<?>[] typeParameters = genericDeclaration
-						.getTypeParameters();
-				// see if the type variable can be resolved
-				// find the ordinal of the type parameter, substitute
-				int ordinal = 0;
-				for (; ordinal < typeParameters.length; ordinal++) {
-					TypeVariable<?> test = typeParameters[ordinal];
-					if (test.equals(typeVariable)) {
-						break;
-					}
-				}
-				Preconditions.checkState(ordinal < typeParameters.length);
-				Type[] actualTypeArguments = parameterizedType
-						.getActualTypeArguments();
-				boundingType = actualTypeArguments[ordinal];
-				int debug = 3;
-			} else {
-				throw new UnsupportedOperationException();
-			}
-		} else if (possiblyParameterizedType instanceof Class) {
-			//
-		} else if (possiblyParameterizedType instanceof ParameterizedType) {
-			// review - further resolution? nested resolution?
-		} else if (possiblyParameterizedType instanceof GenericArrayType) {
-			// review - further resolution? nested resolution?
-			// FIXME - reflection
-		} else {
-			throw new UnsupportedOperationException();
-		}
-		return getType(boundingType);
 	}
 
 	synchronized JGenericType ensureGenericType(Class clazzWithTypeParameters) {

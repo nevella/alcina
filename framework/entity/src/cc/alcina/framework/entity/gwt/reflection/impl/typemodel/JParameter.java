@@ -17,6 +17,7 @@ package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 
 import com.google.gwt.core.ext.typeinfo.JType;
 
@@ -32,11 +33,18 @@ public class JParameter implements com.google.gwt.core.ext.typeinfo.JParameter {
 
 	private Parameter parameter;
 
+	private JType type;
+
 	public JParameter(TypeOracle typeOracle, JAbstractMethod jMethod,
 			Parameter parameter) {
 		this.typeOracle = typeOracle;
 		this.jMethod = jMethod;
 		this.parameter = parameter;
+	}
+
+	@Override
+	public JParameter clone() {
+		return new JParameter(typeOracle, jMethod, parameter);
 	}
 
 	@Override
@@ -66,14 +74,21 @@ public class JParameter implements com.google.gwt.core.ext.typeinfo.JParameter {
 
 	@Override
 	public JType getType() {
-		return typeOracle.resolveType(jMethod.declaringType,
-				parameter.getParameterizedType());
+		if (type == null) {
+			Type parameterizedType = parameter.getParameterizedType();
+			type = typeOracle.getType(parameterizedType);
+		}
+		return type;
 	}
 
 	@Override
 	public boolean
 			isAnnotationPresent(Class<? extends Annotation> annotationClass) {
 		return getAnnotation(annotationClass) == null;
+	}
+
+	public void setType(JType type) {
+		this.type = type;
 	}
 
 	@Override

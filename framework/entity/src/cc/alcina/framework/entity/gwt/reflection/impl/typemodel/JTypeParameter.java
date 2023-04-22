@@ -94,4 +94,15 @@ public class JTypeParameter extends JClassType
 			return super.getQualifiedSourceName();
 		}
 	}
+
+	@Override
+	public String toString() {
+		if (type instanceof Class) {
+			return super.toString();
+		} else if (type instanceof TypeVariable) {
+			return type.toString();
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
 }

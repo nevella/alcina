@@ -28,7 +28,7 @@ public class JConstructor extends JAbstractMethod
 	Constructor constructor;
 
 	public JConstructor(TypeOracle typeOracle, Constructor constructor) {
-		super(typeOracle, constructor.getDeclaringClass(), constructor);
+		super(typeOracle, constructor);
 		this.constructor = constructor;
 	}
 

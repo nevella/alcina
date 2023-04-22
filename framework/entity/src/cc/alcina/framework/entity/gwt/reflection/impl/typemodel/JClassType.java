@@ -1,7 +1,6 @@
 package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -9,14 +8,17 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.ext.typeinfo.JAnnotationType;
 import com.google.gwt.core.ext.typeinfo.JEnumType;
 import com.google.gwt.core.ext.typeinfo.JGenericType;
@@ -24,11 +26,13 @@ import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JRawType;
 import com.google.gwt.core.ext.typeinfo.JType;
-import com.google.gwt.core.ext.typeinfo.JTypeParameter;
 import com.google.gwt.core.ext.typeinfo.JWildcardType;
 import com.google.gwt.core.ext.typeinfo.NotFoundException;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesAssignableTo;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesInterfaces;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesJavaType;
@@ -247,13 +251,6 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JClassType getSuperclass() {
-		if (clazz.getName().contains("OpsolUserPlace")) {
-			AnnotatedType annotatedSuperclass = clazz.getAnnotatedSuperclass();
-			TypeVariable[] typeParameters = clazz.getTypeParameters();
-			AnnotatedType annotatedSuperclass2 = Class.class
-					.getAnnotatedSuperclass();
-			int debug = 3;
-		}
 		return typeOracle.getType(clazz.getGenericSuperclass());
 	}
 
@@ -437,18 +434,19 @@ public abstract class JClassType<T extends Type>
 
 		List<JClassType> implementedInterfaces;
 
-		TypeParameterResolution resolution = new TypeParameterResolution();
+		TypeParameterResolution resolution;
 
 		Members() {
+			resolution = new TypeParameterResolution(JClassType.this);
 			fields = Arrays.stream(clazz.getDeclaredFields())
-					.map(f -> new JField(typeOracle, type, f))
+					.map(f -> new JField(typeOracle, f))
 					.collect(Collectors.toList());
 			if (TypeOracle.reverseFieldOrder) {
 				// android
 				Collections.reverse(fields);
 			}
 			methods = Arrays.stream(clazz.getDeclaredMethods())
-					.map(m -> new JMethod(typeOracle, type, m))
+					.map(m -> new JMethod(typeOracle, m))
 					.collect(Collectors.toList());
 			constructors = Arrays.stream(clazz.getDeclaredConstructors())
 					.map(c -> new JConstructor(typeOracle, c))
@@ -456,10 +454,19 @@ public abstract class JClassType<T extends Type>
 			implementedInterfaces = Arrays.stream(clazz.getInterfaces())
 					.map(typeOracle::getType).collect(Collectors.toList());
 			inheritableMethods = new ArrayList<>();
+			inheritableFields = new ArrayList<>();
 			JClassType cursor = JClassType.this;
+			// split out into three loops - first construct type resolution,
+			// then ensure methods (but only for erased types if superclass - to
+			// avoid unnecessary JParameterizedType construction)
+			while (cursor != null) {
+				resolution.addResolution(cursor);
+				cursor = cursor.getSuperclass();
+			}
+			cursor = JClassType.this;
 			while (cursor != null) {
 				Members members = cursor == JClassType.this ? this
-						: cursor.ensureMembers();
+						: cursor.getErasedType().ensureMembers();
 				/*
 				 * as per JClassType.getInheritableMethods javadoc, only retain
 				 * the most-derived (i.e. subclass overides super)
@@ -468,18 +475,67 @@ public abstract class JClassType<T extends Type>
 				 * method with a possibly specialised version, determined by
 				 * type paremeter resolution
 				 */
-				members.methods.stream().filter(m -> !m.isPrivate())
-						.map(resolution::resolve)
-						.filter(candidateMethod -> !inheritableMethods.stream()
-								.anyMatch(
-										existingMethod -> sameCallingSignature(
-												existingMethod,
-												candidateMethod)))
-						.forEach(inheritableMethods::add);
+				List<JMethod> inheritableMembers = getDirectInheritableMethods(
+						members.methods);
+				inheritableMembers.forEach(inheritableMethods::add);
 				members.fields.stream().filter(m -> !m.isPrivate())
 						.map(resolution::resolve)
 						.forEach(inheritableFields::add);
 				cursor = cursor.getSuperclass();
+			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Members: %s", JClassType.this.toString());
+		}
+
+		private boolean assignableComparable(JClassType o1, JClassType o2) {
+			if (o1.isAssignableFrom(o2)) {
+				return true;
+			} else if (o2.isAssignableFrom(o1)) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		private List<JMethod>
+				getDirectInheritableMethods(List<JMethod> methods) {
+			Multimap<NameCallingSignature, List<JMethod>> candidates = methods
+					.stream().filter(m -> !m.isPrivate())
+					.map(resolution::resolve).collect(AlcinaCollectors
+							.toKeyMultimap(NameCallingSignature::new));
+			return candidates.values().stream().map(this::findMostSpecific)
+					.collect(Collectors.toList());
+		}
+
+		// FIXME - reflection - revisit - a formal definition of what this
+		// enforces (rather than 'property types work') would be good... but
+		// probably a chunk of work.
+		JMethod findMostSpecific(List<JMethod> methods) {
+			if (methods.size() == 1) {
+				return methods.get(0);
+			} else {
+				boolean orderable = true;
+				for (int idx1 = 0; idx1 < methods.size(); idx1++) {
+					JMethod m1 = methods.get(idx1);
+					for (int idx2 = 0; idx2 < methods.size(); idx2++) {
+						JMethod m2 = methods.get(idx2);
+						if (!assignableComparable(
+								(JClassType) m1.getReturnType().getErasedType(),
+								(JClassType) m2.getReturnType()
+										.getErasedType())) {
+							orderable = false;
+							break;
+						}
+					}
+				}
+				if (orderable) {
+					Collections.sort(methods,
+							new ReturnTypeAssignableComparator());
+				}
+				return Ax.last(methods);
 			}
 		}
 
@@ -503,20 +559,184 @@ public abstract class JClassType<T extends Type>
 		}
 	}
 
-	class TypeParameterResolution {
-		Map<Type, Type> resolvedTypeParameters = new LinkedHashMap<>();
+	static class NameCallingSignature {
+		private JMethod method;
+
+		private int hash;
+
+		NameCallingSignature(JMethod method) {
+			this.method = method;
+			this.hash = Objects.hash(method.getName(),
+					Arrays.hashCode(method.getParameters()));
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof NameCallingSignature) {
+				NameCallingSignature o = (NameCallingSignature) obj;
+				return Objects.equals(method.getName(), o.method.getName())
+						&& Arrays.equals(method.getParameterTypes(),
+								o.method.getParameterTypes());
+			} else {
+				return super.equals(obj);
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return hash;
+		}
+	}
+
+	static class ReturnTypeAssignableComparator implements Comparator<JMethod> {
+		TypeAssignableComparator typeAssignableComparator = new TypeAssignableComparator();
+
+		@Override
+		public int compare(JMethod o1, JMethod o2) {
+			return typeAssignableComparator.compare(
+					(JClassType) o1.getReturnType().getErasedType(),
+					(JClassType) o2.getReturnType().getErasedType());
+		}
+	}
+
+	static class TypeAssignableComparator implements Comparator<JClassType> {
+		@Override
+		public int compare(JClassType o1, JClassType o2) {
+			Preconditions.checkState(o1 != o2);
+			if (o1.isAssignableFrom(o2)) {
+				return -1;
+			} else if (o2.isAssignableFrom(o1)) {
+				return 1;
+			} else {
+				throw new IllegalArgumentException();
+			}
+		}
+	}
+
+	// FIXME - reflection - revisit - a formal definition of what this enforces
+	// (rather than 'property types work') would be good... but probably a chunk
+	// of work
+	static class TypeParameterResolution {
+		Map<TypeVariable, Type> resolvedTypeParameters = new LinkedHashMap<>();
+
+		// debug only
+		List<JType> resolvedJTypes = new ArrayList<>();
+
+		List<ParameterizedType> resolvedTypes = new ArrayList<>();
+
+		private JClassType jClassType;
+
+		public TypeParameterResolution(JClassType jClassType) {
+			this.jClassType = jClassType;
+		}
+
+		/*
+		 * These will be processed in most-specific to least-specific order, so
+		 * will visit the specification (JParaameterizedType) before the declar
+		 */
+		public void addResolution(JClassType jType) {
+			resolvedJTypes.add(jType);
+			// iterate over generic supertypes, add to resolution map
+			Class clazz = jType.clazz;
+			if (clazz == null) {
+				return;
+			}
+			resolveIfParameterized(clazz.getGenericSuperclass());
+			Stack<Class> hasResolvableInterfaces = new Stack();
+			hasResolvableInterfaces.push(clazz);
+			while (hasResolvableInterfaces.size() > 0) {
+				Class resolvable = hasResolvableInterfaces.pop();
+				resolveIfParameterized(resolvable);
+				Type[] genericInterfaces = resolvable.getGenericInterfaces();
+				for (Type type : genericInterfaces) {
+					Class checkableClass = checkableClass(type);
+					if (checkableClass != null) {
+						hasResolvableInterfaces.push(checkableClass);
+					}
+				}
+			}
+		}
+
+		private JType resolve(JType jType) {
+			if (!(jType instanceof JClassType)) {
+				return jType;
+			}
+			Type cursor = ((JClassType) jType).type;
+			while (cursor instanceof TypeVariable) {
+				Type test = resolvedTypeParameters.get(cursor);
+				if (test != null) {
+					cursor = test;
+				} else {
+					break;
+				}
+			}
+			if (cursor != null) {
+				return jClassType.typeOracle.getType(cursor);
+			} else {
+				return jType;
+			}
+		}
+
+		private void resolveIfParameterized(Type possiblyParameterizedType) {
+			if (!(possiblyParameterizedType instanceof ParameterizedType)) {
+				return;
+			}
+			ParameterizedType parameterizedType = (ParameterizedType) possiblyParameterizedType;
+			Type[] actualTypeArguments = parameterizedType
+					.getActualTypeArguments();
+			Class rawType = (Class) parameterizedType.getRawType();
+			TypeVariable[] typeParameters = rawType.getTypeParameters();
+			Preconditions.checkState(
+					actualTypeArguments.length == typeParameters.length);
+			for (int idx = 0; idx < actualTypeArguments.length; idx++) {
+				resolvedTypeParameters.putIfAbsent(typeParameters[idx],
+						actualTypeArguments[idx]);
+			}
+		}
+
+		Class checkableClass(Type type) {
+			if (type instanceof Class) {
+				return (Class) type;
+			} else if (type instanceof ParameterizedType) {
+				return (Class) ((ParameterizedType) type).getRawType();
+			} else {
+				return null;
+			}
+		}
 
 		JField resolve(JField field) {
-			return field;
+			JType originalType = field.getType();
+			JType resolved = resolve(originalType);
+			if (resolved != originalType) {
+				JField clone = field.clone();
+				clone.setType(resolved);
+				return clone;
+			} else {
+				return field;
+			}
 		}
 
 		JMethod resolve(JMethod method) {
-			return method;
-		}
-
-		// WIP
-		Type resolve(Type type) {
-			return type;
+			JType originalReturnType = method.getReturnType();
+			JType resolvedReturnType = resolve(originalReturnType);
+			List<JType> originalParameterTypes = Arrays
+					.stream(method.getParameters()).map(JParameter::getType)
+					.collect(Collectors.toList());
+			List<JType> resolvedParameterTypes = originalParameterTypes.stream()
+					.map(this::resolve).collect(Collectors.toList());
+			if (resolvedReturnType != originalReturnType || !Objects
+					.equals(originalParameterTypes, resolvedParameterTypes)) {
+				JMethod clone = method.clone();
+				clone.setReturnType(resolvedReturnType);
+				JParameter[] parameters = clone.getParameters();
+				for (int idx = 0; idx < parameters.length; idx++) {
+					JParameter jParameter = parameters[idx];
+					jParameter.setType(resolvedParameterTypes.get(idx));
+				}
+				return clone;
+			} else {
+				return method;
+			}
 		}
 	}
 }

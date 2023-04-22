@@ -81,6 +81,10 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 				.run(this::performAction1);
 	}
 
+	private void addPropertyIssue(Property property) {
+		incorrectProperty.add(property);
+	}
+
 	private void
 			checkAllTransientFieldsWithPropertiesAreTransient(Class<?> clazz) {
 		if (clazz.isEnum()) {
@@ -92,8 +96,11 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 				return;
 			}
 		}
-		Field[] fields = clazz.getDeclaredFields();
 		ClassReflector reflector = Reflections.at(clazz);
+		if (reflector.isAbstract()) {
+			return;
+		}
+		Field[] fields = clazz.getDeclaredFields();
 		for (Field field : fields) {
 			if (Modifier.isStatic(field.getModifiers())) {
 				continue;
@@ -107,10 +114,6 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 				}
 			}
 		}
-	}
-
-	private void addPropertyIssue(Property property) {
-		incorrectProperty.add(property);
 	}
 
 	private void checkSerializationIssues(Class<?> clazz) {
