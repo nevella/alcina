@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -27,30 +27,27 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+// FIXME - reflection - remove
 @ClientVisible
 @Inherited
 @Target({ ElementType.TYPE })
 /**
  * If inheriting, the annotation should have an empty value() and non-default
  * custom()
- * 
+ *
  * @author Nick Reddel
  */
 public @interface PropertyOrder {
-	public static class Support {
-		public static PropertyOrder.Custom customOrder(
-				PropertyOrder propertyOrder,
-				Function<Class, Object> instantiator) {
-			return propertyOrder == null
-					|| propertyOrder.custom() == Custom.Default.class ? null
-							: (Custom) instantiator
-									.apply(propertyOrder.custom());
-		}
-	}
+	// FIXME - reflection - change to annotation PropertyOrder.Custom with impl
+	// CustomOrder
+	//
+	// Also add PropertyOrder.Type annotation, payload Class<? extends
+	// PropertyEnum> - to define ordering from an enum element ordering.
+	// also add a task to validate propertyenum elements on load/refl.
+	// generation (task.ref.sign.?)
+	public Class<? extends PropertyOrder.Custom> custom() default Custom.Default.class;
 
 	public String[] value();
-
-	public Class<? extends PropertyOrder.Custom> custom() default Custom.Default.class;
 
 	@Reflected
 	public abstract class Custom implements Comparator<String> {
@@ -59,6 +56,17 @@ public @interface PropertyOrder {
 			public int compare(String o1, String o2) {
 				return 0;
 			}
+		}
+	}
+
+	public static class Support {
+		public static PropertyOrder.Custom customOrder(
+				PropertyOrder propertyOrder,
+				Function<Class, Object> instantiator) {
+			return propertyOrder == null
+					|| propertyOrder.custom() == Custom.Default.class ? null
+							: (Custom) instantiator
+									.apply(propertyOrder.custom());
 		}
 	}
 }
