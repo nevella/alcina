@@ -490,9 +490,24 @@ public class DomDocument extends DomNode {
 					break;
 				}
 				case NEXT_DOMNODE_START: {
+					// if at start, go to next logical node from start - if at
+					// end, go
+					// next logical node from last descendant
 					targetAfter = false;
 					targetIndex = -1;
-					targetTreeIndex++;
+					if (!location.after) {
+						targetTreeIndex++;
+					} else {
+						DomNode lastDescendant = node.relative()
+								.lastDescendant();
+						if (lastDescendant != null) {
+							targetTreeIndex = byNode
+									.get(lastDescendant).treeIndex;
+							targetTreeIndex++;
+						} else {
+							targetTreeIndex++;
+						}
+					}
 					break;
 				}
 				default:

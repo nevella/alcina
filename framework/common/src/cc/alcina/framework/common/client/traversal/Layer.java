@@ -162,6 +162,10 @@ public abstract class Layer<S extends Selection> implements
 		return state.complete;
 	}
 
+	protected boolean isSinglePass() {
+		return true;
+	}
+
 	protected void onAfterInputsProcessed() {
 	}
 
@@ -171,7 +175,7 @@ public abstract class Layer<S extends Selection> implements
 	 * super.onAfterIteration()
 	 */
 	protected void onAfterIteration() {
-		state.complete = state.iterationSubmitted == 0;
+		state.complete = isSinglePass() || state.iterationSubmitted == 0;
 		state.iterationCount++;
 	}
 

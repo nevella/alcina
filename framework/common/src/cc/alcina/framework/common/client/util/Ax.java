@@ -220,6 +220,10 @@ public class Ax {
 		System.out.println(format(template, args));
 	}
 
+	public static String padLeft(Object input, int width) {
+		return CommonUtils.padStringLeft(String.valueOf(input), width, ' ');
+	}
+
 	public static <E> Iterator<E> reversedIterator(List<E> list) {
 		ListIterator<E> itr = list.listIterator();
 		while (itr.hasNext()) {

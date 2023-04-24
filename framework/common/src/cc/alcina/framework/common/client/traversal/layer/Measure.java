@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 // FIXME - selection - Measure extends HasSelection? or hasParentSelection?
 /**
@@ -133,8 +134,14 @@ public class Measure extends Location.Range {
 	@Override
 	public String toString() {
 		String aliasMarker = aliasedFrom != null ? " (alias)" : "";
-		return Ax.format("[%s,%s]%s :: %s :: %s", start.index, end.index,
-				aliasMarker, token, text());
+		String tokenString = token.toString();
+		if (tokenString.contains(token.getClass().getName())) {
+			tokenString = token.getClass().getSimpleName();
+		}
+		tokenString = CommonUtils.padStringRight(tokenString, 16, ' ');
+		return Ax.format("[%s,%s]%s :: %s :: %s", Ax.padLeft(start.index, 8),
+				Ax.padLeft(end.index, 8), aliasMarker, tokenString,
+				Ax.trimForLogging(text()));
 	}
 
 	/**
