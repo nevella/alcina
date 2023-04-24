@@ -40,7 +40,7 @@ public class JWildcardType extends JClassType
 
 	@Override
 	public JClassType getErasedType() {
-		throw new UnsupportedOperationException();
+		return typeOracle.getJavaLangObject();
 	}
 
 	@Override

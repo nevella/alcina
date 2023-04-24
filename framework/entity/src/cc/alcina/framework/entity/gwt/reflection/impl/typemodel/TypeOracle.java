@@ -8,10 +8,12 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.ext.typeinfo.JType;
@@ -21,8 +23,10 @@ import com.google.gwt.core.ext.typeinfo.TypeOracleException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesTypeBounds;
 
-public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
+public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle
+		implements ProvidesTypeBounds {
 	public static boolean reverseFieldOrder = false;
 
 	private final Map<String, JPackage> packages = new HashMap<>();
@@ -93,7 +97,7 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 
 	@Override
 	public synchronized JClassType getJavaLangObject() {
-		return findType(Object.class.getName());
+		return getType(Object.class);
 	}
 
 	@Override
@@ -169,6 +173,14 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 	@Override
 	public synchronized JType parse(String type) throws TypeOracleException {
 		return findType(type);
+	}
+
+	@Override
+	public List<? extends com.google.gwt.core.ext.typeinfo.JClassType>
+			provideTypeBounds(
+					com.google.gwt.core.ext.typeinfo.JClassType type) {
+		return ((JClassType) type).provideJdkTypeBounds().bounds.stream()
+				.map(this::getType).collect(Collectors.toList());
 	}
 
 	synchronized JGenericType ensureGenericType(Class clazzWithTypeParameters) {

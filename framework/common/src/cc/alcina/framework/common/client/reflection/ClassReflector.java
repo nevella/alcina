@@ -56,7 +56,7 @@ public class ClassReflector<T> implements HasAnnotations {
 	public static ClassReflector<?> emptyReflector(Class clazz) {
 		return new ClassReflector<>(clazz, Collections.emptyList(),
 				Collections.emptyMap(), new AnnotationProvider.LookupProvider(),
-				null, t -> false, Collections.emptyList(),
+				null, t -> false, Collections.emptyList(), null,
 				// may in fact be true, but unused
 				false, false);
 	}
@@ -83,13 +83,17 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	private List<Class> interfaces;
 
+	private TypeBounds genericBounds;
+
 	public ClassReflector(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
-			List<Class> interfaces, boolean isAbstract, boolean isFinal) {
+			List<Class> interfaces, TypeBounds genericBounds,
+			boolean isAbstract, boolean isFinal) {
 		this();
 		init(reflectedClass, properties, byName, annotationResolver,
-				constructor, assignableTo, interfaces, isAbstract, isFinal);
+				constructor, assignableTo, interfaces, genericBounds,
+				isAbstract, isFinal);
 	}
 
 	protected ClassReflector() {
@@ -99,6 +103,10 @@ public class ClassReflector<T> implements HasAnnotations {
 	@Override
 	public <A extends Annotation> A annotation(Class<A> annotationClass) {
 		return annotationProvider.getAnnotation(annotationClass);
+	}
+
+	public TypeBounds getGenericBounds() {
+		return this.genericBounds;
 	}
 
 	public List<Class> getInterfaces() {
@@ -167,13 +175,15 @@ public class ClassReflector<T> implements HasAnnotations {
 	protected void init(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationProvider,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
-			List<Class> interfaces, boolean isAbstract, boolean isFinal) {
+			List<Class> interfaces, TypeBounds genericBounds,
+			boolean isAbstract, boolean isFinal) {
 		this.reflectedClass = reflectedClass;
 		this.properties = properties;
 		this.byName = byName;
 		this.annotationProvider = annotationProvider;
 		this.noArgsConstructor = constructor;
 		this.assignableTo = assignableTo;
+		this.genericBounds = genericBounds;
 		this.isAbstract = isAbstract;
 		this.interfaces = interfaces;
 		this.isFinal = isFinal;

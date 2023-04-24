@@ -38,6 +38,7 @@ import com.google.gwt.core.ext.typeinfo.JRawType;
 import com.google.gwt.core.ext.typeinfo.JRealClassType;
 import com.google.gwt.core.ext.typeinfo.JType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
+import com.google.gwt.dev.javac.typemodel.JavacTypeBounds;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
@@ -55,6 +56,7 @@ import cc.alcina.framework.common.client.reflection.AsyncSerializableTypes;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -65,6 +67,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectable
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
 import cc.alcina.framework.entity.gwt.reflection.reflector.AnnotationReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
+import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesTypeBounds;
 import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyMethod;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ReflectionVisibility;
@@ -183,6 +186,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	boolean reflectUnknownInInitialModule;
 
 	VisibleAnnotationFilterClient visibleAnnotationFilter;
+
+	ClassReflection.ProvidesTypeBounds providesJavacTypeBounds = new ProvidesJavacTypeBoundsImplementation();
 
 	@Override
 	public RebindResult generateIncrementally(TreeLogger logger,
@@ -395,6 +400,18 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
+	private final class ProvidesJavacTypeBoundsImplementation
+			implements ProvidesTypeBounds {
+		JavacTypeBounds.Computed computedTypeBounds = new JavacTypeBounds.Computed();
+
+		@Override
+		public List<? extends JClassType> provideTypeBounds(JClassType type) {
+			return computedTypeBounds.get(
+					(com.google.gwt.dev.javac.typemodel.JClassType) type,
+					context.getTypeOracle().getJavaLangObject()).bounds;
+		}
+	}
+
 	class AnnotationExpressionWriter {
 		AnnotationReflection reflection;
 
@@ -560,8 +577,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		public ClassReflectorGenerator(JClassType type) {
 			super(type, classReflectorType, false);
-			this.reflection = new ClassReflection(type,
-					visibleAnnotationFilter);
+			this.reflection = new ClassReflection(type, visibleAnnotationFilter,
+					providesJavacTypeBounds);
 		}
 
 		@Override
@@ -596,6 +613,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					AnnotationProvider.LookupProvider.class.getCanonicalName());
 			composerFactory.addImport(ClientReflections.class.getName());
 			composerFactory.addImport(Property.class.getName());
+			composerFactory.addImport(TypeBounds.class.getName());
 			composerFactory.addImport(
 					cc.alcina.framework.common.client.reflection.Method.class
 							.getCanonicalName());
@@ -608,6 +626,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						.addImplementedInterface(Supplier.class.getName());
 			}
 			sourceWriter = createWriter(composerFactory, printWriter);
+			/*
+			 * Write no-args constructor
+			 */
 			if (hasCallableNoArgsConstructor) {
 				sourceWriter.println("public  %s get(){", reflectedTypeFqn());
 				sourceWriter.indent();
@@ -616,6 +637,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				sourceWriter.println("}");
 				sourceWriter.println();
 			}
+			/*
+			 * Write init0 (which builds ClassReflector fields then calls
+			 * ClassReflector.init() )
+			 */
 			sourceWriter.println("protected void init0(){");
 			sourceWriter.indent();
 			sourceWriter.println("Class clazz = %s.class;", reflectedTypeFqn());
@@ -627,6 +652,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.map(PropertyGenerator::new)
 					.forEach(PropertyGenerator::write);
 			sourceWriter.println("List<Class> interfaces = new ArrayList<>();");
+			sourceWriter.println("List<Class> bounds = new ArrayList<>();");
 			sourceWriter.println(
 					"AnnotationProvider.LookupProvider provider = new AnnotationProvider.LookupProvider();");
 			reflection.getAnnotationReflections().stream()
@@ -652,13 +678,20 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						sourceWriter.println("interfaces.add(%s.class);",
 								i.getQualifiedSourceName());
 					});
-			// will probably need to adjust
+			List<JClassType> bounds = reflection
+					.computeTypeBounds(providesJavacTypeBounds);
+			bounds.forEach(t -> {
+				sourceWriter.println("bounds.add(%s.class);",
+						t.getQualifiedSourceName());
+			});
+			sourceWriter
+					.println("TypeBounds typeBounds = new TypeBounds(bounds);");
 			sourceWriter.println("boolean isAbstract = %s;",
 					reflection.isHasAbstractModifier());
 			sourceWriter.println("boolean isFinal = %s;",
 					reflection.isHasFinalModifier());
 			sourceWriter.println("init(clazz, properties, byName, provider,"
-					+ " supplier, assignableTo, interfaces,  isAbstract, isFinal);");
+					+ " supplier, assignableTo, interfaces, typeBounds, isAbstract, isFinal);");
 			sourceWriter.outdent();
 			sourceWriter.println("}");
 			closeClassBody();
@@ -733,8 +766,16 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 								.getQualifiedSourceName());
 				sourceWriter.println("Class declaringType = %s.class;",
 						reflection.declaringType.getQualifiedSourceName());
+				sourceWriter.println("List<Class> bounds = new ArrayList<>();");
+				List<? extends JClassType> bounds = reflection.jtypeBounds;
+				bounds.forEach(t -> {
+					sourceWriter.println("bounds.add(%s.class);",
+							t.getQualifiedSourceName());
+				});
+				sourceWriter.println(
+						"TypeBounds typeBounds = new TypeBounds(bounds);");
 				sourceWriter.print(
-						"Property property = new Property(name, getter, setter, propertyType, owningType, declaringType, provider)");
+						"Property property = new Property(name, getter, setter, propertyType, owningType, declaringType, typeBounds, provider)");
 				sourceWriter.println("{");
 				sourceWriter.indent();
 				printMethodHoist(reflection.getter);

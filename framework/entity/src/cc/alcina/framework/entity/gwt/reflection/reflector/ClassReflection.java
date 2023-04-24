@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -103,9 +104,13 @@ public class ClassReflection extends ReflectionElement {
 
 	List<Registration> registrations = new ArrayList<>();
 
+	private ProvidesTypeBounds providesTypeBounds;
+
 	public ClassReflection(JType type,
-			ReflectionVisibility reflectionVisibility) {
+			ReflectionVisibility reflectionVisibility,
+			ProvidesTypeBounds providesTypeBounds) {
 		this.jType = type;
+		this.providesTypeBounds = providesTypeBounds;
 		this.type = type instanceof JClassType ? (JClassType) type : null;
 		this.reflectionVisibility = reflectionVisibility;
 	}
@@ -123,11 +128,26 @@ public class ClassReflection extends ReflectionElement {
 		List<Class> interfaces = ((ProvidesInterfaces) type)
 				.provideInterfaces();
 		Class javaType = ((ProvidesJavaType) type).provideJavaType();
+		List<? extends JClassType> jTypeBounds = providesTypeBounds
+				.provideTypeBounds(type);
+		List<Class> bounds = jTypeBounds.stream().map(this::asJavaType)
+				.collect(Collectors.toList());
+		TypeBounds typeBounds = new TypeBounds(bounds);
 		return new ClassReflector(javaType, properties,
 				properties.stream()
 						.collect(AlcinaCollectors.toKeyMap(Property::getName)),
 				new AnnotationProviderImpl(), supplier, assignableTo,
-				interfaces, type.isAbstract(), type.isFinal());
+				interfaces, typeBounds, type.isAbstract(), type.isFinal());
+	}
+
+	/*
+	 * only called by
+	 * ClientReflectionGenerator/com.google.gwt.dev.javac.typemodels
+	 */
+	public List<JClassType>
+			computeTypeBounds(ProvidesTypeBounds providesJavacTypeBounds) {
+		return (List<JClassType>) (List<?>) providesJavacTypeBounds
+				.provideTypeBounds(type);
 	}
 
 	public List<AnnotationReflection> getAnnotationReflections() {
@@ -211,7 +231,8 @@ public class ClassReflection extends ReflectionElement {
 						PropertyReflection propertyReflection = propertyReflections
 								.computeIfAbsent(m.propertyName,
 										name -> new PropertyReflection(this,
-												name, reflectionVisibility));
+												name, reflectionVisibility,
+												providesTypeBounds));
 						propertyReflection.addMethod(m);
 					});
 		}
@@ -272,6 +293,10 @@ public class ClassReflection extends ReflectionElement {
 		return null;
 	}
 
+	public interface JdkTypeModelMapper {
+		JClassType getType(Class jdkType);
+	}
+
 	public interface ProvidesAssignableTo {
 		Predicate<Class> provideAssignableTo();
 	}
@@ -282,6 +307,10 @@ public class ClassReflection extends ReflectionElement {
 
 	public interface ProvidesJavaType {
 		Class provideJavaType();
+	}
+
+	public interface ProvidesTypeBounds {
+		List<? extends JClassType> provideTypeBounds(JClassType type);
 	}
 
 	class AnnotationProviderImpl implements AnnotationProvider {

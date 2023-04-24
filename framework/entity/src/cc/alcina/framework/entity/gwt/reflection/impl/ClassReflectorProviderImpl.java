@@ -38,7 +38,7 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		JType type = typeOracle.parse(clazz.getCanonicalName());
 		ClassReflector reflector = null;
 		ClassReflection reflection = new ClassReflection(type,
-				visibleAnnotationFilter);
+				visibleAnnotationFilter, typeOracle);
 		reflection.prepare();
 		ClassReflector<?> typemodelReflector = reflection.asReflector();
 		reflector = typemodelReflector;

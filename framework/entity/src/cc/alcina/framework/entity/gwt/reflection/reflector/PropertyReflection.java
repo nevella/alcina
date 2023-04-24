@@ -14,10 +14,14 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.Method;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesJavaType;
+import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesTypeBounds;
 
 /**
+ * FIXME - reflection - as per policy, should not expose public fields as
+ * mutable unless they *are* mutable (use getters or final)
  */
 public class PropertyReflection extends ReflectionElement
 		implements Comparable<PropertyReflection> {
@@ -37,21 +41,23 @@ public class PropertyReflection extends ReflectionElement
 
 	public JClassType declaringType;
 
+	private ProvidesTypeBounds providesTypeBounds;
+
+	public List<? extends JClassType> jtypeBounds;
+
 	public PropertyReflection(ClassReflection classReflection, String name,
-			ReflectionVisibility reflectionVisibility) {
+			ReflectionVisibility reflectionVisibility,
+			ProvidesTypeBounds providesTypeBounds) {
 		this.classReflection = classReflection;
 		this.name = name;
 		this.reflectionVisibility = reflectionVisibility;
+		this.providesTypeBounds = providesTypeBounds;
 	}
 
 	/*
 	 * ignore methods if they're overridden by existing getter/setter
 	 */
 	public void addMethod(PropertyMethod method) {
-		if (method.method.getEnclosingType().getName()
-				.contains("LongCriterion")) {
-			int debug = 3;
-		}
 		if (method.getter) {
 			if (getter != null && method.method.getEnclosingType()
 					.isAssignableFrom(getter.method.getEnclosingType())) {
@@ -71,12 +77,16 @@ public class PropertyReflection extends ReflectionElement
 	}
 
 	public Property asProperty() {
+		List<Class> jdkBounds = jtypeBounds.stream()
+				.map(t -> ((ProvidesJavaType) t).provideJavaType())
+				.collect(Collectors.toList());
+		TypeBounds typeBounds = new TypeBounds(jdkBounds);
 		return new Property(name, ProvidesMethod.asMethod(getter),
 				ProvidesMethod.asMethod(setter),
 				((ProvidesJavaType) propertyType).provideJavaType(),
 				((ProvidesJavaType) classReflection.type).provideJavaType(),
 				((ProvidesJavaType) declaringType).provideJavaType(),
-				new AnnotationProviderImpl());
+				typeBounds, new AnnotationProviderImpl());
 	}
 
 	@Override
@@ -118,17 +128,23 @@ public class PropertyReflection extends ReflectionElement
 				propertyType.getSimpleSourceName());
 	}
 
-	private void updatePropertyType(JType candidate) {
-		candidate = ClassReflection.erase(candidate);
+	private void updatePropertyType(JType type) {
+		JType erased = ClassReflection.erase(type);
 		if (this.propertyType != null
 				&& this.propertyType instanceof JClassType) {
 			JClassType existingClassType = (JClassType) this.propertyType;
-			JClassType candidateClassType = (JClassType) candidate;
+			JClassType candidateClassType = (JClassType) erased;
 			if (candidateClassType.isAssignableFrom(existingClassType)) {
 				return;// covariant, do not update
 			}
 		}
-		this.propertyType = candidate;
+		if (type instanceof JClassType) {
+			jtypeBounds = providesTypeBounds
+					.provideTypeBounds((JClassType) type);
+		} else {
+			jtypeBounds = List.of();
+		}
+		this.propertyType = erased;
 	}
 
 	public static class PropertyMethod {

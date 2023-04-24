@@ -30,6 +30,7 @@ import com.google.gwt.core.ext.typeinfo.JWildcardType;
 import com.google.gwt.core.ext.typeinfo.NotFoundException;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -73,8 +74,8 @@ public abstract class JClassType<T extends Type>
 	}
 
 	@Override
-	public <T extends Annotation> T
-			findAnnotationInTypeHierarchy(Class<T> annotationType) {
+	public <A extends Annotation> A
+			findAnnotationInTypeHierarchy(Class<A> annotationType) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -99,8 +100,8 @@ public abstract class JClassType<T extends Type>
 	}
 
 	@Override
-	public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-		return (T) clazz.getAnnotation(annotationClass);
+	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+		return (A) clazz.getAnnotation(annotationClass);
 	}
 
 	@Override
@@ -254,6 +255,10 @@ public abstract class JClassType<T extends Type>
 		return typeOracle.getType(clazz.getGenericSuperclass());
 	}
 
+	public JClassType getType(Class jdkType) {
+		return typeOracle.getType(jdkType);
+	}
+
 	@Override
 	public boolean isAbstract() {
 		return Modifier.isAbstract(modifierBits);
@@ -404,6 +409,17 @@ public abstract class JClassType<T extends Type>
 		return clazz;
 	}
 
+	/*
+	 * Initially, only simple (direct generic superclass) bounds for types
+	 */
+	public TypeBounds provideJdkTypeBounds() {
+		if (clazz == null) {
+			return new TypeBounds(List.of());
+		} else {
+			return ensureMembers().typeBounds;
+		}
+	}
+
 	@Override
 	public void setEnhanced() {
 		throw new UnsupportedOperationException();
@@ -434,7 +450,11 @@ public abstract class JClassType<T extends Type>
 
 		List<JClassType> implementedInterfaces;
 
+		List<JClassType> resolvedSuperclassTypes;
+
 		TypeParameterResolution resolution;
+
+		TypeBounds typeBounds;
 
 		Members() {
 			resolution = new TypeParameterResolution(JClassType.this);
@@ -453,6 +473,11 @@ public abstract class JClassType<T extends Type>
 					.collect(Collectors.toList());
 			implementedInterfaces = Arrays.stream(clazz.getInterfaces())
 					.map(typeOracle::getType).collect(Collectors.toList());
+			computeBounds();
+			/*
+			 * populate inheritable fields/methods - these will have type
+			 * parameters resolved if possible
+			 */
 			inheritableMethods = new ArrayList<>();
 			inheritableFields = new ArrayList<>();
 			JClassType cursor = JClassType.this;
@@ -490,7 +515,17 @@ public abstract class JClassType<T extends Type>
 			return Ax.format("Members: %s", JClassType.this.toString());
 		}
 
-		private boolean assignableComparable(JClassType o1, JClassType o2) {
+		private List<JMethod>
+				getDirectInheritableMethods(List<JMethod> methods) {
+			Multimap<NameCallingSignature, List<JMethod>> candidates = methods
+					.stream().filter(m -> !m.isPrivate())
+					.map(resolution::resolve).collect(AlcinaCollectors
+							.toKeyMultimap(NameCallingSignature::new));
+			return candidates.values().stream().map(this::findMostSpecific)
+					.collect(Collectors.toList());
+		}
+
+		boolean assignableComparable(JClassType o1, JClassType o2) {
 			if (o1.isAssignableFrom(o2)) {
 				return true;
 			} else if (o2.isAssignableFrom(o1)) {
@@ -500,14 +535,37 @@ public abstract class JClassType<T extends Type>
 			}
 		}
 
-		private List<JMethod>
-				getDirectInheritableMethods(List<JMethod> methods) {
-			Multimap<NameCallingSignature, List<JMethod>> candidates = methods
-					.stream().filter(m -> !m.isPrivate())
-					.map(resolution::resolve).collect(AlcinaCollectors
-							.toKeyMultimap(NameCallingSignature::new));
-			return candidates.values().stream().map(this::findMostSpecific)
-					.collect(Collectors.toList());
+		void computeBounds() {
+			List<Class> bounds = new ArrayList<>();
+			// find the nearest ParameterizedType ancestor of type (including
+			// self)
+			ParameterizedType nearestGenericSupertype = null;
+			Type cursor = type;
+			while (cursor != null) {
+				if (cursor instanceof ParameterizedType) {
+					nearestGenericSupertype = (ParameterizedType) cursor;
+					break;
+				}
+				if (cursor instanceof Class) {
+					cursor = ((Class) cursor).getGenericSuperclass();
+				} else {
+					throw new UnsupportedOperationException();
+				}
+			}
+			if (nearestGenericSupertype != null) {
+				Arrays.stream(nearestGenericSupertype.getActualTypeArguments())
+						.map(typeOracle::getType).map(resolution::resolve)
+						.map(JClassType::getErasedType)
+						.map(JClassType::provideJavaType)
+						// confirm that it's a Class clazz (although
+						// getErasedType probably forces this).
+						//
+						// maybe here because I like peek...
+						.peek(c -> Preconditions
+								.checkArgument(c instanceof Class))
+						.forEach(bounds::add);
+			}
+			typeBounds = new TypeBounds(bounds);
 		}
 
 		// FIXME - reflection - revisit - a formal definition of what this
@@ -657,10 +715,8 @@ public abstract class JClassType<T extends Type>
 			}
 		}
 
-		private JType resolve(JType jType) {
-			if (!(jType instanceof JClassType)) {
-				return jType;
-			}
+		private JClassType resolve(JType jType) {
+			JClassType classType = (JClassType) jType;
 			Type cursor = ((JClassType) jType).type;
 			while (cursor instanceof TypeVariable) {
 				Type test = resolvedTypeParameters.get(cursor);
@@ -673,7 +729,7 @@ public abstract class JClassType<T extends Type>
 			if (cursor != null) {
 				return jClassType.typeOracle.getType(cursor);
 			} else {
-				return jType;
+				return classType;
 			}
 		}
 
