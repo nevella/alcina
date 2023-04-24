@@ -103,6 +103,10 @@ public class Io {
 			}
 		}
 
+		/**
+		 * Return a domdocument generated from parsing the input as an HTML (not
+		 * XML) document
+		 */
 		public DomDocument asDomDocument() {
 			return DomDocument.from(asHtmlDocument());
 		}
@@ -165,6 +169,14 @@ public class Io {
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
+		}
+
+		/**
+		 * Return a domdocument generated from parsing the input as an XML (not
+		 * HTML) document
+		 */
+		public DomDocument asXmlDomDocument() {
+			return DomDocument.from(asXmlDocument());
 		}
 
 		public boolean exists() {
