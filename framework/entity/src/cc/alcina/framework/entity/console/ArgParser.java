@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,18 @@ public class ArgParser {
 		return argv.remove(0);
 	}
 
+	public Parameter getAndRemove(String prefix) {
+		Parameter result = new Parameter();
+		for (String arg : argv) {
+			if (arg.startsWith(prefix)) {
+				result.value = arg.substring(prefix.length());
+				argv.remove(arg);
+				break;
+			}
+		}
+		return result;
+	}
+
 	public boolean has(String flag) {
 		return argv.contains(flag);
 	}
@@ -59,5 +72,17 @@ public class ArgParser {
 
 	public void populateObject(Object object) {
 		// not done - but populate based on field names and types
+	}
+
+	public class Parameter {
+		String value;
+
+		public Optional<Integer> intValue() {
+			return stringValue().map(Integer::parseInt);
+		}
+
+		public Optional<String> stringValue() {
+			return Optional.ofNullable(value);
+		}
 	}
 }

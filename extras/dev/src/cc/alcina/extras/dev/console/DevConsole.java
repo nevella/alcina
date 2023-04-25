@@ -93,6 +93,8 @@ Command line opts:
 
 - --no-http
 - --no-exit
+- --no-rerun
+- --http-port=<port>
 - (command string)
  * @formatter:on
 
@@ -862,6 +864,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		long statEndInitJaxbServices = System.currentTimeMillis();
 		initState();
 		remote = DevConsoleRemote.get();
+		remote.setOverridePort(launchConfiguration.httpPort);
 		remote.setDevConsole(this);
 		if (launchConfiguration.noHttpServer) {
 			Ax.out("STARTUP\t no-http: not serving console over http");
@@ -893,7 +896,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		initialised = true;
 		if (launchConfiguration.hasCommandString()) {
 			performCommand(launchConfiguration.getCommandString());
-		} else if (!props.lastCommand.matches("|q|re|restart")) {
+		} else if (!props.lastCommand.matches("|q|re|restart")
+				&& !launchConfiguration.noRerunLastCommand) {
 			runningLastCommand = true;
 			performCommand(props.lastCommand);
 		} else {
@@ -1009,15 +1013,22 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	static class LaunchConfiguration {
 		boolean noHttpServer;
 
+		boolean noRerunLastCommand;
+
 		private ArgParser parser;
 
 		boolean exitAfterCommand;
 
+		private Integer httpPort;
+
 		public LaunchConfiguration(String[] argv) {
 			parser = new ArgParser(argv);
 			noHttpServer = parser.hasAndRemove("--no-http");
+			noRerunLastCommand = parser.hasAndRemove("--no-rerun");
+			this.httpPort = parser.getAndRemove("--http-port=").intValue()
+					.orElse(null);
 			exitAfterCommand = !parser.hasAndRemove("--no-exit")
-					&& hasCommandString();
+					&& hasCommandString() && httpPort == null;
 			if (exitAfterCommand) {
 				noHttpServer = true;
 			}

@@ -60,6 +60,8 @@ public class DevConsoleRemote {
 
 	Map<String, Integer> perClientInstanceRecordOffsets = new LinkedHashMap<>();
 
+	private Integer overridePort;
+
 	public void addClearEvent() {
 		ConsoleRecord record = new ConsoleRecord();
 		record.clear = true;
@@ -93,6 +95,10 @@ public class DevConsoleRemote {
 		return out;
 	}
 
+	public Integer getOverridePort() {
+		return this.overridePort;
+	}
+
 	public synchronized boolean hasRecords(String clientInstanceUid) {
 		int size = this.records.size();
 		int currentOffset = perClientInstanceRecordOffsets
@@ -113,6 +119,10 @@ public class DevConsoleRemote {
 		this.devConsole = devConsole;
 	}
 
+	public void setOverridePort(Integer overridePort) {
+		this.overridePort = overridePort;
+	}
+
 	public void start() throws Exception {
 		if (!Configuration.is("serve")) {
 			return;
@@ -131,7 +141,8 @@ public class DevConsoleRemote {
 	}
 
 	private void run0() throws Exception {
-		int port = Integer.parseInt(Configuration.get("port"));
+		int port = overridePort != null ? overridePort.intValue()
+				: Integer.parseInt(Configuration.get("port"));
 		Ax.out("Dev console: serving on port %s", port);
 		Server server = new Server();
 		ServerConnector connector = new ServerConnector(server);
