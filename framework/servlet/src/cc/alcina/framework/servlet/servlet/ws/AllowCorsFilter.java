@@ -27,6 +27,10 @@ public class AllowCorsFilter
 
 	@Override
 	public void filter(ContainerRequestContext context) throws IOException {
+		if (!CorsFilterConfiguration.has()) {
+			// reflectively invoked, ignore
+			return;
+		}
 		CorsFilterConfiguration configuration = CorsFilterConfiguration.get();
 		String explicitRegex = configuration.getAllowExplicitRegex();
 		if (explicitRegex != null) {
@@ -50,6 +54,12 @@ public class AllowCorsFilter
 	public static class CorsFilterConfiguration {
 		public static AllowCorsFilter.CorsFilterConfiguration get() {
 			return Registry.impl(AllowCorsFilter.CorsFilterConfiguration.class);
+		}
+
+		public static boolean has() {
+			return Registry
+					.optional(AllowCorsFilter.CorsFilterConfiguration.class)
+					.isPresent();
 		}
 
 		private boolean allowWildcard;
