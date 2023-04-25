@@ -63,9 +63,20 @@ public class Location implements Comparable<Location> {
 	 */
 	@Override
 	public int compareTo(Location o) {
-		Location l1 = this;
-		Location l2 = o;
-		return locationContext.compare(l1, l2);
+		return compareTo(o, false);
+	}
+
+	public int compareTo(Location o, boolean indexOnly) {
+		if (indexOnly) {
+			return index - o.index;
+		} else {
+			/**
+			 * Identical to a depth-first traversal position comparison
+			 */
+			Location l1 = this;
+			Location l2 = o;
+			return locationContext.compare(l1, l2);
+		}
 	}
 
 	public DomNode containingNode() {
@@ -167,14 +178,18 @@ public class Location implements Comparable<Location> {
 
 		@Override
 		public int compareTo(Range o) {
+			return compareTo(o, false);
+		}
+
+		public int compareTo(Range o, boolean indexOnly) {
 			{
-				int cmp = start.compareTo(o.start);
+				int cmp = start.compareTo(o.start, indexOnly);
 				if (cmp != 0) {
 					return cmp;
 				}
 			}
 			{
-				int cmp = end.compareTo(o.end);
+				int cmp = end.compareTo(o.end, indexOnly);
 				if (cmp != 0) {
 					// later end (and same start) implies this contains o - so
 					// order before
