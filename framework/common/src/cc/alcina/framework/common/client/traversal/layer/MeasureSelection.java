@@ -22,8 +22,9 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		return get().compareTo(o.get());
 	}
 
-	public boolean contains(MeasureSelection o, Token.Order order) {
-		return get().contains(o.get(), order);
+	public boolean contains(MeasureSelection o, Token.Order order,
+			boolean indexOnly) {
+		return get().contains(o.get(), order, indexOnly);
 	}
 
 	/*
