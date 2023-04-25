@@ -317,6 +317,12 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle
 					return simpleBoundType(firstBound);
 				}
 			}
+		} else if (jdkType instanceof GenericArrayType) {
+			GenericArrayType genericArrayType = (GenericArrayType) jdkType;
+			Object arrayInstance = Array.newInstance(
+					simpleBoundType(genericArrayType.getGenericComponentType()),
+					0);
+			return arrayInstance.getClass();
 		} else {
 			throw new UnsupportedOperationException();
 		}
