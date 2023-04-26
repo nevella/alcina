@@ -1126,13 +1126,17 @@ public class DomNode {
 			}
 		}
 
+		public DomNode replaceWithMoveContents(DomNode node) {
+			replaceWith(node);
+			node.copyAttributesFrom(DomNode.this);
+			node.children.adoptFrom(DomNode.this);
+			return node;
+		}
+
 		public DomNode replaceWithTag(String tag) {
 			DomNode wrapper = document
 					.nodeFor(document.domDoc().createElement(tag));
-			replaceWith(wrapper);
-			wrapper.copyAttributesFrom(DomNode.this);
-			wrapper.children.adoptFrom(DomNode.this);
-			return wrapper;
+			return replaceWithMoveContents(wrapper);
 		}
 
 		public void swapWith(DomNode other) {

@@ -165,6 +165,11 @@ public class SelectionTraversal
 		return "[Unknown position]";
 	}
 
+	public String
+			generateSelectionCounterPath(Class<? extends Selection> clazz) {
+		return state.selections.generateSelectionCounterPath(clazz);
+	}
+
 	public Selector getCurrentSelector() {
 		return this.currentSelector;
 	}
@@ -772,6 +777,12 @@ public class SelectionTraversal
 				selectionAdded.publish(selection);
 			}
 			return add;
+		}
+
+		synchronized String
+				generateSelectionCounterPath(Class<? extends Selection> clazz) {
+			return Ax.format("%s.%s", NestedNameProvider.get(clazz),
+					byClass.getAndEnsure(clazz).size());
 		}
 
 		synchronized IntPair getSelectionPosition(Selection value) {
