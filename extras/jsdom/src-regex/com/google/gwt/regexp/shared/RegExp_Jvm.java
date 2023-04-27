@@ -58,14 +58,7 @@ public class RegExp_Jvm implements IRegExp {
 	// \$
 	private static final String REPLACEMENT_DOLLAR_DOLLAR_FOR_JAVA = "\\\\\\$";
 
-	private static Map<StringPair, Pattern> cachedPatterns = new LinkedHashMap<StringPair, Pattern>(
-			10, 0.75f, true) {
-		@Override
-		protected boolean
-				removeEldestEntry(Map.Entry<StringPair, Pattern> eldest) {
-			return size() > 10;
-		};
-	};
+	private static Map<StringPair, Pattern> cachedPatterns;
 
 	/**
 	 * Creates a regular expression object from a pattern with no flags.
@@ -138,13 +131,15 @@ public class RegExp_Jvm implements IRegExp {
 		return Pattern.quote(input);
 	}
 
-	private static Pattern getPattern(String pattern, int javaPatternFlags) {
+	private static synchronized Pattern getPattern(String pattern,
+			int javaPatternFlags) {
 		StringPair key = new StringPair(pattern,
 				String.valueOf(javaPatternFlags));
-		synchronized (cachedPatterns) {
-			return cachedPatterns.computeIfAbsent(key,
-					k -> Pattern.compile(pattern, javaPatternFlags));
+		if (cachedPatterns == null) {
+			cachedPatterns = new EvictingMap<>(10, 0.75f, true);
 		}
+		return cachedPatterns.computeIfAbsent(key,
+				k -> Pattern.compile(pattern, javaPatternFlags));
 	}
 
 	/**
@@ -416,5 +411,17 @@ public class RegExp_Jvm implements IRegExp {
 	}
 
 	public void yup() {
+	}
+
+	private static final class EvictingMap<K, V> extends LinkedHashMap<K, V> {
+		private EvictingMap(int initialCapacity, float loadFactor,
+				boolean accessOrder) {
+			super(initialCapacity, loadFactor, accessOrder);
+		}
+
+		@Override
+		protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+			return size() > 10;
+		}
 	}
 }

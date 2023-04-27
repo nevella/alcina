@@ -116,4 +116,12 @@ public class LocalDomain {
 			}
 		}
 	}
+
+	public static class Transactions {
+		/*
+		 * TODO - this will normally be called in a client environment
+		 */
+		public static void commit() {
+		}
+	}
 }

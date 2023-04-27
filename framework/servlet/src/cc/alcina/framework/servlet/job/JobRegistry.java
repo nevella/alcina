@@ -149,6 +149,12 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
  * FIXME - jobs - activeJobs is a non-transactional view - but possibly should
  * not be, since there are no guarantees that the job exists/has a visible
  * version for a given tx
+ * 
+ * <p>
+ * Implementation note - the Job system exists in a JobEnvironment - the default
+ * environment is within an Alcina mvcc domain, but other (e.g.
+ * non-transactional) environments exist, supporting use on non-db-backed
+ * systems (e.g. Android)
  *
  * @author nick@alcina.cc
  */
@@ -263,6 +269,8 @@ public class JobRegistry {
 
 	private AtomicInteger consoleJobIdCounter = new AtomicInteger();
 
+	private JobEnvironment environment = new JobEnvironmentTx();
+
 	public JobRegistry() {
 	}
 
@@ -277,7 +285,7 @@ public class JobRegistry {
 
 	public Job await(Job job, long maxTime) throws InterruptedException {
 		ContextAwaiter awaiter = ensureAwaiter(job);
-		Transaction.commit();
+		environment.commit();
 		awaiter.await(maxTime);
 		JobContext jobContext = activeJobs.get(job);
 		contextAwaiters.remove(job);
@@ -345,6 +353,10 @@ public class JobRegistry {
 				.filter(AllocationQueue::hasActive)
 				.map(AllocationQueue::asQueueStat).sorted(Comparator
 						.comparing(stat -> -stat.startTime.getTime()));
+	}
+
+	public JobEnvironment getEnvironment() {
+		return this.environment;
 	}
 
 	public String getExJobSystemNextJobId(Class<?> clazz) {
@@ -463,6 +475,10 @@ public class JobRegistry {
 		// server/consoles
 		Preconditions.checkState(Ax.isTest());
 		scheduler.processOrphans();
+	}
+
+	public void setEnvironment(JobEnvironment environment) {
+		this.environment = environment;
 	}
 
 	// for tooling
