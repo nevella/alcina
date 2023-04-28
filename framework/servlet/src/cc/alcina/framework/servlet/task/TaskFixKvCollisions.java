@@ -11,9 +11,9 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.persistence.KeyValuePersistent;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskFixKvCollisions extends ServerTask {
+public class TaskFixKvCollisions extends PerformerTask {
 	@Override
 	public void run() throws Exception {
 		Class<? extends KeyValuePersistent> impl = PersistentImpl

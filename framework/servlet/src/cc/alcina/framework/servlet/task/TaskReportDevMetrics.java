@@ -22,10 +22,10 @@ import cc.alcina.framework.entity.stat.DevStats.KeyedStat;
 import cc.alcina.framework.entity.stat.DevStats.LogProvider;
 import cc.alcina.framework.entity.stat.DevStats.LogProvider.StringLogProvider;
 import cc.alcina.framework.entity.stat.DevStats.StatResults;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.job.JobContext;
 
-public class TaskReportDevMetrics extends ServerTask {
+public class TaskReportDevMetrics extends PerformerTask {
 	private Date from = new Date(
 			System.currentTimeMillis() - TimeConstants.ONE_DAY_MS);
 

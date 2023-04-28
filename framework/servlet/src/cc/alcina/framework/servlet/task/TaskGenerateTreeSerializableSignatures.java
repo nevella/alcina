@@ -33,7 +33,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphTraversal;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 /**
  * <p>
@@ -57,7 +57,7 @@ import cc.alcina.framework.servlet.schedule.ServerTask;
 
  * @formatter:on
  */
-public class TaskGenerateTreeSerializableSignatures extends ServerTask {
+public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 	public transient TreeSerializableSignatures signatures = new TreeSerializableSignatures();
 
 	private transient List<Field> missingPropertyDescriptors = new ArrayList<>();

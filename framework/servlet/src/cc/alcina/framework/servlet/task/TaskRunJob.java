@@ -9,10 +9,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobContext;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.servlet.JobServlet;
 
-public class TaskRunJob extends ServerTask {
+public class TaskRunJob extends PerformerTask {
 	private long jobId;
 
 	public long getJobId() {

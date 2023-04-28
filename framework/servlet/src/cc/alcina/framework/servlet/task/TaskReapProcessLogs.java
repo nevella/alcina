@@ -8,10 +8,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.util.ProcessLogFolder;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFactory;
 
-public class TaskReapProcessLogs extends ServerTask {
+public class TaskReapProcessLogs extends PerformerTask {
 	@Override
 	public void run() throws Exception {
 		List<String> omittedFolders = Arrays

@@ -35,11 +35,11 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Alloca
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.job.JobRegistry.FutureStat;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.servlet.JobServlet;
 import cc.alcina.framework.servlet.servlet.TaskWithHtmlResult;
 
-public class TaskListJobs extends ServerTask implements TaskWithHtmlResult {
+public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 	private String filterText;
 
 	private transient Pattern filterPattern;

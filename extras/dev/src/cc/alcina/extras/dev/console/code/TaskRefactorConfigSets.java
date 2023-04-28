@@ -34,10 +34,10 @@ import cc.alcina.framework.entity.Configuration.PropertyTree;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
-public class TaskRefactorConfigSets extends ServerTask {
+public class TaskRefactorConfigSets extends PerformerTask {
 	private List<String> classpathEntries = new ArrayList<>();
 
 	private List<Configuration.ConfigurationFile> appPropertyFileEntries = new ArrayList<>();

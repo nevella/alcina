@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.ZipUtil;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskGenerateGwtTypemodelJar extends ServerTask {
+public class TaskGenerateGwtTypemodelJar extends PerformerTask {
 	transient String outPath = "/tmp/gwt-typemodel";
 
 	@Override

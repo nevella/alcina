@@ -1,14 +1,14 @@
 package cc.alcina.extras.dev.console.test;
 
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 /**
  *
  * @author nick@alcina.cc
  *
  */
-public class MvccEntityAllTransactionTests extends ServerTask {
+public class MvccEntityAllTransactionTests extends PerformerTask {
 	@Override
 	public void run() throws Exception {
 		/*

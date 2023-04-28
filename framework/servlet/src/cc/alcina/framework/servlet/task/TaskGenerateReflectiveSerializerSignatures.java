@@ -41,7 +41,7 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatures.Scanner.ReflectiveScannerMetadata;
 
 /*
@@ -56,7 +56,7 @@ import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatur
  *
  * - non-transient properties have serializable types
  */
-public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
+public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 	public transient ReflectiveSerializableSignatures signatures = new ReflectiveSerializableSignatures();
 
 	private transient List<Property> incorrectProperty = new ArrayList<>();

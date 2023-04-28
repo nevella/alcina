@@ -5,9 +5,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public abstract class MvccEntityTransactionTest extends ServerTask {
+public abstract class MvccEntityTransactionTest extends PerformerTask {
 	transient private Exception lastThreadException;
 
 	@Override

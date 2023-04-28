@@ -10,9 +10,9 @@ import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.domain.view.DomainViews;
 import cc.alcina.framework.servlet.domain.view.LiveTree;
 import cc.alcina.framework.servlet.domain.view.LiveTree.ProcessLoggerImpl;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskPeristDomainViewLog extends ServerTask {
+public class TaskPeristDomainViewLog extends PerformerTask {
 	private EntityLocator rootEntity;
 
 	public transient ProcessLoggerImpl processLoggerImpl;
