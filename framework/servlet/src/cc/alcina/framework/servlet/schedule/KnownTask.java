@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.job.Task;
 
-public abstract class KnownServerTask extends PerformerTask
+public abstract class KnownTask extends PerformerTask
 		implements KnownJobPerformer {
 	@Override
 	public void performAction(Task task) throws Exception {
