@@ -21,9 +21,9 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskDomainQuery extends ServerTask {
+public class TaskDomainQuery extends PerformerTask {
 	private List<String> resultPaths = List.of("*").stream()
 			.collect(Collectors.toList());
 

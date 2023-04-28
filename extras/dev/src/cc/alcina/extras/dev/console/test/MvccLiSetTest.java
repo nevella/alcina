@@ -11,9 +11,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class MvccLiSetTest extends ServerTask {
+public class MvccLiSetTest extends PerformerTask {
 	@Override
 	public void run() throws Exception {
 		Transaction.end();

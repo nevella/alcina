@@ -200,9 +200,9 @@ public class DomDocument extends DomNode {
 		if (byTag == null) {
 			byTag = new Multimap<>();
 			byId = new Multimap<>();
-			byTag = getDocumentElementNode().children.stream()
+			byTag = getDocumentElementNode().descendants()
 					.collect(AlcinaCollectors.toKeyMultimap(DomNode::name));
-			byId = getDocumentElementNode().children.stream()
+			byId = getDocumentElementNode().descendants()
 					.filter(n -> n.has("id"))
 					.collect(AlcinaCollectors.toKeyMultimap(n -> n.attr("id")));
 		}

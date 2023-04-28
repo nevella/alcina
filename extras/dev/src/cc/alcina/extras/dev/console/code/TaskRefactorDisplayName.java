@@ -28,9 +28,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskRefactorDisplayName extends ServerTask {
+public class TaskRefactorDisplayName extends PerformerTask {
 	private boolean overwriteOriginals;
 
 	private String classPathList;

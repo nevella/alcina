@@ -8,12 +8,12 @@ import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.servlet.job.JobContext;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.test.job.TaskTestBackendQueues.TaskTestSubjob.TestType;
 
 /**
  */
-public class TaskTestBackendQueues extends ServerTask {
+public class TaskTestBackendQueues extends PerformerTask {
 	public TaskTestBackendQueues() {
 	}
 
@@ -27,7 +27,7 @@ public class TaskTestBackendQueues extends ServerTask {
 				.forEach(tt -> new TaskTestSubjob().withType(tt).perform());
 	}
 
-	public static class TaskTestSubjob extends ServerTask {
+	public static class TaskTestSubjob extends PerformerTask {
 		private TestType type;
 
 		public TestType getType() {

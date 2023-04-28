@@ -248,6 +248,14 @@ public class DomNode {
 		return depth;
 	}
 
+	/**
+	 * Returns a stream of nodes, in depth-first order, rooted at this node,
+	 * excluding this node
+	 */
+	public Stream<DomNode> descendants() {
+		return stream(false);
+	}
+
 	public Element domElement() {
 		return (Element) node;
 	}
@@ -419,7 +427,7 @@ public class DomNode {
 	}
 
 	public void removeWhitespaceNodes() {
-		children.stream().filter(n -> n.isText() && n.isWhitespaceTextContent())
+		descendants().filter(n -> n.isText() && n.isWhitespaceTextContent())
 				.forEach(DomNode::removeFromParent);
 	}
 
@@ -450,7 +458,7 @@ public class DomNode {
 		if (isText()) {
 			((Text) node).setData(text);
 		} else {
-			if (children.noElements() && children.stream()
+			if (children.noElements() && descendants()
 					.noneMatch(DomNode::isProcessingInstruction)) {
 				node.setTextContent(text);
 			} else {
@@ -479,9 +487,7 @@ public class DomNode {
 	 * Returns a stream of nodes, in depth-first order, rooted at this node
 	 */
 	public Stream<DomNode> stream() {
-		DomTokenStream domTokenStream = new DomTokenStream(DomNode.this);
-		Iterable<DomNode> iterable = () -> domTokenStream;
-		return StreamSupport.stream(iterable.spliterator(), false);
+		return stream(true);
 	}
 
 	public String streamNCleanForBrowserHtmlFragment() {
@@ -594,6 +600,20 @@ public class DomNode {
 			lookup = new DomNodeReadonlyLookup();
 		}
 		return lookup;
+	}
+
+	/*
+	 * Returns a stream of nodes, in depth-first order, rooted at this node.
+	 *
+	 * If includingSelf is false, returns only the descendants
+	 */
+	private Stream<DomNode> stream(boolean includingSelf) {
+		DomTokenStream domTokenStream = new DomTokenStream(DomNode.this);
+		if (!includingSelf) {
+			domTokenStream.next();
+		}
+		Iterable<DomNode> iterable = () -> domTokenStream;
+		return StreamSupport.stream(iterable.spliterator(), false);
 	}
 
 	protected Document domDoc() {
@@ -778,7 +798,7 @@ public class DomNode {
 		}
 
 		public DomNode firstNonElementChild() {
-			return flatten().filter(n -> !n.isElement()).findFirst()
+			return descendants().filter(n -> !n.isElement()).findFirst()
 					.orElse(null);
 		}
 
@@ -792,17 +812,6 @@ public class DomNode {
 			return stream()
 					.filter(n -> n.isText() && !n.isWhitespaceTextContent())
 					.findFirst().orElse(null);
-		}
-
-		public Stream<DomNode> flatten(String... tags) {
-			List<String> tagArray = Arrays.asList(tags);
-			DomTokenStream domTokenStream = new DomTokenStream(DomNode.this);
-			domTokenStream.next();
-			Iterable<DomNode> iterable = () -> domTokenStream;
-			Stream<DomNode> targetStream = StreamSupport
-					.stream(iterable.spliterator(), false);
-			return targetStream.filter(t -> t.isText() || tagArray.isEmpty()
-					|| t.tagIsOneOf(tagArray));
 		}
 
 		public DomNode importAsFirstChild(DomNode n) {
@@ -934,10 +943,6 @@ public class DomNode {
 			return nodes.size() == 1 && nodes.get(0).isElement()
 					? Optional.of(nodes.get(0))
 					: Optional.empty();
-		}
-
-		public Stream<DomNode> stream() {
-			return flatten();
 		}
 
 		public String textContent() {
@@ -1126,13 +1131,17 @@ public class DomNode {
 			}
 		}
 
+		public DomNode replaceWithMoveContents(DomNode node) {
+			replaceWith(node);
+			node.copyAttributesFrom(DomNode.this);
+			node.children.adoptFrom(DomNode.this);
+			return node;
+		}
+
 		public DomNode replaceWithTag(String tag) {
 			DomNode wrapper = document
 					.nodeFor(document.domDoc().createElement(tag));
-			replaceWith(wrapper);
-			wrapper.copyAttributesFrom(DomNode.this);
-			wrapper.children.adoptFrom(DomNode.this);
-			return wrapper;
+			return replaceWithMoveContents(wrapper);
 		}
 
 		public void swapWith(DomNode other) {
@@ -1195,7 +1204,7 @@ public class DomNode {
 			if (blockResolver.isBlock(DomNode.this)) {
 				return true;
 			}
-			return children.stream().anyMatch(blockResolver::isBlock);
+			return descendants().anyMatch(blockResolver::isBlock);
 		}
 
 		public DomNode setClassName(String string) {
@@ -1746,7 +1755,7 @@ public class DomNode {
 			public DomNode apply(DomNode t) {
 				Stream<DomNode> stream = immediateChildrenOnly
 						? t.children.elements().stream()
-						: t.children.stream();
+						: t.descendants();
 				return stream.filter(n -> n.tagIs(tag)).skip(index - 1)
 						.findFirst().orElse(null);
 			}
@@ -1771,7 +1780,7 @@ public class DomNode {
 
 			@Override
 			public DomNode apply(DomNode t) {
-				return t.children.stream().filter(n -> n.tagIs(tag))
+				return t.descendants().filter(n -> n.tagIs(tag))
 						.filter(n -> n.attrIs(attrName, attrValue)).findFirst()
 						.flatMap(n -> n.children.byTag(childTag).stream()
 								.findFirst())

@@ -2,9 +2,9 @@ package cc.alcina.framework.servlet.task;
 
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskSwitchPostgresUrl extends ServerTask {
+public class TaskSwitchPostgresUrl extends PerformerTask {
 	private String newUrl;
 
 	private String descriptorClassName;

@@ -10,10 +10,10 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobContext;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 @TypeSerialization(flatSerializable = false)
-public class TaskPublish extends ServerTask implements ServletAwaitTask {
+public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 	private ContentRequestBase publicationRequest;
 
 	private boolean copyContentToLargeResult;

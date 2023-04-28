@@ -37,16 +37,65 @@ public class MemoryStat {
 		child.objectMemory = objectMemory;
 	}
 
+	public Query query() {
+		return new Query(this);
+	}
+
 	public void setObjectMemory(ObjectMemory objectMemory) {
 		this.objectMemory = objectMemory;
+	}
+
+	int depth() {
+		return parent == null ? 0 : parent.depth() + 1;
 	}
 
 	boolean hasChildren() {
 		return children.size() > 0;
 	}
 
-	public Query query() {
-		return new Query(this);
+	public static class Counter {
+		public long count = 0;
+
+		public long size = 0;
+
+		public Map<Class, Long> perClassSize = new LinkedHashMap<>();
+
+		public Map<Class, Long> perClassCount = new LinkedHashMap<>();
+
+		public Counter() {
+		}
+
+		public void accumulate(MemoryStat stat) {
+			count += stat.counter.count;
+			size += stat.counter.size;
+			stat.counter.perClassSize.forEach(
+					(k, v) -> perClassSize.merge(k, v, (v1, v2) -> v1 + v2));
+			stat.counter.perClassCount.forEach(
+					(k, v) -> perClassCount.merge(k, v, (v1, v2) -> v1 + v2));
+			for (MemoryStat child : stat.children) {
+				accumulate(child);
+			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s bytes; %s objects", size, count);
+		}
+	}
+
+	public interface MemoryStatProvider {
+		MemoryStat addMemoryStats(MemoryStat parent);
+	}
+
+	@Registration(ObjectMemory.class)
+	public static abstract class ObjectMemory {
+		public abstract void dumpStats();
+
+		public abstract boolean
+				isMemoryStatProvider(Class<? extends Object> clazz);
+
+		public abstract void walkStats(Object o, Counter counter,
+				Predicate<Object> filter);
 	}
 
 	public enum Order {
@@ -62,52 +111,11 @@ public class MemoryStat {
 
 		private MemoryStat from;
 
+		List<MemoryStat> stats = new ArrayList<>();
+
 		public Query(MemoryStat from) {
 			this.from = from;
 		}
-
-		public Query withClassFilter(Predicate<Class> classFilter) {
-			this.classFilter = classFilter;
-			return this;
-		}
-
-		public Query withLeafOnly(boolean leafOnly) {
-			this.leafOnly = leafOnly;
-			return this;
-		}
-
-		public Query withOrder(Order order) {
-			this.order = order;
-			return this;
-		}
-
-		static class Cmp implements Comparator<MemoryStat> {
-			private Order order;
-
-			public Cmp(Order order) {
-				this.order = order;
-			}
-
-			@Override
-			public int compare(MemoryStat o1, MemoryStat o2) {
-				switch (order) {
-				case ENCOUNTER:
-					return 0;
-				case NAME:
-					return o1.root.toString().compareTo(o2.root.toString());
-				case SIZE_REVERSED:
-					Counter c1 = new Counter();
-					c1.accumulate(o1);
-					Counter c2 = new Counter();
-					c2.accumulate(o2);
-					return -CommonUtils.compareLongs(c1.size, c2.size);
-				default:
-					throw new UnsupportedOperationException();
-				}
-			}
-		}
-
-		List<MemoryStat> stats = new ArrayList<>();
 
 		public String execute() {
 			LinkedList<MemoryStat> stack = new LinkedList<>();
@@ -157,55 +165,47 @@ public class MemoryStat {
 			}
 			return builder.toString();
 		}
-	}
 
-	int depth() {
-		return parent == null ? 0 : parent.depth() + 1;
-	}
-
-	public static class Counter {
-		public long count = 0;
-
-		public long size = 0;
-
-		public Map<Class, Long> perClassSize = new LinkedHashMap<>();
-
-		public Map<Class, Long> perClassCount = new LinkedHashMap<>();
-
-		public Counter() {
+		public Query withClassFilter(Predicate<Class> classFilter) {
+			this.classFilter = classFilter;
+			return this;
 		}
 
-		public void accumulate(MemoryStat stat) {
-			count += stat.counter.count;
-			size += stat.counter.size;
-			stat.counter.perClassSize.forEach(
-					(k, v) -> perClassSize.merge(k, v, (v1, v2) -> v1 + v2));
-			stat.counter.perClassCount.forEach(
-					(k, v) -> perClassCount.merge(k, v, (v1, v2) -> v1 + v2));
-			for (MemoryStat child : stat.children) {
-				accumulate(child);
+		public Query withLeafOnly(boolean leafOnly) {
+			this.leafOnly = leafOnly;
+			return this;
+		}
+
+		public Query withOrder(Order order) {
+			this.order = order;
+			return this;
+		}
+
+		static class Cmp implements Comparator<MemoryStat> {
+			private Order order;
+
+			public Cmp(Order order) {
+				this.order = order;
+			}
+
+			@Override
+			public int compare(MemoryStat o1, MemoryStat o2) {
+				switch (order) {
+				case ENCOUNTER:
+					return 0;
+				case NAME:
+					return o1.root.toString().compareTo(o2.root.toString());
+				case SIZE_REVERSED:
+					Counter c1 = new Counter();
+					c1.accumulate(o1);
+					Counter c2 = new Counter();
+					c2.accumulate(o2);
+					return -CommonUtils.compareLongs(c1.size, c2.size);
+				default:
+					throw new UnsupportedOperationException();
+				}
 			}
 		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s bytes; %s objects", size, count);
-		}
-	}
-
-	public interface MemoryStatProvider {
-		MemoryStat addMemoryStats(MemoryStat parent);
-	}
-
-	@Registration(ObjectMemory.class)
-	public static abstract class ObjectMemory {
-		public abstract void dumpStats();
-
-		public abstract boolean
-				isMemoryStatProvider(Class<? extends Object> clazz);
-
-		public abstract void walkStats(Object o, Counter counter,
-				Predicate<Object> filter);
 	}
 
 	public enum StatType {

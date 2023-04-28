@@ -115,6 +115,10 @@ public class Registry {
 		return get().register0();
 	}
 
+	public static <V> Stream<Class<? extends V>> types(Class<V> type) {
+		return get().query0(type).registrations();
+	}
+
 	protected static Registry get() {
 		return provider.getRegistry();
 	}
@@ -301,6 +305,7 @@ public class Registry {
 					true).registrationData.registeringClassKey.clazz();
 		}
 
+		// FIXME - reflection - refactor to types()
 		public Stream<Class<? extends V>> registrations() {
 			return (Stream) untypedRegistrations();
 		}

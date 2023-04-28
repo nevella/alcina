@@ -12,7 +12,7 @@ import cc.alcina.framework.entity.Io.ReadOp.MapType;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.CsvCols;
 import cc.alcina.framework.entity.util.CsvCols.CsvRow;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 /**
  * <p>
@@ -26,7 +26,7 @@ import cc.alcina.framework.servlet.schedule.ServerTask;
  *
  */
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
-public class TaskRefactorConfigSets3 extends ServerTask {
+public class TaskRefactorConfigSets3 extends PerformerTask {
 	StringMap map = new StringMap();
 
 	String propertiesCsv;

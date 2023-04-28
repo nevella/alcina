@@ -30,10 +30,10 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.servlet.JobServlet;
 
-public class TaskLogJobDetails extends ServerTask {
+public class TaskLogJobDetails extends PerformerTask {
 	private long jobId;
 
 	private boolean details;
