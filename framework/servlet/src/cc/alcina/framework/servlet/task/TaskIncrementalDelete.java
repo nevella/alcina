@@ -8,9 +8,9 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskIncrementalDelete extends ServerTask {
+public class TaskIncrementalDelete extends PerformerTask {
 	public String path;
 
 	@Override

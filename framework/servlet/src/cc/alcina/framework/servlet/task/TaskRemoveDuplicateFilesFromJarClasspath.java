@@ -11,9 +11,9 @@ import java.util.zip.ZipInputStream;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.util.Shell;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskRemoveDuplicateFilesFromJarClasspath extends ServerTask {
+public class TaskRemoveDuplicateFilesFromJarClasspath extends PerformerTask {
 	private List<String> jarPaths = new ArrayList<>();
 
 	private boolean dryRun = true;

@@ -8,9 +8,9 @@ import java.util.zip.ZipInputStream;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.util.Shell;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskRemovePathsFromJar extends ServerTask {
+public class TaskRemovePathsFromJar extends PerformerTask {
 	private String jarPath;
 
 	private String removeSegmentRegex;
