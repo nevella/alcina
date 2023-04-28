@@ -32,14 +32,7 @@ public class AlcinaProperties {
 		get().properties.put(cKey, value);
 	}
 
-	private StringMap properties;
-
-	public AlcinaProperties() {
-		super();
-		properties = AlcinaResources.INSTANCE == null ? new StringMap()
-				: StringMap.fromPropertyString(
-						AlcinaResources.INSTANCE.appProperties().getText());
-	}
+	private StringMap properties = new StringMap();
 
 	private String getString(Class clazz, String key) {
 		String cKey = clazz == null ? key

@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.job;
 
 import cc.alcina.framework.common.client.domain.LocalDomain;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 
 /**
  * A non-mvcc environment
@@ -18,6 +19,11 @@ public class JobEnvironmentNonTx implements JobEnvironment {
 	@Override
 	public void commit() {
 		LocalDomain.Transactions.commit();
+	}
+
+	@Override
+	public ClientInstance getPerformerInstance() {
+		return ClientInstance.self();
 	}
 
 	class JobDomainLocal {

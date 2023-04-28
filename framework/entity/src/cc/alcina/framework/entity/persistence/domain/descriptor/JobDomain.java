@@ -67,10 +67,14 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 
 /**
+ * <p>
  * FIXME - mvcc.4 - any non-transactional refs (particularly collections) to
  * mvcc objects should filter by Domain.notRemoved - in fact, just don't have
  * non-transactional refs/collections (if possible) - the sketch factor is just
  * too high.
+ * 
+ * <p>
+ * WIP - this can be backed by a non-DomainStore entitystore
  */
 @Registration.Singleton
 public class JobDomain {

@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
@@ -70,6 +72,15 @@ public abstract class ClientTransformManager extends TransformManager {
 			registerDomainObject(entity);
 		}
 		return entity;
+	}
+
+	/*
+	 * get a local id for assigning to pre-TM-store objects (such as faux
+	 * ClientInstance)
+	 */
+	public long getBootstrapNextLocalId() {
+		Preconditions.checkArgument(getObjectStore() == null);
+		return localIdGenerator.incrementAndGet();
 	}
 
 	public DomainTransformExceptionFilter getDomainTransformExceptionFilter() {

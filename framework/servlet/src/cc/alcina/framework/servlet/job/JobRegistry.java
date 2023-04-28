@@ -853,11 +853,11 @@ public class JobRegistry {
 			} finally {
 				LooseContext.pop();
 			}
+			JobEnvironment environment = JobRegistry.get().environment;
 			// NOTE - not (!!) ClientInstance.self(), which would be the browser
 			// instance if the job call were initiated remotely. The job system
 			// cares about the server creator/performer, not the client.
-			ClientInstance serverInstance = EntityLayerObjects.get()
-					.getServerAsClientInstance();
+			ClientInstance serverInstance = environment.getPerformerInstance();
 			job.setCreator(serverInstance);
 			// very useful for job cascade/trigger debugging
 			job.setUuid(Ax.format("%s.%s", serverInstance.getId(),

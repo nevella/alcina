@@ -358,7 +358,7 @@ public abstract class DevHelper {
 		if (!new File(configPath).exists()) {
 			Io.read().path(configPath + ".template").write().toPath(configPath);
 		}
-		Configuration.properties.setUseSets(true);
+		Configuration.properties.setUseSets(isUsesSets());
 		Configuration.properties
 				.register(Io.read().path(configPath).asString());
 	}
@@ -554,6 +554,10 @@ public abstract class DevHelper {
 	}
 
 	protected abstract void initCustomServicesFirstHalf();
+
+	protected boolean isUsesSets() {
+		return true;
+	}
 
 	protected abstract void registerNames(AlcinaWebappConfig config);
 

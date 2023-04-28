@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.util.ClasspathScanner;
@@ -38,6 +39,8 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
  *
  */
 public abstract class CachingScanner<T extends ClassMetadata> {
+	public static Topic<Void> topicSerializationComplete = Topic.create();
+
 	int cc = 0;
 
 	long loadClassNanos = 0;
@@ -169,6 +172,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 			@Override
 			public void run() {
 				Io.write().object(outgoingCache).toFile(cacheFile);
+				topicSerializationComplete.signal();
 			};
 		}.start();
 	}
