@@ -156,10 +156,10 @@ public abstract class Client {
 						.setDelegateCreator(new JsRegistryDelegateCreator());
 			}
 			JavascriptKeyableLookup.initJs();
+			Reflections.init();
 		}
 
 		private static void registry() {
-			Reflections.init();
 			ModuleReflector moduleReflector = ClientReflectorFactory.create();
 			moduleReflector.register();
 			Init.complete = true;
