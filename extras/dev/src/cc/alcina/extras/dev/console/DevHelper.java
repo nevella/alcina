@@ -21,7 +21,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -33,7 +32,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.dom.client.Document;
@@ -90,8 +88,6 @@ import elemental.json.impl.JsonUtil;
 
 @SuppressWarnings("deprecation")
 public abstract class DevHelper {
-	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
-
 	private static IUser defaultUser;
 
 	private static ClientInstance clientInstance;
@@ -114,8 +110,6 @@ public abstract class DevHelper {
 
 	private MessagingWriter messagingWriter;
 
-	public boolean configLoaded = false;
-
 	private Connection connLocal;
 
 	private Connection connDev;
@@ -130,8 +124,6 @@ public abstract class DevHelper {
 	};
 
 	private Logger logger = null;
-
-	protected String configPath;
 
 	private Logger actionLogger;
 
@@ -360,41 +352,18 @@ public abstract class DevHelper {
 
 	public abstract void initPostObjectServices();
 
+	// FIXME - ru - rename to loadConfig
+	public final void loadConfiguration() {
+		String configPath = getConfigFilePath();
+		if (!new File(configPath).exists()) {
+			Io.read().path(configPath + ".template").write().toPath(configPath);
+		}
+		Configuration.properties.setUseSets(true);
+		Configuration.properties
+				.register(Io.read().path(configPath).asString());
+	}
+
 	public abstract void loadDefaultLoggingProperties();
-
-	public void loadJbossConfig() {
-		loadJbossConfig(new ConsolePrompter());
-	}
-
-	// FIXME - ru - remove
-	public void loadJbossConfig(StringPrompter prompter) {
-		if (configLoaded) {
-			return;
-		}
-		if (prompter instanceof ConsolePrompter
-				&& getPropertyFilePath() != null) {
-			((ConsolePrompter) prompter).setDefaultValue(getPropertyFilePath());
-		}
-		Preferences prefs = Preferences.userNodeForPackage(getClass());
-		configPath = null;
-		while (true) {
-			try {
-				configPath = getAppConfigPath(prefs);
-				Configuration.properties
-						.register(Io.read().path(configPath).asString());
-				configLoaded = true;
-				break;
-			} catch (Exception e) {
-				if (prompter != null) {
-					String prompt = getJbossConfigPrompt(configPath);
-					configPath = prompter.getValue(prompt);
-					prefs.put(JBOSS_CONFIG_PATH, configPath);
-				} else {
-					return;
-				}
-			}
-		}
-	}
 
 	public <V> V readObject(V template) {
 		return readObject(template, template.getClass().getSimpleName());
@@ -465,7 +434,7 @@ public abstract class DevHelper {
 
 	public void solidTestEnvFirstHalf() {
 		loadDefaultLoggingProperties();
-		loadJbossConfig();
+		loadConfiguration();
 		initLightweightServices();
 	}
 
@@ -507,26 +476,6 @@ public abstract class DevHelper {
 	}
 
 	protected void copyTemplates() {
-		{
-			String nonTemplatePath = getPropertyFilePath();
-			if (nonTemplatePath == null) {
-				// not yet configured
-				return;
-			}
-			Preconditions.checkState(nonTemplatePath.endsWith(".local"));
-			File nonTemplateFile = new File(nonTemplatePath);
-			if (!nonTemplateFile.exists()) {
-				try {
-					Ax.out("Copying template %s", nonTemplateFile.getName());
-					SEUtilities.copyFile(
-							new File(nonTemplatePath.replaceFirst(
-									"(.+)\\.local$", "$1.template")),
-							nonTemplateFile);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
 		{
 			String nonTemplatePath = getNonVcsJavaTaskFilePath();
 			if (nonTemplatePath == null) {
@@ -587,10 +536,9 @@ public abstract class DevHelper {
 				: new TestTransformManager();
 	}
 
-	protected String getAppConfigPath(Preferences prefs) {
-		return prefs.get(JBOSS_CONFIG_PATH, "");
-	}
+	protected abstract String getConfigFilePath();
 
+	// FIXME - ru - delete
 	protected abstract String getJbossConfigPrompt(String path);
 
 	protected String getNonVcsJavaDevmodeProcessObserverFilePath() {
@@ -602,11 +550,6 @@ public abstract class DevHelper {
 	}
 
 	protected String getNonVcsJavaTaskFilePath() {
-		return null;
-	}
-
-	// FIXME - ru - unify template copying, properties startup
-	protected String getPropertyFilePath() {
 		return null;
 	}
 
