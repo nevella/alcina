@@ -86,17 +86,21 @@ public class Measure extends Location.Range {
 		return children.stream().filter(m -> list.contains(m.token));
 	}
 
-	public boolean contains(Measure o, Token.Order order) {
+	/**
+	 * if order == null, containment will be true if the measure ranges are
+	 * equal ( A contains B and B contains A)
+	 */
+	public boolean contains(Measure o, Token.Order order, boolean indexOnly) {
 		boolean nonEquivalent = false;
 		{
-			int cmp = start.compareTo(o.start);
+			int cmp = start.compareTo(o.start, indexOnly);
 			if (cmp > 0) {
 				return false;
 			}
 			nonEquivalent |= cmp < 0;
 		}
 		{
-			int cmp = end.compareTo(o.end);
+			int cmp = end.compareTo(o.end, indexOnly);
 			if (cmp < 0) {
 				// later end (and same start) implies this contains o - so order
 				// before
@@ -107,7 +111,7 @@ public class Measure extends Location.Range {
 		if (nonEquivalent) {
 			return true;
 		}
-		return order.compare(token, o.token) < 0;
+		return order == null || order.compare(token, o.token) < 0;
 	}
 
 	public Object getData() {
@@ -139,9 +143,11 @@ public class Measure extends Location.Range {
 			tokenString = token.getClass().getSimpleName();
 		}
 		tokenString = CommonUtils.padStringRight(tokenString, 16, ' ');
-		return Ax.format("[%s,%s]%s :: %s :: %s", Ax.padLeft(start.index, 8),
-				Ax.padLeft(end.index, 8), aliasMarker, tokenString,
-				Ax.trimForLogging(text()));
+		String tokenData = getData() == null ? "" : getData().toString();
+		tokenData = CommonUtils.padStringRight(tokenData, 10, ' ');
+		return Ax.format("[%s,%s]%s :: %s :: %s :: %s",
+				Ax.padLeft(start.index, 8), Ax.padLeft(end.index, 8),
+				aliasMarker, tokenString, tokenData, Ax.trimForLogging(text()));
 	}
 
 	/**
@@ -156,6 +162,12 @@ public class Measure extends Location.Range {
 		 * matching tokens of this type
 		 */
 		public interface NodeTraversalToken extends Token {
+		}
+
+		/*
+		 * Token will not be output (intermediate)
+		 */
+		public interface NonOutput extends Token {
 		}
 
 		/*

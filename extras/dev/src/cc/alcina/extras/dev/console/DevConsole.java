@@ -839,7 +839,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		devHelper.doParallelEarlyClassInit();
 		devHelper.copyTemplates();
-		devHelper.loadJbossConfig();
+		devHelper.loadConfiguration();
 		devHelper.initLightweightServices();
 		long statEndInitLightweightServices = System.currentTimeMillis();
 		devHelper.getTestLogger();
