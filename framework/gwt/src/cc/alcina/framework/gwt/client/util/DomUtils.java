@@ -1109,8 +1109,8 @@ public class DomUtils implements NodeFromXpathProvider {
 							int debug = 3;
 						} else {
 							DomNode domNode = DomNode.from(e);
-							List<DomNode> nonProcesingInstructionChildren = domNode.children
-									.stream()
+							List<DomNode> nonProcesingInstructionChildren = domNode
+									.descendants()
 									.filter(n2 -> !n2.isProcessingInstruction())
 									.collect(Collectors.toList());
 							Preconditions
