@@ -17,10 +17,10 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobScheduler.RetentionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFactory;
 
-public class TaskReapJobs extends ServerTask {
+public class TaskReapJobs extends PerformerTask {
 	@Override
 	public void run() throws Exception {
 		Stream<? extends Job> jobs = JobDomain.get().getAllJobs();

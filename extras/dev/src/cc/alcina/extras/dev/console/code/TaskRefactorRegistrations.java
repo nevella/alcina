@@ -32,9 +32,9 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskRefactorRegistrations extends ServerTask {
+public class TaskRefactorRegistrations extends PerformerTask {
 	private boolean overwriteOriginals;
 
 	private String classPathList;

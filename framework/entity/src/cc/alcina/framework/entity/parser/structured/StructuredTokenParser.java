@@ -42,7 +42,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 			context.parser = this;
 			context.start();
 			int counter = 0;
-			int all = (int) stream.getDoc().children.stream().count();
+			int all = (int) stream.getDoc().descendants().count();
 			while (stream.hasNext()) {
 				DomNode node = stream.next();
 				closeOpenNodes(node, context);

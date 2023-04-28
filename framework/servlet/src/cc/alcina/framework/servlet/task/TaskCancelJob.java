@@ -2,9 +2,9 @@ package cc.alcina.framework.servlet.task;
 
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskCancelJob extends ServerTask {
+public class TaskCancelJob extends PerformerTask {
 	private long jobId;
 
 	public long getJobId() {

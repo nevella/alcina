@@ -19,10 +19,10 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.CsvCols;
 import cc.alcina.framework.entity.util.CsvCols.CsvRow;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
-public class TaskRefactorConfigSets2 extends ServerTask {
+public class TaskRefactorConfigSets2 extends PerformerTask {
 	private String propertiesCsv;
 
 	private String appSetsTsv;

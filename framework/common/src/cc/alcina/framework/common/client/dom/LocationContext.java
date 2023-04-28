@@ -65,10 +65,10 @@ public interface LocationContext {
 
 	Location createRelativeLocation(Location location, int offset, boolean end);
 
+	DomNode getContainingNode(Location location);
+
 	Location getRelativeLocation(Location location,
 			RelativeDirection direction);
-
-	DomNode getContainingNode(Location location);
 
 	String textContent(Range range);
 }

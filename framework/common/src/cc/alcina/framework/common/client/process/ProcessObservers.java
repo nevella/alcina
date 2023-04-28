@@ -99,12 +99,12 @@ public class ProcessObservers {
 			return LooseContext.has(key());
 		}
 
-		public static String key() {
-			return ContextObservers.class.getName();
-		}
-
 		static ContextObservers get() {
 			return has() ? LooseContext.get(key()) : new ContextObservers();
+		}
+
+		static String key() {
+			return ContextObservers.class.getName();
 		}
 
 		private ProcessObservers instance = new ProcessObservers();

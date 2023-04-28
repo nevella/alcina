@@ -51,6 +51,12 @@ public class JobContext {
 	private static final String CONTEXT_EX_JOB_RESOURCES = JobContext.class
 			.getName() + ".CONTEXT_EX_JOB_RESOURCES";
 
+	/*
+	 * use only for limited, non-job devconsole testing
+	 */
+	public static final String CONTEXT_IGNORE_RESOURCES = JobContext.class
+			.getName() + ".CONTEXT_IGNORE_RESOURCES";
+
 	public static final String CONTEXT_KNOWN_OUTSIDE_JOB = JobContext.class
 			.getName() + ".CONTEXT_KNOWN_OUTSIDE_JOB";
 
@@ -76,6 +82,13 @@ public class JobContext {
 
 	public static <T> T callWithResource(JobResource resource,
 			Callable<T> callable) {
+		if (ignoreResource(resource)) {
+			try {
+				return callable.call();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 		try {
 			acquireResource(resource);
 			return callable.call();
@@ -156,13 +169,13 @@ public class JobContext {
 		return get().createProgressBuilder();
 	}
 
-	public static void releaseResourceIfExContext(JobResource match) {
-		if (has()) {
+	public static void releaseResourceIfExContext(JobResource resource) {
+		if (has() || ignoreResource(resource)) {
 		} else {
 			List<JobResource> resources = LooseContext
 					.get(CONTEXT_EX_JOB_RESOURCES);
 			JobResource jobResource = resources.stream()
-					.filter(r -> r.equals(match)).findFirst().get();
+					.filter(r -> r.equals(resource)).findFirst().get();
 			jobResource.release();
 			resources.remove(jobResource);
 		}
@@ -227,6 +240,10 @@ public class JobContext {
 		} else {
 			get().getLogger().warn(template, args);
 		}
+	}
+
+	static boolean ignoreResource(JobResource resource) {
+		return LooseContext.is(CONTEXT_IGNORE_RESOURCES);
 	}
 
 	private boolean enqueueProgressOnBackend;

@@ -2,7 +2,7 @@ package cc.alcina.extras.dev.console.test;
 
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.MvccTestEntity;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 /**
  * <h3>Done:</h3>
@@ -17,7 +17,7 @@ import cc.alcina.framework.servlet.schedule.ServerTask;
  * @author nick@alcina.cc
  *
  */
-public class MvccEntityConstraintTest extends ServerTask {
+public class MvccEntityConstraintTest extends PerformerTask {
 	@Override
 	public void run() throws Exception {
 		DomainStore.writableStore().getMvcc()

@@ -13,11 +13,11 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 @TypeSerialization(flatSerializable = false)
 @Registration(DevConsoleRunnable.class)
-public abstract class DevConsoleRunnable extends ServerTask {
+public abstract class DevConsoleRunnable extends PerformerTask {
 	public static final String CONTEXT_ACTION_RESULT = CmdExecRunnable.class
 			.getName() + ".CONTEXT_ACTION_RESULT";
 

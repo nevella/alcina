@@ -219,12 +219,5 @@ public class Measure extends Location.Range {
 				}
 			}
 		}
-
-		/*
-		 * For output, only measures with tokens of this subtype can contain
-		 * text DOM nodes
-		 */
-		public interface TextContainer extends Token {
-		}
 	}
 }

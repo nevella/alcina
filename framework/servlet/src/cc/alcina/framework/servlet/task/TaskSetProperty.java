@@ -1,9 +1,9 @@
 package cc.alcina.framework.servlet.task;
 
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskSetProperty extends ServerTask {
+public class TaskSetProperty extends PerformerTask {
 	private String key;
 
 	private String value;

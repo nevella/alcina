@@ -9,9 +9,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskReplaceSymlinksWithTargets extends ServerTask {
+public class TaskReplaceSymlinksWithTargets extends PerformerTask {
 	private String root;
 
 	public String getRoot() {
