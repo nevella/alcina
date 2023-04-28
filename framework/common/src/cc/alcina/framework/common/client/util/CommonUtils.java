@@ -344,6 +344,11 @@ public class CommonUtils {
 		return string.toLowerCase().contains(contains.toLowerCase());
 	}
 
+	public static <T> boolean
+			containsNonNull(Collection<? extends T> collection, T element) {
+		return element == null ? false : collection.contains(element);
+	}
+
 	public static boolean containsWithNull(Object obj, String lcText) {
 		if (obj == null || lcText == null) {
 			return false;

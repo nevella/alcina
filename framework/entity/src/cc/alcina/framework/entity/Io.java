@@ -63,6 +63,7 @@ public class Io {
 				String path = "/tmp/log/" + fileName;
 				write().string(content).toPath(path);
 				Ax.out("Logged to: %s ", path);
+				Ax.out("");
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
