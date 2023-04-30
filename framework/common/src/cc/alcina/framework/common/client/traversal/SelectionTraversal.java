@@ -287,7 +287,7 @@ public class SelectionTraversal
 		}
 	}
 
-	public void traverse1() {
+	public void traverseGenerations() {
 		Preconditions.checkState(generations.size() > 0);
 		GenerationTraversal firstGeneration = generations.values().iterator()
 				.next();
@@ -338,7 +338,7 @@ public class SelectionTraversal
 		}
 	}
 
-	public void traverse2() {
+	public void traverseLayers() {
 		state.layerTraversal = new DepthFirstTraversal<Layer>(state.rootLayer,
 				Layer::getChildren, false);
 		/*
