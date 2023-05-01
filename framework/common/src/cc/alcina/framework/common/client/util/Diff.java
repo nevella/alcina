@@ -26,7 +26,9 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A class to compare vectors of objects. The result of comparison is a list of
@@ -485,6 +487,88 @@ public class Diff {
 		}
 	}
 
+	public static class DiffResult {
+		public String log;
+
+		public boolean whiteSpaceOnly;
+
+		public boolean minor;
+
+		int changedLinePercent;
+
+		int changedLineCount = 0;
+
+		public boolean atEndNonMinor;
+
+		public DiffResult(String s1, String s2, boolean showInsertDeleteDeltas,
+				int nonComparisonEndLines) {
+			String[] split1 = s1.split("\n");
+			String[] split2 = s2.split("\n");
+			Change change = new Diff(split1, split2).diff(Diff.forwardScript);
+			FormatBuilder format = new FormatBuilder();
+			whiteSpaceOnly = true;
+			minor = true;
+			atEndNonMinor = false;
+			while (change != null) {
+				format.format("(%s, %s): -%s, +%s\n", change.line0 + 1,
+						change.line1 + 1, change.deleted, change.inserted);
+				changedLineCount += Math.max(change.deleted, change.inserted);
+				String deleted = "";
+				String inserted = "";
+				for (int idx = 0; idx < change.deleted; idx++) {
+					String deleteLine = split1[change.line0 + idx];
+					deleted += deleteLine;
+					if (showInsertDeleteDeltas) {
+						format.format("\t---%s: %s\n",
+								CommonUtils.padStringRight(
+										String.valueOf(change.line0 + idx + 1),
+										8, ' '),
+								CommonUtils.hangingIndent(deleteLine, true, 2));
+					}
+				}
+				for (int idx = 0; idx < change.inserted; idx++) {
+					String insertLine = split2[change.line1 + idx];
+					inserted += insertLine;
+					if (showInsertDeleteDeltas) {
+						format.format("\t+++%s: %s\n",
+								CommonUtils.padStringRight(
+										String.valueOf(change.line1 + idx + 1),
+										8, ' '),
+								CommonUtils.hangingIndent(insertLine, true, 2));
+					}
+				}
+				deleted = Ax.ntrim(deleted);
+				inserted = Ax.ntrim(inserted);
+				if (Objects.equals(deleted, inserted)) {
+				} else {
+					whiteSpaceOnly = false;
+					if (deleted.contains(" ") || inserted.contains(" ")) {
+						DiffResult lineResult = new DiffResult(
+								deleted.replace(" ", "\n"),
+								inserted.replace(" ", "\n"), false, 0);
+						if (lineResult.changedLinePercent > 50) {
+							minor = false;
+						}
+						format.format(
+								"--------------------\nWord change: %s%\n%s\n%s\n%s\n--------------------\n",
+								lineResult.changedLinePercent, deleted,
+								inserted,
+								new SingleLineDiff(deleted, inserted).text);
+					}
+				}
+				atEndNonMinor |= !minor && (change.line0
+						+ change.deleted > split1.length - 2
+								- nonComparisonEndLines
+						|| change.line1 + change.inserted > split2.length - 2
+								- nonComparisonEndLines);
+				change = change.link;
+			}
+			int lineCount = Math.max(1, Math.max(split1.length, split2.length));
+			changedLinePercent = (100 * changedLineCount) / lineCount;
+			log = format.toString();
+		}
+	}
+
 	public interface ScriptBuilder {
 		/**
 		 * Scan the tables of which lines are inserted and deleted, producing an
@@ -502,6 +586,52 @@ public class Diff {
 		 */
 		public Change build_script(boolean[] changed0, int len0,
 				boolean[] changed1, int len1);
+	}
+
+	public static class SingleLineDiff {
+		public String text;
+
+		public SingleLineDiff(String s1, String s2) {
+			String[] split1 = s1.split(" ");
+			String[] split2 = s2.split(" ");
+			String join = "";
+			Map<Integer, Integer> split1Offsets = new LinkedHashMap<>();
+			split1Offsets.put(0, 0);
+			for (String split : split1) {
+				if (join.length() > 0) {
+					join += " ";
+				}
+				join += split;
+				split1Offsets.put(split1Offsets.size(), join.length());
+			}
+			Change change = new Diff(split1, split2).diff(Diff.forwardScript);
+			FormatBuilder format = new FormatBuilder();
+			int idx2 = 0;
+			while (change != null) {
+				format.append(
+						s1.substring(idx2, split1Offsets.get(change.line0)));
+				int modCount = 0;
+				for (int idx = 0; idx < change.deleted; idx++) {
+					String deleteWord = split1[change.line0 + idx];
+					if (modCount++ > 0) {
+						format.append(" -- ");
+					}
+					format.format("-:>>%s<<", deleteWord);
+				}
+				for (int idx = 0; idx < change.inserted; idx++) {
+					String insertWord = split2[change.line1 + idx];
+					if (modCount++ > 0) {
+						format.append(" -- ");
+					}
+					format.format("+:>>%s<<", insertWord);
+				}
+				format.append(" ");
+				idx2 = split1Offsets.get(change.line0 + change.deleted);
+				change = change.link;
+			}
+			format.append(s1.substring(idx2));
+			text = format.toString();
+		}
 	}
 
 	/**
