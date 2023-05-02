@@ -13,6 +13,10 @@ import cc.alcina.framework.servlet.schedule.ServerTask;
 public class TaskIncrementalDelete extends ServerTask {
 	public String path;
 
+	public String getPath() {
+		return this.path;
+	}
+
 	@Override
 	public void run() throws Exception {
 		FileVisitor<? super Path> visitor = new SimpleFileVisitor<Path>() {
@@ -25,5 +29,9 @@ public class TaskIncrementalDelete extends ServerTask {
 			}
 		};
 		Files.walkFileTree(Path.of(path), visitor);
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 }

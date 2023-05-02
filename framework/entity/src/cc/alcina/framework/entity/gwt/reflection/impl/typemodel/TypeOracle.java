@@ -159,6 +159,10 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle
 		throw new UnsupportedOperationException();
 	}
 
+	public JClassType getType(Type jdkType) {
+		return getType(jdkType, 0);
+	}
+
 	@Override
 	public synchronized JClassType[] getTypes() {
 		throw new UnsupportedOperationException();
@@ -237,10 +241,6 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle
 		} else {
 			return new JWildcardType(this, jdkType);
 		}
-	}
-
-	JClassType getType(Type jdkType) {
-		return getType(jdkType, 0);
 	}
 
 	JClassType getType(Type jdkType, int ordinal) {
