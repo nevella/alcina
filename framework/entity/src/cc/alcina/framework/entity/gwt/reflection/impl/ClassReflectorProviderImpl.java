@@ -35,7 +35,7 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 	}
 
 	private ClassReflector getClassReflector0(Class clazz) throws Exception {
-		JType type = typeOracle.parse(clazz.getCanonicalName());
+		JType type = typeOracle.getType(clazz);
 		ClassReflector reflector = null;
 		ClassReflection reflection = new ClassReflection(type,
 				visibleAnnotationFilter, typeOracle);
