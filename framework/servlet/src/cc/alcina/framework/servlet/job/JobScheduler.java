@@ -21,8 +21,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobRelation;
@@ -45,7 +43,6 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
-import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
@@ -53,7 +50,6 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Subque
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.servlet.job.JobScheduler.ScheduleEvent.Type;
 
 /**
  * <h2>TODO</h2>
@@ -86,7 +82,7 @@ public class JobScheduler {
 			new ScheduleEvent(v));
 
 	private TopicListener<Void> futureConsistencyEventListener = v -> enqueueEvent(
-			new ScheduleEvent(Type.FUTURE_CONSISTENCY_EVENT));
+			new ScheduleEvent(ScheduleEventType.FUTURE_CONSISTENCY_EVENT));
 
 	Map<Job, JobAllocator> allocators = new ConcurrentHashMap<>();
 
@@ -94,32 +90,36 @@ public class JobScheduler {
 
 	TowardsAMoreDesirableSituation aMoreDesirableSituation;
 
+	private JobEnvironment environment;
+
 	JobScheduler(JobRegistry jobRegistry) {
 		this.jobRegistry = jobRegistry;
+		this.environment = jobRegistry.getEnvironment();
 		JobDomain.get().queueEvents.add(queueEventListener);
 		JobDomain.get().futureConsistencyEvents
 				.add(futureConsistencyEventListener);
 		JobDomain.get().fireInitialAllocatorQueueCreationEvents();
 		thread = new ScheduleJobsThread();
 		thread.start();
-		/*
-		 * backup every-5-minute timer, FIXME - mvcc.jobs.1a - remove?
-		 */
-		LocalDateTime now = LocalDateTime.now();
-		long untilNext5MinutesMillis = ChronoUnit.MILLIS.between(now,
-				now.truncatedTo(ChronoUnit.MINUTES)
-						.plusMinutes(5 - now.getMinute() % 5));
-		timer.scheduleAtFixedRate(new TimerTask() {
-			@Override
-			public void run() {
-				fireWakeup();
-			}
-		}, untilNext5MinutesMillis, 5 * TimeConstants.ONE_MINUTE_MS);
-		aMoreDesirableSituation = new TowardsAMoreDesirableSituation(this);
-		aMoreDesirableSituation.start();
-		MethodContext.instance().withWrappingTransaction()
-				.run(() -> enqueueEvent(
-						new ScheduleEvent(Type.APPLICATION_STARTUP)));
+		if (environment.isPersistent()) {
+			/*
+			 * backup every-5-minute timer, FIXME - mvcc.jobs.1a - remove?
+			 */
+			LocalDateTime now = LocalDateTime.now();
+			long untilNext5MinutesMillis = ChronoUnit.MILLIS.between(now,
+					now.truncatedTo(ChronoUnit.MINUTES)
+							.plusMinutes(5 - now.getMinute() % 5));
+			timer.scheduleAtFixedRate(new TimerTask() {
+				@Override
+				public void run() {
+					fireWakeup();
+				}
+			}, untilNext5MinutesMillis, 5 * TimeConstants.ONE_MINUTE_MS);
+			aMoreDesirableSituation = new TowardsAMoreDesirableSituation(this);
+			aMoreDesirableSituation.start();
+		}
+		environment.runInTransaction(() -> enqueueEvent(
+				new ScheduleEvent(ScheduleEventType.APPLICATION_STARTUP)));
 	}
 
 	public JobAllocator awaitAllocator(Job job) {
@@ -193,7 +193,7 @@ public class JobScheduler {
 	}
 
 	public void stopService() {
-		events.add(new ScheduleEvent(Type.SHUTDOWN));
+		events.add(new ScheduleEvent(ScheduleEventType.SHUTDOWN));
 	}
 
 	private void futuresToPending(ScheduleEvent event) {
@@ -228,13 +228,12 @@ public class JobScheduler {
 	}
 
 	private void processEvent(ScheduleEvent event) {
-		MethodContext.instance().withWrappingTransaction()
-				.withRootPermissions(true).run(() -> processEvent0(event));
+		environment.processScheduleEvent(() -> this.processEvent0(event));
 	}
 
 	private void processEvent0(ScheduleEvent event) {
 		logger.trace("Received event {}", event);
-		if (event.type == Type.WAKEUP) {
+		if (event.type == ScheduleEventType.WAKEUP) {
 			if (nextScheduledWakeup != null && nextScheduledWakeup
 					.compareTo(LocalDateTime.now()) <= 0) {
 				nextScheduledWakeup = null;
@@ -261,7 +260,7 @@ public class JobScheduler {
 						Transaction.commit();
 					});
 		}
-		if (event.type == Type.SHUTDOWN) {
+		if (event.type == ScheduleEventType.SHUTDOWN) {
 			// FIXME - mvcc.jobs.1a - shutdown all fixed pools
 			allocators.values()
 					.forEach(allocator -> allocator.fireDeletedEvent());
@@ -270,7 +269,7 @@ public class JobScheduler {
 			finished = true;
 			return;
 		}
-		if (event.type == Type.ALLOCATION_EVENT) {
+		if (event.type == ScheduleEventType.ALLOCATION_EVENT) {
 			AllocationQueue queue = event.queueEvent.queue;
 			// FIXME - jobs - review exceptions. Were possibly due to (possibly
 			// blocking) TowardsAMoreDesirableSituation call
@@ -318,8 +317,8 @@ public class JobScheduler {
 			if (schedule == null) {
 				continue;
 			}
-			LocalDateTime nextForTaskClass = schedule
-					.getNext(event.type == Type.APPLICATION_STARTUP);
+			LocalDateTime nextForTaskClass = schedule.getNext(
+					event.type == ScheduleEventType.APPLICATION_STARTUP);
 			if (nextForTaskClass == null) {
 				continue;
 			}
@@ -368,7 +367,7 @@ public class JobScheduler {
 			if (wakeup.isBefore(LocalDateTime.now())) {
 				logger.info("Firing wakeup - wakeup time {} is before now",
 						wakeup);
-				events.add(new ScheduleEvent(Type.WAKEUP));
+				events.add(new ScheduleEvent(ScheduleEventType.WAKEUP));
 			} else {
 				timer.schedule(new TimerTask() {
 					@Override
@@ -388,13 +387,15 @@ public class JobScheduler {
 	}
 
 	void enqueueLeaderChangedEvent() {
-		MethodContext.instance().withWrappingTransaction().call(
-				() -> enqueueEvent(new ScheduleEvent(Type.LEADER_CHANGED)));
+		MethodContext.instance().withWrappingTransaction()
+				.call(() -> enqueueEvent(
+						new ScheduleEvent(ScheduleEventType.LEADER_CHANGED)));
 	}
 
 	void fireWakeup() {
 		MethodContext.instance().withWrappingTransaction()
-				.run(() -> enqueueEvent(new ScheduleEvent(Type.WAKEUP)));
+				.run(() -> enqueueEvent(
+						new ScheduleEvent(ScheduleEventType.WAKEUP)));
 	}
 
 	void processOrphans() {
@@ -764,7 +765,7 @@ public class JobScheduler {
 					 * event is completely processed (and visible to this
 					 * thread/tx).
 					 */
-					DomainStore.waitUntilCurrentRequestsProcessed();
+					environment.waitUntilCurrentRequestsProcessed();
 					processEvent(event);
 				} catch (Throwable e) {
 					e.printStackTrace();
@@ -793,24 +794,22 @@ public class JobScheduler {
 		}
 	}
 
-	static class ScheduleEvent {
+	class ScheduleEvent {
 		AllocationQueue.Event queueEvent;
 
-		Type type;
+		ScheduleEventType type;
 
 		Transaction transaction;
 
 		ScheduleEvent(AllocationQueue.Event queueEvent) {
-			this.transaction = Transaction.current();
-			Preconditions.checkNotNull(this.transaction);
+			this.transaction = environment.getScheduleEventTransaction();
 			this.queueEvent = queueEvent;
-			this.type = Type.ALLOCATION_EVENT;
+			this.type = ScheduleEventType.ALLOCATION_EVENT;
 		}
 
-		ScheduleEvent(Type type) {
-			if (type != Type.SHUTDOWN) {
-				this.transaction = Transaction.current();
-				Preconditions.checkNotNull(this.transaction);
+		ScheduleEvent(ScheduleEventType type) {
+			if (type != ScheduleEventType.SHUTDOWN) {
+				this.transaction = environment.getScheduleEventTransaction();
 			}
 			this.type = type;
 		}
@@ -825,20 +824,20 @@ public class JobScheduler {
 		public String toString() {
 			return GraphProjection.fieldwiseToStringOneLine(this);
 		}
+	}
 
-		enum Type {
-			APPLICATION_STARTUP, WAKEUP, ALLOCATION_EVENT,
-			FUTURE_CONSISTENCY_EVENT, SHUTDOWN, LEADER_CHANGED;
+	enum ScheduleEventType {
+		APPLICATION_STARTUP, WAKEUP, ALLOCATION_EVENT, FUTURE_CONSISTENCY_EVENT,
+		SHUTDOWN, LEADER_CHANGED;
 
-			public boolean isRefreshFuturesEvent() {
-				switch (this) {
-				case APPLICATION_STARTUP:
-				case WAKEUP:
-				case LEADER_CHANGED:
-					return true;
-				}
-				return false;
+		public boolean isRefreshFuturesEvent() {
+			switch (this) {
+			case APPLICATION_STARTUP:
+			case WAKEUP:
+			case LEADER_CHANGED:
+				return true;
 			}
+			return false;
 		}
 	}
 }

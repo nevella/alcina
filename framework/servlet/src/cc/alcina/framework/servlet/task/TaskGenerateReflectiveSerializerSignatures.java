@@ -55,6 +55,9 @@ import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatur
  * - non-tranient fields have getter/setters
  *
  * - non-transient properties have serializable types
+ * 
+ * In production environments, an exception when running this task will cancel
+ * startup (since there are potential serialization issues)
  */
 public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 	public transient ReflectiveSerializableSignatures signatures = new ReflectiveSerializableSignatures();

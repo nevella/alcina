@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
@@ -7,10 +9,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
@@ -42,6 +48,31 @@ public class Mvcc {
 
 	public static DomainStore getStore(Entity entity) {
 		return DomainStore.stores().storeFor(entity.entityClass());
+	}
+
+	public static void initialiseTransactionEnvironment() {
+		// FIXME - adjunct - generalise most 'tx map or not txmap' questions to
+		// the environment - beginning here with tx creator registration
+		Registry.register().add(
+				BaseProjectionSupportMvcc.BplDelegateMapCreatorTransactional.class,
+				List.of(BplDelegateMapCreator.class),
+				Registration.Implementation.INSTANCE,
+				Registration.Priority.PREFERRED_LIBRARY);
+		Registry.register().add(
+				BaseProjectionSupportMvcc.TreeMapRevCreatorImpl.class,
+				List.of(CollectionCreators.TreeMapRevCreator.class),
+				Registration.Implementation.INSTANCE,
+				Registration.Priority.PREFERRED_LIBRARY);
+		Registry.register().add(
+				BaseProjectionSupportMvcc.TreeMapCreatorImpl.class,
+				List.of(CollectionCreators.TreeMapCreator.class),
+				Registration.Implementation.INSTANCE,
+				Registration.Priority.PREFERRED_LIBRARY);
+		Registry.register().add(
+				BaseProjectionSupportMvcc.MultiTrieCreatorImpl.class,
+				List.of(CollectionCreators.MultiTrieCreator.class),
+				Registration.Implementation.INSTANCE,
+				Registration.Priority.PREFERRED_LIBRARY);
 	}
 
 	public static boolean isMvccObject(Entity entity) {

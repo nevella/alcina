@@ -46,6 +46,9 @@ class SchedulingPermissions {
 		if (AppPersistenceBase.isInstanceReadOnly()) {
 			return false;
 		}
+		if (!JobRegistry.get().getEnvironment().canCreateFutures()) {
+			return false;
+		}
 		boolean production = EntityLayerUtils.isProduction();
 		boolean scheduleClusterJobs = production
 				|| Configuration.is(JobScheduler.class, "testSchedules");

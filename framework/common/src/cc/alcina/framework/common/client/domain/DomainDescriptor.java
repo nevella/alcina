@@ -57,12 +57,6 @@ public abstract class DomainDescriptor {
 		perClass.put(classDescriptor.clazz, classDescriptor);
 	}
 
-	public void addClasses(Class[] classes) {
-		for (Class clazz : classes) {
-			perClass.put(clazz, new DomainClassDescriptor(clazz));
-		}
-	}
-
 	public void addComplexFilter(ComplexFilter complexFilter) {
 		complexFilters.add(complexFilter);
 	}
@@ -91,6 +85,16 @@ public abstract class DomainDescriptor {
 		preProvideTasks.stream()
 				.forEach(task -> task.registerStore(domainStore));
 		postLoadTasks.stream().forEach(task -> task.registerStore(domainStore));
+	}
+
+	protected DomainClassDescriptor<?> addClass(Class clazz) {
+		return perClass.put(clazz, new DomainClassDescriptor(clazz));
+	}
+
+	protected void addClasses(Class[] classes) {
+		for (Class clazz : classes) {
+			addClass(clazz);
+		}
 	}
 
 	public static interface DomainStoreTask {

@@ -19,6 +19,11 @@ import cc.alcina.framework.common.client.util.trie.MultiTrie;
 import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
+/*
+ * Because these collection creators subclass their parents, but should only be
+ * used if in a transactional environment, their declarative registrations are
+ * removed and added by Mvcc.init code during transactional environment setup
+ */
 public class BaseProjectionSupportMvcc {
 	public static class BplDelegateMapCreatorNonTransactional
 			implements DelegateMapCreator {
@@ -30,7 +35,7 @@ public class BaseProjectionSupportMvcc {
 
 	@Registration(
 		value = BplDelegateMapCreator.class,
-		priority = Registration.Priority.PREFERRED_LIBRARY)
+		priority = Registration.Priority.REMOVE)
 	public static class BplDelegateMapCreatorTransactional
 			extends BplDelegateMapCreator {
 		private boolean nonTransactionalDomain;
@@ -78,7 +83,7 @@ public class BaseProjectionSupportMvcc {
 
 	@Registration(
 		value = CollectionCreators.MultiTrieCreator.class,
-		priority = Registration.Priority.PREFERRED_LIBRARY)
+		priority = Registration.Priority.REMOVE)
 	public static class MultiTrieCreatorImpl
 			extends CollectionCreators.MultiTrieCreator {
 		@Override
@@ -106,7 +111,7 @@ public class BaseProjectionSupportMvcc {
 
 	@Registration(
 		value = CollectionCreators.TreeMapCreator.class,
-		priority = Registration.Priority.PREFERRED_LIBRARY)
+		priority = Registration.Priority.REMOVE)
 	public static class TreeMapCreatorImpl
 			extends CollectionCreators.TreeMapCreator {
 		private boolean pureTransactional;
@@ -143,9 +148,10 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
+	// force imperative registration
 	@Registration(
 		value = CollectionCreators.TreeMapRevCreator.class,
-		priority = Registration.Priority.PREFERRED_LIBRARY)
+		priority = Registration.Priority.REMOVE)
 	public static class TreeMapRevCreatorImpl
 			extends CollectionCreators.TreeMapRevCreator {
 		@Override

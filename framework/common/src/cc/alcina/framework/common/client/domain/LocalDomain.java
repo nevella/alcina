@@ -48,6 +48,8 @@ public class LocalDomain {
 			this.domainDescriptor.initialise();
 			for (DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
 					.values()) {
+				descriptor.setDomainDescriptor(domainDescriptor);
+				descriptor.initialise();
 				for (DomainStoreLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
 					lookupDescriptor.createLookup();
 				}
@@ -114,14 +116,6 @@ public class LocalDomain {
 			} else {
 				throw new IllegalArgumentException();
 			}
-		}
-	}
-
-	public static class Transactions {
-		/*
-		 * TODO - this will normally be called in a client environment
-		 */
-		public static void commit() {
 		}
 	}
 }

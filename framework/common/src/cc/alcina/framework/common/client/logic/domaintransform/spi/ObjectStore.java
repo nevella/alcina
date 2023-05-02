@@ -6,6 +6,13 @@ import java.util.Map;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 
+/**
+ * FIXME - TM - Probably switch to LocalDomainStore for almost all of this, and
+ * have a client tm just be backed by a DetachedEntityCache (so can be removed)
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public interface ObjectStore {
 	// FIXME - dirndl 1x2 - in application code, tend to replace with
 	// Domain.find
@@ -16,9 +23,13 @@ public interface ObjectStore {
 
 	void changeMapping(Entity obj, long id, long localId);
 
-	boolean contains(Class<? extends Entity> clazz, long id);
+	default boolean contains(Class<? extends Entity> clazz, long id) {
+		return contains(new EntityLocator(clazz, id, 0));
+	}
 
-	boolean contains(Entity obj);
+	default boolean contains(Entity obj) {
+		return contains(obj.toLocator());
+	}
 
 	default boolean contains(EntityLocator locator) {
 		return getObject(locator) != null;

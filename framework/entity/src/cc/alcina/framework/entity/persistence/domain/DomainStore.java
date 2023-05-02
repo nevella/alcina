@@ -837,15 +837,15 @@ public class DomainStore implements IDomainStore {
 		return new DetachedCacheObjectStore(new DomainStoreEntityCache());
 	}
 
-	void index(Entity obj, boolean add, EntityCollation entityCollation,
+	void index(Entity entity, boolean add, EntityCollation entityCollation,
 			boolean committed) {
-		Class<? extends Entity> clazz = obj.entityClass();
+		Class<? extends Entity> clazz = entity.entityClass();
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
 		if (itemDescriptor != null) {
-			itemDescriptor.index(obj, add, committed, entityCollation);
+			itemDescriptor.index(entity, add, committed, entityCollation);
 			itemDescriptor
-					.getDependentObjectsWithDerivedProjections(obj,
+					.getDependentObjectsWithDerivedProjections(entity,
 							entityCollation == null ? null
 									: entityCollation
 											.getTransformedPropertyNames())

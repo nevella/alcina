@@ -155,7 +155,7 @@ public class CommitToStorageTransformListener
 
 	private boolean paused;
 
-	private int localRequestId = 1;
+	protected int localRequestId = 1;
 
 	private List<DomainTransformEvent> synthesisedEvents = new ArrayList<>();
 

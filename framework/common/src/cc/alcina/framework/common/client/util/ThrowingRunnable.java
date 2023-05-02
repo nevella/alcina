@@ -46,6 +46,15 @@ public interface ThrowingRunnable {
 		}
 	}
 
+	public static ThrowingRunnable wrapRunnable(Runnable runnable) {
+		return new ThrowingRunnable() {
+			@Override
+			public void run() throws Exception {
+				runnable.run();
+			}
+		};
+	}
+
 	public void run() throws Exception;
 
 	default ThrowingSupplier<Void> asSupplier() {

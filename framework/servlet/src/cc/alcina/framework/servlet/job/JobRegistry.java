@@ -898,8 +898,9 @@ public class JobRegistry {
 			if (task instanceof TransientFieldTask) {
 				TransientFieldTasks.get().registerTask(job, task);
 			}
-			task.onJobCreate(job);
 			lastCreated = job;
+			task.onJobCreate(job);
+			environment.onJobCreated(job);
 			LogCreation logCreation = LogCreation.valueOf(
 					Configuration.get(JobRegistry.class, "logJobCreation"));
 			switch (logCreation) {

@@ -9,6 +9,11 @@ public interface IDomainStore extends MemoryStatProvider {
 
 	public static boolean isNonTransactionalDomain() {
 		return LooseContext
-				.is(IDomainStore.CONTEXT_NON_TRANSACTIONAL_DOMAIN_INIT);
+				.is(IDomainStore.CONTEXT_NON_TRANSACTIONAL_DOMAIN_INIT)
+				|| State.nonTransactional;
+	}
+
+	public static class State {
+		public static boolean nonTransactional;
 	}
 }

@@ -1,11 +1,13 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.IDomainStore;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.DegenerateCreator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -47,6 +49,29 @@ public class CollectionCreatorsMvcc {
 				return new Multiset<>();
 			} else {
 				return new TransactionalMultiset<>(keyClass, valueClass);
+			}
+		}
+	}
+
+	@Registration(
+		value = CollectionCreators.TransactionalSetCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class DomainStoreSetCreator<E extends Entity>
+			implements CollectionCreators.TransactionalSetCreator<E> {
+		private boolean nonTransactionalDomain;
+
+		public DomainStoreSetCreator() {
+			this.nonTransactionalDomain = IDomainStore
+					.isNonTransactionalDomain();
+		}
+
+		@Override
+		public Set<E> create(Class<E> valueClass) {
+			Preconditions.checkNotNull(valueClass);
+			if (nonTransactionalDomain) {
+				return new LinkedHashSet<>();
+			} else {
+				return new TransactionalSet<>(valueClass);
 			}
 		}
 	}

@@ -68,6 +68,7 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMet
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.DbAppender;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
@@ -402,6 +403,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				Collections.singletonList(AlcinaBeanSerializer.class.getName()),
 				Registration.Implementation.INSTANCE,
 				Registration.Priority._DEFAULT);
+		Mvcc.initialiseTransactionEnvironment();
 		initLoggers();
 	}
 

@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
+import cc.alcina.framework.common.client.domain.DomainDescriptor;
 import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.ReverseDateProjection;
@@ -49,22 +50,21 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
-import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.BaseProjectionSupportMvcc.TreeMapCreatorImpl;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
-import cc.alcina.framework.entity.persistence.mvcc.TransactionalMultiset;
-import cc.alcina.framework.entity.persistence.mvcc.TransactionalSet;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
+import cc.alcina.framework.servlet.local.LocalDomainStore;
 
 /**
  * <p>
@@ -207,7 +207,7 @@ public class JobDomain {
 	private Set<AllocationQueue> queuesWithBufferedEvents = Collections
 			.synchronizedSet(new LinkedHashSet<>());
 
-	public void configureDescriptor(DomainStoreDescriptor descriptor) {
+	public void configureDescriptor(DomainDescriptor descriptor) {
 		jobImplClass = PersistentImpl.getImplementation(Job.class);
 		jobDescriptor = new JobDescriptor();
 		descriptor.addClassDescriptor(jobDescriptor);
@@ -341,6 +341,12 @@ public class JobDomain {
 	public void onAppShutdown() {
 		stateMessageEventHandler.finished = true;
 		stateMessageEventQueue.add(new ArrayList<>());
+	}
+
+	public void onLocalDomainWarmupComplete(LocalDomainStore localDomainStore) {
+		localDomainStore.getPersistenceEvents()
+				.addDomainTransformPersistenceListener(
+						bufferedEventFiringListener);
 	}
 
 	public void onWarmupComplete(DomainStore domainStore) {
@@ -854,14 +860,19 @@ public class JobDomain {
 	}
 
 	class AllocationQueueProjection implements DomainProjection<Job> {
-		private TransactionalMultiset<Class, Job> futuresByTask = new TransactionalMultiset(
-				Class.class, PersistentImpl.getImplementation(Job.class));
+		private Multiset<Class, Set<Job>> futuresByTask = Registry
+				.impl(CollectionCreators.MultisetCreator.class)
+				.create(Class.class,
+						PersistentImpl.getImplementation(Job.class));
 
-		private TransactionalMultiset<Class, Job> incompleteTopLevelByTask = new TransactionalMultiset(
-				Class.class, PersistentImpl.getImplementation(Job.class));
+		private Multiset<Class, Set<Job>> incompleteTopLevelByTask = Registry
+				.impl(CollectionCreators.MultisetCreator.class)
+				.create(Class.class,
+						PersistentImpl.getImplementation(Job.class));
 
-		private TransactionalSet<Job> undeserializableJobs = new TransactionalSet(
-				PersistentImpl.getImplementation(Job.class));
+		private Set<Job> undeserializableJobs = Registry
+				.impl(CollectionCreators.TransactionalSetCreator.class)
+				.create(PersistentImpl.getImplementation(Job.class));
 
 		private Set<AllocationQueue> ensuredQueues = new LinkedHashSet<>();
 

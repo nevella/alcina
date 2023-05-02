@@ -140,6 +140,10 @@ public class CollectionCreators {
 		}
 	}
 
+	public static interface TransactionalSetCreator<E extends Entity> {
+		public Set<E> create(Class<E> valueClass);
+	}
+
 	@Registration(TreeMapCreator.class)
 	public static class TreeMapCreator implements MapCreator {
 		public List<Class> types;
