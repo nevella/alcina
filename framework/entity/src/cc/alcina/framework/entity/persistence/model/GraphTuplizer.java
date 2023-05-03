@@ -157,7 +157,7 @@ public class GraphTuplizer {
 			dte.setNewValue(oValue);
 			dte.setObjectClass(object.getClass());
 			dte.setPropertyName(field.name);
-			TransformManager.get().convertToTargetObject(dte);
+			TransformManager.convertToTargetObject(dte);
 			return dte.getNewStringValue();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

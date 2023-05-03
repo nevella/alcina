@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.Job.ResourceRecord;
@@ -43,7 +44,6 @@ import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.JobStateMessage;
-import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.job.TransientFieldTask;
 import cc.alcina.framework.common.client.lock.JobResource;
@@ -54,7 +54,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
@@ -75,7 +74,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -285,7 +283,7 @@ public class JobRegistry {
 
 	public Job await(Job job, long maxTime) throws InterruptedException {
 		ContextAwaiter awaiter = ensureAwaiter(job);
-		environment.commit();
+		TransactionEnvironment.get().commit();
 		awaiter.await(maxTime);
 		JobContext jobContext = activeJobs.get(job);
 		contextAwaiters.remove(job);
@@ -748,7 +746,7 @@ public class JobRegistry {
 	void performJob(Job job, boolean queueJobPersistence,
 			LauncherThreadState launcherThreadState) {
 		try {
-			if (Transaction.isInTransaction()) {
+			if (environment.isInTransactionMultipleTxEnvironment()) {
 				logger.warn(
 						"DEVEX::0 - JobRegistry.performJobInTx - begin with open transaction "
 								+ " - {}\nuncommitted transforms:\n{}",
@@ -771,15 +769,8 @@ public class JobRegistry {
 					launcherThreadState.contextClassLoader);
 			launcherThreadState.copyContext
 					.forEach((k, v) -> LooseContext.set(k, v));
-			Transaction.begin();
-			Task task = job.getTask();
-			if (task instanceof NonRootTask) {
-				ThreadedPermissionsManager.cast().pushUser(
-						((NonRootTask) task).provideIUser(job),
-						LoginState.LOGGED_IN);
-			} else {
-				ThreadedPermissionsManager.cast().pushSystemUser();
-			}
+			TransactionEnvironment.get().begin();
+			environment.prepareUserContext(job);
 			performJob0(job, queueJobPersistence, launcherThreadState);
 			logger.info("Job complete - {}", job);
 		} catch (RuntimeException e) {
@@ -795,7 +786,7 @@ public class JobRegistry {
 			}
 		} finally {
 			PermissionsManager.get().popUser();
-			Transaction.end();
+			TransactionEnvironment.get().end();
 			LooseContext.pop();
 			LooseContext.confirmDepth(0);
 		}

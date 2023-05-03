@@ -115,7 +115,7 @@ public class PersistedTransformUndo {
 					Object value = pd.getReadMethod().invoke(instance,
 							new Object[0]);
 					dte.setNewValue(value);
-					TransformManager.get().convertToTargetObject(dte);
+					TransformManager.convertToTargetObject(dte);
 					dte.setTransformType(value == null
 							? TransformType.NULL_PROPERTY_REF
 							: TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);

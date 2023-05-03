@@ -1,11 +1,12 @@
 package cc.alcina.framework.servlet.job;
 
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.local.LocalDomainQueue;
-import cc.alcina.framework.servlet.local.LocalDomainStore;
 
 /**
  * A non-mvcc environment
@@ -14,20 +15,12 @@ import cc.alcina.framework.servlet.local.LocalDomainStore;
  *
  */
 public class JobEnvironmentNonTx implements JobEnvironment {
-	private LocalDomainStore localDomainStore;
-
-	public JobEnvironmentNonTx(LocalDomainStore localDomainStore) {
-		this.localDomainStore = localDomainStore;
+	public JobEnvironmentNonTx() {
 	}
 
 	@Override
 	public boolean canCreateFutures() {
 		return false;
-	}
-
-	@Override
-	public void commit() {
-		localDomainStore.commit();
 	}
 
 	@Override
@@ -51,17 +44,32 @@ public class JobEnvironmentNonTx implements JobEnvironment {
 	 */
 	@Override
 	public void onJobCreated(Job job) {
-		commit();
+		TransactionEnvironment.get().commit();
+	}
+
+	@Override
+	public void prepareUserContext(Job job) {
+		PermissionsManager.get().pushCurrentUser();
 	}
 
 	@Override
 	public void processScheduleEvent(Runnable runnable) {
-		runInTransaction(ThrowingRunnable.wrapRunnable(runnable));
+		runInTransactionThread(runnable);
 	}
 
 	@Override
 	public void runInTransaction(ThrowingRunnable runnable) {
 		LocalDomainQueue.run(runnable);
+	}
+
+	@Override
+	public void runInTransactionThread(Runnable runnable) {
+		runInTransaction(ThrowingRunnable.wrapRunnable(runnable));
+	}
+
+	@Override
+	public void setAllocatorThreadName(String name) {
+		// NOOP
 	}
 
 	@Override

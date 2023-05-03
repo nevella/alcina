@@ -91,6 +91,8 @@ public class DomainTransformEvent
 
 	private CommitType commitType = CommitType.TO_LOCAL_BEAN;
 
+	// misnomer (I didn't really understand the Date class at the time of
+	// writing) - should just be 'date'
 	private Date utcDate;
 
 	private transient Object oldValue;
@@ -299,6 +301,56 @@ public class DomainTransformEvent
 	@Override
 	public int hashCode() {
 		return (int) (eventId != 0 ? eventId : super.hashCode());
+	}
+
+	public DomainTransformEvent invert() {
+		// deliberately does not copy object version numbers (code that uses
+		// them must handle inversion)
+		DomainTransformEvent result = new DomainTransformEvent();
+		result.propertyName = propertyName;
+		result.objectClass = objectClass;
+		result.objectClassName = objectClassName;
+		result.objectClassRef = objectClassRef;
+		result.objectId = objectId;
+		result.objectLocalId = objectLocalId;
+		// (don't create a new event)
+		result.eventId = eventId;
+		result.utcDate = utcDate;
+		result.commitType = commitType;
+		result.newValue = oldValue;
+		result.oldValue = newValue;
+		switch (transformType) {
+		case CHANGE_PROPERTY_REF:
+		case CHANGE_PROPERTY_SIMPLE_VALUE:
+		case NULL_PROPERTY_REF:
+			if (result.newValue == null) {
+				result.transformType = TransformType.NULL_PROPERTY_REF;
+			} else {
+				TransformManager.convertToTargetObject(result);
+				result.transformType = result.newValue instanceof Entity
+						? TransformType.CHANGE_PROPERTY_REF
+						: TransformType.CHANGE_PROPERTY_SIMPLE_VALUE;
+			}
+			break;
+		case ADD_REF_TO_COLLECTION:
+			copyValueRefs(result);
+			result.transformType = TransformType.REMOVE_REF_FROM_COLLECTION;
+			break;
+		case REMOVE_REF_FROM_COLLECTION:
+			copyValueRefs(result);
+			result.transformType = TransformType.REMOVE_REF_FROM_COLLECTION;
+			break;
+		case CREATE_OBJECT:
+			result.transformType = TransformType.DELETE_OBJECT;
+			break;
+		case DELETE_OBJECT:
+			result.transformType = TransformType.CREATE_OBJECT;
+			break;
+		default:
+			// none, but future-proofing
+			throw new UnsupportedOperationException();
+		}
+		return result;
 	}
 
 	@Transient
@@ -531,5 +583,13 @@ public class DomainTransformEvent
 
 	public EntityLocator toValueLocator() {
 		return EntityLocator.valueLocator(this);
+	}
+
+	private void copyValueRefs(DomainTransformEvent result) {
+		result.valueClass = valueClass;
+		result.valueClassName = valueClassName;
+		result.valueClassRef = valueClassRef;
+		result.valueId = valueId;
+		result.valueLocalId = valueLocalId;
 	}
 }

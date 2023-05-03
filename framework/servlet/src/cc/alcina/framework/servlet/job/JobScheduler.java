@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.csobjects.JobResultType;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
@@ -273,7 +274,7 @@ public class JobScheduler {
 			AllocationQueue queue = event.queueEvent.queue;
 			// FIXME - jobs - review exceptions. Were possibly due to (possibly
 			// blocking) TowardsAMoreDesirableSituation call
-			if (!Transaction.isInActiveTransaction()) {
+			if (!TransactionEnvironment.get().isInActiveTransaction()) {
 				Transaction.debugCurrentThreadTransaction();
 				Transaction.ensureBegun();
 			}

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -32,9 +33,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Alloca
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventType;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
-import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
-import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
@@ -44,8 +43,8 @@ import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
  * first in sequence), or once the job has reached stage 'processing'
  */
 class JobAllocator {
-	static void commit() {
-		TransformCommit.commitWithBackoff();
+	private static void commit() {
+		TransactionEnvironment.get().commitWithBackoff();
 	}
 
 	private AllocationQueue queue;
@@ -100,7 +99,7 @@ class JobAllocator {
 		if (enqueuedStatusMessage == null) {
 			return;
 		}
-		Transaction.ensureBegun();
+		TransactionEnvironment.get().ensureBegun();
 		queue.job.setStatusMessage(enqueuedStatusMessage.message);
 		queue.job.setCompletion(enqueuedStatusMessage.percentComplete / 100.0);
 		commit();
@@ -131,6 +130,10 @@ class JobAllocator {
 		return queue.toString();
 	}
 
+	private JobEnvironment environment() {
+		return JobRegistry.get().getEnvironment();
+	}
+
 	/*
 	 * Called only from the performer thread (so job.provideChildren is live)
 	 */
@@ -140,18 +143,18 @@ class JobAllocator {
 			if (queue.job.provideChildren().noneMatch(j -> true)) {
 				return;
 			}
-			Transaction.ensureEnded();
+			TransactionEnvironment.get().ensureEnded();
 			ensureStarted();
 			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
 				if (enqueuedStatusMessage != null) {
 					applyStatusMessage();
-					Transaction.end();
+					TransactionEnvironment.get().end();
 				}
 			}
-			Transaction.endAndBeginNew();
+			TransactionEnvironment.get().endAndBeginNew();
 			new StatusMessage().publish();
 			applyStatusMessage();
-			Transaction.ensureBegun();
+			TransactionEnvironment.get().ensureBegun();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -191,15 +194,78 @@ class JobAllocator {
 
 		long lastAllocated = System.currentTimeMillis();
 
+		public void processAllocationEvent(Event event) {
+			try {
+				TransactionEnvironment.get().begin();
+				if (event == null) {
+					/*
+					 * TODO - probably remove this - it tends to only get hit
+					 * while awaiting child jobs which are themselves awaiting
+					 * sequence completion - which means it does nothing
+					 */
+					int debug = 3;
+					/*
+					 * FIXME - mvcc.jobs.1a - up the timeout n catch these
+					 * suckers
+					 */
+					long incompleteCount = queue
+							.getIncompleteAllocatedJobCountForCurrentPhaseThisVm();
+					ExecutionConstraints constraints = ExecutionConstraints
+							.forQueue(queue);
+					ExecutorService executorService = constraints
+							.getExecutorServiceProvider().getService(queue);
+					if (executorService instanceof ThreadPoolExecutor
+							&& !constraints.isClusteredChildAllocation()
+							&& queue.job.getCreator() == ClientInstance.self()
+							&& queue.currentPhase == SubqueuePhase.Child) {
+						ThreadPoolExecutor tpex = (ThreadPoolExecutor) executorService;
+						if (tpex.getActiveCount() == 0 && incompleteCount > 0) {
+							// commented out, prevents grandchild jobs
+							//
+							// logger.warn(
+							// "Removing {} incomplete jobs as
+							// allocated/processing",
+							// incompleteCount);
+							// // queue.clearIncompleteAllocatedJobs();
+							// queue.cancelIncompleteAllocatedJobs();
+						}
+					}
+					// missed event?
+					queue.publish(EventType.WAKEUP);
+				} else {
+					TransactionEnvironment.get()
+							.waitUntilCurrentRequestsProcessed();
+					processEvent(event);
+					/*
+					 * Only need to process the first RELATED_MODIFICATION
+					 */
+					if (event.type == EventType.RELATED_MODIFICATION) {
+						Event peekEvent = null;
+						while ((peekEvent = eventQueue.peek()) != null
+								&& peekEvent.transactionId == event.transactionId
+								&& peekEvent.type == EventType.RELATED_MODIFICATION) {
+							eventQueue.poll();
+						}
+					}
+				}
+			} catch (Exception e) {
+				logger.warn("Exception in allocator");
+				logger.warn("Trace: ", e);
+				e.printStackTrace();
+			} finally {
+				TransactionEnvironment.get().ensureEnded();
+			}
+		}
+
 		public void processEvent(Event event) {
 			if (finished) {
 				return;
 			}
-			Transaction.ensureBegun();
+			TransactionEnvironment.get().ensureBegun();
 			Job job = queue.job;
 			if (firstEvent) {
 				firstEvent = false;
-				Thread.currentThread().setName(
+				environment().setAllocatorThreadName(
 						Ax.format("job-allocator::%s", queue.toDisplayName()));
 				logger.debug("Allocation thread started -  job {}",
 						job.toDisplayName());
@@ -289,7 +355,7 @@ class JobAllocator {
 				new StatusMessage().publish();
 				enqueueEvent(event);
 			} else {
-				Transaction.endAndBeginNew();
+				TransactionEnvironment.get().endAndBeginNew();
 				AllocationQueue constraintQueue = queue;
 				if ((queue.currentPhase == SubqueuePhase.Sequence
 						|| queue.currentPhase == SubqueuePhase.Child)
@@ -333,6 +399,11 @@ class JobAllocator {
 									logger.warn(
 											"jobAllocator-invalid-state - not allocating job {}",
 											j);
+									List<Job> maTest = queue
+											.getUnallocatedJobs()
+											.filter(this::isAllocatable)
+											.limit(maxAllocatable)
+											.collect(Collectors.toList());
 									invalidAllocated.add(j);
 								} else {
 									j.setState(JobState.ALLOCATED);
@@ -425,7 +496,7 @@ class JobAllocator {
 				toCancel.forEach(Job::cancel);
 				commit();
 			}
-			Transaction.ensureEnded();
+			TransactionEnvironment.get().ensureEnded();
 		}
 
 		@Override
@@ -434,77 +505,15 @@ class JobAllocator {
 			while (!finished) {
 				try {
 					Event event = eventQueue.poll(1, TimeUnit.SECONDS);
-					try {
-						Transaction.begin();
-						if (event == null) {
-							/*
-							 * TODO - probably remove this - it tends to only
-							 * get hit while awaiting child jobs which are
-							 * themselves awaiting sequence completion - which
-							 * means it does nothing
-							 */
-							int debug = 3;
-							/*
-							 * FIXME - mvcc.jobs.1a - up the timeout n catch
-							 * these suckers
-							 */
-							long incompleteCount = queue
-									.getIncompleteAllocatedJobCountForCurrentPhaseThisVm();
-							ExecutionConstraints constraints = ExecutionConstraints
-									.forQueue(queue);
-							ExecutorService executorService = constraints
-									.getExecutorServiceProvider()
-									.getService(queue);
-							if (executorService instanceof ThreadPoolExecutor
-									&& !constraints.isClusteredChildAllocation()
-									&& queue.job.getCreator() == ClientInstance
-											.self()
-									&& queue.currentPhase == SubqueuePhase.Child) {
-								ThreadPoolExecutor tpex = (ThreadPoolExecutor) executorService;
-								if (tpex.getActiveCount() == 0
-										&& incompleteCount > 0) {
-									// commented out, prevents grandchild jobs
-									//
-									// logger.warn(
-									// "Removing {} incomplete jobs as
-									// allocated/processing",
-									// incompleteCount);
-									// // queue.clearIncompleteAllocatedJobs();
-									// queue.cancelIncompleteAllocatedJobs();
-								}
-							}
-							// missed event?
-							queue.publish(EventType.WAKEUP);
-						} else {
-							DomainStore.waitUntilCurrentRequestsProcessed();
-							processEvent(event);
-							/*
-							 * Only need to process the first
-							 * RELATED_MODIFICATION
-							 */
-							if (event.type == EventType.RELATED_MODIFICATION) {
-								Event peekEvent = null;
-								while ((peekEvent = eventQueue.peek()) != null
-										&& peekEvent.transactionId == event.transactionId
-										&& peekEvent.type == EventType.RELATED_MODIFICATION) {
-									eventQueue.poll();
-								}
-							}
-						}
-					} catch (Exception e) {
-						logger.warn("Exception in allocator");
-						logger.warn("Trace: ", e);
-						e.printStackTrace();
-					} finally {
-						Transaction.ensureEnded();
-					}
+					environment().runInTransactionThread(
+							() -> processAllocationEvent(event));
 				} catch (Exception e) {
 					logger.warn("Exception in allocator (outer)");
 					logger.warn("Trace: ", e);
 					e.printStackTrace();
 				}
 			}
-			Thread.currentThread().setName("job-allocator::idle");
+			environment().setAllocatorThreadName("job-allocator::idle");
 		}
 
 		private boolean isPhaseComplete(Event event) {

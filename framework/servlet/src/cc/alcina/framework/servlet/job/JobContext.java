@@ -16,6 +16,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
@@ -372,7 +373,7 @@ public class JobContext {
 	}
 
 	public void toAwaitingChildren() {
-		Transaction.commit();
+		TransactionEnvironment.get().commit();
 		allocator.toAwaitingChildren();
 	}
 
@@ -447,19 +448,19 @@ public class JobContext {
 			/*
 			 * Because of possible collisions with stacktrace?
 			 */
-			TransformCommit.commitWithBackoff();
+			TransactionEnvironment.get().commitWithBackoff();
 		}
 	}
 
 	void awaitSequenceCompletion() {
-		Transaction.ensureEnded();
+		TransactionEnvironment.get().ensureEnded();
 		try {
 			endedLatch.await();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		allocator.awaitSequenceCompletion();
-		Transaction.begin();
+		TransactionEnvironment.get().begin();
 	}
 
 	void checkCancelled0(boolean ignoreSelf) {
@@ -529,6 +530,8 @@ public class JobContext {
 			thread.setName(Ax.format("%s::%s::%s",
 					job.provideTaskClass().getSimpleName(), job.getId(),
 					threadStartName));
+			// Threading - guaranteed that this is sole mutating thread (for
+			// job)
 			job.setStartTime(new Date());
 			job.setState(JobState.PROCESSING);
 			job.setPerformerVersionNumber(performer.getVersionNumber());

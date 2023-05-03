@@ -4,27 +4,36 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor;
+import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.LocalDomain;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
@@ -35,6 +44,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.servlet.local.LocalDomainStore.DomainHandlerLds.Query;
 
 /**
  * A non-persistent entity store. Copies some tx-based environment behaviours
@@ -55,7 +65,7 @@ public class LocalDomainStore {
 
 	private SingleThreadedTransformManager singleThreadedTransformManager;
 
-	private CommitToStorageTransformListenerNoRemote commitToStorageTransformListener;
+	CommitToStorageTransformListenerNoRemote commitToStorageTransformListener;
 
 	private ObjectStore objectStore;
 
@@ -73,6 +83,8 @@ public class LocalDomainStore {
 		}
 	};
 
+	boolean committingRequest;
+
 	public LocalDomainStore(DomainDescriptor domainDescriptor,
 			PersistenceImplementations persistenceImplementations) {
 		this.domainDescriptor = domainDescriptor;
@@ -80,14 +92,17 @@ public class LocalDomainStore {
 		this.domain = new LocalDomain(domainDescriptor);
 		IDomainStore.State.nonTransactional = true;
 		this.domain.initialise();
-		registerClassRefs();
 		this.objectStore = new ObjectStoreImpl();
 		this.singleThreadedTransformManager = new SingleThreadedTransformManager();
 		commitToStorageTransformListener = new CommitToStorageTransformListenerNoRemote();
 		singleThreadedTransformManager.initObjectStore();
 		LocalDomainStore.instance = this;
+		Domain.registerHandler(new DomainHandlerLds());
 		persistenceEvents
 				.addDomainTransformPersistenceListener(indexingListener);
+		Registry.register().singleton(TransactionEnvironment.class,
+				new TransactionEnvironmentNonTx());
+		JobDomain.get().onLocalDomainWarmupComplete(this);
 	}
 
 	public void commit() {
@@ -107,33 +122,38 @@ public class LocalDomainStore {
 		return singleThreadedTransformManager;
 	}
 
-	private void registerClassRefs() {
-		List<ClassRef> refs = domainDescriptor.perClass.keySet().stream()
-				.map(clazz -> {
-					ClassRef ref = PersistentImpl
-							.getNewImplementationInstance(ClassRef.class);
-					ref.setRefClass(clazz);
-					return ref;
-				}).collect(Collectors.toList());
-		ClassRef.add(refs);
-	}
-
 	void index(DomainTransformPersistenceEvent evt) {
 		AdjunctTransformCollation collation = evt.getTransformPersistenceToken()
 				.getTransformCollation();
-		collation.allEntityCollations().forEach(ec -> {
-			/*
-			 * LocalDomainStores don't allow deletion
-			 */
-			Preconditions.checkArgument(!ec.isDeleted());
-			/*
-			 * only de-index if created prior to this request
-			 */
-			if (!ec.isCreated()) {
-				index(ec.getEntity(), false, ec, true);
-			}
-			index(ec.getEntity(), true, ec, true);
-		});
+		/*
+		 * De-index
+		 */
+		collation.allEntityCollations()
+				.filter(ec -> ec.getTransforms().size() > 0).forEach(ec -> {
+					/*
+					 * LocalDomainStores don't allow deletion
+					 */
+					Preconditions.checkArgument(!ec.isDeleted());
+					/*
+					 * only de-index if created prior to this request
+					 */
+					if (!ec.isCreated()) {
+						List<DomainTransformEvent> transforms = ec
+								.getTransforms();
+						TransformManager.get().replayLocalEvents(transforms,
+								true);
+						index(ec.getEntity(), false, ec, true);
+						TransformManager.get().replayLocalEvents(transforms,
+								false);
+						TransformManager.get().setIgnorePropertyChanges(false);
+					}
+				});
+		/*
+		 * Index
+		 */
+		collation.allEntityCollations()
+				.filter(ec -> ec.getTransforms().size() > 0)
+				.forEach(ec -> index(ec.getEntity(), true, ec, true));
 	}
 
 	void index(Entity entity, boolean add, EntityCollation entityCollation,
@@ -152,6 +172,24 @@ public class LocalDomainStore {
 		}
 	}
 
+	boolean isEmptyCommitQueue() {
+		return commitToStorageTransformListener.isEmptyCommitQueue();
+	}
+
+	<V extends Entity> Stream<V> query0(Class<V> entityClass, Query<V> query) {
+		List<Predicate> predicates = query.getFilters().stream()
+				.map(DomainFilter::asPredicate).collect(Collectors.toList());
+		// naive - does not optimise with indicies -- FIXME - ma.2
+		return Domain.stream(entityClass).filter(e -> {
+			for (Predicate predicate : predicates) {
+				if (!predicate.test(e)) {
+					return false;
+				}
+			}
+			return true;
+		});
+	}
+
 	public class PersistenceEvents {
 		List<DomainTransformPersistenceListener> listeners = new ArrayList<>();
 
@@ -163,21 +201,29 @@ public class LocalDomainStore {
 		}
 
 		public void publish(DomainTransformRequestPersistent request) {
-			TransformPersistenceToken token = new TransformPersistenceToken(
-					request, locatorMap, false, true, false, logger, true);
-			DomainTransformLayerWrapper layerWrapper = new DomainTransformLayerWrapper(
-					token);
-			DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
-					token, layerWrapper,
-					DomainTransformPersistenceEventType.PREPARE_COMMIT, true);
-			for (DomainTransformPersistenceListener listener : listeners) {
-				listener.onDomainTransformRequestPersistence(persistenceEvent);
-			}
-			persistenceEvent = new DomainTransformPersistenceEvent(token,
-					layerWrapper, DomainTransformPersistenceEventType.COMMIT_OK,
-					true);
-			for (DomainTransformPersistenceListener listener : listeners) {
-				listener.onDomainTransformRequestPersistence(persistenceEvent);
+			try {
+				committingRequest = true;
+				TransformPersistenceToken token = new TransformPersistenceToken(
+						request, locatorMap, false, true, false, logger, true);
+				DomainTransformLayerWrapper layerWrapper = new DomainTransformLayerWrapper(
+						token);
+				DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
+						token, layerWrapper,
+						DomainTransformPersistenceEventType.PREPARE_COMMIT,
+						true);
+				for (DomainTransformPersistenceListener listener : listeners) {
+					listener.onDomainTransformRequestPersistence(
+							persistenceEvent);
+				}
+				persistenceEvent = new DomainTransformPersistenceEvent(token,
+						layerWrapper,
+						DomainTransformPersistenceEventType.COMMIT_OK, true);
+				for (DomainTransformPersistenceListener listener : listeners) {
+					listener.onDomainTransformRequestPersistence(
+							persistenceEvent);
+				}
+			} finally {
+				committingRequest = false;
 			}
 		}
 	}
@@ -225,6 +271,68 @@ public class LocalDomainStore {
 			 * create a faux DTRP publish on access queue
 			 */
 		}
+
+		long getCurrentRequestId() {
+			return localRequestId;
+		}
+
+		boolean isEmptyCommitQueue() {
+			return transformQueue.isEmpty();
+		}
+	}
+
+	class DomainHandlerLds implements Domain.DomainHandler {
+		@Override
+		public <V extends Entity> void async(Class<V> clazz, long objectId,
+				boolean create, Consumer<V> resultConsumer) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <V extends Entity> V detachedVersion(V v) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <V extends Entity> V find(Class clazz, long id) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <V extends Entity> V find(V v) {
+			return domain.getCache().get(v.toLocator());
+		}
+
+		@Override
+		public <V extends Entity> boolean isDomainVersion(V v) {
+			return true;
+		}
+
+		@Override
+		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
+			return new Query(clazz);
+		}
+
+		@Override
+		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
+			return domain.getCache().stream(clazz);
+		}
+
+		class Query<V extends Entity> extends DomainQuery<V> {
+			public Query(Class<V> entityClass) {
+				super(entityClass);
+			}
+
+			@Override
+			public List<V> list() {
+				return stream().collect(Collectors.toList());
+			}
+
+			@Override
+			public Stream<V> stream() {
+				return query0(entityClass, this);
+			}
+		}
 	}
 
 	class ObjectStoreImpl implements ObjectStore {
@@ -235,7 +343,6 @@ public class LocalDomainStore {
 
 		@Override
 		public void deregister(Entity entity) {
-			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -266,8 +373,12 @@ public class LocalDomainStore {
 		}
 
 		@Override
-		public void mapObject(Entity obj) {
-			// NOOP - mapping (indexing) happens in the LocalDomain
+		public void mapObject(Entity entity) {
+			if (!domain.getCache().contains(entity)) {
+				domain.add(entity);
+				entity.addPropertyChangeListener(
+						singleThreadedTransformManager);
+			}
 		}
 
 		@Override
@@ -286,6 +397,12 @@ public class LocalDomainStore {
 		public void fireCollectionModificationEvent(
 				CollectionModificationEvent event) {
 			// NOOP - FIXME - adjunct - remove this method (belongs in store)
+		}
+
+		@Override
+		public boolean isIgnoreUnrecognizedDomainClassException() {
+			// does not use classrefs
+			return true;
 		}
 
 		@Override

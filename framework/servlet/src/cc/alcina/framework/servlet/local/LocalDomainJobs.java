@@ -11,8 +11,7 @@ import cc.alcina.framework.servlet.job.JobRegistry;
  */
 public class LocalDomainJobs {
 	public void init(LocalDomainStore localDomainStore) {
-		JobEnvironmentNonTx jobEnvironment = new JobEnvironmentNonTx(
-				localDomainStore);
+		JobEnvironmentNonTx jobEnvironment = new JobEnvironmentNonTx();
 		JobRegistry.get().setEnvironment(jobEnvironment);
 		JobRegistry.get().init();
 	}

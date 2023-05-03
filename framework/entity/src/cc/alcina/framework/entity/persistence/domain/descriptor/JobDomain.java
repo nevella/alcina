@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.domain.DomainDescriptor;
 import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.ReverseDateProjection;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
@@ -578,7 +579,7 @@ public class JobDomain {
 		// / otherwise we may hit the allocators before the commit is finished
 		public void publish(EventType type) {
 			Event event = new Event(type);
-			if (Transaction.current().isToDomainCommitting()) {
+			if (TransactionEnvironment.get().isToDomainCommitting()) {
 				bufferedEvents.add(event);
 				queuesWithBufferedEvents.add(this);
 			} else {
@@ -732,7 +733,8 @@ public class JobDomain {
 			public Event(EventType type) {
 				this.type = type;
 				this.queue = AllocationQueue.this;
-				this.transactionId = Transaction.current().getId();
+				this.transactionId = TransactionEnvironment.get()
+						.getCurrentTxId();
 			}
 
 			@Override
@@ -974,7 +976,8 @@ public class JobDomain {
 
 		private AllocationQueue ensureQueue(Job job, AllocationQueue queue) {
 			queue = ensureQueue0(job, queue);
-			if (!Transaction.current().isBaseTransaction()) {
+			if (TransactionEnvironment.get()
+					.isInNonSingleThreadedProjectionState()) {
 				if (ensuredQueues.add(queue)) {
 					Preconditions.checkState(LooseContext
 							.is(DomainStore.CONTEXT_IN_POST_PROCESS));

@@ -127,6 +127,52 @@ public abstract class TransformManager
 
 	protected static Map<Integer, List<Entity>> createdLocalAndPromoted = null;
 
+	public static void convertToTargetObject(DomainTransformEvent event) {
+		Object value = event.getNewValue();
+		if (value == null) {
+			return;
+		}
+		// this dte will never be used - it'll be converted to a series of
+		// add/remove refs
+		if (value instanceof Set) {
+			return;
+		}
+		if (value instanceof Entity) {
+			Entity entity = (Entity) value;
+			if (entity.getId() == 0 && entity.getLocalId() == 0) {
+				DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
+						"Set value object with zero id and localid");
+				dtre.setEvent(event);
+				throw dtre;
+			}
+			event.setValueId(entity.getId());
+			event.setValueLocalId(entity.getLocalId());
+			event.setValueClass(entity.entityClass());
+			return;
+		}
+		if (value instanceof Enum) {
+			event.setValueClass(((Enum) value).getDeclaringClass());
+			// make sure the enum is reflect-instantiable (although not strictly
+			// necessary here, it's a common dev problem to miss this
+			// annotation, and here is the best place to catch it
+			Class clazz = Reflections.forName(event.getValueClassName());
+			event.setNewStringValue(((Enum) value).name());
+			return;
+		}
+		Class<? extends Object> valueClass = value.getClass();
+		event.setValueClass(valueClass);
+		if (valueClass == Integer.class || valueClass == String.class
+				|| valueClass == Double.class || valueClass == Float.class
+				|| valueClass == Short.class || valueClass == Boolean.class) {
+			event.setNewStringValue(value.toString());
+		} else if (valueClass == Long.class) {
+			event.setNewStringValue(SimpleStringParser.toString((Long) value));
+		} else if (valueClass == Date.class) {
+			event.setNewStringValue(
+					SimpleStringParser.toString((((Date) value).getTime())));
+		}
+	}
+
 	public static DomainTransformEvent createTransformEvent() {
 		DomainTransformEvent event = new DomainTransformEvent();
 		/*
@@ -670,52 +716,6 @@ public abstract class TransformManager
 		Entity obj = getObjectStore().getObject(dte.getObjectClass(),
 				dte.getObjectId(), dte.getObjectLocalId());
 		return obj != null;
-	}
-
-	public void convertToTargetObject(DomainTransformEvent event) {
-		Object value = event.getNewValue();
-		if (value == null) {
-			return;
-		}
-		// this dte will never be used - it'll be converted to a series of
-		// add/remove refs
-		if (value instanceof Set) {
-			return;
-		}
-		if (value instanceof Entity) {
-			Entity entity = (Entity) value;
-			if (entity.getId() == 0 && entity.getLocalId() == 0) {
-				DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
-						"Set value object with zero id and localid");
-				dtre.setEvent(event);
-				throw dtre;
-			}
-			event.setValueId(entity.getId());
-			event.setValueLocalId(entity.getLocalId());
-			event.setValueClass(entity.entityClass());
-			return;
-		}
-		if (value instanceof Enum) {
-			event.setValueClass(((Enum) value).getDeclaringClass());
-			// make sure the enum is reflect-instantiable (although not strictly
-			// necessary here, it's a common dev problem to miss this
-			// annotation, and here is the best place to catch it
-			Class clazz = Reflections.forName(event.getValueClassName());
-			event.setNewStringValue(((Enum) value).name());
-			return;
-		}
-		Class<? extends Object> valueClass = value.getClass();
-		event.setValueClass(valueClass);
-		if (valueClass == Integer.class || valueClass == String.class
-				|| valueClass == Double.class || valueClass == Float.class
-				|| valueClass == Short.class || valueClass == Boolean.class) {
-			event.setNewStringValue(value.toString());
-		} else if (valueClass == Long.class) {
-			event.setNewStringValue(SimpleStringParser.toString((Long) value));
-		} else if (valueClass == Date.class) {
-			event.setNewStringValue(
-					SimpleStringParser.toString((((Date) value).getTime())));
-		}
 	}
 
 	public <T extends Entity> T createDomainObject(Class<T> objectClass) {
@@ -1566,6 +1566,30 @@ public abstract class TransformManager
 					|| c.contains(transform.provideTargetMarkerForRemoval())) {
 				removeTransform(transform);
 			}
+		}
+	}
+
+	/*
+	 * In an non-transactional system, this is required for pre + post
+	 * transaction indexing. Note that it can't support
+	 */
+	public void replayLocalEvents(List<DomainTransformEvent> transforms,
+			boolean undo) {
+		if (undo) {
+			transforms = transforms.stream().map(DomainTransformEvent::invert)
+					.collect(Collectors.toList());
+			Collections.reverse(transforms);
+		}
+		try {
+			setIgnorePropertyChanges(true);
+			for (DomainTransformEvent transform : transforms) {
+				apply(transform);
+			}
+		} catch (Exception e) {
+			// since we're replaying, this is reasonable
+			throw WrappedRuntimeException.wrap(e);
+		} finally {
+			setIgnorePropertyChanges(false);
 		}
 	}
 
