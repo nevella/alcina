@@ -687,6 +687,15 @@ public class Window {
 		}-*/;
 
 		/**
+		 * Gets the URL's origin.
+		 *
+		 * @return the URL's origin
+		 */
+		public static native String getOrigin() /*-{
+      return $wnd.location.origin;
+		}-*/;
+
+		/**
 		 * Gets the URL's parameter of the specified name. Note that if multiple
 		 * parameters have been specified with the same name, the last one will
 		 * be returned.
