@@ -26,7 +26,8 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 
-public class DomainTransformPersistenceEvents {
+public class DomainTransformPersistenceEvents
+		implements DomainTransformPersistenceListener.Has {
 	private static final String CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS = DomainTransformPersistenceEvents.class
 			.getName() + ".CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS";
 
@@ -52,6 +53,7 @@ public class DomainTransformPersistenceEvents {
 		this.queue = new DomainTransformPersistenceQueue(this);
 	}
 
+	@Override
 	public void addDomainTransformPersistenceListener(
 			DomainTransformPersistenceListener listener) {
 		listenerList.add(listener);
@@ -66,6 +68,19 @@ public class DomainTransformPersistenceEvents {
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	public DomainTransformPersistenceQueue getQueue() {
+		return this.queue;
+	}
+
+	public void removeDomainTransformPersistenceListener(
+			DomainTransformPersistenceListener listener) {
+		listenerList.remove(listener);
+	}
+
+	public void startEventQueue() {
+		queue.startEventQueue();
 	}
 
 	private void fireDomainTransformPersistenceEvent0(
@@ -117,19 +132,6 @@ public class DomainTransformPersistenceEvents {
 			break;
 		}
 		}
-	}
-
-	public DomainTransformPersistenceQueue getQueue() {
-		return this.queue;
-	}
-
-	public void removeDomainTransformPersistenceListener(
-			DomainTransformPersistenceListener listener) {
-		listenerList.remove(listener);
-	}
-
-	public void startEventQueue() {
-		queue.startEventQueue();
 	}
 
 	private void fireDomainTransformPersistenceEvent1(

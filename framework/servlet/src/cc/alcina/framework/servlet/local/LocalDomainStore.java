@@ -102,7 +102,7 @@ public class LocalDomainStore {
 				.addDomainTransformPersistenceListener(indexingListener);
 		Registry.register().singleton(TransactionEnvironment.class,
 				new TransactionEnvironmentNonTx());
-		JobDomain.get().onLocalDomainWarmupComplete(this);
+		JobDomain.get().onDomainWarmupComplete(persistenceEvents);
 	}
 
 	public void commit() {
@@ -190,11 +190,13 @@ public class LocalDomainStore {
 		});
 	}
 
-	public class PersistenceEvents {
+	public class PersistenceEvents
+			implements DomainTransformPersistenceListener.Has {
 		List<DomainTransformPersistenceListener> listeners = new ArrayList<>();
 
 		private EntityLocatorMap locatorMap = new EntityLocatorMap();
 
+		@Override
 		public void addDomainTransformPersistenceListener(
 				DomainTransformPersistenceListener listener) {
 			listeners.add(listener);

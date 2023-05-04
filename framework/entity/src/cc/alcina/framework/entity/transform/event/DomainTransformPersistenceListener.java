@@ -15,4 +15,9 @@ public interface DomainTransformPersistenceListener {
 	default boolean isPreBarrierListener() {
 		return false;
 	}
+
+	public interface Has {
+		void addDomainTransformPersistenceListener(
+				DomainTransformPersistenceListener listener);
+	}
 }

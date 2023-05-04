@@ -65,7 +65,6 @@ import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
-import cc.alcina.framework.servlet.local.LocalDomainStore;
 
 /**
  * <p>
@@ -344,27 +343,23 @@ public class JobDomain {
 		stateMessageEventQueue.add(new ArrayList<>());
 	}
 
-	public void onLocalDomainWarmupComplete(LocalDomainStore localDomainStore) {
-		localDomainStore.getPersistenceEvents()
-				.addDomainTransformPersistenceListener(
-						bufferedEventFiringListener);
-	}
-
-	public void onWarmupComplete(DomainStore domainStore) {
+	public void onDomainWarmupComplete(
+			DomainTransformPersistenceListener.Has hasPersistenceListeners) {
 		if (Configuration.is("logTransforms")) {
-			domainStore.getPersistenceEvents()
+			hasPersistenceListeners
 					.addDomainTransformPersistenceListener(jobLogger);
 		}
-		domainStore.getPersistenceEvents()
-				.addDomainTransformPersistenceListener(
-						stacktraceRequestListener);
-		domainStore.getPersistenceEvents()
-				.addDomainTransformPersistenceListener(
-						bufferedEventFiringListener);
+		hasPersistenceListeners.addDomainTransformPersistenceListener(
+				stacktraceRequestListener);
+		hasPersistenceListeners.addDomainTransformPersistenceListener(
+				bufferedEventFiringListener);
 		warmupComplete = true;
-		Thread stateMessageEventThread = new Thread(stateMessageEventHandler,
-				"DomainDescriptorJob-stateMessageEventHandler");
-		stateMessageEventThread.start();
+		if (TransactionEnvironment.get().isMultiple()) {
+			Thread stateMessageEventThread = new Thread(
+					stateMessageEventHandler,
+					"DomainDescriptorJob-stateMessageEventHandler");
+			stateMessageEventThread.start();
+		}
 	}
 
 	public void removeAllocationQueue(Job job) {
