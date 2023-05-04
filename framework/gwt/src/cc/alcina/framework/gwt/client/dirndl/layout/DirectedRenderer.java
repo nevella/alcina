@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -262,11 +263,11 @@ public abstract class DirectedRenderer {
 				Preconditions.checkArgument(descendantResolvedPropertyAnnotation
 						.bindings().length == 0);
 				descendantResolvedPropertyAnnotation
-						.setEmits(Impl.EMPTY_CLASS_ARRAY);
+						.setEmits(CommonUtils.EMPTY_CLASS_ARRAY);
 				descendantResolvedPropertyAnnotation
-						.setReceives(Impl.EMPTY_CLASS_ARRAY);
+						.setReceives(CommonUtils.EMPTY_CLASS_ARRAY);
 				descendantResolvedPropertyAnnotation
-						.setReemits(Impl.EMPTY_CLASS_ARRAY);
+						.setReemits(CommonUtils.EMPTY_CLASS_ARRAY);
 			}
 			location.resolutionState.resolvedPropertyAnnotations = Arrays
 					.asList(descendantResolvedPropertyAnnotation);

@@ -72,6 +72,8 @@ public class CommonUtils {
 	// for GWT reflection gets, this gets used...a lot
 	public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
+	public static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
+
 	public static final String[] MONTH_NAMES = { "invalid", "January",
 			"February", "March", "April", "May", "June", "July", "August",
 			"September", "October", "November", "December" };

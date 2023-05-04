@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.serializer;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -54,22 +55,30 @@ class SerializationSupport {
 		});
 	}
 
-	static PropertySerialization getPropertySerialization(Class<?> clazz,
-			String propertyName) {
+	static PropertySerialization getPropertySerialization(Property property) {
+		Class<?> clazz = property.getOwningType();
 		TypeSerialization typeSerialization = Annotations.resolve(clazz,
 				TypeSerialization.class);
 		PropertySerialization annotation = null;
 		if (typeSerialization != null) {
 			for (PropertySerialization p : typeSerialization.properties()) {
-				if (p.name().equals(propertyName)) {
+				if (p.name().equals(property.getName())) {
 					annotation = p;
 					break;
 				}
 			}
 		}
 		if (annotation == null) {
-			annotation = Annotations.resolve(clazz, propertyName,
+			annotation = Annotations.resolve(clazz, property.getName(),
 					PropertySerialization.class);
+		}
+		if (annotation == null
+				&& Collection.class.isAssignableFrom(property.getType())
+				&& property.getTypeBounds().bounds.size() == 1) {
+			PropertySerialization.Impl impl = new PropertySerialization.Impl();
+			impl.setTypes(
+					new Class[] { property.getTypeBounds().bounds.get(0) });
+			annotation = impl;
 		}
 		return annotation;
 	}
@@ -125,7 +134,7 @@ class SerializationSupport {
 							}
 						}
 						PropertySerialization propertySerialization = getPropertySerialization(
-								valueClass, name);
+								property);
 						if (propertySerialization != null
 								&& propertySerialization.ignore()) {
 							return false;

@@ -25,6 +25,7 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
@@ -397,6 +398,10 @@ public class CompilationUnits {
 			return from.isAssignableFrom(clazz());
 		}
 
+		public void prepareForModification() {
+			unitWrapper.prepareForModification();
+		}
+
 		public String resolveFqn(Type type) {
 			return fqn(unitWrapper, type.asString());
 		}
@@ -503,6 +508,10 @@ public class CompilationUnits {
 					.anyMatch(ClassOrInterfaceDeclarationWrapper::hasFlags);
 		}
 
+		public void prepareForModification() {
+			LexicalPreservingPrinter.setup(unit());
+		}
+
 		public void removeImport(Class<?> clazz) {
 			new ArrayList<>(unit.getImports()).stream()
 					.filter(i -> i.getNameAsString().equals(clazz.getName()))
@@ -532,9 +541,11 @@ public class CompilationUnits {
 			File outFile = SEUtilities.getChildFile(outDir,
 					getFile().getName());
 			try {
-				String modified = mapper == null ? unit.toString()
+				String modified = mapper == null
+						? LexicalPreservingPrinter.print(unit)
 						: mapper.apply(this);
 				Io.write().string(modified).toFile(outFile);
+				Ax.out("wrote: %s", getFile().getName());
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
