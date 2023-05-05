@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.domain;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 
 /*
  * Provides access to either a full mvcc transactional system

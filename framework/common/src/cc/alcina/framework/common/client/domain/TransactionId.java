@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.persistence.mvcc;
+package cc.alcina.framework.common.client.domain;
 
 import java.util.Objects;
 
