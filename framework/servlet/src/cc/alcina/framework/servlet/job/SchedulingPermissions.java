@@ -46,7 +46,7 @@ class SchedulingPermissions {
 		if (AppPersistenceBase.isInstanceReadOnly()) {
 			return false;
 		}
-		if (!JobRegistry.get().getEnvironment().canCreateFutures()) {
+		if (!JobRegistry.get().getEnvironment().isPersistent()) {
 			return false;
 		}
 		boolean production = EntityLayerUtils.isProduction();
@@ -86,6 +86,9 @@ class SchedulingPermissions {
 
 	static boolean canProcessOrphans() {
 		if (AppPersistenceBase.isInstanceReadOnly()) {
+			return false;
+		}
+		if (!JobRegistry.get().getEnvironment().isPersistent()) {
 			return false;
 		}
 		return JobRegistry.get().jobExecutors.isCurrentOrphanage();

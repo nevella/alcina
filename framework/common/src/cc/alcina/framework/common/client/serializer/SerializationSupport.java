@@ -73,7 +73,8 @@ class SerializationSupport {
 					PropertySerialization.class);
 		}
 		if (annotation == null
-				&& Collection.class.isAssignableFrom(property.getType())
+				&& Reflections.isAssignableFrom(Collection.class,
+						property.getType())
 				&& property.getTypeBounds().bounds.size() == 1) {
 			PropertySerialization.Impl impl = new PropertySerialization.Impl();
 			impl.setTypes(

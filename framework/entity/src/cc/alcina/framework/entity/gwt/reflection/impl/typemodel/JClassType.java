@@ -535,6 +535,12 @@ public abstract class JClassType<T extends Type>
 			}
 		}
 
+		/*
+		 * This implementation assumes only one nearest generic ancestore
+		 * (extends A<B> or implements C<D>)) - if there are multiple, it will
+		 * return no bounds
+		 * 
+		 */
 		void computeBounds() {
 			List<Class> bounds = new ArrayList<>();
 			// find the nearest ParameterizedType ancestor of type (including
@@ -547,7 +553,34 @@ public abstract class JClassType<T extends Type>
 					break;
 				}
 				if (cursor instanceof Class) {
-					cursor = ((Class) cursor).getGenericSuperclass();
+					Class classCursor = (Class) cursor;
+					cursor = null;
+					Type superType = classCursor.getGenericSuperclass();
+					ParameterizedType parameterizedSuperclass = superType instanceof ParameterizedType
+							? (ParameterizedType) superType
+							: null;
+					List<ParameterizedType> parameterizedInterfaces = Arrays
+							.stream(classCursor.getGenericInterfaces())
+							.filter(intf -> intf instanceof ParameterizedType)
+							.map(intf -> (ParameterizedType) intf)
+							.collect(Collectors.toList());
+					if (parameterizedSuperclass == null) {
+						if (parameterizedInterfaces.size() == 0) {
+							cursor = superType;
+						} else if (parameterizedInterfaces.size() == 1) {
+							cursor = parameterizedInterfaces.get(0);
+						} else {
+							// invalid, >1 generic superInterfaces
+							break;
+						}
+					} else {
+						if (parameterizedInterfaces.size() == 0) {
+							cursor = superType;
+						} else {
+							// invalid, type has a generic superclass && >=1
+							// generic superInterfaces
+						}
+					}
 				} else {
 					throw new UnsupportedOperationException();
 				}
@@ -674,6 +707,8 @@ public abstract class JClassType<T extends Type>
 	// FIXME - reflection - revisit - a formal definition of what this enforces
 	// (rather than 'property types work') would be good... but probably a chunk
 	// of work
+	//
+	//
 	static class TypeParameterResolution {
 		Map<TypeVariable, Type> resolvedTypeParameters = new LinkedHashMap<>();
 
@@ -690,7 +725,8 @@ public abstract class JClassType<T extends Type>
 
 		/*
 		 * These will be processed in most-specific to least-specific order, so
-		 * will visit the specification (JParaameterizedType) before the declar
+		 * will visit the specification (JParaameterizedType) before the
+		 * declaration
 		 */
 		public void addResolution(JClassType jType) {
 			resolvedJTypes.add(jType);

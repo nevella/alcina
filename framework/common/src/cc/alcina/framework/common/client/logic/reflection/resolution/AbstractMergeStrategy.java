@@ -32,6 +32,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 		List<A> result = new ArrayList<>();
 		Set<Class> stack = new LinkedHashSet<>();
 		Set<Class> visited = new LinkedHashSet<>();
+		ClassReflector<?> resolvingReflector = Reflections.at(clazz);
 		stack.add(clazz);
 		Class<?> cursor = clazz;
 		while ((cursor = cursor.getSuperclass()) != null) {
@@ -42,12 +43,14 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			cursor = itr.next();
 			itr.remove();
 			visited.add(cursor);
-			ClassReflector<?> reflector = Reflections.at(cursor);
-			List<A> atClass = atClass(annotationClass, reflector);
+			ClassReflector<?> cursorReflector = Reflections.at(cursor);
+			List<A> atClass = atClass(annotationClass, cursorReflector,
+					resolvingReflector);
 			result = merge(atClass, result);
 			if (inheritance.contains(Inheritance.INTERFACE)) {
-				reflector.getInterfaces().stream().filter(this::permitPackages)
-						.filter(visited::add).forEach(stack::add);
+				cursorReflector.getInterfaces().stream()
+						.filter(this::permitPackages).filter(visited::add)
+						.forEach(stack::add);
 			}
 		}
 		return result;
@@ -91,7 +94,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	}
 
 	protected abstract List<A> atClass(Class<A> annotationClass,
-			ClassReflector<?> reflector);
+			ClassReflector<?> reflector, ClassReflector<?> resolvingReflector);
 
 	protected abstract List<A> atProperty(Class<A> annotationClass,
 			Property property);
@@ -135,11 +138,30 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			return moreSpecific;
 		}
 
+		public static abstract class ClassOnly<A extends Annotation>
+				extends AbstractMergeStrategy.SingleResultMergeStrategy<A> {
+			@Override
+			protected List<A> atClass(Class<A> annotationClass,
+					ClassReflector<?> reflector,
+					ClassReflector<?> resolvingReflector) {
+				A annotation = reflector.annotation(annotationClass);
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
+			}
+
+			@Override
+			protected List<A> atProperty(Class<A> annotationClass,
+					Property property) {
+				throw new UnsupportedOperationException();
+			}
+		}
+
 		public static abstract class PropertyOnly<A extends Annotation>
 				extends AbstractMergeStrategy.SingleResultMergeStrategy<A> {
 			@Override
 			protected List<A> atClass(Class<A> annotationClass,
-					ClassReflector<?> reflector) {
+					ClassReflector<?> reflector,
+					ClassReflector<?> resolvingReflector) {
 				throw new UnsupportedOperationException();
 			}
 
@@ -156,7 +178,8 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 				extends AbstractMergeStrategy.SingleResultMergeStrategy<A> {
 			@Override
 			protected List<A> atClass(Class<A> annotationClass,
-					ClassReflector<?> reflector) {
+					ClassReflector<?> reflector,
+					ClassReflector<?> resolvingReflector) {
 				A annotation = reflector.annotation(annotationClass);
 				return annotation == null ? Collections.emptyList()
 						: Collections.singletonList(annotation);

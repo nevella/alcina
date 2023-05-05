@@ -15,3 +15,4 @@ Make beans pretty again!
 
 TaskRefactorPropertySerialization - remove redundant annotations (info supplied by reflected type paramters)
 
+TaskRefactorRegistrationNonGenericSubtype  - remove redundant annotations (info supplied by reflected type paramters)
