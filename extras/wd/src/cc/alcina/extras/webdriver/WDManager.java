@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.extras.webdriver.api.TestResult;
 import cc.alcina.extras.webdriver.api.TestResultType;
 import cc.alcina.extras.webdriver.api.WDWriter;
 import cc.alcina.extras.webdriver.api.WebdriverTest;
@@ -80,7 +81,10 @@ public class WDManager {
 				if (timeout != 0) {
 					LooseContext.set(WDUtils.CONTEXT_OVERRIDE_TIMEOUT, timeout);
 				}
-				test.process(token, 0, null);
+				TestResult result = test.process(token, 0, null);
+				if (!result.providePassed()) {
+					throw new Exception("Test failed");
+				}
 			} finally {
 				try {
 					if (token.getRootResult()

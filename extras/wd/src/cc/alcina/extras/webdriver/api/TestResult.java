@@ -40,7 +40,7 @@ public class TestResult {
 	public TestResultType computeTreeResultType() {
 		TestResultType rt = this.resultType;
 		for (TestResult tr : getChildren()) {
-			TestResultType crt = tr.getResultType();
+			TestResultType crt = tr.computeTreeResultType();
 			if (crt.compareTo(rt) > 0) {
 				rt = crt;
 			}
