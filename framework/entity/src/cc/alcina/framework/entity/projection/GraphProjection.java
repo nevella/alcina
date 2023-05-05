@@ -647,7 +647,8 @@ public class GraphProjection {
 														"\n\t: "))
 										.collect(Collectors.joining("\t\n")));
 					}
-					if (Configuration.is("projectionMetrics")) {
+					if (Configuration.is(GraphProjection.class,
+							"projectionMetrics")) {
 						System.out.format(
 								"Graph projection - %.3f ms - %s traversals %s creations\n",
 								((double) (System.nanoTime() - start))

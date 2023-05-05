@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity;
 
-import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -21,6 +20,9 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalCollection;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -32,47 +34,47 @@ public class ObjectUtil {
 				cloneCollections, new ArrayList<String>());
 	}
 
-	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
+	public static <T> T copyBeanProperties(Object sourceBean, T targetBean,
 			Class methodFilterAnnotation, boolean cloneCollections,
 			Collection<String> ignorePropertyNames) {
-		for (PropertyDescriptor targetDescriptor : SEUtilities
-				.getPropertyDescriptorsSortedByName(tgtBean.getClass())) {
-			if (ignorePropertyNames.contains(targetDescriptor.getName())) {
-				continue;
+		ClassReflector<? extends Object> targetReflector = Reflections
+				.at(targetBean.getClass());
+		ClassReflector<? extends Object> sourceReflector = Reflections
+				.at(sourceBean.getClass());
+		targetReflector.properties().stream().forEach(targetProperty -> {
+			if (ignorePropertyNames.contains(targetProperty.getName())) {
+				return;
 			}
-			PropertyDescriptor sourceDescriptor = SEUtilities
-					.getPropertyDescriptorByName(srcBean.getClass(),
-							targetDescriptor.getName());
-			if (sourceDescriptor == null) {
-				continue;
+			if (targetProperty.isReadOnly()) {
+				return;
 			}
-			Method readMethod = sourceDescriptor.getReadMethod();
-			if (readMethod == null) {
-				continue;
+			Property sourceProperty = sourceReflector
+					.property(targetProperty.getName());
+			if (sourceProperty == null) {
+				return;
 			}
-			if (methodFilterAnnotation != null) {
-				if (readMethod.isAnnotationPresent(methodFilterAnnotation)) {
-					continue;
-				}
+			if (sourceProperty.isWriteOnly()) {
+				return;
 			}
-			Method setMethod = targetDescriptor.getWriteMethod();
-			if (setMethod != null) {
+			if (methodFilterAnnotation != null
+					&& sourceProperty.has(methodFilterAnnotation)) {
+				return;
+			}
+			Object value = sourceProperty.get(sourceBean);
+			if (cloneCollections && value instanceof Collection
+					&& value instanceof Cloneable) {
 				try {
-					Object obj = readMethod.invoke(srcBean, (Object[]) null);
-					if (cloneCollections && obj instanceof Collection
-							&& obj instanceof Cloneable) {
-						Method clone = obj.getClass().getMethod("clone",
-								new Class[0]);
-						clone.setAccessible(true);
-						obj = clone.invoke(obj, CommonUtils.EMPTY_OBJECT_ARRAY);
-					}
-					setMethod.invoke(tgtBean, obj);
+					Method clone = value.getClass().getMethod("clone",
+							new Class[0]);
+					clone.setAccessible(true);
+					value = clone.invoke(value, CommonUtils.EMPTY_OBJECT_ARRAY);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
 			}
-		}
-		return tgtBean;
+			targetProperty.set(targetBean, value);
+		});
+		return targetBean;
 	}
 
 	public static <T> T fieldwiseClone(T t) {
@@ -139,71 +141,6 @@ public class ObjectUtil {
 		}
 	}
 
-	static <T> T newInstanceForCopy(T t)
-			throws NoSuchMethodException, InstantiationException,
-			IllegalAccessException, InvocationTargetException {
-		if (t instanceof LiSet) {
-			return (T) ((LiSet) t).clone();
-		}
-		Constructor<T> constructor = null;
-		try {
-			constructor = (Constructor<T>) t.getClass()
-					.getConstructor(new Class[0]);
-		} catch (NoSuchMethodException e) {
-			constructor = (Constructor<T>) t.getClass()
-					.getDeclaredConstructor(new Class[0]);
-		}
-		constructor.setAccessible(true);
-		T instance = constructor.newInstance();
-		return instance;
-	}
-
-	protected static <T> List<Field> getFieldsForCopyOrLog(T t,
-			boolean withTransients, Set<String> ignoreFieldNames) {
-		List<Field> result = new ArrayList<>();
-		Class c = t.getClass();
-		while (c != Object.class) {
-			Field[] fields = c.getDeclaredFields();
-			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers())) {
-					continue;
-				}
-				if (Modifier.isFinal(field.getModifiers())) {
-					continue;
-				}
-				if (Modifier.isTransient(field.getModifiers())
-						&& !withTransients) {
-					continue;
-				}
-				if (ignoreFieldNames != null
-						&& ignoreFieldNames.contains(field.getName())) {
-					continue;
-				}
-				field.setAccessible(true);
-				result.add(field);
-			}
-			c = c.getSuperclass();
-		}
-		return result;
-	}
-
-	public static void setField(Object object, String fieldPath,
-			Object newValue) throws Exception {
-		Object cursor = object;
-		Field field = null;
-		String[] segments = fieldPath.split("\\.");
-		for (int idx = 0; idx < segments.length; idx++) {
-			String segment = segments[idx];
-			field = SEUtilities.getFieldByName(cursor.getClass(), segment);
-			field.setAccessible(true);
-			if (idx < segments.length - 1) {
-				cursor = field.get(cursor);
-			} else {
-				field.set(cursor, newValue);
-			}
-		}
-	}
-
 	public static String objectOrPrimitiveToString(Object object) {
 		if (object == null) {
 			return null;
@@ -241,5 +178,70 @@ public class ObjectUtil {
 			throw new WrappedRuntimeException(e);
 		}
 		return result;
+	}
+
+	public static void setField(Object object, String fieldPath,
+			Object newValue) throws Exception {
+		Object cursor = object;
+		Field field = null;
+		String[] segments = fieldPath.split("\\.");
+		for (int idx = 0; idx < segments.length; idx++) {
+			String segment = segments[idx];
+			field = SEUtilities.getFieldByName(cursor.getClass(), segment);
+			field.setAccessible(true);
+			if (idx < segments.length - 1) {
+				cursor = field.get(cursor);
+			} else {
+				field.set(cursor, newValue);
+			}
+		}
+	}
+
+	protected static <T> List<Field> getFieldsForCopyOrLog(T t,
+			boolean withTransients, Set<String> ignoreFieldNames) {
+		List<Field> result = new ArrayList<>();
+		Class c = t.getClass();
+		while (c != Object.class) {
+			Field[] fields = c.getDeclaredFields();
+			for (Field field : fields) {
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isFinal(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isTransient(field.getModifiers())
+						&& !withTransients) {
+					continue;
+				}
+				if (ignoreFieldNames != null
+						&& ignoreFieldNames.contains(field.getName())) {
+					continue;
+				}
+				field.setAccessible(true);
+				result.add(field);
+			}
+			c = c.getSuperclass();
+		}
+		return result;
+	}
+
+	static <T> T newInstanceForCopy(T t)
+			throws NoSuchMethodException, InstantiationException,
+			IllegalAccessException, InvocationTargetException {
+		if (t instanceof LiSet) {
+			return (T) ((LiSet) t).clone();
+		}
+		Constructor<T> constructor = null;
+		try {
+			constructor = (Constructor<T>) t.getClass()
+					.getConstructor(new Class[0]);
+		} catch (NoSuchMethodException e) {
+			constructor = (Constructor<T>) t.getClass()
+					.getDeclaredConstructor(new Class[0]);
+		}
+		constructor.setAccessible(true);
+		T instance = constructor.newInstance();
+		return instance;
 	}
 }

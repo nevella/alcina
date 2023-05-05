@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.persistence;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.persistence.EntityManager;
@@ -101,8 +100,7 @@ public abstract class AppPersistenceBase {
 					.muteClassloaderLogging(true);
 			ClassMetadataCache classInfo = new ServletClassMetadataCacheProvider()
 					.getClassInfo(mainLogger, true);
-			new RegistryScanner().scan(classInfo, new ArrayList<String>(),
-					"entity-layer");
+			new RegistryScanner().scan(classInfo, null, "entity-layer");
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {

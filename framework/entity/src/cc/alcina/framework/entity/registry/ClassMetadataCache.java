@@ -14,8 +14,8 @@ public class ClassMetadataCache<T extends ClassMetadata>
 	/*
 	 * @formatter:off
 	 * Version history:
-	 *
-	 *20220225 - 03 - change registration merge strategy
+	 * 20230504 - 04 - change registration merge strategy (new annotation)
+	 * 20220225 - 03 - change registration merge strategy
 	 * 20220224 - 02 - change registration merge strategy
 	 * 20220224 - 01 - baseline
 	 *

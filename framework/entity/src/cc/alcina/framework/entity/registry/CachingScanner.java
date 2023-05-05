@@ -18,6 +18,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +58,8 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	protected String ignoreClassnameRegex;
+
 	public InputStream getStreamForMd5(ClassMetadata classMetadata)
 			throws Exception {
 		try {
@@ -84,11 +87,17 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		ClassMetadataCache<T> passIncomingCache = incomingCache;
 		int pass = 1;
 		int invalidatedParentCount = 0;
+		Pattern ignoreClassnamePattern = ignoreClassnameRegex == null ? null
+				: Pattern.compile(ignoreClassnameRegex);
 		do {
 			invalidatedThisPass.clear();
 			int loggedThisPass = 0;
 			for (ClassMetadata meta : classpathCache.classData.values()) {
 				String className = meta.className;
+				if (ignoreClassnamePattern != null && ignoreClassnamePattern
+						.matcher(className).matches()) {
+					continue;
+				}
 				T out = null;
 				T existing = passIncomingCache.classData.get(meta.className);
 				boolean unchanged = existing != null

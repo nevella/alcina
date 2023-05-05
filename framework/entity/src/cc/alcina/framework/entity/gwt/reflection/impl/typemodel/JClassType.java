@@ -457,56 +457,10 @@ public abstract class JClassType<T extends Type>
 		TypeBounds typeBounds;
 
 		Members() {
-			resolution = new TypeParameterResolution(JClassType.this);
-			fields = Arrays.stream(clazz.getDeclaredFields())
-					.map(f -> new JField(typeOracle, f))
-					.collect(Collectors.toList());
-			if (TypeOracle.reverseFieldOrder) {
-				// android
-				Collections.reverse(fields);
-			}
-			methods = Arrays.stream(clazz.getDeclaredMethods())
-					.map(m -> new JMethod(typeOracle, m))
-					.collect(Collectors.toList());
-			constructors = Arrays.stream(clazz.getDeclaredConstructors())
-					.map(c -> new JConstructor(typeOracle, c))
-					.collect(Collectors.toList());
-			implementedInterfaces = Arrays.stream(clazz.getInterfaces())
-					.map(typeOracle::getType).collect(Collectors.toList());
-			computeBounds();
-			/*
-			 * populate inheritable fields/methods - these will have type
-			 * parameters resolved if possible
-			 */
-			inheritableMethods = new ArrayList<>();
-			inheritableFields = new ArrayList<>();
-			JClassType cursor = JClassType.this;
-			// split out into three loops - first construct type resolution,
-			// then ensure methods (but only for erased types if superclass - to
-			// avoid unnecessary JParameterizedType construction)
-			while (cursor != null) {
-				resolution.addResolution(cursor);
-				cursor = cursor.getSuperclass();
-			}
-			cursor = JClassType.this;
-			while (cursor != null) {
-				Members members = cursor == JClassType.this ? this
-						: cursor.getErasedType().ensureMembers();
-				/*
-				 * as per JClassType.getInheritableMethods javadoc, only retain
-				 * the most-derived (i.e. subclass overides super)
-				 *
-				 * the stream calls resolution::resolve to replace the inherited
-				 * method with a possibly specialised version, determined by
-				 * type paremeter resolution
-				 */
-				List<JMethod> inheritableMembers = getDirectInheritableMethods(
-						members.methods);
-				inheritableMembers.forEach(inheritableMethods::add);
-				members.fields.stream().filter(m -> !m.isPrivate())
-						.map(resolution::resolve)
-						.forEach(inheritableFields::add);
-				cursor = cursor.getSuperclass();
+			try {
+				init();
+			} catch (Throwable e) {
+				throw e;
 			}
 		}
 
@@ -627,6 +581,60 @@ public abstract class JClassType<T extends Type>
 							new ReturnTypeAssignableComparator());
 				}
 				return Ax.last(methods);
+			}
+		}
+
+		void init() {
+			resolution = new TypeParameterResolution(JClassType.this);
+			fields = Arrays.stream(clazz.getDeclaredFields())
+					.map(f -> new JField(typeOracle, f))
+					.collect(Collectors.toList());
+			if (TypeOracle.reverseFieldOrder) {
+				// android
+				Collections.reverse(fields);
+			}
+			methods = Arrays.stream(clazz.getDeclaredMethods())
+					.map(m -> new JMethod(typeOracle, m))
+					.collect(Collectors.toList());
+			constructors = Arrays.stream(clazz.getDeclaredConstructors())
+					.map(c -> new JConstructor(typeOracle, c))
+					.collect(Collectors.toList());
+			implementedInterfaces = Arrays.stream(clazz.getInterfaces())
+					.map(typeOracle::getType).collect(Collectors.toList());
+			computeBounds();
+			/*
+			 * populate inheritable fields/methods - these will have type
+			 * parameters resolved if possible
+			 */
+			inheritableMethods = new ArrayList<>();
+			inheritableFields = new ArrayList<>();
+			JClassType cursor = JClassType.this;
+			// split out into three loops - first construct type resolution,
+			// then ensure methods (but only for erased types if superclass - to
+			// avoid unnecessary JParameterizedType construction)
+			while (cursor != null) {
+				resolution.addResolution(cursor);
+				cursor = cursor.getSuperclass();
+			}
+			cursor = JClassType.this;
+			while (cursor != null) {
+				Members members = cursor == JClassType.this ? this
+						: cursor.getErasedType().ensureMembers();
+				/*
+				 * as per JClassType.getInheritableMethods javadoc, only retain
+				 * the most-derived (i.e. subclass overides super)
+				 *
+				 * the stream calls resolution::resolve to replace the inherited
+				 * method with a possibly specialised version, determined by
+				 * type paremeter resolution
+				 */
+				List<JMethod> inheritableMembers = getDirectInheritableMethods(
+						members.methods);
+				inheritableMembers.forEach(inheritableMethods::add);
+				members.fields.stream().filter(m -> !m.isPrivate())
+						.map(resolution::resolve)
+						.forEach(inheritableFields::add);
+				cursor = cursor.getSuperclass();
 			}
 		}
 
