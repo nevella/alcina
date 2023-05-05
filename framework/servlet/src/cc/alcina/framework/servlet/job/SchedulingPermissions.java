@@ -85,6 +85,9 @@ class SchedulingPermissions {
 	}
 
 	static boolean canProcessOrphans() {
+		if (!JobRegistry.get().getEnvironment().isPersistent()) {
+			return false;
+		}
 		if (AppPersistenceBase.isInstanceReadOnly()) {
 			return false;
 		}

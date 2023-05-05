@@ -21,7 +21,7 @@ public class ClassMetadataCache<T extends ClassMetadata>
 	 *
 	 * @formatter:on
 	 */
-	public static final transient int CURRENT_VERSION = 3;
+	public static final transient int CURRENT_VERSION = 5;
 
 	public int version;
 

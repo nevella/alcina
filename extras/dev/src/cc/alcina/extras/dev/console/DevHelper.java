@@ -412,8 +412,7 @@ public abstract class DevHelper {
 			classes = new ServletClasspathScanner("*", true, true, null,
 					Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
 							.getClasses();
-			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					"console");
+			new RegistryScanner().scan(classes, null, "console");
 			long t2 = System.currentTimeMillis();
 			Ax.out("STARTUP\t registry: scan: %s ms", (t2 - t1));
 		} catch (Exception e) {
