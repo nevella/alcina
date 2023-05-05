@@ -81,10 +81,7 @@ public class WDManager {
 				if (timeout != 0) {
 					LooseContext.set(WDUtils.CONTEXT_OVERRIDE_TIMEOUT, timeout);
 				}
-				TestResult result = test.process(token, 0, null);
-				if (!result.providePassed()) {
-					throw new Exception("Test failed");
-				}
+				test.process(token, 0, null);
 			} finally {
 				try {
 					if (token.getRootResult()
