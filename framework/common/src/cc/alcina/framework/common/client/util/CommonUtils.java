@@ -349,12 +349,12 @@ public class CommonUtils {
 		return element == null ? false : collection.contains(element);
 	}
 
-	public static boolean containsWithNull(Object obj, String lcText) {
-		if (obj == null || lcText == null) {
+	public static boolean containsWithNull(Object obj, String lowerCasedText) {
+		if (obj == null || lowerCasedText == null) {
 			return false;
 		}
 		String string = obj.toString();
-		return string != null && string.toLowerCase().contains(lcText);
+		return string != null && string.toLowerCase().contains(lowerCasedText);
 	}
 
 	public static int countOccurrences(String content, String occurrence) {
@@ -1898,8 +1898,11 @@ public class CommonUtils {
 		if (isNullOrEmpty(s)) {
 			return s;
 		}
-		if (s.contains("CALLA")) {
-			int debug = 3;
+		if (s.contains("-")) {
+			// handle hyphenated-names
+			return Arrays.stream(s.split("\\-"))
+					.map(CommonUtils::upperCaseFirstLetterOnly)
+					.collect(Collectors.joining("-"));
 		}
 		String pre = "";
 		if (s.length() > 1 && s.matches("[({\\[].+")) {
