@@ -5,7 +5,6 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 
 public class GwtEvents {
@@ -58,8 +57,7 @@ public class GwtEvents {
 			return ValueChange.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, ValueChange.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<ValueChange> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addHandler(this::fireEvent,

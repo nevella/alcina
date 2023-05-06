@@ -336,7 +336,7 @@ public class CompilationUnits {
 		}
 
 		public void dirty() {
-			prepareForModification();
+			unitWrapper.prepareForModification();
 			unitWrapper.dirty = true;
 		}
 
@@ -400,10 +400,6 @@ public class CompilationUnits {
 
 		public boolean isAssignableFrom(Class<?> from) {
 			return from.isAssignableFrom(clazz());
-		}
-
-		public void prepareForModification() {
-			unitWrapper.prepareForModification();
 		}
 
 		public String resolveFqn(Type type) {
@@ -544,13 +540,6 @@ public class CompilationUnits {
 					.anyMatch(ClassOrInterfaceDeclarationWrapper::hasFlags);
 		}
 
-		public void prepareForModification() {
-			if (!preparedForModification) {
-				preparedForModification = true;
-				LexicalPreservingPrinter.setup(unit());
-			}
-		}
-
 		public void removeImport(Class<?> clazz) {
 			new ArrayList<>(unit.getImports()).stream()
 					.filter(i -> i.getNameAsString().equals(clazz.getName()))
@@ -587,6 +576,13 @@ public class CompilationUnits {
 				Ax.out("wrote: %s", getFile().getName());
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		void prepareForModification() {
+			if (!preparedForModification) {
+				preparedForModification = true;
+				LexicalPreservingPrinter.setup(unit());
 			}
 		}
 	}

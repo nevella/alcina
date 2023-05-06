@@ -182,8 +182,9 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 					classLoader = RegistrationMergeStrategy.class
 							.getClassLoader();
 				}
-				Class<?> clazz = Class.forName(type.getQualifiedBinaryName(),
-						false, classLoader);
+				Class<?> clazz = Class.forName(
+						type.getErasedType().getQualifiedBinaryName(), false,
+						classLoader);
 				return clazz;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

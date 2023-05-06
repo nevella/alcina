@@ -13,12 +13,14 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
-import com.github.javaparser.ast.expr.ClassExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.type.TypeParameter;
+import com.google.common.base.Preconditions;
 
 import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
@@ -26,7 +28,6 @@ import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.util.FsObjectCache;
@@ -82,12 +83,18 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 
 	private boolean test;
 
+	private Class onlyAssignableFrom;
+
 	public Action getAction() {
 		return this.action;
 	}
 
 	public String getClassPathList() {
 		return this.classPathList;
+	}
+
+	public Class getOnlyAssignableFrom() {
+		return this.onlyAssignableFrom;
 	}
 
 	public boolean isOverwriteOriginals() {
@@ -113,7 +120,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		switch (getAction()) {
 		case LIST_INTERESTING: {
 			compUnits.declarations.values().stream()
-					.filter(dec -> dec.hasFlags())
+					.filter(dec -> dec.hasFlags()).filter(this::assignableFrom)
 					.forEach(dec -> Ax.out("%s - %s",
 							dec.clazz().getSimpleName(), dec.typeFlags));
 			break;
@@ -135,7 +142,8 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 			break;
 		}
 		case UPDATE_TWO_KEY_ANNOTATIONS: {
-			ensureAnnotations();
+			Preconditions.checkArgument(onlyAssignableFrom != null);
+			updateTwoKeyAnnotations();
 			break;
 		}
 		}
@@ -150,6 +158,10 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		this.classPathList = classPathList;
 	}
 
+	public void setOnlyAssignableFrom(Class onlyAssignableFrom) {
+		this.onlyAssignableFrom = onlyAssignableFrom;
+	}
+
 	public void setOverwriteOriginals(boolean overwriteOriginals) {
 		this.overwriteOriginals = overwriteOriginals;
 	}
@@ -160,14 +172,6 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 
 	public void setTest(boolean test) {
 		this.test = test;
-	}
-
-	private void ensureAnnotations() {
-		compUnits.declarations.values().stream()
-				.filter(dec -> dec.hasFlag(Type.TwoKeyRegistration))
-				.peek(ClassOrInterfaceDeclarationWrapper::prepareForModification)
-				.forEach(dec -> SourceMods
-						.removeRedundantPropertySerializationAnnotations(dec));
 	}
 
 	private void removeMethod(
@@ -194,6 +198,23 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		}
 	}
 
+	private void updateTwoKeyAnnotations() {
+		compUnits.declarations.values().stream()
+				.filter(dec -> dec.hasFlag(Type.TwoKeyRegistration))
+				.filter(this::assignableFrom).forEach(dec -> SourceMods
+						.removeRedundantRegistrationAnnotation(dec));
+	}
+
+	boolean assignableFrom(
+			ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+		if (onlyAssignableFrom != null) {
+			return onlyAssignableFrom
+					.isAssignableFrom(declarationWrapper.clazz());
+		} else {
+			return true;
+		}
+	}
+
 	public enum Action {
 		LIST_INTERESTING, UPDATE_TWO_KEY_ANNOTATIONS, LIST_TWO_KEY_ROOTS,
 		CLEAN_HANDLERS;
@@ -216,7 +237,13 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 
 		private boolean isDomainStoreHandler(
 				ClassOrInterfaceDeclarationWrapper declaration) {
-			return declaration.isAssignableFrom(DomainCriterionHandler.class);
+			try {
+				return declaration
+						.isAssignableFrom(DomainCriterionHandler.class);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+				return false;
+			}
 		}
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
@@ -267,58 +294,47 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		static Logger logger = LoggerFactory
 				.getLogger(TaskFlatSerializerMetadata.class);
 
-		public static void removeRedundantPropertySerializationAnnotations(
+		public static void removeRedundantRegistrationAnnotation(
 				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
 			ClassOrInterfaceDeclaration declaration = declarationWrapper
 					.getDeclaration();
-			declaration.getMethods().forEach(m -> {
-				Optional<AnnotationExpr> annotation = m
-						.getAnnotationByClass(PropertySerialization.class);
-				cleanIfRedundant(declarationWrapper, annotation, m);
-			});
-		}
-
-		private static void cleanIfRedundant(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper,
-				Optional<AnnotationExpr> annotation,
-				MethodDeclaration methodDeclaration) {
-			if (!annotation.isPresent()) {
+			if (declaration.isInterface()) {
 				return;
 			}
-			AnnotationExpr expr = annotation.get();
-			if (!(expr instanceof NormalAnnotationExpr)) {
-				return;
-			}
-			NormalAnnotationExpr normalExpr = (NormalAnnotationExpr) expr;
-			NodeList<MemberValuePair> pairs = normalExpr.getPairs();
-			if (pairs.size() != 1) {
-				// not a simple 'serialize collection like this' annotation
-				return;
-			}
-			Optional<MemberValuePair> namePair = pairs.stream()
-					.filter(p -> p.getName().toString().equals("types"))
-					.findFirst();
-			if (!namePair.isPresent()) {
-				return;
-			}
-			MemberValuePair pair = namePair.get();
-			Expression valueExpr = pair.getValue();
-			ClassExpr classExpr = null;
-			if (valueExpr instanceof ClassExpr) {
-				classExpr = (ClassExpr) valueExpr;
-			} else {
-				ArrayInitializerExpr arrayInitializerExpr = (ArrayInitializerExpr) valueExpr;
-				if (arrayInitializerExpr.getChildNodes().size() == 1) {
-					classExpr = (ClassExpr) arrayInitializerExpr.getChildNodes()
-							.get(0);
+			NodeList<TypeParameter> typeParameters = declaration
+					.getTypeParameters();
+			Optional<AnnotationExpr> annotation = declaration
+					.getAnnotationByClass(Registration.class);
+			// either extends a generic type, or a single generic interface
+			boolean hasSingleGenericParameterParent = false;
+			if (typeParameters.size() == 0) {
+				if (declaration.getExtendedTypes().size() == 1) {
+					ClassOrInterfaceType extendedType = declaration
+							.getExtendedTypes().get(0);
+					Optional<NodeList<com.github.javaparser.ast.type.Type>> typeArguments = extendedType
+							.getTypeArguments();
+					if (typeArguments.isPresent()
+							&& typeArguments.get().size() == 1) {
+						hasSingleGenericParameterParent = true;
+					}
+				} else {
+					hasSingleGenericParameterParent = declaration
+							.getImplementedTypes().stream().filter(t -> {
+								Optional<NodeList<com.github.javaparser.ast.type.Type>> typeArguments = t
+										.getTypeArguments();
+								return typeArguments.isPresent()
+										&& typeArguments.get().size() == 1;
+							}).count() == 1;
 				}
 			}
-			if (classExpr == null) {
-				// multiple types
-				return;
+			if (annotation.isPresent()) {
+				if (hasSingleGenericParameterParent) {
+					declarationWrapper.dirty();
+					annotation.get().remove();
+				} else {
+					Ax.out("Must add generic: %s", declaration);
+				}
 			}
-			declarationWrapper.dirty();
-			expr.remove();
 		}
 	}
 

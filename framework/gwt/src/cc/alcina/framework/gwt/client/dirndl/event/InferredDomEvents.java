@@ -42,8 +42,8 @@ public class InferredDomEvents {
 			return ActionOutside.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, ActionOutside.class })
-		public static class BindingImpl extends EventRelativeBinding {
+		public static class BindingImpl
+				extends EventRelativeBinding<ActionOutside> {
 			@Override
 			protected boolean isObservedEvent(NativePreviewEvent event) {
 				return Event.as(event.getNativeEvent())
@@ -67,8 +67,8 @@ public class InferredDomEvents {
 			return ClickOutside.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, ClickOutside.class })
-		public static class BindingImpl extends EventRelativeBinding {
+		public static class BindingImpl
+				extends EventRelativeBinding<ClickOutside> {
 			@Override
 			protected boolean isObservedEvent(NativePreviewEvent event) {
 				return Event.as(event.getNativeEvent())
@@ -93,8 +93,7 @@ public class InferredDomEvents {
 			return CtrlEnterPressed.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, CtrlEnterPressed.class })
-		public static class BindingImpl extends DomBinding
+		public static class BindingImpl extends DomBinding<CtrlEnterPressed>
 				implements KeyUpHandler {
 			@Override
 			public void onKeyUp(KeyUpEvent event) {
@@ -129,8 +128,7 @@ public class InferredDomEvents {
 			return EnterPressed.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, EnterPressed.class })
-		public static class BindingImpl extends DomBinding
+		public static class BindingImpl extends DomBinding<EnterPressed>
 				implements KeyUpHandler {
 			@Override
 			public void onKeyUp(KeyUpEvent event) {
@@ -165,8 +163,7 @@ public class InferredDomEvents {
 			return EscapePressed.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, EscapePressed.class })
-		public static class BindingImpl extends DomBinding
+		public static class BindingImpl extends DomBinding<EscapePressed>
 				implements KeyUpHandler {
 			@Override
 			public void onKeyUp(KeyUpEvent event) {
@@ -206,8 +203,7 @@ public class InferredDomEvents {
 			return InputEnterCommit.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, InputEnterCommit.class })
-		public static class BindingImpl extends DomBinding
+		public static class BindingImpl extends DomBinding<InputEnterCommit>
 				implements ChangeHandler, KeyUpHandler {
 			private boolean enterReceived = false;
 
@@ -292,8 +288,8 @@ public class InferredDomEvents {
 		 * Must defer connect (since requires element connected to the dom) --
 		 * so must also check connect occurred on disconnect
 		 */
-		@Registration({ DomBinding.class, IntersectionObserved.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl
+				extends DomBinding<IntersectionObserved> {
 			private IntersectionObserver intersectionObserver;
 
 			boolean removed = false;
@@ -377,8 +373,7 @@ public class InferredDomEvents {
 			return LeftClick.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, LeftClick.class })
-		public static class BindingImpl extends DomBinding
+		public static class BindingImpl extends DomBinding<LeftClick>
 				implements ClickHandler {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -419,8 +414,8 @@ public class InferredDomEvents {
 			return MouseDownOutside.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, MouseDownOutside.class })
-		public static class BindingImpl extends EventRelativeBinding {
+		public static class BindingImpl
+				extends EventRelativeBinding<MouseDownOutside> {
 			@Override
 			protected boolean isObservedEvent(NativePreviewEvent event) {
 				return Event.as(event.getNativeEvent())
@@ -495,8 +490,7 @@ public class InferredDomEvents {
 			return ResizeObserved.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, ResizeObserved.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<ResizeObserved> {
 			private ResizeObserver resizeObserver;
 
 			boolean removed = false;
@@ -574,8 +568,8 @@ public class InferredDomEvents {
 	 *
 	 * FIXME - dirndl 1x1dz - check on mobile (and maybe remove)
 	 */
-	static abstract class EventRelativeBinding extends DomBinding
-			implements NativePreviewHandler {
+	static abstract class EventRelativeBinding<E extends NodeEvent>
+			extends DomBinding<E> implements NativePreviewHandler {
 		static boolean mobile = BrowserMod.isMobile();
 
 		private Widget widget;
