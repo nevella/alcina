@@ -1252,6 +1252,28 @@ public class DomNode {
 	}
 
 	public class DomNodeText {
+		public void mergeWithAdjacentTexts() {
+			DomNode cursor = DomNode.this;
+			for (;;) {
+				DomNode previousSibling = cursor.relative().nextSibling();
+				if (previousSibling != null && previousSibling.isText()) {
+					cursor = previousSibling;
+				} else {
+					break;
+				}
+			}
+			for (;;) {
+				DomNode nextSibling = cursor.relative().nextSibling();
+				if (nextSibling != null && nextSibling.isText()) {
+					cursor.setText(
+							cursor.textContent() + nextSibling.textContent());
+					nextSibling.removeFromParent();
+				} else {
+					break;
+				}
+			}
+		}
+
 		public SplitResult split(int from, int to) {
 			SplitResult result = new SplitResult();
 			Preconditions.checkState(isText());
