@@ -9,7 +9,9 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.SelectElement;
+import com.google.gwt.event.dom.client.MouseDownEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -23,6 +25,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -91,15 +95,19 @@ public abstract class Choices<T> extends Model
 	 * renderer) - but the css for decoration of the choice becomes a lot
 	 * simpler if there _is_ a choice > model structure, so Choice remains a
 	 * container for the moment
+	 *
+	 * Note the preventDefault on mouseDown - which prevents (say) choices in a
+	 * ReferenceDecorator moving document focus
 	 */
 	@Directed(
 		bindings = @Binding(
 			type = Type.PROPERTY,
 			from = "selected",
 			to = "_selected"),
-		receives = DomEvents.Click.class,
-		reemits = ModelEvents.Selected.class)
-	public static class Choice<T> extends Model {
+		receives = { DomEvents.Click.class, DomEvents.MouseDown.class },
+		emits = ModelEvents.Selected.class)
+	public static class Choice<T> extends Model
+			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler {
 		private boolean selected;
 
 		private final T value;
@@ -115,6 +123,18 @@ public abstract class Choices<T> extends Model
 
 		public boolean isSelected() {
 			return this.selected;
+		}
+
+		@Override
+		public void onClick(Click event) {
+			event.reemitAs(this, ModelEvents.Selected.class);
+		}
+
+		@Override
+		public void onMouseDown(MouseDown event) {
+			NativeEvent nativeEvent = ((MouseDownEvent) event.getContext()
+					.getGwtEvent()).getNativeEvent();
+			nativeEvent.preventDefault();
 		}
 
 		public void setSelected(boolean selected) {
