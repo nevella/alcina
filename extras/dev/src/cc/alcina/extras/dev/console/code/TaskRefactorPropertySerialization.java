@@ -106,7 +106,6 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 	private void ensureAnnotations() {
 		compUnits.declarations.values().stream().filter(
 				dec -> dec.hasFlag(Type.PropertySerializationAnnotation))
-				.peek(ClassOrInterfaceDeclarationWrapper::prepareForModification)
 				.forEach(dec -> SourceMods
 						.removeRedundantPropertySerializationAnnotations(dec));
 		compUnits.writeDirty(isTest());

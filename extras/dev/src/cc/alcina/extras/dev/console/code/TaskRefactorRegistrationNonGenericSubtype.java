@@ -1,6 +1,9 @@
 package cc.alcina.extras.dev.console.code;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +24,7 @@ import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclar
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -29,6 +33,42 @@ import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
+/*
+ * This doesn't maybe handle the 'other route' - type structures with a
+ * 'handlesClass' method such as :
+ * 
+ * DomainCriterionHandler... public Class<SC> handlesSearchCriterion() { return
+ * searchCriterionClass; }
+ * 
+ * So...major structures that need semi-manual fix:
+ * @formatter:off
+ * 
+
+DomainCriterionHandler
+SearchCriterionHandler
+DomBinding
+PermissibleActionHandler
+TopLevelHandler
+HasSearchables (shd be abstract)
+BaseRemoteActionPerformer <TaskPerformer>
+DirectedRenderer
+FormatConverter
+BoundSuggestOracleRequestHandler
+HasDisplayName.ClassDisplayName
+OutOfBandMessageHandler
+CustomSearchHandler
+BasePlaceTokenizer
+CriterionTranslator
+DevConsoleCommandTransforms$CmdListClientLogRecords$CmdListClientLogRecordsFilter (remove)
+DevConsoleProtocolHandler$MethodHandler
+DirectedActivity.Provider
+
+ * 
+ *@formatter:on
+ * 
+ * 
+ * 
+ */
 public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 	private boolean overwriteOriginals;
 
@@ -73,16 +113,33 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		switch (getAction()) {
 		case LIST_INTERESTING: {
 			compUnits.declarations.values().stream()
-					.filter(dec -> dec.hasFlag(Type.TwoKeyRegistration))
+					.filter(dec -> dec.hasFlags())
 					.forEach(dec -> Ax.out("%s - %s",
 							dec.clazz().getSimpleName(), dec.typeFlags));
 			break;
 		}
-		case UPDATE_ANNOTATIONS: {
+		case LIST_TWO_KEY_ROOTS: {
+			Stream<Stream<Class<?>>> map = compUnits.declarations.values()
+					.stream()
+					.filter(dec -> dec.hasFlag(Type.TwoKeyRegistration))
+					.map(ClassOrInterfaceDeclarationWrapper::rootTypes);
+			map.flatMap(Function.identity()).distinct().map(Class::getName)
+					.sorted().forEach(Ax::out);
+			break;
+		}
+		case CLEAN_HANDLERS: {
+			compUnits.declarations.values().stream()
+					.filter(dec -> dec.hasFlag(Type.DomainCriterionHandler))
+					.forEach(dec -> this.removeMethod(dec,
+							Type.DomainCriterionHandler));
+			break;
+		}
+		case UPDATE_TWO_KEY_ANNOTATIONS: {
 			ensureAnnotations();
 			break;
 		}
 		}
+		compUnits.writeDirty(isTest());
 	}
 
 	public void setAction(Action action) {
@@ -111,11 +168,35 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 				.peek(ClassOrInterfaceDeclarationWrapper::prepareForModification)
 				.forEach(dec -> SourceMods
 						.removeRedundantPropertySerializationAnnotations(dec));
-		compUnits.writeDirty(isTest());
+	}
+
+	private void removeMethod(
+			ClassOrInterfaceDeclarationWrapper declarationWrapper,
+			Type... types) {
+		ClassOrInterfaceDeclaration decl = declarationWrapper.getDeclaration();
+		List<MethodDeclaration> methods = decl.getMethods();
+		for (MethodDeclaration method : methods) {
+			for (Type type : types) {
+				switch (type) {
+				case DomainCriterionHandler:
+					if (method.getNameAsString()
+							.equals("handlesSearchCriterion")
+							&& !decl.getNameAsString()
+									.equals("DomainCriterionHandler")) {
+						declarationWrapper.dirty();
+						method.remove();
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+			}
+		}
 	}
 
 	public enum Action {
-		LIST_INTERESTING, UPDATE_ANNOTATIONS;
+		LIST_INTERESTING, UPDATE_TWO_KEY_ANNOTATIONS, LIST_TWO_KEY_ROOTS,
+		CLEAN_HANDLERS;
 	}
 
 	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {
@@ -133,6 +214,11 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 			}
 		}
 
+		private boolean isDomainStoreHandler(
+				ClassOrInterfaceDeclarationWrapper declaration) {
+			return declaration.isAssignableFrom(DomainCriterionHandler.class);
+		}
+
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
 				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
@@ -141,15 +227,17 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 						.getNameAsString();
 				declaration.setDeclaration(node);
 				unit.declarations.add(declaration);
-				boolean hasAnnotation = hasAnnotation(node);
-				if (hasAnnotation) {
+				if (hasTwoKeyAnnotation(node)) {
 					declaration.setFlag(Type.TwoKeyRegistration);
+				}
+				if (isDomainStoreHandler(declaration)) {
+					declaration.setFlag(Type.DomainCriterionHandler);
 				}
 			}
 			super.visit(node, arg);
 		}
 
-		boolean hasAnnotation(NodeWithAnnotations<?> decl) {
+		boolean hasTwoKeyAnnotation(NodeWithAnnotations<?> decl) {
 			if (decl.isAnnotationPresent(Registration.class)) {
 				AnnotationExpr annotationExpr = decl
 						.getAnnotationByClass(Registration.class).get();
@@ -235,6 +323,6 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 	}
 
 	enum Type implements TypeFlag {
-		TwoKeyRegistration
+		TwoKeyRegistration, DomainCriterionHandler,
 	}
 }

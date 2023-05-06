@@ -490,9 +490,10 @@ public abstract class JClassType<T extends Type>
 		}
 
 		/*
-		 * This implementation assumes only one nearest generic ancestore
-		 * (extends A<B> or implements C<D>)) - if there are multiple, it will
-		 * return no bounds
+		 * This implementation assumes only one nearest generic ancestor
+		 * (extends A<B> or implements C<D>)) - if there are multiple interface
+		 * ancestors of equivalent rank(note that supertype beats
+		 * superinterfaces), it will return no bounds
 		 * 
 		 */
 		void computeBounds() {
@@ -528,12 +529,7 @@ public abstract class JClassType<T extends Type>
 							break;
 						}
 					} else {
-						if (parameterizedInterfaces.size() == 0) {
-							cursor = superType;
-						} else {
-							// invalid, type has a generic superclass && >=1
-							// generic superInterfaces
-						}
+						cursor = superType;
 					}
 				} else {
 					throw new UnsupportedOperationException();
