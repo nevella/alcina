@@ -37,15 +37,17 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 /*
  * This doesn't maybe handle the 'other route' - type structures with a
  * 'handlesClass' method such as :
- * 
+ *
  * DomainCriterionHandler... public Class<SC> handlesSearchCriterion() { return
  * searchCriterionClass; }
- * 
+ *
  * So...major structures that need semi-manual fix:
  * @formatter:off
- * 
+ *
 
 DomainCriterionHandler
+//cleanup the getFilter0 calls
+ * DomainCriterionHandler -> DomainCriterionHandler implements DomainCriterionFilter - and the various logic interfaces override DomainCriterionFilter
 SearchCriterionHandler
 DomBinding
 PermissibleActionHandler
@@ -64,11 +66,11 @@ DevConsoleCommandTransforms$CmdListClientLogRecords$CmdListClientLogRecordsFilte
 DevConsoleProtocolHandler$MethodHandler
 DirectedActivity.Provider
 
- * 
+ *
  *@formatter:on
- * 
- * 
- * 
+ *
+ *
+ *
  */
 public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 	private boolean overwriteOriginals;
@@ -185,7 +187,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 				case DomainCriterionHandler:
 					if (method.getNameAsString()
 							.equals("handlesSearchCriterion")
-							&& !decl.getNameAsString()
+							&& !method.isFinal() && !decl.getNameAsString()
 									.equals("DomainCriterionHandler")) {
 						declarationWrapper.dirty();
 						method.remove();

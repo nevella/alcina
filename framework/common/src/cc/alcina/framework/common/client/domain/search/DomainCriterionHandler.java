@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 public abstract class DomainCriterionHandler<SC extends SearchCriterion> {
 	public abstract DomainFilter getFilter(SC sc);
 
-	public final Class<SC> handlesSearchCriterion() {
+	public Class<SC> handlesSearchCriterion() {
 		return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
 	}
 

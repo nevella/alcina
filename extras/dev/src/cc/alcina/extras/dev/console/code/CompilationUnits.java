@@ -139,18 +139,25 @@ public class CompilationUnits {
 			Ax.out("%s: %s", classPath, javaFileCount);
 			for (File file : files) {
 				if (!file.isDirectory()) {
-					CompilationUnitWrapper unit = new CompilationUnitWrapper(
-							file);
-					unit.unit().accept(visitorCreator.apply(units, unit), null);
-					synchronized (units) {
-						units.units.add(unit);
-						unit.declarations.stream().filter(d -> d.hasFlags())
-								.forEach(d -> {
-									units.declarations
-											.put(d.qualifiedSourceName, d);
-								});
-						unit.declarations.forEach(
-								d -> units.declarationsByName.add(d.name, d));
+					try {
+						CompilationUnitWrapper unit = new CompilationUnitWrapper(
+								file);
+						unit.unit().accept(visitorCreator.apply(units, unit),
+								null);
+						synchronized (units) {
+							units.units.add(unit);
+							unit.declarations.stream().filter(d -> d.hasFlags())
+									.forEach(d -> {
+										units.declarations
+												.put(d.qualifiedSourceName, d);
+									});
+							unit.declarations
+									.forEach(d -> units.declarationsByName
+											.add(d.name, d));
+						}
+					} catch (Throwable e) {
+						Ax.out(e);
+						Ax.err("Could not load unit: %s", file);
 					}
 					counter.tick();
 				}
