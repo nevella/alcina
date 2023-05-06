@@ -19,7 +19,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
@@ -42,6 +41,6 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.
 public @interface Reflected {
 	@Reflected
 	public static class MergeStrategy extends
-			AbstractMergeStrategy.SingleResultMergeStrategy.ClassOnly<Display> {
+			AbstractMergeStrategy.SingleResultMergeStrategy.ClassOnly<Reflected> {
 	}
 }

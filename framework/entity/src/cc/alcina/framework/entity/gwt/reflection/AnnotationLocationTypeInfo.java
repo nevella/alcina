@@ -37,7 +37,7 @@ import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo.Abst
  * that or *really* abstract the standard java implementation. This
  * implementation is only used during client reflection generation for
  * resolution of registration annotations
- * 
+ *
  * FIXME - doc - actually, not true - at least @Reflected does use this as well
  */
 public class AnnotationLocationTypeInfo extends AnnotationLocation {
@@ -235,7 +235,7 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 
 		/**
 		 * Handling is different to jvm typemodel, since the
-		 * 
+		 *
 		 * @param resolvingClass
 		 */
 		Optional<Registration> applicableNonGeneric(JClassType clazz,
@@ -286,7 +286,7 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			if (mergeStrategyClass == Registration.MergeStrategy.class) {
 				mergeStrategy = new RegistrationMergeStrategy();
 			} else if (mergeStrategyClass == Reflected.MergeStrategy.class) {
-				mergeStrategy = new RegistrationMergeStrategy();
+				mergeStrategy = new ReflectedMergeStrategy();
 			} else {
 				throw new UnsupportedOperationException();
 			}
