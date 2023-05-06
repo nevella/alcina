@@ -318,6 +318,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	}
 
 	<A extends Annotation> boolean has(JClassType t, Class<A> annotationClass) {
+		if (annotationClass == Reflected.class
+				|| annotationClass == Registration.class) {
+			return new AnnotationLocationTypeInfo(t, annotationResolver)
+					.hasAnnotation(annotationClass);
+		}
 		return t.getAnnotation(annotationClass) != null;
 	}
 
@@ -1052,14 +1057,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			return result;
 		}
 
-		private boolean hasRegistrations(JClassType t) {
-			return new AnnotationLocationTypeInfo(t, annotationResolver)
-					.hasAnnotation(Registration.class);
-		}
-
 		private boolean isReflectable(JClassType t) {
 			return filter.isWhitelistReflectable(t) || has(t, Reflected.class)
-					|| has(t, Bean.class) || hasRegistrations(t)
+					|| has(t, Bean.class) || has(t, Registration.class)
 					// the annotations themselves
 					|| t.isAnnotationPresent(ClientVisible.class)
 					|| isReflectableJavaCoreClass(t)
@@ -1138,7 +1138,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		List<JClassType> computeRegistryTypes() {
 			return Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> hasRegistrations(t))
+					.filter(t -> has(t, Registration.class))
 					.map(ClassReflection::erase).distinct()
 					// only interested in instantiable types
 					.filter(t -> t.isPublic() && !t.isAbstract())

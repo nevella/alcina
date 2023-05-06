@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
@@ -32,6 +34,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 
 /**
  * In place of dependency injection and JNDI...we have...the registry
@@ -232,6 +235,11 @@ public class Registry {
 		public void shareImplementationsTo(Registry otherRegistry) {
 			otherRegistry.sharedImplementations = registry;
 			otherRegistry.singletons = registry.singletons;
+		}
+
+		public void stats() {
+			Ax.out("Registry stats: %s", registry);
+			registry.registrations.stats();
 		}
 	}
 
@@ -631,18 +639,16 @@ public class Registry {
 			root.put(itr, t);
 		}
 
+		void stats() {
+			root.stats();
+		}
+
 		class Node {
 			// will be concurrent if in a concurrent environment
 			Map<RegistryKey, Node> map = delegateCreator.createDelegateMap(0,
 					0);
 
 			T value;
-
-			private void dump(String key, int depth) {
-				Ax.out("%s : %s", CommonUtils.padStringRight(key, 45, ' '),
-						value);
-				map.forEach((k, v) -> v.dump(k.simpleName(), depth + 1));
-			}
 
 			void add(Iterator<RegistryKey> itr, Object value) {
 				RegistryKey key = itr.next();
@@ -656,6 +662,16 @@ public class Registry {
 				} else {
 					((List) child.value).add(value);
 				}
+			}
+
+			PerKeyStat atKey(Entry<RegistryKey, LookupTree<T>.Node> entry) {
+				return new PerKeyStat(entry, false);
+			}
+
+			void dump(String key, int depth) {
+				Ax.out("%s : %s", CommonUtils.padStringRight(key, 45, ' '),
+						value);
+				map.forEach((k, v) -> v.dump(k.simpleName(), depth + 1));
 			}
 
 			T get(Iterator<RegistryKey> itr) {
@@ -691,23 +707,109 @@ public class Registry {
 					child.value = t;
 				}
 			}
+
+			/*
+			 * Output registrations ordered by registrations-per-key
+			 */
+			void stats() {
+				Ax.out("Subkey stats\n=======================");
+				map.entrySet().stream().map(this::subKey).sorted()
+						.filter(PerKeyStat::isNonEmpty).forEach(Ax::out);
+				Ax.out("At key stats\n=======================");
+				map.entrySet().stream().map(this::atKey).sorted()
+						.filter(PerKeyStat::isNonEmpty).forEach(Ax::out);
+			}
+
+			PerKeyStat subKey(Entry<RegistryKey, LookupTree<T>.Node> entry) {
+				return new PerKeyStat(entry, true);
+			}
+
+			class PerKeyStat implements Comparable<PerKeyStat> {
+				private Entry<RegistryKey, Node> entry;
+
+				boolean subkey;
+
+				PerKeyStat(Entry<RegistryKey, LookupTree<T>.Node> entry,
+						boolean subkey) {
+					this.entry = entry;
+					this.subkey = subkey;
+					if (entry.getKey()
+							.clazz() == DomainCriterionHandler.class) {
+						int debug = 3;
+					}
+				}
+
+				@Override
+				public int compareTo(LookupTree<T>.Node.PerKeyStat o) {
+					{
+						int cmp = size() - o.size();
+						if (cmp != 0) {
+							return -cmp;
+						}
+					}
+					return entry.getKey().simpleName()
+							.compareTo(o.entry.getKey().simpleName());
+				}
+
+				@Override
+				public String toString() {
+					FormatBuilder format = new FormatBuilder();
+					format.line("%s: %s", Ax.padLeft(size(), 3),
+							entry.getKey().simpleName());
+					format.append("  ");
+					format.separator(", ");
+					if (subkey) {
+						entry.getValue().map.keySet().stream()
+								.map(RegistryKey::simpleName)
+								.forEach(format::append);
+					} else {
+						T value = entry.getValue().value;
+						if (value instanceof Collection) {
+							((Collection) value).stream().map(
+									v -> ((RegistrationData) v).registeringClassKey
+											.simpleName())
+									.forEach(format::append);
+						} else {
+							format.append(value);
+						}
+					}
+					return format.toString();
+				}
+
+				boolean isNonEmpty() {
+					return size() != 0;
+				}
+
+				int size() {
+					if (subkey) {
+						return entry.getValue().map.keySet().size();
+					} else {
+						T value = entry.getValue().value;
+						if (value instanceof Collection) {
+							return ((Collection) value).size();
+						} else {
+							return 1;
+						}
+					}
+				}
+			}
 		}
 	}
 
 	class Registrations {
 		LookupTree<List<RegistrationData>> lookup = new LookupTree<>();
 
-		public void clear(RegistryKey typeKey) {
+		void clear(RegistryKey typeKey) {
 			lookup.clear(typeKey);
-		}
-
-		public Collection<RegistryKey> keys(Query query) {
-			return lookup.keys(query.asRegistrationKeys());
 		}
 
 		void dump() {
 			Ax.out("Registrations:\n============");
 			lookup.dump();
+		}
+
+		Collection<RegistryKey> keys(Query query) {
+			return lookup.keys(query.asRegistrationKeys());
 		}
 
 		void register(RegistryKey registeringClassKey, List<RegistryKey> keys,
@@ -721,6 +823,11 @@ public class Registry {
 		List<RegistrationData> registrations(List<RegistryKey> keys) {
 			List<RegistrationData> value = lookup.get(keys);
 			return value == null ? new ArrayList<>() : value;
+		}
+
+		void stats() {
+			Ax.out("Registration stats:\n============");
+			lookup.stats();
 		}
 
 		Stream<Class> stream(Query<?> query) {

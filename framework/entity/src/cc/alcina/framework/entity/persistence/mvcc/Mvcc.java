@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreator;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
+import cc.alcina.framework.common.client.domain.TransactionId;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;

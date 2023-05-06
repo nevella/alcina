@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -50,14 +51,24 @@ import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 public class Configuration {
 	public final static Properties properties = new Properties();
 
+	/*
+	 * Limited pre-stack-walker support
+	 */
+	public static boolean useStackTraceCallingClass;
+
 	public static String get(Class clazz, String key) {
 		return properties.get(new Key(clazz, key));
 	}
 
 	public static String get(String key) {
-		Class clazz = StackWalker
-				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass();
+		Class clazz = null;
+		if (useStackTraceCallingClass) {
+			clazz = getStacktraceCallingClass();
+		} else {
+			clazz = StackWalker
+					.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+					.getCallerClass();
+		}
 		return get(clazz, key);
 	}
 
@@ -66,16 +77,26 @@ public class Configuration {
 	}
 
 	public static int getInt(String key) {
-		Class clazz = StackWalker
-				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass();
+		Class clazz = null;
+		if (useStackTraceCallingClass) {
+			clazz = getStacktraceCallingClass();
+		} else {
+			clazz = StackWalker
+					.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+					.getCallerClass();
+		}
 		return getInt(clazz, key);
 	}
 
 	public static long getLong(String key) {
-		Class clazz = StackWalker
-				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass();
+		Class clazz = null;
+		if (useStackTraceCallingClass) {
+			clazz = getStacktraceCallingClass();
+		} else {
+			clazz = StackWalker
+					.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+					.getCallerClass();
+		}
 		return Long.parseLong(get(clazz, key));
 	}
 
@@ -89,9 +110,14 @@ public class Configuration {
 	}
 
 	public static boolean is(String key) {
-		Class clazz = StackWalker
-				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass();
+		Class clazz = null;
+		if (useStackTraceCallingClass) {
+			clazz = getStacktraceCallingClass();
+		} else {
+			clazz = StackWalker
+					.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+					.getCallerClass();
+		}
 		return is(clazz, key);
 	}
 
@@ -100,9 +126,21 @@ public class Configuration {
 	}
 
 	public static Key key(String keyPart) {
-		return new Key(StackWalker
-				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
-				.getCallerClass(), keyPart);
+		Class clazz = null;
+		if (useStackTraceCallingClass) {
+			clazz = getStacktraceCallingClass();
+		} else {
+			clazz = StackWalker
+					.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+					.getCallerClass();
+		}
+		return new Key(clazz, keyPart);
+	}
+
+	private static Class getStacktraceCallingClass() {
+		StackTraceElement[] stackTrace = new Exception().getStackTrace();
+		StackTraceElement caller = stackTrace[2];
+		return Reflections.forName(caller.getClassName());
 	}
 
 	public static class ConfigurationFile {
@@ -389,7 +427,7 @@ public class Configuration {
 		}
 
 		private void ensureBundles(Key key) {
-			String packageName = key.clazz.getPackageName();
+			String packageName = key.clazz.getPackage().getName();
 			if (!packageBundles.containsKey(packageName)) {
 				PackageBundles bundles = new PackageBundles(key.clazz);
 				packageBundles.put(packageName, bundles);
@@ -510,8 +548,8 @@ public class Configuration {
 							break;
 						}
 						clazz = clazz.getSuperclass();
-						if (clazz == null
-								|| clazz.getPackageName().startsWith("java")) {
+						if (clazz == null || clazz.getPackage().getName()
+								.startsWith("java")) {
 							break;
 						}
 						cursor = new Key(clazz, cursor.keyPart)
@@ -552,7 +590,7 @@ public class Configuration {
 			private ClassLoader classLoader;
 
 			public PackageBundles(Class clazz) {
-				packageName = clazz.getPackageName();
+				packageName = clazz.getPackage().getName();
 				classLoader = clazz.getClassLoader();
 			}
 

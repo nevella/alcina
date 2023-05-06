@@ -457,6 +457,130 @@ public abstract class JClassType<T extends Type>
 		TypeBounds typeBounds;
 
 		Members() {
+			try {
+				init();
+			} catch (Throwable e) {
+				throw e;
+			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Members: %s", JClassType.this.toString());
+		}
+
+		private List<JMethod>
+				getDirectInheritableMethods(List<JMethod> methods) {
+			Multimap<NameCallingSignature, List<JMethod>> candidates = methods
+					.stream().filter(m -> !m.isPrivate())
+					.map(resolution::resolve).collect(AlcinaCollectors
+							.toKeyMultimap(NameCallingSignature::new));
+			return candidates.values().stream().map(this::findMostSpecific)
+					.collect(Collectors.toList());
+		}
+
+		boolean assignableComparable(JClassType o1, JClassType o2) {
+			if (o1.isAssignableFrom(o2)) {
+				return true;
+			} else if (o2.isAssignableFrom(o1)) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		/*
+		 * This implementation assumes only one nearest generic ancestor
+		 * (extends A<B> or implements C<D>)) - if there are multiple interface
+		 * ancestors of equivalent rank(note that supertype beats
+		 * superinterfaces), it will return no bounds
+		 * 
+		 */
+		void computeBounds() {
+			List<Class> bounds = new ArrayList<>();
+			// find the nearest ParameterizedType ancestor of type (including
+			// self)
+			ParameterizedType nearestGenericSupertype = null;
+			Type cursor = type;
+			while (cursor != null) {
+				if (cursor instanceof ParameterizedType) {
+					nearestGenericSupertype = (ParameterizedType) cursor;
+					break;
+				}
+				if (cursor instanceof Class) {
+					Class classCursor = (Class) cursor;
+					cursor = null;
+					Type superType = classCursor.getGenericSuperclass();
+					ParameterizedType parameterizedSuperclass = superType instanceof ParameterizedType
+							? (ParameterizedType) superType
+							: null;
+					List<ParameterizedType> parameterizedInterfaces = Arrays
+							.stream(classCursor.getGenericInterfaces())
+							.filter(intf -> intf instanceof ParameterizedType)
+							.map(intf -> (ParameterizedType) intf)
+							.collect(Collectors.toList());
+					if (parameterizedSuperclass == null) {
+						if (parameterizedInterfaces.size() == 0) {
+							cursor = superType;
+						} else if (parameterizedInterfaces.size() == 1) {
+							cursor = parameterizedInterfaces.get(0);
+						} else {
+							// invalid, >1 generic superInterfaces
+							break;
+						}
+					} else {
+						cursor = superType;
+					}
+				} else {
+					throw new UnsupportedOperationException();
+				}
+			}
+			if (nearestGenericSupertype != null) {
+				Arrays.stream(nearestGenericSupertype.getActualTypeArguments())
+						.map(typeOracle::getType).map(resolution::resolve)
+						.map(JClassType::getErasedType)
+						.map(JClassType::provideJavaType)
+						// confirm that it's a Class clazz (although
+						// getErasedType probably forces this).
+						//
+						// maybe here because I like peek...
+						.peek(c -> Preconditions
+								.checkArgument(c instanceof Class))
+						.forEach(bounds::add);
+			}
+			typeBounds = new TypeBounds(bounds);
+		}
+
+		// FIXME - reflection - revisit - a formal definition of what this
+		// enforces (rather than 'property types work') would be good... but
+		// probably a chunk of work.
+		JMethod findMostSpecific(List<JMethod> methods) {
+			if (methods.size() == 1) {
+				return methods.get(0);
+			} else {
+				boolean orderable = true;
+				for (int idx1 = 0; idx1 < methods.size(); idx1++) {
+					JMethod m1 = methods.get(idx1);
+					for (int idx2 = 0; idx2 < methods.size(); idx2++) {
+						JMethod m2 = methods.get(idx2);
+						if (!assignableComparable(
+								(JClassType) m1.getReturnType().getErasedType(),
+								(JClassType) m2.getReturnType()
+										.getErasedType())) {
+							orderable = false;
+							break;
+						}
+					}
+				}
+				if (orderable) {
+					Collections.sort(methods,
+							new ReturnTypeAssignableComparator());
+				}
+				return Ax.last(methods);
+			}
+		}
+
+		void init() {
 			resolution = new TypeParameterResolution(JClassType.this);
 			fields = Arrays.stream(clazz.getDeclaredFields())
 					.map(f -> new JField(typeOracle, f))
@@ -507,93 +631,6 @@ public abstract class JClassType<T extends Type>
 						.map(resolution::resolve)
 						.forEach(inheritableFields::add);
 				cursor = cursor.getSuperclass();
-			}
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("Members: %s", JClassType.this.toString());
-		}
-
-		private List<JMethod>
-				getDirectInheritableMethods(List<JMethod> methods) {
-			Multimap<NameCallingSignature, List<JMethod>> candidates = methods
-					.stream().filter(m -> !m.isPrivate())
-					.map(resolution::resolve).collect(AlcinaCollectors
-							.toKeyMultimap(NameCallingSignature::new));
-			return candidates.values().stream().map(this::findMostSpecific)
-					.collect(Collectors.toList());
-		}
-
-		boolean assignableComparable(JClassType o1, JClassType o2) {
-			if (o1.isAssignableFrom(o2)) {
-				return true;
-			} else if (o2.isAssignableFrom(o1)) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		void computeBounds() {
-			List<Class> bounds = new ArrayList<>();
-			// find the nearest ParameterizedType ancestor of type (including
-			// self)
-			ParameterizedType nearestGenericSupertype = null;
-			Type cursor = type;
-			while (cursor != null) {
-				if (cursor instanceof ParameterizedType) {
-					nearestGenericSupertype = (ParameterizedType) cursor;
-					break;
-				}
-				if (cursor instanceof Class) {
-					cursor = ((Class) cursor).getGenericSuperclass();
-				} else {
-					throw new UnsupportedOperationException();
-				}
-			}
-			if (nearestGenericSupertype != null) {
-				Arrays.stream(nearestGenericSupertype.getActualTypeArguments())
-						.map(typeOracle::getType).map(resolution::resolve)
-						.map(JClassType::getErasedType)
-						.map(JClassType::provideJavaType)
-						// confirm that it's a Class clazz (although
-						// getErasedType probably forces this).
-						//
-						// maybe here because I like peek...
-						.peek(c -> Preconditions
-								.checkArgument(c instanceof Class))
-						.forEach(bounds::add);
-			}
-			typeBounds = new TypeBounds(bounds);
-		}
-
-		// FIXME - reflection - revisit - a formal definition of what this
-		// enforces (rather than 'property types work') would be good... but
-		// probably a chunk of work.
-		JMethod findMostSpecific(List<JMethod> methods) {
-			if (methods.size() == 1) {
-				return methods.get(0);
-			} else {
-				boolean orderable = true;
-				for (int idx1 = 0; idx1 < methods.size(); idx1++) {
-					JMethod m1 = methods.get(idx1);
-					for (int idx2 = 0; idx2 < methods.size(); idx2++) {
-						JMethod m2 = methods.get(idx2);
-						if (!assignableComparable(
-								(JClassType) m1.getReturnType().getErasedType(),
-								(JClassType) m2.getReturnType()
-										.getErasedType())) {
-							orderable = false;
-							break;
-						}
-					}
-				}
-				if (orderable) {
-					Collections.sort(methods,
-							new ReturnTypeAssignableComparator());
-				}
-				return Ax.last(methods);
 			}
 		}
 
@@ -674,6 +711,8 @@ public abstract class JClassType<T extends Type>
 	// FIXME - reflection - revisit - a formal definition of what this enforces
 	// (rather than 'property types work') would be good... but probably a chunk
 	// of work
+	//
+	//
 	static class TypeParameterResolution {
 		Map<TypeVariable, Type> resolvedTypeParameters = new LinkedHashMap<>();
 
@@ -690,7 +729,8 @@ public abstract class JClassType<T extends Type>
 
 		/*
 		 * These will be processed in most-specific to least-specific order, so
-		 * will visit the specification (JParaameterizedType) before the declar
+		 * will visit the specification (JParaameterizedType) before the
+		 * declaration
 		 */
 		public void addResolution(JClassType jType) {
 			resolvedJTypes.add(jType);

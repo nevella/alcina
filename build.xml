@@ -221,7 +221,7 @@
 			<fileset dir="${framework.entity.build.dir}">
 				<include name="**/*.*" />
 				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
-				<exclude name="${framework.remote.interface.package}" />
+				<!-- 14 years later - remove GWT restriction -->
 				<exclude name="com/google/gwt/dom/client/**/*.*" />
 				<exclude name="org/w3c/dom/**/*.*" />
 			</fileset>
@@ -250,9 +250,7 @@
 				<include name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
-			<fileset dir="${framework.entity.build.dir}">
-				<include name="${framework.remote.interface.package}" />
-			</fileset>
+		
 			<!-- give the server handy access to stylesheets for print, static serving etc -->
 			<fileset dir="${framework.gwt.src.dir}">
 				<include name="**/*.css" />
@@ -311,20 +309,6 @@
 				<include name="**/*.*" />
 				<exclude name="**/*.class" />
 			</fileset>
-			<fileset dir="${framework.classmeta.build.dir}">
-				<include name="**/*.*" />
-			</fileset>
-			<fileset dir="${framework.classmeta.src.dir}">
-				<include name="**/*.*" />
-				<exclude name="**/*.class" />
-			</fileset>
-			<fileset dir="${framework.clientreflectorjvm.build.dir}">
-				<include name="**/*.*" />
-			</fileset>
-			<fileset dir="${framework.clientreflectorjvm.src.dir}">
-				<include name="**/*.*" />
-				<exclude name="**/*.class" />
-			</fileset>
 		</jar>
 
 		<condition property="framework.impl.base.dir" value="${framework.impl.jboss-hibernate.base.dir}">
@@ -369,9 +353,6 @@
 
 				<include name="**/*.java" />
 				<exclude name="**/*.class" />
-			</fileset>
-			<fileset dir="${framework.entity.build.dir}">
-				<include name="${framework.remote.interface.package}" />
 			</fileset>
 		</jar>
 

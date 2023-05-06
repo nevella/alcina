@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.serializer;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -21,6 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  *
@@ -48,6 +50,8 @@ public @interface PropertySerialization {
 
 	/*
 	 * Serialize if serializing on client
+	 * 
+	 * FIXME - reflection - possibly replace with AlcinaTransient/ctx
 	 */
 	boolean fromClient() default true;
 
@@ -88,6 +92,112 @@ public @interface PropertySerialization {
 	 * specified, not a subtype
 	 */
 	Class[] types() default {};
+
+	public static class Impl implements PropertySerialization {
+		private boolean defaultProperty = false;
+
+		private boolean fromClient = true;
+
+		private boolean ignore = false;
+
+		private String name = "";
+
+		private boolean notTestable = false;
+
+		private String path = "";
+
+		private boolean serializeDefaultValue = false;
+
+		private Class<? extends Serializer> serializer = Serializer.None.class;
+
+		private Class[] types = CommonUtils.EMPTY_CLASS_ARRAY;
+
+		@Override
+		public final Class<? extends Annotation> annotationType() {
+			return PropertySerialization.class;
+		}
+
+		@Override
+		public boolean defaultProperty() {
+			return defaultProperty;
+		}
+
+		@Override
+		public boolean fromClient() {
+			return fromClient;
+		}
+
+		@Override
+		public boolean ignore() {
+			return ignore;
+		}
+
+		@Override
+		public String name() {
+			return name;
+		}
+
+		@Override
+		public boolean notTestable() {
+			return notTestable;
+		}
+
+		@Override
+		public String path() {
+			return path;
+		}
+
+		@Override
+		public boolean serializeDefaultValue() {
+			return serializeDefaultValue;
+		}
+
+		@Override
+		public Class<? extends Serializer> serializer() {
+			return serializer;
+		}
+
+		public void setDefaultProperty(boolean defaultProperty) {
+			this.defaultProperty = defaultProperty;
+		}
+
+		public void setFromClient(boolean fromClient) {
+			this.fromClient = fromClient;
+		}
+
+		public void setIgnore(boolean ignore) {
+			this.ignore = ignore;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public void setNotTestable(boolean notTestable) {
+			this.notTestable = notTestable;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}
+
+		public void setSerializeDefaultValue(boolean serializeDefaultValue) {
+			this.serializeDefaultValue = serializeDefaultValue;
+		}
+
+		public void setSerializer(Class<? extends Serializer> serializer) {
+			this.serializer = serializer;
+		}
+
+		public void setTypes(Class[] types) {
+			this.types = types;
+		}
+
+		@Override
+		public Class[] types() {
+			return types;
+		}
+	}
 
 	public static interface Serializer<T> {
 		T deserializeValue(String value);

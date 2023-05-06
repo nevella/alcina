@@ -24,6 +24,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 @ClientVisible
 /**
  *
+ * FIXME - 2024 - remove (replaced by Type/Property serialization)
+ * 
  * @author Nick Reddel
  */
 public @interface SearchDefinitionSerializationInfo {

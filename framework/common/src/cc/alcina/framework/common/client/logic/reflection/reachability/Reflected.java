@@ -15,23 +15,33 @@ package cc.alcina.framework.common.client.logic.reflection.reachability;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
+
 /**
  * Make type info available to the GWT client.
  *
- * FIXME - dirndl 1x2 - use a strategy (and resolve in callers) to make this
- * annotation inheritable from interfaces
+ * FIXME - beans1x5 - check that server-side reflection/reachability checks
+ * respect the merge strategy
  *
  * @author nick@alcina.cc
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
 @Documented
 @Target({ ElementType.TYPE })
+@Resolution(
+	inheritance = { Inheritance.CLASS, Inheritance.INTERFACE },
+	mergeStrategy = Reflected.MergeStrategy.class)
 public @interface Reflected {
+	@Reflected
+	public static class MergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.ClassOnly<Display> {
+	}
 }

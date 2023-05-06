@@ -22,9 +22,11 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
@@ -32,6 +34,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -44,9 +47,6 @@ import cc.alcina.framework.common.client.util.Ax;
  * Custom 'inheritance' (resolution)
  */
 // @Inherited
-@Resolution(
-	inheritance = { Inheritance.CLASS, Inheritance.INTERFACE },
-	mergeStrategy = Registration.MergeStrategy.class)
 /**
  *
  * <p>
@@ -56,6 +56,16 @@ import cc.alcina.framework.common.client.util.Ax;
  * <li>Denote a class as fulfilling a service contract (single)
  * <li>Denote a class as possessing a given attribute (multiple)
  * </ul>
+ * <p>
+ * Note that parts of annotation resolution are replicated between the two
+ * typemodel systems (JVM, GWT) - this is the only situation in which such
+ * replication is required, all other annotation resolution occurs at runtime,
+ * not buildtime.
+ * <p>
+ * For details of the GWT resolution, see
+ * {@link AnnotationLocationTypeInfo#RegistrationMergeStrategy}. Most of the
+ * interesting logic in resolution is shared here though (see
+ * {@link Registration#Shared})
  *
  * @see Registry
  *
@@ -63,6 +73,9 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  *
  */
+@Resolution(
+	inheritance = { Inheritance.CLASS, Inheritance.INTERFACE },
+	mergeStrategy = Registration.MergeStrategy.class)
 public @interface Registration {
 	Implementation implementation() default Implementation.INSTANCE;
 
@@ -117,7 +130,8 @@ public @interface Registration {
 		@Override
 		protected List<Registration> atClass(
 				Class<Registration> annotationClass,
-				ClassReflector<?> reflector) {
+				ClassReflector<?> reflector,
+				ClassReflector<?> resolvingReflector) {
 			List<Registration> result = new ArrayList<>();
 			Registration registration = reflector
 					.annotation(Registration.class);
@@ -125,6 +139,8 @@ public @interface Registration {
 					.annotation(Registrations.class);
 			Registration.Singleton singleton = reflector
 					.annotation(Registration.Singleton.class);
+			Registration.NonGenericSubtypes nonGenericSubtypes = reflector
+					.annotation(Registration.NonGenericSubtypes.class);
 			if (registration != null) {
 				result.add(registration);
 			}
@@ -135,6 +151,11 @@ public @interface Registration {
 				result.add(new SingletonWrapper(singleton,
 						reflector.getReflectedClass()));
 			}
+			if (nonGenericSubtypes != null) {
+				Optional<Registration> applicableNonGeneric = applicableNonGeneric(
+						reflector, resolvingReflector, nonGenericSubtypes);
+				applicableNonGeneric.ifPresent(result::add);
+			}
 			return result;
 		}
 
@@ -142,6 +163,84 @@ public @interface Registration {
 		protected List<Registration> atProperty(
 				Class<Registration> annotationClass, Property property) {
 			throw new UnsupportedOperationException();
+		}
+
+		Optional<Registration> applicableNonGeneric(ClassReflector<?> reflector,
+				ClassReflector<?> resolvingReflector,
+				NonGenericSubtypes nonGenericSubtypes) {
+			if (resolvingReflector.isAbstract()) {
+				return Optional.empty();
+			}
+			List<Class> bounds = resolvingReflector.getGenericBounds().bounds;
+			if (bounds.size() != 1) {
+				return Optional.empty();
+			}
+			Class firstBound = bounds.get(0);
+			if (firstBound == Object.class) {
+				return Optional.empty();
+			}
+			return Optional
+					.of(new NonGenericSubtypeWrapper(nonGenericSubtypes.value(),
+							firstBound, reflector.getReflectedClass()));
+		}
+
+		public static class NonGenericSubtypeWrapper implements Registration {
+			private Class<?> firstKey;
+
+			private Class secondKey;
+
+			private Class<?> declaringClass;
+
+			public NonGenericSubtypeWrapper(Class<?> firstKey, Class secondKey,
+					Class<?> declaringClass) {
+				this.firstKey = firstKey;
+				this.secondKey = secondKey;
+				this.declaringClass = declaringClass;
+			}
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Registration.class;
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof NonGenericSubtypeWrapper) {
+					NonGenericSubtypeWrapper o = (NonGenericSubtypeWrapper) obj;
+					return firstKey == o.firstKey && secondKey == o.secondKey
+							&& declaringClass == o.declaringClass;
+				} else {
+					return super.equals(obj);
+				}
+			}
+
+			@Override
+			public int hashCode() {
+				return firstKey.hashCode() ^ secondKey.hashCode()
+						^ declaringClass.hashCode();
+			}
+
+			@Override
+			public Implementation implementation() {
+				return Implementation.INSTANCE;
+			}
+
+			@Override
+			public Priority priority() {
+				return Priority._DEFAULT;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("@%s(value=%s,implementation=%s,priority=%s)",
+						Registration.class.getName(), Arrays.toString(value()),
+						implementation(), priority());
+			}
+
+			@Override
+			public Class[] value() {
+				return new Class[] { firstKey, secondKey };
+			}
 		}
 
 		public static class Shared {
@@ -232,7 +331,7 @@ public @interface Registration {
 			}
 		}
 
-		static class SingletonWrapper implements Registration {
+		public static class SingletonWrapper implements Registration {
 			private Singleton singleton;
 
 			private Class<?> declaringClass;
@@ -274,8 +373,7 @@ public @interface Registration {
 
 			@Override
 			public String toString() {
-				return Ax.format(
-						"@%s(value=%s,implementation=SINGLETON,priority=%s)",
+				return Ax.format("@%s(value=%s,implementation=%s,priority=%s)",
 						Registration.class.getName(), Arrays.toString(value()),
 						implementation(), priority());
 			}
@@ -287,6 +385,25 @@ public @interface Registration {
 						: new Class[] { declaringClass };
 			}
 		}
+	}
+
+	/**
+	 * <p>
+	 * This is the first serious use of generic typemodel information to remove
+	 * redundant declarative information - and I like it. It allows the common
+	 * 'generic parent, multiple non-generic children' pattern (such as a
+	 * {@code Handler<T>} with lots of
+	 * {@code ZHandler extends/implements Handler<Z>} (where Z is a concrete
+	 * subtype of T)) to be registered purely via the generic supertype
+	 * ({@code Z}} bounds
+	 * 
+	 * 
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE })
+	public @interface NonGenericSubtypes {
+		Class<?> value();
 	}
 
 	public enum Priority {

@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
@@ -110,8 +111,6 @@ public @interface Directed {
 	public static class Impl implements Directed {
 		public static final Binding[] EMPTY_BINDINGS_ARRAY = new Binding[0];
 
-		public static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
-
 		public static final Directed DEFAULT_INSTANCE = new Directed.Impl();
 
 		public static Impl wrap(Directed directed) {
@@ -124,11 +123,11 @@ public @interface Directed {
 
 		private Binding[] bindings = EMPTY_BINDINGS_ARRAY;
 
-		private Class[] emits = EMPTY_CLASS_ARRAY;
+		private Class[] emits = CommonUtils.EMPTY_CLASS_ARRAY;
 
-		private Class[] receives = EMPTY_CLASS_ARRAY;
+		private Class[] receives = CommonUtils.EMPTY_CLASS_ARRAY;
 
-		private Class[] reemits = EMPTY_CLASS_ARRAY;
+		private Class[] reemits = CommonUtils.EMPTY_CLASS_ARRAY;
 
 		private boolean merge = true;
 

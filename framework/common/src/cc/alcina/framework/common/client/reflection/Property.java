@@ -83,6 +83,10 @@ public class Property implements HasAnnotations {
 		return isWriteOnly() ? getType() : resolveGetter(bean).getReturnType();
 	}
 
+	public TypeBounds getTypeBounds() {
+		return this.typeBounds;
+	}
+
 	public <A extends Annotation> boolean has(Class<A> annotationClass) {
 		return annotationResolver.hasAnnotation(annotationClass);
 	}

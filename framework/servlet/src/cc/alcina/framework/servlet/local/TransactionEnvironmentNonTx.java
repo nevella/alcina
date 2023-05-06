@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.local;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
-import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
+import cc.alcina.framework.common.client.domain.TransactionId;
 
 public class TransactionEnvironmentNonTx implements TransactionEnvironment {
 	@Override

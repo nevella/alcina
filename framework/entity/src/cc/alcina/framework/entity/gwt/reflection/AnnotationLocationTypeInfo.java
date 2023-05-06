@@ -4,21 +4,26 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.NonGenericSubtypes;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
@@ -32,6 +37,8 @@ import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo.Abst
  * that or *really* abstract the standard java implementation. This
  * implementation is only used during client reflection generation for
  * resolution of registration annotations
+ * 
+ * FIXME - doc - actually, not true - at least @Reflected does use this as well
  */
 public class AnnotationLocationTypeInfo extends AnnotationLocation {
 	private JClassType type;
@@ -68,6 +75,10 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		return Ax.format("location: %s", type);
 	}
 
+	/*
+	 * Note, these are class-annotation only, so there's no correspondent to
+	 * resolution.AbstractMergeStrategy.atProperty (yet)
+	 */
 	public static abstract class AbstractMergeStrategy<A extends Annotation>
 			implements MergeStrategyTypeinfo<A> {
 		@Override
@@ -88,7 +99,7 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 				JClassType cursor = itr.next();
 				itr.remove();
 				visited.add(cursor);
-				List<A> atClass = atClass(annotationClass, cursor);
+				List<A> atClass = atClass(annotationClass, cursor, clazz);
 				result = merge(atClass, result);
 				if (inheritance.contains(Inheritance.INTERFACE)) {
 					Arrays.stream(cursor.getImplementedInterfaces())
@@ -100,7 +111,7 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		}
 
 		protected abstract List<A> atClass(Class<A> annotationClass,
-				JClassType clazz);
+				JClassType clazz, JClassType resolvingClass);
 
 		boolean permitPackages(JClassType clazz) {
 			switch (clazz.getPackage().getName()) {
@@ -126,10 +137,60 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 						.collect(Collectors.toList());
 			}
 		}
+
+		public static abstract class SingleResultMergeStrategy<A extends Annotation>
+				extends AbstractMergeStrategy<A> {
+			@Override
+			public List<A> merge(List<A> lessSpecific, List<A> moreSpecific) {
+				if (lessSpecific.isEmpty()) {
+					return moreSpecific;
+				}
+				if (moreSpecific.isEmpty()) {
+					return lessSpecific;
+				}
+				Preconditions.checkState(moreSpecific.size() == 1);
+				return moreSpecific;
+			}
+
+			public static abstract class ClassOnly<A extends Annotation>
+					extends AbstractMergeStrategy.SingleResultMergeStrategy<A> {
+				@Override
+				protected List<A> atClass(Class<A> annotationClass,
+						JClassType clazz, JClassType resolvingClass) {
+					A annotation = clazz.getAnnotation(annotationClass);
+					return annotation == null ? Collections.emptyList()
+							: Collections.singletonList(annotation);
+				}
+			}
+		}
+	}
+
+	public static class ReflectedMergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.ClassOnly<Reflected> {
 	}
 
 	public static class RegistrationMergeStrategy
 			extends AdditiveMergeStrategy<Registration> {
+		static Class typeModelToJdkType(JClassType type) {
+			try {
+				// see
+				// com.google.gwt.dev.javac.CompilationUnitTypeOracleUpdater.getAnnotationClass(TreeLogger,
+				// AnnotationData)
+				ClassLoader classLoader = Thread.currentThread()
+						.getContextClassLoader();
+				if (classLoader == null) {
+					classLoader = RegistrationMergeStrategy.class
+							.getClassLoader();
+				}
+				Class<?> clazz = Class.forName(
+						type.getErasedType().getQualifiedBinaryName(), false,
+						classLoader);
+				return clazz;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
 		@Override
 		public void finish(List<Registration> merged) {
 			merged.removeIf(r -> r.priority() == Priority.REMOVE);
@@ -143,14 +204,17 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		}
 
 		@Override
-		protected List<Registration>
-				atClass(Class<Registration> annotationClass, JClassType clazz) {
+		protected List<Registration> atClass(
+				Class<Registration> annotationClass, JClassType clazz,
+				JClassType resolvingClass) {
 			List<Registration> result = new ArrayList<>();
 			Registration registration = clazz.getAnnotation(Registration.class);
 			Registrations registrations = clazz
 					.getAnnotation(Registrations.class);
 			Registration.Singleton singleton = clazz
 					.getAnnotation(Registration.Singleton.class);
+			Registration.NonGenericSubtypes nonGenericSubtypes = clazz
+					.getAnnotation(Registration.NonGenericSubtypes.class);
 			if (registration != null) {
 				result.add(registration);
 			}
@@ -158,81 +222,48 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 				Arrays.stream(registrations.value()).forEach(result::add);
 			}
 			if (singleton != null) {
-				result.add(new SingletonWrapper(singleton, clazz));
+				result.add(new Registration.MergeStrategy.SingletonWrapper(
+						singleton, typeModelToJdkType(clazz)));
+			}
+			if (nonGenericSubtypes != null) {
+				Optional<Registration> applicableNonGeneric = applicableNonGeneric(
+						clazz, resolvingClass, nonGenericSubtypes);
+				applicableNonGeneric.ifPresent(result::add);
 			}
 			return result;
 		}
 
-		static class SingletonWrapper implements Registration {
-			private Singleton singleton;
-
-			private JClassType declaringType;
-
-			public SingletonWrapper(Singleton singleton, JClassType clazz) {
-				this.singleton = singleton;
-				this.declaringType = clazz;
+		/**
+		 * Handling is different to jvm typemodel, since the
+		 * 
+		 * @param resolvingClass
+		 */
+		Optional<Registration> applicableNonGeneric(JClassType clazz,
+				JClassType resolvingClass,
+				NonGenericSubtypes nonGenericSubtypes) {
+			// List<? extends JClassType> jTypeBounds = providesTypeBounds
+			// .provideTypeBounds(clazz);
+			// List<Class> bounds = jTypeBounds.stream().map(this::asJavaType)
+			// .collect(Collectors.toList());
+			// TypeBounds typeBounds = new TypeBounds(bounds);
+			// List<Class> bounds = reflector.getGenericBounds().bounds;
+			if (!(clazz instanceof JParameterizedType)) {
+				return Optional.empty();
 			}
-
-			@Override
-			public Class<? extends Annotation> annotationType() {
-				return Registration.class;
+			JParameterizedType parameterizedType = (JParameterizedType) clazz;
+			JClassType[] typeArgs = parameterizedType.getTypeArgs();
+			if (typeArgs.length != 1) {
+				return Optional.empty();
 			}
-
-			@Override
-			public boolean equals(Object obj) {
-				if (obj instanceof SingletonWrapper) {
-					return ((SingletonWrapper) obj).singleton.equals(singleton);
-				} else {
-					return super.equals(obj);
-				}
+			JClassType firstBound = typeArgs[0];
+			Class firstJdkBound = typeModelToJdkType(firstBound);
+			if (firstJdkBound == Object.class) {
+				return Optional.empty();
 			}
-
-			@Override
-			public int hashCode() {
-				return singleton.hashCode();
-			}
-
-			@Override
-			public Implementation implementation() {
-				return Implementation.SINGLETON;
-			}
-
-			@Override
-			public Priority priority() {
-				return this.singleton.priority();
-			}
-
-			@Override
-			public String toString() {
-				return Ax.format(
-						"@%s(value=%s,implementation=SINGLETON,priority=%s)",
-						Registration.class.getName(), Arrays.toString(value()),
-						implementation(), priority());
-			}
-
-			@Override
-			public Class[] value() {
-				if (this.singleton.value().length > 0) {
-					return this.singleton.value();
-				} else {
-					try {
-						// see
-						// com.google.gwt.dev.javac.CompilationUnitTypeOracleUpdater.getAnnotationClass(TreeLogger,
-						// AnnotationData)
-						ClassLoader classLoader = Thread.currentThread()
-								.getContextClassLoader();
-						if (classLoader == null) {
-							classLoader = getClass().getClassLoader();
-						}
-						Class<?> clazz = Class.forName(
-								declaringType.getQualifiedBinaryName(), false,
-								classLoader);
-						return new Class[] { clazz };
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
-			}
+			return Optional
+					.of(new Registration.MergeStrategy.NonGenericSubtypeWrapper(
+							nonGenericSubtypes.value(), firstJdkBound,
+							typeModelToJdkType(clazz)));
 		}
 	}
 
@@ -253,6 +284,8 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			Class<? extends MergeStrategy> mergeStrategyClass = resolution
 					.mergeStrategy();
 			if (mergeStrategyClass == Registration.MergeStrategy.class) {
+				mergeStrategy = new RegistrationMergeStrategy();
+			} else if (mergeStrategyClass == Reflected.MergeStrategy.class) {
 				mergeStrategy = new RegistrationMergeStrategy();
 			} else {
 				throw new UnsupportedOperationException();

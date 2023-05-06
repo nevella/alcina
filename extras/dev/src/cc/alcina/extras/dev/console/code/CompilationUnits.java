@@ -3,6 +3,7 @@ package cc.alcina.extras.dev.console.code;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -11,8 +12,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -25,6 +28,7 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
@@ -332,6 +336,7 @@ public class CompilationUnits {
 		}
 
 		public void dirty() {
+			unitWrapper.prepareForModification();
 			unitWrapper.dirty = true;
 		}
 
@@ -417,6 +422,36 @@ public class CompilationUnits {
 			}
 		}
 
+		/*
+		 * Output direct subclass of object *if* it doesn't implement any
+		 * interfaces, otherwise root interfaces
+		 */
+		public Stream<Class<?>> rootTypes() {
+			Set<Class<?>> rootTypes = new LinkedHashSet<>();
+			Stack<Class> stack = new Stack<>();
+			stack.push(clazz());
+			while (!stack.isEmpty()) {
+				Class cursor = stack.pop();
+				Class[] interfaces = cursor.getInterfaces();
+				if (cursor.isInterface()) {
+					if (interfaces.length == 0) {
+						rootTypes.add(cursor);
+					}
+				} else {
+					Class superclass = cursor.getSuperclass();
+					if (superclass == Object.class) {
+						if (interfaces.length == 0) {
+							rootTypes.add(cursor);
+						}
+					} else {
+						stack.push(superclass);
+					}
+				}
+				Arrays.stream(interfaces).forEach(stack::add);
+			}
+			return rootTypes.stream();
+		}
+
 		public void setDeclaration(ClassOrInterfaceDeclaration declaration) {
 			this.declaration = declaration;
 		}
@@ -462,6 +497,8 @@ public class CompilationUnits {
 		public transient CompilationUnit unit;
 
 		public boolean dirty;
+
+		transient boolean preparedForModification;
 
 		public CompilationUnitWrapper() {
 		}
@@ -532,11 +569,20 @@ public class CompilationUnits {
 			File outFile = SEUtilities.getChildFile(outDir,
 					getFile().getName());
 			try {
-				String modified = mapper == null ? unit.toString()
+				String modified = mapper == null
+						? LexicalPreservingPrinter.print(unit)
 						: mapper.apply(this);
 				Io.write().string(modified).toFile(outFile);
+				Ax.out("wrote: %s", getFile().getName());
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		void prepareForModification() {
+			if (!preparedForModification) {
+				preparedForModification = true;
+				LexicalPreservingPrinter.setup(unit());
 			}
 		}
 	}

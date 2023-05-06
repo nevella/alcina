@@ -10,8 +10,6 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  * FIXME - jobs - probably most of these belong in TransactionEnvironment
  */
 public interface JobEnvironment {
-	boolean canCreateFutures();
-
 	ClientInstance getPerformerInstance();
 
 	Transaction getScheduleEventTransaction();

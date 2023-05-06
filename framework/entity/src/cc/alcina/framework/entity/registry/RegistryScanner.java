@@ -18,7 +18,6 @@ import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +39,8 @@ import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetada
  * @author Nick Reddel
  */
 public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
+	public boolean commitAfterScan = true;
+
 	/**
 	 * Load cached registry data directly (when generated at build- rather than
 	 * run-time)
@@ -49,16 +50,33 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 		commit();
 	}
 
+	public void logRegistrations() {
+		for (RegistryScannerMetadata metadata : outgoingCache.classData
+				.values()) {
+			if (!metadata.invalid) {
+				for (RegistryScannerLazyRegistration registration : metadata.registrations) {
+					Ax.out("%s - %s - %s - %s",
+							registration.registeringClassClassName,
+							registration.keys, registration.implementation,
+							registration.priority);
+				}
+			}
+		}
+	}
+
 	public void scan(ClassMetadataCache<ClassMetadata> classDataCache,
-			Collection<String> ignore, String registryName) throws Exception {
+			String ignoreClassnameRegex, String registryName) throws Exception {
 		String cachePath = Ax.format("%s/%s-registry-cache.ser",
 				getHomeDir().getPath(), registryName);
 		if (!Ax.isTest() && !Boolean.getBoolean("RegistryScanner.useCache")
 				&& !GWT.isClient()) {
 			new File(cachePath).delete();
 		}
+		this.ignoreClassnameRegex = ignoreClassnameRegex;
 		scan(classDataCache, cachePath);
-		commit();
+		if (commitAfterScan) {
+			commit();
+		}
 	}
 
 	private void commit() {

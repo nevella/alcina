@@ -6,7 +6,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -508,8 +507,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			ClassMetadataCache classes = classMetadataCacheProvider
 					.getClassInfo(logger, false);
 			Registry servletLayerRegistry = Registry.internals().instance();
-			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					"servlet-layer");
+			new RegistryScanner().scan(classes, null, "servlet-layer");
 			ClassLoaderAwareRegistryProvider.get()
 					.setServletLayerClassloader(getClass().getClassLoader());
 			EntityLayerObjects.get()

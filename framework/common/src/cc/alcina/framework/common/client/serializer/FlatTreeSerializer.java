@@ -608,11 +608,8 @@ public class FlatTreeSerializer {
 							}
 							break;
 						}
-						Class<? extends Object> cursorValueClass = cursor.value
-								.getClass();
 						PropertySerialization propertySerialization = SerializationSupport
-								.getPropertySerialization(cursorValueClass,
-										property.getName());
+								.getPropertySerialization(property);
 						Object childValue = property.get(cursor.value);
 						Node lookahead = new Node(cursor, childValue, null);
 						lookahead.path.property = property;
@@ -744,8 +741,7 @@ public class FlatTreeSerializer {
 				cursor.path.property);
 		return deSerializationPropertyAliasClass.computeIfAbsent(key, k -> {
 			PropertySerialization propertySerialization = SerializationSupport
-					.getPropertySerialization(cursor.parent.value.getClass(),
-							k.property.getName());
+					.getPropertySerialization(k.property);
 			Class[] availableTypes = propertySerialization == null
 					? new Class[0]
 					: propertySerialization.types();
@@ -767,8 +763,7 @@ public class FlatTreeSerializer {
 	private Map<String, Property> getAliasPropertyMap(Node cursor) {
 		Function<? super Property, ? extends String> keyMapper = property -> {
 			PropertySerialization propertySerialization = SerializationSupport
-					.getPropertySerialization(cursor.value.getClass(),
-							property.getName());
+					.getPropertySerialization(property);
 			if (propertySerialization != null) {
 				if (propertySerialization.defaultProperty()) {
 					return "";
@@ -891,8 +886,7 @@ public class FlatTreeSerializer {
 							childNode.path.setPropertySerialization(
 									SerializationSupport
 											.getPropertySerialization(
-													cursor.value.getClass(),
-													property.getName()));
+													property));
 							if (childNode.path.ignoreForSerialization()) {
 								return;
 							}
@@ -920,8 +914,7 @@ public class FlatTreeSerializer {
 	private Object synthesisePopulatedPropertyValue(Node node,
 			Property property) {
 		PropertySerialization propertySerialization = SerializationSupport
-				.getPropertySerialization(node.value.getClass(),
-						property.getName());
+				.getPropertySerialization(property);
 		if (propertySerialization != null
 				&& propertySerialization.notTestable()) {
 			try {

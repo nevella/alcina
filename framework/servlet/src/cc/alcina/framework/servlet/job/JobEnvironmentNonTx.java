@@ -19,11 +19,6 @@ public class JobEnvironmentNonTx implements JobEnvironment {
 	}
 
 	@Override
-	public boolean canCreateFutures() {
-		return false;
-	}
-
-	@Override
 	public ClientInstance getPerformerInstance() {
 		return ClientInstance.self();
 	}

@@ -54,7 +54,7 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 
 	@Override
 	protected List<Directed> atClass(Class<Directed> annotationClass,
-			ClassReflector<?> reflector) {
+			ClassReflector<?> reflector, ClassReflector<?> resolvingReflector) {
 		return atHasAnnotations(reflector);
 	}
 

@@ -22,11 +22,6 @@ import cc.alcina.framework.entity.util.MethodContext;
  */
 class JobEnvironmentTx implements JobEnvironment {
 	@Override
-	public boolean canCreateFutures() {
-		return true;
-	}
-
-	@Override
 	public ClientInstance getPerformerInstance() {
 		return EntityLayerObjects.get().getServerAsClientInstance();
 	}

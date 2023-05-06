@@ -22,7 +22,6 @@ import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 
 public class DomEvents {
@@ -49,8 +48,7 @@ public class DomEvents {
 			return this.nativeBeforeInputEvent;
 		}
 
-		@Registration({ DomBinding.class, BeforeInput.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<BeforeInput> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -74,8 +72,7 @@ public class DomEvents {
 			return Blur.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, Blur.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<Blur> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -106,8 +103,7 @@ public class DomEvents {
 			return Change.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, Change.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<Change> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -138,8 +134,7 @@ public class DomEvents {
 			return Click.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, Click.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<Click> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -163,8 +158,7 @@ public class DomEvents {
 			return Focus.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, Focus.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<Focus> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -188,8 +182,7 @@ public class DomEvents {
 			return Focusin.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, Focusin.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<Focusin> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -213,8 +206,7 @@ public class DomEvents {
 			return Focusout.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, Focusout.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<Focusout> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -260,8 +252,7 @@ public class DomEvents {
 			return this.value;
 		}
 
-		@Registration({ DomBinding.class, Input.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<Input> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -285,8 +276,7 @@ public class DomEvents {
 			return KeyDown.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, KeyDown.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<KeyDown> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -310,8 +300,7 @@ public class DomEvents {
 			return KeyUp.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, KeyUp.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<KeyUp> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -335,8 +324,7 @@ public class DomEvents {
 			return MouseUp.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, MouseUp.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<MouseUp> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -360,8 +348,7 @@ public class DomEvents {
 			return Scroll.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, Scroll.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<Scroll> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				return widget.addDomHandler(this::fireEvent,
@@ -390,8 +377,7 @@ public class DomEvents {
 			return Submit.Handler.class;
 		}
 
-		@Registration({ DomBinding.class, Submit.class })
-		public static class BindingImpl extends DomBinding {
+		public static class BindingImpl extends DomBinding<Submit> {
 			@Override
 			protected HandlerRegistration bind1(Widget widget) {
 				// required since form submit doesn't propagate
