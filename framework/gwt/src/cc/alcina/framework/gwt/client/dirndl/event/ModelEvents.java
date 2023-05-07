@@ -12,6 +12,9 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
  * <p>
  * Note that these 'events' are really english language imperative verb forms
  * (or infinitives without 'to') - that's the shortest...
+ *
+ * <p>
+ * FIXME - there's possible confusion between 'Close' and 'Closed' -
  */
 public class ModelEvents {
 	public static class Add extends ModelEvent<Object, Add.Handler> {

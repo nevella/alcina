@@ -495,10 +495,8 @@ public class DomNode {
 	}
 
 	public void strip() {
-		DocumentFragment frag = domDoc().createDocumentFragment();
-		DomNode fragNode = new DomNode(frag, document);
-		fragNode.children.adoptFrom(this);
-		relative().insertBeforeThis(fragNode);
+		List<DomNode> nodes = children.nodes();
+		nodes.forEach(relative()::insertBeforeThis);
 		removeFromParent();
 	}
 
