@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.search.EnumCriterion;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
@@ -13,10 +14,12 @@ import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class BaseEnumCriterionPack {
-	public interface BaseEnumCriterionHandler<T, E extends Enum, C extends EnumCriterion<E>> {
+	public interface BaseEnumCriterionHandler<T, E extends Enum, C extends EnumCriterion<E>>
+			extends DomainCriterionFilter<C> {
 		public boolean test(T t, E value);
 
-		default DomainFilter getFilter0(C sc) {
+		@Override
+		default DomainFilter getFilter(C sc) {
 			E e = sc.getValue();
 			if (e == null) {
 				return null;

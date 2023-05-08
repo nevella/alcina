@@ -9,6 +9,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.gwittir.validator.DoubleValidator;
 import cc.alcina.framework.common.client.search.DoubleCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
@@ -16,11 +17,13 @@ import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class BaseDoubleCriterionPack {
-	public interface BaseDoubleCriterionHandler<T> extends Function<T, Double> {
+	public interface BaseDoubleCriterionHandler<SC extends DoubleCriterion, T>
+			extends Function<T, Double>, DomainCriterionFilter<SC> {
 		@Override
 		public Double apply(T t);
 
-		default DomainFilter getFilter0(DoubleCriterion sc) {
+		@Override
+		default DomainFilter getFilter(SC sc) {
 			Double value = sc.getDouble();
 			if (value == null) {
 				return null;
@@ -83,12 +86,13 @@ public class BaseDoubleCriterionPack {
 		}
 	}
 
-	public interface BaseDoubleStreamCriterionHandler<T>
-			extends Function<T, Stream<Double>> {
+	public interface BaseDoubleStreamCriterionHandler<SC extends DoubleCriterion, T>
+			extends Function<T, Stream<Double>>, DomainCriterionFilter<SC> {
 		@Override
 		public Stream<Double> apply(T t);
 
-		default DomainFilter getFilter0(DoubleCriterion sc) {
+		@Override
+		default DomainFilter getFilter(SC sc) {
 			Double value = sc.getDouble();
 			if (value == null) {
 				return null;

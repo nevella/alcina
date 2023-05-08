@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TextUtils;
@@ -15,10 +16,12 @@ import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class BaseTextCriterionPack {
-	public interface BaseTextCriterionHandler<T> {
+	public interface BaseTextCriterionHandler<SC extends TextCriterion, T>
+			extends DomainCriterionFilter<SC> {
 		public boolean test(T t, String text);
 
-		default DomainFilter getFilter0(TextCriterion sc) {
+		@Override
+		default DomainFilter getFilter(SC sc) {
 			String text = TextUtils.normalisedLcKey(sc.getValue());
 			if (text.isEmpty()) {
 				return null;

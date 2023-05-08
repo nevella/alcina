@@ -7,6 +7,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
 import cc.alcina.framework.common.client.search.LongCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
@@ -14,10 +15,12 @@ import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class BaseLongCriterionPack {
-	public interface BaseLongCriterionHandler<T> {
+	public interface BaseLongCriterionHandler<SC extends LongCriterion, T>
+			extends DomainCriterionFilter<SC> {
 		public boolean test(T t, Long value);
 
-		default DomainFilter getFilter0(LongCriterion sc) {
+		@Override
+		default DomainFilter getFilter(SC sc) {
 			Long value = sc.getValue();
 			if (value == null) {
 				return null;

@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -35,10 +36,10 @@ import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
- * 
+ *
  * @author Nick Reddel
- * 
- * 
+ *
+ *
  */
 public abstract class EnumMultipleCriterion<E extends Enum>
 		extends SearchCriterion implements HasValue<Set<E>> {
@@ -127,10 +128,12 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 		return false;
 	}
 
-	public interface Handler<T, E extends Enum, SC extends EnumMultipleCriterion<E>> {
+	public interface Handler<T, E extends Enum, SC extends EnumMultipleCriterion<E>>
+			extends DomainCriterionFilter<SC> {
 		public boolean test(T t, Set<E> value);
 
-		default DomainFilter getFilter0(SC sc) {
+		@Override
+		default DomainFilter getFilter(SC sc) {
 			Set<E> values = sc.getValue();
 			if (values.isEmpty()) {
 				return null;

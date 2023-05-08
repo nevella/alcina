@@ -48,7 +48,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 DomainCriterionHandler
 //cleanup the getFilter0 calls
  * DomainCriterionHandler -> DomainCriterionHandler implements DomainCriterionFilter - and the various logic interfaces override DomainCriterionFilter
-SearchCriterionHandler
+SearchCriterionHandler (/)
 DomBinding
 PermissibleActionHandler
 TopLevelHandler
@@ -139,7 +139,13 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		case CLEAN_HANDLERS: {
 			compUnits.declarations.values().stream()
 					.filter(dec -> dec.hasFlag(Type.DomainCriterionHandler))
-					.forEach(dec -> this.removeMethod(dec,
+					.forEach(dec -> this.removeHandlesMethod(dec,
+							Type.DomainCriterionHandler));
+			// rearrange class hierarchy so logic interfaces can override
+			// filter()
+			compUnits.declarations.values().stream()
+					.filter(dec -> dec.hasFlag(Type.DomainCriterionHandler))
+					.forEach(dec -> this.removeFilter0FilterMethod(dec,
 							Type.DomainCriterionHandler));
 			break;
 		}
@@ -176,7 +182,32 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		this.test = test;
 	}
 
-	private void removeMethod(
+	private void removeFilter0FilterMethod(
+			ClassOrInterfaceDeclarationWrapper declarationWrapper,
+			Type... types) {
+		ClassOrInterfaceDeclaration decl = declarationWrapper.getDeclaration();
+		List<MethodDeclaration> methods = decl.getMethods();
+		for (MethodDeclaration method : methods) {
+			for (Type type : types) {
+				switch (type) {
+				case DomainCriterionHandler:
+					if (method.getNameAsString().equals("getFilter")
+							&& method.getType().toString()
+									.contains("DomainFilter")
+							&& method.toString()
+									.contains("return getFilter0(sc);")) {
+						declarationWrapper.dirty();
+						method.remove();
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+			}
+		}
+	}
+
+	private void removeHandlesMethod(
 			ClassOrInterfaceDeclarationWrapper declarationWrapper,
 			Type... types) {
 		ClassOrInterfaceDeclaration decl = declarationWrapper.getDeclaration();

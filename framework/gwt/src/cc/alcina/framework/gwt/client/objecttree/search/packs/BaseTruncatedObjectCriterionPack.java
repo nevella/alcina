@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -15,8 +16,10 @@ import cc.alcina.framework.gwt.client.objecttree.search.FlatSuggestorSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class BaseTruncatedObjectCriterionPack {
-	public interface BaseTruncatedObjectCriterionHandler<I extends HasId, O extends Entity> {
-		default DomainFilter getFilter0(TruncatedObjectCriterion<O> sc) {
+	public interface BaseTruncatedObjectCriterionHandler<I extends HasId, O extends Entity, SC extends TruncatedObjectCriterion<O>>
+			extends DomainCriterionFilter<SC> {
+		@Override
+		default DomainFilter getFilter(SC sc) {
 			long id = sc.getId();
 			if (id == 0) {
 				return null;
@@ -60,22 +63,24 @@ public class BaseTruncatedObjectCriterionPack {
 			return tc.getId() != 0;
 		}
 
+		@Override
+		public boolean isNonDefaultValue(TC sc) {
+			sc.ensurePlaceholderObject();
+			return super.isNonDefaultValue(sc);
+		}
+
 		public <S extends BaseTruncatedObjectCriterionSearchable> S
 				withOverrideName(String name) {
 			this.name = name;
 			this.category = "";
 			return (S) this;
 		}
-
-		@Override
-		public boolean isNonDefaultValue(TC sc) {
-			sc.ensurePlaceholderObject();
-			return super.isNonDefaultValue(sc);
-		}
 	}
 
-	public interface BaseTruncatedObjectMultipleCriterionHandler<I extends HasId, O extends Entity> {
-		default DomainFilter getFilter0(TruncatedObjectCriterion<O> sc) {
+	public interface BaseTruncatedObjectMultipleCriterionHandler<I extends HasId, O extends Entity, SC extends TruncatedObjectCriterion<O>>
+			extends DomainCriterionFilter<SC> {
+		@Override
+		default DomainFilter getFilter(SC sc) {
 			long id = sc.getId();
 			if (id == 0) {
 				return null;

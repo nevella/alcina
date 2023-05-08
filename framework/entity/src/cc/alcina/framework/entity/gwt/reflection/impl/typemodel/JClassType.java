@@ -489,12 +489,12 @@ public abstract class JClassType<T extends Type>
 			}
 		}
 
-		/*
+		/**
 		 * This implementation assumes only one nearest generic ancestor
-		 * (extends A<B> or implements C<D>)) - if there are multiple interface
-		 * ancestors of equivalent rank(note that supertype beats
+		 * {@code (extends A<B> or implements C<D>) } - if there are multiple
+		 * interface ancestors of equivalent rank(note that supertype beats
 		 * superinterfaces), it will return no bounds
-		 * 
+		 *
 		 */
 		void computeBounds() {
 			List<Class> bounds = new ArrayList<>();

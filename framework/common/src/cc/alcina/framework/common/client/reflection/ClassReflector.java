@@ -105,6 +105,12 @@ public class ClassReflector<T> implements HasAnnotations {
 		return annotationProvider.getAnnotation(annotationClass);
 	}
 
+	/**
+	 * This is the resolved bounds of this class - i.e
+	 * {@code A extends B<String> would have a genericBounds of [String.class] }.
+	 * Note that this takes into account both direct superclass and interface
+	 * bounds - with more detail in {@link JClassType.Members#computeBounds}
+	 */
 	public TypeBounds getGenericBounds() {
 		return this.genericBounds;
 	}
