@@ -15,12 +15,14 @@ package cc.alcina.framework.common.client.actions;
 
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  *
  * @author Nick Reddel
  */
+@Registration.NonGenericSubtypes(PermissibleActionHandler.class)
 public interface PermissibleActionHandler<A extends PermissibleAction> {
 	public void handleAction(Widget sourceWidget, A action, Object target);
 

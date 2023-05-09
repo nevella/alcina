@@ -10,8 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
-@Reflected
-@Registration({ PermissibleActionHandler.class, PermissibleEntityAction.class })
 public class PermissibleEntityActionHandler
 		implements PermissibleActionHandler<PermissibleEntityAction> {
 	@Override

@@ -48,9 +48,9 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 DomainCriterionHandler
 //cleanup the getFilter0 calls
  * DomainCriterionHandler -> DomainCriterionHandler implements DomainCriterionFilter - and the various logic interfaces override DomainCriterionFilter
-SearchCriterionHandler (/)
+SearchCriterionHandler 
 DomBinding
-PermissibleActionHandler
+PermissibleActionHandler 
 TopLevelHandler
 HasSearchables (shd be abstract)
 BaseRemoteActionPerformer <TaskPerformer>
