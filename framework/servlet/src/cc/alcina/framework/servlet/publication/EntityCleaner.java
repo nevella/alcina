@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.dirndl;
+package cc.alcina.framework.servlet.publication;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
