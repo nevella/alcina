@@ -153,7 +153,9 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	 * @author nick@alcina.cc
 	 *
 	 */
-	public static interface TopLevelHandler extends EventHandler {
-		void handle(ModelEvent unhandledEvent);
+	@Registration.NonGenericSubtypes(TopLevelHandler.class)
+	public static interface TopLevelHandler<M extends ModelEvent>
+			extends EventHandler {
+		void handle(M unhandledEvent);
 	}
 }

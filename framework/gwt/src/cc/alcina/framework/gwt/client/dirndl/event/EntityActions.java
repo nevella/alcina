@@ -7,16 +7,11 @@ import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.TopLevelHandler;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Create;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Delete;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Edit;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.View;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
@@ -29,16 +24,10 @@ import cc.alcina.framework.gwt.client.logic.MessageManager;
  *
  */
 public class EntityActions {
-	@Registration({ TopLevelHandler.class, ModelEvents.Create.class })
 	public static class CreateHandler
-			implements TopLevelHandler, ModelEvents.Create.Handler {
+			implements TopLevelHandler<ModelEvents.Create> {
 		@Override
-		public void handle(ModelEvent unhandledEvent) {
-			onCreate((Create) unhandledEvent);
-		}
-
-		@Override
-		public void onCreate(Create event) {
+		public void handle(ModelEvents.Create unhandledEvent) {
 			EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
 			EntityPlace entityPlace = Reflections
 					.newInstance(currentPlace.getClass());
@@ -66,16 +55,10 @@ public class EntityActions {
 		}
 	}
 
-	@Registration({ TopLevelHandler.class, ModelEvents.Delete.class })
 	public static class DeleteHandler
-			implements TopLevelHandler, ModelEvents.Delete.Handler {
+			implements TopLevelHandler<ModelEvents.Delete> {
 		@Override
-		public void handle(ModelEvent unhandledEvent) {
-			onDelete((Delete) unhandledEvent);
-		}
-
-		@Override
-		public void onDelete(Delete event) {
+		public void handle(ModelEvents.Delete event) {
 			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
 					.copy();
 			if (Window.confirm(Ax.format(
@@ -89,16 +72,10 @@ public class EntityActions {
 		}
 	}
 
-	@Registration({ TopLevelHandler.class, ModelEvents.Edit.class })
 	public static class EditHandler
-			implements TopLevelHandler, ModelEvents.Edit.Handler {
+			implements TopLevelHandler<ModelEvents.Edit> {
 		@Override
-		public void handle(ModelEvent unhandledEvent) {
-			onEdit((Edit) unhandledEvent);
-		}
-
-		@Override
-		public void onEdit(Edit event) {
+		public void handle(ModelEvents.Edit event) {
 			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
 					.copy();
 			entityPlace.action = EntityAction.EDIT;
@@ -106,16 +83,10 @@ public class EntityActions {
 		}
 	}
 
-	@Registration({ TopLevelHandler.class, ModelEvents.View.class })
 	public static class ViewHandler
-			implements TopLevelHandler, ModelEvents.View.Handler {
+			implements TopLevelHandler<ModelEvents.View> {
 		@Override
-		public void handle(ModelEvent unhandledEvent) {
-			onView((View) unhandledEvent);
-		}
-
-		@Override
-		public void onView(View event) {
+		public void handle(ModelEvents.View event) {
 			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
 					.copy();
 			entityPlace.action = EntityAction.VIEW;
