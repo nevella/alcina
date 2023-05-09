@@ -7,15 +7,15 @@ import java.io.OutputStreamWriter;
 
 import org.w3c.dom.Document;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_XLS;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.servlet.grid.ExcelExporter;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-@Registration({ FormatConverter.class, FormatConversionTarget_XLS.class })
-public class FormatConverterXls implements FormatConverter {
+public class FormatConverterXls
+		implements FormatConverter<FormatConversionTarget_XLS> {
+	@Override
 	public InputStream convert(PublicationContext ctx,
 			FormatConversionModel fcm) throws Exception {
 		if (fcm.bytes == null) {
@@ -30,10 +30,12 @@ public class FormatConverterXls implements FormatConverter {
 		return new ByteArrayInputStream(fcm.bytes);
 	}
 
+	@Override
 	public String getFileExtension() {
 		return "xls";
 	}
 
+	@Override
 	public String getMimeType() {
 		return "application/msexcel";
 	}

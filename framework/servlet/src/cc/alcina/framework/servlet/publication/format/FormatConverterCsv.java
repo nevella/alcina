@@ -7,15 +7,14 @@ import java.util.List;
 
 import org.w3c.dom.Document;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_CSV;
 import cc.alcina.framework.entity.util.CsvCols;
 import cc.alcina.framework.servlet.grid.ExcelExporter;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-@Registration({ FormatConverter.class, FormatConversionTarget_CSV.class })
-public class FormatConverterCsv implements FormatConverter {
+public class FormatConverterCsv
+		implements FormatConverter<FormatConversionTarget_CSV> {
 	@Override
 	public InputStream convert(PublicationContext ctx,
 			FormatConversionModel fcm) throws Exception {

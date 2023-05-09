@@ -2,7 +2,6 @@ package cc.alcina.framework.servlet.publication;
 
 import java.io.InputStream;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_HTML;
 import cc.alcina.framework.entity.Io;
 
@@ -11,8 +10,8 @@ import cc.alcina.framework.entity.Io;
  *
  * @author nick@alcina.cc
  */
-@Registration({ FormatConverter.class, FormatConversionTarget_HTML.class })
-public class HtmlFormatConversionTargetHtml implements FormatConverter {
+public class HtmlFormatConversionTargetHtml
+		implements FormatConverter<FormatConversionTarget_HTML> {
 	@Override
 	public InputStream convert(PublicationContext ctx,
 			FormatConversionModel hfcm) throws Exception {

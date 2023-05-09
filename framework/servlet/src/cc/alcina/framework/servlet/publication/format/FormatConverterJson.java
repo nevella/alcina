@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import org.w3c.dom.Document;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_JSON;
 import cc.alcina.framework.common.client.publication.PublicationContent;
@@ -17,8 +16,8 @@ import cc.alcina.framework.servlet.grid.ExcelExporter;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-@Registration({ FormatConverter.class, FormatConversionTarget_JSON.class })
-public class FormatConverterJson implements FormatConverter {
+public class FormatConverterJson
+		implements FormatConverter<FormatConversionTarget_JSON> {
 	@Override
 	public InputStream convert(PublicationContext ctx,
 			FormatConversionModel fcm) throws Exception {

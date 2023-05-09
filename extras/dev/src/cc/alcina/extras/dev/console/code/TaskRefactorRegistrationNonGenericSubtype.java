@@ -53,8 +53,13 @@ DomBinding
 PermissibleActionHandler
 TopLevelHandler
 HasSearchables (shd be abstract)
+<<<<<<< HEAD
 BaseRemoteActionPerformer <TaskPerformer> (/)
 DirectedRenderer
+=======
+BaseRemoteActionPerformer <TaskPerformer>
+DirectedRenderer (nope - hierarchy too idiosyncratic)
+>>>>>>> b4bb639f6c940a7bbf60fdca9f09632cf79cec65
 FormatConverter
 BoundSuggestOracleRequestHandler
 HasDisplayName.ClassDisplayName
