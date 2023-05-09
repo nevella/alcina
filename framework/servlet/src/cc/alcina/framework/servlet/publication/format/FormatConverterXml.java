@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_XML;
 import cc.alcina.framework.common.client.publication.PublicationContent;
@@ -13,8 +12,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-@Registration({ FormatConverter.class, FormatConversionTarget_XML.class })
-public class FormatConverterXml implements FormatConverter {
+public class FormatConverterXml
+		implements FormatConverter<FormatConversionTarget_XML> {
 	@Override
 	public InputStream convert(PublicationContext ctx,
 			FormatConversionModel conversionModel) throws Exception {

@@ -5,13 +5,17 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.publication.FormatConversionTarget;
+
 /**
  * Implemented by format converters
  *
  * @author nick@alcina.cc
  *
  */
-public interface FormatConverter {
+@Registration.NonGenericSubtypes(FormatConverter.class)
+public interface FormatConverter<T extends FormatConversionTarget> {
 	public InputStream convert(PublicationContext ctx,
 			FormatConversionModel model) throws Exception;
 

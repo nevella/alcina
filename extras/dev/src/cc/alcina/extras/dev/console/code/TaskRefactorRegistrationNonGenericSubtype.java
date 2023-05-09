@@ -54,7 +54,7 @@ PermissibleActionHandler
 TopLevelHandler
 HasSearchables (shd be abstract)
 BaseRemoteActionPerformer <TaskPerformer>
-DirectedRenderer
+DirectedRenderer (nope - hierarchy too idiosyncratic)
 FormatConverter
 BoundSuggestOracleRequestHandler
 HasDisplayName.ClassDisplayName
