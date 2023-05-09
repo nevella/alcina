@@ -5,8 +5,10 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.entity.SEUtilities;
 
+@Registration.NonGenericSubtypes(BaseRemoteActionPerformer.class)
 public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 		implements TaskPerformer<R> {
 	boolean started;

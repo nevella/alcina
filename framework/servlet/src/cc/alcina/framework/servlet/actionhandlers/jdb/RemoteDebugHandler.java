@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.actions.RemoteDebugAction;
-import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -31,7 +30,6 @@ import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
  *
  * @author nick@alcina.cc
  */
-@Registration({ TaskPerformer.class, RemoteDebugAction.class })
 public class RemoteDebugHandler
 		extends BaseRemoteActionPerformer<RemoteDebugAction> {
 	public static String immutableSecurityProperty() {
