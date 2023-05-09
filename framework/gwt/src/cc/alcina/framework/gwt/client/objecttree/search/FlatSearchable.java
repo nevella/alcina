@@ -158,9 +158,8 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 				: handlerManager;
 	}
 
-	@Reflected
-	@Registration({ HasSearchables.class, Bindable.class })
-	public static class HasSearchables {
+	@Registration.NonGenericSubtypes(HasSearchables.class)
+	public static abstract class HasSearchables<B extends Bindable> {
 		private Map<Class<? extends SearchCriterion>, FlatSearchable> searchables;
 
 		public String criterionDisplayName(SearchCriterion criterion) {
@@ -197,8 +196,13 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 			return Optional.ofNullable(searchables.get(criterion.getClass()));
 		}
 
-		protected List<FlatSearchable> createSearchables() {
-			return new ArrayList<>();
+		protected abstract List<FlatSearchable> createSearchables();
+
+		public static class Bindables extends HasSearchables<Bindable> {
+			@Override
+			protected List<FlatSearchable> createSearchables() {
+				return new ArrayList<>();
+			}
 		}
 	}
 }
