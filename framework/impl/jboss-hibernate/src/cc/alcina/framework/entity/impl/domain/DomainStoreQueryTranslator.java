@@ -49,6 +49,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.OrderCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
@@ -284,11 +285,6 @@ public class DomainStoreQueryTranslator {
 	public static class ConjunctionTranslator
 			extends CriterionTranslator<Conjunction> {
 		@Override
-		protected Class<Conjunction> getHandledClass() {
-			return Conjunction.class;
-		}
-
-		@Override
 		protected DomainFilter handle(Conjunction criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
@@ -325,7 +321,9 @@ public class DomainStoreQueryTranslator {
 			return clazz == getHandledClass();
 		}
 
-		protected abstract Class<C> getHandledClass();
+		protected final Class<C> getHandledClass() {
+			return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
+		}
 
 		protected Object getValue(Object object, String... fieldNames) {
 			return fieldHelper.getValue(object, fieldNames);
@@ -339,11 +337,6 @@ public class DomainStoreQueryTranslator {
 
 	public static class DisjunctionTranslator
 			extends CriterionTranslator<Disjunction> {
-		@Override
-		protected Class<Disjunction> getHandledClass() {
-			return Disjunction.class;
-		}
-
 		@Override
 		protected DomainFilter handle(Disjunction criterion,
 				DomainStoreCriteria domainStoreCriteria,
@@ -430,11 +423,6 @@ public class DomainStoreQueryTranslator {
 	public static class InExpressionTranslator
 			extends CriterionTranslator<InExpression> {
 		@Override
-		protected Class<InExpression> getHandledClass() {
-			return InExpression.class;
-		}
-
-		@Override
 		protected DomainFilter handle(InExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator) {
@@ -460,11 +448,6 @@ public class DomainStoreQueryTranslator {
 	public static class NotNullTranslator
 			extends CriterionTranslator<NotNullExpression> {
 		@Override
-		protected Class<NotNullExpression> getHandledClass() {
-			return NotNullExpression.class;
-		}
-
-		@Override
 		protected DomainFilter handle(NotNullExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
@@ -479,11 +462,6 @@ public class DomainStoreQueryTranslator {
 	public static class NotTranslator
 			extends CriterionTranslator<NotExpression> {
 		@Override
-		protected Class<NotExpression> getHandledClass() {
-			return NotExpression.class;
-		}
-
-		@Override
 		protected DomainFilter handle(NotExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
@@ -497,11 +475,6 @@ public class DomainStoreQueryTranslator {
 
 	public static class NullTranslator
 			extends CriterionTranslator<NullExpression> {
-		@Override
-		protected Class<NullExpression> getHandledClass() {
-			return NullExpression.class;
-		}
-
 		@Override
 		protected DomainFilter handle(NullExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
@@ -520,11 +493,6 @@ public class DomainStoreQueryTranslator {
 
 	public static class SimpleExpressionTranslator
 			extends CriterionTranslator<SimpleExpression> {
-		@Override
-		protected Class<SimpleExpression> getHandledClass() {
-			return SimpleExpression.class;
-		}
-
 		@Override
 		protected DomainFilter handle(SimpleExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
@@ -562,11 +530,6 @@ public class DomainStoreQueryTranslator {
 	public static class SimpleSubqueryExpressionTranslator
 			extends CriterionTranslator<SimpleSubqueryExpression> {
 		@Override
-		protected Class<SimpleSubqueryExpression> getHandledClass() {
-			return SimpleSubqueryExpression.class;
-		}
-
-		@Override
 		protected DomainFilter handle(SimpleSubqueryExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator) {
@@ -600,11 +563,6 @@ public class DomainStoreQueryTranslator {
 
 	public static class SqlInCriterionTranslator
 			extends CriterionTranslator<SQLCriterion> {
-		@Override
-		protected Class<SQLCriterion> getHandledClass() {
-			return SQLCriterion.class;
-		}
-
 		@Override
 		protected DomainFilter handle(SQLCriterion criterion,
 				DomainStoreCriteria domainStoreCriteria,
