@@ -976,6 +976,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return false;
 	}
 
+	@Registration.NonGenericSubtypes(BoundSuggestOracleRequestHandler.class)
 	public static abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
 		public Response handleRequest(Class<T> clazz,
 				BoundSuggestOracleRequest request, String hint) {
