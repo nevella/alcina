@@ -253,6 +253,7 @@ public class CommonSearchSupport {
 		return projector.project(object);
 	}
 
+	@Registration.NonGenericSubtypes(CustomSearchHandler.class)
 	public static abstract class CustomSearchHandler<BSD extends BindableSearchDefinition> {
 		private SearchContext searchContext;
 

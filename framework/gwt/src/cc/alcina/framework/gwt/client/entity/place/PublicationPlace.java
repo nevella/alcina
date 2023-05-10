@@ -31,11 +31,6 @@ public class PublicationPlace extends BasePlace {
 	public static class PublicationPlaceTokenizer
 			extends BasePlaceTokenizer<PublicationPlace> {
 		@Override
-		public Class<PublicationPlace> getTokenizedClass() {
-			return PublicationPlace.class;
-		}
-
-		@Override
 		protected PublicationPlace getPlace0(String token) {
 			PublicationPlace place = new PublicationPlace();
 			if (parts.length == 1) {

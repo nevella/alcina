@@ -75,9 +75,6 @@ public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 	public static abstract class CategoryNamePlaceTokenizer<CNP extends CategoryNamePlace>
 			extends BasePlaceTokenizer<CNP> {
 		@Override
-		public abstract Class<CNP> getTokenizedClass();
-
-		@Override
 		protected CNP getPlace0(String token) {
 			CNP place = Reflections.newInstance(getTokenizedClass());
 			if (parts.length > 1) {

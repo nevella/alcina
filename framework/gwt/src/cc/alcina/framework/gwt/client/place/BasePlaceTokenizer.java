@@ -109,7 +109,9 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		return tokenBuilder.toString();
 	}
 
-	public abstract Class<P> getTokenizedClass();
+	public Class<P> getTokenizedClass() {
+		return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
+	}
 
 	public boolean handles(String token) {
 		return true;

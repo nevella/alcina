@@ -4,6 +4,7 @@ import java.util.Comparator;
 
 import com.totsp.gwittir.client.ui.Renderer;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.CommonUtils.ComparatorResult;
 
@@ -34,10 +35,12 @@ public interface HasDisplayName {
 	public String displayName();
 
 	/*
-	 * Used for registration lookup (e.g. display name of modeleventclasses)
+	 * Used for registration lookup - gives the display name of a type (e.g.
+	 * display name of modelevent subclasses)
 	 */
-	@Reflected
-	public static abstract class ClassDisplayName implements HasDisplayName {
+	@Registration.NonGenericSubtypes(ClassDisplayName.class)
+	public static abstract class ClassDisplayName<H extends Object>
+			implements HasDisplayName {
 	}
 
 	public static class HasDisplayNameComparator

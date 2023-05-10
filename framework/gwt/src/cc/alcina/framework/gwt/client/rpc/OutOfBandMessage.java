@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.rpc;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotifications.Level;
@@ -25,9 +24,6 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@Reflected
-	@Registration({ OutOfBandMessageHandler.class,
-			ClientInstanceMessage.class })
 	public static class ClientInstanceMessageHandler
 			implements OutOfBandMessageHandler<ClientInstanceMessage> {
 		private static boolean shownThisInstance;
@@ -58,8 +54,6 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@Reflected
-	@Registration({ OutOfBandMessageHandler.class, ExceptionMessage.class })
 	public static class ExceptionMessageHandler
 			implements OutOfBandMessageHandler<ExceptionMessage> {
 		@Override
@@ -69,6 +63,7 @@ public interface OutOfBandMessage {
 		}
 	}
 
+	@Registration.NonGenericSubtypes(OutOfBandMessageHandler.class)
 	public interface OutOfBandMessageHandler<T extends OutOfBandMessage> {
 		void handle(T outOfBandMessage);
 	}
@@ -86,9 +81,6 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@Reflected
-	@Registration({ OutOfBandMessageHandler.class,
-			ReadonlyInstanceMessage.class })
 	public static class ReadonlyInstanceMessageHandler
 			implements OutOfBandMessageHandler<ReadonlyInstanceMessage> {
 		@Override

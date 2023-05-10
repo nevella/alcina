@@ -52,11 +52,6 @@ public abstract class ActionPlace extends BasePlace {
 	public static class Tokenizer extends BasePlaceTokenizer<ActionPlace> {
 		Map<String, ClassReflector<? extends ActionPlace>> byName;
 
-		@Override
-		public Class<ActionPlace> getTokenizedClass() {
-			return ActionPlace.class;
-		}
-
 		private void ensureLookup() {
 			if (byName == null) {
 				Map<String, ClassReflector<? extends ActionPlace>> byName = AlcinaCollections

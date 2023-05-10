@@ -32,11 +32,6 @@ public class RemoteConsoleActivityMapper implements ActivityMapper {
 		}
 
 		@Override
-		public Class<ConsolePlace> getTokenizedClass() {
-			return ConsolePlace.class;
-		}
-
-		@Override
 		protected ConsolePlace getPlace0(String token) {
 			ConsolePlace place = new ConsolePlace();
 			return place;

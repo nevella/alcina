@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
+import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 /*
@@ -57,12 +58,12 @@ BaseRemoteActionPerformer <TaskPerformer>
 DirectedRenderer
 BaseRemoteActionPerformer <TaskPerformer>
 DirectedRenderer (nope - hierarchy too idiosyncratic)
-FormatConverter (/)
+FormatConverter 
 BoundSuggestOracleRequestHandler 
 HasDisplayName.ClassDisplayName
 OutOfBandMessageHandler
 CustomSearchHandler
-BasePlaceTokenizer
+BasePlaceTokenizer (/)
 CriterionTranslator
 DevConsoleCommandTransforms$CmdListClientLogRecords$CmdListClientLogRecordsFilter (remove)
 DevConsoleProtocolHandler$MethodHandler
@@ -151,6 +152,13 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 							Type.DomainCriterionHandler));
 			break;
 		}
+		case CLEAN_TOKENIZERS: {
+			compUnits.declarations.values().stream()
+					.filter(dec -> dec.hasFlag(Type.BasePlaceTokenizer))
+					.forEach(dec -> this.removeHandlesMethod(dec,
+							Type.BasePlaceTokenizer));
+			break;
+		}
 		case UPDATE_TWO_KEY_ANNOTATIONS: {
 			Preconditions.checkArgument(onlyAssignableFrom != null);
 			updateTwoKeyAnnotations();
@@ -226,6 +234,14 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 						method.remove();
 					}
 					break;
+				case BasePlaceTokenizer:
+					if (method.getNameAsString().equals("getTokenizedClass")
+							&& !decl.getNameAsString().matches(
+									"(BasePlaceTokenizer|BindablePlaceTokenizer)")) {
+						declarationWrapper.dirty();
+						method.remove();
+					}
+					break;
 				default:
 					throw new UnsupportedOperationException();
 				}
@@ -252,7 +268,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 
 	public enum Action {
 		LIST_INTERESTING, UPDATE_TWO_KEY_ANNOTATIONS, LIST_TWO_KEY_ROOTS,
-		CLEAN_HANDLERS;
+		CLEAN_HANDLERS, CLEAN_TOKENIZERS;
 	}
 
 	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {
@@ -267,6 +283,16 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 				visit0(node, arg);
 			} catch (VerifyError ve) {
 				Ax.out("Verify error: %s", node.getName());
+			}
+		}
+
+		private boolean isBasePlaceTokenizer(
+				ClassOrInterfaceDeclarationWrapper declaration) {
+			try {
+				return declaration.isAssignableFrom(BasePlaceTokenizer.class);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+				return false;
 			}
 		}
 
@@ -294,6 +320,9 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 				}
 				if (isDomainStoreHandler(declaration)) {
 					declaration.setFlag(Type.DomainCriterionHandler);
+				}
+				if (isBasePlaceTokenizer(declaration)) {
+					declaration.setFlag(Type.BasePlaceTokenizer);
 				}
 			}
 			super.visit(node, arg);
@@ -374,6 +403,6 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 	}
 
 	enum Type implements TypeFlag {
-		TwoKeyRegistration, DomainCriterionHandler,
+		TwoKeyRegistration, DomainCriterionHandler, BasePlaceTokenizer
 	}
 }

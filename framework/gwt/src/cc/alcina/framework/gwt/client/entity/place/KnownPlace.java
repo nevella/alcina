@@ -16,11 +16,6 @@ public class KnownPlace extends BasePlace implements OmniPlace {
 	public static class KnownPlaceTokenizer
 			extends BasePlaceTokenizer<KnownPlace> {
 		@Override
-		public Class<KnownPlace> getTokenizedClass() {
-			return KnownPlace.class;
-		}
-
-		@Override
 		protected KnownPlace getPlace0(String token) {
 			KnownPlace place = new KnownPlace();
 			if (parts.length > 1) {

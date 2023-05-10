@@ -46,8 +46,6 @@ public class ProcessMetrics {
 		startup, app, rpc
 	}
 
-	@Registration({ OutOfBandMessageHandler.class,
-			ProcessMetric.Observer.class })
 	public static class RpcMessageHandler
 			implements OutOfBandMessageHandler<ProcessMetric.Observer> {
 		@Override

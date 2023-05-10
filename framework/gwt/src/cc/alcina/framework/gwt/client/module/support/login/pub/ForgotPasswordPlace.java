@@ -11,11 +11,6 @@ public class ForgotPasswordPlace extends BasePlace {
 	public static class ForgotPasswordPlaceTokenizer
 			extends BasePlaceTokenizer<ForgotPasswordPlace> {
 		@Override
-		public Class<ForgotPasswordPlace> getTokenizedClass() {
-			return ForgotPasswordPlace.class;
-		}
-
-		@Override
 		protected ForgotPasswordPlace getPlace0(String token) {
 			ForgotPasswordPlace place = new ForgotPasswordPlace();
 			return place;

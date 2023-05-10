@@ -36,11 +36,6 @@ public abstract class NamedPlace extends BasePlace {
 		}
 
 		@Override
-		public Class<NamedPlace> getTokenizedClass() {
-			return NamedPlace.class;
-		}
-
-		@Override
 		public boolean handles(String token) {
 			ensureLookup();
 			return byName.containsKey(token);

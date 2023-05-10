@@ -15,6 +15,11 @@ public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends Bin
 
 	public abstract Class<HL> getModelClass();
 
+	@Override
+	public Class<P> getTokenizedClass() {
+		return Reflections.at(getClass()).getGenericBounds().bounds.get(2);
+	}
+
 	protected SD deserializeDef(P place) {
 		SD def = searchDefinitionSerializer().deserialize(place.def.getClass(),
 				getStringParameter(P_DEF));

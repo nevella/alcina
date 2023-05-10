@@ -10,11 +10,6 @@ public class LoginPlace extends BasePlace {
 	public static class LoginPlaceTokenizer
 			extends BasePlaceTokenizer<LoginPlace> {
 		@Override
-		public Class<LoginPlace> getTokenizedClass() {
-			return LoginPlace.class;
-		}
-
-		@Override
 		protected LoginPlace getPlace0(String token) {
 			LoginPlace place = new LoginPlace();
 			return place;
