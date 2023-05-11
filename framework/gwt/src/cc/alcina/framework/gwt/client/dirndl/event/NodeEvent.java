@@ -111,6 +111,14 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return node.annotation(clazz);
 		}
 
+		/*
+		 * Mark the event causing this one as not handled - which causes it to
+		 * fire on ancestor handlers
+		 */
+		public void bubble() {
+			((ModelEvent) getPrevious().getNodeEvent()).setHandled(false);
+		}
+
 		public void dispatch(Class<? extends ModelEvent> modelEventClass,
 				Object model) {
 			ModelEvent.dispatch(this, modelEventClass, model);
@@ -144,10 +152,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 				return false;
 			}
 			return getPrevious().hasPrevious(eventClass);
-		}
-
-		public void markCauseEventAsNotHandled() {
-			((ModelEvent) getPrevious().getNodeEvent()).setHandled(false);
 		}
 
 		public void setNodeEvent(NodeEvent nodeEvent) {

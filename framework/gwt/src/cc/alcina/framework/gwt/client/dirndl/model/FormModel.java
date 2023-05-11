@@ -196,7 +196,7 @@ public class FormModel extends Model
 	public void onSubmit(ModelEvents.Submit event) {
 		submit();
 		// also propagate
-		event.getContext().markCauseEventAsNotHandled();
+		event.getContext().bubble();
 	}
 
 	public boolean submit() {
