@@ -137,6 +137,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 		return (DA) this;
 	}
 
+	@Registration.NonGenericSubtypes(Provider.class)
 	public static interface Provider<P extends Place> {
 		DirectedActivity getActivity(P place);
 	}

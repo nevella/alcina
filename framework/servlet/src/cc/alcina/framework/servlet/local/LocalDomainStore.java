@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.local;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -23,6 +24,7 @@ import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.LocalDomain;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
@@ -213,6 +215,22 @@ public class LocalDomainStore {
 						token, layerWrapper,
 						DomainTransformPersistenceEventType.PREPARE_COMMIT,
 						true);
+				/*
+				 * Update date fields
+				 */
+				AdjunctTransformCollation collation = persistenceEvent
+						.getTransformPersistenceToken().getTransformCollation();
+				Date time = new Date();
+				collation.allEntityCollations().forEach(ec -> {
+					Entity entity = ec.getEntity();
+					if (entity instanceof VersionableEntity) {
+						VersionableEntity versionable = (VersionableEntity) entity;
+						if (ec.isCreated()) {
+							versionable.setCreationDate(time);
+						}
+						versionable.setLastModificationDate(time);
+					}
+				});
 				for (DomainTransformPersistenceListener listener : listeners) {
 					listener.onDomainTransformRequestPersistence(
 							persistenceEvent);
@@ -241,6 +259,12 @@ public class LocalDomainStore {
 	class CommitToStorageTransformListenerNoRemote
 			extends CommitToStorageTransformListener {
 		@Override
+		public void domainTransform(DomainTransformEvent event) {
+			LocalDomainQueue.checkOnDomainThread();
+			super.domainTransform(event);
+		}
+
+		@Override
 		public boolean isQueueCommitTimerDisabled() {
 			// only explicit commits supported
 			return true;
@@ -249,6 +273,9 @@ public class LocalDomainStore {
 		/*
 		 * A simplified version of the superclass methods (which just pushes the
 		 * grouped transforms as a 'persistent' request)
+		 * 
+		 * Deliberately don't sync on the superclass collectionsMonitor (any
+		 * access should be single-threaded)
 		 */
 		@Override
 		protected synchronized void commit0() {

@@ -66,6 +66,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
@@ -309,14 +310,31 @@ public class JobRegistry {
 	 * Ensure there is exactly one pending job (which takes care of changes
 	 * affecting the model which will be missed by an in-glight)
 	 */
-	public void ensureScheduled(Task task) {
+	public Job ensureScheduled(Task task, boolean scheduleAfterInFlight) {
+		ObjectWrapper<Job> jobRef = new ObjectWrapper<>();
 		withJobMetadataLock(task.getClass().getName(), () -> {
-			if (JobDomain.get().getJobsForTask(task.getClass())
-					.anyMatch(j -> j.getState() == JobState.PENDING)) {
+			Optional<? extends Job> pending = JobDomain.get()
+					.getJobsForTask(task.getClass())
+					.filter(j -> j.getState() == JobState.PENDING).findFirst();
+			if (pending.isPresent()) {
+				jobRef.set(pending.get());
 				return;
 			}
-			task.schedule();
+			Job job = task.schedule();
+			if (scheduleAfterInFlight) {
+				Optional<? extends Job> inFlight = JobDomain.get()
+						.getJobsForTask(task.getClass())
+						.filter(j -> j.getState() == JobState.ALLOCATED
+								|| j.getState() == JobState.PROCESSING)
+						.findFirst();
+				if (inFlight.isPresent()) {
+					inFlight.get().createRelation(job,
+							JobRelationType.SEQUENCE);
+				}
+			}
+			jobRef.set(job);
 		});
+		return jobRef.get();
 	}
 
 	public Stream<? extends Job> getActiveConsistencyJobs() {
@@ -489,6 +507,7 @@ public class JobRegistry {
 		TaskPerformer performer = getTaskPerformer(job);
 		JobContext jobContext = new JobContext(job, performer, null, null);
 		jobContext.start();
+		jobContext.beginLogBuffer();
 	}
 
 	public void stopService() {
@@ -560,6 +579,7 @@ public class JobRegistry {
 		}
 	}
 
+	// FIXME - jobs - clean
 	private <T extends Task> void performJob0(Job job,
 			boolean queueJobPersistence,
 			LauncherThreadState launcherThreadState) {
@@ -581,23 +601,24 @@ public class JobRegistry {
 		boolean taskEnabled = !Configuration.properties
 				.has(Ax.format("%s.disabled", job.getTaskClassName()))
 				&& !Configuration.is("allJobsDisabled");
+		boolean deferMetadataPersistence = performer
+				.deferMetadataPersistence(job);
 		try {
 			LooseContext.push();
-			if (performer.deferMetadataPersistence(job)) {
-				LooseContext.setTrue(
-						ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
-			}
-			context.start();
+			withDomain(deferMetadataPersistence, () -> context.start());
+			context.beginLogBuffer();
 			if (taskEnabled) {
 				acquireResources(job, performer.getResources());
 				performer.performAction((T) job.getTask());
 			} else {
 				logger.info("Not performing {} (disabled)", job);
 			}
-			context.persistMetadata();
-			context.toAwaitingChildren();
-			context.awaitChildCompletion();
-			performer.onChildCompletion();
+			withDomain(deferMetadataPersistence, () -> {
+				context.persistMetadata();
+				context.toAwaitingChildren();
+				context.awaitChildCompletion();
+				performer.onChildCompletion();
+			});
 		} catch (Throwable t) {
 			Exception e = (Exception) ((t instanceof Exception) ? t
 					: new WrappedRuntimeException(t));
@@ -606,38 +627,43 @@ public class JobRegistry {
 			 */
 			Transaction.ensureEnded();
 			Transaction.begin();
-			context.onJobException(e);
-			if (CommonUtils.extractCauseOfClass(e,
-					CancelledException.class) != null) {
-			} else {
-				logger.warn(Ax.format("Job exception in job %s", job), t);
-				EntityLayerLogging.persistentLog(LogMessageType.TASK_EXCEPTION,
-						e);
-			}
+			withDomain(deferMetadataPersistence, () -> {
+				context.onJobException(e);
+				if (CommonUtils.extractCauseOfClass(e,
+						CancelledException.class) != null) {
+				} else {
+					logger.warn(Ax.format("Job exception in job %s", job), t);
+					EntityLayerLogging
+							.persistentLog(LogMessageType.TASK_EXCEPTION, e);
+				}
+			});
 		} finally {
+			context.endLogBuffer();
 			/*
 			 * key - handle tx timeouts/aborts
 			 */
-			Transaction.ensureBegun();
-			LooseContext.remove(
-					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
-			performer.onBeforeEnd();
-			context.end();
-			performer.onAfterEnd();
-			try {
-				releaseResources(job, false);
-			} catch (Exception e) {
-				logger.warn("DEVEX::0 - JobRegistry.releaseResources", e);
-				e.printStackTrace();
-			}
-			context.persistMetadata();
+			withDomain(deferMetadataPersistence, () -> {
+				LooseContext.remove(
+						ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
+				Transaction.ensureBegun();
+				performer.onBeforeEnd();
+				context.end();
+				performer.onAfterEnd();
+				try {
+					releaseResources(job, false);
+				} catch (Exception e) {
+					logger.warn("DEVEX::0 - JobRegistry.releaseResources", e);
+					e.printStackTrace();
+				}
+				context.persistMetadata();
+				activeJobs.remove(job);
+				context.clearRefs();
+				context.remove();
+				if (trackInternalMetrics()) {
+					InternalMetrics.get().endTracker(job);
+				}
+			});
 			LooseContext.pop();
-			activeJobs.remove(job);
-			context.clearRefs();
-			context.remove();
-			if (trackInternalMetrics()) {
-				InternalMetrics.get().endTracker(job);
-			}
 		}
 	}
 
@@ -679,6 +705,20 @@ public class JobRegistry {
 			ProcessState processState = message.ensureProcessState();
 			context.updateProcessState(processState);
 			message.persistProcessState();
+		}
+	}
+
+	private void withDomain(boolean deferMetadataPersistence,
+			Runnable runnable) {
+		try {
+			LooseContext.push();
+			if (deferMetadataPersistence) {
+				LooseContext.setTrue(
+						ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
+			}
+			TransactionEnvironment.withDomain(runnable);
+		} finally {
+			LooseContext.pop();
 		}
 	}
 
@@ -1089,6 +1129,11 @@ public class JobRegistry {
 
 	@Registration.Singleton(Task.Performer.class)
 	public static class Performer implements Task.Performer {
+		@Override
+		public Job ensurePending(Task task) {
+			return get().ensureScheduled(task, true);
+		}
+
 		@Override
 		public Job perform(Task task) {
 			return get().perform(task);

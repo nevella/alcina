@@ -63,12 +63,13 @@ BoundSuggestOracleRequestHandler
 HasDisplayName.ClassDisplayName
 OutOfBandMessageHandler
 CustomSearchHandler
-BasePlaceTokenizer (/)
+BasePlaceTokenizer 
 CriterionTranslator
 DevConsoleCommandTransforms$CmdListClientLogRecords$CmdListClientLogRecordsFilter (remove)
 DevConsoleProtocolHandler$MethodHandler
 DirectedActivity.Provider
 
+[All complete]
  *
  *@formatter:on
  *
