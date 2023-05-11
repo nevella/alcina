@@ -1,11 +1,22 @@
 package cc.alcina.framework.servlet.local;
 
+import java.util.function.Supplier;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.domain.TransactionId;
+import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
 public class TransactionEnvironmentNonTx implements TransactionEnvironment {
+	public static void runAndCommit(ThrowingRunnable runnable) {
+		LocalDomainQueue.run(() -> {
+			runnable.run();
+			TransactionEnvironment.get().commit();
+		});
+	}
+
 	@Override
 	public void begin() {
 		// NOOP, tx is effectively just the presence of a transformmanager
@@ -23,7 +34,8 @@ public class TransactionEnvironmentNonTx implements TransactionEnvironment {
 
 	@Override
 	public void end() {
-		Preconditions.checkState(LocalDomainStore.get().isEmptyCommitQueue());
+		withDomainAccess0(() -> Preconditions
+				.checkState(LocalDomainStore.get().isEmptyCommitQueue()));
 	}
 
 	@Override
@@ -76,5 +88,19 @@ public class TransactionEnvironmentNonTx implements TransactionEnvironment {
 	@Override
 	public void waitUntilCurrentRequestsProcessed() {
 		// NOOP (probably)
+	}
+
+	@Override
+	public void withDomainAccess0(Runnable runnable) {
+		LocalDomainQueue.run(ThrowingRunnable.wrapRunnable(runnable));
+	}
+
+	@Override
+	public <T> T withDomainAccess0(Supplier<T> supplier) {
+		ObjectWrapper<T> ref = new ObjectWrapper<>();
+		LocalDomainQueue.run(() -> {
+			ref.set(supplier.get());
+		});
+		return ref.get();
 	}
 }

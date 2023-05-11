@@ -1183,6 +1183,20 @@ public class JobDomain {
 			}
 
 			@Override
+			public void remove(Job t) {
+				if (!t.provideIsComplete()) {
+					return;
+				}
+				if (t.provideIsTopLevel() ^ topLevel) {
+					return;
+				}
+				if (t.getEndTime() == null) {
+					return;
+				}
+				super.remove(t);
+			}
+
+			@Override
 			protected Date getDate(Job job) {
 				return job.getEndTime();
 			}

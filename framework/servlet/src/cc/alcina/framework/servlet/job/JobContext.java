@@ -305,6 +305,12 @@ public class JobContext {
 		allocator.awaitChildCompletion(this);
 	}
 
+	public void endLogBuffer() {
+		if (job.provideIsNotComplete()) {
+			log = Registry.impl(PerThreadLogging.class).endBuffer();
+		}
+	}
+
 	public ExecutionConstraints getExecutionConstraints() {
 		return allocator.getExecutionConstraints();
 	}
@@ -407,7 +413,8 @@ public class JobContext {
 			InternalMetrics.get().endTracker(performer);
 		}
 		if (job.provideIsNotComplete()) {
-			log = Registry.impl(PerThreadLogging.class).endBuffer();
+			// occurs just before end, since possibly on a different thread
+			// log = Registry.impl(PerThreadLogging.class).endBuffer();
 			int maxChars = LooseContext
 					.<Integer> optional(CONTEXT_LOG_MAX_CHARS).orElse(5000000);
 			log = CommonUtils.trimToWsChars(log, maxChars, true);
@@ -461,6 +468,10 @@ public class JobContext {
 		}
 		allocator.awaitSequenceCompletion();
 		TransactionEnvironment.get().begin();
+	}
+
+	void beginLogBuffer() {
+		Registry.impl(PerThreadLogging.class).beginBuffer();
 	}
 
 	void checkCancelled0(boolean ignoreSelf) {
@@ -537,7 +548,6 @@ public class JobContext {
 			job.setPerformerVersionNumber(performer.getVersionNumber());
 			persistMetadata();
 		}
-		Registry.impl(PerThreadLogging.class).beginBuffer();
 		if (noHttpContext) {
 			ActionPerformerTrackMetrics filter = Registry
 					.impl(ActionPerformerTrackMetrics.class);

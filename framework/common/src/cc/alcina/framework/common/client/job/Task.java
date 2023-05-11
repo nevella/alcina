@@ -8,6 +8,10 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 
 public interface Task extends TreeSerializable, HasEquivalence {
+	default Job ensurePending() {
+		return Registry.impl(Performer.class).ensurePending(this);
+	}
+
 	@Override
 	default int equivalenceHash() {
 		return getClass().hashCode();
@@ -41,6 +45,14 @@ public interface Task extends TreeSerializable, HasEquivalence {
 	}
 
 	public static interface Performer {
+		/**
+		 * Ensure that a pending {@link Job} performing this {@link Task} is
+		 * scheduled. If there's an in-flight job, append the pending job to the
+		 * in-flight job's sequence (ensuring it will run after the in-flight
+		 * job's completion)
+		 */
+		Job ensurePending(Task task);
+
 		Job perform(Task task);
 
 		Job schedule(Task task);

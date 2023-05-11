@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  *
  * @param <SC>
  */
-@Registration.NonGenericSubtypes(DomainCriterionHandler.class)
+@Registration(DomainCriterionHandler.class)
 public abstract class DomainCriterionHandler<SC extends SearchCriterion>
 		implements DomainCriterionFilter<SC> {
 	public Class<SC> handlesSearchCriterion() {

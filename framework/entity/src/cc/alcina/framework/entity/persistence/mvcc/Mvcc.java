@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.persistence.EntityManager;
 
@@ -228,6 +229,18 @@ public class Mvcc {
 		@Override
 		public void waitUntilCurrentRequestsProcessed() {
 			DomainStore.waitUntilCurrentRequestsProcessed();
+		}
+
+		@Override
+		public void withDomainAccess0(Runnable runnable) {
+			Preconditions.checkState(isInActiveTransaction());
+			runnable.run();
+		}
+
+		@Override
+		public <T> T withDomainAccess0(Supplier<T> supplier) {
+			Preconditions.checkState(isInActiveTransaction());
+			return supplier.get();
 		}
 	}
 }

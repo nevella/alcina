@@ -19,6 +19,11 @@ public class File
 	public boolean exists(){
 		throw new UnsupportedOperationException();
 	}
-	
+	public long length(){
+		throw new UnsupportedOperationException();	
+	}
+	public long lastModified(){
+		throw new UnsupportedOperationException();	
+	}
 	
 }

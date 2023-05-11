@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.domain;
 
+import java.util.function.Supplier;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*
@@ -14,6 +16,14 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 public interface TransactionEnvironment {
 	public static TransactionEnvironment get() {
 		return Registry.impl(TransactionEnvironment.class);
+	}
+
+	public static void withDomain(Runnable runnable) {
+		get().withDomainAccess0(runnable);
+	}
+
+	public static <T> T withDomainAccess(Supplier<T> supplier) {
+		return get().withDomainAccess0(supplier);
 	}
 
 	public void begin();
@@ -42,5 +52,9 @@ public interface TransactionEnvironment {
 
 	public boolean isToDomainCommitting();
 
-	public void waitUntilCurrentRequestsProcessed();;
+	public void waitUntilCurrentRequestsProcessed();
+
+	public void withDomainAccess0(Runnable runnable);
+
+	public <T> T withDomainAccess0(Supplier<T> supplier);;
 }
