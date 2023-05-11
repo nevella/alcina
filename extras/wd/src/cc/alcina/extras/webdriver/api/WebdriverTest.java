@@ -218,7 +218,9 @@ public abstract class WebdriverTest implements Registration.Ensure {
 				throw e;
 			}
 		} finally {
-			onAfterProcess();
+			if (token.getRootResult() != null) {
+				onAfterProcess();
+			}
 			LooseContext.pop();
 		}
 	}
