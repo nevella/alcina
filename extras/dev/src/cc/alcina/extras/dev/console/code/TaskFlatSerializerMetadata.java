@@ -89,7 +89,6 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 		return this.criterionNameRemovalRegex;
 	}
 
-	@PropertySerialization(types = Class.class)
 	public List<Class<? extends SearchDefinition>> getSearchDefinitions() {
 		return this.searchDefinitions;
 	}

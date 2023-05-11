@@ -51,7 +51,6 @@ public class TaskDomainQuery extends PerformerTask {
 		return this.maxElementsPerCollection;
 	}
 
-	@PropertySerialization(types = String.class)
 	public List<String> getResultPaths() {
 		return this.resultPaths;
 	}

@@ -36,7 +36,6 @@ public class SelectionFilter extends Model implements TreeSerializable {
 		return this.allGenerationsLimit;
 	}
 
-	@PropertySerialization(types = SelectionFilter.GenerationEntry.class)
 	public List<SelectionFilter.GenerationEntry> getGenerations() {
 		return this.generations;
 	}

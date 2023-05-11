@@ -61,7 +61,6 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		}
 	}
 
-	@PropertySerialization(types = MutationHistory.Event.class)
 	public List<MutationHistory.Event> getEvents() {
 		return this.events;
 	}
@@ -201,7 +200,6 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			return this.localDom;
 		}
 
-		@PropertySerialization(types = MutationRecord.class)
 		public List<MutationRecord> getRecords() {
 			return this.records;
 		}

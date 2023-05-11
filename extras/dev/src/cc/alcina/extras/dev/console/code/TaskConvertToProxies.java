@@ -58,7 +58,6 @@ public class TaskConvertToProxies implements RootTask {
 		return this.outputPackagePath;
 	}
 
-	@PropertySerialization(types = String.class)
 	public List<String> getPathsToScan() {
 		return this.pathsToScan;
 	}

@@ -134,12 +134,10 @@ public final class MutationNode {
 		}
 	}
 
-	@PropertySerialization(types = String.class)
 	public Map<String, String> getAttributes() {
 		return this.attributes;
 	}
 
-	@PropertySerialization(types = MutationNode.class)
 	public List<MutationNode> getChildNodes() {
 		return this.childNodes;
 	}

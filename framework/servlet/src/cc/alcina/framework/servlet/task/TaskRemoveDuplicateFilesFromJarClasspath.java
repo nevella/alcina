@@ -20,7 +20,6 @@ public class TaskRemoveDuplicateFilesFromJarClasspath extends PerformerTask {
 
 	private transient Set<String> existingRelativePaths = new TreeSet<>();
 
-	@PropertySerialization(types = String.class)
 	public List<String> getJarPaths() {
 		return this.jarPaths;
 	}

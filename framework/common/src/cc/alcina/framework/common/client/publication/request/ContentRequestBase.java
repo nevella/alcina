@@ -178,7 +178,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	}
 
 	@Override
-	@PropertySerialization(types = MultipleDeliveryEntry.class)
 	public List<MultipleDeliveryEntry> getMultipleDeliveryEntries() {
 		return this.multipleDeliveryEntries;
 	}

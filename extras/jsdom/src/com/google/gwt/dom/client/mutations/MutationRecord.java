@@ -103,7 +103,6 @@ public class MutationRecord {
 		}
 	}
 
-	@PropertySerialization(types = MutationNode.class)
 	public List<MutationNode> getAddedNodes() {
 		return this.addedNodes;
 	}
@@ -133,7 +132,6 @@ public class MutationRecord {
 		return this.previousSibling;
 	}
 
-	@PropertySerialization(types = MutationNode.class)
 	public List<MutationNode> getRemovedNodes() {
 		return this.removedNodes;
 	}

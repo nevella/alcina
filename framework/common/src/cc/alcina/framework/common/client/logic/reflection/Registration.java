@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
@@ -34,7 +33,6 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -172,10 +170,10 @@ public @interface Registration {
 				return Optional.empty();
 			}
 			List<Class> bounds = resolvingReflector.getGenericBounds().bounds;
-			if (bounds.size() != 1) {
+			if (bounds.size() != nonGenericSubtypes.size()) {
 				return Optional.empty();
 			}
-			Class firstBound = bounds.get(0);
+			Class firstBound = bounds.get(nonGenericSubtypes.index());
 			if (firstBound == Object.class) {
 				return Optional.empty();
 			}
@@ -396,13 +394,25 @@ public @interface Registration {
 	 * {@code ZHandler extends/implements Handler<Z>} (where Z is a concrete
 	 * subtype of T)) to be registered purely via the generic supertype
 	 * ({@code Z}} bounds
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE })
 	public @interface NonGenericSubtypes {
+		/*
+		 * The index of the registration key class in the generic supertype
+		 * parameter array
+		 */
+		int index() default 0;
+
+		/*
+		 * The size of the generic supertype parameter array - extends A<B> : 1,
+		 * extends A<B,C> : 2 etc
+		 */
+		int size() default 1;
+
 		Class<?> value();
 	}
 

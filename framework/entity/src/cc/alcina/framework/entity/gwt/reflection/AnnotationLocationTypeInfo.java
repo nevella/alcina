@@ -252,10 +252,10 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			}
 			JParameterizedType parameterizedType = (JParameterizedType) clazz;
 			JClassType[] typeArgs = parameterizedType.getTypeArgs();
-			if (typeArgs.length != 1) {
+			if (typeArgs.length != nonGenericSubtypes.size()) {
 				return Optional.empty();
 			}
-			JClassType firstBound = typeArgs[0];
+			JClassType firstBound = typeArgs[nonGenericSubtypes.index()];
 			Class firstJdkBound = typeModelToJdkType(firstBound);
 			if (firstJdkBound == Object.class) {
 				return Optional.empty();
