@@ -56,12 +56,17 @@ public class ClassReflector<T> implements HasAnnotations {
 			primitiveClassMap.values());
 
 	public static <T> void copyProperties(T from, T to,
-			String... propertyNames) {
+			Predicate<String> namePredicate) {
 		ClassReflector<?> reflector = Reflections.at(from);
-		List<String> list = Arrays.asList(propertyNames);
 		Stream<Property> properties = reflector.properties().stream()
-				.filter(p -> list.isEmpty() || list.indexOf(p.getName()) != -1);
+				.filter(p -> namePredicate.test(p.getName()));
 		properties.forEach(p -> p.copy(from, to));
+	}
+
+	public static <T> void copyProperties(T from, T to,
+			String... propertyNames) {
+		List<String> list = Arrays.asList(propertyNames);
+		copyProperties(from, to, list::contains);
 	}
 
 	public static ClassReflector<?> emptyReflector(Class clazz) {
