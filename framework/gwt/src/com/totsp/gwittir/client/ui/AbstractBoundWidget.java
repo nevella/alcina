@@ -78,7 +78,7 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	}
 
 	@Override
-	public PropertyChangeListener[] getPropertyChangeListeners() {
+	public PropertyChangeListener[] propertyChangeListeners() {
 		return changes.getPropertyChangeListeners();
 	}
 

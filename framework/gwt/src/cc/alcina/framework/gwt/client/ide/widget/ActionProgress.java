@@ -16,8 +16,6 @@ package cc.alcina.framework.gwt.client.ide.widget;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.persistence.Transient;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Timer;
@@ -241,12 +239,6 @@ public class ActionProgress extends Composite
 		return this.maxConnectionFailure;
 	}
 
-	@Override
-	@Transient
-	public PropertyChangeListener[] getPropertyChangeListeners() {
-		return this.propertyChangeSupport.getPropertyChangeListeners();
-	}
-
 	public void minimal() {
 		CellFormatter cf = grid.getCellFormatter();
 		cf.setVisible(0, 0, false);
@@ -254,6 +246,11 @@ public class ActionProgress extends Composite
 		cf.setVisible(1, 0, false);
 		cf.setVisible(1, 1, false);
 		fp.addStyleName("minimal");
+	}
+
+	@Override
+	public PropertyChangeListener[] propertyChangeListeners() {
+		return this.propertyChangeSupport.getPropertyChangeListeners();
 	}
 
 	@Override

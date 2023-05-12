@@ -33,7 +33,7 @@ public interface SourcesPropertyChangeEvents {
 	public void addPropertyChangeListener(String propertyName,
 			PropertyChangeListener l);
 
-	public PropertyChangeListener[] getPropertyChangeListeners();
+	public PropertyChangeListener[] propertyChangeListeners();
 
 	public void removePropertyChangeListener(PropertyChangeListener l);
 

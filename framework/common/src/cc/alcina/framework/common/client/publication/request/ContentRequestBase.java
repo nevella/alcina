@@ -221,7 +221,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	@Override
 	@Transient
 	@AlcinaTransient
-	public PropertyChangeListener[] getPropertyChangeListeners() {
+	public PropertyChangeListener[] propertyChangeListeners() {
 		return this.propertyChangeSupport().getPropertyChangeListeners();
 	}
 

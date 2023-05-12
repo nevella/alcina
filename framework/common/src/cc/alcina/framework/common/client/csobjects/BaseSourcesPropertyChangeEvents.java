@@ -116,7 +116,7 @@ public class BaseSourcesPropertyChangeEvents
 	@XmlTransient
 	@JsonIgnore
 	@Omit
-	public PropertyChangeListener[] getPropertyChangeListeners() {
+	public PropertyChangeListener[] propertyChangeListeners() {
 		return this.propertyChangeSupport().getPropertyChangeListeners();
 	}
 

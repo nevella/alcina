@@ -89,7 +89,7 @@ public class Button extends AbstractBoundWidget<String>
 	}
 
 	@Override
-	public PropertyChangeListener[] getPropertyChangeListeners() {
+	public PropertyChangeListener[] propertyChangeListeners() {
 		return changes.getPropertyChangeListeners();
 	}
 

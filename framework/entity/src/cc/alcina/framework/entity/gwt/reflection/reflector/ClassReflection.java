@@ -226,6 +226,7 @@ public class ClassReflection extends ReflectionElement {
 		if (hasReflectableProperties) {
 			Arrays.stream(type.getInheritableMethods())
 					.filter(reflectionVisibility::isVisibleMethod)
+					.filter(m -> !m.getName().equals("getClass"))
 					.map(this::toPropertyMethod).filter(Objects::nonNull)
 					.forEach(m -> {
 						PropertyReflection propertyReflection = propertyReflections

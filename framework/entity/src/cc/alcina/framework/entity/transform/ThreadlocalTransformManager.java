@@ -952,7 +952,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 		 * synthesising collection updates will have equal effect to
 		 * clone/modify
 		 */
-		return entity.getPropertyChangeListeners().length == 1;
+		return entity.propertyChangeListeners().length == 1;
 	}
 
 	protected <E extends Entity> E newInstance(Class<E> clazz, long id,

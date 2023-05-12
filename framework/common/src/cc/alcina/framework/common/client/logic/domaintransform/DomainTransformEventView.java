@@ -81,7 +81,7 @@ public class DomainTransformEventView extends DomainTransformEvent
 	}
 
 	@Override
-	public PropertyChangeListener[] getPropertyChangeListeners() {
+	public PropertyChangeListener[] propertyChangeListeners() {
 		return null;
 	}
 
