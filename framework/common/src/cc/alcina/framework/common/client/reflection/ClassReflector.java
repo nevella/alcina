@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.reflection;
 
 import java.lang.annotation.Annotation;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
@@ -52,6 +54,15 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	public static final Set<Class> primitives = new HashSet<Class>(
 			primitiveClassMap.values());
+
+	public static <T> void copyProperties(T from, T to,
+			String... propertyNames) {
+		ClassReflector<?> reflector = Reflections.at(from);
+		List<String> list = Arrays.asList(propertyNames);
+		Stream<Property> properties = reflector.properties().stream()
+				.filter(p -> list.isEmpty() || list.indexOf(p.getName()) != -1);
+		properties.forEach(p -> p.copy(from, to));
+	}
 
 	public static ClassReflector<?> emptyReflector(Class clazz) {
 		return new ClassReflector<>(clazz, Collections.emptyList(),

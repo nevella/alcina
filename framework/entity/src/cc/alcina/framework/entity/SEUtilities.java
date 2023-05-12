@@ -273,6 +273,7 @@ public class SEUtilities {
 		return false;
 	}
 
+	// FIXME - reflection - remove (cleanup seutilities)
 	public static int copyFile(File in, File out) throws IOException {
 		return copyFile(in, out, true, false);
 	}
@@ -297,19 +298,6 @@ public class SEUtilities {
 		out.setLastModified(in.lastModified());
 		ins.close();
 		return 1;
-	}
-
-	public static <T> void copyProperties(T from, T to,
-			String... propertyNames) {
-		try {
-			for (String propertyName : propertyNames) {
-				PropertyDescriptor pd = getPropertyDescriptorByName(
-						from.getClass(), propertyName);
-				pd.getWriteMethod().invoke(to, pd.getReadMethod().invoke(from));
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	public static <T> void debugComparator(List<T> list,
