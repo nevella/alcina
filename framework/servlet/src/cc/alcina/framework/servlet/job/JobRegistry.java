@@ -68,6 +68,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
@@ -247,6 +248,8 @@ public class JobRegistry {
 			}
 		}
 	}
+
+	public Topic<Job> topicJobComplete = Topic.create();
 
 	private ConcurrentHashMap<Job, InMemoryResult> inMemoryResults = new ConcurrentHashMap<>();
 
@@ -605,7 +608,8 @@ public class JobRegistry {
 				.deferMetadataPersistence(job);
 		try {
 			LooseContext.push();
-			withDomain(deferMetadataPersistence, () -> context.start());
+			context.start();
+			withDomain(deferMetadataPersistence, () -> context.persistStart());
 			context.beginLogBuffer();
 			if (taskEnabled) {
 				acquireResources(job, performer.getResources());
@@ -643,24 +647,26 @@ public class JobRegistry {
 			 * key - handle tx timeouts/aborts
 			 */
 			withDomain(deferMetadataPersistence, () -> {
-				LooseContext.remove(
-						ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
-				Transaction.ensureBegun();
-				performer.onBeforeEnd();
-				context.end();
-				performer.onAfterEnd();
 				try {
+					LooseContext.remove(
+							ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
+					Transaction.ensureBegun();
+					performer.onBeforeEnd();
+					context.end();
+					performer.onAfterEnd();
 					releaseResources(job, false);
-				} catch (Exception e) {
-					logger.warn("DEVEX::0 - JobRegistry.releaseResources", e);
+					context.persistMetadata();
+					activeJobs.remove(job);
+					context.clearRefs();
+					context.remove();
+					if (trackInternalMetrics()) {
+						InternalMetrics.get().endTracker(job);
+					}
+					topicJobComplete.publish(job);
+				} catch (Throwable e) {
+					logger.warn("DEVEX::0 - JobRegistry.performJob0.finally",
+							e);
 					e.printStackTrace();
-				}
-				context.persistMetadata();
-				activeJobs.remove(job);
-				context.clearRefs();
-				context.remove();
-				if (trackInternalMetrics()) {
-					InternalMetrics.get().endTracker(job);
 				}
 			});
 			LooseContext.pop();

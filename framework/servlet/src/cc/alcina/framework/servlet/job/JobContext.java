@@ -301,7 +301,8 @@ public class JobContext {
 	 * FIXME - mvcc.5 - allow self/children execution interleaving
 	 */
 	public void awaitChildCompletion() {
-		Preconditions.checkArgument(thread == Thread.currentThread());
+		Preconditions.checkArgument(thread == Thread.currentThread()
+				|| !TransactionEnvironment.get().isMultiple());
 		allocator.awaitChildCompletion(this);
 	}
 
@@ -533,6 +534,17 @@ public class JobContext {
 		}
 	}
 
+	void persistStart() {
+		if (job.provideIsNotComplete()) {
+			// Threading - guaranteed that this is sole mutating thread (for
+			// job)
+			job.setStartTime(new Date());
+			job.setState(JobState.PROCESSING);
+			job.setPerformerVersionNumber(performer.getVersionNumber());
+			persistMetadata();
+		}
+	}
+
 	void start() {
 		LooseContext.set(CONTEXT_CURRENT, this);
 		thread = Thread.currentThread();
@@ -541,12 +553,6 @@ public class JobContext {
 			thread.setName(Ax.format("%s::%s::%s",
 					job.provideTaskClass().getSimpleName(), job.getId(),
 					threadStartName));
-			// Threading - guaranteed that this is sole mutating thread (for
-			// job)
-			job.setStartTime(new Date());
-			job.setState(JobState.PROCESSING);
-			job.setPerformerVersionNumber(performer.getVersionNumber());
-			persistMetadata();
 		}
 		if (noHttpContext) {
 			ActionPerformerTrackMetrics filter = Registry
