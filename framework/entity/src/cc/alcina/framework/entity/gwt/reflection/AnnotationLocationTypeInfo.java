@@ -20,6 +20,7 @@ import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.MergeStrategy.NonGenericSubtypeWrapper;
 import cc.alcina.framework.common.client.logic.reflection.Registration.NonGenericSubtypes;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
@@ -199,6 +200,11 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		@Override
 		public List<Registration> merge(List<Registration> lessSpecific,
 				List<Registration> moreSpecific) {
+			if (lessSpecific.stream()
+					.allMatch(r -> r instanceof NonGenericSubtypeWrapper)
+					&& !moreSpecific.isEmpty()) {
+				return moreSpecific;
+			}
 			return Registration.MergeStrategy.Shared.merge(lessSpecific,
 					moreSpecific, (t1, t2) -> t1.isAssignableFrom(t2));
 		}
