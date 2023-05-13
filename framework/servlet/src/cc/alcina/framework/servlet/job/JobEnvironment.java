@@ -21,6 +21,8 @@ public interface JobEnvironment {
 
 	boolean isPersistent();
 
+	boolean isTrackMetrics();
+
 	void onJobCreated(Job job);
 
 	void prepareUserContext(Job job);

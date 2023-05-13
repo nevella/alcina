@@ -20,7 +20,6 @@ import java.util.Optional;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.transform.EntityLocatorMap;
 
@@ -31,7 +30,6 @@ import cc.alcina.framework.entity.transform.EntityLocatorMap;
  * @author nick@alcina.cc
  *
  */
-@Registration.Singleton
 public class EntityLayerObjects {
 	// pre-registry
 	public static EntityLayerObjects get() {

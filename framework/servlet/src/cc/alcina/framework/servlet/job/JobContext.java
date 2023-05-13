@@ -301,8 +301,7 @@ public class JobContext {
 	 * FIXME - mvcc.5 - allow self/children execution interleaving
 	 */
 	public void awaitChildCompletion() {
-		Preconditions.checkArgument(thread == Thread.currentThread()
-				|| !TransactionEnvironment.get().isMultiple());
+		Preconditions.checkArgument(thread == Thread.currentThread());
 		allocator.awaitChildCompletion(this);
 	}
 
@@ -358,6 +357,7 @@ public class JobContext {
 		String simpleExceptionMessage = CommonUtils.toSimpleExceptionMessage(e);
 		job.setStatusMessage(simpleExceptionMessage);
 		job.setResultMessage(simpleExceptionMessage);
+		TransactionEnvironment.get().commit();
 		logger.warn("Unexpected job exception - job {}", e, job.getId());
 		e.printStackTrace();
 	}
@@ -411,7 +411,9 @@ public class JobContext {
 	private void end0() {
 		Transaction.ensureBegun();
 		if (noHttpContext) {
-			InternalMetrics.get().endTracker(performer);
+			if (JobRegistry.get().environment.isTrackMetrics()) {
+				InternalMetrics.get().endTracker(performer);
+			}
 		}
 		if (job.provideIsNotComplete()) {
 			// occurs just before end, since possibly on a different thread
@@ -435,9 +437,6 @@ public class JobContext {
 					job.getEndTime().getTime() - job.getStartTime().getTime());
 		}
 		persistMetadata();
-		if (threadStartName != null) {
-			Thread.currentThread().setName(threadStartName);
-		}
 		endedLatch.countDown();
 	}
 
@@ -545,22 +544,31 @@ public class JobContext {
 		}
 	}
 
+	void restoreThreadName() {
+		if (threadStartName != null) {
+			Thread.currentThread().setName(threadStartName);
+		}
+	}
+
 	void start() {
 		LooseContext.set(CONTEXT_CURRENT, this);
 		thread = Thread.currentThread();
 		threadStartName = thread.getName();
 		if (job.provideIsNotComplete()) {
-			thread.setName(Ax.format("%s::%s::%s",
+			String contextThreadName = Ax.format("%s::%s::%s",
 					job.provideTaskClass().getSimpleName(), job.getId(),
-					threadStartName));
+					threadStartName);
+			thread.setName(contextThreadName);
 		}
 		if (noHttpContext) {
 			ActionPerformerTrackMetrics filter = Registry
 					.impl(ActionPerformerTrackMetrics.class);
-			InternalMetrics.get().startTracker(performer,
-					() -> describeTask(job.getTask(), ""),
-					InternalMetricTypeAlcina.service,
-					performer.getClass().getSimpleName(), filter);
+			if (JobRegistry.get().environment.isTrackMetrics()) {
+				InternalMetrics.get().startTracker(performer,
+						() -> describeTask(job.getTask(), ""),
+						InternalMetricTypeAlcina.service,
+						performer.getClass().getSimpleName(), filter);
+			}
 		}
 	}
 

@@ -147,13 +147,13 @@ class JobAllocator {
 			ensureStarted();
 			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
 				if (enqueuedStatusMessage != null) {
-					applyStatusMessage();
+					TransactionEnvironment.withDomain(this::applyStatusMessage);
 					TransactionEnvironment.get().end();
 				}
 			}
 			TransactionEnvironment.get().endAndBeginNew();
 			new StatusMessage().publish();
-			applyStatusMessage();
+			TransactionEnvironment.withDomain(this::applyStatusMessage);
 			TransactionEnvironment.get().ensureBegun();
 		} catch (Exception e) {
 			e.printStackTrace();

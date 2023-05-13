@@ -271,7 +271,7 @@ public class JobRegistry {
 
 	private AtomicInteger consoleJobIdCounter = new AtomicInteger();
 
-	private JobEnvironment environment = new JobEnvironmentTx();
+	JobEnvironment environment = new JobEnvironmentTx();
 
 	public JobRegistry() {
 	}
@@ -583,6 +583,14 @@ public class JobRegistry {
 	}
 
 	// FIXME - jobs - clean
+	//
+	// first - move to a jobperformer class
+	//
+	// then - have performer phases
+	//
+	// then - manage persistence/threads better
+	//
+	// then - allocator
 	private <T extends Task> void performJob0(Job job,
 			boolean queueJobPersistence,
 			LauncherThreadState launcherThreadState) {
@@ -620,9 +628,9 @@ public class JobRegistry {
 			withDomain(deferMetadataPersistence, () -> {
 				context.persistMetadata();
 				context.toAwaitingChildren();
-				context.awaitChildCompletion();
-				performer.onChildCompletion();
 			});
+			context.awaitChildCompletion();
+			performer.onChildCompletion();
 		} catch (Throwable t) {
 			Exception e = (Exception) ((t instanceof Exception) ? t
 					: new WrappedRuntimeException(t));
@@ -643,6 +651,7 @@ public class JobRegistry {
 			});
 		} finally {
 			context.endLogBuffer();
+			context.restoreThreadName();
 			/*
 			 * key - handle tx timeouts/aborts
 			 */

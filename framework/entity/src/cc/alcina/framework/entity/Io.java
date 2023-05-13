@@ -308,10 +308,14 @@ public class Io {
 			public ReadOp resource(String classpathResource) {
 				this.classpathResource = classpathResource;
 				if (classpathRelative == null) {
-					classpathRelative = StackWalker
-							.getInstance(
-									StackWalker.Option.RETAIN_CLASS_REFERENCE)
-							.getCallerClass();
+					if (Configuration.useStackTraceCallingClass) {
+						classpathRelative = Configuration
+								.getStacktraceCallingClass();
+					} else {
+						classpathRelative = StackWalker.getInstance(
+								StackWalker.Option.RETAIN_CLASS_REFERENCE)
+								.getCallerClass();
+					}
 				}
 				return ReadOp.this;
 			}

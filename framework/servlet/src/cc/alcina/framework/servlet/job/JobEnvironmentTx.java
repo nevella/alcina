@@ -39,6 +39,11 @@ class JobEnvironmentTx implements JobEnvironment {
 	}
 
 	@Override
+	public boolean isTrackMetrics() {
+		return true;
+	}
+
+	@Override
 	public void onJobCreated(Job job) {
 		// NOOP
 	}

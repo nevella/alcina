@@ -183,6 +183,9 @@ public class GraphProjection {
 				if (excludeList.contains(name)) {
 					continue;
 				}
+				if (name.startsWith("this$")) {
+					continue;
+				}
 				if (withTypes) {
 					sb.append(field.getType().getSimpleName());
 					sb.append("/");

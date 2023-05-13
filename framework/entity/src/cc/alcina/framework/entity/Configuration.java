@@ -137,7 +137,7 @@ public class Configuration {
 		return new Key(clazz, keyPart);
 	}
 
-	private static Class getStacktraceCallingClass() {
+	static Class getStacktraceCallingClass() {
 		StackTraceElement[] stackTrace = new Exception().getStackTrace();
 		StackTraceElement caller = stackTrace[2];
 		return Reflections.forName(caller.getClassName());

@@ -50,6 +50,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
  * The "large" functions assume a byte structure of [first 128] public-key RSA
@@ -85,7 +86,7 @@ public class EncryptionUtils {
 		byte[] md5hash = new byte[32];
 		md.update(bytes, 0, bytes.length);
 		md5hash = md.digest();
-		return convertToHex(md5hash);
+		return CommonUtils.toHex(md5hash);
 	}
 
 	public static String MD5(List<byte[]> byties)
@@ -97,7 +98,7 @@ public class EncryptionUtils {
 		}
 		byte[] md5hash = new byte[32];
 		md5hash = md.digest();
-		return convertToHex(md5hash);
+		return CommonUtils.toHex(md5hash);
 	}
 
 	public static String MD5(String text) {
@@ -108,7 +109,7 @@ public class EncryptionUtils {
 			// iso-8859 not that good an idea, but keep it...
 			md.update(text.getBytes("iso-8859-1"), 0, text.length());
 			md5hash = md.digest();
-			return convertToHex(md5hash);
+			return CommonUtils.toHex(md5hash);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -130,22 +131,6 @@ public class EncryptionUtils {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	private static String convertToHex(byte[] data) {
-		StringBuffer buf = new StringBuffer();
-		for (int i = 0; i < data.length; i++) {
-			int halfbyte = (data[i] >>> 4) & 0x0F;
-			int two_halfs = 0;
-			do {
-				if ((0 <= halfbyte) && (halfbyte <= 9))
-					buf.append((char) ('0' + halfbyte));
-				else
-					buf.append((char) ('a' + (halfbyte - 10)));
-				halfbyte = data[i] & 0x0F;
-			} while (two_halfs++ < 1);
-		}
-		return buf.toString();
 	}
 
 	private byte[] passphrase;
@@ -339,7 +324,7 @@ public class EncryptionUtils {
 			byte[] sha1hash = new byte[32];
 			md.update(bytes);
 			sha1hash = md.digest();
-			return convertToHex(sha1hash);
+			return CommonUtils.toHex(sha1hash);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		} finally {

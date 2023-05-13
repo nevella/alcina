@@ -93,8 +93,11 @@ public class DirndlRenderer {
 	}
 
 	private Element renderElement() {
-		Element element = new DirectedLayout()
-				.render(contextResolver, renderable).getElement();
+		DirectedLayout layout = new DirectedLayout();
+		Element element = layout.render(contextResolver, renderable)
+				.getElement();
+		// unbind listeners
+		layout.remove();
 		return element;
 	}
 

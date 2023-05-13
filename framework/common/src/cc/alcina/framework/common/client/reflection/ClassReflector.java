@@ -15,7 +15,9 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
 
 /*
  * TODO - caching annotation facade? Or cache on the resolver (possibly latter)
@@ -169,6 +171,10 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	public List<Property> properties() {
 		return this.properties;
+	}
+
+	public Property property(PropertyEnum name) {
+		return byName.get(name.name());
 	}
 
 	public Property property(String name) {
