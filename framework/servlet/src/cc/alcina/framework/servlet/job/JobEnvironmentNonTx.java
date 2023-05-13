@@ -33,6 +33,11 @@ public class JobEnvironmentNonTx implements JobEnvironment {
 		return false;
 	}
 
+	@Override
+	public boolean isTrackMetrics() {
+		return false;
+	}
+
 	/*
 	 * Since the non-tx system doesn't know (in general) about transactions,
 	 * commit here

@@ -1,11 +1,11 @@
 package cc.alcina.framework.servlet.util.logging;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.log4j.Layout;
 import org.apache.log4j.WriterAppender;
 

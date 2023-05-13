@@ -329,6 +329,7 @@ public class LocalDomainStore {
 
 		@Override
 		public <V extends Entity> V find(V v) {
+			LocalDomainQueue.checkOnDomainThread();
 			return domain.getCache().get(v.toLocator());
 		}
 
@@ -344,6 +345,7 @@ public class LocalDomainStore {
 
 		@Override
 		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
+			LocalDomainQueue.checkOnDomainThread();
 			return domain.getCache().stream(clazz);
 		}
 
@@ -359,6 +361,7 @@ public class LocalDomainStore {
 
 			@Override
 			public Stream<V> stream() {
+				LocalDomainQueue.checkOnDomainThread();
 				return query0(entityClass, this);
 			}
 		}

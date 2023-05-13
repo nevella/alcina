@@ -14,41 +14,39 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 
 public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
-	/*
-	 * as per implemented method, 'lower' is lower in the resolution stack,
-	 * higher precedence
-	 * 
-	 * FIXME - dirndl 1x1e - reverse lower + higher (top of stack -- most
-	 * specific frame - is 'higher', not lower)
-	 */
 	@Override
-	public List<Directed> merge(List<Directed> higher, List<Directed> lower) {
-		if (lower == null || lower.isEmpty()) {
-			return higher;
+	public List<Directed> merge(List<Directed> lessSpecific,
+			List<Directed> moreSpecific) {
+		if (moreSpecific == null || moreSpecific.isEmpty()) {
+			return lessSpecific;
 		}
-		if (higher == null || higher.isEmpty()) {
-			return lower;
+		if (lessSpecific == null || lessSpecific.isEmpty()) {
+			return moreSpecific;
 		}
-		// require lower.length==1 || higher.length ==1
+		// require moreSpecific.length==1 || lessSpecific.length ==1
 		//
-		// if lower.length==1, merge lower[0] with higher[0], then add remaining
-		// higher
+		// if moreSpecific.length==1, merge moreSpecific[0] with
+		// lessSpecific[0], then add remaining
+		// lessSpecific
 		//
-		// if higher.length==1, add lower[0..last-1], merge lower[last] with
-		// higher[0]
+		// if lessSpecific.length==1, add moreSpecific[0..last-1], merge
+		// moreSpecific[last] with
+		// lessSpecific[0]
 		//
 		// merge via Directed.Impl
-		Directed lowest = Ax.last(lower);
-		if (!lowest.merge()) {
-			return lower;
+		Directed mostSpecific = Ax.last(moreSpecific);
+		if (!mostSpecific.merge()) {
+			return moreSpecific;
 		}
-		Preconditions.checkArgument(higher.size() == 1 || lower.size() == 1);
-		Directed.Impl lowestImpl = Directed.Impl.wrap(lowest);
+		Preconditions.checkArgument(
+				lessSpecific.size() == 1 || moreSpecific.size() == 1);
+		Directed.Impl lowestImpl = Directed.Impl.wrap(mostSpecific);
 		List<Directed> result = new ArrayList<>();
-		lower.stream().limit(lower.size() - 1).forEach(result::add);
-		Impl merged = lowestImpl.mergeParent(higher.get(0));
+		moreSpecific.stream().limit(moreSpecific.size() - 1)
+				.forEach(result::add);
+		Impl merged = lowestImpl.mergeParent(lessSpecific.get(0));
 		result.add(merged);
-		higher.stream().skip(1).forEach(result::add);
+		lessSpecific.stream().skip(1).forEach(result::add);
 		return result;
 	}
 

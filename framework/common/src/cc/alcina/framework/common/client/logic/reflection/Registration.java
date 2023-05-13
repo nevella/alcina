@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
@@ -33,6 +34,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -119,9 +121,17 @@ public @interface Registration {
 		}
 
 		@Override
-		public List<Registration> merge(List<Registration> higher,
-				List<Registration> lower) {
-			return Shared.merge(higher, lower,
+		public List<Registration> merge(List<Registration> lessSpecific,
+				List<Registration> moreSpecific) {
+			/*
+			 * NonGenericSubtypeWrapper is overridden by lower @Registration etc
+			 */
+			if (lessSpecific.stream()
+					.allMatch(r -> r instanceof NonGenericSubtypeWrapper)
+					&& !moreSpecific.isEmpty()) {
+				return moreSpecific;
+			}
+			return Shared.merge(lessSpecific, moreSpecific,
 					(t1, t2) -> Reflections.isAssignableFrom(t1, t2));
 		}
 
@@ -130,6 +140,10 @@ public @interface Registration {
 				Class<Registration> annotationClass,
 				ClassReflector<?> reflector,
 				ClassReflector<?> resolvingReflector) {
+			if (resolvingReflector.getReflectedClass().getName()
+					.contains("Adc1TestRegistrationAnnotations")) {
+				int debug = 3;
+			}
 			List<Registration> result = new ArrayList<>();
 			Registration registration = reflector
 					.annotation(Registration.class);
@@ -394,6 +408,14 @@ public @interface Registration {
 	 * {@code ZHandler extends/implements Handler<Z>} (where Z is a concrete
 	 * subtype of T)) to be registered purely via the generic supertype
 	 * ({@code Z}} bounds
+	 * 
+	 * <p>
+	 * If anyone can think of a better name than 'NonGenericSubtypes'...please
+	 * holler. 'ReifiedSubtypes' would be wrong but sounds cool...
+	 * 
+	 * <p>
+	 * <b>Note</b> - this annotation is *not* applied if the applicable type has
+	 * any other Registration annotation
 	 *
 	 *
 	 */

@@ -53,6 +53,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public static final String CONTEXT_WITHOUT_MAPPER_POOL = JacksonJsonObjectSerializer.class
 			+ ".CONTEXT_NO_MAPPER";
 
+	public static boolean usePool = true;
+
 	private static CachingMap<JacksonJsonObjectSerializer, ObjectMapperPool> objectMappersPool = new CachingConcurrentMap<>(
 			serializer -> new ObjectMapperPool(serializer), 10);
 
@@ -304,7 +306,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private <T> T
 			runWithObjectMapper(Function<ObjectMapper, T> mapperFunction) {
-		if (LooseContext.is(CONTEXT_WITHOUT_MAPPER_POOL)) {
+		if (LooseContext.is(CONTEXT_WITHOUT_MAPPER_POOL) || !usePool) {
 			ObjectMapper mapper = createObjectMapper();
 			return mapperFunction.apply(mapper);
 		} else {

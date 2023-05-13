@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 
@@ -21,8 +20,6 @@ public class AtEndOfEventSeriesTimer<T> {
 			if (time - lastEventOccurred >= waitToPerformAction
 					|| (maxDelayFromFirstAction != 0 && (time
 							- firstEventOccurred >= maxDelayFromFirstAction))) {
-				Ax.out("Debouncer: Firing: time: %s firstEvent : %s - lastEvent: %s",
-						time, firstEventOccurred, lastEventOccurred);
 				synchronized (this) {
 					if (timer != null) {
 						timer.cancel();

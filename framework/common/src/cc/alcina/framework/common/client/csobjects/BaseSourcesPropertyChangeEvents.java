@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Objects;
 
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
@@ -26,6 +27,8 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
 import cc.alcina.framework.common.client.logic.LazyPropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
@@ -121,11 +124,6 @@ public class BaseSourcesPropertyChangeEvents
 	}
 
 	/*
-	 * Given all the ways the transient deserialization mix can go wrong, this
-	 * is best.
-	 *
-	 * I'd imagine any decent JS engine will optimise the null check fairly well
-	 *
 	 * MVCC access - 'this' correctly refers to the version, *not*
 	 * domainIdentity()
 	 */
@@ -149,6 +147,18 @@ public class BaseSourcesPropertyChangeEvents
 				listener);
 	}
 
+	/*
+	 * MVCC access - 'this' correctly refers to the version, *not*
+	 * domainIdentity()
+	 */
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+	public void set(PropertyEnum propertyName, Object newValue) {
+		Property property = Reflections.at(getClass()).property(propertyName);
+		Object oldValue = property.get(this);
+		set(propertyName, oldValue, newValue,
+				() -> property.set(this, newValue));
+	}
+
 	// optimisation for non-mutating callers
 	protected boolean hasPropertyChangeSupport() {
 		return propertyChangeSupport != null;
@@ -161,7 +171,7 @@ public class BaseSourcesPropertyChangeEvents
 
 	protected <V> void set(String propertyName, V oldValue, V newValue,
 			Runnable setter) {
-		if (oldValue == newValue) {
+		if (Objects.equals(oldValue, newValue)) {
 			return;
 		}
 		setter.run();
