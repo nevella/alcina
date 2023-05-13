@@ -549,6 +549,11 @@ public class Diff {
 						if (lineResult.changedLinePercent > 50) {
 							minor = false;
 						}
+						if (deleted.replace(" ", "")
+								.equals(inserted.replace(" ", ""))) {
+							// pure whitespace
+							minor = true;
+						}
 						format.format(
 								"--------------------\nWord change: %s%\n%s\n%s\n%s\n--------------------\n",
 								lineResult.changedLinePercent, deleted,
