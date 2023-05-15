@@ -25,6 +25,10 @@ public class SelectionRemote extends JavaScriptObject {
 	protected SelectionRemote() {
 	}
 
+	public final native void collapse() /*-{
+    this.collapse();
+	}-*/;
+
 	public final native NodeRemote getAnchorNode() /*-{
     return this.anchorNode;
 	}-*/;
@@ -76,5 +80,13 @@ public class SelectionRemote extends JavaScriptObject {
 
 	public final native void removeAllRanges() /*-{
     this.removeAllRanges();
+	}-*/;
+
+	public final native void setAnchorNode(NodeRemote node) /*-{
+    this.anchorNode = node;
+	}-*/;
+
+	public final native void setAnchorOffset(int offset) /*-{
+    this.anchorOffset = offset;
 	}-*/;
 }
