@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.entity.SEUtilities;
 
-@Registration.NonGenericSubtypes(BaseRemoteActionPerformer.class)
+@Registration.NonGenericSubtypes(TaskPerformer.class)
 public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 		implements TaskPerformer<R> {
 	boolean started;
