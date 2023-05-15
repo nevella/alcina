@@ -19,7 +19,7 @@
 	<classpathentry kind="src" output="extras/jsdom/bin" path="extras/jsdom/src-element"/>
 	<classpathentry kind="src" path="extras/wd/src"/>
 	<classpathentry kind="src" output="extras/patches/nekohtml/bin" path="extras/patches/nekohtml/src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/Eclipse Temurin 17 [17.0.1]">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>

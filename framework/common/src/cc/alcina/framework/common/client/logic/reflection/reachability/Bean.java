@@ -42,6 +42,10 @@ import cc.alcina.framework.common.client.reflection.Reflections;
  *
  * </ul>
  *
+ * <p>
+ * This annotation currently follows standard JVM inheritance rules - liable to
+ * a rethink (i.e. possibly inherit from interface)
+ * 
  * @author nick@alcina.cc
  *
  */
@@ -51,4 +55,39 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 @Target({ ElementType.TYPE })
 @ClientVisible
 public @interface Bean {
+	/**
+	 * <p>
+	 * Adds to @Bean by specifying that all non-private transient fields should
+	 * be modelled as properties.
+	 * 
+	 * <p>
+	 * See the {@link cc.alcina.framework.common.client.reflection reflection
+	 * spec}
+	 * 
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@Documented
+	@Target({ ElementType.TYPE })
+	@ClientVisible
+	public @interface Fields {
+	}
+
+	/**
+	 * <p>
+	 * Adds to @Bean by specifying that all non-private transient final fields
+	 * should be modelled as read-only properties.
+	 * 
+	 * <p>
+	 * See the {@link cc.alcina.framework.common.client.reflection reflection
+	 * spec}
+	 * 
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@Documented
+	@Target({ ElementType.TYPE })
+	@ClientVisible
+	public @interface ImmutableFields {
+	}
 }
