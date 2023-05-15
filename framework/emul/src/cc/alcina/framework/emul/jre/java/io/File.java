@@ -25,5 +25,8 @@ public class File
 	public long lastModified(){
 		throw new UnsupportedOperationException();	
 	}
+	public String getName(){
+		throw new UnsupportedOperationException();	
+	}
 	
 }
