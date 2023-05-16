@@ -24,6 +24,7 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
+	
 	<classpathentry kind="lib" path="lib/framework/entity/nekohtml.jar"/>
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>

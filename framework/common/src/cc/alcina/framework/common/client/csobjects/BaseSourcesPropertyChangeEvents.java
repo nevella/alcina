@@ -116,7 +116,6 @@ public class BaseSourcesPropertyChangeEvents
 
 	@Override
 	@Transient
-	@XmlTransient
 	@JsonIgnore
 	@Omit
 	public PropertyChangeListener[] propertyChangeListeners() {
