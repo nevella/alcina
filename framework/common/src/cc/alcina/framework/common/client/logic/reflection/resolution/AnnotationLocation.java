@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.reflection.resolution;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -129,6 +130,11 @@ public class AnnotationLocation {
 	public <A extends Annotation> boolean
 			hasAnnotation(Class<A> annotationClass) {
 		return getAnnotation(annotationClass) != null;
+	}
+
+	public boolean hasAny(Class<? extends Annotation>... annotationClasses) {
+		return Arrays.stream(annotationClasses).anyMatch(
+				annotationClass -> getAnnotation(annotationClass) != null);
 	}
 
 	@Override

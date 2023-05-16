@@ -43,8 +43,8 @@ import cc.alcina.framework.common.client.reflection.Reflections;
  * </ul>
  *
  * <p>
- * This annotation currently follows standard JVM inheritance rules - liable to
- * a rethink (i.e. possibly inherit from interface)
+ * Currently an annotation rather than an interface (no-params annotations are
+ * basically equivalent) to allow descendants to declare themselves 'not a bean'
  * 
  * @author nick@alcina.cc
  *
@@ -53,7 +53,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 @Inherited
 @Documented
 @Target({ ElementType.TYPE })
-@ClientVisible
 public @interface Bean {
 	/**
 	 * <p>
@@ -69,7 +68,6 @@ public @interface Bean {
 	@Inherited
 	@Documented
 	@Target({ ElementType.TYPE })
-	@ClientVisible
 	public @interface Fields {
 	}
 
@@ -87,7 +85,6 @@ public @interface Bean {
 	@Inherited
 	@Documented
 	@Target({ ElementType.TYPE })
-	@ClientVisible
 	public @interface ImmutableFields {
 	}
 }

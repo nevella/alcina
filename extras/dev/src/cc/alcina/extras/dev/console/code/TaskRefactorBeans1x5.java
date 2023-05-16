@@ -28,6 +28,7 @@ import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.util.FsObjectCache;
@@ -40,56 +41,97 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
  * @formatter:off
  *
 
+Plan (impl):
+Property:
+- Add field support
+  - can serialize this task?
+- @Bean resolver (since we want tree serializable) 
+- 
+
+
+Tool:
+- Find beans (@bean annotation)
+- Find beanlike (getter/setter but no @bean)(exclude tasks)
+- Fix signature generation tasks
+
 
  *
  *@formatter:on
  *
- *
- *
  */
+@Bean.Fields
 public class TaskRefactorBeans1x5 extends PerformerTask {
-	private boolean overwriteOriginals;
+	transient CompilationUnits compUnits;
 
-	private String classPathList;
+	public boolean overwriteOriginals;
 
-	private transient CompilationUnits compUnits;
+	public String classPathList;
 
-	private boolean refresh;
+	public boolean refresh;
 
-	private Action action;
+	public Action action;
 
-	private boolean test;
+	public boolean test;
 
-	private Class onlyAssignableFrom;
+	public Class onlyAssignableFrom;
 
-	private String classNameFilter;
+	public String classNameFilter;
 
-	public Action getAction() {
-		return this.action;
+	public void removeFilter0FilterMethod(
+			ClassOrInterfaceDeclarationWrapper declarationWrapper,
+			Type... types) {
+		ClassOrInterfaceDeclaration decl = declarationWrapper.getDeclaration();
+		List<MethodDeclaration> methods = decl.getMethods();
+		for (MethodDeclaration method : methods) {
+			for (Type type : types) {
+				switch (type) {
+				case DomainCriterionHandler:
+					if (method.getNameAsString().equals("getFilter")
+							&& method.getType().toString()
+									.contains("DomainFilter")
+							&& method.toString()
+									.contains("return getFilter0(sc);")) {
+						declarationWrapper.dirty();
+						method.remove();
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+			}
+		}
 	}
 
-	public String getClassNameFilter() {
-		return this.classNameFilter;
-	}
-
-	public String getClassPathList() {
-		return this.classPathList;
-	}
-
-	public Class getOnlyAssignableFrom() {
-		return this.onlyAssignableFrom;
-	}
-
-	public boolean isOverwriteOriginals() {
-		return this.overwriteOriginals;
-	}
-
-	public boolean isRefresh() {
-		return refresh;
-	}
-
-	public boolean isTest() {
-		return this.test;
+	public void removeHandlesMethod(
+			ClassOrInterfaceDeclarationWrapper declarationWrapper,
+			Type... types) {
+		ClassOrInterfaceDeclaration decl = declarationWrapper.getDeclaration();
+		List<MethodDeclaration> methods = decl.getMethods();
+		for (MethodDeclaration method : methods) {
+			for (Type type : types) {
+				switch (type) {
+				case DomainCriterionHandler:
+					if (method.getNameAsString()
+							.equals("handlesSearchCriterion")
+							&& !method.isFinal() && !decl.getNameAsString()
+									.equals("DomainCriterionHandler")) {
+						declarationWrapper.dirty();
+						method.remove();
+					}
+					break;
+				case BasePlaceTokenizer:
+					if (method.getNameAsString().equals("getTokenizedClass")
+							&& !decl.getNameAsString().matches(
+									"(BasePlaceTokenizer|BindablePlaceTokenizer)")) {
+						declarationWrapper.dirty();
+						method.remove();
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+			}
+		}
 	}
 
 	@Override
@@ -99,8 +141,8 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 				.singletonCache(CompilationUnits.class, getClass())
 				.asSingletonCache();
 		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
-				DeclarationVisitor::new, isRefresh());
-		switch (getAction()) {
+				DeclarationVisitor::new, refresh);
+		switch (action) {
 		case LIST_INTERESTING: {
 			compUnits.declarations.values().stream()
 					.filter(dec -> dec.hasFlags()).filter(this::assignableFrom)
@@ -143,95 +185,10 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 			break;
 		}
 		}
-		compUnits.writeDirty(isTest());
+		compUnits.writeDirty(test);
 	}
 
-	public void setAction(Action action) {
-		this.action = action;
-	}
-
-	public void setClassNameFilter(String classNameFilter) {
-		this.classNameFilter = classNameFilter;
-	}
-
-	public void setClassPathList(String classPathList) {
-		this.classPathList = classPathList;
-	}
-
-	public void setOnlyAssignableFrom(Class onlyAssignableFrom) {
-		this.onlyAssignableFrom = onlyAssignableFrom;
-	}
-
-	public void setOverwriteOriginals(boolean overwriteOriginals) {
-		this.overwriteOriginals = overwriteOriginals;
-	}
-
-	public void setRefresh(boolean refresh) {
-		this.refresh = refresh;
-	}
-
-	public void setTest(boolean test) {
-		this.test = test;
-	}
-
-	private void removeFilter0FilterMethod(
-			ClassOrInterfaceDeclarationWrapper declarationWrapper,
-			Type... types) {
-		ClassOrInterfaceDeclaration decl = declarationWrapper.getDeclaration();
-		List<MethodDeclaration> methods = decl.getMethods();
-		for (MethodDeclaration method : methods) {
-			for (Type type : types) {
-				switch (type) {
-				case DomainCriterionHandler:
-					if (method.getNameAsString().equals("getFilter")
-							&& method.getType().toString()
-									.contains("DomainFilter")
-							&& method.toString()
-									.contains("return getFilter0(sc);")) {
-						declarationWrapper.dirty();
-						method.remove();
-					}
-					break;
-				default:
-					throw new UnsupportedOperationException();
-				}
-			}
-		}
-	}
-
-	private void removeHandlesMethod(
-			ClassOrInterfaceDeclarationWrapper declarationWrapper,
-			Type... types) {
-		ClassOrInterfaceDeclaration decl = declarationWrapper.getDeclaration();
-		List<MethodDeclaration> methods = decl.getMethods();
-		for (MethodDeclaration method : methods) {
-			for (Type type : types) {
-				switch (type) {
-				case DomainCriterionHandler:
-					if (method.getNameAsString()
-							.equals("handlesSearchCriterion")
-							&& !method.isFinal() && !decl.getNameAsString()
-									.equals("DomainCriterionHandler")) {
-						declarationWrapper.dirty();
-						method.remove();
-					}
-					break;
-				case BasePlaceTokenizer:
-					if (method.getNameAsString().equals("getTokenizedClass")
-							&& !decl.getNameAsString().matches(
-									"(BasePlaceTokenizer|BindablePlaceTokenizer)")) {
-						declarationWrapper.dirty();
-						method.remove();
-					}
-					break;
-				default:
-					throw new UnsupportedOperationException();
-				}
-			}
-		}
-	}
-
-	private void updateTwoKeyAnnotations() {
+	public void updateTwoKeyAnnotations() {
 		compUnits.declarations.values().stream()
 				.filter(dec -> dec.hasFlag(Type.TwoKeyRegistration))
 				.filter(this::assignableFrom).forEach(dec -> SourceMods
@@ -268,48 +225,6 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 			}
 		}
 
-		private boolean isBasePlaceTokenizer(
-				ClassOrInterfaceDeclarationWrapper declaration) {
-			try {
-				return declaration.isAssignableFrom(BasePlaceTokenizer.class);
-			} catch (Exception e) {
-				Ax.simpleExceptionOut(e);
-				return false;
-			}
-		}
-
-		private boolean isDomainStoreHandler(
-				ClassOrInterfaceDeclarationWrapper declaration) {
-			try {
-				return declaration
-						.isAssignableFrom(DomainCriterionHandler.class);
-			} catch (Exception e) {
-				Ax.simpleExceptionOut(e);
-				return false;
-			}
-		}
-
-		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
-			if (!node.isInterface()) {
-				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
-						unit, node);
-				String nameAsString = declaration.getDeclaration()
-						.getNameAsString();
-				declaration.setDeclaration(node);
-				unit.declarations.add(declaration);
-				if (hasTwoKeyAnnotation(node)) {
-					declaration.setFlag(Type.TwoKeyRegistration);
-				}
-				if (isDomainStoreHandler(declaration)) {
-					declaration.setFlag(Type.DomainCriterionHandler);
-				}
-				if (isBasePlaceTokenizer(declaration)) {
-					declaration.setFlag(Type.BasePlaceTokenizer);
-				}
-			}
-			super.visit(node, arg);
-		}
-
 		boolean hasTwoKeyAnnotation(NodeWithAnnotations<?> decl) {
 			if (decl.isAnnotationPresent(Registration.class)) {
 				AnnotationExpr annotationExpr = decl
@@ -334,13 +249,55 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 			}
 			return false;
 		}
+
+		boolean isBasePlaceTokenizer(
+				ClassOrInterfaceDeclarationWrapper declaration) {
+			try {
+				return declaration.isAssignableFrom(BasePlaceTokenizer.class);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+				return false;
+			}
+		}
+
+		boolean isDomainStoreHandler(
+				ClassOrInterfaceDeclarationWrapper declaration) {
+			try {
+				return declaration
+						.isAssignableFrom(DomainCriterionHandler.class);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+				return false;
+			}
+		}
+
+		void visit0(ClassOrInterfaceDeclaration node, Void arg) {
+			if (!node.isInterface()) {
+				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
+						unit, node);
+				String nameAsString = declaration.getDeclaration()
+						.getNameAsString();
+				declaration.setDeclaration(node);
+				unit.declarations.add(declaration);
+				if (hasTwoKeyAnnotation(node)) {
+					declaration.setFlag(Type.TwoKeyRegistration);
+				}
+				if (isDomainStoreHandler(declaration)) {
+					declaration.setFlag(Type.DomainCriterionHandler);
+				}
+				if (isBasePlaceTokenizer(declaration)) {
+					declaration.setFlag(Type.BasePlaceTokenizer);
+				}
+			}
+			super.visit(node, arg);
+		}
 	}
 
 	static class SourceMods {
 		static Logger logger = LoggerFactory
 				.getLogger(TaskFlatSerializerMetadata.class);
 
-		public static void removeRedundantRegistrationAnnotation(
+		static void removeRedundantRegistrationAnnotation(
 				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
 			ClassOrInterfaceDeclaration declaration = declarationWrapper
 					.getDeclaration();

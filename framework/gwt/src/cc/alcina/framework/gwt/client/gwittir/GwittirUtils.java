@@ -34,7 +34,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
@@ -125,7 +124,7 @@ public class GwittirUtils {
 	}
 
 	public static boolean isIntrospectable(Class clazz) {
-		return Reflections.at(clazz).has(Bean.class);
+		return Reflections.at(clazz).properties().size() > 0;
 	}
 
 	public static void refreshAllTextBoxes(Binding binding) {

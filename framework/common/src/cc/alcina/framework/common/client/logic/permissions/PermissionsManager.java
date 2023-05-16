@@ -194,7 +194,6 @@ public class PermissionsManager implements DomainTransformListener {
 	public static boolean hasDeletePermission(Object object) {
 		AnnotationLocation clazzLocation = new AnnotationLocation(
 				object.getClass(), null);
-		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
 		ObjectPermissions op = clazzLocation
 				.getAnnotation(ObjectPermissions.class);
 		if (op == null) {

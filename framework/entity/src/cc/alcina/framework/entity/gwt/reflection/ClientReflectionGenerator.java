@@ -795,28 +795,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				return true;
 			}
 
-			// unused, can remove
-			void printMethodFunction(PropertyMethod method) {
-				if (method == null) {
-					sourceWriter.print("null");
-					return;
-				}
-				PropertyMethodGenerator methodGenerator = new PropertyMethodGenerator(
-						method);
-				sourceWriter.print("new Method(");
-				// doesn't intern - so fairly bulky for final artifact
-				// String toString = Ax.format("[Method: %s]",
-				// method.method.getName());
-				// sourceWriter.print(stringLiteral(toString));
-				sourceWriter.print("null , ");
-				methodGenerator.printInvoker();
-				sourceWriter.print(", ");
-				sourceWriter.print("%s.class",
-						ClassReflection.erase(method.method.getReturnType())
-								.getQualifiedSourceName());
-				sourceWriter.print(")");
-			}
-
 			void printMethodHoist(PropertyMethod method) {
 				if (method == null) {
 					return;
@@ -844,6 +822,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				this.propertyMethod = propertyMethod;
 			}
 
+			// FIXME - beans1x5 - add 'serialization setter' which doesn't emit
+			// a property change
 			public void printHoist() {
 				if (propertyMethod.getter) {
 					sourceWriter.println("@Override");
@@ -1346,7 +1326,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		@Override
 		public boolean isVisibleType(JType type) {
-			return ClassReflection.has((JClassType) type, Bean.class);
+			return ClassReflection.has((JClassType) type, Bean.class)
+					|| ClassReflection.has((JClassType) type, Bean.Fields.class)
+					|| ClassReflection.has((JClassType) type,
+							Bean.ImmutableFields.class);
 		}
 	}
 }

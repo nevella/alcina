@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JField;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JType;
 
@@ -153,6 +154,14 @@ public class PropertyReflection extends ReflectionElement
 		public boolean getter;
 
 		public JMethod method;
+
+		public JField field;
+
+		PropertyMethod(String propertyName, boolean getter, JField field) {
+			this.propertyName = propertyName;
+			this.getter = getter;
+			this.field = field;
+		}
 
 		PropertyMethod(String propertyName, boolean getter, JMethod method) {
 			this.propertyName = propertyName;

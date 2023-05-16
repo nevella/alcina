@@ -24,10 +24,17 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 
 /**
+ * <p>
  * Make type info available to the GWT client.
  *
+ * <p>
  * FIXME - beans1x5 - check that server-side reflection/reachability checks
  * respect the merge strategy
+ * 
+ * <p>
+ * Other causes of client-side reflection are the presence of resolved @Bean
+ * or @Registration annotations
+ * 
  *
  * @author nick@alcina.cc
  *

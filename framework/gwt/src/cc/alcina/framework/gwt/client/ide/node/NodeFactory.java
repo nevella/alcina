@@ -27,7 +27,6 @@ import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
@@ -77,7 +76,6 @@ public class NodeFactory {
 				.at(bindableClass);
 		ObjectPermissions op = classReflector
 				.annotation(ObjectPermissions.class);
-		Bean beanInfo = classReflector.annotation(Bean.class);
 		SortedMultimap<Integer, List<TreeItem>> createdNodes = new SortedMultimap<Integer, List<TreeItem>>();
 		List<Property> visibleProperties = subCollectionFolders.computeIfAbsent(
 				bindableClass,

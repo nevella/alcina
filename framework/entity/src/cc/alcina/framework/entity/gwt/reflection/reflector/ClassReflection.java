@@ -26,6 +26,7 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -35,6 +36,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ClassUtil;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
+import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyMethod;
 
 /**
  * Builds a class reflector (or data required for ClassReflector source
@@ -80,11 +82,9 @@ public class ClassReflection extends ReflectionElement {
 
 	AnnotationLocationTypeInfo.Resolver annotationResolver = new AnnotationLocationTypeInfo.Resolver();
 
-	public final JType jType;
-
 	public final JClassType type;
 
-	private ReflectionVisibility reflectionVisibility;
+	ReflectionVisibility reflectionVisibility;
 
 	JConstructor noArgsConstructor;
 
@@ -96,7 +96,7 @@ public class ClassReflection extends ReflectionElement {
 
 	Map<String, PropertyReflection> propertyReflections = new LinkedHashMap<>();
 
-	List<PropertyReflection> sortedPropertyReflections;
+	List<PropertyReflection> sortedPropertyReflections = new ArrayList<>();
 
 	Pattern getterPattern = Pattern.compile("(?:is|get)([A-Z].*)");
 
@@ -104,12 +104,15 @@ public class ClassReflection extends ReflectionElement {
 
 	List<Registration> registrations = new ArrayList<>();
 
-	private ProvidesTypeBounds providesTypeBounds;
+	ProvidesTypeBounds providesTypeBounds;
+
+	AnnotationLocationTypeInfo typeAnnotationLocation;
+
+	boolean hasPackageProtectionProperties;
 
 	public ClassReflection(JType type,
 			ReflectionVisibility reflectionVisibility,
 			ProvidesTypeBounds providesTypeBounds) {
-		this.jType = type;
 		this.providesTypeBounds = providesTypeBounds;
 		this.type = type instanceof JClassType ? (JClassType) type : null;
 		this.reflectionVisibility = reflectionVisibility;
@@ -180,16 +183,20 @@ public class ClassReflection extends ReflectionElement {
 			// primitive
 			return;
 		}
-		hasAbstractModifier = type.isAbstract();
-		hasFinalModifier = type.isFinal();
-		noArgsConstructor = !hasAbstractModifier
+		this.typeAnnotationLocation = new AnnotationLocationTypeInfo(type,
+				annotationResolver);
+		this.hasPackageProtectionProperties = typeAnnotationLocation.hasAny(
+				Bean.class, Bean.Fields.class, Bean.ImmutableFields.class);
+		this.hasAbstractModifier = type.isAbstract();
+		this.hasFinalModifier = type.isFinal();
+		boolean isExternalConstructible = !hasAbstractModifier
 				&& !type.getQualifiedSourceName().equals("java.lang.Class")
-				&& (type.isStatic() || !type.isMemberType())
-						? Arrays.stream(type.getConstructors())
-								.filter(c -> c.getParameters().length == 0)
-								.filter(c -> c.isPublic()).findFirst()
-								.orElse(null)
-						: null;
+				&& (type.isStatic() || !type.isMemberType());
+		if (isExternalConstructible) {
+			noArgsConstructor = Arrays.stream(type.getConstructors())
+					.filter(c -> c.getParameters().length == 0)
+					.filter(c -> c.isPublic()).findFirst().orElse(null);
+		}
 		Arrays.stream(type.getAnnotations())
 				.filter(a -> reflectionVisibility
 						.isVisibleAnnotation(a.annotationType()))
@@ -220,32 +227,80 @@ public class ClassReflection extends ReflectionElement {
 		return first.toLowerCase() + s.substring(1);
 	}
 
-	private void prepareProperties() {
+	void addFieldMethods(JField field) {
+		boolean hasMutableFields = typeAnnotationLocation
+				.hasAnnotation(Bean.Fields.class);
+		PropertyReflection propertyReflection = propertyReflections
+				.computeIfAbsent(field.getName(),
+						name -> new PropertyReflection(this, name,
+								reflectionVisibility, providesTypeBounds));
+	}
+
+	void addPropertyMethod(PropertyMethod m) {
+		PropertyReflection propertyReflection = propertyReflections
+				.computeIfAbsent(m.propertyName,
+						name -> new PropertyReflection(this, name,
+								reflectionVisibility, providesTypeBounds));
+		propertyReflection.addMethod(m);
+	}
+
+	List<JField> getAllFields() {
+		List<JField> propertyFields = new ArrayList<>();
+		JClassType cursor = type;
+		/*
+		 * The result of the loop is that fields are ordered (superclass before
+		 * subclass)(then field order in class)
+		 * 
+		 */
+		while (cursor.getSuperclass() != null) {
+			JField[] fields = type.getFields();
+			for (int idx = 0; idx < fields.length; idx++) {
+				propertyFields.add(idx, fields[idx]);
+			}
+			cursor = cursor.getSuperclass();
+		}
+		return propertyFields;
+	}
+
+	void prepareProperties() {
 		boolean hasReflectableProperties = reflectionVisibility
 				.isVisibleType(type);
-		if (hasReflectableProperties) {
-			Arrays.stream(type.getInheritableMethods())
-					.filter(reflectionVisibility::isVisibleMethod)
-					.filter(m -> !m.getName().equals("getClass"))
-					.map(this::toPropertyMethod).filter(Objects::nonNull)
-					.forEach(m -> {
-						PropertyReflection propertyReflection = propertyReflections
-								.computeIfAbsent(m.propertyName,
-										name -> new PropertyReflection(this,
-												name, reflectionVisibility,
-												providesTypeBounds));
-						propertyReflection.addMethod(m);
-					});
+		if (!hasReflectableProperties) {
+			return;
 		}
+		/*
+		 * Add method (getter/setter)-derived properties
+		 */
+		Arrays.stream(type.getInheritableMethods())
+				.filter(reflectionVisibility::isVisibleMethod)
+				.filter(m -> !m.getName().equals("getClass"))
+				.map(this::toPropertyMethod).filter(Objects::nonNull)
+				.forEach(this::addPropertyMethod);
+		/*
+		 * Add field-derived properties. Note that method-first means any method
+		 * will override, if it exists
+		 */
+		boolean hasFields = typeAnnotationLocation.hasAny(Bean.Fields.class,
+				Bean.ImmutableFields.class);
+		boolean hasMutableFields = typeAnnotationLocation
+				.hasAnnotation(Bean.Fields.class);
+		if (hasFields) {
+			List<JField> fields = getAllFields();
+			fields.stream().
+			// non-transient, non-private and immutable unless Bean.Fields
+					filter(f -> !f.isTransient()).filter(f -> !f.isPrivate())
+					.filter(f -> f.isFinal() || hasMutableFields)
+					.forEach(this::addFieldMethods);
+		}
+		/*
+		 * Cleanup, sort, prepare
+		 */
 		propertyReflections.entrySet().removeIf(
 				e -> e.getValue().getter != null && e.getValue().getter.method
 						.getAnnotation(Omit.class) != null);
-		sortedPropertyReflections = propertyReflections.values().stream()
-				.sorted(new PropertyOrdering()).collect(Collectors.toList());
+		propertyReflections.values().stream().sorted(new PropertyOrdering())
+				.forEach(sortedPropertyReflections::add);
 		sortedPropertyReflections.forEach(PropertyReflection::prepare);
-		if (sortedPropertyReflections.size() > 0) {
-			sortedPropertyReflections.get(0).toString();
-		}
 	}
 
 	void prepareRegistrations() {

@@ -21,15 +21,20 @@
  * Make beans pretty again!
  * </p>
  * <ul>
- * <li>No-args serializers not required
+ * <li>No-args constructors not required
  * <li>Field-defined properties
  * <li>Package by default
- * <li>Permit nested classes
  * <ul>
  * <li>The Java protection level mechanism default is the level at which -
  * presumably - the designers of Java originally envisioned most code would
  * exist.
  * </ul>
+ * <li>Permit nested classes
+ * </ul>
+ * <p>
+ * Level 2:
+ * <ul>
+ * <li>No-args _serializable_ bean constructors not required
  * </ul>
  */
 package cc.alcina.framework.common.client.reflection;

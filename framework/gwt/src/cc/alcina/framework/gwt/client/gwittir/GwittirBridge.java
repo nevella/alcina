@@ -316,7 +316,6 @@ public class GwittirBridge {
 		List<Field> fields = new ArrayList<Field>();
 		Class<? extends Object> clazz = obj.getClass();
 		ClassReflector<? extends Object> classReflector = Reflections.at(clazz);
-		Bean beanInfo = classReflector.annotation(Bean.class);
 		classReflector.properties().stream().map(property -> {
 			String pn = property.getName();
 			if (propertyName != null && !(propertyName.equals(pn))) {

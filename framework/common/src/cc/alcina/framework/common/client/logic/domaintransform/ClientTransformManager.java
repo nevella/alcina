@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -117,7 +116,6 @@ public abstract class ClientTransformManager extends TransformManager {
 		}
 		ObjectPermissions op = classReflector
 				.annotation(ObjectPermissions.class);
-		Bean beanInfo = classReflector.annotation(Bean.class);
 		for (Property property : properties) {
 			PropertyPermissions pp = property
 					.annotation(PropertyPermissions.class);
