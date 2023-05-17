@@ -30,9 +30,9 @@ public class PropertyReflection extends ReflectionElement
 
 	public final String name;
 
-	public PropertyMethod getter;
+	public PropertyAccessor getter;
 
-	public PropertyMethod setter;
+	public PropertyAccessor setter;
 
 	public JType propertyType;
 
@@ -56,23 +56,22 @@ public class PropertyReflection extends ReflectionElement
 	}
 
 	/*
-	 * ignore methods if they're overridden by existing getter/setter
+	 * ignore methods (or field set/get) if they're overridden by existing
+	 * getter/setter
 	 */
-	public void addMethod(PropertyMethod method) {
+	public void addMethod(PropertyAccessor method) {
 		if (method.getter) {
-			if (getter != null && method.method.getEnclosingType()
-					.isAssignableFrom(getter.method.getEnclosingType())) {
+			if (method.isOverriddenBy(getter)) {
 				return;
 			}
 			getter = method;
-			updatePropertyType(method.method.getReturnType());
+			updatePropertyType(method.getPropertyType());
 		} else {
-			if (setter != null && method.method.getEnclosingType()
-					.isAssignableFrom(setter.method.getEnclosingType())) {
+			if (method.isOverriddenBy(setter)) {
 				return;
 			}
 			setter = method;
-			updatePropertyType(method.method.getParameters()[0].getType());
+			updatePropertyType(method.getPropertyType());
 		}
 		propertyType = ClassReflection.erase(propertyType);
 	}
@@ -82,8 +81,8 @@ public class PropertyReflection extends ReflectionElement
 				.map(t -> ((ProvidesJavaType) t).provideJavaType())
 				.collect(Collectors.toList());
 		TypeBounds typeBounds = new TypeBounds(jdkBounds);
-		return new Property(name, ProvidesMethod.asMethod(getter),
-				ProvidesMethod.asMethod(setter),
+		return new Property(name, ProvidesPropertyMethod.asMethod(getter),
+				ProvidesPropertyMethod.asMethod(setter),
 				((ProvidesJavaType) propertyType).provideJavaType(),
 				((ProvidesJavaType) classReflection.type).provideJavaType(),
 				((ProvidesJavaType) declaringType).provideJavaType(),
@@ -103,28 +102,35 @@ public class PropertyReflection extends ReflectionElement
 		return this.name;
 	}
 
+	public JType getPropertyType() {
+		return this.propertyType;
+	}
+
+	public boolean has(Class<? extends Annotation> clazz) {
+		return getter == null ? false : getter.has(clazz);
+	}
+
 	public boolean isSerializable() {
 		return getter != null && setter != null
-				&& !getter.method.isAnnotationPresent(AlcinaTransient.class);
+				&& !getter.has(AlcinaTransient.class);
 	}
 
 	@Override
 	public void prepare() {
 		annotationReflections = getter == null ? new ArrayList<>()
-				: Arrays.stream(getter.method.getAnnotations())
+				: Arrays.stream(getter.getAnnotations())
 						.filter(ann -> reflectionVisibility
 								.isVisibleAnnotation(ann.annotationType()))
 						.map(AnnotationReflection::new).sorted()
 						.collect(Collectors.toList());
-		declaringType = getter != null ? getter.method.getEnclosingType()
-				: setter.method.getEnclosingType();
+		declaringType = getter != null ? getter.getEnclosingType()
+				: setter.getEnclosingType();
 	}
 
 	@Override
 	public String toString() {
-		JClassType declaringType = getter != null
-				? getter.method.getEnclosingType()
-				: setter.method.getEnclosingType();
+		JClassType declaringType = getter != null ? getter.getEnclosingType()
+				: setter.getEnclosingType();
 		return Ax.format("%s.%s : %s", declaringType.getName(), name,
 				propertyType.getSimpleSourceName());
 	}
@@ -148,43 +154,154 @@ public class PropertyReflection extends ReflectionElement
 		this.propertyType = erased;
 	}
 
-	public static class PropertyMethod {
+	public static abstract class PropertyAccessor
+			implements ProvidesPropertyMethod {
 		String propertyName;
 
 		public boolean getter;
 
-		public JMethod method;
+		boolean firePropertyChangeEvents;
 
-		public JField field;
-
-		PropertyMethod(String propertyName, boolean getter, JField field) {
+		PropertyAccessor(String propertyName, boolean getter,
+				boolean firePropertyChangeEvents) {
 			this.propertyName = propertyName;
 			this.getter = getter;
-			this.field = field;
+			this.firePropertyChangeEvents = firePropertyChangeEvents;
 		}
 
-		PropertyMethod(String propertyName, boolean getter, JMethod method) {
-			this.propertyName = propertyName;
-			this.getter = getter;
-			this.method = method;
+		public abstract Annotation[] getAnnotations();
+
+		public abstract JClassType getEnclosingType();
+
+		public abstract String getName();
+
+		public abstract JType getPropertyType();
+
+		public boolean has(Class<? extends Annotation> annotationClass) {
+			return getAnnotation(annotationClass) != null;
 		}
 
-		@Override
-		public String toString() {
-			return method.toString();
-		}
-	}
+		protected abstract <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass);
 
-	public interface ProvidesMethod {
-		static Method asMethod(PropertyMethod propertyMethod) {
-			if (propertyMethod == null) {
-				return null;
-			} else {
-				return ((ProvidesMethod) propertyMethod.method).provideMethod();
+		protected abstract boolean isOverriddenBy(PropertyAccessor getter2);
+
+		public static class Field extends PropertyAccessor {
+			JField field;
+
+			Field(JField field, boolean getter,
+					boolean firePropertyChangeEvents) {
+				super(field.getName(), getter, firePropertyChangeEvents);
+				this.field = field;
+			}
+
+			@Override
+			public Annotation[] getAnnotations() {
+				return field.getAnnotations();
+			}
+
+			@Override
+			public JClassType getEnclosingType() {
+				return field.getEnclosingType();
+			}
+
+			@Override
+			public String getName() {
+				return field.getName();
+			}
+
+			@Override
+			public JType getPropertyType() {
+				return field.getType();
+			}
+
+			@Override
+			public cc.alcina.framework.common.client.reflection.Method
+					providePropertyMethod(boolean getter,
+							boolean firePropertyChangeEvents) {
+				return ((ProvidesPropertyMethod) field).providePropertyMethod(
+						getter, firePropertyChangeEvents);
+			}
+
+			@Override
+			protected <A extends Annotation> A
+					getAnnotation(Class<A> annotationClass) {
+				return field.getAnnotation(annotationClass);
+			}
+
+			@Override
+			protected boolean isOverriddenBy(PropertyAccessor test) {
+				return test != null;
 			}
 		}
 
-		Method provideMethod();
+		public static class Method extends PropertyAccessor {
+			JMethod method;
+
+			Method(String propertyName, boolean getter, JMethod method) {
+				super(propertyName, getter, false);
+				this.method = method;
+			}
+
+			@Override
+			public Annotation[] getAnnotations() {
+				return method.getAnnotations();
+			}
+
+			@Override
+			public JClassType getEnclosingType() {
+				return method.getEnclosingType();
+			}
+
+			@Override
+			public String getName() {
+				return method.getName();
+			}
+
+			@Override
+			public JType getPropertyType() {
+				if (getter) {
+					return method.getReturnType();
+				} else {
+					return method.getParameters()[0].getType();
+				}
+			}
+
+			@Override
+			public cc.alcina.framework.common.client.reflection.Method
+					providePropertyMethod(boolean getter,
+							boolean firePropertyChangeEvents) {
+				return ((ProvidesPropertyMethod) method).providePropertyMethod(
+						getter, firePropertyChangeEvents);
+			}
+
+			@Override
+			protected <A extends Annotation> A
+					getAnnotation(Class<A> annotationClass) {
+				return method.getAnnotation(annotationClass);
+			}
+
+			@Override
+			protected boolean isOverriddenBy(PropertyAccessor test) {
+				return test != null && test.getEnclosingType()
+						.isAssignableFrom(getEnclosingType());
+			}
+		}
+	}
+
+	public interface ProvidesPropertyMethod {
+		static cc.alcina.framework.common.client.reflection.Method
+				asMethod(PropertyAccessor accessor) {
+			if (accessor == null) {
+				return null;
+			} else {
+				return accessor.providePropertyMethod(accessor.getter,
+						accessor.firePropertyChangeEvents);
+			}
+		}
+
+		Method providePropertyMethod(boolean getter,
+				boolean providePropertyMethod);
 	}
 
 	class AnnotationProviderImpl implements AnnotationProvider {
@@ -192,7 +309,7 @@ public class PropertyReflection extends ReflectionElement
 		public <A extends Annotation> A
 				getAnnotation(Class<A> annotationClass) {
 			return getter == null ? null
-					: getter.method.getAnnotation(annotationClass);
+					: getter.getAnnotation(annotationClass);
 		}
 	}
 }

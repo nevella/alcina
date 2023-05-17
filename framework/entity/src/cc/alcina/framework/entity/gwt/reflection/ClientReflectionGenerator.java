@@ -33,7 +33,9 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
+import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JRawType;
 import com.google.gwt.core.ext.typeinfo.JRealClassType;
 import com.google.gwt.core.ext.typeinfo.JType;
@@ -69,7 +71,7 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.AnnotationReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesTypeBounds;
 import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection;
-import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyMethod;
+import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyAccessor;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ReflectionVisibility;
 
 /*
@@ -188,6 +190,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	VisibleAnnotationFilterClient visibleAnnotationFilter;
 
 	ClassReflection.ProvidesTypeBounds providesJavacTypeBounds = new ProvidesJavacTypeBoundsImplementation();
+
+	public JType voidJType;
+
+	public Object[] firePropertyChangeMethodJTypes;
 
 	@Override
 	public RebindResult generateIncrementally(TreeLogger logger,
@@ -309,6 +315,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
+	JClassType getType(Class clazz) {
+		return getType(clazz.getCanonicalName());
+	}
+
 	JClassType getType(String typeName) {
 		try {
 			return context.getTypeOracle().getType(typeName);
@@ -331,7 +341,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		configureRegistry();
 		String superClassName = null;
 		generatingType = getType(typeName);
-		classReflectorType = getType(ClassReflector.class.getCanonicalName());
+		classReflectorType = getType(ClassReflector.class);
 		module = generatingType.getAnnotation(ReflectionModule.class);
 		implementationName = String.format("ModuleReflector_%s_Impl",
 				module.value());
@@ -344,6 +354,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		 */
 		reflectUnknownInInitialModule = !context.isProdMode()
 				|| Boolean.getBoolean("reachability.production");
+		voidJType = JPrimitiveType.VOID;
+		firePropertyChangeMethodJTypes = new JType[] { getType(String.class),
+				getType(Object.class), getType(Object.class) };
 	}
 
 	String stringLiteral(String value, boolean quoted) {
@@ -582,7 +595,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		public ClassReflectorGenerator(JClassType type) {
 			super(type, classReflectorType, false);
-			this.reflection = new ClassReflection(type, visibleAnnotationFilter,
+			this.reflection = new ClassReflection(type,
+					sourcesPropertyChangeEvents(), visibleAnnotationFilter,
 					providesJavacTypeBounds);
 		}
 
@@ -703,6 +717,31 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			return true;
 		}
 
+		PropertyMethodGenerator
+				propertyMethodGenerator(PropertyAccessor accessor) {
+			if (accessor instanceof PropertyAccessor.Field) {
+				return new FieldSourced((PropertyAccessor.Field) accessor);
+			} else {
+				return new MethodSourced((PropertyAccessor.Method) accessor);
+			}
+		}
+
+		boolean sourcesPropertyChangeEvents() {
+			if (reflectedType.getQualifiedSourceName().endsWith("Thaithala")) {
+				JMethod jMethod = Arrays
+						.stream(reflectedType.getInheritableMethods())
+						.filter(m -> m.getName()
+								.equals("propertyChangeListeners"))
+						.findFirst().get();
+				int debug = 3;
+			}
+			return Arrays.stream(reflectedType.getInheritableMethods())
+					.filter(m -> m.getName().equals("firePropertyChange"))
+					.filter(m -> m.getReturnType() == voidJType)
+					.anyMatch(m -> Arrays.equals(m.getParameterTypes(),
+							firePropertyChangeMethodJTypes));
+		}
+
 		void writeForNameCase(SourceWriter sourceWriter) {
 			sourceWriter.println("case \"%s\":",
 					reflection.type.getQualifiedBinaryName());
@@ -733,6 +772,113 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						instanceGenerator.writeExpression(sourceWriter);
 						sourceWriter.println(");");
 					});
+		}
+
+		class FieldSourced extends PropertyMethodGenerator {
+			FieldSourced(PropertyAccessor.Field accessor) {
+				super(accessor);
+			}
+
+			@Override
+			protected void printHoist() {
+				if (accessor.getter) {
+					sourceWriter.println("@Override");
+					sourceWriter.println("public Object get(Object bean){");
+					sourceWriter.indent();
+					sourceWriter.print("return ((%s)bean).%s;",
+							accessor.getEnclosingType()
+									.getQualifiedSourceName(),
+							accessor.getName());
+					sourceWriter.outdent();
+					sourceWriter.println("}");
+				} else {
+					sourceWriter.println("@Override");
+					sourceWriter.println(
+							"public void set(Object bean,Object value){");
+					sourceWriter.indent();
+					if (reflection.sourcesPropertyChanges) {
+						/*
+						 * See BaseSourcesPropertyChangeEvents.set for similar code - basically, prep the propertyChange
+						 * @formatter:off
+						 * output is: 
+						 @Override
+					      public void set(Object bean,Object value){
+					      		<beantypefqn> typed = (<dbeantypefqn>)bean;
+					      		Object oldValue = typed.<fieldName>;
+					            typed.<fieldName>=((valuetypefqn)value);
+					            typed.firePropertyChange("overwriteOriginals", oldValue, value);
+					            }
+					      }
+						 * @formatter: on
+						 */
+						sourceWriter.println("%s typed = (%s) bean;",
+								accessor.getEnclosingType()
+										.getQualifiedSourceName(),
+										accessor.getEnclosingType()
+										.getQualifiedSourceName()
+								);
+						sourceWriter.println("Object oldValue = typed.%s;",
+								accessor.getName());
+						sourceWriter.println("typed.%s=(%s)value;",
+								accessor.getName(), accessor.getPropertyType()
+										.getQualifiedSourceName());
+						sourceWriter.println("typed.firePropertyChange(\"%s\", oldValue, value);",accessor.getName());
+					} else {
+						/*
+						 * @formatter:off
+						 * output is: 
+						 @Override
+					      public void set(Object bean,Object value){
+					            ((<beantypefqn>)bean).<fieldName>=((valuetypefqn)value);}
+					      }
+						 * @formatter: on
+						 */
+						sourceWriter.println("((%s)bean).%s=(%s)value;",
+								accessor.getEnclosingType()
+										.getQualifiedSourceName(),
+								accessor.getName(), accessor.getPropertyType()
+										.getQualifiedSourceName());
+					}
+					sourceWriter.outdent();
+					sourceWriter.println("}");
+				}
+			}
+		}
+
+		class MethodSourced extends PropertyMethodGenerator {
+			MethodSourced(PropertyAccessor.Method accessor) {
+				super(accessor);
+			}
+
+			// FIXME - beans1x5 - add 'serialization setter' which doesn't
+			// emit
+			// a property change
+			@Override
+			public void printHoist() {
+				if (accessor.getter) {
+					sourceWriter.println("@Override");
+					sourceWriter.println("public Object get(Object bean){");
+					sourceWriter.indent();
+					sourceWriter.print("return  ((%s)bean).%s();",
+							accessor.getEnclosingType()
+									.getQualifiedSourceName(),
+							accessor.getName());
+					sourceWriter.outdent();
+					sourceWriter.println("}");
+				} else {
+					sourceWriter.println("@Override");
+					sourceWriter.println(
+							"public void set(Object bean,Object value){");
+					sourceWriter.indent();
+					sourceWriter.print("  ((%s)bean).%s((%s)value);",
+							accessor.getEnclosingType()
+									.getQualifiedSourceName(),
+							accessor.getName(), accessor.getPropertyType()
+									.getQualifiedSourceName());
+					sourceWriter.outdent();
+					sourceWriter.println("}");
+				}
+			}
 		}
 
 		class PropertyGenerator extends ReflectorGenerator {
@@ -795,16 +941,16 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				return true;
 			}
 
-			void printMethodHoist(PropertyMethod method) {
-				if (method == null) {
+			void printMethodHoist(PropertyAccessor accessor) {
+				if (accessor == null) {
 					return;
 				}
-				PropertyMethodGenerator methodGenerator = new PropertyMethodGenerator(
-						method);
+				PropertyMethodGenerator methodGenerator = propertyMethodGenerator(
+						accessor);
 				methodGenerator.printHoist();
 			}
 
-			void printMethodRef(PropertyMethod method) {
+			void printMethodRef(PropertyAccessor method) {
 				if (method == null) {
 					sourceWriter.print("null;");
 					return;
@@ -815,59 +961,14 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			}
 		}
 
-		class PropertyMethodGenerator {
-			private PropertyMethod propertyMethod;
+		abstract class PropertyMethodGenerator {
+			PropertyAccessor accessor;
 
-			PropertyMethodGenerator(PropertyMethod propertyMethod) {
-				this.propertyMethod = propertyMethod;
+			PropertyMethodGenerator(PropertyAccessor propertyMethod) {
+				this.accessor = propertyMethod;
 			}
 
-			// FIXME - beans1x5 - add 'serialization setter' which doesn't emit
-			// a property change
-			public void printHoist() {
-				if (propertyMethod.getter) {
-					sourceWriter.println("@Override");
-					sourceWriter.println("public Object get(Object bean){");
-					sourceWriter.indent();
-					sourceWriter.print("return  ((%s)bean).%s();",
-							propertyMethod.method.getEnclosingType()
-									.getQualifiedSourceName(),
-							propertyMethod.method.getName());
-					sourceWriter.outdent();
-					sourceWriter.println("}");
-				} else {
-					sourceWriter.println("@Override");
-					sourceWriter.println(
-							"public void set(Object bean,Object value){");
-					sourceWriter.indent();
-					sourceWriter.print("  ((%s)bean).%s((%s)value);",
-							propertyMethod.method.getEnclosingType()
-									.getQualifiedSourceName(),
-							propertyMethod.method.getName(),
-							propertyMethod.method.getParameters()[0].getType()
-									.getQualifiedSourceName());
-					sourceWriter.outdent();
-					sourceWriter.println("}");
-				}
-			}
-
-			public void printInvoker() {
-				if (propertyMethod.getter) {
-					sourceWriter.print("(target,args) -> ((%s)target).%s()",
-							propertyMethod.method.getEnclosingType()
-									.getQualifiedSourceName(),
-							propertyMethod.method.getName());
-				} else {
-					sourceWriter.print("(target,args) -> {((%s)target).%s(",
-							propertyMethod.method.getEnclosingType()
-									.getQualifiedSourceName(),
-							propertyMethod.method.getName());
-					sourceWriter.print("(%s)((Object[])args)[0]",
-							propertyMethod.method.getParameters()[0].getType()
-									.getQualifiedSourceName());
-					sourceWriter.print("); return null;}");
-				}
-			}
+			protected abstract void printHoist();
 		}
 	}
 
@@ -1016,10 +1117,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			Set<JClassType> computed = reflectorGenerator.reflection
 					.getSortedPropertyReflections().stream()
 					.filter(PropertyReflection::isSerializable)
-					.map(generator -> generator.setter.method)
-					.flatMap(m -> Arrays.stream(m.getParameterTypes())
-							.flatMap(t -> ReachabilityData
-									.toReachableConcreteTypes(t, subtypes)))
+					.map(PropertyReflection::getPropertyType)
+					.flatMap(t -> ReachabilityData.toReachableConcreteTypes(t,
+							subtypes))
 					.filter(ReachabilityData::excludeJavaType)
 					.collect(AlcinaCollectors.toLinkedHashSet());
 			return computed;
@@ -1246,7 +1346,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		JClassType superClassOrInterfaceType;
 
-		private JClassType reflectedType;
+		protected JClassType reflectedType;
 
 		protected UnitGenerator(JClassType reflectionInfoForType,
 				JClassType superClassOrInterfaceType,

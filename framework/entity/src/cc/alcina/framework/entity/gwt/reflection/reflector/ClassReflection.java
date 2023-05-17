@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ClassUtil;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
-import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyMethod;
+import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyAccessor;
 
 /**
  * Builds a class reflector (or data required for ClassReflector source
@@ -84,6 +84,8 @@ public class ClassReflection extends ReflectionElement {
 
 	public final JClassType type;
 
+	public final boolean sourcesPropertyChanges;
+
 	ReflectionVisibility reflectionVisibility;
 
 	JConstructor noArgsConstructor;
@@ -110,9 +112,10 @@ public class ClassReflection extends ReflectionElement {
 
 	boolean hasPackageProtectionProperties;
 
-	public ClassReflection(JType type,
+	public ClassReflection(JType type, boolean sourcesPropertyChanges,
 			ReflectionVisibility reflectionVisibility,
 			ProvidesTypeBounds providesTypeBounds) {
+		this.sourcesPropertyChanges = sourcesPropertyChanges;
 		this.providesTypeBounds = providesTypeBounds;
 		this.type = type instanceof JClassType ? (JClassType) type : null;
 		this.reflectionVisibility = reflectionVisibility;
@@ -234,9 +237,15 @@ public class ClassReflection extends ReflectionElement {
 				.computeIfAbsent(field.getName(),
 						name -> new PropertyReflection(this, name,
 								reflectionVisibility, providesTypeBounds));
+		propertyReflection.addMethod(new PropertyAccessor.Field(field, true,
+				sourcesPropertyChanges));
+		if (hasMutableFields && !field.isFinal()) {
+			propertyReflection.addMethod(new PropertyAccessor.Field(field,
+					false, sourcesPropertyChanges));
+		}
 	}
 
-	void addPropertyMethod(PropertyMethod m) {
+	void addPropertyMethod(PropertyAccessor m) {
 		PropertyReflection propertyReflection = propertyReflections
 				.computeIfAbsent(m.propertyName,
 						name -> new PropertyReflection(this, name,
@@ -295,9 +304,7 @@ public class ClassReflection extends ReflectionElement {
 		/*
 		 * Cleanup, sort, prepare
 		 */
-		propertyReflections.entrySet().removeIf(
-				e -> e.getValue().getter != null && e.getValue().getter.method
-						.getAnnotation(Omit.class) != null);
+		propertyReflections.values().removeIf(refl -> refl.has(Omit.class));
 		propertyReflections.values().stream().sorted(new PropertyOrdering())
 				.forEach(sortedPropertyReflections::add);
 		sortedPropertyReflections.forEach(PropertyReflection::prepare);
@@ -310,7 +317,7 @@ public class ClassReflection extends ReflectionElement {
 				.forEach(getRegistrations()::add);
 	}
 
-	PropertyReflection.PropertyMethod toPropertyMethod(JMethod method) {
+	PropertyReflection.PropertyAccessor toPropertyMethod(JMethod method) {
 		if (!method.isPublic()) {
 			return null;
 		}
@@ -326,7 +333,7 @@ public class ClassReflection extends ReflectionElement {
 								method.getReturnType().getQualifiedSourceName(),
 								"boolean");
 				if (!ignoreableIs) {
-					return new PropertyReflection.PropertyMethod(
+					return new PropertyReflection.PropertyAccessor.Method(
 							methodNamePartToPropertyName(m.group(1)), true,
 							method);
 				}
@@ -340,7 +347,7 @@ public class ClassReflection extends ReflectionElement {
 								.equals("void"))) {
 			Matcher m = setterPattern.matcher(method.getName());
 			if (m.matches()) {
-				return new PropertyReflection.PropertyMethod(
+				return new PropertyReflection.PropertyAccessor.Method(
 						methodNamePartToPropertyName(m.group(1)), false,
 						method);
 			}

@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.gwt.reflection.impl;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.function.BiFunction;
 
 import com.google.gwt.core.ext.typeinfo.JType;
@@ -38,11 +39,21 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		JType type = typeOracle.getType(clazz);
 		ClassReflector reflector = null;
 		ClassReflection reflection = new ClassReflection(type,
-				visibleAnnotationFilter, typeOracle);
+				sourcesPropertyChanges(clazz), visibleAnnotationFilter,
+				typeOracle);
 		reflection.prepare();
 		ClassReflector<?> typemodelReflector = reflection.asReflector();
 		reflector = typemodelReflector;
 		return reflector;
+	}
+
+	boolean sourcesPropertyChanges(Class clazz) {
+		return Arrays.stream(clazz.getMethods())
+				.filter(m -> m.getName().equals("firePropertyChange"))
+				.filter(m -> m.getParameterCount() == 3)
+				.filter(m -> m.getReturnType() == void.class).anyMatch(
+						m -> Arrays.equals(m.getParameterTypes(), new Class[] {
+								String.class, Object.class, Object.class }));
 	}
 
 	public static class ClassAnnotationProvider implements AnnotationProvider {
