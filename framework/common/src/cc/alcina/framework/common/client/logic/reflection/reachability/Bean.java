@@ -52,6 +52,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
+@ClientVisible
 @Target({ ElementType.TYPE })
 public @interface Bean {
 	/**
@@ -86,5 +87,13 @@ public @interface Bean {
 	@Documented
 	@Target({ ElementType.TYPE })
 	public @interface ImmutableFields {
+	}
+
+	public static class Support {
+		public static boolean isIntrospectable(Class clazz) {
+			ClassReflector reflector = Reflections.at(clazz);
+			return reflector.has(Bean.class) || reflector.has(Bean.Fields.class)
+					|| reflector.has(Bean.ImmutableFields.class);
+		}
 	}
 }

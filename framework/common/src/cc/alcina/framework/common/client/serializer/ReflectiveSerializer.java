@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -240,8 +241,8 @@ public class ReflectiveSerializer {
 				});
 				toResolve = next;
 			}
-			boolean resolveWithReflectiveTypeSerializer = Reflections
-					.at(lookupClass).properties().size() > 0;
+			boolean resolveWithReflectiveTypeSerializer = Bean.Support
+					.isIntrospectable(lookupClass);
 			if (!GWT.isClient()) {
 				resolveWithReflectiveTypeSerializer |= Reflections
 						.isAssignableFrom(TreeSerializable.class, lookupClass)
