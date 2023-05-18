@@ -68,6 +68,10 @@ public class DownloadServlet extends HttpServlet {
 		return item.id;
 	}
 
+	public static String getDownloadUrl(String hrefBase, String id) {
+		return Ax.format("%s/downloadServlet.do?id=%s", hrefBase, id);
+	}
+
 	public static String registerRemote(byte[] bytes, String fileName,
 			String mimeType, String id) throws Exception {
 		DownloadRegistration registration = new DownloadRegistration(bytes,
