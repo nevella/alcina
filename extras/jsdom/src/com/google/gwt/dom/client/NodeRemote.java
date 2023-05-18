@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public abstract class NodeRemote extends JavaScriptObject implements DomNode {
+public abstract class NodeRemote extends JavaScriptObject implements ClientNode {
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.

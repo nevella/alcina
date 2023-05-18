@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.DomNode;
+import com.google.gwt.dom.client.ClientNode;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
@@ -136,7 +136,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			issue.append("-----------------------------------");
 			issue.append("");
 			if (currentMutations != null) {
-				DomNode triggeringRemote = equivalenceTest.firstInequivalent.right.domNode;
+				ClientNode triggeringRemote = equivalenceTest.firstInequivalent.right.domNode;
 				MutationNode mutationNodeWithRecords = currentMutations.mutationNodes
 						.get(triggeringRemote);
 				MutationRecord mutationRecord = mutationNodeWithRecords.records

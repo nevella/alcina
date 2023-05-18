@@ -294,6 +294,10 @@ public class DomNode {
 		return (Element) node;
 	}
 
+	public com.google.gwt.dom.client.Node gwtNode() {
+		return (com.google.gwt.dom.client.Node) node;
+	}
+
 	public boolean has(String name) {
 		if (!isElement()) {
 			return false;
@@ -1340,13 +1344,18 @@ public class DomNode {
 		}
 
 		public Optional<DomNode> nextNonWhitespaceTextNode() {
+			return nextTextNode(false);
+		}
+
+		public Optional<DomNode> nextTextNode(boolean nonWhitespace) {
 			while (true) {
 				Node next = tw.nextNode();
 				if (next == null) {
 					return Optional.empty();
 				}
 				DomNode xNext = document.nodeFor(next);
-				if (xNext.isText() && xNext.isNonWhitespaceTextContent()) {
+				if (xNext.isText() && (nonWhitespace
+						|| xNext.isNonWhitespaceTextContent())) {
 					return Optional.of(xNext);
 				}
 			}
