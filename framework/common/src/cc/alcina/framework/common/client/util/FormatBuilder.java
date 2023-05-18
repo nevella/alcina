@@ -268,6 +268,13 @@ public class FormatBuilder {
 	}
 
 	/**
+	 * Append a collection, one line per element
+	 */
+	public void elementLines(Collection<?> collection) {
+		collection.forEach(this::line);
+	}
+
+	/**
 	 * Fill the current line with a fill string, `width` times
 	 *
 	 * @param width
