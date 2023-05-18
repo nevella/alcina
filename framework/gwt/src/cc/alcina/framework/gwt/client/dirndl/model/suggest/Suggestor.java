@@ -9,11 +9,14 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
@@ -43,9 +46,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 	receives = { SuggestorEvents.EditorAsk.class,
 			ModelEvents.SelectionChanged.class },
 	emits = ModelEvents.SelectionChanged.class)
-public class Suggestor extends Model
-		implements SuggestorEvents.EditorAsk.Handler,
-		ModelEvents.SelectionChanged.Handler, HasSelectedValue {
+public class Suggestor extends Model implements
+		SuggestorEvents.EditorAsk.Handler, ModelEvents.SelectionChanged.Handler,
+		HasSelectedValue, KeyboardNavigation.Navigation.Handler {
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -98,6 +101,14 @@ public class Suggestor extends Model
 		suggestions.toState(State.LOADING);
 		builder.answer.ask(event.getModel(), this::onAnswers,
 				this::onAskException);
+	}
+
+	@Override
+	public void onNavigation(Navigation event) {
+		if (suggestions instanceof KeyboardNavigation.Navigation.Handler) {
+			((KeyboardNavigation.Navigation.Handler) suggestions)
+					.onNavigation(event);
+		}
 	}
 
 	@Override
@@ -180,6 +191,16 @@ public class Suggestor extends Model
 
 		public void setTotal(int total) {
 			this.total = total;
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder format = new FormatBuilder();
+			format.appendKeyValues("total", total);
+			format.newLine();
+			format.indent(2);
+			format.elementLines(suggestions);
+			return format.toString();
 		}
 	}
 
@@ -387,6 +408,11 @@ public class Suggestor extends Model
 
 			public void setModel(Object model) {
 				this.model = model;
+			}
+
+			@Override
+			public String toString() {
+				return FormatBuilder.keyValues("markup", markup);
 			}
 		}
 	}
