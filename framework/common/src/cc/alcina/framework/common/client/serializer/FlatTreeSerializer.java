@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -49,6 +51,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -168,6 +171,9 @@ public class FlatTreeSerializer {
 
 	public static final Topic<StringPair> unequalSerialized = Topic.create();
 
+	static final RegExp TIME_FORMAT = RegExp.compile(
+			"(\\d{4})(\\d{2})(\\d{2})T(\\d{2})(\\d{2})(\\d{2})(\\d{3})([+\\-])(\\d{2})(\\d{2})");
+
 	static int unknownPropertyWarningCount = 20;
 
 	public static <R extends TreeSerializable> R clone(R object) {
@@ -207,8 +213,7 @@ public class FlatTreeSerializer {
 				state.keyValues.remove(CLASS);
 			}
 			instance.treeSerializationCustomiser().onBeforeTreeDeserialize();
-			Node node = new Node(null, instance, null);
-			new FlatTreeSerializer(state).deserialize(node);
+			new FlatTreeSerializer(state).deserialize0(instance);
 			instance.treeSerializationCustomiser().onAfterTreeDeserialize();
 			return instance;
 		} finally {
@@ -233,7 +238,9 @@ public class FlatTreeSerializer {
 			SerializerOptions options) {
 		try {
 			LooseContext.pushWithTrue(Serializers.CONTEXT_SERIALIZING);
-			return serialize0(object, options);
+			// the deserialize static builders supply a state - easier not to
+			// for serialization
+			return new FlatTreeSerializer(null).serialize0(object, options);
 		} finally {
 			LooseContext.pop();
 		}
@@ -311,82 +318,6 @@ public class FlatTreeSerializer {
 		return false;
 	}
 
-	private static String serialize0(TreeSerializable object,
-			SerializerOptions options) {
-		if (object == null) {
-			return null;
-		}
-		State state;
-		try {
-			object.treeSerializationCustomiser().onBeforeTreeSerialize();
-			state = new State();
-			state.serializerOptions = options;
-			Node node = new Node(null, object,
-					Reflections.at(object).templateInstance());
-			state.serializationSupport = SerializationSupport
-					.serializationInstance();
-			state.pending.add(node);
-			FlatTreeSerializer serializer = new FlatTreeSerializer(state);
-			serializer.serialize();
-		} finally {
-			object.treeSerializationCustomiser().onAfterTreeSerialize();
-		}
-		String serialized = state.keyValues.sorted(new KeyComparator())
-				.toPropertyString();
-		serialized = object.treeSerializationCustomiser().mapKeys(serialized,
-				true);
-		if (options.singleLine) {
-			serialized = serialized.replace("\n", ":");
-		}
-		if (options.testSerialized) {
-			DeserializerOptions deserializerOptions = new DeserializerOptions()
-					.withShortPaths(options.shortPaths);
-			TransienceContext[] transienceContext = AlcinaTransient.Support
-					.getTransienceContextsNoDefault();
-			AlcinaTransient.Support.clearTransienceContext();
-			TreeSerializable checkObject = deserialize(object.getClass(),
-					serialized, deserializerOptions);
-			AlcinaTransient.Support.setTransienceContexts(transienceContext);
-			SerializerOptions checkOptions = new SerializerOptions()
-					.withElideDefaults(options.elideDefaults)
-					.withShortPaths(options.shortPaths)
-					.withSingleLine(options.singleLine)
-					.withTopLevelTypeInfo(options.topLevelTypeInfo);
-			String testSerialized = object.treeSerializationCustomiser()
-					.filterTestSerialized(serialized);
-			String checkSerialized = serialize(checkObject, checkOptions);
-			String testCheckSerialized = object.treeSerializationCustomiser()
-					.filterTestSerialized(checkSerialized);
-			if (!Objects.equals(testSerialized, testCheckSerialized)) {
-				unequalSerialized.publish(
-						new StringPair(testSerialized, testCheckSerialized));
-				Preconditions.checkState(
-						Objects.equals(testSerialized, testCheckSerialized),
-						"Unequal serialized:\n\n%s\n========\n%s", serialized,
-						checkSerialized);
-			}
-			/*
-			 * Would be nice - but then we'd need to do fancy things to
-			 * replicate filterTestSerialized (handle fields we deliberately
-			 * drop for client concision)
-			 */
-			// String reflectiveCheck0 = AlcinaBeanSerializer
-			// .serializeHolder(object);
-			// String reflectiveCheck1 = AlcinaBeanSerializer
-			// .serializeHolder(checkObject);
-			// if (!Objects.equals(reflectiveCheck0, reflectiveCheck1)) {
-			// unequalSerialized.publish(
-			// new StringPair(reflectiveCheck0, reflectiveCheck1));
-			// Preconditions.checkState(
-			// Objects.equals(reflectiveCheck0, reflectiveCheck1),
-			// "Unequal serialized (bean):\n\n%s\n========\n%s",
-			// reflectiveCheck0, reflectiveCheck1);
-			// }
-			// FIXME - mvcc.5 - implement once reflectiveserializer up
-		}
-		return serialized;
-	}
-
 	State state;
 
 	private MultikeyMap<Object> collectionElementClassIndexObject = new UnsortedMultikeyMap<>(
@@ -439,7 +370,8 @@ public class FlatTreeSerializer {
 		}
 	}
 
-	private void deserialize(Node root) {
+	private void deserialize0(Object instance) {
+		Node root = new Node(null, instance, null);
 		state.rootClass = root.value.getClass();
 		/*
 		 * (Document for 'short paths' case - non-short is simpler (does not use
@@ -911,6 +843,83 @@ public class FlatTreeSerializer {
 		}
 	}
 
+	private String serialize0(TreeSerializable object,
+			SerializerOptions options) {
+		if (object == null) {
+			return null;
+		}
+		State state;
+		try {
+			object.treeSerializationCustomiser().onBeforeTreeSerialize();
+			state = new State();
+			state.serializerOptions = options;
+			Node node = new Node(null, object,
+					Reflections.at(object).templateInstance());
+			state.serializationSupport = SerializationSupport
+					.serializationInstance();
+			state.pending.add(node);
+			FlatTreeSerializer serializer = new FlatTreeSerializer(state);
+			serializer.serialize();
+		} finally {
+			object.treeSerializationCustomiser().onAfterTreeSerialize();
+		}
+		String serialized = state.keyValues.sorted(new KeyComparator())
+				.toPropertyString();
+		serialized = object.treeSerializationCustomiser().mapKeys(serialized,
+				true);
+		if (options.singleLine) {
+			serialized = serialized.replace("\n", ":");
+		}
+		if (options.testSerialized) {
+			DeserializerOptions deserializerOptions = new DeserializerOptions()
+					.withShortPaths(options.shortPaths);
+			TransienceContext[] transienceContext = AlcinaTransient.Support
+					.getTransienceContextsNoDefault();
+			AlcinaTransient.Support.clearTransienceContext();
+			TreeSerializable checkObject = deserialize(object.getClass(),
+					serialized, deserializerOptions);
+			AlcinaTransient.Support.setTransienceContexts(transienceContext);
+			SerializerOptions checkOptions = new SerializerOptions()
+					.withElideDefaults(options.elideDefaults)
+					.withShortPaths(options.shortPaths)
+					.withSingleLine(options.singleLine)
+					.withTopLevelTypeInfo(options.topLevelTypeInfo)
+					.withReadableTime(options.readableTime);
+			String testSerialized = object.treeSerializationCustomiser()
+					.filterTestSerialized(serialized);
+			String checkSerialized = serialize(checkObject, checkOptions);
+			String testCheckSerialized = object.treeSerializationCustomiser()
+					.filterTestSerialized(checkSerialized);
+			if (!Objects.equals(testSerialized, testCheckSerialized)) {
+				unequalSerialized.publish(
+						new StringPair(testSerialized, testCheckSerialized));
+				Preconditions.checkState(
+						Objects.equals(testSerialized, testCheckSerialized),
+						"Unequal serialized:\n\n%s\n========\n%s", serialized,
+						checkSerialized);
+			}
+			/*
+			 * Would be nice - but then we'd need to do fancy things to
+			 * replicate filterTestSerialized (handle fields we deliberately
+			 * drop for client concision)
+			 */
+			// String reflectiveCheck0 = AlcinaBeanSerializer
+			// .serializeHolder(object);
+			// String reflectiveCheck1 = AlcinaBeanSerializer
+			// .serializeHolder(checkObject);
+			// if (!Objects.equals(reflectiveCheck0, reflectiveCheck1)) {
+			// unequalSerialized.publish(
+			// new StringPair(reflectiveCheck0, reflectiveCheck1));
+			// Preconditions.checkState(
+			// Objects.equals(reflectiveCheck0, reflectiveCheck1),
+			// "Unequal serialized (bean):\n\n%s\n========\n%s",
+			// reflectiveCheck0, reflectiveCheck1);
+			// }
+			// FIXME - mvcc.5 - implement once reflectiveserializer up
+		}
+		return serialized;
+	}
+
 	private Object synthesisePopulatedPropertyValue(Node node,
 			Property property) {
 		PropertySerialization propertySerialization = SerializationSupport
@@ -1211,10 +1220,17 @@ public class FlatTreeSerializer {
 
 		boolean testSerializedPopulateAllPaths;
 
+		boolean readableTime = false;
+
 		Reachables reachables;
 
 		public SerializerOptions withElideDefaults(boolean elideDefaults) {
 			this.elideDefaults = elideDefaults;
+			return this;
+		}
+
+		public SerializerOptions withReadableTime(boolean readableTime) {
+			this.readableTime = readableTime;
 			return this;
 		}
 
@@ -1352,7 +1368,7 @@ public class FlatTreeSerializer {
 		}
 	}
 
-	static class Node {
+	class Node {
 		private static final String VALUE_SEPARATOR = ",";
 
 		Path path;
@@ -1386,12 +1402,38 @@ public class FlatTreeSerializer {
 			return Ax.format("%s=%s", path, value);
 		}
 
+		@SuppressWarnings("deprecation")
+		private String readableTime(long time) {
+			Date date = new Date(time);
+			FormatBuilder format = new FormatBuilder();
+			format.appendZeroesLeft(4, date.getYear() + 1900);
+			format.appendZeroesLeft(2, date.getMonth() + 1);
+			format.appendZeroesLeft(2, date.getDate());
+			format.append("T");
+			format.appendZeroesLeft(2, date.getHours());
+			format.appendZeroesLeft(2, date.getMinutes());
+			format.appendZeroesLeft(2, date.getSeconds());
+			format.appendZeroesLeft(3, (int) (time % 1000));
+			int tzOffset = date.getTimezoneOffset();
+			int tzOffsetHours = tzOffset / 60;
+			int tzOffsetMinutes = tzOffset % 60;
+			String tzDirection = tzOffset <= 0 ? "+" : "-";
+			format.append(tzDirection);
+			format.appendZeroesLeft(2, tzOffsetHours);
+			format.appendZeroesLeft(2, tzOffsetMinutes);
+			return format.toString();
+		}
+
 		private String toStringValue0() {
 			if (path.serializer != null) {
 				return path.serializer.serializeValue(value);
 			}
 			if (value instanceof Date) {
-				return String.valueOf(((Date) value).getTime());
+				if (state.serializerOptions.readableTime) {
+					return readableTime(((Date) value).getTime());
+				} else {
+					return String.valueOf(((Date) value).getTime());
+				}
 			} else if (value instanceof String) {
 				String escapedValue = escapeValue(value.toString());
 				return escapeValue(value.toString());
@@ -1409,9 +1451,15 @@ public class FlatTreeSerializer {
 			} else if (value instanceof ExtensibleEnum) {
 				// same data as
 				// cc.alcina.framework.common.client.serializer.ReflectiveSerializers.ValueSerializerExtensibleEnum
-				return Ax.format("%s,%s", ExtensibleEnum.registryPoint(
-						(Class<? extends ExtensibleEnum>) value.getClass())
-						.getName(), value.toString());
+				Class<? extends ExtensibleEnum> registryPoint = ExtensibleEnum
+						.registryPoint((Class<? extends ExtensibleEnum>) value
+								.getClass());
+				if (registryPoint == path.property.getType()) {
+					return value.toString();
+				} else {
+					return Ax.format("%s,%s", registryPoint.getName(),
+							value.toString());
+				}
 			} else if (value.getClass().isArray()
 					&& value.getClass().getComponentType() == byte.class) {
 				return Base64.encodeBytes((byte[]) value);
@@ -1471,10 +1519,10 @@ public class FlatTreeSerializer {
 				return Boolean.valueOf(stringValue);
 			}
 			if (valueClass == Date.class) {
-				return new Date(Long.parseLong(stringValue));
+				return new Date(parseTime(stringValue));
 			}
 			if (valueClass == Timestamp.class) {
-				return new Timestamp(Long.parseLong(stringValue));
+				return new Timestamp(parseTime(stringValue));
 			}
 			if (Reflections.isAssignableFrom(Enum.class, valueClass)) {
 				return CommonUtils.getEnumValueOrNull(valueClass, stringValue,
@@ -1486,8 +1534,13 @@ public class FlatTreeSerializer {
 			if (Reflections.isAssignableFrom(ExtensibleEnum.class,
 					valueClass)) {
 				String[] parts = stringValue.split(",");
-				return ExtensibleEnum.valueOf(Reflections.forName(parts[0]),
-						parts[1]);
+				if (parts.length == 1) {
+					return ExtensibleEnum.valueOf(path.property.getType(),
+							parts[0]);
+				} else {
+					return ExtensibleEnum.valueOf(Reflections.forName(parts[0]),
+							parts[1]);
+				}
 			}
 			if (Reflections.isAssignableFrom(VersionableEntity.class,
 					valueClass)) {
@@ -1511,6 +1564,38 @@ public class FlatTreeSerializer {
 				return Base64.decode(stringValue);
 			}
 			throw new UnsupportedOperationException();
+		}
+
+		/*
+		 * yes yes, date deprecation, yes yes
+		 */
+		@SuppressWarnings("deprecation")
+		long parseTime(String stringValue) {
+			if (stringValue.contains("T")) {
+				MatchResult result = TIME_FORMAT.exec(stringValue);
+				int year = Integer.parseInt(result.getGroup(1)) - 1900;
+				int month = Integer.parseInt(result.getGroup(2)) - 1;
+				int day = Integer.parseInt(result.getGroup(3));
+				int hrs = Integer.parseInt(result.getGroup(4));
+				int min = Integer.parseInt(result.getGroup(5));
+				int sec = Integer.parseInt(result.getGroup(6));
+				int millis = Integer.parseInt(result.getGroup(7));
+				String plusMinus = result.getGroup(8);
+				int tzHours = Integer.parseInt(result.getGroup(9));
+				int tzMinutes = Integer.parseInt(result.getGroup(10));
+				int tzTotalMinutes = tzHours * 60 + tzMinutes;
+				int tzMultiplier = plusMinus.equals("+") ? 1 : -1;
+				Date date = new Date(year, month, day, hrs, min, sec);
+				long time = date.getTime();
+				int tzOffset = date.getTimezoneOffset();
+				// adjust for tz diff
+				time += date.getTimezoneOffset() * TimeConstants.ONE_MINUTE_MS;
+				time += tzMultiplier * tzTotalMinutes
+						* TimeConstants.ONE_MINUTE_MS;
+				return time;
+			} else {
+				return Long.parseLong(stringValue);
+			}
 		}
 
 		void putToObject(String stringValue) {

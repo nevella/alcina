@@ -74,6 +74,7 @@ public class Comment extends Node implements DomComment, org.w3c.dom.Comment {
 		return getData();
 	}
 
+	@Override
 	public CommentImplAccess implAccess() {
 		return new CommentImplAccess();
 	}
@@ -150,7 +151,7 @@ public class Comment extends Node implements DomComment, org.w3c.dom.Comment {
 		return (CommentRemote) remote();
 	}
 
-	public class CommentImplAccess {
+	public class CommentImplAccess extends Node.ImplAccess {
 		public CommentRemote ensureRemote() {
 			ensureRemoteCheck();
 			return Comment.this.typedRemote();

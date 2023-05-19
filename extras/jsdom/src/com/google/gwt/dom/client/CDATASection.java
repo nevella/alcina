@@ -80,6 +80,7 @@ public class CDATASection extends Node
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public CDATASectionImplAccess implAccess() {
 		return new CDATASectionImplAccess();
 	}
@@ -168,7 +169,7 @@ public class CDATASection extends Node
 		return (CDATASectionRemote) remote();
 	}
 
-	public class CDATASectionImplAccess {
+	public class CDATASectionImplAccess extends Node.ImplAccess {
 		public CDATASectionRemote ensureRemote() {
 			ensureRemoteCheck();
 			return CDATASection.this.typedRemote();

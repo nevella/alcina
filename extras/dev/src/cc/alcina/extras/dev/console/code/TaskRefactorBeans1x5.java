@@ -29,6 +29,7 @@ import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.util.FsObjectCache;
@@ -45,8 +46,8 @@ Plan (impl):
 Property:
 - Add field support
   - can serialize this task?
-- @Bean resolver (since we want tree serializable) 
-- 
+- @Bean resolver (since we want tree serializable)
+-
 
 
 Tool:
@@ -60,6 +61,8 @@ Tool:
  *
  */
 @Bean.Fields
+// (tmp)
+@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 public class TaskRefactorBeans1x5 extends PerformerTask {
 	transient CompilationUnits compUnits;
 

@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
@@ -9,7 +11,11 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Builder;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Spinner;
 
-public class SuggestionChoices implements Suggestor.Suggestions {
+/*
+ * Implements display of suggestions via a choices model
+ */
+public class SuggestionChoices implements Suggestor.Suggestions,
+		KeyboardNavigation.Navigation.Handler {
 	private Overlay overlay;
 
 	private final Contents contents = new Contents();
@@ -39,6 +45,19 @@ public class SuggestionChoices implements Suggestor.Suggestions {
 		// FIXME - design
 		contents.setModel(
 				new String(CommonUtils.toSimpleExceptionMessage(throwsable)));
+	}
+
+	@Override
+	public void onNavigation(Navigation event) {
+		switch (event.getModel()) {
+		case CANCEL:
+			event.consume();
+			overlay.close(event.getContext().getOriginatingGwtEvent(), false);
+			break;
+		default:
+			choices.onNavigation(event);
+			break;
+		}
 	}
 
 	@Override

@@ -25,8 +25,12 @@ public class SelectionRemote extends JavaScriptObject {
 	protected SelectionRemote() {
 	}
 
-	public final native void collapse() /*-{
-    this.collapse();
+	public final native void collapse(NodeRemote node) /*-{
+    this.collapse(node);
+	}-*/;
+
+	public final native void collapse(NodeRemote node, int offset) /*-{
+    this.collapse(node, offset);
 	}-*/;
 
 	public final native NodeRemote getAnchorNode() /*-{
@@ -37,24 +41,8 @@ public class SelectionRemote extends JavaScriptObject {
     return this.anchorOffset;
 	}-*/;
 
-	public final native NodeRemote getBaseNode() /*-{
-    return this.baseNode;
-	}-*/;
-
-	public final native int getBaseOffset() /*-{
-    return this.baseOffset;
-	}-*/;
-
 	public final native DomRect getClientRect()/*-{
     return this.getRangeAt(0).getBoundingClientRect();
-	}-*/;
-
-	public final native NodeRemote getExtentNode() /*-{
-    return this.extentNode;
-	}-*/;
-
-	public final native int getExtentOffset() /*-{
-    return this.extentOffset;
 	}-*/;
 
 	public final native NodeRemote getFocusNode() /*-{
@@ -88,5 +76,13 @@ public class SelectionRemote extends JavaScriptObject {
 
 	public final native void setAnchorOffset(int offset) /*-{
     this.anchorOffset = offset;
+	}-*/;
+
+	public final native void setFocusNode(NodeRemote node) /*-{
+    this.focusNode = node;
+	}-*/;
+
+	public final native void setFocusOffset(int offset) /*-{
+    this.focusOffset = offset;
 	}-*/;
 }
