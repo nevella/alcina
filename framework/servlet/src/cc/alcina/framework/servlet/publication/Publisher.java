@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
@@ -64,10 +65,16 @@ public class Publisher {
 	public static final String CONTEXT_PERSIST_CONTENT_RENDERER_RESULTS = Publisher.class
 			.getName() + ".CONTEXT_PERSIST_CONTENT_RENDERER_RESULTS";
 
-	private PublicationContext ctx;
+	private PublicationContext context;
+
+	private ContentWrapper contentWrapper;
+
+	private PublicationResult result;
+
+	private InputStream convertedContent;
 
 	public PublicationContext getContext() {
-		return this.ctx;
+		return this.context;
 	}
 
 	public PublicationResult publish(ContentDefinition contentDefinition,
@@ -80,13 +87,13 @@ public class Publisher {
 			throws Exception {
 		int depth = LooseContext.depth();
 		try {
-			ctx = PublicationContext.setupContext(contentDefinition,
+			context = PublicationContext.setupContext(contentDefinition,
 					deliveryModel);
 			LooseContext.pushWithKey(
-					PublicationContext.CONTEXT_PUBLICATION_CONTEXT, ctx);
+					PublicationContext.CONTEXT_PUBLICATION_CONTEXT, context);
 			return publish0(contentDefinition, deliveryModel, original);
 		} catch (Exception e) {
-			ctx.logPublicationException(e);
+			context.logPublicationException(e);
 			throw e;
 		} finally {
 			LooseContext.pop();
@@ -94,12 +101,21 @@ public class Publisher {
 		}
 	}
 
+	private boolean exitPreDelivery() {
+		if (context.deliveryModel
+				.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	private void persist(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Long publicationUserId,
 			Publication original, PublicationResult result) {
 		PublicationPersister persister = PublicationPersister.get();
-		ctx.publication = persister.newPublicationInstance();
-		Publication publication = ctx.publication;
+		context.publication = persister.newPublicationInstance();
+		Publication publication = context.publication;
 		if (contentDefinition instanceof HasId) {
 			HasId hasId = (HasId) contentDefinition;
 			hasId.setId(0);
@@ -138,6 +154,17 @@ public class Publisher {
 		}
 	}
 
+	private void preparePreDeliveryExitResult() {
+		if (convertedContent != null) {
+			result.setContent(Base64Utils.toBase64(
+					Io.read().fromStream(convertedContent).asBytes()));
+		} else if (result.getContent() == null && (AppPersistenceBase.isTest()
+				|| LooseContext.is(CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT))) {
+			result.setContent(
+					Base64Utils.toBase64(contentWrapper.wrappedBytes));
+		}
+	}
+
 	private PublicationResult publish0(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original)
 			throws Exception {
@@ -150,19 +177,19 @@ public class Publisher {
 		ContentModelHandler cmh = Registry.impl(ContentModelHandler.class,
 				contentDefinition.getClass());
 		cmh.prepareContent(contentDefinition, deliveryModel);
-		PublicationVisitor visitor = ctx.getVisitorOrNoop();
+		PublicationVisitor visitor = context.getVisitorOrNoop();
 		visitor.afterPrepareContent(cmh);
 		if (!cmh.hasResults) {
 			// throw exception??
 			return null;
 		}
-		PublicationResult result = new PublicationResult();
-		ctx.publicationResult = result;
+		result = new PublicationResult();
+		context.publicationResult = result;
 		long publicationUserId = 0;
 		boolean forPublication = !deliveryModel.isNoPersistence()
 				&& deliveryModel.provideContentDeliveryType().isRepublishable();
 		PublicationContent publicationContent = cmh.getPublicationContent();
-		ctx.publicationContent = publicationContent;
+		context.publicationContent = publicationContent;
 		result.setPublicationUid(deliveryModel.getPublicationUid());
 		PublicationPersister persister = PublicationPersister.get();
 		boolean persistPublication = forPublication
@@ -183,63 +210,69 @@ public class Publisher {
 			}
 		}
 		long publicationId = CommonUtils.lv(result.getPublicationId());
-		ContentRenderer crh = Registry.impl(ContentRenderer.class,
+		ContentRenderer contentRenderer = Registry.impl(ContentRenderer.class,
 				publicationContent.getClass());
 		visitor.beforeRenderContent();
-		publicationContent = ctx.publicationContent;
-		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
-				publicationId, publicationUserId);
-		ctx.renderedContent = crh.results;
-		if (crh.getResults().persist && ctx.publication != null) {
-			persister.persistContentRendererResults(crh.getResults(),
-					ctx.publication);
+		publicationContent = context.publicationContent;
+		contentRenderer.renderContent(contentDefinition, publicationContent,
+				deliveryModel, publicationId, publicationUserId);
+		context.renderedContent = contentRenderer.results;
+		if (contentRenderer.getResults().persist
+				&& context.publication != null) {
+			persister.persistContentRendererResults(
+					contentRenderer.getResults(), context.publication);
 		}
-		ContentWrapper cw = Registry.impl(ContentWrapper.class,
+		contentWrapper = Registry.impl(ContentWrapper.class,
 				publicationContent.getClass());
 		visitor.beforeWrapContent();
-		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
-				crh.getResults(), publicationId, publicationUserId);
-		visitor.afterWrapContent(cw);
+		contentWrapper.wrapContent(contentDefinition, publicationContent,
+				deliveryModel, contentRenderer.getResults(), publicationId,
+				publicationUserId);
+		visitor.afterWrapContent(contentWrapper);
 		if (deliveryModel.provideContentDeliveryType().getClass() == null) {
 			return null;
 		}
-		result.setContent(cw.wrappedContent);
-		if (deliveryModel
-				.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
-			if (result.getContent() == null && (AppPersistenceBase.isTest()
-					|| LooseContext.is(CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT))) {
-				result.setContent(Base64Utils.toBase64(cw.wrappedBytes));
-			}
+		result.setContent(contentWrapper.wrappedContent);
+		FormatConverter formatConverter = Registry.impl(FormatConverter.class,
+				deliveryModel.provideTargetFormat().getClass());
+		if (formatConverter.isPassthrough() && exitPreDelivery()) {
+			preparePreDeliveryExitResult();
 			return result;
 		}
-		FormatConverter fc = Registry.impl(FormatConverter.class,
-				deliveryModel.provideTargetFormat().getClass());
-		FormatConversionModel fcm = new FormatConversionModel();
-		fcm.html = cw.wrappedContent;
-		fcm.footer = cw.wrappedFooter;
-		fcm.bytes = cw.wrappedBytes;
-		fcm.stream = cw.stream;
-		fcm.rows = cw.wrapper.gridRows;
-		fcm.custom = cw.custom;
-		ctx.formatConversionModel = fcm;
-		fcm.fileExtension = fc.getFileExtension();
-		fcm.mimeType = fc.getMimeType();
-		InputStream convertedContent = fc.convert(ctx, fcm);
+		FormatConversionModel formatConversionModel = new FormatConversionModel();
+		formatConversionModel.html = contentWrapper.wrappedContent;
+		formatConversionModel.footer = contentWrapper.wrappedFooter;
+		formatConversionModel.bytes = contentWrapper.wrappedBytes;
+		formatConversionModel.stream = contentWrapper.stream;
+		formatConversionModel.rows = contentWrapper.wrapper.gridRows;
+		formatConversionModel.custom = contentWrapper.custom;
+		context.formatConversionModel = formatConversionModel;
+		formatConversionModel.fileExtension = formatConverter
+				.getFileExtension();
+		formatConversionModel.mimeType = formatConverter.getMimeType();
+		convertedContent = formatConverter.convert(context,
+				formatConversionModel);
 		convertedContent = visitor.transformConvertedContent(convertedContent);
+		if (exitPreDelivery()) {
+			preparePreDeliveryExitResult();
+			return result;
+		}
 		visitor.beforeDelivery();
 		ContentDelivery deliverer = Registry.query(ContentDelivery.class)
 				.setKeys(ContentDeliveryType.class,
 						deliveryModel.provideContentDeliveryType().getClass())
 				.impl();
-		String token = deliverer.deliver(ctx, convertedContent, deliveryModel,
-				fc);
+		String token = deliverer.deliver(context, convertedContent,
+				deliveryModel, formatConverter);
 		if (persistPublication) {
 			postDeliveryPersistence(publicationId);
-			crh.getResults().htmlContent = cw.wrappedContent;
+			contentRenderer
+					.getResults().htmlContent = contentWrapper.wrappedContent;
 			if ((LooseContext.is(CONTEXT_PERSIST_CONTENT_RENDERER_RESULTS)
-					|| crh.getResults().persist) && ctx.publication != null) {
-				persister.persistContentRendererResults(crh.getResults(),
-						ctx.publication);
+					|| contentRenderer.getResults().persist)
+					&& context.publication != null) {
+				persister.persistContentRendererResults(
+						contentRenderer.getResults(), context.publication);
 			}
 		}
 		result.setContent(null);
