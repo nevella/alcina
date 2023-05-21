@@ -99,11 +99,11 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	/**
 	 * Used to get custom annotations from an annotation template class - e.g:
-	 * 
+	 *
 	 * <code><pre>
-	 * 
-	 * 
-	 * 
+	 *
+	 *
+	 *
 	&#64;Directed.Multiple({ @Directed(tag = "li", cssClass = "es-toolbar-item"),
 	&#64;Directed(tag = "button", cssClass = "es-button") })
 	public static class ButtonLink extends Link {
