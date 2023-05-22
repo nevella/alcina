@@ -3,30 +3,23 @@ package cc.alcina.extras.dev.console.code;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
-import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
-import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
@@ -34,7 +27,6 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderType
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -233,9 +225,9 @@ public class CompilationUnits {
 
 	public List<CompilationUnitWrapper> units = new ArrayList<>();
 
-	public Map<String, ClassOrInterfaceDeclarationWrapper> declarations = new LinkedHashMap<>();
+	public Map<String, UnitType> declarations = new LinkedHashMap<>();
 
-	private Multimap<String, List<ClassOrInterfaceDeclarationWrapper>> declarationsByName = new Multimap<>();
+	private Multimap<String, List<UnitType>> declarationsByName = new Multimap<>();
 
 	public CompilationUnits() {
 		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
@@ -243,17 +235,15 @@ public class CompilationUnits {
 		this.solver = JavaParserFacade.get(typeSolver);
 	}
 
-	public ClassOrInterfaceDeclarationWrapper declarationByFqn(String typeFqn) {
+	public UnitType declarationByFqn(String typeFqn) {
 		return declarations.get(typeFqn);
 	}
 
-	public List<ClassOrInterfaceDeclarationWrapper>
-			declarationByName(String simpleName) {
+	public List<UnitType> declarationByName(String simpleName) {
 		return declarationsByName.get(simpleName);
 	}
 
-	public ClassOrInterfaceDeclarationWrapper
-			declarationWrapperForClass(Class<?> clazz) {
+	public UnitType declarationWrapperForClass(Class<?> clazz) {
 		return declarationByFqn(clazz.getCanonicalName());
 	}
 
@@ -281,225 +271,10 @@ public class CompilationUnits {
 		writeDirty(test, null, writeLimit);
 	}
 
-	public static class ClassOrInterfaceDeclarationWrapper {
-		public static transient boolean evaluateSuperclassFqn = false;
-
-		private transient ClassOrInterfaceDeclaration declaration;
-
-		public Set<TypeFlag> typeFlags = new LinkedHashSet<>();
-
-		public String name;
-
-		public CompilationUnitWrapper unitWrapper;
-
-		public String qualifiedSourceName;
-
-		public String qualifiedBinaryName;
-
-		public String superclassFqn;
-
-		public boolean invalid;
-
-		public ClassOrInterfaceDeclarationWrapper() {
-		}
-
-		public ClassOrInterfaceDeclarationWrapper(CompilationUnitWrapper unit,
-				ClassOrInterfaceDeclaration n) {
-			this.unitWrapper = unit;
-			this.name = n.getNameAsString();
-			qualifiedSourceName = fqn(unit, n, false);
-			qualifiedBinaryName = fqn(unit, n, true);
-			if (qualifiedSourceName == null) {
-				invalid = true;
-				return;
-			}
-			if (evaluateSuperclassFqn) {
-				NodeList<ClassOrInterfaceType> extendedTypes = n
-						.getExtendedTypes();
-				if (extendedTypes.size() > 1) {
-					throw new UnsupportedOperationException();
-				} else if (extendedTypes.size() == 1) {
-					ClassOrInterfaceType exType = extendedTypes.get(0);
-					try {
-						superclassFqn = fqn(unit, exType);
-					} catch (Exception e) {
-						invalidSuperclassFqns.add(exType.getNameAsString());
-						if (LooseContext.is(CONTEXT_COMP_UNITS)) {
-							Ax.out("%s: %s", e.getMessage(),
-									exType.getNameAsString());
-						}
-					}
-				}
-			}
-		}
-
-		public void addAnnotation(AnnotationExpr element) {
-			declaration.addAnnotation(element);
-			dirty();
-		}
-
-		public Class clazz() {
-			return Reflections.forName(qualifiedBinaryName);
-		}
-
-		public void dirty() {
-			unitWrapper.prepareForModification();
-			unitWrapper.dirty = true;
-		}
-
-		public void dirty(String initialSource, String ensuredSource) {
-			if (!Objects.equals(initialSource, ensuredSource)) {
-				dirty();
-			}
-		}
-
-		public void ensureImport(Class<?> clazz) {
-			unitWrapper.ensureImport(clazz);
-		}
-
-		public void ensureImport(String name) {
-			unitWrapper.ensureImport(name);
-		}
-
-		public boolean exists() {
-			return new File(unitWrapper.path).exists();
-		}
-
-		public ClassOrInterfaceDeclaration getDeclaration() {
-			if (declaration == null) {
-				unitWrapper.unit().accept(new VoidVisitorAdapter<Void>() {
-					@Override
-					public void visit(ClassOrInterfaceDeclaration node,
-							Void arg) {
-						if (Objects.equals(qualifiedSourceName,
-								fqn(unitWrapper, node, false))) {
-							declaration = node;
-						}
-						super.visit(node, arg);
-					}
-				}, null);
-			}
-			return declaration;
-		}
-
-		public boolean hasFlag(TypeFlag flag) {
-			return typeFlags.contains(flag);
-		}
-
-		public boolean hasFlags() {
-			return typeFlags.size() > 0;
-		}
-
-		public boolean hasSuperclass(String fqn) {
-			if (Objects.equals(fqn, superclassFqn)) {
-				return true;
-			}
-			if (superclassFqn == null) {
-				return false;
-			}
-			ClassOrInterfaceDeclarationWrapper compUnitClassDec = compUnits().declarations
-					.get(superclassFqn);
-			if (compUnitClassDec == null) {
-				return false;
-			}
-			return compUnitClassDec.hasSuperclass(fqn);
-		}
-
-		public boolean isAssignableFrom(Class<?> from) {
-			return from.isAssignableFrom(clazz());
-		}
-
-		public String resolveFqn(Type type) {
-			return fqn(unitWrapper, type.asString());
-		}
-
-		public String resolveFqnOrNull(String genericPart) {
-			try {
-				return fqn(unitWrapper, genericPart);
-			} catch (Exception e) {
-				return null;
-			}
-		}
-
-		public String resolveFqnOrNull(Type type) {
-			try {
-				return resolveFqn(type);
-			} catch (Exception e) {
-				return null;
-			}
-		}
-
-		/*
-		 * Output direct subclass of object *if* it doesn't implement any
-		 * interfaces, otherwise root interfaces
-		 */
-		public Stream<Class<?>> rootTypes() {
-			Set<Class<?>> rootTypes = new LinkedHashSet<>();
-			Stack<Class> stack = new Stack<>();
-			stack.push(clazz());
-			while (!stack.isEmpty()) {
-				Class cursor = stack.pop();
-				Class[] interfaces = cursor.getInterfaces();
-				if (cursor.isInterface()) {
-					if (interfaces.length == 0) {
-						rootTypes.add(cursor);
-					}
-				} else {
-					Class superclass = cursor.getSuperclass();
-					if (superclass == Object.class) {
-						if (interfaces.length == 0) {
-							rootTypes.add(cursor);
-						}
-					} else {
-						stack.push(superclass);
-					}
-				}
-				Arrays.stream(interfaces).forEach(stack::add);
-			}
-			return rootTypes.stream();
-		}
-
-		public void setDeclaration(ClassOrInterfaceDeclaration declaration) {
-			this.declaration = declaration;
-		}
-
-		public void setFlag(TypeFlag flag) {
-			setFlag(flag, true);
-		}
-
-		public void setFlag(TypeFlag flag, boolean set) {
-			if (flag == null) {
-				return;
-			}
-			if (set) {
-				typeFlags.add(flag);
-			} else {
-				typeFlags.remove(flag);
-			}
-		}
-
-		public String simpleName() {
-			return qualifiedSourceName.replaceFirst(".+\\.", "");
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s: %s", typeFlags, name);
-		}
-
-		public <T> T typedInstance() {
-			return (T) Reflections.newInstance(clazz());
-		}
-
-		private CompilationUnits compUnits() {
-			return LooseContext.get(CONTEXT_COMP_UNITS);
-		}
-	}
-
 	public static class CompilationUnitWrapper {
 		public String path;
 
-		public List<ClassOrInterfaceDeclarationWrapper> declarations = new ArrayList<>();
+		public List<UnitType> declarations = new ArrayList<>();
 
 		public transient CompilationUnit unit;
 
@@ -514,8 +289,7 @@ public class CompilationUnits {
 			this.setFile(file);
 		}
 
-		public ClassOrInterfaceDeclarationWrapper
-				declarationWrapperFor(ClassOrInterfaceDeclaration n) {
+		public UnitType declarationWrapperFor(ClassOrInterfaceDeclaration n) {
 			unit();
 			return declarations.stream().filter(
 					d -> d.qualifiedSourceName.endsWith(n.getNameAsString()))
@@ -543,8 +317,7 @@ public class CompilationUnits {
 		}
 
 		public boolean hasFlags() {
-			return declarations.stream()
-					.anyMatch(ClassOrInterfaceDeclarationWrapper::hasFlags);
+			return declarations.stream().anyMatch(UnitType::hasFlags);
 		}
 
 		public void removeImport(Class<?> clazz) {

@@ -19,7 +19,6 @@ import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
@@ -69,7 +68,7 @@ public class TaskRefactorRegistrations extends PerformerTask {
 
 	@Override
 	public void run() throws Exception {
-		ClassOrInterfaceDeclarationWrapper.evaluateSuperclassFqn = false;
+		UnitType.evaluateSuperclassFqn = false;
 		StringMap classPaths = StringMap.fromStringList(classPathList);
 		SingletonCache<CompilationUnits> cache = FsObjectCache
 				.singletonCache(CompilationUnits.class, getClass())
@@ -115,7 +114,7 @@ public class TaskRefactorRegistrations extends PerformerTask {
 	}
 
 	boolean hasRegistryLocationAnnotations(
-			ClassOrInterfaceDeclarationWrapper wrapper) {
+			UnitType wrapper) {
 		// boolean hasOld = wrapper.getDeclaration()
 		// .getAnnotationByClass(RegistryLocation.class).isPresent()
 		// || wrapper.getDeclaration()
@@ -138,7 +137,7 @@ public class TaskRefactorRegistrations extends PerformerTask {
 
 	private class RegistrationsModifier extends SourceModifier {
 		public RegistrationsModifier(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+				UnitType declarationWrapper) {
 			super(declarationWrapper);
 		}
 
@@ -349,7 +348,7 @@ public class TaskRefactorRegistrations extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
+				UnitType declaration = new UnitType(
 						unit, node);
 				declaration.setDeclaration(node);
 				unit.declarations.add(declaration);

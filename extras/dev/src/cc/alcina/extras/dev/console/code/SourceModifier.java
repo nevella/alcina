@@ -13,17 +13,15 @@ import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
-
 abstract class SourceModifier {
-	protected ClassOrInterfaceDeclarationWrapper declarationWrapper;
+	protected UnitType declarationWrapper;
 
 	protected ClassOrInterfaceDeclaration declaration;
 
 	private String initialSource;
 
 	public SourceModifier(
-			ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+			UnitType declarationWrapper) {
 		this.declarationWrapper = declarationWrapper;
 		this.declaration = this.declarationWrapper.getDeclaration();
 	}

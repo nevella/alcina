@@ -1426,10 +1426,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		@Override
 		public boolean isVisibleType(JType type) {
-			return ClassReflection.has((JClassType) type, Bean.class)
-					|| ClassReflection.has((JClassType) type, Bean.Fields.class)
-					|| ClassReflection.has((JClassType) type,
-							Bean.ImmutableFields.class);
+			return ClassReflection.has((JClassType) type, Bean.class);
 		}
 	}
 }

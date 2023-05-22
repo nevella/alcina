@@ -16,7 +16,6 @@ import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
@@ -132,7 +131,7 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
+				UnitType declaration = new UnitType(
 						unit, node);
 				declaration.setDeclaration(node);
 				unit.declarations.add(declaration);
@@ -155,7 +154,7 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 				.getLogger(TaskFlatSerializerMetadata.class);
 
 		public static void removeRedundantPropertySerializationAnnotations(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+				UnitType declarationWrapper) {
 			ClassOrInterfaceDeclaration declaration = declarationWrapper
 					.getDeclaration();
 			declaration.getMethods().forEach(m -> {
@@ -166,7 +165,7 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 		}
 
 		private static void cleanIfRedundant(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper,
+				UnitType declarationWrapper,
 				Optional<AnnotationExpr> annotation,
 				MethodDeclaration methodDeclaration) {
 			if (!annotation.isPresent()) {

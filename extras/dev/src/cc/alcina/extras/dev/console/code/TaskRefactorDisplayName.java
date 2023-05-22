@@ -18,7 +18,6 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.google.common.base.Preconditions;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
@@ -134,7 +133,7 @@ public class TaskRefactorDisplayName extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
+				UnitType declaration = new UnitType(
 						unit, node);
 				declaration.setDeclaration(node);
 				unit.declarations.add(declaration);
@@ -158,7 +157,7 @@ public class TaskRefactorDisplayName extends PerformerTask {
 				.getLogger(TaskFlatSerializerMetadata.class);
 
 		public static void cleanDisplayAnnotations(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+				UnitType declarationWrapper) {
 			ClassOrInterfaceDeclaration declaration = declarationWrapper
 					.getDeclaration();
 			{
@@ -188,7 +187,7 @@ public class TaskRefactorDisplayName extends PerformerTask {
 		}
 
 		private static void clean(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper,
+				UnitType declarationWrapper,
 				Optional<AnnotationExpr> annotation,
 				MethodDeclaration methodDeclaration) {
 			if (!annotation.isPresent()) {

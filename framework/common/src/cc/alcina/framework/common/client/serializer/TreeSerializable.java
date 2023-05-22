@@ -11,9 +11,10 @@ import cc.alcina.framework.common.client.util.StringMap;
 /**
  *
  * <p>
- * That is used by app server code to generate the serialization signature of
- * the reachable serializables at startup time, and to validate the serializable
- * classes (most importantly that any non-property fields are transient)
+ * The set of TreeSerializable subtypes is used by app server code to generate
+ * the serialization signature of the reachable serializables at startup time,
+ * and to validate the serializable classes (most importantly that any
+ * non-property fields are transient)
  *
  * <p>
  * Note that - as per {@link FlatTreeSerializer}, Collection properties cannot

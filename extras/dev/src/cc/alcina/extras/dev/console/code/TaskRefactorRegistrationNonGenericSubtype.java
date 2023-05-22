@@ -22,7 +22,6 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.TypeParameter;
 import com.google.common.base.Preconditions;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
@@ -135,7 +134,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 			Stream<Stream<Class<?>>> map = compUnits.declarations.values()
 					.stream()
 					.filter(dec -> dec.hasFlag(Type.TwoKeyRegistration))
-					.map(ClassOrInterfaceDeclarationWrapper::rootTypes);
+					.map(UnitType::rootTypes);
 			map.flatMap(Function.identity()).distinct().map(Class::getName)
 					.sorted().forEach(Ax::out);
 			break;
@@ -194,7 +193,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 	}
 
 	private void removeFilter0FilterMethod(
-			ClassOrInterfaceDeclarationWrapper declarationWrapper,
+			UnitType declarationWrapper,
 			Type... types) {
 		ClassOrInterfaceDeclaration decl = declarationWrapper.getDeclaration();
 		List<MethodDeclaration> methods = decl.getMethods();
@@ -219,7 +218,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 	}
 
 	private void removeHandlesMethod(
-			ClassOrInterfaceDeclarationWrapper declarationWrapper,
+			UnitType declarationWrapper,
 			Type... types) {
 		ClassOrInterfaceDeclaration decl = declarationWrapper.getDeclaration();
 		List<MethodDeclaration> methods = decl.getMethods();
@@ -258,7 +257,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 	}
 
 	boolean assignableFrom(
-			ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+			UnitType declarationWrapper) {
 		if (onlyAssignableFrom != null) {
 			return onlyAssignableFrom
 					.isAssignableFrom(declarationWrapper.clazz());
@@ -288,7 +287,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		}
 
 		private boolean isBasePlaceTokenizer(
-				ClassOrInterfaceDeclarationWrapper declaration) {
+				UnitType declaration) {
 			try {
 				return declaration.isAssignableFrom(BasePlaceTokenizer.class);
 			} catch (Exception e) {
@@ -298,7 +297,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		}
 
 		private boolean isDomainStoreHandler(
-				ClassOrInterfaceDeclarationWrapper declaration) {
+				UnitType declaration) {
 			try {
 				return declaration
 						.isAssignableFrom(DomainCriterionHandler.class);
@@ -310,7 +309,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
+				UnitType declaration = new UnitType(
 						unit, node);
 				String nameAsString = declaration.getDeclaration()
 						.getNameAsString();
@@ -360,7 +359,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 				.getLogger(TaskFlatSerializerMetadata.class);
 
 		public static void removeRedundantRegistrationAnnotation(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+				UnitType declarationWrapper) {
 			ClassOrInterfaceDeclaration declaration = declarationWrapper
 					.getDeclaration();
 			if (declaration.isInterface()) {

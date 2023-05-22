@@ -241,8 +241,8 @@ public class ReflectiveSerializer {
 				});
 				toResolve = next;
 			}
-			boolean resolveWithReflectiveTypeSerializer = Bean.Support
-					.isIntrospectable(lookupClass);
+			boolean resolveWithReflectiveTypeSerializer = Reflections.at(clazz)
+					.has(Bean.class);
 			if (!GWT.isClient()) {
 				resolveWithReflectiveTypeSerializer |= Reflections
 						.isAssignableFrom(TreeSerializable.class, lookupClass)

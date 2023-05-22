@@ -19,7 +19,6 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
@@ -249,7 +248,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		Ax.out("count with config: %s", count);
 		SourceHandler sourceHandler = new SourceHandler();
 		compUnits.declarations.values().stream()
-				.filter(ClassOrInterfaceDeclarationWrapper::exists)
+				.filter(UnitType::exists)
 				.forEach(dec -> sourceHandler.listConfigurationCalls(dec));
 		this.seenKeys = sourceHandler.refs.stream()
 				.flatMap(ref -> ref.keys.stream()).map(key -> key.toString())
@@ -261,8 +260,8 @@ public class TaskRefactorConfigSets extends PerformerTask {
 	}
 
 	public interface NameResolver {
-		public ClassOrInterfaceDeclarationWrapper resolve(
-				List<ClassOrInterfaceDeclarationWrapper> choices, Object source,
+		public UnitType resolve(
+				List<UnitType> choices, Object source,
 				String name);
 	}
 
@@ -282,7 +281,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		}
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
-			CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
+			UnitType declaration = new UnitType(
 					unit, node);
 			declaration.setDeclaration(node);
 			unit.declarations.add(declaration);
@@ -299,7 +298,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		List<Ref> refs = new ArrayList<>();
 
 		public void listConfigurationCalls(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+				UnitType declarationWrapper) {
 			ConfigurationCallLister lister = new ConfigurationCallLister(
 					declarationWrapper);
 			declarationWrapper.getDeclaration().accept(lister, null);
@@ -311,10 +310,10 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		}
 
 		class ConfigurationCallLister extends VoidVisitorAdapter<Void> {
-			private ClassOrInterfaceDeclarationWrapper declarationWrapper;
+			private UnitType declarationWrapper;
 
 			public ConfigurationCallLister(
-					ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+					UnitType declarationWrapper) {
 				this.declarationWrapper = declarationWrapper;
 			}
 
@@ -341,7 +340,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		class Ref {
 			List<Configuration.Key> keys = new ArrayList<>();
 
-			ClassOrInterfaceDeclarationWrapper declarationWrapper;
+			UnitType declarationWrapper;
 
 			boolean implicitClass;
 
@@ -354,7 +353,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 			private ClassExpr superfluousArgument;
 
 			public Ref(MethodCallExpr expr,
-					ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+					UnitType declarationWrapper) {
 				this.expr = expr;
 				this.declarationWrapper = declarationWrapper;
 				int size = expr.getArguments().size();
@@ -362,7 +361,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 					// is() called on .key()
 					return;
 				}
-				ClassOrInterfaceDeclarationWrapper classParamWrapper = null;
+				UnitType classParamWrapper = null;
 				implicitClass = size == 1;
 				Expression keyNameExpr = null;
 				if (implicitClass) {
@@ -408,7 +407,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				if (!implicitClass) {
 					ClassExpr argument = (ClassExpr) expr.getArgument(0);
 					String className = argument.getType().asString();
-					ClassOrInterfaceDeclarationWrapper classDeclByName = className
+					UnitType classDeclByName = className
 							.equals(declarationWrapper.name)
 									? declarationWrapper
 									: declarationByName(className);
@@ -460,8 +459,8 @@ public class TaskRefactorConfigSets extends PerformerTask {
 			}
 
 			private List<String> getSuperclassNames(
-					ClassOrInterfaceDeclarationWrapper classParamWrapper) {
-				ClassOrInterfaceDeclarationWrapper cursor = classParamWrapper;
+					UnitType classParamWrapper) {
+				UnitType cursor = classParamWrapper;
 				List<String> result = new ArrayList<>();
 				while (true) {
 					String name = cursor.getDeclaration().getNameAsString();
@@ -474,7 +473,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 							.findFirst();
 					if (extended.isPresent()) {
 						String extendedName = extended.get().getNameAsString();
-						ClassOrInterfaceDeclarationWrapper declarationByName = declarationByName(
+						UnitType declarationByName = declarationByName(
 								extendedName);
 						if (declarationByName != null) {
 							cursor = declarationByName;
@@ -488,8 +487,8 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				return result;
 			}
 
-			ClassOrInterfaceDeclarationWrapper declarationByName(String name) {
-				List<ClassOrInterfaceDeclarationWrapper> declarationByName = compUnits
+			UnitType declarationByName(String name) {
+				List<UnitType> declarationByName = compUnits
 						.declarationByName(name);
 				if (declarationByName == null) {
 					switch (name) {

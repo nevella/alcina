@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPoint
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -110,8 +111,6 @@ public class ClassReflection extends ReflectionElement {
 
 	AnnotationLocationTypeInfo typeAnnotationLocation;
 
-	boolean hasPackageProtectionProperties;
-
 	public ClassReflection(JType type, boolean sourcesPropertyChanges,
 			ReflectionVisibility reflectionVisibility,
 			ProvidesTypeBounds providesTypeBounds) {
@@ -188,8 +187,6 @@ public class ClassReflection extends ReflectionElement {
 		}
 		this.typeAnnotationLocation = new AnnotationLocationTypeInfo(type,
 				annotationResolver);
-		this.hasPackageProtectionProperties = typeAnnotationLocation.hasAny(
-				Bean.class, Bean.Fields.class, Bean.ImmutableFields.class);
 		this.hasAbstractModifier = type.isAbstract();
 		this.hasFinalModifier = type.isFinal();
 		boolean isExternalConstructible = !hasAbstractModifier
@@ -232,7 +229,9 @@ public class ClassReflection extends ReflectionElement {
 
 	void addFieldMethods(JField field) {
 		boolean hasMutableFields = typeAnnotationLocation
-				.hasAnnotation(Bean.Fields.class);
+				.hasAnnotation(Bean.class)
+				&& typeAnnotationLocation.getAnnotation(Bean.class)
+						.value() == PropertySource.FIELDS;
 		PropertyReflection propertyReflection = propertyReflections
 				.computeIfAbsent(field.getName(),
 						name -> new PropertyReflection(this, name,
@@ -289,10 +288,14 @@ public class ClassReflection extends ReflectionElement {
 		 * Add field-derived properties. Note that method-first means any method
 		 * will override, if it exists
 		 */
-		boolean hasFields = typeAnnotationLocation.hasAny(Bean.Fields.class,
-				Bean.ImmutableFields.class);
-		boolean hasMutableFields = typeAnnotationLocation
-				.hasAnnotation(Bean.Fields.class);
+		Bean.PropertySource propertySource = typeAnnotationLocation
+				.hasAnnotation(Bean.class)
+						? typeAnnotationLocation.getAnnotation(Bean.class)
+								.value()
+						: null;
+		boolean hasFields = propertySource == PropertySource.FIELDS
+				|| propertySource == PropertySource.IMMUTABLE_FIELDS;
+		boolean hasMutableFields = propertySource == PropertySource.FIELDS;
 		if (hasFields) {
 			List<JField> fields = getAllFields();
 			fields.stream().
