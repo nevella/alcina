@@ -240,6 +240,20 @@ public class FormatBuilder {
 	}
 
 	/**
+	 * Append object as string with a left pad of `width` zeroes
+	 *
+	 * @param width
+	 *            Number of zeroes to append
+	 * @param value
+	 *            the int to append
+	 * @return This FormatBuilder
+	 */
+	public FormatBuilder appendZeroesLeft(int width, int value) {
+		sb.append(CommonUtils.padStringLeft(String.valueOf(value), width, "0"));
+		return this;
+	}
+
+	/**
 	 * call format(template,args) if test is true
 	 *
 	 * @return This FormatBuilder
@@ -251,6 +265,13 @@ public class FormatBuilder {
 		} else {
 			return this;
 		}
+	}
+
+	/**
+	 * Append a collection, one line per element
+	 */
+	public void elementLines(Collection<?> collection) {
+		collection.forEach(this::line);
 	}
 
 	/**

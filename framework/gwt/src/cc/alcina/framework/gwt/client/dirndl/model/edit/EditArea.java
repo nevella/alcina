@@ -159,6 +159,6 @@ public class EditArea extends Model
 	}
 
 	DomNode node() {
-		return DomNode.from(provideElement());
+		return provideElement().asDomNode();
 	}
 }

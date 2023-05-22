@@ -79,6 +79,7 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public TextImplAccess implAccess() {
 		return new TextImplAccess();
 	}
@@ -165,7 +166,7 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 		return (TextRemote) remote();
 	}
 
-	public class TextImplAccess {
+	public class TextImplAccess extends Node.ImplAccess {
 		public TextRemote ensureRemote() {
 			ensureRemoteCheck();
 			return Text.this.typedRemote();

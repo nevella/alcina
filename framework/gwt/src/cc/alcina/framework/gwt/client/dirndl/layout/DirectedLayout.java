@@ -918,7 +918,7 @@ public class DirectedLayout implements AlcinaProcess {
 			 * reemit from StringInput (annotation merge should fail if
 			 * receive/reemit pair - instead, add just receipt and manually
 			 * reemit)
-			 * 
+			 *
 			 * FIXME - dirndl 1x1h - Also: warn if a model implements a handler
 			 * but has no receive (reverse will be a ClassCast, so no need to
 			 * check)
@@ -1177,12 +1177,12 @@ public class DirectedLayout implements AlcinaProcess {
 	/**
 	 * Instances act as an input and process state token for the
 	 * layout/transformation algorithm
-	 * 
+	 *
 	 * Note that the resolver is modified (if at all) *after* init,
 	 * so @DirectedContextResolver applies to children, not the node itself.
 	 * This simplifies processing, but makes customisation a little more work in
 	 * certain cases - see {@link Choices.Select}
-	 * 
+	 *
 	 *
 	 * @author nick@alcina.cc
 	 *

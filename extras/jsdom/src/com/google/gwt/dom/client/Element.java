@@ -536,6 +536,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		return local().hasTagName(tagName);
 	}
 
+	@Override
 	public ElementImplAccess implAccess() {
 		return new ElementImplAccess();
 	}
@@ -1087,7 +1088,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		this.remote = remote;
 	}
 
-	public class ElementImplAccess {
+	public class ElementImplAccess extends Node.ImplAccess {
 		public void appendChildLocalOnly(Element localOnly) {
 			// IE special case
 			local.getChildren().add(localOnly.local);
@@ -1109,6 +1110,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 			return Element.this.provideSelfOrAncestorLinkedToRemote();
 		}
 
+		@Override
 		public DomElement remote() {
 			return Element.this.remote();
 		}

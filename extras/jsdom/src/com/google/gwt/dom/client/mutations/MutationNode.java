@@ -12,7 +12,7 @@ import org.w3c.dom.NodeList;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.DomElement;
-import com.google.gwt.dom.client.DomNode;
+import com.google.gwt.dom.client.ClientNode;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 @Bean
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 public final class MutationNode {
-	DomNode domNode;
+	ClientNode domNode;
 
 	short nodeType;
 
@@ -66,7 +66,7 @@ public final class MutationNode {
 
 	String path = "0";
 
-	private DomNode node;
+	private ClientNode node;
 
 	private MutationsAccess access;
 
@@ -77,7 +77,7 @@ public final class MutationNode {
 	public MutationNode() {
 	}
 
-	public MutationNode(DomNode node, SyncMutations sync,
+	public MutationNode(ClientNode node, SyncMutations sync,
 			LocalDom.MutationsAccess access, boolean withChildren,
 			MutationNode parent) {
 		// when syncing (not generating a tree for debugging), parent must be
@@ -113,7 +113,7 @@ public final class MutationNode {
 						.collect(Collectors.toList());
 				int length = list.size();
 				for (int idx = 0; idx < length; idx++) {
-					DomNode item = list.get(idx);
+					ClientNode item = list.get(idx);
 					MutationNode child = new MutationNode(item, sync, access,
 							withChildren, this);
 					childNodes.add(child);
@@ -122,7 +122,7 @@ public final class MutationNode {
 				NodeList nodeList = node.getChildNodes();
 				int length = nodeList.getLength();
 				for (int idx = 0; idx < length; idx++) {
-					DomNode item = (DomNode) nodeList.item(idx);
+					ClientNode item = (ClientNode) nodeList.item(idx);
 					MutationNode child = new MutationNode(item, sync, access,
 							withChildren, this);
 					childNodes.add(child);
@@ -323,7 +323,7 @@ public final class MutationNode {
 			int length = list.size();
 			MutationNode lastChild = null;
 			for (int idx = 0; idx < length; idx++) {
-				DomNode item = list.get(idx);
+				ClientNode item = list.get(idx);
 				MutationNode child = sync.mutationNode((NodeRemote) item);
 				// key - the only place child.parent is set is here (first time
 				// children are accessed during reverse playback). Ensures we're

@@ -351,7 +351,16 @@ public class CommonUtils {
 		return element == null ? false : collection.contains(element);
 	}
 
-	public static boolean containsWithNull(Object obj, String lowerCasedText) {
+	public static boolean containsWithNull(Object obj, String text) {
+		if (obj == null || text == null) {
+			return false;
+		}
+		String string = obj.toString();
+		return string != null && string.contains(text);
+	}
+
+	public static boolean containsWithNullLowerCased(Object obj,
+			String lowerCasedText) {
 		if (obj == null || lowerCasedText == null) {
 			return false;
 		}

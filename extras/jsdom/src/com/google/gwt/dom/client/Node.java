@@ -27,6 +27,8 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
+import cc.alcina.framework.common.client.dom.DomNode;
+
 /**
  * The Node interface is the primary datatype for the entire Document Object
  * Model. It represents a single node in the document tree. While all objects
@@ -34,7 +36,7 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
  * all objects implementing the Node interface may have children.
  */
 public abstract class Node
-		implements JavascriptObjectEquivalent, DomNode, org.w3c.dom.Node {
+		implements JavascriptObjectEquivalent, ClientNode, org.w3c.dom.Node {
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -89,6 +91,10 @@ public abstract class Node
 		T node = local().appendChild(newChild);
 		sync(() -> remote().appendChild(newChild));
 		return node;
+	}
+
+	public DomNode asDomNode() {
+		return DomNode.from(this);
 	}
 
 	@Override
@@ -227,6 +233,10 @@ public abstract class Node
 		return DomNodeStatic.hasParentElement(this);
 	}
 
+	public ImplAccess implAccess() {
+		return new ImplAccess();
+	}
+
 	@Override
 	public int indexInParentChildren() {
 		return local().indexInParentChildren();
@@ -360,7 +370,7 @@ public abstract class Node
 		return replaceChild((Node) arg0, (Node) arg1);
 	}
 
-	public DomNode sameTreeNodeFor(DomNode domNode) {
+	public ClientNode sameTreeNodeFor(ClientNode domNode) {
 		if (domNode == null) {
 			return null;
 		}
@@ -460,7 +470,7 @@ public abstract class Node
 
 	protected abstract void putRemote(NodeRemote nodeDom, boolean resolved);
 
-	protected abstract <T extends DomNode> T remote();
+	protected abstract <T extends ClientNode> T remote();
 
 	protected void resetRemote() {
 		clearResolved();
@@ -501,6 +511,12 @@ public abstract class Node
 
 	boolean wasResolved() {
 		return resolvedEventId > 0;
+	}
+
+	public class ImplAccess {
+		public <E extends ClientNode> E remote() {
+			return (E) typedRemote();
+		}
 	}
 
 	class ChildNodeList extends AbstractList<Node> {

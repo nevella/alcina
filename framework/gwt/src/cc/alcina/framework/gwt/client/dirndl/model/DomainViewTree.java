@@ -19,6 +19,9 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
@@ -282,6 +285,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 	 * 'domain-view-node' - but otherwise respecting subclass name
 	 *
 	 */
+	@Directed(bindings = @Binding(from = "pathSegment", type = Type.PROPERTY))
 	public static class DomainViewNode
 			extends Tree.AbstractPathNode<DomainViewNode> implements HasTag {
 		private DomainViewNodeContent<?> node;
@@ -328,6 +332,15 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 
 		public DomainViewNodeContent<?> getNode() {
 			return this.node;
+		}
+
+		/*
+		 * Expose path segment for possible subtree css rules
+		 */
+		public String getPathSegment() {
+			return this.node instanceof ExposePathSegment
+					? getTreePath().getSegment()
+					: null;
 		}
 
 		public DomainViewTree provideContainingTree() {
@@ -429,6 +442,17 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 				return nodeLabelText;
 			}
 		}
+	}
+
+	/*
+	 * Instructs the tree renderer to expose the path segment, if the node
+	 * content is of this type
+	 *
+	 * Note that this would normally be used for css styling of subtrees - and
+	 * there are possibly better ways (i.e. use a ContextResolver to change the
+	 * model, at least if deleting content)
+	 */
+	public interface ExposePathSegment {
 	}
 
 	/*

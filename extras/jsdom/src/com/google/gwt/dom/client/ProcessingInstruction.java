@@ -64,6 +64,7 @@ public class ProcessingInstruction extends Node
 		return getData();
 	}
 
+	@Override
 	public ProcessingInstructionImplAccess implAccess() {
 		return new ProcessingInstructionImplAccess();
 	}
@@ -116,7 +117,7 @@ public class ProcessingInstruction extends Node
 		return (ProcessingInstructionRemote) remote();
 	}
 
-	public class ProcessingInstructionImplAccess {
+	public class ProcessingInstructionImplAccess extends Node.ImplAccess {
 		public ProcessingInstructionRemote ensureRemote() {
 			ensureRemoteCheck();
 			return ProcessingInstruction.this.typedRemote();

@@ -9,11 +9,22 @@ public class NestedNameProvider {
 		return get().getNestedSimpleName(clazz);
 	}
 
+	public static String get(Object object) {
+		return object == null ? "null"
+				: get().getNestedSimpleName(object.getClass());
+	}
+
 	private static NestedNameProvider get() {
 		return Registry.impl(NestedNameProvider.class);
 	}
 
 	public String getNestedSimpleName(Class clazz) {
-		throw new UnsupportedOperationException();
+		String name = clazz.getName();
+		int idx = name.lastIndexOf(".");
+		if (idx == -1) {
+			return name;
+		} else {
+			return name.substring(idx + 1).replace("$", ".");
+		}
 	}
 }

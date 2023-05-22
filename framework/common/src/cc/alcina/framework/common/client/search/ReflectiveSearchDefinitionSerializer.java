@@ -204,7 +204,7 @@ public class ReflectiveSearchDefinitionSerializer
 				return FlatTreeSerializer.serialize(def,
 						new SerializerOptions().withTopLevelTypeInfo(false)
 								.withShortPaths(true).withSingleLine(true)
-								.withElideDefaults(true)
+								.withElideDefaults(true).withReadableTime(true)
 								.withTestSerialized(true));
 			} catch (Exception e) {
 				e.printStackTrace();

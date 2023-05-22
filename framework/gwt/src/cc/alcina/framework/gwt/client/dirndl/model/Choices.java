@@ -23,6 +23,9 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.IndexedSelection;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
@@ -100,15 +103,19 @@ public abstract class Choices<T> extends Model
 	 * ReferenceDecorator moving document focus
 	 */
 	@Directed(
-		bindings = @Binding(
-			type = Type.PROPERTY,
-			from = "selected",
-			to = "_selected"),
+		bindings = {
+				@Binding(
+					type = Type.PROPERTY,
+					from = "selected",
+					to = "_selected"),
+				@Binding(type = Type.PROPERTY, from = "indexSelected") },
 		receives = { DomEvents.Click.class, DomEvents.MouseDown.class },
 		emits = ModelEvents.Selected.class)
 	public static class Choice<T> extends Model
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler {
 		private boolean selected;
+
+		private boolean indexSelected;
 
 		private final T value;
 
@@ -119,6 +126,10 @@ public abstract class Choices<T> extends Model
 		@Directed
 		public T getValue() {
 			return this.value;
+		}
+
+		public boolean isIndexSelected() {
+			return this.indexSelected;
 		}
 
 		public boolean isSelected() {
@@ -137,11 +148,14 @@ public abstract class Choices<T> extends Model
 			nativeEvent.preventDefault();
 		}
 
+		public void setIndexSelected(boolean indexSelected) {
+			set("indexSelected", this.indexSelected, indexSelected,
+					() -> this.indexSelected = indexSelected);
+		}
+
 		public void setSelected(boolean selected) {
-			boolean old_selected = this.selected;
-			this.selected = selected;
-			propertyChangeSupport().firePropertyChange("selected", old_selected,
-					selected);
+			set("selected", this.selected, selected,
+					() -> this.selected = selected);
 		}
 	}
 
@@ -264,7 +278,8 @@ public abstract class Choices<T> extends Model
 	@Directed(
 		emits = { ModelEvents.SelectionChanged.class,
 				ModelEvents.Selected.class })
-	public static class Single<T> extends Choices<T> {
+	public static class Single<T> extends Choices<T>
+			implements KeyboardNavigation.Navigation.Handler {
 		protected boolean deselectIfSelectedClicked = false;
 
 		/*
@@ -286,11 +301,19 @@ public abstract class Choices<T> extends Model
 		 */
 		private Topic<Void> valueSelected = Topic.create();
 
+		IndexedSelection indexedSelection;
+
 		public Single() {
+			this(new ArrayList<>());
 		}
 
 		public Single(List<T> values) {
 			super(values);
+			indexedSelection = new IndexedSelection(
+					new IndexedSelectionHostImpl());
+			indexedSelection.topicIndexChanged
+					.add(this::onIndexedSelectionChange);
+			updateIndexSelected(indexedSelection.getIndexSelected(), true);
 		}
 
 		public T getProvisionalValue() {
@@ -308,6 +331,21 @@ public abstract class Choices<T> extends Model
 
 		public boolean isDeselectIfSelectedClicked() {
 			return this.deselectIfSelectedClicked;
+		}
+
+		@Override
+		public void onNavigation(Navigation event) {
+			switch (event.getModel()) {
+			case COMMIT:
+				int indexSelected = indexedSelection.getIndexSelected();
+				if (indexSelected != -1) {
+					event.consume();
+					setSelectedValue(getValues().get(indexSelected));
+					return;
+				}
+				break;
+			}
+			indexedSelection.onNavigation(event);
 		}
 
 		@Override
@@ -369,10 +407,28 @@ public abstract class Choices<T> extends Model
 			}
 		}
 
+		void onIndexedSelectionChange(IndexedSelection.Change change) {
+			updateIndexSelected(change.oldIndexSelected, false);
+			updateIndexSelected(change.newIndexSelected, true);
+		}
+
+		void updateIndexSelected(int index, boolean indexSelected) {
+			if (index >= 0 && index < choices.size()) {
+				choices.get(index).setIndexSelected(indexSelected);
+			}
+		}
+
 		@Directed.Delegating
 		public static class Delegating<T> extends Single<T> {
 			public Delegating(List<T> values) {
 				super(values);
+			}
+		}
+
+		class IndexedSelectionHostImpl implements IndexedSelection.Host {
+			@Override
+			public List getItems() {
+				return choices;
 			}
 		}
 	}

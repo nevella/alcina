@@ -1,6 +1,17 @@
 package com.google.gwt.dom.client;
 
-public interface DomNode {
+/**
+ * Naming note - this interface is the root of the three DOM-like hierarchies
+ * (Node, NodeLocal, NodeRemote) which collectively implement the local/remote
+ * (aka virtural) DOM model. Named ClientNode to avoid collision with the
+ * more-used (particularly by external code)
+ * cc.alcina.framework.common.client.dom.DomNode) - the other DomXxx units in
+ * this package could also be renamed to ClientDomXxx
+ *
+ * @author nick@alcina.cc
+ *
+ */
+public interface ClientNode {
 	public Node cloneNode(boolean deep);
 
 	<T extends Node> T appendChild(T newChild);
@@ -9,7 +20,7 @@ public interface DomNode {
 
 	/**
 	 * Gets the child node at the given index.
-	 * 
+	 *
 	 * @param index
 	 *            the index of the node to be retrieved
 	 * @return the child node at the given index
@@ -18,7 +29,7 @@ public interface DomNode {
 
 	/**
 	 * Gets the number of child nodes contained within this node.
-	 * 
+	 *
 	 * @return the number of child nodes
 	 */
 	int getChildCount();
@@ -41,7 +52,7 @@ public interface DomNode {
 
 	/**
 	 * Gets the parent element of this node.
-	 * 
+	 *
 	 * @return this node's parent element, or <code>null</code> if none exists
 	 */
 	Element getParentElement();
@@ -54,7 +65,7 @@ public interface DomNode {
 
 	/**
 	 * Determines whether this node has a parent element.
-	 * 
+	 *
 	 * @return true if the node has a parent element
 	 */
 	boolean hasParentElement();
@@ -65,7 +76,7 @@ public interface DomNode {
 	 * Inserts the node newChild after the existing child node refChild. If
 	 * refChild is <code>null</code>, insert newChild at the end of the list of
 	 * children.
-	 * 
+	 *
 	 * @param newChild
 	 *            The node to insert
 	 * @param refChild
@@ -79,7 +90,7 @@ public interface DomNode {
 
 	/**
 	 * Inserts the given child as the first child of this node.
-	 * 
+	 *
 	 * @param child
 	 *            the child to be inserted
 	 * @return The node being inserted

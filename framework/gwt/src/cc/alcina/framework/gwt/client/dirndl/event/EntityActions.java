@@ -12,6 +12,10 @@ import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.TopLevelHandler;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Create;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Delete;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Edit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.View;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
@@ -24,10 +28,10 @@ import cc.alcina.framework.gwt.client.logic.MessageManager;
  *
  */
 public class EntityActions {
-	public static class CreateHandler
-			implements TopLevelHandler<ModelEvents.Create> {
+	public static class CreateHandler implements
+			TopLevelHandler<ModelEvents.Create>, ModelEvents.Create.Handler {
 		@Override
-		public void handle(ModelEvents.Create unhandledEvent) {
+		public void onCreate(Create event) {
 			EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
 			EntityPlace entityPlace = Reflections
 					.newInstance(currentPlace.getClass());
@@ -55,10 +59,10 @@ public class EntityActions {
 		}
 	}
 
-	public static class DeleteHandler
-			implements TopLevelHandler<ModelEvents.Delete> {
+	public static class DeleteHandler implements
+			TopLevelHandler<ModelEvents.Delete>, ModelEvents.Delete.Handler {
 		@Override
-		public void handle(ModelEvents.Delete event) {
+		public void onDelete(Delete event) {
 			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
 					.copy();
 			if (Window.confirm(Ax.format(
@@ -72,10 +76,10 @@ public class EntityActions {
 		}
 	}
 
-	public static class EditHandler
-			implements TopLevelHandler<ModelEvents.Edit> {
+	public static class EditHandler implements
+			TopLevelHandler<ModelEvents.Edit>, ModelEvents.Edit.Handler {
 		@Override
-		public void handle(ModelEvents.Edit event) {
+		public void onEdit(Edit event) {
 			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
 					.copy();
 			entityPlace.action = EntityAction.EDIT;
@@ -83,10 +87,10 @@ public class EntityActions {
 		}
 	}
 
-	public static class ViewHandler
-			implements TopLevelHandler<ModelEvents.View> {
+	public static class ViewHandler implements
+			TopLevelHandler<ModelEvents.View>, ModelEvents.View.Handler {
 		@Override
-		public void handle(ModelEvents.View event) {
+		public void onView(View event) {
 			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
 					.copy();
 			entityPlace.action = EntityAction.VIEW;
