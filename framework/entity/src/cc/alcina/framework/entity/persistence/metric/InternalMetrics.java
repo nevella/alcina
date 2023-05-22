@@ -51,9 +51,8 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.util.AnalyseThreadDump;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
-import cc.alcina.framework.entity.util.LengthConstrainedStringBuilder;
-import cc.alcina.framework.entity.util.LengthConstrainedStringWriter;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.entity.util.SqlUtils;
@@ -260,8 +259,7 @@ public class InternalMetrics {
 						persistExecutor.submit(() -> {
 							try {
 								LooseContext.push();
-								LooseContext.set(LengthConstrainedStringWriter.CONTEXT_MAX_LENGTH, 40000000);
-								LooseContext.set(LengthConstrainedStringBuilder.CONTEXT_MAX_LENGTH, 40000000);
+								LooseContext.set(JacksonJsonObjectSerializer.MAX_LENGTH, 40000000);
 								persist();
 							} catch (Throwable e) {
 								try {
