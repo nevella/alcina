@@ -317,6 +317,9 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			SingleTableSearchDefinition def = action.getParameters();
 			Object bean = Reflections.at(def.getResultClass())
 					.templateInstance();
+			if (converter != null) {
+				bean = converter.apply(bean);
+			}
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
 			Field[] fields = null;
