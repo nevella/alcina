@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -378,6 +380,10 @@ public abstract class Model extends Bindable implements
 				return new MapBackedProperty(property);
 			}
 		}
+	}
+
+	@Bean(PropertySource.FIELDS)
+	public abstract static class Fields extends Model {
 	}
 
 	public interface FocusOnBind {

@@ -297,6 +297,9 @@ public class ClassReflection extends ReflectionElement {
 				|| propertySource == PropertySource.IMMUTABLE_FIELDS;
 		boolean hasMutableFields = propertySource == PropertySource.FIELDS;
 		if (hasFields) {
+			if (type.getName().endsWith("Section")) {
+				int debug = 3;
+			}
 			List<JField> fields = getAllFields();
 			fields.stream().
 			// non-transient, non-private and immutable unless Bean.Fields

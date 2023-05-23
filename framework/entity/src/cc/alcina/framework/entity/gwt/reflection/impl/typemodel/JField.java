@@ -151,6 +151,11 @@ public class JField implements com.google.gwt.core.ext.typeinfo.JField,
 		this.type = type;
 	}
 
+	@Override
+	public String toString() {
+		return field.toString();
+	}
+
 	static class MethodInvokerImpl<T>
 			implements BiFunction<Object, Object[], T> {
 		java.lang.reflect.Field reflectField;
@@ -162,6 +167,7 @@ public class JField implements com.google.gwt.core.ext.typeinfo.JField,
 		MethodInvokerImpl(java.lang.reflect.Field reflectField, boolean getter,
 				boolean firePropertyChangeEvents) {
 			this.reflectField = reflectField;
+			reflectField.setAccessible(true);
 			this.getter = getter;
 			this.firePropertyChangeEvents = firePropertyChangeEvents;
 		}

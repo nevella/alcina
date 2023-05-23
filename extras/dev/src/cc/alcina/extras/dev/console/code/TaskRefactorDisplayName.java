@@ -133,15 +133,15 @@ public class TaskRefactorDisplayName extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				UnitType declaration = new UnitType(
+				UnitType type = new UnitType(
 						unit, node);
-				declaration.setDeclaration(node);
-				unit.declarations.add(declaration);
+				type.setDeclaration(node);
+				unit.declarations.add(type);
 				boolean hasDisplayAnnotation = hasDisplayAnnotation(node)
 						|| node.getMethods().stream()
 								.anyMatch(this::hasDisplayAnnotation);
 				if (hasDisplayAnnotation) {
-					declaration.setFlag(Type.DisplayAnnotations);
+					type.setFlag(Type.DisplayAnnotations);
 				}
 			}
 			super.visit(node, arg);
@@ -157,37 +157,37 @@ public class TaskRefactorDisplayName extends PerformerTask {
 				.getLogger(TaskFlatSerializerMetadata.class);
 
 		public static void cleanDisplayAnnotations(
-				UnitType declarationWrapper) {
-			ClassOrInterfaceDeclaration declaration = declarationWrapper
+				UnitType type) {
+			ClassOrInterfaceDeclaration declaration = type
 					.getDeclaration();
 			{
 				Optional<AnnotationExpr> annotation = declaration
 						.getAnnotationByClass(Display.class);
 				// only applicable for on-method anns
-				// clean(declarationWrapper, annotation);
+				// clean(type, annotation);
 			}
 			declaration.getMethods().forEach(m -> {
 				Optional<AnnotationExpr> annotation = m
 						.getAnnotationByClass(Display.class);
-				clean(declarationWrapper, annotation, m);
+				clean(type, annotation, m);
 			});
 			// List<MethodDeclaration> methods = declaration
 			// .getMethodsByName("getCriteriaGroups");
-			// declarationWrapper.ensureImport(CriteriaGroup.class);
-			// declarationWrapper.ensureImport(Set.class);
+			// type.ensureImport(CriteriaGroup.class);
+			// type.ensureImport(Set.class);
 			// if (methods.size() > 0) {
 			// MethodDeclaration methodDeclaration = methods.get(0);
 			// if (methodDeclaration.toString().contains("")) {
 			// methodDeclaration.remove();
 			// logger.info("Removed getCriteria() for {}",
 			// declaration.getName());
-			// declarationWrapper.dirty();
+			// type.dirty();
 			// }
 			// }
 		}
 
 		private static void clean(
-				UnitType declarationWrapper,
+				UnitType type,
 				Optional<AnnotationExpr> annotation,
 				MethodDeclaration methodDeclaration) {
 			if (!annotation.isPresent()) {
@@ -221,7 +221,7 @@ public class TaskRefactorDisplayName extends PerformerTask {
 					+ matcher.group(3);
 			String defaultName = CommonUtils.deInfix(propertyName);
 			if (Objects.equals(defaultName, string)) {
-				declarationWrapper.dirty();
+				type.dirty();
 				normalExpr.remove(pair);
 				if (normalExpr.getChildNodes().isEmpty()) {
 					normalExpr.getParentNode().get().remove(normalExpr);

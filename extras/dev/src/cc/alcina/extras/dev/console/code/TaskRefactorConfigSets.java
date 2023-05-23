@@ -247,8 +247,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				.filter(dec -> dec.hasFlag(Type.HasConfiguration)).count();
 		Ax.out("count with config: %s", count);
 		SourceHandler sourceHandler = new SourceHandler();
-		compUnits.declarations.values().stream()
-				.filter(UnitType::exists)
+		compUnits.declarations.values().stream().filter(UnitType::exists)
 				.forEach(dec -> sourceHandler.listConfigurationCalls(dec));
 		this.seenKeys = sourceHandler.refs.stream()
 				.flatMap(ref -> ref.keys.stream()).map(key -> key.toString())
@@ -260,8 +259,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 	}
 
 	public interface NameResolver {
-		public UnitType resolve(
-				List<UnitType> choices, Object source,
+		public UnitType resolve(List<UnitType> choices, Object source,
 				String name);
 	}
 
@@ -281,14 +279,13 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		}
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
-			UnitType declaration = new UnitType(
-					unit, node);
-			declaration.setDeclaration(node);
-			unit.declarations.add(declaration);
+			UnitType type = new UnitType(unit, node);
+			type.setDeclaration(node);
+			unit.declarations.add(type);
 			boolean hasConfiguration = node.toString()
 					.contains("Configuration.");
 			if (hasConfiguration) {
-				declaration.setFlag(Type.HasConfiguration);
+				type.setFlag(Type.HasConfiguration);
 			}
 			super.visit(node, arg);
 		}
@@ -297,11 +294,9 @@ public class TaskRefactorConfigSets extends PerformerTask {
 	class SourceHandler {
 		List<Ref> refs = new ArrayList<>();
 
-		public void listConfigurationCalls(
-				UnitType declarationWrapper) {
-			ConfigurationCallLister lister = new ConfigurationCallLister(
-					declarationWrapper);
-			declarationWrapper.getDeclaration().accept(lister, null);
+		public void listConfigurationCalls(UnitType type) {
+			ConfigurationCallLister lister = new ConfigurationCallLister(type);
+			type.getDeclaration().accept(lister, null);
 		}
 
 		public void removeSuperfluousClassLiterals() {
@@ -310,16 +305,15 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		}
 
 		class ConfigurationCallLister extends VoidVisitorAdapter<Void> {
-			private UnitType declarationWrapper;
+			private UnitType type;
 
-			public ConfigurationCallLister(
-					UnitType declarationWrapper) {
-				this.declarationWrapper = declarationWrapper;
+			public ConfigurationCallLister(UnitType type) {
+				this.type = type;
 			}
 
 			@Override
 			public void visit(ClassOrInterfaceDeclaration n, Void arg) {
-				if (n != declarationWrapper.getDeclaration()) {
+				if (n != type.getDeclaration()) {
 					// stop (don't visit inner classes)
 				} else {
 					super.visit(n, arg);
@@ -330,7 +324,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 			public void visit(MethodCallExpr expr, Void arg) {
 				if (expr.toString()
 						.matches("(?s)Configuration\\.(has|is|get|key).*")) {
-					Ref ref = new Ref(expr, declarationWrapper);
+					Ref ref = new Ref(expr, type);
 					refs.add(ref);
 				}
 				super.visit(expr, arg);
@@ -340,7 +334,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		class Ref {
 			List<Configuration.Key> keys = new ArrayList<>();
 
-			UnitType declarationWrapper;
+			UnitType type;
 
 			boolean implicitClass;
 
@@ -352,10 +346,9 @@ public class TaskRefactorConfigSets extends PerformerTask {
 
 			private ClassExpr superfluousArgument;
 
-			public Ref(MethodCallExpr expr,
-					UnitType declarationWrapper) {
+			public Ref(MethodCallExpr expr, UnitType type) {
 				this.expr = expr;
-				this.declarationWrapper = declarationWrapper;
+				this.type = type;
 				int size = expr.getArguments().size();
 				if (size == 0) {
 					// is() called on .key()
@@ -365,7 +358,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				implicitClass = size == 1;
 				Expression keyNameExpr = null;
 				if (implicitClass) {
-					classParamWrapper = declarationWrapper;
+					classParamWrapper = type;
 					keyNameExpr = expr.getArgument(0);
 				} else {
 					keyNameExpr = expr.getArgument(1);
@@ -374,7 +367,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				if (keyNameExpr instanceof StringLiteralExpr) {
 					keyName = ((StringLiteralExpr) keyNameExpr).getValue();
 				} else if (keyNameExpr instanceof NameExpr) {
-					Optional<FieldDeclaration> fieldByName = declarationWrapper
+					Optional<FieldDeclaration> fieldByName = type
 							.getDeclaration()
 							.getFieldByName(keyNameExpr.toString());
 					if (fieldByName.isPresent()) {
@@ -407,14 +400,13 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				if (!implicitClass) {
 					ClassExpr argument = (ClassExpr) expr.getArgument(0);
 					String className = argument.getType().asString();
-					UnitType classDeclByName = className
-							.equals(declarationWrapper.name)
-									? declarationWrapper
-									: declarationByName(className);
+					UnitType classDeclByName = className.equals(type.name)
+							? type
+							: declarationByName(className);
 					if (classDeclByName == null) {
 						throw new UnsupportedOperationException();
 					} else {
-						if (classDeclByName == declarationWrapper) {
+						if (classDeclByName == type) {
 							if (classDeclByName.toString()
 									.contains("Connection")
 									|| classDeclByName.toString()
@@ -458,8 +450,8 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				}
 			}
 
-			private List<String> getSuperclassNames(
-					UnitType classParamWrapper) {
+			private List<String>
+					getSuperclassNames(UnitType classParamWrapper) {
 				UnitType cursor = classParamWrapper;
 				List<String> result = new ArrayList<>();
 				while (true) {
@@ -473,10 +465,9 @@ public class TaskRefactorConfigSets extends PerformerTask {
 							.findFirst();
 					if (extended.isPresent()) {
 						String extendedName = extended.get().getNameAsString();
-						UnitType declarationByName = declarationByName(
-								extendedName);
-						if (declarationByName != null) {
-							cursor = declarationByName;
+						UnitType type = declarationByName(extendedName);
+						if (type != null) {
+							cursor = type;
 						} else {
 							break;
 						}
@@ -488,9 +479,8 @@ public class TaskRefactorConfigSets extends PerformerTask {
 			}
 
 			UnitType declarationByName(String name) {
-				List<UnitType> declarationByName = compUnits
-						.declarationByName(name);
-				if (declarationByName == null) {
+				List<UnitType> types = compUnits.declarationByName(name);
+				if (types == null) {
 					switch (name) {
 					case "RemoteServiceServlet":
 					case "AbstractHandler":
@@ -504,17 +494,17 @@ public class TaskRefactorConfigSets extends PerformerTask {
 						throw new UnsupportedOperationException();
 					}
 					return null;
-				} else if (declarationByName.size() == 1) {
-					return declarationByName.get(0);
+				} else if (types.size() == 1) {
+					return types.get(0);
 				} else {
-					return nameResolver.resolve(declarationByName,
-							SourceHandler.this, name);
+					return nameResolver.resolve(types, SourceHandler.this,
+							name);
 				}
 			}
 
 			void removeExplicitClassRef() {
 				superfluousArgument.remove();
-				declarationWrapper.dirty();
+				type.dirty();
 			}
 		}
 	}

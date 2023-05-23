@@ -583,6 +583,7 @@ public abstract class JClassType<T extends Type>
 		void init() {
 			resolution = new TypeParameterResolution(JClassType.this);
 			fields = Arrays.stream(clazz.getDeclaredFields())
+					.filter(f -> !f.getName().contains("$"))
 					.map(f -> new JField(typeOracle, f))
 					.collect(Collectors.toList());
 			if (TypeOracle.reverseFieldOrder) {
@@ -620,9 +621,9 @@ public abstract class JClassType<T extends Type>
 				 * as per JClassType.getInheritableMethods javadoc, only retain
 				 * the most-derived (i.e. subclass overides super)
 				 *
-				 * the stream calls resolution::resolve to replace the inherited
-				 * method with a possibly specialised version, determined by
-				 * type paremeter resolution
+				 * the streams (of methods, fields) call resolution::resolve to
+				 * replace the inherited method with a possibly specialised
+				 * version, determined by type paremeter resolution
 				 */
 				List<JMethod> inheritableMembers = getDirectInheritableMethods(
 						members.methods);

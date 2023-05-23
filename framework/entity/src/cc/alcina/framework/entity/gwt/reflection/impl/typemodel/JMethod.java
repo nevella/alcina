@@ -112,6 +112,7 @@ public class JMethod extends JAbstractMethod implements
 		private java.lang.reflect.Method reflectMethod;
 
 		public MethodInvokerImpl(java.lang.reflect.Method reflectMethod) {
+			reflectMethod.setAccessible(true);
 			this.reflectMethod = reflectMethod;
 		}
 

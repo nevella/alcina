@@ -74,15 +74,15 @@ public @interface Bean {
 		 */
 		BEAN_METHODS,
 		/**
-		 * All non-transient fields with access level &gt;= the class access
-		 * level should be modelled as properties (in addition to properties
-		 * derived from BEAN_METHODS)
+		 * All non-transient fields with access level &gt;= package should be
+		 * modelled as properties (in addition to properties derived from
+		 * BEAN_METHODS)
 		 */
 		FIELDS,
 		/**
-		 * All non-transient final fields with access level &gt;= the class
-		 * access level should be modelled as read-only properties (in addition
-		 * to properties derived from BEAN_METHODS)
+		 * All non-transient final fields with access level &gt;= package should
+		 * be modelled as read-only properties (in addition to properties
+		 * derived from BEAN_METHODS)
 		 */
 		IMMUTABLE_FIELDS;
 	}

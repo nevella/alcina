@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -41,6 +42,8 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -243,6 +246,14 @@ public class DirectedLayout implements AlcinaProcess {
 
 	public InsertionPoint insertionPoint;
 
+	/**
+	 * This guards against recursive (infinite) node generation, forcing input
+	 * checks when node depth > maxDepth
+	 */
+	public int maxDepth = 99;
+
+	boolean checkedRecursion = false;
+
 	// remove the root node (unbind all listeners following removal from the
 	// dom)
 	public void remove() {
@@ -405,7 +416,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * context) is the retrieval of the ancestor Overlay in
 	 * {@code Overlay.onBind()}
 	 */
-	public static class Node {
+	public class Node {
 		// not necessarily unchanged during the Node's lifetime - the renderer
 		// can change it if required
 		ContextResolver resolver;
@@ -416,6 +427,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 		// below are nullable
 		Node parent;
+
+		private int depth = -1;
 
 		final Object model;
 
@@ -439,6 +452,9 @@ public class DirectedLayout implements AlcinaProcess {
 			this.annotationLocation = annotationLocation;
 			this.model = model;
 			current = this;
+			if (depth() > maxDepth && !checkedRecursion) {
+				checkRecursion();
+			}
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
@@ -597,6 +613,25 @@ public class DirectedLayout implements AlcinaProcess {
 			replacementListener.bind();
 		}
 
+		private void checkRecursion() {
+			checkedRecursion = true;
+			Ax.err("Checking recursion. To remove this check, increase DirectedLayout.maxDepth - depth %s - %s - %s",
+					depth(), annotationLocation, model);
+			Node cursor = this;
+			CountingMap<RecursionTest> ancestorCount = new CountingMap<>();
+			while (cursor != null) {
+				ancestorCount.add(new RecursionTest(cursor));
+				cursor = cursor.parent;
+			}
+			LinkedHashMap<RecursionTest, Integer> counts = ancestorCount
+					.toLinkedHashMap(true);
+			Entry<RecursionTest, Integer> first = Ax.first(counts.entrySet());
+			if (first.getValue() >= 3) {
+				throw new IllegalStateException(Ax.format(
+						"Probable recursive layout generation - %s", first));
+			}
+		}
+
 		private Widget provideWidgetOrLastDescendantChildWidget() {
 			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
 					this, Node::readOnlyChildren, true);
@@ -650,6 +685,17 @@ public class DirectedLayout implements AlcinaProcess {
 			if (propertyBindings != null) {
 				propertyBindings.unbind();
 			}
+		}
+
+		int depth() {
+			if (depth == -1) {
+				if (parent == null) {
+					depth = 0;
+				} else {
+					depth = parent.depth() + 1;
+				}
+			}
+			return depth;
 		}
 
 		void fireEvent(ModelEvent modelEvent) {
@@ -1171,6 +1217,43 @@ public class DirectedLayout implements AlcinaProcess {
 
 		enum Point {
 			FIRST, AFTER, LAST
+		}
+	}
+
+	class RecursionTest {
+		private Object model;
+
+		private AnnotationLocation annotationLocation;
+
+		RecursionTest(Node node) {
+			this.model = node.model;
+			this.annotationLocation = node.annotationLocation;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof RecursionTest) {
+				RecursionTest test = (RecursionTest) obj;
+				return CommonUtils.equals(test.annotationLocation,
+						annotationLocation, test.model, model);
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(model, annotationLocation);
+		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("location", annotationLocation,
+					"model", model);
+		}
+
+		Object model() {
+			return model;
 		}
 	}
 

@@ -108,13 +108,11 @@ public class TaskRefactorRegistrations extends PerformerTask {
 	private void ensureRegistrations() {
 		compUnits.declarations.values().stream()
 				.filter(this::hasRegistryLocationAnnotations)
-				.forEach(declarationWrapper -> new RegistrationsModifier(
-						declarationWrapper).modify());
+				.forEach(type -> new RegistrationsModifier(type).modify());
 		compUnits.writeDirty(isTest());
 	}
 
-	boolean hasRegistryLocationAnnotations(
-			UnitType wrapper) {
+	boolean hasRegistryLocationAnnotations(UnitType wrapper) {
 		// boolean hasOld = wrapper.getDeclaration()
 		// .getAnnotationByClass(RegistryLocation.class).isPresent()
 		// || wrapper.getDeclaration()
@@ -136,9 +134,8 @@ public class TaskRefactorRegistrations extends PerformerTask {
 	}
 
 	private class RegistrationsModifier extends SourceModifier {
-		public RegistrationsModifier(
-				UnitType declarationWrapper) {
-			super(declarationWrapper);
+		public RegistrationsModifier(UnitType type) {
+			super(type);
 		}
 
 		private Expression createEnumConstantExpression(Enum value) {
@@ -233,11 +230,11 @@ public class TaskRefactorRegistrations extends PerformerTask {
 			// .ifPresent(AnnotationExpr::remove);
 			// declaration.getAnnotationByClass(RegistryLocation.class)
 			// .map(this::translateLocation)
-			// .ifPresent(declarationWrapper::addAnnotation);
+			// .ifPresent(type::addAnnotation);
 			// declaration.getAnnotationByClass(RegistryLocations.class)
 			// .map(this::translateLocations)
-			// .ifPresent(declarationWrapper::addAnnotation);
-			// declarationWrapper.ensureImport(Registration.class);
+			// .ifPresent(type::addAnnotation);
+			// type.ensureImport(Registration.class);
 			throw new UnsupportedOperationException();
 		}
 
@@ -305,7 +302,7 @@ public class TaskRefactorRegistrations extends PerformerTask {
 
 		@SuppressWarnings("unused")
 		AnnotationExpr translateLocations(AnnotationExpr location) {
-			declarationWrapper.ensureImport(Registrations.class);
+			type.ensureImport(Registrations.class);
 			ArrayInitializerExpr inArray = null;
 			if (location instanceof SingleMemberAnnotationExpr) {
 				inArray = (ArrayInitializerExpr) ((SingleMemberAnnotationExpr) location)
@@ -348,12 +345,11 @@ public class TaskRefactorRegistrations extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				UnitType declaration = new UnitType(
-						unit, node);
-				declaration.setDeclaration(node);
-				unit.declarations.add(declaration);
-				if (hasRegistryLocationAnnotations(declaration)) {
-					declaration.setFlag(Type.RegistryLocation);
+				UnitType type = new UnitType(unit, node);
+				type.setDeclaration(node);
+				unit.declarations.add(type);
+				if (hasRegistryLocationAnnotations(type)) {
+					type.setFlag(Type.RegistryLocation);
 				}
 			}
 			super.visit(node, arg);

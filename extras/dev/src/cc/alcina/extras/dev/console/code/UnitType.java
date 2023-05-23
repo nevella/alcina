@@ -54,8 +54,7 @@ public class UnitType {
 			return;
 		}
 		if (evaluateSuperclassFqn) {
-			NodeList<ClassOrInterfaceType> extendedTypes = n
-					.getExtendedTypes();
+			NodeList<ClassOrInterfaceType> extendedTypes = n.getExtendedTypes();
 			if (extendedTypes.size() > 1) {
 				throw new UnsupportedOperationException();
 			} else if (extendedTypes.size() == 1) {
@@ -63,7 +62,8 @@ public class UnitType {
 				try {
 					superclassFqn = CompilationUnits.fqn(unit, exType);
 				} catch (Exception e) {
-					CompilationUnits.invalidSuperclassFqns.add(exType.getNameAsString());
+					CompilationUnits.invalidSuperclassFqns
+							.add(exType.getNameAsString());
 					if (LooseContext.is(CompilationUnits.CONTEXT_COMP_UNITS)) {
 						Ax.out("%s: %s", e.getMessage(),
 								exType.getNameAsString());
@@ -78,7 +78,7 @@ public class UnitType {
 		dirty();
 	}
 
-	public Class clazz() {
+	public Class<?> clazz() {
 		return Reflections.forName(qualifiedBinaryName);
 	}
 
@@ -109,8 +109,7 @@ public class UnitType {
 		if (declaration == null) {
 			unitWrapper.unit().accept(new VoidVisitorAdapter<Void>() {
 				@Override
-				public void visit(ClassOrInterfaceDeclaration node,
-						Void arg) {
+				public void visit(ClassOrInterfaceDeclaration node, Void arg) {
 					if (Objects.equals(qualifiedSourceName,
 							CompilationUnits.fqn(unitWrapper, node, false))) {
 						declaration = node;
@@ -137,8 +136,7 @@ public class UnitType {
 		if (superclassFqn == null) {
 			return false;
 		}
-		UnitType compUnitClassDec = compUnits().declarations
-				.get(superclassFqn);
+		UnitType compUnitClassDec = compUnits().declarations.get(superclassFqn);
 		if (compUnitClassDec == null) {
 			return false;
 		}

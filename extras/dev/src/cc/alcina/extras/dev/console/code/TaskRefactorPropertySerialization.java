@@ -131,14 +131,14 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				UnitType declaration = new UnitType(
+				UnitType type = new UnitType(
 						unit, node);
-				declaration.setDeclaration(node);
-				unit.declarations.add(declaration);
+				type.setDeclaration(node);
+				unit.declarations.add(type);
 				boolean hasAnnotation = node.getMethods().stream()
 						.anyMatch(this::hasAnnotation);
 				if (hasAnnotation) {
-					declaration.setFlag(Type.PropertySerializationAnnotation);
+					type.setFlag(Type.PropertySerializationAnnotation);
 				}
 			}
 			super.visit(node, arg);
@@ -154,18 +154,18 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 				.getLogger(TaskFlatSerializerMetadata.class);
 
 		public static void removeRedundantPropertySerializationAnnotations(
-				UnitType declarationWrapper) {
-			ClassOrInterfaceDeclaration declaration = declarationWrapper
+				UnitType type) {
+			ClassOrInterfaceDeclaration declaration = type
 					.getDeclaration();
 			declaration.getMethods().forEach(m -> {
 				Optional<AnnotationExpr> annotation = m
 						.getAnnotationByClass(PropertySerialization.class);
-				cleanIfRedundant(declarationWrapper, annotation, m);
+				cleanIfRedundant(type, annotation, m);
 			});
 		}
 
 		private static void cleanIfRedundant(
-				UnitType declarationWrapper,
+				UnitType type,
 				Optional<AnnotationExpr> annotation,
 				MethodDeclaration methodDeclaration) {
 			if (!annotation.isPresent()) {
@@ -203,7 +203,7 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 				// multiple types
 				return;
 			}
-			declarationWrapper.dirty();
+			type.dirty();
 			expr.remove();
 		}
 	}

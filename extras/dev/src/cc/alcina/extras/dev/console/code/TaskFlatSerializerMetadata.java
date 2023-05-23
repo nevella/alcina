@@ -248,8 +248,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 		criterionHandlers.stream().forEach(handler -> {
 			Class<? extends SearchCriterion> searchCriterionClass = handler
 					.handlesSearchCriterion();
-			UnitType unitType = compUnits
-					.declarationWrapperForClass(searchCriterionClass);
+			UnitType unitType = compUnits.typeForClass(searchCriterionClass);
 			if (unitType == null) {
 				Ax.out("--**-- omit -- %s", searchCriterionClass);
 				return;
@@ -456,7 +455,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 			}
 			String fqn = Ax.format("%s.%s", searchDefinitionClass.getName(),
 					entityCriteriaGroupName);
-			declarationWrapper.ensureImport(fqn);
+			type.ensureImport(fqn);
 		}
 
 		private void ensureNoGetCriteriaGroupsMethod() {
@@ -476,7 +475,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 					.map(dch -> {
 						Class<? extends SearchCriterion> searchCriterion = dch
 								.handlesSearchCriterion();
-						declarationWrapper.ensureImport(searchCriterion);
+						type.ensureImport(searchCriterion);
 						ClassOrInterfaceType type = StaticJavaParser
 								.parseClassOrInterfaceType(
 										searchCriterion.getSimpleName());
@@ -487,10 +486,10 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 
 		@Override
 		protected void ensureImports() {
-			declarationWrapper.ensureImport(CriteriaGroup.class);
-			declarationWrapper.ensureImport(Set.class);
-			declarationWrapper.ensureImport(TypeSerialization.class);
-			declarationWrapper.ensureImport(PropertySerialization.class);
+			type.ensureImport(CriteriaGroup.class);
+			type.ensureImport(Set.class);
+			type.ensureImport(TypeSerialization.class);
+			type.ensureImport(PropertySerialization.class);
 		}
 
 		@Override
@@ -536,26 +535,23 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				UnitType declaration = new UnitType(
-						unit, node);
-				declaration.setDeclaration(node);
-				unit.declarations.add(declaration);
-				if (declaration
-						.isAssignableFrom(DomainCriterionHandler.class)) {
-					declaration.setFlag(Type.DomainCriterionHandler);
+				UnitType type = new UnitType(unit, node);
+				type.setDeclaration(node);
+				unit.declarations.add(type);
+				if (type.isAssignableFrom(DomainCriterionHandler.class)) {
+					type.setFlag(Type.DomainCriterionHandler);
 				}
-				if (declaration.isAssignableFrom(SearchCriterion.class)) {
-					declaration.setFlag(Type.SearchCriterion);
+				if (type.isAssignableFrom(SearchCriterion.class)) {
+					type.setFlag(Type.SearchCriterion);
 				}
-				if (declaration.isAssignableFrom(CriteriaGroup.class)) {
-					declaration.setFlag(Type.CriteriaGroup);
+				if (type.isAssignableFrom(CriteriaGroup.class)) {
+					type.setFlag(Type.CriteriaGroup);
 				}
-				if (declaration
-						.isAssignableFrom(BindableSearchDefinition.class)) {
-					declaration.setFlag(Type.BindableSearchDefinition);
+				if (type.isAssignableFrom(BindableSearchDefinition.class)) {
+					type.setFlag(Type.BindableSearchDefinition);
 				}
-				if (declaration.isAssignableFrom(Task.class)) {
-					declaration.setFlag(Type.Task);
+				if (type.isAssignableFrom(Task.class)) {
+					type.setFlag(Type.Task);
 				}
 			}
 			super.visit(node, arg);

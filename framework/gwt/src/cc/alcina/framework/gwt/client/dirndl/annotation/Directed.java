@@ -41,7 +41,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 // Not inherited - annotation resolution uses merging algorithm which would
 // conflict
 // @Inherited

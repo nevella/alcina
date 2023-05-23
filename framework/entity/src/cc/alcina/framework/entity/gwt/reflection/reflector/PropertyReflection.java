@@ -283,8 +283,8 @@ public class PropertyReflection extends ReflectionElement
 
 			@Override
 			protected boolean isOverriddenBy(PropertyAccessor test) {
-				return test != null && test.getEnclosingType()
-						.isAssignableFrom(getEnclosingType());
+				return test != null && getEnclosingType()
+						.isAssignableFrom(test.getEnclosingType());
 			}
 		}
 	}

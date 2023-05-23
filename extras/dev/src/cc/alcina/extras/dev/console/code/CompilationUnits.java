@@ -243,7 +243,7 @@ public class CompilationUnits {
 		return declarationsByName.get(simpleName);
 	}
 
-	public UnitType declarationWrapperForClass(Class<?> clazz) {
+	public UnitType typeForClass(Class<?> clazz) {
 		return declarationByFqn(clazz.getCanonicalName());
 	}
 
@@ -289,7 +289,7 @@ public class CompilationUnits {
 			this.setFile(file);
 		}
 
-		public UnitType declarationWrapperFor(ClassOrInterfaceDeclaration n) {
+		public UnitType typeFor(ClassOrInterfaceDeclaration n) {
 			unit();
 			return declarations.stream().filter(
 					d -> d.qualifiedSourceName.endsWith(n.getNameAsString()))

@@ -533,14 +533,13 @@ public class ConvertToProxiesPerformer
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				UnitType declaration = new UnitType(
-						unit, node);
-				if (declaration.invalid) {
+				UnitType type = new UnitType(unit, node);
+				if (type.invalid) {
 					Ax.err("Invalid decl: %s", unit.getFile().getName());
 					return;
 				}
-				declaration.setDeclaration(node);
-				unit.declarations.add(declaration);
+				type.setDeclaration(node);
+				unit.declarations.add(type);
 			}
 			super.visit(node, arg);
 		}
