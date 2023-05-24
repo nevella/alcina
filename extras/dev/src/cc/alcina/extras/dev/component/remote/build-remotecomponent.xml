@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="alcina_remote_console_client" basedir="." default="compile-gwt">
+<project name="alcina_remote_component_client" basedir="." default="compile-gwt">
 	<property file="local.ant.properties" />
-	<property file="build-remoteconsole.properties" />
+	<property file="build-remotecomponent.properties" />
 	<property file="${alcina.home}/local.ant.properties" />
 	<property file="${alcina.home}/build.properties" />
 	<target name="clean-gwt">

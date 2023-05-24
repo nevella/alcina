@@ -1,5 +1,5 @@
 var $wnd = $wnd || window.parent;
-var __gwtModuleFunction = $wnd.cc_alcina_extras_dev_console_remote_RemoteConsoleClient;
+var __gwtModuleFunction = $wnd.cc_alcina_extras_dev_component_remote_RemoteComponentClient;
 var $sendStats = __gwtModuleFunction.__sendStats;
 $sendStats('moduleStartup', 'moduleEvalStart');
 var $gwt_version = "0.0.0";
@@ -292,8 +292,8 @@ function getCodeServer() {
   if (idx >= 0) {
     idx += 12;  // "gwt.codesvr=".length == 12
   } else {
-    idx = query.indexOf("gwt.codesvr.cc.alcina.extras.dev.console.remote.RemoteConsoleClient=");
-    idx += (13 + "cc.alcina.extras.dev.console.remote.RemoteConsoleClient".length);  // 
+    idx = query.indexOf("gwt.codesvr.cc.alcina.extras.dev.component.remote.RemoteComponentClient=");
+    idx += (13 + "cc.alcina.extras.dev.component.remote.RemoteComponentClient".length);  // 
   }
   if (idx >= 0) {
     var amp = query.indexOf("&", idx);
@@ -2131,7 +2131,9 @@ class WebSocketTransportClient extends WebSocketTransport {
          * load socket worker, wait for connect event
          */
         this.setBuffers(new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE), new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE));
-        this.socketWorker = new Worker(`/${this.moduleName}/WebSocketTransport.js`);
+        var clientPrefix = $wnd._alc_websocket_transport_client_prefix;
+        var pathPrefix = typeof clientPrefix == 'undefined' ? '' : clientPrefix;
+        this.socketWorker = new Worker(`/${pathPrefix}${this.moduleName}/WebSocketTransport.js`);
         this.socketWorker.postMessage({
             message: "start",
             codeServerWs: this.codeServerWs,
@@ -2168,5 +2170,5 @@ $sendStats('moduleStartup', 'moduleEvalEnd');
 gwtOnLoad(__gwtModuleFunction.__errFn, __gwtModuleFunction.__moduleName, __gwtModuleFunction.__moduleBase, __gwtModuleFunction.__softPermutationId,__gwtModuleFunction.__computePropValue);
 $sendStats('moduleStartup', 'end');
 $gwt && $gwt.permProps && __gwtModuleFunction.__moduleStartupDone($gwt.permProps);
-//# sourceURL=cc.alcina.extras.dev.console.remote.RemoteConsoleClient-0.js
+//# sourceURL=cc.alcina.extras.dev.component.remote.RemoteComponentClient-0.js
 

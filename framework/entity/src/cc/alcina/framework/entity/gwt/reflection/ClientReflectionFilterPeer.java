@@ -27,6 +27,12 @@ public interface ClientReflectionFilterPeer {
 	 * relection issues) is a temporary fix
 	 */
 	default Boolean emitType(JClassType type, String moduleName) {
+		switch (type.getQualifiedSourceName()) {
+		case "cc.alcina.extras.dev.component.remote.protocol.RemoteComponentResponse":
+		case "cc.alcina.extras.dev.component.remote.protocol.RemoteComponentStartupModel":
+		case "cc.alcina.extras.dev.component.remote.protocol.RemoteComponentConsoleChanges":
+			return true;
+		}
 		return null;
 	}
 

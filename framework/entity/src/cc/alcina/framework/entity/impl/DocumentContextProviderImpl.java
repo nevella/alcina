@@ -46,7 +46,7 @@ public class DocumentContextProviderImpl implements
 		return DocumentFrame.class.getName();
 	}
 
-	static class DocumentFrame implements ContextFrame {
+	public static class DocumentFrame implements ContextFrame {
 		Document document;
 	}
 }

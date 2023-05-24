@@ -1,48 +1,48 @@
-function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
+function cc_alcina_extras_dev_component_remote_RemoteComponentClient(){
   var $wnd_0 = window;
   var $doc_0 = document;
   sendStats('bootstrap', 'begin');
   function isHostedMode(){
     var query = $wnd_0.location.search;
-    return query.indexOf('gwt.codesvr.cc.alcina.extras.dev.console.remote.RemoteConsoleClient=') != -1 || query.indexOf('gwt.codesvr=') != -1;
+    return query.indexOf('gwt.codesvr.cc.alcina.extras.dev.component.remote.RemoteComponentClient=') != -1 || query.indexOf('gwt.codesvr=') != -1;
   }
 
   function sendStats(evtGroupString, typeString){
     if ($wnd_0.__gwtStatsEvent) {
-      $wnd_0.__gwtStatsEvent({'moduleName':'cc.alcina.extras.dev.console.remote.RemoteConsoleClient', 'sessionId':$wnd_0.__gwtStatsSessionId, 'subSystem':'startup', 'evtGroup':evtGroupString, 'millis':(new Date).getTime(), 'type':typeString});
+      $wnd_0.__gwtStatsEvent({'moduleName':'cc.alcina.extras.dev.component.remote.RemoteComponentClient', 'sessionId':$wnd_0.__gwtStatsSessionId, 'subSystem':'startup', 'evtGroup':evtGroupString, 'millis':(new Date).getTime(), 'type':typeString});
     }
   }
 
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__sendStats = sendStats;
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__moduleName = 'cc.alcina.extras.dev.console.remote.RemoteConsoleClient';
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__errFn = null;
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__moduleBase = 'DUMMY';
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__softPermutationId = 0;
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__computePropValue = null;
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__getPropMap = null;
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__installRunAsyncCode = function(){
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__sendStats = sendStats;
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__moduleName = 'cc.alcina.extras.dev.component.remote.RemoteComponentClient';
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__errFn = null;
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__moduleBase = 'DUMMY';
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__softPermutationId = 0;
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__computePropValue = null;
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__getPropMap = null;
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__installRunAsyncCode = function(){
   }
   ;
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__gwtStartLoadingFragment = function(){
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__gwtStartLoadingFragment = function(){
     return null;
   }
   ;
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__gwt_isKnownPropertyValue = function(){
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__gwt_isKnownPropertyValue = function(){
     return false;
   }
   ;
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__gwt_getMetaProperty = function(){
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__gwt_getMetaProperty = function(){
     return null;
   }
   ;
   var __propertyErrorFunction = null;
   var activeModules = $wnd_0.__gwt_activeModules = $wnd_0.__gwt_activeModules || {};
-  activeModules['cc.alcina.extras.dev.console.remote.RemoteConsoleClient'] = {'moduleName':'cc.alcina.extras.dev.console.remote.RemoteConsoleClient'};
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__moduleStartupDone = function(permProps){
-    var oldBindings = activeModules['cc.alcina.extras.dev.console.remote.RemoteConsoleClient'].bindings;
-    activeModules['cc.alcina.extras.dev.console.remote.RemoteConsoleClient'].bindings = function(){
+  activeModules['cc.alcina.extras.dev.component.remote.RemoteComponentClient'] = {'moduleName':'cc.alcina.extras.dev.component.remote.RemoteComponentClient'};
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__moduleStartupDone = function(permProps){
+    var oldBindings = activeModules['cc.alcina.extras.dev.component.remote.RemoteComponentClient'].bindings;
+    activeModules['cc.alcina.extras.dev.component.remote.RemoteComponentClient'].bindings = function(){
       var props = oldBindings?oldBindings():{};
-      var embeddedProps = permProps[cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__softPermutationId];
+      var embeddedProps = permProps[cc_alcina_extras_dev_component_remote_RemoteComponentClient.__softPermutationId];
       for (var i = 0; i < embeddedProps.length; i++) {
         var pair = embeddedProps[i];
         props[pair[0]] = pair[1];
@@ -63,7 +63,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
       return;
     }
     var scriptFrame = $doc_0.createElement('iframe');
-    scriptFrame.id = 'cc.alcina.extras.dev.console.remote.RemoteConsoleClient';
+    scriptFrame.id = 'cc.alcina.extras.dev.component.remote.RemoteComponentClient';
     scriptFrame.style.cssText = 'position:absolute; width:0; height:0; border:none; left: -1000px;' + ' top: -1000px;';
     scriptFrame.tabIndex = -1;
     $doc_0.body.appendChild(scriptFrame);
@@ -122,9 +122,9 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
       var script = doc.createElement('script');
       script.language = 'javascript';
       script.src = code_0;
-      if (cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__errFn) {
+      if (cc_alcina_extras_dev_component_remote_RemoteComponentClient.__errFn) {
         script.onerror = function(){
-          cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__errFn('cc_alcina_extras_dev_console_remote_RemoteConsoleClient', new Error('Failed to load ' + code_0));
+          cc_alcina_extras_dev_component_remote_RemoteComponentClient.__errFn('cc_alcina_extras_dev_component_remote_RemoteComponentClient', new Error('Failed to load ' + code_0));
         }
         ;
       }
@@ -139,11 +139,11 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     );
   }
 
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__startLoadingFragment = function(fragmentFile){
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__startLoadingFragment = function(fragmentFile){
     return computeUrlForResource(fragmentFile);
   }
   ;
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__installRunAsyncCode = function(code_0){
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__installRunAsyncCode = function(code_0){
     var doc = getInstallLocationDoc();
     var docbody = doc.body;
     var script = doc.createElement('script');
@@ -160,7 +160,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     for (var i = 0, n = metas.length; i < n; ++i) {
       var meta = metas[i], name_1 = meta.getAttribute('name'), content_0;
       if (name_1) {
-        name_1 = name_1.replace('cc.alcina.extras.dev.console.remote.RemoteConsoleClient::', '');
+        name_1 = name_1.replace('cc.alcina.extras.dev.component.remote.RemoteComponentClient::', '');
         if (name_1.indexOf('::') >= 0) {
           continue;
         }
@@ -209,7 +209,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     }
     ;
     __propertyErrorFunction = propertyErrorFunc;
-    cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__errFn = onLoadErrorFunc;
+    cc_alcina_extras_dev_component_remote_RemoteComponentClient.__errFn = onLoadErrorFunc;
   }
 
   function computeScriptBase(){
@@ -248,7 +248,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     function tryNocacheJsTag(){
       var scriptTags = $doc_0.getElementsByTagName('script');
       for (var i = 0; i < scriptTags.length; ++i) {
-        if (scriptTags[i].src.indexOf('cc.alcina.extras.dev.console.remote.RemoteConsoleClient.nocache.js') != -1) {
+        if (scriptTags[i].src.indexOf('cc.alcina.extras.dev.component.remote.RemoteComponentClient.nocache.js') != -1) {
           return getDirectoryOfFile(scriptTags[i].src);
         }
       }
@@ -289,7 +289,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     if (resource.match(/^[a-zA-Z]+:\/\//)) {
       return resource;
     }
-    return cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__moduleBase + resource;
+    return cc_alcina_extras_dev_component_remote_RemoteComponentClient.__moduleBase + resource;
   }
 
   function getCompiledCodeFilename(){
@@ -316,7 +316,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
       return propValue in values[propName];
     }
     ;
-    cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__getPropMap = function(){
+    cc_alcina_extras_dev_component_remote_RemoteComponentClient.__getPropMap = function(){
       var result = {};
       for (var key in values) {
         if (values.hasOwnProperty(key)) {
@@ -326,15 +326,15 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
       return result;
     }
     ;
-    cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__computePropValue = computePropValue;
-    $wnd_0.__gwt_activeModules['cc.alcina.extras.dev.console.remote.RemoteConsoleClient'].bindings = cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__getPropMap;
+    cc_alcina_extras_dev_component_remote_RemoteComponentClient.__computePropValue = computePropValue;
+    $wnd_0.__gwt_activeModules['cc.alcina.extras.dev.component.remote.RemoteComponentClient'].bindings = cc_alcina_extras_dev_component_remote_RemoteComponentClient.__getPropMap;
     sendStats('bootstrap', 'selectingPermutation');
     if (isHostedMode()) {
-      return computeUrlForResource('cc.alcina.extras.dev.console.remote.RemoteConsoleClient.devmode.js');
+      return computeUrlForResource('cc.alcina.extras.dev.component.remote.RemoteComponentClient.devmode.js');
     }
     var strongName;
     try {
-      strongName = '73A9992F70FE9B54829E8A1B613BBDCC';
+      strongName = '194DF14EDF783DED545FB8AE6EE64ACF';
       var idx = strongName.indexOf(':');
       if (idx != -1) {
         softPermutationId = parseInt(strongName.substring(idx + 1), 10);
@@ -343,7 +343,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     }
      catch (e) {
     }
-    cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__softPermutationId = softPermutationId;
+    cc_alcina_extras_dev_component_remote_RemoteComponentClient.__softPermutationId = softPermutationId;
     return computeUrlForResource(strongName + '.cache.js');
   }
 
@@ -356,12 +356,12 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
   }
 
   processMetas();
-  cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__moduleBase = computeScriptBase();
-  activeModules['cc.alcina.extras.dev.console.remote.RemoteConsoleClient'].moduleBase = cc_alcina_extras_dev_console_remote_RemoteConsoleClient.__moduleBase;
+  cc_alcina_extras_dev_component_remote_RemoteComponentClient.__moduleBase = computeScriptBase();
+  activeModules['cc.alcina.extras.dev.component.remote.RemoteComponentClient'].moduleBase = cc_alcina_extras_dev_component_remote_RemoteComponentClient.__moduleBase;
   var filename_0 = getCompiledCodeFilename();
   if ($wnd_0) {
     var devModePermitted = !!($wnd_0.location.protocol == 'http:' || $wnd_0.location.protocol == 'file:');
-    $wnd_0.__gwt_activeModules['cc.alcina.extras.dev.console.remote.RemoteConsoleClient'].canRedirect = devModePermitted;
+    $wnd_0.__gwt_activeModules['cc.alcina.extras.dev.component.remote.RemoteComponentClient'].canRedirect = devModePermitted;
     function supportsSessionStorage(){
       var key = '_gwt_dummy_';
       try {
@@ -375,7 +375,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     }
 
     if (devModePermitted && supportsSessionStorage()) {
-      var devModeKey = '__gwtDevModeHook:cc.alcina.extras.dev.console.remote.RemoteConsoleClient';
+      var devModeKey = '__gwtDevModeHook:cc.alcina.extras.dev.component.remote.RemoteComponentClient';
       var devModeUrl = $wnd_0.sessionStorage[devModeKey];
       if (!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/.*$/.test(devModeUrl)) {
         if (devModeUrl && (window.console && console.log)) {
@@ -400,4 +400,4 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
   return true;
 }
 
-cc_alcina_extras_dev_console_remote_RemoteConsoleClient.succeeded = cc_alcina_extras_dev_console_remote_RemoteConsoleClient();
+cc_alcina_extras_dev_component_remote_RemoteComponentClient.succeeded = cc_alcina_extras_dev_component_remote_RemoteComponentClient();

@@ -22,6 +22,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 
+import cc.alcina.extras.dev.component.remote.server.RemoteComponentProtocolHandler;
 import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -149,13 +150,14 @@ public class DevConsoleRemote {
 		connector.setPort(port);
 		server.addConnector(connector);
 		ClassLoader cl = DevConsoleRemote.class.getClassLoader();
-		URL gwtHtmlFile = cl.getResource(
+		URL consoleGwtHtmlFile = cl.getResource(
 				"cc/alcina/extras/dev/console/remote/war/remote.html");
-		if (gwtHtmlFile == null) {
+		if (consoleGwtHtmlFile == null) {
 			throw new RuntimeException("Unable to find resource directory");
 		}
 		// Resolve file to directory
-		URI webRootUri = gwtHtmlFile.toURI().resolve("./").normalize();
+		URI consoleWebRootUri = consoleGwtHtmlFile.toURI().resolve("./")
+				.normalize();
 		HandlerCollection handlers = new HandlerCollection();
 		{
 			ContextHandler protocolHandler = new ContextHandler(handlers,
@@ -183,19 +185,27 @@ public class DevConsoleRemote {
 					new ServletHolder(new JsCodeServerServlet()), "/*");
 			jsCodeServerHandler.setAllowNullPathInfo(true);
 		}
+		{
+			ContextHandler protocolHandler = new ContextHandler(handlers,
+					"/remote");
+			protocolHandler.setAllowNullPathInfo(true);
+			protocolHandler.setHandler(new RemoteComponentProtocolHandler());
+		}
 		addSubclassHandlers(handlers);
 		{
 			ServletContextHandler resourceHandler = new ServletContextHandler(
 					ServletContextHandler.SESSIONS);
 			resourceHandler.setContextPath("/");
-			resourceHandler.setBaseResource(Resource.newResource(webRootUri));
+			resourceHandler
+					.setBaseResource(Resource.newResource(consoleWebRootUri));
 			resourceHandler.setWelcomeFiles(new String[] { "remote.html" });
 			// Lastly, the default servlet for root content (always needed, to
 			// satisfy servlet spec)
 			// It is important that this is last.
 			ServletHolder holderPwd = new ServletHolder("default",
 					DefaultServlet.class);
-			holderPwd.setInitParameter("resourceBase", webRootUri.toString());
+			holderPwd.setInitParameter("resourceBase",
+					consoleWebRootUri.toString());
 			holderPwd.setInitParameter("dirAllowed", "false");
 			resourceHandler.addServlet(holderPwd, "/");
 			handlers.addHandler(resourceHandler);

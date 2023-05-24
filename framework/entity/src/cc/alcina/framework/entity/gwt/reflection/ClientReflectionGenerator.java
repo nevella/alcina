@@ -607,6 +607,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		@Override
+		public String toString() {
+			return "reflector-generator: " + reflectedTypeFqBinaryName();
+		}
+
+		@Override
 		protected void prepare() {
 			reflection.prepare();
 		}

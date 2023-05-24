@@ -43,10 +43,6 @@ public class RemoteConsoleInit {
 		request.setType(RemoteConsoleRequestType.STARTUP);
 		RemoteConsoleClientUtils.submitRequest(request,
 				this::handleStartupResponse);
-		// model = new JadexInitModel();
-		// model.fromJson(Jx.wndString(JadexInitModel.JS_INTEROP_KEY));
-		// Registry.register().singleton(ClientNotifications.class,// new
-		// JadeNotificationsImpl());
 	}
 
 	private void addDevCssListener() {
@@ -64,7 +60,6 @@ public class RemoteConsoleInit {
 				}
 				boolean altKey = nativeEvent.getAltKey();
 				boolean shiftKey = nativeEvent.getShiftKey();
-				// Remote - use jade event sys
 				int keyCode = nativeEvent.getKeyCode();
 				int charCode = nativeEvent.getCharCode();
 				if (type.equals("keydown") && altKey && shiftKey) {
