@@ -21,6 +21,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.features.FeatureFlagProvider;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -61,8 +62,11 @@ public class ReflectiveSerializers {
 		@Override
 		public void writeValueOrContainer(GraphNode node,
 				SerialNode serialNode) {
-			// TODO: Find out a better way to vary this for the server
-			if (Domain.isMvccObject((Entity) node.value)) {
+			// TODO: Remove after serialization change is tested (2022-05-26)
+			boolean mvccSerializationPrevention = FeatureFlagProvider.get()
+					.isEnabled(getClass(), "mvccSerializationPrevention");
+			if (mvccSerializationPrevention
+					&& Domain.isMvccObject((Entity) node.value)) {
 				throw new RuntimeException(
 						"Cannot serialize MVCC objects, project the object first");
 			}
