@@ -61,8 +61,10 @@ public class ReflectiveSerializers {
 		@Override
 		public void writeValueOrContainer(GraphNode node,
 				SerialNode serialNode) {
-			if (MvccObject.class.isAssignableFrom(node.value.getClass())) {
-				throw new RuntimeException("Cannot serialize MVCC objects, project the object first");
+			// TODO: Find out a better way to vary this for the server
+			if (Domain.isMvccObject((Entity) node.value)) {
+				throw new RuntimeException(
+						"Cannot serialize MVCC objects, project the object first");
 			}
 			super.writeValueOrContainer(node, serialNode);
 		}

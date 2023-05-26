@@ -52,6 +52,11 @@ public class DomainHandlerClient implements DomainHandler {
 	}
 
 	@Override
+	public <V extends Entity> boolean isMvccObject(V v) {
+		return false;
+	}
+
+	@Override
 	public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
 		throw new UnsupportedOperationException();
 	}
