@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import cc.alcina.framework.common.client.util.Ax;
 
-public class TextLocal extends NodeLocal implements DomText {
+public class TextLocal extends NodeLocal implements ClientDomText {
 	private String text;
 
 	private Text textNode;

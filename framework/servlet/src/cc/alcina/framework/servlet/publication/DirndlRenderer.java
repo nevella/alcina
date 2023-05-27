@@ -67,7 +67,7 @@ public class DirndlRenderer {
 	private <T> T render(Supplier<T> supplier) {
 		try {
 			LooseContext.push();
-			DocumentContextProviderImpl.get().registerContextFrame();
+			DocumentContextProviderImpl.get().registerNewContextFrame();
 			return supplier.get();
 		} finally {
 			LooseContext.pop();

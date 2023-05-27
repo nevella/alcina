@@ -63,6 +63,8 @@ public @interface Bean {
 	 * the reasoning behind these options (rather than just the Java Beans spec
 	 * variant, BEAN_METHODS)
 	 * 
+	 * FIXME - beans1x5 - check transient attr on field is respected
+	 * 
 	 * @author nick@alcina.cc
 	 *
 	 */

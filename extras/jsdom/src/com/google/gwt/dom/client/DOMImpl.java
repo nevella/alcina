@@ -39,6 +39,15 @@ abstract class DOMImpl {
     return val | 0;
 	}-*/;
 
+	private Element ensureDocumentScrollingElement(DocumentRemote document) {
+		// In some case (e.g SVG document and old Webkit browsers),
+		// getDocumentScrollingElement can
+		// return null. In this case, default to documentElement.
+		Element scrollingElement = getDocumentScrollingElement(document);
+		return scrollingElement != null ? scrollingElement
+				: document.getDocumentElement();
+	}
+
 	private native JavaScriptObject eventGetNativeTarget(NativeEvent event) /*-{
     return event.currentTarget;
 	}-*/;
@@ -472,7 +481,7 @@ abstract class DOMImpl {
 
 	protected native NodeList<OptionElement>
 			selectGetOptions(ElementRemote select) /*-{
-    var out = @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(select.options);
+    var out = @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/ClientDomNodeList;)(select.options);
     return out;
 	}-*/;
 
@@ -506,19 +515,6 @@ abstract class DOMImpl {
 
 	protected void setScrollTop(DocumentRemote doc, int top) {
 		ensureDocumentScrollingElement(doc).setScrollTop(top);
-	}
-
-	private Element ensureDocumentScrollingElement(DocumentRemote document) {
-		// In some case (e.g SVG document and old Webkit browsers),
-		// getDocumentScrollingElement can
-		// return null. In this case, default to documentElement.
-		Element scrollingElement = getDocumentScrollingElement(document);
-		return scrollingElement != null ? scrollingElement
-				: document.getDocumentElement();
-	}
-
-	Element getDocumentScrollingElement(DocumentRemote doc) {
-		return doc.getViewportElement();
 	}
 
 	protected native String toString(ElementRemote elem) /*-{
@@ -559,6 +555,10 @@ abstract class DOMImpl {
 
 	protected String yeah() {
 		return "";
+	}
+
+	Element getDocumentScrollingElement(DocumentRemote doc) {
+		return doc.getViewportElement();
 	}
 
 	private static class DomImplCache {

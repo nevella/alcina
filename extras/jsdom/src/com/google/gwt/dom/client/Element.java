@@ -46,7 +46,8 @@ import cc.alcina.framework.common.client.util.TextUtils;
 /**
  * All HTML element interfaces derive from this class.
  */
-public class Element extends Node implements DomElement, org.w3c.dom.Element {
+public class Element extends Node
+		implements ClientDomElement, org.w3c.dom.Element {
 	public static final String REMOTE_DEFINED = "__localdom-remote-defined";
 
 	public static final Predicate<Element> DISPLAY_NONE = e -> e.implAccess()
@@ -124,7 +125,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 	private ElementLocal local;
 
-	private DomElement remote;
+	private ClientDomElement remote;
 
 	private Style style;
 
@@ -280,7 +281,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		return null;
 	}
 
-	public int getChildIndexLocal(Element child) {
+	public int getChildIndexLocal(Node child) {
 		if (child.getParentElement() != this) {
 			return -1;
 		}
@@ -930,7 +931,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		}
 	}
 
-	private DomElement implForPropertyName(String name) {
+	private ClientDomElement implForPropertyName(String name) {
 		switch (name) {
 		case "clientWidth":
 		case "offsetWidth":
@@ -985,7 +986,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote, boolean resolved) {
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
 		if (!GWT.isScript()) {
 			String nodeName = remote.getNodeName();
 			Preconditions
@@ -1005,7 +1006,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	}
 
 	@Override
-	protected DomElement remote() {
+	protected ClientDomElement remote() {
 		if (LocalDom.isDisableRemoteWrite()) {
 			return ElementNull.INSTANCE;
 		}
@@ -1102,6 +1103,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 			return Element.this.linkedToRemote();
 		}
 
+		@Override
 		public ElementLocal local() {
 			return Element.this.local();
 		}
@@ -1111,7 +1113,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		}
 
 		@Override
-		public DomElement remote() {
+		public ClientDomElement remote() {
 			return Element.this.remote();
 		}
 

@@ -19,16 +19,12 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 
 public class DomDispatch implements IDomDispatch {
-	// handle transitions from local DOM trees to remote (browser DOM)
-	DomResolver resolver = new DomResolver();
-
 	//
 	IDomDispatch local = new DomDispatchNull();
 
 	IDomDispatch remote = new DomDispatchNull();
 
 	public DomDispatch() {
-		resolver.dispatch = this;
 		if (GWT.isClient()) {
 			local = new DomDispatchLocal();
 			remote = new DomDispatchRemote();

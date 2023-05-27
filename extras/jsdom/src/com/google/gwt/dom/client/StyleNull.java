@@ -24,7 +24,7 @@ import com.google.gwt.dom.client.Style.VerticalAlign;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 
-public class StyleNull implements DomStyle {
+public class StyleNull implements ClientDomStyle {
 	static final StyleNull INSTANCE = new StyleNull();
 
 	private StyleNull() {

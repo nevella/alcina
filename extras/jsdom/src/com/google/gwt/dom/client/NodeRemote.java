@@ -2,7 +2,8 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public abstract class NodeRemote extends JavaScriptObject implements ClientNode {
+public abstract class NodeRemote extends JavaScriptObject
+		implements ClientDomNode {
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -54,12 +55,12 @@ public abstract class NodeRemote extends JavaScriptObject implements ClientNode 
 
 	@Override
 	public final Node getChild(int index) {
-		return DomNodeStatic.getChild(this, index);
+		return ClientDomNodeStatic.getChild(this, index);
 	}
 
 	@Override
 	public final int getChildCount() {
-		return DomNodeStatic.getChildCount(this);
+		return ClientDomNodeStatic.getChildCount(this);
 	}
 
 	/**
@@ -158,7 +159,7 @@ public abstract class NodeRemote extends JavaScriptObject implements ClientNode 
 
 	@Override
 	public final boolean hasParentElement() {
-		return DomNodeStatic.hasParentElement(this);
+		return ClientDomNodeStatic.hasParentElement(this);
 	}
 
 	@Override
@@ -219,7 +220,7 @@ public abstract class NodeRemote extends JavaScriptObject implements ClientNode 
 
 	@Override
 	public final Node removeAllChildren() {
-		return DomNodeStatic.removeAllChildren(this);
+		return ClientDomNodeStatic.removeAllChildren(this);
 	}
 
 	@Override
@@ -239,7 +240,7 @@ public abstract class NodeRemote extends JavaScriptObject implements ClientNode 
 
 	@Override
 	public final void removeFromParent() {
-		DomNodeStatic.removeFromParent(this);
+		ClientDomNodeStatic.removeFromParent(this);
 	}
 
 	@Override

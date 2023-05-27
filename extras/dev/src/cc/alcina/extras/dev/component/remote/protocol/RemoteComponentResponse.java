@@ -1,25 +1,13 @@
 package cc.alcina.extras.dev.component.remote.protocol;
 
-import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 
-public class RemoteComponentResponse extends Bindable {
-	private RemoteComponentStartupModel startupModel;
+@Bean(PropertySource.FIELDS)
+public class RemoteComponentResponse {
+	public RemoteComponentRequest.Session session;
 
-	private RemoteComponentConsoleChanges changes;
+	public int requestId;
 
-	public RemoteComponentConsoleChanges getChanges() {
-		return this.changes;
-	}
-
-	public RemoteComponentStartupModel getStartupModel() {
-		return startupModel;
-	}
-
-	public void setChanges(RemoteComponentConsoleChanges changes) {
-		this.changes = changes;
-	}
-
-	public void setStartupModel(RemoteComponentStartupModel startupModel) {
-		this.startupModel = startupModel;
-	}
+	public ProtocolMessage protocolMessage;
 }

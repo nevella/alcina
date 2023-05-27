@@ -22,6 +22,7 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.ElementRemote.ContiguousTextNodes;
 import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
 import com.google.gwt.dom.client.mutations.LocalDomMutations;
+import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.LocalDomDebug;
 
@@ -91,11 +92,11 @@ public class LocalDom {
 
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
-	};
+	}
 
 	public static void ensureRemote(Node node) {
 		get().ensureRemote0(node);
-	}
+	};
 
 	public static void ensureRemoteDocument() {
 		nodeFor(Document.get().typedRemote().getDocumentElement0());
@@ -124,6 +125,10 @@ public class LocalDom {
 		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
 		instance = new LocalDom();
+	}
+
+	public static void initalizeDetachedSync() {
+		get().initalizeDetachedSync0();
 	}
 
 	public static void invokeExternal(Runnable runnable) {
@@ -178,10 +183,14 @@ public class LocalDom {
 		}
 	}
 
+	public static PathRefRepresentations pathRefRepresentations() {
+		return get().pathRefRepresentations;
+	}
+
 	public static void register(Document doc) {
-		if (isUseRemoteDom()) {
+		if (GWT.isClient()) {
 			initalize();
-			get().initalizeSync(doc);
+			get().initalizeRemoteSync(doc);
 		}
 	}
 
@@ -324,6 +333,8 @@ public class LocalDom {
 		get().wasResolved0(elem);
 	}
 
+	private PathRefRepresentations pathRefRepresentations = new PathRefRepresentations();
+
 	boolean replaying;
 
 	LocalDomMutations mutations;
@@ -373,7 +384,7 @@ public class LocalDom {
 		Element element = (Element) node;
 		if (element.isPendingResolution()) {
 			ElementRemote remote = (ElementRemote) node.remote();
-			DomElement local = node.local();
+			ClientDomElement local = node.local();
 			localToRemote(element, remote, local);
 		}
 	}
@@ -497,17 +508,20 @@ public class LocalDom {
 		eventMods.get(evt).add(eventName);
 	}
 
-	private void initalizeSync(Document doc) {
+	private void initalizeDetachedSync0() {
+		mutations = new LocalDomMutations(new MutationsAccess(),
+				new LocalDomMutations.LoggingConfiguration());
+	}
+
+	private void initalizeRemoteSync(Document doc) {
 		docRemote = doc.typedRemote();
 		loggingConfiguration = new LoggingConfiguration();
 		browserBehaviour = new BrowserBehaviour();
 		browserBehaviour.test();
 		linkRemote(docRemote, doc);
 		nodeFor0(docRemote.getDocumentElement0());
-		mutations = GWT.isClient()
-				? new LocalDomMutations(new MutationsAccess(),
-						loggingConfiguration.asMutationsConfiguration())
-				: null;
+		mutations = new LocalDomMutations(new MutationsAccess(),
+				loggingConfiguration.asMutationsConfiguration());
 	}
 
 	private void initElementCreators() {
@@ -632,7 +646,7 @@ public class LocalDom {
 	}
 
 	private void localToRemote(Element element, ElementRemote remote,
-			DomElement local) {
+			ClientDomElement local) {
 		String innerHTML = local.getInnerHTML();
 		remote.setInnerHTML(innerHTML);
 		log(LocalDomDebug.RESOLVE, "%s - uiobj: %s - \n%s",
@@ -977,7 +991,8 @@ public class LocalDom {
 		Node parent = previousNode.getParentNode();
 		NodeLocal contiguousLocal = null;
 		Node created = createAndInsertAfter(parent, previousNode,
-				contiguous.node);
+				contiguous.node.getNodeType(), contiguous.node.getNodeName(),
+				contiguous.node.getNodeValue(), contiguous.node);
 		String previousLocalText = previousNode.getTextContent();
 		String remotePreviousTextContent = contiguous.previous.getNodeValue();
 		previousNode.setTextContent(remotePreviousTextContent);
@@ -986,28 +1001,31 @@ public class LocalDom {
 	}
 
 	Node createAndInsertAfter(Node parentNode, Node previousSibling,
+			short nodeType, String nodeName, String nodeValue,
 			NodeRemote remoteNode) {
 		ElementLocal parent = parentNode.local();
 		Node newChild = null;
-		switch (remoteNode.getNodeType()) {
+		switch (nodeType) {
 		case Node.COMMENT_NODE:
-			newChild = parent.ownerDocument
-					.createComment(remoteNode.getNodeValue());
+			newChild = parent.ownerDocument.createComment(nodeValue);
 			break;
 		case Node.TEXT_NODE:
-			newChild = parent.ownerDocument
-					.createTextNode(remoteNode.getNodeValue());
+			newChild = parent.ownerDocument.createTextNode(nodeValue);
 			break;
 		case Node.ELEMENT_NODE:
-			newChild = parent.ownerDocument
-					.createElement(remoteNode.getNodeName());
+			newChild = parent.ownerDocument.createElement(nodeName);
 			break;
 		default:
 			throw new UnsupportedOperationException();
 		}
-		newChild.putRemote(remoteNode, false);
+		// FIXME - remoteNode
+		if (remoteNode != null) {
+			newChild.putRemote(remoteNode, false);
+		}
 		parentNode.insertAfter(newChild, previousSibling);
-		linkRemote(remoteNode, newChild);
+		if (remoteNode != null) {
+			linkRemote(remoteNode, newChild);
+		}
 		return newChild;
 	}
 
@@ -1140,9 +1158,10 @@ public class LocalDom {
 
 	public class MutationsAccess {
 		public Node createAndInsertAfter(Node target, Node previousSibling,
+				short nodeType, String nodeName, String nodeValue,
 				NodeRemote remoteNode) {
 			return LocalDom.this.createAndInsertAfter(target, previousSibling,
-					remoteNode);
+					nodeType, nodeName, nodeValue, remoteNode);
 		}
 
 		public Element elementForNoResolve(ElementRemote remote) {
@@ -1209,6 +1228,21 @@ public class LocalDom {
 
 		public NodeRemote typedRemote(Node n) {
 			return n.typedRemote();
+		}
+	}
+
+	/*
+	 * Bridging class between the server-side DetachedDom and the client-side
+	 * LocalDom
+	 */
+	public class PathRefRepresentations {
+		public void applyMutations(List<MutationRecord> mutations) {
+			LocalDom.this.mutations.applyDetachedMutations(mutations);
+		}
+
+		public List<MutationRecord> domAsMutations() {
+			return mutations
+					.nodeAsMutations(Document.get().getDocumentElement());
 		}
 	}
 }

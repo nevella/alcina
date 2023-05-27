@@ -20,7 +20,7 @@ public class RemoteComponentRemote {
 
 	Object outputReadyNotifier = new Object();
 
-	private List<ConsoleRecord> records = new ArrayList<>();
+	List<ConsoleRecord> records = new ArrayList<>();
 
 	public synchronized boolean hasRecords(String clientInstanceUid) {
 		throw new UnsupportedOperationException();

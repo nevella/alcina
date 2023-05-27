@@ -3,15 +3,14 @@ package com.google.gwt.dom.client;
 /**
  * Naming note - this interface is the root of the three DOM-like hierarchies
  * (Node, NodeLocal, NodeRemote) which collectively implement the local/remote
- * (aka virtural) DOM model. Named ClientNode to avoid collision with the
+ * (aka virtural) DOM model. Named ClientDomNode to avoid collision with the
  * more-used (particularly by external code)
- * cc.alcina.framework.common.client.dom.DomNode) - the other DomXxx units in
- * this package could also be renamed to ClientDomXxx
+ * cc.alcina.framework.common.client.dom.DomNode)
  *
  * @author nick@alcina.cc
  *
  */
-public interface ClientNode {
+public interface ClientDomNode {
 	public Node cloneNode(boolean deep);
 
 	<T extends Node> T appendChild(T newChild);

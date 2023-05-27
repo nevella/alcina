@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * The CDATASection interface represents textual content.
  */
 public class CDATASection extends Node
-		implements DomCDATASection, org.w3c.dom.CDATASection {
+		implements ClientDomCDATASection, org.w3c.dom.CDATASection {
 	/**
 	 * Assert that the given {@link Node} is of type
 	 * {@link Node#CDATA_SECTION_NODE} and automatically typecast it.
@@ -37,7 +37,7 @@ public class CDATASection extends Node
 
 	private CDATASectionLocal local;
 
-	private DomCDATASection remote;
+	private ClientDomCDATASection remote;
 
 	protected CDATASection(CDATASectionLocal local) {
 		this.local = local;
@@ -149,13 +149,13 @@ public class CDATASection extends Node
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote, boolean resolved) {
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
 		Preconditions.checkState(wasResolved() == resolved);
-		this.remote = (DomCDATASection) remote;
+		this.remote = (ClientDomCDATASection) remote;
 	}
 
 	@Override
-	protected DomCDATASection remote() {
+	protected ClientDomCDATASection remote() {
 		return remote;
 	}
 

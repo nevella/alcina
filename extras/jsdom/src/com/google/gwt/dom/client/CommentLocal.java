@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import cc.alcina.framework.common.client.util.Ax;
 
-public class CommentLocal extends NodeLocal implements DomComment {
+public class CommentLocal extends NodeLocal implements ClientDomComment {
 	private String text;
 
 	private Comment commentNode;

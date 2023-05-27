@@ -35,8 +35,8 @@ import org.w3c.dom.traversal.TreeWalker;
  * <p>
  * Server-side, {@code Document.get()} returns a context-dependent instance
  */
-public class Document extends Node implements DomDocument, org.w3c.dom.Document,
-		org.w3c.dom.traversal.DocumentTraversal {
+public class Document extends Node implements ClientDomDocument,
+		org.w3c.dom.Document, org.w3c.dom.traversal.DocumentTraversal {
 	private static Document doc;
 
 	private static DocumentContextProvider contextProvider;
@@ -88,7 +88,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	DocumentLocal local;
 
-	DomDocument remote;
+	ClientDomDocument remote;
 
 	Element documentElement;
 
@@ -240,12 +240,16 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public DivElement createDivElement() {
-		return DomDocumentStatic.createDivElement(this);
+		return ClientDomDocumentStatic.createDivElement(this);
 	}
 
 	@Override
 	public DListElement createDLElement() {
 		return local.createDLElement();
+	}
+
+	public void createDocumentElement(String tagName) {
+		documentElement = createElement(tagName);
 	}
 
 	@Override
@@ -1049,12 +1053,12 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote, boolean resolved) {
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	protected DomDocument remote() {
+	protected ClientDomDocument remote() {
 		return remote;
 	}
 

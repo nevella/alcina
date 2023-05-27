@@ -15,7 +15,7 @@
  */
 package com.google.gwt.dom.client;
 
-import static com.google.gwt.dom.client.DomStyleConstants.*;
+import static com.google.gwt.dom.client.ClientDomStyleConstants.*;
 
 import java.util.Map;
 import java.util.Objects;
@@ -35,12 +35,12 @@ import com.google.gwt.user.client.LocalDomDebug;
  *
  * @see Element#getStyle()
  */
-public class Style implements DomStyle {
+public class Style implements ClientDomStyle {
 	private Element element;
 
 	StyleLocal local;
 
-	private DomStyle remote = StyleNull.INSTANCE;
+	private ClientDomStyle remote = StyleNull.INSTANCE;
 
 	protected Style(Element element) {
 		this.element = element;
@@ -347,7 +347,7 @@ public class Style implements DomStyle {
 		sync(() -> remote().clearZIndex());
 	}
 
-	public void cloneStyleFrom(DomStyle domStyle) {
+	public void cloneStyleFrom(ClientDomStyle domStyle) {
 		Style style = (Style) domStyle;
 		local().cloneStyleFrom(style.local(), this);
 	}
@@ -974,7 +974,7 @@ public class Style implements DomStyle {
 		return local;
 	}
 
-	protected DomStyle remote() {
+	protected ClientDomStyle remote() {
 		element.ensureRemoteCheck();
 		if (!linkedToRemote() && element.linkedToRemote()) {
 			remote = element.typedRemote().getStyleRemote();

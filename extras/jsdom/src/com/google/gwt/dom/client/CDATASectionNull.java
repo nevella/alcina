@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class CDATASectionNull extends NodeLocalNull implements DomCDATASection {
+public class CDATASectionNull extends NodeLocalNull implements ClientDomCDATASection {
 	static final CDATASectionNull INSTANCE = new CDATASectionNull();
 
 	CDATASectionNull() {

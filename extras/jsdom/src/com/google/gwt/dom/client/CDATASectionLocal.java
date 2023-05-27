@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import cc.alcina.framework.common.client.util.Ax;
 
-public class CDATASectionLocal extends NodeLocal implements DomCDATASection {
+public class CDATASectionLocal extends NodeLocal implements ClientDomCDATASection {
 	private String text;
 
 	private CDATASection textNode;

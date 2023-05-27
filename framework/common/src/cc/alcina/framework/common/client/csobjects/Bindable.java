@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.csobjects;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 
 /**
  * <p>
@@ -31,6 +32,10 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 public class Bindable extends BaseSourcesPropertyChangeEvents
 		implements Serializable, IsBindable {
 	public static class BindableAdapter extends Bindable {
+	}
+
+	@Bean(PropertySource.FIELDS)
+	public abstract static class Fields extends Bindable {
 	}
 
 	public interface HasContext<T> {

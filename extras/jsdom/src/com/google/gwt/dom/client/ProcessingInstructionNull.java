@@ -1,7 +1,7 @@
 package com.google.gwt.dom.client;
 
 public class ProcessingInstructionNull extends NodeLocalNull
-		implements DomProcessingInstruction {
+		implements ClientDomProcessingInstruction {
 	static final ProcessingInstructionNull INSTANCE = new ProcessingInstructionNull();
 
 	ProcessingInstructionNull() {

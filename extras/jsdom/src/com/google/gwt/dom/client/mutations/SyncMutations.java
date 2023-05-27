@@ -54,6 +54,9 @@ class SyncMutations {
 								null));
 	}
 
+	/**
+	 * Applies a sequence of remote (browser) dom mutations to the local dom
+	 */
 	public void sync(JsArray<MutationRecordJso> records) {
 		long start = System.currentTimeMillis();
 		List<MutationRecord> recordList = null;
@@ -74,35 +77,6 @@ class SyncMutations {
 
 	public NodeRemote typedRemote(Node n) {
 		return mutationsAccess.typedRemote(n);
-	}
-
-	private void applyMutationsToLocalDom(List<MutationRecord> recordList) {
-		// post-sync, any remotes for which there is no localcorrespondent
-		// (at S0) can be ignored
-		recordList.stream().forEach(record -> {
-			NodeRemote targetRemote = record.target.remoteNode();
-			Node target = mutationsAccess.nodeForNoResolve(targetRemote);
-			if (target != null) {
-				// if it's a structural mutation, and was part of a subtree
-				// created during mutation, do not apply changes (the subtree
-				// reparse will do that, and we don't have enough information
-				// apply via mutation)
-				if (record.provideIsStructuralMutation()
-						&& !applyStructuralMutations.contains(targetRemote)) {
-					// with the caveat that any removed nodes must be unlinked
-					// from the localdom
-					record.getRemovedNodes().forEach(removed -> {
-						Node removedNode = mutationsAccess
-								.nodeForNoResolve(removed.remoteNode());
-						if (removedNode != null) {
-							mutationsAccess.removeFromRemoteLookup(removedNode);
-						}
-					});
-					return;
-				}
-				record.apply(ApplyTo.local);
-			}
-		});
 	}
 
 	private final native JsArray<MutationRecordJso>
@@ -168,7 +142,7 @@ class SyncMutations {
 		});
 		// sync local/topmost remote (of completed inverse tree).
 		syncTopmostMutatedIfContainedInInitialLocal();
-		applyMutationsToLocalDom(recordList);
+		applyRemoteMutationsToLocalDom(recordList);
 		// sync added subtrees
 		createdLocals.forEach(LocalDom::syncToRemote);
 		return recordList;
@@ -317,8 +291,49 @@ class SyncMutations {
 		}
 	}
 
+	void applyDetachedMutationsToLocalDom(List<MutationRecord> recordList) {
+		recordList.stream().forEach(record -> {
+			record.sync = this;
+			record.connectMutationNodeRefs();
+			record.apply(ApplyTo.local);
+		});
+	}
+
+	void applyRemoteMutationsToLocalDom(List<MutationRecord> recordList) {
+		// post-sync, any remotes for which there is no localcorrespondent
+		// (at S0) can be ignored
+		recordList.stream().forEach(record -> {
+			// remote -> local (more complex) call
+			NodeRemote targetRemote = record.target.remoteNode();
+			Node target = mutationsAccess.nodeForNoResolve(targetRemote);
+			if (target != null) {
+				// if it's a structural mutation, and was part of a subtree
+				// created during mutation, do not apply changes (the
+				// subtree
+				// reparse will do that, and we don't have enough
+				// information
+				// apply via mutation)
+				if (record.provideIsStructuralMutation()
+						&& !applyStructuralMutations.contains(targetRemote)) {
+					// with the caveat that any removed nodes must be
+					// unlinked
+					// from the localdom
+					record.removedNodes.forEach(removed -> {
+						Node removedNode = mutationsAccess
+								.nodeForNoResolve(removed.remoteNode());
+						if (removedNode != null) {
+							mutationsAccess.removeFromRemoteLookup(removedNode);
+						}
+					});
+					return;
+				}
+				record.apply(ApplyTo.local);
+			}
+		});
+	}
+
 	boolean isApplicable(MutationRecord record) {
-		if (record.getTarget().getNodeName().equalsIgnoreCase("title")) {
+		if (record.target.getNodeName().equalsIgnoreCase("title")) {
 			// FIXME - merge with other 'can't track' checks
 			return false;
 		} else {

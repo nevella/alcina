@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client.mutations;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,8 +12,8 @@ import java.util.stream.Collectors;
 import org.w3c.dom.NodeList;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.dom.client.DomElement;
-import com.google.gwt.dom.client.ClientNode;
+import com.google.gwt.dom.client.ClientDomElement;
+import com.google.gwt.dom.client.ClientDomNode;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
@@ -21,7 +22,7 @@ import com.google.gwt.dom.client.NodeRemote;
 import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
@@ -37,59 +38,81 @@ import cc.alcina.framework.common.client.util.UrlComponentEncoder;
  * <p>
  * Also used as the serialization form for local/remote dom-as-json dumps
  */
-@Bean
+@Bean(PropertySource.FIELDS)
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 public final class MutationNode {
-	ClientNode domNode;
+	static MutationNode shallow(Node node) {
+		MutationNode result = new MutationNode();
+		result.nodeType = node.getNodeType();
+		result.nodeName = node.getNodeName();
+		Node cursor = node;
+		List<Integer> ordinals = new ArrayList<>();
+		do {
+			Element parentElement = cursor.getParentElement();
+			int ordinal = parentElement == null ? 0
+					: parentElement.getChildIndexLocal(cursor);
+			ordinals.add(ordinal);
+			cursor = cursor.getParentElement();
+		} while (cursor != null);
+		Collections.reverse(ordinals);
+		result.path = ordinals.stream().map(String::valueOf)
+				.collect(Collectors.joining("."));
+		return result;
+	}
 
-	short nodeType;
+	public short nodeType;
 
-	String nodeName;
+	public String nodeName;
 
-	String nodeValue;
+	public String nodeValue;
 
-	SyncMutations sync;
+	transient SyncMutations sync;
 
-	Map<String, String> attributes;
+	public Map<String, String> attributes;
 
-	List<MutationNode> childNodes;
+	transient List<MutationNode> childNodes;
 
-	MutationNode parent;
+	transient MutationNode parent;
 
-	MutationNode previousSibling;
+	transient MutationNode previousSibling;
 
-	MutationNode nextSibling;
+	transient MutationNode nextSibling;
 
-	int ordinal;
+	public int ordinal;
 
-	int id = -1;
+	public int id = -1;
 
-	String path = "0";
+	public String path = "0";
 
-	private ClientNode node;
+	transient Node node;
 
-	private MutationsAccess access;
+	transient NodeRemote remoteNode;
 
-	List<MutationRecord> records = new ArrayList<>();
+	transient MutationsAccess access;
 
-	private boolean parentModified;
+	transient List<MutationRecord> records = new ArrayList<>();
+
+	transient private boolean parentModified;
 
 	public MutationNode() {
 	}
 
-	public MutationNode(ClientNode node, SyncMutations sync,
+	public MutationNode(ClientDomNode clientDomNode, SyncMutations sync,
 			LocalDom.MutationsAccess access, boolean withChildren,
 			MutationNode parent) {
 		// when syncing (not generating a tree for debugging), parent must be
 		// null
 		Preconditions.checkArgument(!(parent != null && sync != null));
-		this.node = node;
-		this.domNode = node;
+		if (clientDomNode instanceof Node) {
+			this.node = (Node) clientDomNode;
+		} else {
+			this.remoteNode = (NodeRemote) clientDomNode;
+		}
 		this.sync = sync;
 		this.access = access;
-		this.nodeType = node.getNodeType();
-		this.nodeName = node.getNodeName().toLowerCase();
-		this.nodeValue = node.getNodeValue();
+		this.nodeType = clientDomNode.getNodeType();
+		this.nodeName = clientDomNode.getNodeName().toLowerCase();
+		this.nodeValue = clientDomNode.getNodeValue();
 		this.parent = parent;
 		if (parent != null) {
 			this.parent = parent;
@@ -97,7 +120,7 @@ public final class MutationNode {
 			path = parent.path + "." + ordinal;
 		}
 		if (nodeType == Node.ELEMENT_NODE) {
-			DomElement elem = (DomElement) node;
+			ClientDomElement elem = (ClientDomElement) clientDomNode;
 			attributes = new LinkedHashMap<>();
 			Map<String, String> attributeMap = elem.getAttributeMap();
 			if (elem.getAttributeMap() != null) {
@@ -108,21 +131,22 @@ public final class MutationNode {
 		if (withChildren) {
 			childNodes = new ArrayList<>();
 			// avoid wrap-in-LD-node if remote
-			if (node instanceof NodeRemote) {
-				List<NodeRemote> list = access.streamChildren((NodeRemote) node)
+			if (clientDomNode instanceof NodeRemote) {
+				List<NodeRemote> list = access
+						.streamChildren((NodeRemote) clientDomNode)
 						.collect(Collectors.toList());
 				int length = list.size();
 				for (int idx = 0; idx < length; idx++) {
-					ClientNode item = list.get(idx);
+					ClientDomNode item = list.get(idx);
 					MutationNode child = new MutationNode(item, sync, access,
 							withChildren, this);
 					childNodes.add(child);
 				}
 			} else {
-				NodeList nodeList = node.getChildNodes();
+				NodeList nodeList = clientDomNode.getChildNodes();
 				int length = nodeList.getLength();
 				for (int idx = 0; idx < length; idx++) {
-					ClientNode item = (ClientNode) nodeList.item(idx);
+					ClientDomNode item = (ClientDomNode) nodeList.item(idx);
 					MutationNode child = new MutationNode(item, sync, access,
 							withChildren, this);
 					childNodes.add(child);
@@ -132,34 +156,6 @@ public final class MutationNode {
 		if (sync != null) {
 			this.id = sync.mutationNodes.size();
 		}
-	}
-
-	public Map<String, String> getAttributes() {
-		return this.attributes;
-	}
-
-	public List<MutationNode> getChildNodes() {
-		return this.childNodes;
-	}
-
-	public int getId() {
-		return this.id;
-	}
-
-	public String getNodeName() {
-		return this.nodeName;
-	}
-
-	public short getNodeType() {
-		return this.nodeType;
-	}
-
-	public String getNodeValue() {
-		return this.nodeValue;
-	}
-
-	public String getPath() {
-		return this.path;
 	}
 
 	public void insertAfter(MutationNode predecessor, MutationNode newChild,
@@ -182,11 +178,12 @@ public final class MutationNode {
 			break;
 		}
 		case local: {
-			Node target = remoteNode().node();
+			Node target = node();
 			Node previousSibling = predecessor == null ? null
-					: predecessor.remoteNode().node();
+					: predecessor.node();
 			Node newChildDomNode = sync.mutationsAccess.createAndInsertAfter(
-					target, previousSibling, newChild.remoteNode());
+					target, previousSibling, newChild.nodeType,
+					newChild.nodeName, newChild.nodeValue, newChild.remoteNode);
 			sync.recordLocalCreation(newChildDomNode);
 			break;
 		}
@@ -206,7 +203,7 @@ public final class MutationNode {
 			return currentValue;
 		}
 		case local: {
-			Node target = remoteNode().node();
+			Node target = node();
 			String currentValue = ((Element) target)
 					.getAttribute(attributeName);
 			((Element) target).setAttribute(attributeName, characterData);
@@ -225,7 +222,7 @@ public final class MutationNode {
 			return currentValue;
 		}
 		case local: {
-			Node target = remoteNode().node();
+			Node target = node();
 			String currentValue = target.getNodeValue();
 			target.setNodeValue(characterData);
 			return currentValue;
@@ -235,29 +232,33 @@ public final class MutationNode {
 		}
 	}
 
-	public void remove(MutationNode node, ApplyTo applyTo) {
+	public NodeRemote remoteNode() {
+		return remoteNode;
+	}
+
+	public void remove(MutationNode remove, ApplyTo applyTo) {
 		switch (applyTo) {
 		case mutations_reversed: {
-			if (node.previousSibling != null) {
-				node.previousSibling.nextSibling = node.nextSibling;
+			if (remove.previousSibling != null) {
+				remove.previousSibling.nextSibling = remove.nextSibling;
 			}
-			if (node.nextSibling != null) {
-				node.nextSibling.previousSibling = node.previousSibling;
+			if (remove.nextSibling != null) {
+				remove.nextSibling.previousSibling = remove.previousSibling;
 			}
-			boolean removed = childNodes.remove(node);
+			boolean removed = childNodes.remove(remove);
 			Preconditions.checkState(removed);
-			node.parentModified = true;
-			node.parent = null;
-			node.nextSibling = null;
-			node.previousSibling = null;
+			remove.parentModified = true;
+			remove.parent = null;
+			remove.nextSibling = null;
+			remove.previousSibling = null;
 			break;
 		}
 		case local: {
-			Node target = remoteNode().node();
+			Node target = node();
 			// so....this should be guaranteed to exist in LocalDom.remoteLookup
 			// (since we've listeed the parent's kids during the inverse tree
 			// build)
-			Node delta = node.remoteNode().node();
+			Node delta = remove.node();
 			target.removeChild(delta);
 			// because the non-local code could then reinsert parts of the
 			// local/remote synced structure, make sure all the subtree
@@ -266,38 +267,6 @@ public final class MutationNode {
 			break;
 		}
 		}
-	}
-
-	public void setAttributes(Map<String, String> attributes) {
-		this.attributes = attributes;
-	}
-
-	public void setChildNodes(List<MutationNode> childNodes) {
-		this.childNodes = childNodes;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
-	}
-
-	public void setNodeType(short nodeType) {
-		this.nodeType = nodeType;
-	}
-
-	public void setNodeValue(String nodeValue) {
-		this.nodeValue = nodeValue;
-	}
-
-	public void setParentModified(boolean parentModified) {
-		this.parentModified = parentModified;
-	}
-
-	public void setPath(String path) {
-		this.path = path;
 	}
 
 	@Override
@@ -316,14 +285,14 @@ public final class MutationNode {
 	void ensureChildNodes() {
 		if (childNodes == null) {
 			childNodes = new ArrayList<>();
-			Preconditions.checkState(node instanceof NodeRemote);
+			Preconditions.checkState(remoteNode != null);
 			// avoid wrap-in-LD-node if remote
-			List<NodeRemote> list = access.streamChildren((NodeRemote) node)
+			List<NodeRemote> list = access.streamChildren(remoteNode)
 					.collect(Collectors.toList());
 			int length = list.size();
 			MutationNode lastChild = null;
 			for (int idx = 0; idx < length; idx++) {
-				ClientNode item = list.get(idx);
+				ClientDomNode item = list.get(idx);
 				MutationNode child = sync.mutationNode((NodeRemote) item);
 				// key - the only place child.parent is set is here (first time
 				// children are accessed during reverse playback). Ensures we're
@@ -339,15 +308,16 @@ public final class MutationNode {
 		}
 	}
 
+	String getNodeName() {
+		return nodeName;
+	}
+
 	boolean hasRecords() {
 		return records.size() > 0;
 	}
 
-	/*
-	 * Always valid during sync
-	 */
-	NodeRemote remoteNode() {
-		return (NodeRemote) domNode;
+	Node node() {
+		return node != null ? node : remoteNode.node();
 	}
 
 	EquivalenceTest testEquivalence(MutationNode other) {
@@ -468,24 +438,24 @@ public final class MutationNode {
 		}
 
 		private boolean shallowInequivalent() {
-			if (!Objects.equals(left.getNodeType(), right.getNodeType())) {
+			if (!Objects.equals(left.nodeType, right.nodeType)) {
 				inequivalenceReason = Ax.format("Unequal types :: %s - %s",
-						left.getNodeType(), right.getNodeType());
+						left.nodeType, right.nodeType);
 				return true;
 			}
-			if (!Objects.equals(left.getNodeName(), right.getNodeName())) {
+			if (!Objects.equals(left.nodeName, right.nodeName)) {
 				inequivalenceReason = Ax.format("Unequal names :: %s - %s",
-						left.getNodeName(), right.getNodeName());
+						left.nodeName, right.nodeName);
 				return true;
 			}
-			if (!Objects.equals(left.getNodeValue(), right.getNodeValue())) {
+			if (!Objects.equals(left.nodeValue, right.nodeValue)) {
 				inequivalenceReason = Ax.format("Unequal values :: %s",
-						debugInequivalentValues(left.getNodeValue(),
-								right.getNodeValue()));
+						debugInequivalentValues(left.nodeValue,
+								right.nodeValue));
 				return true;
 			}
-			if (left.getNodeType() == Node.ELEMENT_NODE) {
-				for (String key : left.getAttributes().keySet()) {
+			if (left.nodeType == Node.ELEMENT_NODE) {
+				for (String key : left.attributes.keySet()) {
 					if (key.equals("style")) {
 						// style is computed - basically should only use
 						// computedStyle anyway post flush()
@@ -493,10 +463,9 @@ public final class MutationNode {
 						// flush is...problematci
 						continue;
 					}
-					String leftAttr = Ax
-							.blankToEmpty(left.getAttributes().get(key));
+					String leftAttr = Ax.blankToEmpty(left.attributes.get(key));
 					String rightAttr = Ax
-							.blankToEmpty(right.getAttributes().get(key));
+							.blankToEmpty(right.attributes.get(key));
 					if (!Objects.equals(leftAttr, rightAttr)) {
 						inequivalenceReason = Ax.format(
 								"Unequal attributes :: %s :: '%s' - '%s'", key,
@@ -504,14 +473,13 @@ public final class MutationNode {
 						return true;
 					}
 				}
-				for (String key : right.getAttributes().keySet()) {
+				for (String key : right.attributes.keySet()) {
 					if (key.equals("style")) {
 						continue;
 					}
-					String leftAttr = Ax
-							.blankToEmpty(left.getAttributes().get(key));
+					String leftAttr = Ax.blankToEmpty(left.attributes.get(key));
 					String rightAttr = Ax
-							.blankToEmpty(right.getAttributes().get(key));
+							.blankToEmpty(right.attributes.get(key));
 					if (!Objects.equals(leftAttr, rightAttr)) {
 						inequivalenceReason = Ax.format(
 								"Unequal attributes :: %s :: '%s' - '%s'", key,
@@ -519,22 +487,22 @@ public final class MutationNode {
 						return true;
 					}
 				}
-				int leftSize = left.getChildNodes().size();
-				int rightSize = right.getChildNodes().size();
+				int leftSize = left.childNodes.size();
+				int rightSize = right.childNodes.size();
 				if (leftSize != rightSize) {
 					MutationNode firstDelta = null;
 					if (leftSize > rightSize) {
-						firstDelta = left.getChildNodes().get(rightSize);
+						firstDelta = left.childNodes.get(rightSize);
 					} else {
-						firstDelta = right.getChildNodes().get(leftSize);
+						firstDelta = right.childNodes.get(leftSize);
 					}
 					inequivalenceReason = Ax.format(
 							"Unequal child counts :: %s :: %s - first delta: %s - names: \n\tl: %s\n\tr: %s",
 							leftSize, rightSize, firstDelta,
-							left.getChildNodes().stream()
+							left.childNodes.stream()
 									.map(MutationNode::getNodeName)
 									.collect(Collectors.joining(", ")),
-							right.getChildNodes().stream()
+							right.childNodes.stream()
 									.map(MutationNode::getNodeName)
 									.collect(Collectors.joining(", ")));
 					return true;

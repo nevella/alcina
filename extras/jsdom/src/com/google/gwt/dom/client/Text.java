@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.Ax;
 /**
  * The Text interface represents textual content.
  */
-public class Text extends Node implements DomText, org.w3c.dom.Text {
+public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	/**
 	 * Assert that the given {@link Node} is of type {@link Node#TEXT_NODE} and
 	 * automatically typecast it.
@@ -36,7 +36,7 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 
 	private TextLocal local;
 
-	private DomText remote;
+	private ClientDomText remote;
 
 	protected Text(TextLocal local) {
 		this.local = local;
@@ -146,13 +146,13 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote, boolean resolved) {
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
 		Preconditions.checkState(wasResolved() == resolved);
-		this.remote = (DomText) remote;
+		this.remote = (ClientDomText) remote;
 	}
 
 	@Override
-	protected DomText remote() {
+	protected ClientDomText remote() {
 		return remote;
 	}
 

@@ -22,7 +22,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 
-import cc.alcina.extras.dev.component.remote.server.RemoteComponentProtocolHandler;
+import cc.alcina.extras.dev.component.remote.server.ProtocolRequestHandler;
 import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -189,7 +189,7 @@ public class DevConsoleRemote {
 			ContextHandler protocolHandler = new ContextHandler(handlers,
 					"/remote");
 			protocolHandler.setAllowNullPathInfo(true);
-			protocolHandler.setHandler(new RemoteComponentProtocolHandler());
+			protocolHandler.setHandler(new ProtocolRequestHandler());
 		}
 		addSubclassHandlers(handlers);
 		{

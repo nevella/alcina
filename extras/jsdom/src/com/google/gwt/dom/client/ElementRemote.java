@@ -18,7 +18,7 @@ import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
-public class ElementRemote extends NodeRemote implements DomElement {
+public class ElementRemote extends NodeRemote implements ClientDomElement {
 	/*
 	 * Non-private for access from bytecode generated (ElementRemote$)
 	 */
@@ -109,11 +109,11 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}
 
 	static int indexOfName(String nameList, String name) {
-		return DomElement.indexOfName(nameList, name);
+		return ClientDomElement.indexOfName(nameList, name);
 	}
 
 	static String trimClassName(String className) {
-		return DomElement.trimClassName(className);
+		return ClientDomElement.trimClassName(className);
 	}
 
 	protected ElementRemote() {
@@ -121,7 +121,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final boolean addClassName(String className) {
-		return DomElementStatic.addClassName(this, className);
+		return ClientDomElementStatic.addClassName(this, className);
 	}
 
 	/**
@@ -302,7 +302,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final Element getFirstChildElement() {
-		return DomElementStatic.getFirstChildElement(this);
+		return ClientDomElementStatic.getFirstChildElement(this);
 	}
 
 	/**
@@ -319,12 +319,12 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final String getInnerHTML() {
-		return DomElementStatic.getInnerHTML(this);
+		return ClientDomElementStatic.getInnerHTML(this);
 	}
 
 	@Override
 	public final String getInnerText() {
-		return DomElementStatic.getInnerText(this);
+		return ClientDomElementStatic.getInnerText(this);
 	}
 
 	/**
@@ -337,7 +337,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final Element getNextSiblingElement() {
-		return DomElementStatic.getNextSiblingElement(this);
+		return ClientDomElementStatic.getNextSiblingElement(this);
 	}
 
 	/**
@@ -392,7 +392,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final Element getPreviousSiblingElement() {
-		return DomElementStatic.getPreviousSiblingElement(this);
+		return ClientDomElementStatic.getPreviousSiblingElement(this);
 	}
 
 	/**
@@ -477,7 +477,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final int getScrollLeft() {
-		return DomElementStatic.getScrollLeft(this);
+		return ClientDomElementStatic.getScrollLeft(this);
 	}
 
 	/**
@@ -498,7 +498,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final String getString() {
-		return DomElementStatic.getString(this);
+		return ClientDomElementStatic.getString(this);
 	}
 
 	/**
@@ -515,12 +515,12 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final int getTabIndex() {
-		return DomElementStatic.getTabIndex(this);
+		return ClientDomElementStatic.getTabIndex(this);
 	}
 
 	@Override
 	public final String getTagName() {
-		return DomElementStatic.getTagName(this);
+		return ClientDomElementStatic.getTagName(this);
 	}
 
 	/**
@@ -533,17 +533,17 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final boolean hasAttribute(String name) {
-		return DomElementStatic.hasAttribute(this, name);
+		return ClientDomElementStatic.hasAttribute(this, name);
 	}
 
 	@Override
 	public final boolean hasClassName(String className) {
-		return DomElementStatic.hasClassName(this, className);
+		return ClientDomElementStatic.hasClassName(this, className);
 	}
 
 	@Override
 	public final boolean hasTagName(String tagName) {
-		return DomElementStatic.hasTagName(this, tagName);
+		return ClientDomElementStatic.hasTagName(this, tagName);
 	}
 
 	public final String provideRemoteDomTree() {
@@ -561,13 +561,13 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final boolean removeClassName(String className) {
-		return DomElementStatic.removeClassName(this, className);
+		return ClientDomElementStatic.removeClassName(this, className);
 	}
 
 	@Override
 	public final void replaceClassName(String oldClassName,
 			String newClassName) {
-		DomElementStatic.replaceClassName(this, oldClassName, newClassName);
+		ClientDomElementStatic.replaceClassName(this, oldClassName, newClassName);
 	}
 
 	public final void replaceWith(ElementRemote replacement) {
@@ -577,7 +577,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final void scrollIntoView() {
-		DomElementStatic.scrollIntoView(this);
+		ClientDomElementStatic.scrollIntoView(this);
 	}
 
 	/**
@@ -620,7 +620,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final void setDraggable(String draggable) {
-		DomElementStatic.setDraggable(this, draggable);
+		ClientDomElementStatic.setDraggable(this, draggable);
 	}
 
 	/**
@@ -647,12 +647,12 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
-		DomElementStatic.setInnerSafeHtml(this, html);
+		ClientDomElementStatic.setInnerSafeHtml(this, html);
 	}
 
 	@Override
 	public final void setInnerText(String text) {
-		DomElementStatic.setInnerText(this, text);
+		ClientDomElementStatic.setInnerText(this, text);
 	}
 
 	/**
@@ -749,7 +749,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
-		DomElementStatic.setScrollLeft(this, scrollLeft);
+		ClientDomElementStatic.setScrollLeft(this, scrollLeft);
 	}
 
 	/**
@@ -797,7 +797,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final void toggleClassName(String className) {
-		DomElementStatic.toggleClassName(this, className);
+		ClientDomElementStatic.toggleClassName(this, className);
 	}
 
 	private final native JsArrayString getAttributeList()/*-{

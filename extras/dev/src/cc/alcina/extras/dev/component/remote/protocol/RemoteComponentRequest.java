@@ -3,74 +3,54 @@ package cc.alcina.extras.dev.component.remote.protocol;
 import java.util.Date;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.shared.GWT;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Window;
 
-import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
-public class RemoteComponentRequest extends Bindable {
-	private transient static String generatedClientInstanceUid;
+@Bean(PropertySource.FIELDS)
+public class RemoteComponentRequest {
+	private transient static Session clientSession;
 
-	public static RemoteComponentRequest create() {
-		Preconditions.checkArgument(GWT.isClient());
-		if (generatedClientInstanceUid == null) {
-			generatedClientInstanceUid = Ax.format("%s__%s", CommonUtils
+	private transient static int clientMessageId;
+
+	public static synchronized RemoteComponentRequest create() {
+		Preconditions.checkState(GWT.isClient());
+		if (clientSession == null) {
+			clientSession = new Session();
+			clientSession.clientInstanceUid = Ax.format("%s__%s", CommonUtils
 					.formatDate(new Date(), DateStyle.TIMESTAMP_HUMAN),
 					Math.random());
+			String path = Window.Location.getPath();
+			clientSession.environmentId = path.replaceFirst(".+/(.+)/(.+)",
+					"$1");
+			clientSession.environmentAuth = path.replaceFirst(".+/(.+)/(.+)",
+					"$2");
 		}
-		RemoteComponentRequest consoleRequest = new RemoteComponentRequest();
-		consoleRequest.clientInstanceUid = generatedClientInstanceUid;
-		return consoleRequest;
+		RemoteComponentRequest request = new RemoteComponentRequest();
+		request.session = clientSession;
+		request.requestId = ++clientMessageId;
+		return request;
 	}
 
-	private String commandString;
+	public Session session;
 
-	private String completionString;
+	public int requestId;
 
-	private String clientInstanceUid;
+	public ProtocolMessage protocolMessage;
 
-	private RemoteComponentRequestType type;
+	@Bean(PropertySource.FIELDS)
+	public static class Session {
+		public String clientInstanceUid;
 
-	public RemoteComponentRequest() {
-	}
+		public String environmentId;
 
-	public String getClientInstanceUid() {
-		return this.clientInstanceUid;
-	}
+		public String environmentUid;
 
-	public String getCommandString() {
-		return this.commandString;
-	}
-
-	public String getCompletionString() {
-		return this.completionString;
-	}
-
-	public RemoteComponentRequestType getType() {
-		return this.type;
-	}
-
-	public void setClientInstanceUid(String clientInstanceUid) {
-		this.clientInstanceUid = clientInstanceUid;
-	}
-
-	public void setCommandString(String commandString) {
-		this.commandString = commandString;
-	}
-
-	public void setCompletionString(String completionString) {
-		this.completionString = completionString;
-	}
-
-	public void setType(RemoteComponentRequestType type) {
-		this.type = type;
-	}
-
-	@Reflected
-	public enum RemoteComponentRequestType {
-		STARTUP, GET_RECORDS, COMPLETE, DO_COMMAND, ARROW_UP, ARROW_DOWN
+		public String environmentAuth;
 	}
 }

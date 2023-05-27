@@ -512,7 +512,7 @@ public class WidgetUtils {
     var elt = elto.@com.google.gwt.dom.client.Element::typedRemote()();
     var from = (elt) ? elt : $doc;
     var nodeList = from.querySelectorAll(selector);
-    return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(nodeList);
+    return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/ClientDomNodeList;)(nodeList);
 	}-*/;
 
 	public static native Element getFocussedDocumentElement()/*-{

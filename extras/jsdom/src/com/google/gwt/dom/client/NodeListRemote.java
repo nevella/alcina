@@ -33,7 +33,7 @@ import com.google.gwt.core.client.JavaScriptObject;
  *            the type of contained node
  */
 public class NodeListRemote<T extends Node> extends JavaScriptObject
-		implements DomNodeList<T> {
+		implements ClientDomNodeList<T> {
 	protected NodeListRemote() {
 	}
 
@@ -53,7 +53,7 @@ public class NodeListRemote<T extends Node> extends JavaScriptObject
 
 	@Override
 	public final Stream<T> stream() {
-		return DomNodeListStatic.stream0(this);
+		return ClientDomNodeListStatic.stream0(this);
 	}
 
 	/**

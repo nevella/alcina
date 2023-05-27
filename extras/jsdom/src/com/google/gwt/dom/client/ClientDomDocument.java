@@ -12,7 +12,7 @@ import org.w3c.dom.ProcessingInstruction;
  * @author nick@alcina.cc
  *
  */
-public interface DomDocument extends ClientNode {
+public interface ClientDomDocument extends ClientDomNode {
 	/**
 	 * Creates an &lt;a&gt; element.
 	 *

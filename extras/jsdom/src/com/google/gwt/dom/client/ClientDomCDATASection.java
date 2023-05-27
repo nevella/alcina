@@ -1,6 +1,9 @@
 package com.google.gwt.dom.client;
 
-public interface DomText extends ClientNode {
+/*
+ * Could extend DomText, but doesn't due to JSO single-interface restrictions
+ */
+public interface ClientDomCDATASection extends ClientDomNode {
 	void deleteData(int offset, int length);
 
 	String getData();

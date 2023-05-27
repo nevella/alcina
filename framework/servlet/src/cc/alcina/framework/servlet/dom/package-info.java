@@ -8,10 +8,13 @@
  * 
  * <h3>The dom handshake</h3>
  * <ol>
- * <li>The client sends a 'register' packet with uid, auth and the browser dom
- * outer html
+ * <li>All packets contain environment uid, environment auth, client uid
+ * <li>The client sends a 'register' packet with browser dom outer html and
+ * localdom props
  * <li>The environment populates the server document with the browser dom
- * <li>The environment calls remoteui.init() which ...
+ * <li>The environment calls remoteui.init() which causes dommutations +
+ * registrations (DomEvent)
+ * <li>The server treats the client as synchronous (by blocking until ACK)
  * </ol>
  */
 package cc.alcina.framework.servlet.dom;

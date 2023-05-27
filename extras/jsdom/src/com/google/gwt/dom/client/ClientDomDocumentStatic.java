@@ -1,12 +1,12 @@
 package com.google.gwt.dom.client;
 
-public class DomDocumentStatic {
+public class ClientDomDocumentStatic {
 	/**
 	 * Creates an &lt;a&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	static AnchorElement createAnchorElement(DomDocument domDocument) {
+	static AnchorElement createAnchorElement(ClientDomDocument domDocument) {
 		return (AnchorElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), AnchorElement.TAG);
 	}
@@ -16,7 +16,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static AreaElement createAreaElement(DomDocument domDocument) {
+	static AreaElement createAreaElement(ClientDomDocument domDocument) {
 		return (AreaElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), AreaElement.TAG);
 	}
@@ -26,7 +26,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static AudioElement createAudioElement(DomDocument domDocument) {
+	static AudioElement createAudioElement(ClientDomDocument domDocument) {
 		return (AudioElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), AudioElement.TAG);
 	}
@@ -36,7 +36,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static BaseElement createBaseElement(DomDocument domDocument) {
+	static BaseElement createBaseElement(ClientDomDocument domDocument) {
 		return (BaseElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), BaseElement.TAG);
 	}
@@ -46,7 +46,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static QuoteElement createBlockQuoteElement(DomDocument domDocument) {
+	static QuoteElement createBlockQuoteElement(ClientDomDocument domDocument) {
 		return (QuoteElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), QuoteElement.TAG_BLOCKQUOTE);
 	}
@@ -54,7 +54,7 @@ public class DomDocumentStatic {
 	/**
 	 * Creates a 'blur' event.
 	 */
-	static NativeEvent createBlurEvent(DomDocument domDocument) {
+	static NativeEvent createBlurEvent(ClientDomDocument domDocument) {
 		return domDocument.createHtmlEvent(BrowserEvents.BLUR, false, false);
 	}
 
@@ -63,7 +63,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static BRElement createBRElement(DomDocument domDocument) {
+	static BRElement createBRElement(ClientDomDocument domDocument) {
 		return (BRElement) DOMImpl.impl.createElement(domDocument.documentFor(),
 				BRElement.TAG);
 	}
@@ -80,7 +80,7 @@ public class DomDocumentStatic {
 	 *             {@link #createSubmitButtonElement()} instead.
 	 */
 	@Deprecated
-	static ButtonElement createButtonElement(DomDocument domDocument) {
+	static ButtonElement createButtonElement(ClientDomDocument domDocument) {
 		return (ButtonElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), ButtonElement.TAG);
 	}
@@ -90,7 +90,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createButtonInputElement(DomDocument domDocument) {
+	static InputElement createButtonInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"button");
 	}
@@ -100,7 +100,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static CanvasElement createCanvasElement(DomDocument domDocument) {
+	static CanvasElement createCanvasElement(ClientDomDocument domDocument) {
 		return (CanvasElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), CanvasElement.TAG);
 	}
@@ -110,7 +110,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableCaptionElement createCaptionElement(DomDocument domDocument) {
+	static TableCaptionElement createCaptionElement(ClientDomDocument domDocument) {
 		return (TableCaptionElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableCaptionElement.TAG);
 	}
@@ -118,7 +118,7 @@ public class DomDocumentStatic {
 	/**
 	 * Creates a 'change' event.
 	 */
-	static NativeEvent createChangeEvent(DomDocument domDocument) {
+	static NativeEvent createChangeEvent(ClientDomDocument domDocument) {
 		return domDocument.createHtmlEvent(BrowserEvents.CHANGE, false, true);
 	}
 
@@ -127,7 +127,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createCheckInputElement(DomDocument domDocument) {
+	static InputElement createCheckInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createCheckInputElement(domDocument.documentFor());
 	}
 
@@ -159,7 +159,7 @@ public class DomDocumentStatic {
 	 *            <code>true</code> if the meta key is depressed
 	 * @return the event object
 	 */
-	static NativeEvent createClickEvent(DomDocument domDocument, int detail,
+	static NativeEvent createClickEvent(ClientDomDocument domDocument, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey) {
 		// We disallow setting the button here, because IE doesn't provide the
@@ -174,7 +174,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableColElement createColElement(DomDocument domDocument) {
+	static TableColElement createColElement(ClientDomDocument domDocument) {
 		return (TableColElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableColElement.TAG_COL);
 	}
@@ -184,7 +184,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableColElement createColGroupElement(DomDocument domDocument) {
+	static TableColElement createColGroupElement(ClientDomDocument domDocument) {
 		return (TableColElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableColElement.TAG_COLGROUP);
 	}
@@ -197,7 +197,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the event object
 	 */
-	static NativeEvent createContextMenuEvent(DomDocument domDocument) {
+	static NativeEvent createContextMenuEvent(ClientDomDocument domDocument) {
 		return domDocument.createHtmlEvent(BrowserEvents.CONTEXTMENU, true,
 				true);
 	}
@@ -235,7 +235,7 @@ public class DomDocumentStatic {
 	 *            <code>true</code> if the meta key is depressed
 	 * @return the event object
 	 */
-	static NativeEvent createDblClickEvent(DomDocument domDocument, int detail,
+	static NativeEvent createDblClickEvent(ClientDomDocument domDocument, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey) {
 		// We disallow setting the button here, because IE doesn't provide the
@@ -250,7 +250,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ModElement createDelElement(DomDocument domDocument) {
+	static ModElement createDelElement(ClientDomDocument domDocument) {
 		return (ModElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), ModElement.TAG_DEL);
 	}
@@ -260,7 +260,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static DivElement createDivElement(DomDocument domDocument) {
+	static DivElement createDivElement(ClientDomDocument domDocument) {
 		return (DivElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), DivElement.TAG);
 	}
@@ -270,7 +270,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static DListElement createDLElement(DomDocument domDocument) {
+	static DListElement createDLElement(ClientDomDocument domDocument) {
 		return (DListElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), DListElement.TAG);
 	}
@@ -282,7 +282,7 @@ public class DomDocumentStatic {
 	 *            the tag name of the element to be created
 	 * @return the newly created element
 	 */
-	static Element createElement(DomDocument domDocument, String tagName) {
+	static Element createElement(ClientDomDocument domDocument, String tagName) {
 		return DOMImpl.impl.createElement(domDocument.documentFor(), tagName);
 	}
 
@@ -291,7 +291,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the event object
 	 */
-	static NativeEvent createErrorEvent(DomDocument domDocument) {
+	static NativeEvent createErrorEvent(ClientDomDocument domDocument) {
 		return domDocument.createHtmlEvent(BrowserEvents.ERROR, false, false);
 	}
 
@@ -300,7 +300,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static FieldSetElement createFieldSetElement(DomDocument domDocument) {
+	static FieldSetElement createFieldSetElement(ClientDomDocument domDocument) {
 		return (FieldSetElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), FieldSetElement.TAG);
 	}
@@ -310,7 +310,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createFileInputElement(DomDocument domDocument) {
+	static InputElement createFileInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"file");
 	}
@@ -320,7 +320,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the event object
 	 */
-	static NativeEvent createFocusEvent(DomDocument domDocument) {
+	static NativeEvent createFocusEvent(ClientDomDocument domDocument) {
 		return domDocument.createHtmlEvent(BrowserEvents.FOCUS, false, false);
 	}
 
@@ -329,7 +329,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static FormElement createFormElement(DomDocument domDocument) {
+	static FormElement createFormElement(ClientDomDocument domDocument) {
 		return (FormElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), FormElement.TAG);
 	}
@@ -339,7 +339,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static FrameElement createFrameElement(DomDocument domDocument) {
+	static FrameElement createFrameElement(ClientDomDocument domDocument) {
 		return (FrameElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), FrameElement.TAG);
 	}
@@ -349,7 +349,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static FrameSetElement createFrameSetElement(DomDocument domDocument) {
+	static FrameSetElement createFrameSetElement(ClientDomDocument domDocument) {
 		return (FrameSetElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), FrameSetElement.TAG);
 	}
@@ -359,7 +359,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static HeadElement createHeadElement(DomDocument domDocument) {
+	static HeadElement createHeadElement(ClientDomDocument domDocument) {
 		return (HeadElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), HeadElement.TAG);
 	}
@@ -371,7 +371,7 @@ public class DomDocumentStatic {
 	 *            the type of heading, from 1 to 6 inclusive
 	 * @return the newly created element
 	 */
-	static HeadingElement createHElement(DomDocument domDocument, int n) {
+	static HeadingElement createHElement(ClientDomDocument domDocument, int n) {
 		assert (n >= 1) && (n <= 6);
 		return (HeadingElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), "h" + n);
@@ -382,7 +382,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createHiddenInputElement(DomDocument domDocument) {
+	static InputElement createHiddenInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"hidden");
 	}
@@ -392,7 +392,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static HRElement createHRElement(DomDocument domDocument) {
+	static HRElement createHRElement(ClientDomDocument domDocument) {
 		return (HRElement) DOMImpl.impl.createElement(domDocument.documentFor(),
 				HRElement.TAG);
 	}
@@ -421,7 +421,7 @@ public class DomDocumentStatic {
 	 *            <code>true</code> if the event should be cancelable
 	 * @return the event object
 	 */
-	static NativeEvent createHtmlEvent(DomDocument domDocument, String type,
+	static NativeEvent createHtmlEvent(ClientDomDocument domDocument, String type,
 			boolean canBubble, boolean cancelable) {
 		return DOMImpl.impl.createHtmlEvent(domDocument.documentFor(), type,
 				canBubble, cancelable);
@@ -432,7 +432,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static IFrameElement createIFrameElement(DomDocument domDocument) {
+	static IFrameElement createIFrameElement(ClientDomDocument domDocument) {
 		return (IFrameElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), IFrameElement.TAG);
 	}
@@ -442,7 +442,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ImageElement createImageElement(DomDocument domDocument) {
+	static ImageElement createImageElement(ClientDomDocument domDocument) {
 		return (ImageElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), ImageElement.TAG);
 	}
@@ -452,7 +452,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createImageInputElement(DomDocument domDocument) {
+	static InputElement createImageInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"image");
 	}
@@ -460,7 +460,7 @@ public class DomDocumentStatic {
 	/**
 	 * Creates an 'input' event.
 	 */
-	static NativeEvent createInputEvent(DomDocument domDocument) {
+	static NativeEvent createInputEvent(ClientDomDocument domDocument) {
 		return domDocument.createHtmlEvent(BrowserEvents.INPUT, true, false);
 	}
 
@@ -469,7 +469,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ModElement createInsElement(DomDocument domDocument) {
+	static ModElement createInsElement(ClientDomDocument domDocument) {
 		return (ModElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), ModElement.TAG_INS);
 	}
@@ -499,7 +499,7 @@ public class DomDocumentStatic {
 	 *            the key-code to be set on the event
 	 * @return the event object
 	 */
-	static NativeEvent createKeyCodeEvent(DomDocument domDocument, String type,
+	static NativeEvent createKeyCodeEvent(ClientDomDocument domDocument, String type,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
 		return DOMImpl.impl.createKeyCodeEvent(domDocument.documentFor(), type,
@@ -521,7 +521,7 @@ public class DomDocumentStatic {
 	 *            the key-code to be set on the event
 	 * @return the event object
 	 */
-	static NativeEvent createKeyDownEvent(DomDocument domDocument,
+	static NativeEvent createKeyDownEvent(ClientDomDocument domDocument,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
 		return domDocument.createKeyCodeEvent(BrowserEvents.KEYDOWN, ctrlKey,
@@ -549,7 +549,7 @@ public class DomDocumentStatic {
 	 *             {@link #createKeyDownEvent(boolean, boolean, boolean, boolean, int)}
 	 */
 	@Deprecated
-	static NativeEvent createKeyDownEvent(DomDocument domDocument,
+	static NativeEvent createKeyDownEvent(ClientDomDocument domDocument,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode, int charCode) {
 		return domDocument.createKeyEvent(BrowserEvents.KEYDOWN, true, true,
@@ -599,7 +599,7 @@ public class DomDocumentStatic {
 	 *             {@link #createKeyPressEvent(boolean, boolean, boolean, boolean, int)}
 	 */
 	@Deprecated
-	static NativeEvent createKeyEvent(DomDocument domDocument, String type,
+	static NativeEvent createKeyEvent(ClientDomDocument domDocument, String type,
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
@@ -623,7 +623,7 @@ public class DomDocumentStatic {
 	 *            the char-code to be set on the event
 	 * @return the event object
 	 */
-	static NativeEvent createKeyPressEvent(DomDocument domDocument,
+	static NativeEvent createKeyPressEvent(ClientDomDocument domDocument,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode) {
 		return DOMImpl.impl.createKeyPressEvent(domDocument.documentFor(),
@@ -651,7 +651,7 @@ public class DomDocumentStatic {
 	 *             {@link #createKeyPressEvent(boolean, boolean, boolean, boolean, int)}
 	 */
 	@Deprecated
-	static NativeEvent createKeyPressEvent(DomDocument domDocument,
+	static NativeEvent createKeyPressEvent(ClientDomDocument domDocument,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode, int charCode) {
 		return domDocument.createKeyEvent(BrowserEvents.KEYPRESS, true, true,
@@ -673,7 +673,7 @@ public class DomDocumentStatic {
 	 *            the key-code to be set on the event
 	 * @return the event object
 	 */
-	static NativeEvent createKeyUpEvent(DomDocument domDocument,
+	static NativeEvent createKeyUpEvent(ClientDomDocument domDocument,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
 		return domDocument.createKeyCodeEvent(BrowserEvents.KEYUP, ctrlKey,
@@ -701,7 +701,7 @@ public class DomDocumentStatic {
 	 *             {@link #createKeyUpEvent(boolean, boolean, boolean, boolean, int)}
 	 */
 	@Deprecated
-	static NativeEvent createKeyUpEvent(DomDocument domDocument,
+	static NativeEvent createKeyUpEvent(ClientDomDocument domDocument,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode, int charCode) {
 		return domDocument.createKeyEvent(BrowserEvents.KEYUP, true, true,
@@ -713,7 +713,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static LabelElement createLabelElement(DomDocument domDocument) {
+	static LabelElement createLabelElement(ClientDomDocument domDocument) {
 		return (LabelElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), LabelElement.TAG);
 	}
@@ -723,7 +723,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static LegendElement createLegendElement(DomDocument domDocument) {
+	static LegendElement createLegendElement(ClientDomDocument domDocument) {
 		return (LegendElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), LegendElement.TAG);
 	}
@@ -733,7 +733,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static LIElement createLIElement(DomDocument domDocument) {
+	static LIElement createLIElement(ClientDomDocument domDocument) {
 		return (LIElement) DOMImpl.impl.createElement(domDocument.documentFor(),
 				LIElement.TAG);
 	}
@@ -743,7 +743,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static LinkElement createLinkElement(DomDocument domDocument) {
+	static LinkElement createLinkElement(ClientDomDocument domDocument) {
 		return (LinkElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), LinkElement.TAG);
 	}
@@ -753,7 +753,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the event object
 	 */
-	static NativeEvent createLoadEvent(DomDocument domDocument) {
+	static NativeEvent createLoadEvent(ClientDomDocument domDocument) {
 		return domDocument.createHtmlEvent(BrowserEvents.LOAD, false, false);
 	}
 
@@ -762,7 +762,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static MapElement createMapElement(DomDocument domDocument) {
+	static MapElement createMapElement(ClientDomDocument domDocument) {
 		return (MapElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), MapElement.TAG);
 	}
@@ -772,7 +772,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static MetaElement createMetaElement(DomDocument domDocument) {
+	static MetaElement createMetaElement(ClientDomDocument domDocument) {
 		return (MetaElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), MetaElement.TAG);
 	}
@@ -803,7 +803,7 @@ public class DomDocumentStatic {
 	 *            {@link NativeEvent#BUTTON_LEFT} et al)
 	 * @return the event object
 	 */
-	static NativeEvent createMouseDownEvent(DomDocument domDocument, int detail,
+	static NativeEvent createMouseDownEvent(ClientDomDocument domDocument, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
 		return domDocument.createMouseEvent(BrowserEvents.MOUSEDOWN, true, true,
@@ -860,7 +860,7 @@ public class DomDocumentStatic {
 	 *            mouseout events)
 	 * @return the event object
 	 */
-	static NativeEvent createMouseEvent(DomDocument domDocument, String type,
+	static NativeEvent createMouseEvent(ClientDomDocument domDocument, String type,
 			boolean canBubble, boolean cancelable, int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
@@ -897,7 +897,7 @@ public class DomDocumentStatic {
 	 *            {@link NativeEvent#BUTTON_LEFT} et al)
 	 * @return the event object
 	 */
-	static NativeEvent createMouseMoveEvent(DomDocument domDocument, int detail,
+	static NativeEvent createMouseMoveEvent(ClientDomDocument domDocument, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
 		return domDocument.createMouseEvent(BrowserEvents.MOUSEMOVE, true, true,
@@ -936,7 +936,7 @@ public class DomDocumentStatic {
 	 *            the event's related target
 	 * @return the event object
 	 */
-	static NativeEvent createMouseOutEvent(DomDocument domDocument, int detail,
+	static NativeEvent createMouseOutEvent(ClientDomDocument domDocument, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
@@ -976,7 +976,7 @@ public class DomDocumentStatic {
 	 *            the event's related target
 	 * @return the event object
 	 */
-	static NativeEvent createMouseOverEvent(DomDocument domDocument, int detail,
+	static NativeEvent createMouseOverEvent(ClientDomDocument domDocument, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
@@ -1011,7 +1011,7 @@ public class DomDocumentStatic {
 	 *            {@link NativeEvent#BUTTON_LEFT} et al)
 	 * @return the event object
 	 */
-	static NativeEvent createMouseUpEvent(DomDocument domDocument, int detail,
+	static NativeEvent createMouseUpEvent(ClientDomDocument domDocument, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
 		return domDocument.createMouseEvent(BrowserEvents.MOUSEUP, true, true,
@@ -1024,7 +1024,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ObjectElement createObjectElement(DomDocument domDocument) {
+	static ObjectElement createObjectElement(ClientDomDocument domDocument) {
 		return (ObjectElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), ObjectElement.TAG);
 	}
@@ -1034,7 +1034,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static OListElement createOLElement(DomDocument domDocument) {
+	static OListElement createOLElement(ClientDomDocument domDocument) {
 		return (OListElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), OListElement.TAG);
 	}
@@ -1044,7 +1044,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static OptGroupElement createOptGroupElement(DomDocument domDocument) {
+	static OptGroupElement createOptGroupElement(ClientDomDocument domDocument) {
 		return (OptGroupElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), OptGroupElement.TAG);
 	}
@@ -1054,7 +1054,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static OptionElement createOptionElement(DomDocument domDocument) {
+	static OptionElement createOptionElement(ClientDomDocument domDocument) {
 		return (OptionElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), OptionElement.TAG);
 	}
@@ -1064,7 +1064,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ParamElement createParamElement(DomDocument domDocument) {
+	static ParamElement createParamElement(ClientDomDocument domDocument) {
 		return (ParamElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), ParamElement.TAG);
 	}
@@ -1074,7 +1074,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createPasswordInputElement(DomDocument domDocument) {
+	static InputElement createPasswordInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"password");
 	}
@@ -1084,7 +1084,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ParagraphElement createPElement(DomDocument domDocument) {
+	static ParagraphElement createPElement(ClientDomDocument domDocument) {
 		return (ParagraphElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), ParagraphElement.TAG);
 	}
@@ -1094,7 +1094,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static PreElement createPreElement(DomDocument domDocument) {
+	static PreElement createPreElement(ClientDomDocument domDocument) {
 		return (PreElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), PreElement.TAG);
 	}
@@ -1104,7 +1104,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ButtonElement createPushButtonElement(DomDocument domDocument) {
+	static ButtonElement createPushButtonElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createButtonElement(domDocument.documentFor(),
 				"button");
 	}
@@ -1114,7 +1114,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static QuoteElement createQElement(DomDocument domDocument) {
+	static QuoteElement createQElement(ClientDomDocument domDocument) {
 		return (QuoteElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), QuoteElement.TAG_Q);
 	}
@@ -1126,7 +1126,7 @@ public class DomDocumentStatic {
 	 *            the name of the radio input (used for grouping)
 	 * @return the newly created element
 	 */
-	static InputElement createRadioInputElement(DomDocument domDocument,
+	static InputElement createRadioInputElement(ClientDomDocument domDocument,
 			String name) {
 		return DOMImpl.impl.createInputRadioElement(domDocument.documentFor(),
 				name);
@@ -1137,7 +1137,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ButtonElement createResetButtonElement(DomDocument domDocument) {
+	static ButtonElement createResetButtonElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createButtonElement(domDocument.documentFor(),
 				"reset");
 	}
@@ -1147,7 +1147,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createResetInputElement(DomDocument domDocument) {
+	static InputElement createResetInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"reset");
 	}
@@ -1157,7 +1157,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ScriptElement createScriptElement(DomDocument domDocument) {
+	static ScriptElement createScriptElement(ClientDomDocument domDocument) {
 		return (ScriptElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), ScriptElement.TAG);
 	}
@@ -1169,7 +1169,7 @@ public class DomDocumentStatic {
 	 *            the source code to set inside the element
 	 * @return the newly created element
 	 */
-	static ScriptElement createScriptElement(DomDocument domDocument,
+	static ScriptElement createScriptElement(ClientDomDocument domDocument,
 			String source) {
 		return DOMImpl.impl.createScriptElement(domDocument.documentFor(),
 				source);
@@ -1183,7 +1183,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the event object
 	 */
-	static NativeEvent createScrollEvent(DomDocument domDocument) {
+	static NativeEvent createScrollEvent(ClientDomDocument domDocument) {
 		return domDocument.createHtmlEvent(BrowserEvents.SCROLL, false, false);
 	}
 
@@ -1192,7 +1192,7 @@ public class DomDocumentStatic {
 	 *
 	 * @return the newly created element
 	 */
-	static SelectElement createSelectElement(DomDocument domDocument) {
+	static SelectElement createSelectElement(ClientDomDocument domDocument) {
 		return (SelectElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), SelectElement.TAG);
 	}
@@ -1209,7 +1209,7 @@ public class DomDocumentStatic {
 	 *              multiple-selection.
 	 */
 	@Deprecated
-	static SelectElement createSelectElement(DomDocument domDocument,
+	static SelectElement createSelectElement(ClientDomDocument domDocument,
 			boolean multiple) {
 		SelectElement el = domDocument.createSelectElement();
 		el.setMultiple(multiple);
@@ -1221,7 +1221,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static SourceElement createSourceElement(DomDocument domDocument) {
+	static SourceElement createSourceElement(ClientDomDocument domDocument) {
 		return (SourceElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), SourceElement.TAG);
 	}
@@ -1231,7 +1231,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static SpanElement createSpanElement(DomDocument domDocument) {
+	static SpanElement createSpanElement(ClientDomDocument domDocument) {
 		return (SpanElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), SpanElement.TAG);
 	}
@@ -1241,7 +1241,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static StyleElement createStyleElement(DomDocument domDocument) {
+	static StyleElement createStyleElement(ClientDomDocument domDocument) {
 		return (StyleElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), StyleElement.TAG);
 	}
@@ -1251,7 +1251,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ButtonElement createSubmitButtonElement(DomDocument domDocument) {
+	static ButtonElement createSubmitButtonElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createButtonElement(domDocument.documentFor(),
 				"submit");
 	}
@@ -1261,7 +1261,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createSubmitInputElement(DomDocument domDocument) {
+	static InputElement createSubmitInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"submit");
 	}
@@ -1271,7 +1271,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableElement createTableElement(DomDocument domDocument) {
+	static TableElement createTableElement(ClientDomDocument domDocument) {
 		return (TableElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), TableElement.TAG);
 	}
@@ -1281,7 +1281,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableSectionElement createTBodyElement(DomDocument domDocument) {
+	static TableSectionElement createTBodyElement(ClientDomDocument domDocument) {
 		return (TableSectionElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableSectionElement.TAG_TBODY);
 	}
@@ -1291,7 +1291,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableCellElement createTDElement(DomDocument domDocument) {
+	static TableCellElement createTDElement(ClientDomDocument domDocument) {
 		return (TableCellElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableCellElement.TAG_TD);
 	}
@@ -1301,7 +1301,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TextAreaElement createTextAreaElement(DomDocument domDocument) {
+	static TextAreaElement createTextAreaElement(ClientDomDocument domDocument) {
 		return (TextAreaElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), TextAreaElement.TAG);
 	}
@@ -1311,7 +1311,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createTextInputElement(DomDocument domDocument) {
+	static InputElement createTextInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"text");
 	}
@@ -1321,7 +1321,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableSectionElement createTFootElement(DomDocument domDocument) {
+	static TableSectionElement createTFootElement(ClientDomDocument domDocument) {
 		return (TableSectionElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableSectionElement.TAG_TFOOT);
 	}
@@ -1331,7 +1331,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableSectionElement createTHeadElement(DomDocument domDocument) {
+	static TableSectionElement createTHeadElement(ClientDomDocument domDocument) {
 		return (TableSectionElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableSectionElement.TAG_THEAD);
 	}
@@ -1341,7 +1341,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableCellElement createTHElement(DomDocument domDocument) {
+	static TableCellElement createTHElement(ClientDomDocument domDocument) {
 		return (TableCellElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableCellElement.TAG_TH);
 	}
@@ -1351,7 +1351,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TitleElement createTitleElement(DomDocument domDocument) {
+	static TitleElement createTitleElement(ClientDomDocument domDocument) {
 		return (TitleElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), TitleElement.TAG);
 	}
@@ -1361,7 +1361,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableRowElement createTRElement(DomDocument domDocument) {
+	static TableRowElement createTRElement(ClientDomDocument domDocument) {
 		return (TableRowElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), TableRowElement.TAG);
 	}
@@ -1371,7 +1371,7 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static UListElement createULElement(DomDocument domDocument) {
+	static UListElement createULElement(ClientDomDocument domDocument) {
 		return (UListElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), UListElement.TAG);
 	}
@@ -1381,121 +1381,121 @@ public class DomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static VideoElement createVideoElement(DomDocument domDocument) {
+	static VideoElement createVideoElement(ClientDomDocument domDocument) {
 		return (VideoElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), VideoElement.TAG);
 	}
 
-	static void enableScrolling(DomDocument domDocument, boolean enable) {
+	static void enableScrolling(ClientDomDocument domDocument, boolean enable) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getBodyOffsetLeft(DomDocument domDocument) {
+	static int getBodyOffsetLeft(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getBodyOffsetTop(DomDocument domDocument) {
+	static int getBodyOffsetTop(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getClientHeight(DomDocument domDocument) {
+	static int getClientHeight(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getClientWidth(DomDocument domDocument) {
+	static int getClientWidth(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static String getCompatMode(DomDocument domDocument) {
+	static String getCompatMode(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static Element getDocumentElement(DomDocument domDocument) {
+	static Element getDocumentElement(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static String getDomain(DomDocument domDocument) {
+	static String getDomain(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static Element getElementById(DomDocument domDocument, String elementId) {
+	static Element getElementById(ClientDomDocument domDocument, String elementId) {
 		throw new UnsupportedOperationException();
 	}
 
-	static NodeList<Element> getElementsByTagName(DomDocument domDocument,
+	static NodeList<Element> getElementsByTagName(ClientDomDocument domDocument,
 			String tagName) {
 		throw new UnsupportedOperationException();
 	}
 
-	static HeadElement getHead(DomDocument domDocument) {
+	static HeadElement getHead(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static String getNodeName(DomDocument domDocument) {
+	static String getNodeName(ClientDomDocument domDocument) {
 		return "#document";
 	}
 
-	static short getNodeType(DomDocument domDocument) {
+	static short getNodeType(ClientDomDocument domDocument) {
 		return Node.DOCUMENT_NODE;
 	}
 
-	static String getNodeValue(DomDocument domDocument) {
+	static String getNodeValue(ClientDomDocument domDocument) {
 		return null;
 	}
 
-	static String getReferrer(DomDocument domDocument) {
+	static String getReferrer(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getScrollHeight(DomDocument domDocument) {
+	static int getScrollHeight(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getScrollLeft(DomDocument domDocument) {
+	static int getScrollLeft(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getScrollTop(DomDocument domDocument) {
+	static int getScrollTop(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getScrollWidth(DomDocument domDocument) {
+	static int getScrollWidth(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static String getTitle(DomDocument domDocument) {
+	static String getTitle(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static String getURL(DomDocument domDocument) {
+	static String getURL(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static Element getViewportElement(DomDocument domDocument) {
+	static Element getViewportElement(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static void importNode(DomDocument domDocument, Node node, boolean deep) {
+	static void importNode(ClientDomDocument domDocument, Node node, boolean deep) {
 		throw new UnsupportedOperationException();
 	}
 
-	static boolean isCSS1Compat(DomDocument domDocument) {
+	static boolean isCSS1Compat(ClientDomDocument domDocument) {
 		throw new UnsupportedOperationException();
 	}
 
-	static void setNodeValue(DomDocument domDocument, String nodeValue) {
+	static void setNodeValue(ClientDomDocument domDocument, String nodeValue) {
 		throw new UnsupportedOperationException();
 	}
 
-	static void setScrollLeft(DomDocument domDocument, int left) {
+	static void setScrollLeft(ClientDomDocument domDocument, int left) {
 		throw new UnsupportedOperationException();
 	}
 
-	static void setScrollTop(DomDocument domDocument, int top) {
+	static void setScrollTop(ClientDomDocument domDocument, int top) {
 		throw new UnsupportedOperationException();
 	}
 
-	static void setTitle(DomDocument domDocument, String title) {
+	static void setTitle(ClientDomDocument domDocument, String title) {
 		throw new UnsupportedOperationException();
 	}
 }

@@ -1,7 +1,7 @@
 package com.google.gwt.dom.client;
 
 public class ProcessingInstructionRemote extends NodeRemote
-		implements DomProcessingInstruction {
+		implements ClientDomProcessingInstruction {
 	// sole creator (DocumentRemote) throws
 	protected ProcessingInstructionRemote() {
 		// https://developer.mozilla.org/en-US/docs/Web/API/ProcessingInstruction

@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class CommentRemote extends NodeRemote implements DomComment {
+public class CommentRemote extends NodeRemote implements ClientDomComment {
 	protected CommentRemote() {
 	}
 

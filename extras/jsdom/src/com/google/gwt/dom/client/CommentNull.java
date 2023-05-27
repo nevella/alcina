@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class CommentNull extends NodeLocalNull implements DomComment {
+public class CommentNull extends NodeLocalNull implements ClientDomComment {
 	static final CommentNull INSTANCE = new CommentNull();
 
 	CommentNull() {

@@ -25,7 +25,7 @@ import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 import com.google.gwt.safehtml.shared.annotations.IsSafeUri;
 
-public interface DomStyle {
+public interface ClientDomStyle {
 	/**
 	 * Clear the background-color css property.
 	 */

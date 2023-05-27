@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import java.util.stream.Stream;
 
-public interface DomNodeList<T extends Node> {
+public interface ClientDomNodeList<T extends Node> {
 	T getItem(int index);
 
 	int getLength();

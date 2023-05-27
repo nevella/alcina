@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
  * all objects implementing the Node interface may have children.
  */
 public abstract class Node
-		implements JavascriptObjectEquivalent, ClientNode, org.w3c.dom.Node {
+		implements JavascriptObjectEquivalent, ClientDomNode, org.w3c.dom.Node {
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -99,7 +99,7 @@ public abstract class Node
 
 	@Override
 	public void callMethod(String methodName) {
-		DomNodeStatic.callMethod(this, methodName);
+		ClientDomNodeStatic.callMethod(this, methodName);
 	}
 
 	@Override
@@ -130,12 +130,12 @@ public abstract class Node
 
 	@Override
 	public Node getChild(int index) {
-		return DomNodeStatic.getChild(this, index);
+		return ClientDomNodeStatic.getChild(this, index);
 	}
 
 	@Override
 	public int getChildCount() {
-		return DomNodeStatic.getChildCount(this);
+		return ClientDomNodeStatic.getChildCount(this);
 	}
 
 	@Override
@@ -230,7 +230,7 @@ public abstract class Node
 
 	@Override
 	public boolean hasParentElement() {
-		return DomNodeStatic.hasParentElement(this);
+		return ClientDomNodeStatic.hasParentElement(this);
 	}
 
 	public ImplAccess implAccess() {
@@ -244,7 +244,7 @@ public abstract class Node
 
 	@Override
 	public Node insertAfter(Node newChild, Node refChild) {
-		return DomNodeStatic.insertAfter(this, newChild, refChild);
+		return ClientDomNodeStatic.insertAfter(this, newChild, refChild);
 	}
 
 	@Override
@@ -270,7 +270,7 @@ public abstract class Node
 
 	@Override
 	public Node insertFirst(Node child) {
-		return DomNodeStatic.insertFirst(this, child);
+		return ClientDomNodeStatic.insertFirst(this, child);
 	}
 
 	@Override
@@ -331,7 +331,7 @@ public abstract class Node
 	@Override
 	public Node removeAllChildren() {
 		getChildNodes().forEach(n -> doPreTreeResolution(n));
-		return DomNodeStatic.removeAllChildren(this);
+		return ClientDomNodeStatic.removeAllChildren(this);
 	}
 
 	@Override
@@ -370,7 +370,7 @@ public abstract class Node
 		return replaceChild((Node) arg0, (Node) arg1);
 	}
 
-	public ClientNode sameTreeNodeFor(ClientNode domNode) {
+	public ClientDomNode sameTreeNodeFor(ClientDomNode domNode) {
 		if (domNode == null) {
 			return null;
 		}
@@ -468,9 +468,9 @@ public abstract class Node
 		return null;
 	}
 
-	protected abstract void putRemote(NodeRemote nodeDom, boolean resolved);
+	protected abstract void putRemote(ClientDomNode remote, boolean resolved);
 
-	protected abstract <T extends ClientNode> T remote();
+	protected abstract <T extends ClientDomNode> T remote();
 
 	protected void resetRemote() {
 		clearResolved();
@@ -514,7 +514,11 @@ public abstract class Node
 	}
 
 	public class ImplAccess {
-		public <E extends ClientNode> E remote() {
+		public <E extends ClientDomNode> E local() {
+			return (E) Node.this.local();
+		}
+
+		public <E extends ClientDomNode> E remote() {
 			return (E) typedRemote();
 		}
 	}

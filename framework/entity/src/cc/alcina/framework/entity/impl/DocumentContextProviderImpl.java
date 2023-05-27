@@ -33,13 +33,17 @@ public class DocumentContextProviderImpl implements
 		Document.registerContextProvider(this);
 	}
 
-	public void registerContextFrame() {
-		LooseContext.set(contextKeyFrame(), new DocumentFrame());
+	public void registerContextFrame(DocumentFrame frame) {
+		LooseContext.set(contextKeyFrame(), frame);
 	}
 
 	@Override
 	public void registerCreatedDocument(Document document) {
 		contextInstance().document = document;
+	}
+
+	public void registerNewContextFrame() {
+		registerContextFrame(new DocumentFrame());
 	}
 
 	private String contextKeyFrame() {

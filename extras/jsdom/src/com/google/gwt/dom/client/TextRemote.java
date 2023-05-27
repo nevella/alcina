@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class TextRemote extends NodeRemote implements DomText {
+public class TextRemote extends NodeRemote implements ClientDomText {
 	protected TextRemote() {
 	}
 

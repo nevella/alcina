@@ -3,7 +3,7 @@ package com.google.gwt.dom.client;
 /*
  * Could extend DomText, but doesn't due to JSO single-interface restrictions
  */
-public interface DomCDATASection extends ClientNode {
+public interface ClientDomComment extends ClientDomNode {
 	void deleteData(int offset, int length);
 
 	String getData();

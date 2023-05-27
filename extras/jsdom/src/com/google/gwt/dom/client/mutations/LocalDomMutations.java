@@ -1,7 +1,9 @@
 package com.google.gwt.dom.client.mutations;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -10,10 +12,12 @@ import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.MutationRecordJso;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 public class LocalDomMutations {
 	MutationsAccess mutationsAccess;
@@ -43,6 +47,11 @@ public class LocalDomMutations {
 		history = new MutationHistory(this);
 	}
 
+	public void applyDetachedMutations(List<MutationRecord> mutations) {
+		SyncMutations syncMutations = new SyncMutations(mutationsAccess);
+		syncMutations.applyDetachedMutationsToLocalDom(mutations);
+	}
+
 	public boolean hadExceptions() {
 		return history.hadExceptions() || hadExceptions;
 	}
@@ -57,6 +66,16 @@ public class LocalDomMutations {
 
 	public boolean isObserverConnected() {
 		return this.observerConnected;
+	}
+
+	public List<MutationRecord> nodeAsMutations(Node node) {
+		List<MutationRecord> records = new ArrayList<>();
+		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<Node>(
+				node,
+				n -> n.getChildNodes().stream().collect(Collectors.toList()),
+				false);
+		traversal.forEach(n -> MutationRecord.forNode(n, records));
+		return records;
 	}
 
 	public String serializeHistory() {

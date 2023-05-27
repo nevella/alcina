@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-class DomNodeListStatic {
-	static <T extends Node> Stream<T> stream0(DomNodeList<T> ref) {
+class ClientDomNodeListStatic {
+	static <T extends Node> Stream<T> stream0(ClientDomNodeList<T> ref) {
 		List<T> list = new ArrayList<>();
 		for (int idx = 0; idx < ref.getLength(); idx++) {
 			list.add(ref.getItem(idx));

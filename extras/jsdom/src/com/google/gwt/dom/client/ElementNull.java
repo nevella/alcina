@@ -6,7 +6,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 public class ElementNull extends NodeLocalNull
-		implements DomElement, LocalDomElement {
+		implements ClientDomElement, LocalDomElement {
 	static final ElementNull INSTANCE = new ElementNull();
 
 	private ElementNull() {

@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.safehtml.shared.SafeHtml;
 
-public class DomElementStatic {
+public class ClientDomElementStatic {
 	/**
 	 * Returns the index of the first occurrence of name in a space-separated
 	 * list of names, or -1 if not found.
@@ -39,7 +39,7 @@ public class DomElementStatic {
 	 *         specified class name
 	 * @see #setClassName(String)
 	 */
-	static boolean addClassName(DomElement domElement, String className) {
+	static boolean addClassName(ClientDomElement domElement, String className) {
 		className = trimClassName(className);
 		// Get the current style string.
 		String oldClassName = domElement.getClassName();
@@ -56,47 +56,47 @@ public class DomElementStatic {
 		return false;
 	}
 
-	static void blur(DomElement domElement) {
+	static void blur(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static void dispatchEvent(DomElement domElement, NativeEvent evt) {
+	static void dispatchEvent(ClientDomElement domElement, NativeEvent evt) {
 		throw new UnsupportedOperationException();
 	}
 
-	static void focus(DomElement domElement) {
+	static void focus(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getAbsoluteBottom(DomElement domElement) {
+	static int getAbsoluteBottom(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getAbsoluteLeft(DomElement domElement) {
+	static int getAbsoluteLeft(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getAbsoluteRight(DomElement domElement) {
+	static int getAbsoluteRight(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getAbsoluteTop(DomElement domElement) {
+	static int getAbsoluteTop(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getClientHeight(DomElement domElement) {
+	static int getClientHeight(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getClientWidth(DomElement domElement) {
+	static int getClientWidth(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static String getDir(DomElement domElement) {
+	static String getDir(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static String getDraggable(DomElement domElement) {
+	static String getDraggable(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -104,25 +104,25 @@ public class DomElementStatic {
 	 * The first child of element this element. If there is no such element,
 	 * this returns null.
 	 */
-	static Element getFirstChildElement(DomElement domElement) {
+	static Element getFirstChildElement(ClientDomElement domElement) {
 		return DOMImpl.impl.getFirstChildElement(domElement.elementFor());
 	}
 
 	/**
 	 * All of the markup and content within a given element.
 	 */
-	static String getInnerHTML(DomElement domElement) {
+	static String getInnerHTML(ClientDomElement domElement) {
 		return DOMImpl.impl.getInnerHTML(domElement.elementFor());
 	}
 
 	/**
 	 * The text between the start and end tags of the object.
 	 */
-	static String getInnerText(DomElement domElement) {
+	static String getInnerText(ClientDomElement domElement) {
 		return DOMImpl.impl.getInnerText(domElement.elementFor());
 	}
 
-	static String getLang(DomElement domElement) {
+	static String getLang(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -130,11 +130,11 @@ public class DomElementStatic {
 	 * The element immediately following this element. If there is no such
 	 * element, this returns null.
 	 */
-	static Element getNextSiblingElement(DomElement domElement) {
+	static Element getNextSiblingElement(ClientDomElement domElement) {
 		return DOMImpl.impl.getNextSiblingElement(domElement.elementFor());
 	}
 
-	static int getOffsetHeight(DomElement domElement) {
+	static int getOffsetHeight(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -142,11 +142,11 @@ public class DomElementStatic {
 	 * The element immediately preceding this element. If there is no such
 	 * element, this returns null.
 	 */
-	static Element getPreviousSiblingElement(DomElement domElement) {
+	static Element getPreviousSiblingElement(ClientDomElement domElement) {
 		return DOMImpl.impl.getPreviousSiblingElement(domElement.elementFor());
 	}
 
-	static int getScrollHeight(DomElement domElement) {
+	static int getScrollHeight(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -158,15 +158,15 @@ public class DomElementStatic {
 	 * of the number of pixels scrolled from the right.
 	 * </p>
 	 */
-	static int getScrollLeft(DomElement domElement) {
+	static int getScrollLeft(ClientDomElement domElement) {
 		return DOMImpl.impl.getScrollLeft(domElement.elementFor());
 	}
 
-	static int getScrollTop(DomElement domElement) {
+	static int getScrollTop(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
-	static int getScrollWidth(DomElement domElement) {
+	static int getScrollWidth(ClientDomElement domElement) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -178,7 +178,7 @@ public class DomElementStatic {
 	 * 
 	 * @return the string representation of this element
 	 */
-	static String getString(DomElement domElement) {
+	static String getString(ClientDomElement domElement) {
 		return DOMImpl.impl.toString(domElement.elementFor());
 	}
 
@@ -189,7 +189,7 @@ public class DomElementStatic {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-tabindex">
 	 *      W3C HTML Specification</a>
 	 */
-	static int getTabIndex(DomElement domElement) {
+	static int getTabIndex(ClientDomElement domElement) {
 		return DOMImpl.impl.getTabIndex(domElement.elementFor());
 	}
 
@@ -199,7 +199,7 @@ public class DomElementStatic {
 	 * 
 	 * @return the element's tag name
 	 */
-	static String getTagName(DomElement domElement) {
+	static String getTagName(ClientDomElement domElement) {
 		return DOMImpl.impl.getTagName(domElement.elementFor());
 	}
 
@@ -215,7 +215,7 @@ public class DomElementStatic {
 	 *            the name of the attribute
 	 * @return <code>true</code> if this element has the specified attribute
 	 */
-	static boolean hasAttribute(DomElement domElement, String name) {
+	static boolean hasAttribute(ClientDomElement domElement, String name) {
 		return DOMImpl.impl.hasAttribute(domElement.elementFor(), name);
 	}
 
@@ -226,7 +226,7 @@ public class DomElementStatic {
 	 *            the class name to be added
 	 * @return <code>true</code> if this element has the specified class name
 	 */
-	static boolean hasClassName(DomElement domElement, String className) {
+	static boolean hasClassName(ClientDomElement domElement, String className) {
 		className = trimClassName(className);
 		int idx = indexOfName(domElement.getClassName(), className);
 		return idx != -1;
@@ -239,7 +239,7 @@ public class DomElementStatic {
 	 *            the tag name, including namespace-prefix (if present)
 	 * @return <code>true</code> if the element has the given tag name
 	 */
-	static boolean hasTagName(DomElement domElement, String tagName) {
+	static boolean hasTagName(ClientDomElement domElement, String tagName) {
 		assert tagName != null : "tagName must not be null";
 		return tagName.equalsIgnoreCase(domElement.getTagName());
 	}
@@ -253,7 +253,7 @@ public class DomElementStatic {
 	 * @return <code>true</code> if this element had the specified class name
 	 * @see #setClassName(String)
 	 */
-	static boolean removeClassName(DomElement domElement, String className) {
+	static boolean removeClassName(ClientDomElement domElement, String className) {
 		className = trimClassName(className);
 		// Get the current className string.
 		String oldClassName = domElement.getClassName();
@@ -287,7 +287,7 @@ public class DomElementStatic {
 	 * @param newClassName
 	 *            the class name to replace it
 	 */
-	static void replaceClassName(DomElement domElement, String oldClassName,
+	static void replaceClassName(ClientDomElement domElement, String oldClassName,
 			String newClassName) {
 		domElement.removeClassName(oldClassName);
 		domElement.addClassName(newClassName);
@@ -303,11 +303,11 @@ public class DomElementStatic {
 	 * by the minimum amount necessary.
 	 * </p>
 	 */
-	static void scrollIntoView(DomElement domElement) {
+	static void scrollIntoView(ClientDomElement domElement) {
 		DOMImpl.impl.scrollIntoView(domElement.elementFor());
 	}
 
-	static void setDir(DomElement domElement, String dir) {
+	static void setDir(ClientDomElement domElement, String dir) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -318,33 +318,33 @@ public class DomElementStatic {
 	 * @param draggable
 	 *            a String constants
 	 */
-	static void setDraggable(DomElement domElement, String draggable) {
+	static void setDraggable(ClientDomElement domElement, String draggable) {
 		DOMImpl.impl.setDraggable(domElement.elementFor(), draggable);
 	}
 
 	/**
 	 * All of the markup and content within a given element.
 	 */
-	static void setInnerSafeHtml(DomElement domElement, SafeHtml html) {
+	static void setInnerSafeHtml(ClientDomElement domElement, SafeHtml html) {
 		domElement.setInnerHTML(html.asString());
 	}
 
 	/**
 	 * The text between the start and end tags of the object.
 	 */
-	static void setInnerText(DomElement domElement, String text) {
+	static void setInnerText(ClientDomElement domElement, String text) {
 		DOMImpl.impl.setInnerText(domElement.elementFor(), text);
 	}
 
-	static void setLang(DomElement domElement, String lang) {
+	static void setLang(ClientDomElement domElement, String lang) {
 		domElement.setPropertyString("lang", lang);
 	}
 
-	static void setScrollLeft(DomElement domElement, int scrollLeft) {
+	static void setScrollLeft(ClientDomElement domElement, int scrollLeft) {
 		DOMImpl.impl.setScrollLeft(domElement.elementFor(), scrollLeft);
 	}
 
-	static void setScrollTop(DomElement domElement, int scrollTop) {
+	static void setScrollTop(ClientDomElement domElement, int scrollTop) {
 		domElement.setPropertyInt("scrollTop", scrollTop);
 	}
 
@@ -354,7 +354,7 @@ public class DomElementStatic {
 	 * @param className
 	 *            the class name to be toggled
 	 */
-	static void toggleClassName(DomElement domElement, String className) {
+	static void toggleClassName(ClientDomElement domElement, String className) {
 		boolean added = domElement.addClassName(className);
 		if (!added) {
 			domElement.removeClassName(className);

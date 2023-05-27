@@ -12,40 +12,40 @@ import cc.alcina.framework.common.client.util.TextUtils;
  * @author nick@alcina.cc
  *
  */
-class DomNodeStatic {
-	public static String shortLog(List<? extends ClientNode> list) {
+class ClientDomNodeStatic {
+	public static String shortLog(List<? extends ClientDomNode> list) {
 		int idx = 0;
 		StringBuilder stringBuilder = new StringBuilder();
-		for (ClientNode domNode : list) {
+		for (ClientDomNode domNode : list) {
 			stringBuilder.append(Ax.format("%s%s\n", CommonUtils.padTwo(idx++),
 					shortLog(domNode)));
 		}
 		return stringBuilder.toString();
 	}
 
-	static void callMethod(ClientNode domNode, String methodName) {
+	static void callMethod(ClientDomNode domNode, String methodName) {
 		throw new UnsupportedOperationException();
 	}
 
-	static Node getChild(ClientNode domNode, int index) {
+	static Node getChild(ClientDomNode domNode, int index) {
 		assert (index >= 0) && (index < domNode
 				.getChildCount()) : "Child index out of bounds";
 		return domNode.getChildNodes().getItem(index);
 	}
 
-	static int getChildCount(ClientNode domNode) {
+	static int getChildCount(ClientDomNode domNode) {
 		return domNode.getChildNodes().getLength();
 	}
 
-	static Element getParentElement(ClientNode domNode) {
+	static Element getParentElement(ClientDomNode domNode) {
 		return DOMImpl.impl.getParentElement(domNode.node());
 	}
 
-	static boolean hasParentElement(ClientNode domNode) {
+	static boolean hasParentElement(ClientDomNode domNode) {
 		return domNode.getParentElement() != null;
 	}
 
-	static Node insertAfter(ClientNode domNode, Node newChild, Node refChild) {
+	static Node insertAfter(ClientDomNode domNode, Node newChild, Node refChild) {
 		assert (newChild != null) : "Cannot add a null child node";
 		if (refChild == null) {
 			// insert at start
@@ -61,12 +61,12 @@ class DomNodeStatic {
 		}
 	}
 
-	static Node insertFirst(ClientNode domNode, Node child) {
+	static Node insertFirst(ClientDomNode domNode, Node child) {
 		assert (child != null) : "Cannot add a null child node";
 		return domNode.insertBefore(child, domNode.getFirstChild());
 	}
 
-	static Node removeAllChildren(ClientNode domNode) {
+	static Node removeAllChildren(ClientDomNode domNode) {
 		Node child = null;
 		while ((child = domNode.getLastChild()) != null) {
 			domNode.removeChild(child);
@@ -74,15 +74,15 @@ class DomNodeStatic {
 		return null;// GWT impl returns null
 	}
 
-	static void removeFromParent(ClientNode domNode) {
+	static void removeFromParent(ClientDomNode domNode) {
 		Element parent = domNode.getParentElement();
 		if (parent != null) {
-			ClientNode parentDomNode = parent.sameTreeNodeFor(domNode);
+			ClientDomNode parentDomNode = parent.sameTreeNodeFor(domNode);
 			parentDomNode.removeChild(domNode.node());
 		}
 	}
 
-	static String shortLog(ClientNode node) {
+	static String shortLog(ClientDomNode node) {
 		if (node == null) {
 			return "(null)";
 		}

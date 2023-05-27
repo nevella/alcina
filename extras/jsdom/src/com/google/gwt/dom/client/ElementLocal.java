@@ -1,9 +1,11 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -16,7 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class ElementLocal extends NodeLocal
-		implements DomElement, LocalDomElement {
+		implements ClientDomElement, LocalDomElement {
 	static int _idCounter;
 
 	private static final RegExp PERMITTED_TAGS = RegExp
@@ -47,12 +49,12 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final boolean addClassName(String className) {
-		return DomElementStatic.addClassName(this, className);
+		return ClientDomElementStatic.addClassName(this, className);
 	}
 
 	@Override
 	public void blur() {
-		DomElementStatic.blur(this);
+		ClientDomElementStatic.blur(this);
 	}
 
 	public void clearChildrenAndAttributes0() {
@@ -89,7 +91,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public void dispatchEvent(NativeEvent evt) {
-		DomElementStatic.dispatchEvent(this, evt);
+		ClientDomElementStatic.dispatchEvent(this, evt);
 	}
 
 	@Override
@@ -106,27 +108,27 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public void focus() {
-		DomElementStatic.focus(this);
+		ClientDomElementStatic.focus(this);
 	}
 
 	@Override
 	public int getAbsoluteBottom() {
-		return DomElementStatic.getAbsoluteBottom(this);
+		return ClientDomElementStatic.getAbsoluteBottom(this);
 	}
 
 	@Override
 	public int getAbsoluteLeft() {
-		return DomElementStatic.getAbsoluteLeft(this);
+		return ClientDomElementStatic.getAbsoluteLeft(this);
 	}
 
 	@Override
 	public int getAbsoluteRight() {
-		return DomElementStatic.getAbsoluteRight(this);
+		return ClientDomElementStatic.getAbsoluteRight(this);
 	}
 
 	@Override
 	public int getAbsoluteTop() {
-		return DomElementStatic.getAbsoluteTop(this);
+		return ClientDomElementStatic.getAbsoluteTop(this);
 	}
 
 	@Override
@@ -147,22 +149,22 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public int getClientHeight() {
-		return DomElementStatic.getClientHeight(this);
+		return ClientDomElementStatic.getClientHeight(this);
 	}
 
 	@Override
 	public int getClientWidth() {
-		return DomElementStatic.getClientWidth(this);
+		return ClientDomElementStatic.getClientWidth(this);
 	}
 
 	@Override
 	public String getDir() {
-		return DomElementStatic.getDir(this);
+		return ClientDomElementStatic.getDir(this);
 	}
 
 	@Override
 	public String getDraggable() {
-		return DomElementStatic.getDraggable(this);
+		return ClientDomElementStatic.getDraggable(this);
 	}
 
 	@Override
@@ -211,7 +213,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public String getLang() {
-		return DomElementStatic.getLang(this);
+		return ClientDomElementStatic.getLang(this);
 	}
 
 	@Override
@@ -251,7 +253,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public int getOffsetHeight() {
-		return DomElementStatic.getOffsetHeight(this);
+		return ClientDomElementStatic.getOffsetHeight(this);
 	}
 
 	@Override
@@ -329,27 +331,27 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public int getScrollHeight() {
-		return DomElementStatic.getScrollHeight(this);
+		return ClientDomElementStatic.getScrollHeight(this);
 	}
 
 	@Override
 	public final int getScrollLeft() {
-		return DomElementStatic.getScrollLeft(this);
+		return ClientDomElementStatic.getScrollLeft(this);
 	}
 
 	@Override
 	public int getScrollTop() {
-		return DomElementStatic.getScrollTop(this);
+		return ClientDomElementStatic.getScrollTop(this);
 	}
 
 	@Override
 	public int getScrollWidth() {
-		return DomElementStatic.getScrollWidth(this);
+		return ClientDomElementStatic.getScrollWidth(this);
 	}
 
 	@Override
 	public final String getString() {
-		return DomElementStatic.getString(this);
+		return ClientDomElementStatic.getString(this);
 	}
 
 	@Override
@@ -380,12 +382,12 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final boolean hasClassName(String className) {
-		return DomElementStatic.hasClassName(this, className);
+		return ClientDomElementStatic.hasClassName(this, className);
 	}
 
 	@Override
 	public final boolean hasTagName(String tagName) {
-		return DomElementStatic.hasTagName(this, tagName);
+		return ClientDomElementStatic.hasTagName(this, tagName);
 	}
 
 	@Override
@@ -397,6 +399,17 @@ public class ElementLocal extends NodeLocal
 		this.element = element;
 	}
 
+	public ClientDomNode queryRelativePath(String path) {
+		List<Integer> ordinals = Arrays.stream(path.split("\\."))
+				.map(Integer::parseInt).collect(Collectors.toList());
+		ClientDomNode cursor = this;
+		ordinals.remove(0);
+		for (Integer childOrdinal : ordinals) {
+			cursor = cursor.getChild(childOrdinal);
+		}
+		return cursor;
+	}
+
 	@Override
 	public void removeAttribute(String name) {
 		attributes.remove(name);
@@ -404,18 +417,19 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final boolean removeClassName(String className) {
-		return DomElementStatic.removeClassName(this, className);
+		return ClientDomElementStatic.removeClassName(this, className);
 	}
 
 	@Override
 	public final void replaceClassName(String oldClassName,
 			String newClassName) {
-		DomElementStatic.replaceClassName(this, oldClassName, newClassName);
+		ClientDomElementStatic.replaceClassName(this, oldClassName,
+				newClassName);
 	}
 
 	@Override
 	public final void scrollIntoView() {
-		DomElementStatic.scrollIntoView(this);
+		ClientDomElementStatic.scrollIntoView(this);
 	}
 
 	@Override
@@ -434,12 +448,12 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public void setDir(String dir) {
-		DomElementStatic.setDir(this, dir);
+		ClientDomElementStatic.setDir(this, dir);
 	}
 
 	@Override
 	public final void setDraggable(String draggable) {
-		DomElementStatic.setDraggable(this, draggable);
+		ClientDomElementStatic.setDraggable(this, draggable);
 	}
 
 	@Override
@@ -478,7 +492,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
-		DomElementStatic.setInnerSafeHtml(this, html);
+		ClientDomElementStatic.setInnerSafeHtml(this, html);
 	}
 
 	@Override
@@ -492,7 +506,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public void setLang(String lang) {
-		DomElementStatic.setLang(this, lang);
+		ClientDomElementStatic.setLang(this, lang);
 	}
 
 	@Override
@@ -630,7 +644,7 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public final void toggleClassName(String className) {
-		DomElementStatic.toggleClassName(this, className);
+		ClientDomElementStatic.toggleClassName(this, className);
 	}
 
 	@Override

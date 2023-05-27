@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public interface DomProcessingInstruction extends ClientNode {
+public interface ClientDomProcessingInstruction extends ClientDomNode {
 	String getData();
 
 	String getTarget();
