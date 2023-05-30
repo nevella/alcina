@@ -1,7 +1,6 @@
 package com.google.gwt.dom.client.mutations;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,8 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeRemote;
+import com.google.gwt.dom.client.NodeJso;
+import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -41,24 +41,18 @@ import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 @Bean(PropertySource.FIELDS)
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 public final class MutationNode {
-	static MutationNode shallow(Node node) {
+	public static MutationNode shallow(Node node) {
+		if (node == null) {
+			return null;
+		}
 		MutationNode result = new MutationNode();
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
-		Node cursor = node;
-		List<Integer> ordinals = new ArrayList<>();
-		do {
-			Element parentElement = cursor.getParentElement();
-			int ordinal = parentElement == null ? 0
-					: parentElement.getChildIndexLocal(cursor);
-			ordinals.add(ordinal);
-			cursor = cursor.getParentElement();
-		} while (cursor != null);
-		Collections.reverse(ordinals);
-		result.path = ordinals.stream().map(String::valueOf)
-				.collect(Collectors.joining("."));
+		result.path = Pathref.from(node);
 		return result;
 	}
+
+	public Pathref path = new Pathref();
 
 	public short nodeType;
 
@@ -82,11 +76,9 @@ public final class MutationNode {
 
 	public int id = -1;
 
-	public String path = "0";
-
 	transient Node node;
 
-	transient NodeRemote remoteNode;
+	transient NodeJso remoteNode;
 
 	transient MutationsAccess access;
 
@@ -106,7 +98,7 @@ public final class MutationNode {
 		if (clientDomNode instanceof Node) {
 			this.node = (Node) clientDomNode;
 		} else {
-			this.remoteNode = (NodeRemote) clientDomNode;
+			this.remoteNode = (NodeJso) clientDomNode;
 		}
 		this.sync = sync;
 		this.access = access;
@@ -117,7 +109,7 @@ public final class MutationNode {
 		if (parent != null) {
 			this.parent = parent;
 			ordinal = parent.childNodes.size();
-			path = parent.path + "." + ordinal;
+			path = parent.path.append(ordinal);
 		}
 		if (nodeType == Node.ELEMENT_NODE) {
 			ClientDomElement elem = (ClientDomElement) clientDomNode;
@@ -131,9 +123,9 @@ public final class MutationNode {
 		if (withChildren) {
 			childNodes = new ArrayList<>();
 			// avoid wrap-in-LD-node if remote
-			if (clientDomNode instanceof NodeRemote) {
-				List<NodeRemote> list = access
-						.streamChildren((NodeRemote) clientDomNode)
+			if (clientDomNode instanceof NodeJso) {
+				List<NodeJso> list = access
+						.streamChildren((NodeJso) clientDomNode)
 						.collect(Collectors.toList());
 				int length = list.size();
 				for (int idx = 0; idx < length; idx++) {
@@ -232,7 +224,7 @@ public final class MutationNode {
 		}
 	}
 
-	public NodeRemote remoteNode() {
+	public NodeJso remoteNode() {
 		return remoteNode;
 	}
 
@@ -287,13 +279,13 @@ public final class MutationNode {
 			childNodes = new ArrayList<>();
 			Preconditions.checkState(remoteNode != null);
 			// avoid wrap-in-LD-node if remote
-			List<NodeRemote> list = access.streamChildren(remoteNode)
+			List<NodeJso> list = access.streamChildren(remoteNode)
 					.collect(Collectors.toList());
 			int length = list.size();
 			MutationNode lastChild = null;
 			for (int idx = 0; idx < length; idx++) {
 				ClientDomNode item = list.get(idx);
-				MutationNode child = sync.mutationNode((NodeRemote) item);
+				MutationNode child = sync.mutationNode((NodeJso) item);
 				// key - the only place child.parent is set is here (first time
 				// children are accessed during reverse playback). Ensures we're
 				// building a correct inverse tree

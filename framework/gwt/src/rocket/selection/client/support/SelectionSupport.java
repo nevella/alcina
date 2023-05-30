@@ -17,12 +17,12 @@ package rocket.selection.client.support;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeRemote;
+import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.Text;
-import com.google.gwt.dom.client.TextRemote;
+import com.google.gwt.dom.client.TextJso;
 
 import cc.alcina.framework.common.client.util.Topic;
 import rocket.selection.client.Selection;
@@ -40,7 +40,7 @@ import rocket.util.client.JavaScript;
 abstract public class SelectionSupport {
 	public static final Topic<Integer> topicSelectionDebug = Topic.create();
 
-	native static TextRemote remote(Text text)/*-{
+	native static TextJso remote(Text text)/*-{
     var implAccess = text.@com.google.gwt.dom.client.Text::implAccess()();
     var remote = implAccess.@com.google.gwt.dom.client.Text.TextImplAccess::ensureRemote()();
     return remote;
@@ -83,12 +83,12 @@ abstract public class SelectionSupport {
 		int debugInfo = 0;
 		try {
 			final SelectionEndPoint end = new SelectionEndPoint();
-			NodeRemote nodeRemote = JavaScript
+			NodeJso nodeJso = JavaScript
 					.getObject(selection, Constants.FOCUS_NODE).cast();
-			if (nodeRemote == null) {
+			if (nodeJso == null) {
 				return null;
 			}
-			end.setNode(LocalDom.nodeFor(nodeRemote));
+			end.setNode(LocalDom.nodeFor(nodeJso));
 			end.setOffset(
 					JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
 			if (end.getNode() == null) {
@@ -104,9 +104,9 @@ abstract public class SelectionSupport {
 					end.setTextNode((Text) node);
 					end.setOffset(0);
 				} else {
-					TextRemote textRemote = getFirstTextDepthFirstWithParent(
-							((Element) node).implAccess().ensureRemote(), 1);
-					Text text = LocalDom.nodeFor(textRemote);
+					TextJso textJso = getFirstTextDepthFirstWithParent(
+							((Element) node).implAccess().ensureJsoRemote(), 1);
+					Text text = LocalDom.nodeFor(textJso);
 					end.setTextNode(text);
 					end.setOffset(0);
 				}
@@ -126,13 +126,13 @@ abstract public class SelectionSupport {
 		int debugInfo = 0;
 		try {
 			final SelectionEndPoint start = new SelectionEndPoint();
-			NodeRemote nodeRemote = JavaScript
+			NodeJso nodeJso = JavaScript
 					.getObject(selection, Constants.ANCHOR_NODE).cast();
-			if (nodeRemote == null) {
+			if (nodeJso == null) {
 				return null;
 			}
 			debugInfo = 1;
-			start.setNode(LocalDom.nodeFor(nodeRemote));
+			start.setNode(LocalDom.nodeFor(nodeJso));
 			debugInfo = 2;
 			start.setOffset(
 					JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
@@ -146,10 +146,10 @@ abstract public class SelectionSupport {
 					debugInfo = 5;
 					start.setOffset(0);
 				} else {
-					TextRemote textRemote = getFirstTextDepthFirstWithParent(
-							((Element) node).implAccess().ensureRemote(), 1);
+					TextJso textJso = getFirstTextDepthFirstWithParent(
+							((Element) node).implAccess().ensureJsoRemote(), 1);
 					debugInfo = 6;
-					Text text = LocalDom.nodeFor(textRemote);
+					Text text = LocalDom.nodeFor(textJso);
 					start.setTextNode(text);
 					debugInfo = 7;
 					start.setOffset(0);
@@ -252,8 +252,8 @@ abstract public class SelectionSupport {
     selection.addRange(range);
 	}-*/;
 
-	native protected TextRemote getFirstTextDepthFirst(
-			final ElementRemote parent, int childIndex, int direction)/*-{
+	native protected TextJso getFirstTextDepthFirst(
+			final ElementJso parent, int childIndex, int direction)/*-{
     var childNodes = parent.childNodes;
     var i = childIndex;
     for (; i >= 0 && i < childNodes.length; i += direction) {
@@ -263,7 +263,7 @@ abstract public class SelectionSupport {
         return node;
       }
       if (1 == nodeType && node.childNodes.length != 0) {
-        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementRemote;II)(node,direction==-1?node.childNodes.length-1:0,direction);
+        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementJso;II)(node,direction==-1?node.childNodes.length-1:0,direction);
         if (result != null) {
           return result;
         }
@@ -273,8 +273,8 @@ abstract public class SelectionSupport {
 
 	}-*/;
 
-	native protected TextRemote getFirstTextDepthFirstWithParent(
-			final ElementRemote element, int direction)/*-{
+	native protected TextJso getFirstTextDepthFirstWithParent(
+			final ElementJso element, int direction)/*-{
     var childNodes = element.parentNode.childNodes;
     var i = direction == 1 ? 0 : childNodes.length - 1;
     var found = false;
@@ -288,13 +288,13 @@ abstract public class SelectionSupport {
         if (3 == nodeType) {
           return node;
         }
-        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementRemote;II)(node,direction==-1?node.childNodes.length-1:0,direction);
+        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementJso;II)(node,direction==-1?node.childNodes.length-1:0,direction);
         if (result != null) {
           return result;
         }
       }
     }
-    return this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirstWithParent(Lcom/google/gwt/dom/client/ElementRemote;I)(element.parentNode,direction);
+    return this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirstWithParent(Lcom/google/gwt/dom/client/ElementJso;I)(element.parentNode,direction);
 	}-*/;
 
 	native protected void surround0(final Selection selection,

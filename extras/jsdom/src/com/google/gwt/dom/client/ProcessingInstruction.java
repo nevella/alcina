@@ -113,18 +113,18 @@ public class ProcessingInstruction extends Node implements
 	}
 
 	@Override
-	protected ProcessingInstructionRemote typedRemote() {
-		return (ProcessingInstructionRemote) remote();
+	protected ProcessingInstructionJso jsoRemote() {
+		return (ProcessingInstructionJso) remote();
 	}
 
 	public class ProcessingInstructionImplAccess extends Node.ImplAccess {
-		public ProcessingInstructionRemote ensureRemote() {
+		public ProcessingInstructionJso ensureRemote() {
 			ensureRemoteCheck();
-			return ProcessingInstruction.this.typedRemote();
+			return ProcessingInstruction.this.jsoRemote();
 		}
 
-		public ProcessingInstructionRemote typedRemote() {
-			return ProcessingInstruction.this.typedRemote();
+		public ProcessingInstructionJso typedRemote() {
+			return ProcessingInstruction.this.jsoRemote();
 		}
 	}
 }

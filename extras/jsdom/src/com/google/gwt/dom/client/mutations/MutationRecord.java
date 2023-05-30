@@ -10,7 +10,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeRemote;
+import com.google.gwt.dom.client.NodeJso;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -40,7 +40,7 @@ public class MutationRecord {
 	 * This includes creating an insert mutation IFF the node has a parent
 	 * element
 	 */
-	public static void forNode(Node node, List<MutationRecord> records) {
+	public static void generateInsertMutations(Node node, List<MutationRecord> records) {
 		Element parentElement = node.getParentElement();
 		if (parentElement != null) {
 			MutationRecord record = new MutationRecord();
@@ -184,15 +184,6 @@ public class MutationRecord {
 		return format.toString();
 	}
 
-	private void connectMutationNodeRef(MutationNode mutationNode) {
-		if (mutationNode == null) {
-			return;
-		}
-		mutationNode.node = Document.get().getDocumentElement().implAccess()
-				.local().queryRelativePath(mutationNode.path).node();
-		mutationNode.sync = sync;
-	}
-
 	private String stringOrNull(JsonObject jsonObj, String string) {
 		JsonValue jsonValue = jsonObj.get(string);
 		if (jsonValue instanceof JsonNull) {
@@ -251,6 +242,15 @@ public class MutationRecord {
 		}
 	}
 
+	void connectMutationNodeRef(MutationNode mutationNode) {
+		if (mutationNode == null) {
+			return;
+		}
+		mutationNode.node = Document.get().getDocumentElement().implAccess()
+				.local().queryRelativePath(mutationNode.path).node();
+		mutationNode.sync = sync;
+	}
+
 	void connectMutationNodeRefs() {
 		connectMutationNodeRef(target);
 		connectMutationNodeRef(previousSibling);
@@ -259,8 +259,8 @@ public class MutationRecord {
 		removedNodes.forEach(this::connectMutationNodeRef);
 	}
 
-	MutationNode mutationNode(NodeRemote nodeRemote) {
-		return sync.mutationNode(nodeRemote);
+	MutationNode mutationNode(NodeJso nodeJso) {
+		return sync.mutationNode(nodeJso);
 	}
 
 	@Reflected

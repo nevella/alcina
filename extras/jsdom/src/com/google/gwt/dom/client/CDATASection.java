@@ -165,18 +165,18 @@ public class CDATASection extends Node
 	}
 
 	@Override
-	protected CDATASectionRemote typedRemote() {
-		return (CDATASectionRemote) remote();
+	protected CDATASectionJso jsoRemote() {
+		return (CDATASectionJso) remote();
 	}
 
 	public class CDATASectionImplAccess extends Node.ImplAccess {
-		public CDATASectionRemote ensureRemote() {
+		public CDATASectionJso ensureRemote() {
 			ensureRemoteCheck();
-			return CDATASection.this.typedRemote();
+			return CDATASection.this.jsoRemote();
 		}
 
-		public CDATASectionRemote typedRemote() {
-			return CDATASection.this.typedRemote();
+		public CDATASectionJso typedRemote() {
+			return CDATASection.this.jsoRemote();
 		}
 	}
 }

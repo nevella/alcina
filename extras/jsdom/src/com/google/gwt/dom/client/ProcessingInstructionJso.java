@@ -1,9 +1,9 @@
 package com.google.gwt.dom.client;
 
-public class ProcessingInstructionRemote extends NodeRemote
+public class ProcessingInstructionJso extends NodeJso
 		implements ClientDomProcessingInstruction {
 	// sole creator (DocumentRemote) throws
-	protected ProcessingInstructionRemote() {
+	protected ProcessingInstructionJso() {
 		// https://developer.mozilla.org/en-US/docs/Web/API/ProcessingInstruction
 		// has no representation in the browser HTML dom (only the XML dom) -
 		// all code should emit Comment nodes if it will be pushed to DOM

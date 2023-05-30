@@ -16,7 +16,7 @@
 package com.google.gwt.user.client.ui.impl;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.event.logical.shared.HasInitializeHandlers;
 import com.google.gwt.event.logical.shared.InitializeEvent;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
@@ -35,13 +35,13 @@ import com.google.gwt.user.client.ui.RichTextArea;
 public class RichTextAreaImpl {
 	protected Element elemDelegating;
 
-	protected ElementRemote elem;
+	protected ElementJso elem;
 
 	protected HasInitializeHandlers owner;
 
 	public RichTextAreaImpl() {
 		elemDelegating = createElement();
-		elem = elemDelegating.implAccess().ensureRemote();
+		elem = elemDelegating.implAccess().ensureJsoRemote();
 	}
 
 	public Element getElement() {

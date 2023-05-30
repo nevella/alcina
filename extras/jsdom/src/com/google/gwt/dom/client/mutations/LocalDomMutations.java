@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.MutationRecordJso;
@@ -26,7 +26,7 @@ public class LocalDomMutations {
 
 	private JavaScriptObject records;
 
-	private ElementRemote documentElement;
+	private ElementJso documentElement;
 
 	private boolean observerConnected = false;
 
@@ -47,9 +47,11 @@ public class LocalDomMutations {
 		history = new MutationHistory(this);
 	}
 
-	public void applyDetachedMutations(List<MutationRecord> mutations) {
+	public void applyDetachedMutations(List<MutationRecord> mutations,
+			boolean applyToRemote) {
 		SyncMutations syncMutations = new SyncMutations(mutationsAccess);
-		syncMutations.applyDetachedMutationsToLocalDom(mutations);
+		syncMutations.applyDetachedMutationsToLocalDom(mutations,
+				applyToRemote);
 	}
 
 	public boolean hadExceptions() {
@@ -74,7 +76,7 @@ public class LocalDomMutations {
 				node,
 				n -> n.getChildNodes().stream().collect(Collectors.toList()),
 				false);
-		traversal.forEach(n -> MutationRecord.forNode(n, records));
+		traversal.forEach(n -> MutationRecord.generateInsertMutations(n, records));
 		return records;
 	}
 

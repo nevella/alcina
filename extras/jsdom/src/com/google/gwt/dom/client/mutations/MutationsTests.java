@@ -2,7 +2,7 @@ package com.google.gwt.dom.client.mutations;
 
 import java.util.stream.Collectors;
 
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationsTests.Tests.Phase;
@@ -212,7 +212,7 @@ public class MutationsTests {
 				extends EnumRunnableAsyncCallbackPlayer<Void, Phase> {
 			private String color;
 
-			ElementRemote remote;
+			ElementJso remote;
 
 			public Test(Phase state, String color) {
 				super(state);
@@ -239,7 +239,7 @@ public class MutationsTests {
 					RootPanel.get().add(widget);
 					LocalDom.flush();
 					this.remote = widget.getElement().implAccess()
-							.typedRemote();
+							.jsoRemote();
 					LocalDom.invokeExternal(this::mutate);
 					new Timer() {
 						@Override

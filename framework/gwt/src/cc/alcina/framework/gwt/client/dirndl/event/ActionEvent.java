@@ -122,15 +122,15 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 		}
 	}
 
-	public static interface ContextProvider<T> {
+	public static interface ActionContextProvider<T> {
 		public T provideActionContext();
 	}
 
 	public interface Handler<T> extends NodeEvent.Handler {
 		default void onActionEvent(ActionEvent event) {
 			Object instance = null;
-			if (this instanceof ContextProvider) {
-				instance = ((ContextProvider) this).provideActionContext();
+			if (this instanceof ActionContextProvider) {
+				instance = ((ActionContextProvider) this).provideActionContext();
 			} else {
 				instance = this;
 			}

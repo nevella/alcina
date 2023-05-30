@@ -3,7 +3,7 @@ package com.google.gwt.dom.client;
 import java.util.List;
 
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
+import com.google.gwt.dom.client.ElementJso.ElementJsoIndex;
 import com.google.gwt.user.client.LocalDomDebug;
 import com.google.gwt.user.client.Window;
 
@@ -15,11 +15,11 @@ public class LocalDomDebugImpl {
 
 	static boolean debugAll = false;
 
-	public void debugNodeFor(ElementRemote elementRemote, Element hasNode,
-			ElementRemoteIndex remoteIndex, boolean firstPass) {
+	public void debugNodeFor(ElementJso elementJso, Element hasNode,
+			ElementJsoIndex remoteIndex, boolean firstPass) {
 		if (GWT.isScript()) {
 		} else {
-			debugNodeFor0(elementRemote, hasNode, remoteIndex, firstPass);
+			debugNodeFor0(elementJso, hasNode, remoteIndex, firstPass);
 		}
 	}
 
@@ -28,9 +28,9 @@ public class LocalDomDebugImpl {
 		if (!debug) {
 			return;
 		}
-		NodeListRemote<Node> childNodes = withRemote.typedRemote()
+		NodeListJso<Node> childNodes = withRemote.jsoRemote()
 				.getChildNodes0();
-		NodeRemote remoteChild = null;
+		NodeJso remoteChild = null;
 		Node localChild = null;
 		String issue = null;
 		if (childNodes.getLength() != withRemote.getChildCount()) {
@@ -43,7 +43,7 @@ public class LocalDomDebugImpl {
 				issue = "node removed";
 			} else if (remoteChild.provideIsElement()) {
 				localChild = withRemote.getChild(idx);
-				String tagName0 = ((ElementRemote) remoteChild)
+				String tagName0 = ((ElementJso) remoteChild)
 						.getTagNameRemote();
 				if (!tagName0.equalsIgnoreCase(localChild.getNodeName())) {
 					issue = "mismatched tagname";
@@ -51,7 +51,7 @@ public class LocalDomDebugImpl {
 			}
 		}
 		if (issue != null) {
-			debugElement(needsRemote, withRemote, withRemote.typedRemote(),
+			debugElement(needsRemote, withRemote, withRemote.jsoRemote(),
 					remoteChild, localChild, issue);
 		}
 	}
@@ -85,20 +85,20 @@ public class LocalDomDebugImpl {
 	}
 
 	private void debugElement(Element element, Element withRemote,
-			ElementRemote elementRemote, NodeRemote remoteChild,
+			ElementJso elementJso, NodeJso remoteChild,
 			Node localChild, String issue) {
 		String remoteDebug = null;
 		String innerHTML = element.getInnerHTML();
-		String remoteDom = elementRemote.provideRemoteDomTree();
+		String remoteDom = elementJso.provideRemoteDomTree();
 		String localDom = withRemote.local().provideLocalDomTree();
-		ElementRemote parentRemote = elementRemote.getParentElementRemote();
-		ElementRemoteIndex remoteIndex = elementRemote.provideRemoteIndex(true);
+		ElementJso parentRemote = elementJso.getParentElementJso();
+		ElementJsoIndex remoteIndex = elementJso.provideRemoteIndex(true);
 		remoteDebug = remoteIndex.getString();
 		log(LocalDomDebug.DEBUG_ISSUE, issue);
 	}
 
-	private void debugNodeFor0(ElementRemote elementRemote, Element hasNode,
-			ElementRemoteIndex remoteIndex, boolean firstPass) {
+	private void debugNodeFor0(ElementJso elementJso, Element hasNode,
+			ElementJsoIndex remoteIndex, boolean firstPass) {
 		if (remoteIndex.hasRemoteDefined() && firstPass) {
 			return;
 		}
@@ -118,21 +118,21 @@ public class LocalDomDebugImpl {
 		if (sizesMatch) {
 			return;
 		}
-		remoteIndex = elementRemote.provideRemoteIndex(false);
+		remoteIndex = elementJso.provideRemoteIndex(false);
 		String remoteDebug = null;
-		String remoteDomHasNode = hasNode.typedRemote().provideRemoteDomTree();
-		String remoteDom = elementRemote.provideRemoteDomTree();
+		String remoteDomHasNode = hasNode.jsoRemote().provideRemoteDomTree();
+		String remoteDom = elementJso.provideRemoteDomTree();
 		String localDomHasNode = hasNode.local().provideLocalDomTree();
 		String remoteDomHasNode2 = CommonUtils
 				.trimLinesToChars(remoteDomHasNode, 50);
 		String localDomHasNode2 = CommonUtils.trimLinesToChars(localDomHasNode,
 				50);
-		ElementRemote parentRemote = elementRemote.getParentElementRemote();
+		ElementJso parentRemote = elementJso.getParentElementJso();
 		remoteDebug = remoteIndex.getString();
 		String hashes = Ax.format("%s: %s %s %s", hasNode.getTagName(),
 				hasNode.hashCode(), hasNode.local().hashCode(),
 				hasNode.remote().hashCode());
-		LocalDom.debug(hasNode.typedRemote());
+		LocalDom.debug(hasNode.jsoRemote());
 		log(LocalDomDebug.DEBUG_ISSUE, "mismatched sizes");
 	}
 }

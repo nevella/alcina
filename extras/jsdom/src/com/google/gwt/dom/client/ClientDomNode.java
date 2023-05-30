@@ -2,8 +2,8 @@ package com.google.gwt.dom.client;
 
 /**
  * Naming note - this interface is the root of the three DOM-like hierarchies
- * (Node, NodeLocal, NodeRemote) which collectively implement the local/remote
- * (aka virtural) DOM model. Named ClientDomNode to avoid collision with the
+ * (Node, NodeLocal, NodeJso) which collectively implement the local/remote (aka
+ * virtural) DOM model. Named ClientDomNode to avoid collision with the
  * more-used (particularly by external code)
  * cc.alcina.framework.common.client.dom.DomNode)
  *
@@ -95,6 +95,8 @@ public interface ClientDomNode {
 	 * @return The node being inserted
 	 */
 	Node insertFirst(Node child);
+
+	boolean isJso();
 
 	boolean isOrHasChild(Node child);
 

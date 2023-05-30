@@ -1,16 +1,16 @@
 package com.google.gwt.dom.client;
 
-public class DomDispatchRemote implements IDomDispatch {
+public class DomDispatchJso implements IDomDispatch {
 	// per-browser custom
 	DOMImpl domImpl;
 
 	@Override
 	public void buttonClick(ButtonElement button) {
-		domImpl.buttonClick(button.implAccess().ensureRemote());
+		domImpl.buttonClick(button.implAccess().ensureJsoRemote());
 	}
 
-	public ElementRemote createElement(String tagName) {
-		return domImpl.createElement(Document.get().typedRemote(), tagName);
+	public ElementJso createElement(String tagName) {
+		return domImpl.createElement(Document.get().jsoRemote(), tagName);
 	}
 
 	@Override
@@ -46,22 +46,22 @@ public class DomDispatchRemote implements IDomDispatch {
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
 		if (select.linkedToRemote()) {
-			domImpl.selectAdd(select.typedRemote(), option.typedRemote(),
-					before == null ? null : before.typedRemote());
+			domImpl.selectAdd(select.jsoRemote(), option.jsoRemote(),
+					before == null ? null : before.jsoRemote());
 		}
 	}
 
 	@Override
 	public void selectClear(SelectElement select) {
 		if (select.linkedToRemote()) {
-			domImpl.selectClear(select.typedRemote());
+			domImpl.selectClear(select.jsoRemote());
 		}
 	}
 
 	@Override
 	public void selectRemoveOption(SelectElement select, int index) {
 		if (select.linkedToRemote()) {
-			domImpl.selectRemoveOption(select.typedRemote(), index);
+			domImpl.selectRemoveOption(select.jsoRemote(), index);
 		}
 	}
 }

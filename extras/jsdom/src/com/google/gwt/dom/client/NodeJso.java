@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public abstract class NodeRemote extends JavaScriptObject
+public abstract class NodeJso extends JavaScriptObject
 		implements ClientDomNode {
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
@@ -31,7 +31,7 @@ public abstract class NodeRemote extends JavaScriptObject
 		return LocalDom.nodeFor(o);
 	}
 
-	protected NodeRemote() {
+	protected NodeJso() {
 	}
 
 	@Override
@@ -39,7 +39,7 @@ public abstract class NodeRemote extends JavaScriptObject
 		if (LocalDom.isPending(this)) {
 			return null;
 		}
-		NodeRemote toAppend = resolvedOrPending(newChild);
+		NodeJso toAppend = resolvedOrPending(newChild);
 		return (T) nodeFor(appendChild0(toAppend));
 	}
 
@@ -81,7 +81,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	 * The first child of this node. If there is no such node, this returns
 	 * null.
 	 */
-	public final native NodeRemote getFirstChild0() /*-{
+	public final native NodeJso getFirstChild0() /*-{
     return this.firstChild;
 	}-*/;
 
@@ -127,12 +127,12 @@ public abstract class NodeRemote extends JavaScriptObject
 
 	@Override
 	public final Element getParentElement() {
-		return nodeFor(getParentElementRemote());
+		return nodeFor(getParentElementJso());
 	}
 
 	@Override
 	public final Node getParentNode() {
-		return nodeFor(getParentNodeRemote());
+		return nodeFor(getParentNodeJso());
 	}
 
 	/**
@@ -140,7 +140,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	 * However, if a node has just been created and not yet added to the tree,
 	 * or if it has been removed from the tree, this is null.
 	 */
-	public final native NodeRemote getParentNodeRemote() /*-{
+	public final native NodeJso getParentNodeJso() /*-{
     return this.parentNode;
 	}-*/;
 
@@ -185,14 +185,19 @@ public abstract class NodeRemote extends JavaScriptObject
 		if (LocalDom.isPending(this)) {
 			return null;
 		}
-		NodeRemote newChildDom = resolvedOrPending(newChild);
-		NodeRemote refChildDom = resolvedOrPending(refChild);
+		NodeJso newChildDom = resolvedOrPending(newChild);
+		NodeJso refChildDom = resolvedOrPending(refChild);
 		return nodeFor(insertBefore0(newChildDom, refChildDom));
 	}
 
 	@Override
 	public final Node insertFirst(Node child) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public final boolean isJso() {
+		return true;
 	}
 
 	/**
@@ -230,7 +235,7 @@ public abstract class NodeRemote extends JavaScriptObject
 			removeChild0(oldChild.remote());
 		}
 		return null;
-		// NodeRemote resolvedOrPending = resolvedOrPending(oldChild);
+		// NodeJso resolvedOrPending = resolvedOrPending(oldChild);
 		// if (resolvedOrPending.getParentNode() == null) {
 		// return nodeFor(resolvedOrPending);
 		// } else {
@@ -245,8 +250,8 @@ public abstract class NodeRemote extends JavaScriptObject
 
 	@Override
 	public final Node replaceChild(Node newChild, Node oldChild) {
-		NodeRemote newChildDom = resolvedOrPending(newChild);
-		NodeRemote oldChildDom = resolvedOrPending(oldChild);
+		NodeJso newChildDom = resolvedOrPending(newChild);
+		NodeJso oldChildDom = resolvedOrPending(oldChild);
 		return nodeFor(replaceChild0(newChildDom, oldChildDom));
 	}
 
@@ -263,7 +268,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	/**
 	 * The last child of this node. If there is no such node, this returns null.
 	 */
-	private final native NodeRemote getLastChild0() /*-{
+	private final native NodeJso getLastChild0() /*-{
     return this.lastChild;
 	}-*/;
 
@@ -271,7 +276,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	 * The node immediately following this node. If there is no such node, this
 	 * returns null.
 	 */
-	private final native NodeRemote getNextSibling0() /*-{
+	private final native NodeJso getNextSibling0() /*-{
     return this.nextSibling;
 	}-*/;
 
@@ -279,7 +284,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	 * The Document object associated with this node. This is also the
 	 * {@link Document} object used to create new nodes.
 	 */
-	private final native DocumentRemote getOwnerDocument0() /*-{
+	private final native DocumentJso getOwnerDocument0() /*-{
     return this.ownerDocument;
 	}-*/;
 
@@ -287,7 +292,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	 * The node immediately preceding this node. If there is no such node, this
 	 * returns null.
 	 */
-	private final native NodeRemote getPreviousSibling0() /*-{
+	private final native NodeJso getPreviousSibling0() /*-{
     return this.previousSibling;
 	}-*/;
 
@@ -299,7 +304,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	 *            The node being removed
 	 * @return The node removed
 	 */
-	private final native NodeRemote removeChild0(NodeRemote oldChild) /*-{
+	private final native NodeJso removeChild0(NodeJso oldChild) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     //3 == TEXT_NODE
     if (oldChild.parentNode == null && oldChild.nodeType == 3) {
@@ -327,8 +332,8 @@ public abstract class NodeRemote extends JavaScriptObject
 	 *            The node being replaced in the list
 	 * @return The node replaced
 	 */
-	private final native NodeRemote replaceChild0(NodeRemote newChild,
-			NodeRemote oldChild) /*-{
+	private final native NodeJso replaceChild0(NodeJso newChild,
+			NodeJso oldChild) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     return this.replaceChild(newChild, oldChild);
 	}-*/;
@@ -336,7 +341,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	/**
 	 * Link remote to [remote or local]
 	 */
-	private NodeRemote resolvedOrPending(Node node) {
+	private NodeJso resolvedOrPending(Node node) {
 		if (node == null) {
 			return null;
 		}
@@ -360,7 +365,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	 *            The node to add
 	 * @return The node added
 	 */
-	final native NodeRemote appendChild0(NodeRemote newChild) /*-{
+	final native NodeJso appendChild0(NodeJso newChild) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     return this.appendChild(newChild);
 	}-*/;
@@ -384,16 +389,16 @@ public abstract class NodeRemote extends JavaScriptObject
 	 *            attributes, if it is an {@link Element})
 	 * @return The duplicate node
 	 */
-	final native NodeRemote cloneNode0(boolean deep) /*-{
+	final native NodeJso cloneNode0(boolean deep) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     return this.cloneNode(deep);
 	}-*/;
 
-	final native NodeListRemote<Node> getChildNodes0() /*-{
+	final native NodeListJso<Node> getChildNodes0() /*-{
     return this.childNodes;
 	}-*/;
 
-	final native ElementRemote getParentElementRemote() /*-{
+	final native ElementJso getParentElementJso() /*-{
     var parentElement = this.parentElement;
     if (parentElement) {
       return parentElement;
@@ -418,8 +423,7 @@ public abstract class NodeRemote extends JavaScriptObject
 	 *            node must be inserted), or <code>null</code>
 	 * @return The node being inserted
 	 */
-	final native NodeRemote insertBefore0(NodeRemote newChild,
-			NodeRemote refChild) /*-{
+	final native NodeJso insertBefore0(NodeJso newChild, NodeJso refChild) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     return this.insertBefore(newChild, refChild);
 	}-*/;

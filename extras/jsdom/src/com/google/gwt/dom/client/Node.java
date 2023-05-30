@@ -284,6 +284,11 @@ public abstract class Node
 	}
 
 	@Override
+	public boolean isJso() {
+		return false;
+	}
+
+	@Override
 	public boolean isOrHasChild(Node child) {
 		return local().isOrHasChild(child);
 	}
@@ -434,7 +439,7 @@ public abstract class Node
 	protected boolean ensureRemoteCheck() {
 		if (!linkedToRemote() && wasResolved()
 				&& provideSelfOrAncestorLinkedToRemote() != null
-				&& !LocalDom.isDisableRemoteWrite()
+				&& getOwnerDocument().remoteType.hasRemote()
 				&& (provideIsText() || provideIsElement())) {
 			LocalDom.ensureRemote(this);
 			return true;
@@ -446,6 +451,8 @@ public abstract class Node
 	protected boolean isPendingResolution() {
 		return false;
 	}
+
+	protected abstract NodeJso jsoRemote();
 
 	protected abstract boolean linkedToRemote();
 
@@ -480,7 +487,7 @@ public abstract class Node
 	protected abstract void resetRemote0();
 
 	protected void sync(Runnable runnable) {
-		if (remote() instanceof NodeLocalNull || LocalDom.isReplaying()) {
+		if (remote() instanceof NodeLocalNull || !LocalDom.isApplyToRemote()) {
 			return;
 		}
 		try {
@@ -491,8 +498,10 @@ public abstract class Node
 		}
 	}
 
-	protected abstract NodeRemote typedRemote();
-
+	/*
+	 * For subclasses (tables essentially) to disallow invalid *local* dom,
+	 * since that would cause a local/remote mismatch
+	 */
 	protected void validateInsert(Node newChild) {
 	}
 
@@ -513,13 +522,29 @@ public abstract class Node
 		return resolvedEventId > 0;
 	}
 
+	/**
+	 * For subtypes, most of the methods assume the remote() is a NodeJso -
+	 * where that's not the case, the methods should return null if the remote
+	 * is a NodePathref subtype
+	 * 
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public class ImplAccess {
+		public boolean isJsoRemote() {
+			return remote().isJso();
+		}
+
 		public <E extends ClientDomNode> E local() {
 			return (E) Node.this.local();
 		}
 
+		public void putRemote(ClientDomNode remote) {
+			throw new UnsupportedOperationException();
+		}
+
 		public <E extends ClientDomNode> E remote() {
-			return (E) typedRemote();
+			return (E) Node.this.remote();
 		}
 	}
 

@@ -1,7 +1,7 @@
 package com.google.gwt.dom.client;
 
-public class TextRemote extends NodeRemote implements ClientDomText {
-	protected TextRemote() {
+public class CommentJso extends NodeJso implements ClientDomComment {
+	protected CommentJso() {
 	}
 
 	@Override
@@ -36,14 +36,13 @@ public class TextRemote extends NodeRemote implements ClientDomText {
 
 	@Override
 	public final Text splitText(int offset) {
-		return nodeFor(splitText0(offset));
+		throw new UnsupportedOperationException();
 	}
 
 	/**
 	 * Deletes data at the given [offset, length] range.
 	 */
 	private final native void deleteData0(int offset, int length) /*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.deleteData(offset, length);
 	}-*/;
 
@@ -65,7 +64,6 @@ public class TextRemote extends NodeRemote implements ClientDomText {
 	 * Inserts character data at the given offset.
 	 */
 	private final native void insertData0(int offset, String data) /*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.insertData(offset, data);
 	}-*/;
 
@@ -73,7 +71,6 @@ public class TextRemote extends NodeRemote implements ClientDomText {
 	 * Replaces data at the given [offset, length] range with the given string.
 	 */
 	private final native void replaceData0(int offset, int length, String data) /*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.replaceData(offset, length, data);
 	}-*/;
 
@@ -81,17 +78,6 @@ public class TextRemote extends NodeRemote implements ClientDomText {
 	 * The character data of this text node.
 	 */
 	private final native void setData0(String data) /*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.data = data;
-	}-*/;
-
-	/**
-	 * Splits the data in this node into two separate text nodes. The text
-	 * before the split offset is kept in this node, and a new sibling node is
-	 * created to contain the text after the offset.
-	 */
-	private final native TextRemote splitText0(int offset) /*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
-    return this.splitText(offset);
 	}-*/;
 }

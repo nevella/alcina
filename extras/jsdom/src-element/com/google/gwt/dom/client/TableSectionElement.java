@@ -198,7 +198,7 @@ public class TableSectionElement extends Element {
 		this.setPropertyString("vAlign", vAlign);
 	}
 
-	private final native NodeListRemote getRows0(ElementRemote elem) /*-{
+	private final native NodeListJso getRows0(ElementJso elem) /*-{
 																		return elem.rows;
 																		}-*/;
 
@@ -210,7 +210,7 @@ public class TableSectionElement extends Element {
 	 *            row. This index starts from 0 and is relative only to the rows
 	 *            contained inside this section, not all the rows in the table.
 	 */
-	native void deleteRow0(ElementRemote elt, int index) /*-{
+	native void deleteRow0(ElementJso elt, int index) /*-{
 															elt.deleteRow(index);
 															}-*/;
 }

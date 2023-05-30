@@ -27,7 +27,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
-import com.google.gwt.dom.client.NodeRemote;
+import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Position;
@@ -143,11 +143,11 @@ public class ClientUtils {
 	}
 
 	public static void dumpElementTree(Element elt) {
-		NodeRemote jso = elt.implAccess().ensureRemote();
+		NodeJso jso = elt.implAccess().ensureJsoRemote();
 		while (jso != null) {
 			System.out
 					.println(Ax.format("dump - %s - %s", jso.hashCode(), jso));
-			jso = jso.getParentNodeRemote();
+			jso = jso.getParentNodeJso();
 		}
 	}
 
@@ -217,7 +217,7 @@ public class ClientUtils {
 
 	public static native void invokeJsDebugger(Element e) /*-{
     var v = e;
-    var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
+    var jso = e.@com.google.gwt.dom.client.Element::jsoRemote()();
     debugger;
 	}-*/;
 
@@ -382,7 +382,7 @@ public class ClientUtils {
 
 	public static native boolean setCssTextViaCssTextProperty(Element elem,
 			String css) /*-{
-    var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
+    var styleTag = elem.@com.google.gwt.dom.client.Element::jsoRemote()();
     var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
     if ('cssText' in sheet) { // Internet Explorer
@@ -586,7 +586,7 @@ public class ClientUtils {
 	}
 
 	private static native void setElementStyle0(Element eltMulti, String css) /*-{
-    var e = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+    var e = eltMulti.@com.google.gwt.dom.client.Element::jsoRemote()();
     if (e.style && typeof (e.style.cssText) == "string") {
       e.style.cssText = css;
     } else {

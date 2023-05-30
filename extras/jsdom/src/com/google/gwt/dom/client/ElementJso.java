@@ -18,9 +18,9 @@ import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
-public class ElementRemote extends NodeRemote implements ClientDomElement {
+public class ElementJso extends NodeJso implements ClientDomElement {
 	/*
-	 * Non-private for access from bytecode generated (ElementRemote$)
+	 * Non-private for access from bytecode generated (ElementJso$)
 	 */
 	static RemoteCache cache = new RemoteCache();
 
@@ -62,8 +62,8 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 	}
 
 	private static boolean isRemote(JavaScriptObject o) {
-		if (NodeRemote.is(o)) {
-			return ((NodeRemote) o).getNodeType() == Node.ELEMENT_NODE;
+		if (NodeJso.is(o)) {
+			return ((NodeJso) o).getNodeType() == Node.ELEMENT_NODE;
 		}
 		return false;
 	}
@@ -87,7 +87,7 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 	 * Assert that the given {@link Node} is an {@link Element} and
 	 * automatically typecast it.
 	 */
-	static ElementRemote asRemote(JavaScriptObject o) {
+	static ElementJso asRemote(JavaScriptObject o) {
 		assert isRemote(o);
 		return o.cast();
 	}
@@ -116,7 +116,7 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 		return ClientDomElement.trimClassName(className);
 	}
 
-	protected ElementRemote() {
+	protected ElementJso() {
 	}
 
 	@Override
@@ -570,8 +570,8 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 		ClientDomElementStatic.replaceClassName(this, oldClassName, newClassName);
 	}
 
-	public final void replaceWith(ElementRemote replacement) {
-		getParentElementRemote().insertBefore0(replacement, this);
+	public final void replaceWith(ElementJso replacement) {
+		getParentElementJso().insertBefore0(replacement, this);
 		removeFromParent0();
 	}
 
@@ -820,7 +820,7 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 	 *            all tags
 	 * @return A list of matching Element nodes
 	 */
-	private final native NodeListRemote<Element>
+	private final native NodeListJso<Element>
 			getElementsByTagName0(String name) /*-{
     return this.getElementsByTagName(name);
 	}-*/;
@@ -946,23 +946,23 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 
 	final List<ContiguousTextNodes> getContiguousTextContainers() {
 		List<ContiguousTextNodes> result = new ArrayList<>();
-		Stack<ElementRemote> stack = new Stack<>();
+		Stack<ElementJso> stack = new Stack<>();
 		stack.push(this);
 		while (!stack.isEmpty()) {
 			// breadth first is important here, because later application
 			// requires correct parent indicies (at time of application)
-			ElementRemote elem = stack.remove(0);
-			List<NodeRemote> list = new ArrayList<>();
-			NodeListRemote<Node> childNodes = elem.getChildNodes0();
+			ElementJso elem = stack.remove(0);
+			List<NodeJso> list = new ArrayList<>();
+			NodeListJso<Node> childNodes = elem.getChildNodes0();
 			int length = childNodes.getLength();
 			int lastNodeType = -1;
-			NodeRemote lastNode = null;
+			NodeJso lastNode = null;
 			for (int idx = 0; idx < length; idx++) {
-				NodeRemote node = childNodes.getItem0(idx);
+				NodeJso node = childNodes.getItem0(idx);
 				int nodeType = node.getNodeType();
 				switch (nodeType) {
 				case Node.ELEMENT_NODE:
-					ElementRemote elemChild = (ElementRemote) node;
+					ElementJso elemChild = (ElementJso) node;
 					switch (elemChild.getNodeName().toLowerCase()) {
 					case "script":
 					case "style":
@@ -1057,7 +1057,7 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 	// FIXME - dirndl 1x1e - should also check tagname for really warped
 	// dom. unlikely to be an issue though. Also result should be a json form
 	// (JSO)
-	final native ElementRemoteIndex provideRemoteIndex(boolean debug)/*-{
+	final native ElementJsoIndex provideRemoteIndex(boolean debug)/*-{
     var result = {
       hasNode : null,
       root : null,
@@ -1148,13 +1148,13 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 	}-*/;
 
 	static class ContiguousTextNodes {
-		NodeRemote previous;
+		NodeJso previous;
 
-		NodeRemote node;
+		NodeJso node;
 
 		int idx;
 
-		ContiguousTextNodes(int idx, NodeRemote previous, NodeRemote node) {
+		ContiguousTextNodes(int idx, NodeJso previous, NodeJso node) {
 			this.idx = idx;
 			this.previous = previous;
 			this.node = node;
@@ -1164,8 +1164,8 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 		}
 	}
 
-	static class ElementRemoteIndex extends JavaScriptObject {
-		protected ElementRemoteIndex() {
+	static class ElementJsoIndex extends JavaScriptObject {
+		protected ElementJsoIndex() {
 		}
 
 		public final String getString() {
@@ -1191,7 +1191,7 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
       return this.debugLog;
 		}-*/;
 
-		final native ElementRemote hasNode()/*-{
+		final native ElementJso hasNode()/*-{
       return this.hasNode;
 		}-*/;
 
@@ -1220,7 +1220,7 @@ public class ElementRemote extends NodeRemote implements ClientDomElement {
 			return commaSeparatedBoolsToList(stringRemoteDefined());
 		}
 
-		final native ElementRemote root()/*-{
+		final native ElementJso root()/*-{
       return this.root;
 		}-*/;
 

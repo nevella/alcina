@@ -1,11 +1,9 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -399,12 +397,9 @@ public class ElementLocal extends NodeLocal
 		this.element = element;
 	}
 
-	public ClientDomNode queryRelativePath(String path) {
-		List<Integer> ordinals = Arrays.stream(path.split("\\."))
-				.map(Integer::parseInt).collect(Collectors.toList());
+	public ClientDomNode queryRelativePath(Pathref path) {
 		ClientDomNode cursor = this;
-		ordinals.remove(0);
-		for (Integer childOrdinal : ordinals) {
+		for (Integer childOrdinal : path.childOrdinals()) {
 			cursor = cursor.getChild(childOrdinal);
 		}
 		return cursor;

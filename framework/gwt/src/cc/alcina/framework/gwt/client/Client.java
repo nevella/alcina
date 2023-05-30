@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Document.RemoteType;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
@@ -135,6 +137,15 @@ public abstract class Client {
 			/*
 			 * initialise localdom, mutations
 			 */
+			if (GWT.isClient()) {
+				Document.initialiseContextProvider(RemoteType.JSO);
+			}
+			/*
+			 * Called in the Impl event loop if in a script context
+			 */
+			if (!GWT.isScript()) {
+				LocalDom.initalize();
+			}
 			Document.get();
 			/*
 			 * Attach non-vcs process debugging

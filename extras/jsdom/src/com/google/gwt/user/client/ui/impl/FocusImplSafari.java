@@ -28,7 +28,7 @@ public class FocusImplSafari extends FocusImplStandard {
 											// Attempts to blur elements from within an event callback will generally
 											// be unsuccessful, so we invoke blur() from outside of the callback.
 											$wnd.setTimeout(function() {
-											var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
+											var remote=elem.@com.google.gwt.dom.client.Element::jsoRemote()();
 											if(remote.nodeType){
 											remote.blur();
 											}
@@ -40,7 +40,7 @@ public class FocusImplSafari extends FocusImplStandard {
 											// Attempts to focus elements from within an event callback will generally
 											// be unsuccessful, so we invoke focus() from outside of the callback.
 											$wnd.setTimeout(function() {
-											var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
+											var remote=elem.@com.google.gwt.dom.client.Element::jsoRemote()();
 											if(remote.nodeType){
 											remote.focus();
 											}

@@ -42,6 +42,11 @@ public class TextNull extends NodeLocalNull implements ClientDomText {
 	}
 
 	@Override
+	public int indexInParentChildren() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void insertData(int offset, String data) {
 		// noop
 	}
@@ -65,16 +70,6 @@ public class TextNull extends NodeLocalNull implements ClientDomText {
 	public Text splitText(int offset) {
 		// noop
 		return null;
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		throw new UnsupportedOperationException();
 	}
 
 	void appendUnescaped(UnsafeHtmlBuilder builder) {

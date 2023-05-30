@@ -1,7 +1,5 @@
 package cc.alcina.extras.dev.component.remote.client.common.logic;
 
-import java.util.function.Consumer;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.http.client.Request;
@@ -10,12 +8,20 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage;
+import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.AwaitRemote;
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentRequest;
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentResponse;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedNameProvider;
 
-public class RemoteComponentClientUtils {
+/*
+ * Nice thing about statics is they *ensure* statelessness
+ */
+public class RemoteComponentClientRpc {
 	public static void runAsync(Class clazz, Runnable runnable) {
 		GWT.runAsync(clazz, new RunAsyncCallback() {
 			@Override
@@ -44,8 +50,7 @@ public class RemoteComponentClientUtils {
 		};
 	}
 
-	public static void submitRequest(RemoteComponentRequest request,
-			Consumer<RemoteComponentResponse> consoleResponseConsumer) {
+	public static void submitRequest(RemoteComponentRequest request) {
 		String payload = ReflectiveSerializer.serialize(request);
 		String path = Window.Location.getPath();
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, path);
@@ -56,12 +61,28 @@ public class RemoteComponentClientUtils {
 			}
 
 			@Override
-			public void onResponseReceived(Request request, Response response) {
-				String text = response.getText();
-				RemoteComponentResponse consoleResponse = text.isEmpty() ? null
+			public void onResponseReceived(Request httpRequest,
+					Response httpResponse) {
+				String text = httpResponse.getText();
+				RemoteComponentResponse response = text.isEmpty() ? null
 						: ReflectiveSerializer.deserialize(text);
-				if (consoleResponseConsumer != null) {
-					consoleResponseConsumer.accept(consoleResponse);
+				if (response != null) {
+					ProtocolMessage message = response.protocolMessage;
+					Class<? extends ProtocolMessage> messageClass = request.protocolMessage
+							.getClass();
+					if (message != null) {
+						ProtocolMessageHandlerClient handler = Registry.impl(
+								ProtocolMessageHandlerClient.class,
+								message.getClass());
+						handler.handle(response, message);
+					} else {
+						Ax.out("Received no-message response for %s",
+								NestedNameProvider.get(messageClass));
+					}
+					if (messageClass == AwaitRemote.class) {
+						// continue 'receive loop' with component server
+						sendAwaitRemoteMessage();
+					}
 				}
 			}
 		};
@@ -70,5 +91,15 @@ public class RemoteComponentClientUtils {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private static void sendAwaitRemoteMessage() {
+		send(new ProtocolMessage.AwaitRemote());
+	}
+
+	static void send(ProtocolMessage message) {
+		RemoteComponentRequest request = RemoteComponentRequest.create();
+		request.protocolMessage = message;
+		submitRequest(request);
 	}
 }

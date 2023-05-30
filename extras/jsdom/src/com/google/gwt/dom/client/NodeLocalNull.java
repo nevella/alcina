@@ -1,10 +1,8 @@
 package com.google.gwt.dom.client;
 
-import java.util.List;
-
 import cc.alcina.framework.common.client.util.Ax;
 
-public abstract class NodeLocalNull extends NodeLocal {
+public abstract class NodeLocalNull implements ClientDomNode {
 	protected NodeLocalNull() {
 	}
 
@@ -108,12 +106,12 @@ public abstract class NodeLocalNull extends NodeLocal {
 	}
 
 	@Override
-	public boolean isOrHasChild(Node child) {
-		throw new UnsupportedOperationException();
+	public boolean isJso() {
+		return false;
 	}
 
 	@Override
-	public List<LocalDomNode> localDomChildren() {
+	public boolean isOrHasChild(Node child) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -146,12 +144,6 @@ public abstract class NodeLocalNull extends NodeLocal {
 		return Ax.format("%s: null::remote-placeholder",
 				getClass().getSimpleName());
 	}
-
-	@Override
-	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
-
-	@Override
-	abstract void appendTextContent(StringBuilder builder);
 
 	void setParentNode(NodeLocalNull local) {
 	}

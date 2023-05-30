@@ -81,7 +81,7 @@ public class FocusImpl {
 	}
 
 	public native void setAccessKey(Element elem, char key) /*-{
-															var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
+															var remote=elem.@com.google.gwt.dom.client.Element::jsoRemote()();
 															remote.accessKey = String.fromCharCode(key);
 															}-*/;
 

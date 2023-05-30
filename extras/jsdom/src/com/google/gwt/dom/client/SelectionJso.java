@@ -21,19 +21,19 @@ import com.google.gwt.core.client.JavaScriptObject;
  * Derived from elemental.js.html.JsSelection. Includes only desired
  * methods/accessors
  */
-public class SelectionRemote extends JavaScriptObject {
-	protected SelectionRemote() {
+public class SelectionJso extends JavaScriptObject {
+	protected SelectionJso() {
 	}
 
-	public final native void collapse(NodeRemote node) /*-{
+	public final native void collapse(NodeJso node) /*-{
     this.collapse(node);
 	}-*/;
 
-	public final native void collapse(NodeRemote node, int offset) /*-{
+	public final native void collapse(NodeJso node, int offset) /*-{
     this.collapse(node, offset);
 	}-*/;
 
-	public final native NodeRemote getAnchorNode() /*-{
+	public final native NodeJso getAnchorNode() /*-{
     return this.anchorNode;
 	}-*/;
 
@@ -45,7 +45,7 @@ public class SelectionRemote extends JavaScriptObject {
     return this.getRangeAt(0).getBoundingClientRect();
 	}-*/;
 
-	public final native NodeRemote getFocusNode() /*-{
+	public final native NodeJso getFocusNode() /*-{
     return this.focusNode;
 	}-*/;
 
@@ -70,7 +70,7 @@ public class SelectionRemote extends JavaScriptObject {
     this.removeAllRanges();
 	}-*/;
 
-	public final native void setAnchorNode(NodeRemote node) /*-{
+	public final native void setAnchorNode(NodeJso node) /*-{
     this.anchorNode = node;
 	}-*/;
 
@@ -78,7 +78,7 @@ public class SelectionRemote extends JavaScriptObject {
     this.anchorOffset = offset;
 	}-*/;
 
-	public final native void setFocusNode(NodeRemote node) /*-{
+	public final native void setFocusNode(NodeJso node) /*-{
     this.focusNode = node;
 	}-*/;
 

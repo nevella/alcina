@@ -25,7 +25,7 @@ public class FocusImplIE6 extends FocusImpl {
 	@Override
 	public native void focus(Element bi) /*-{
 											@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(bi);
-											var elem = bi.@com.google.gwt.dom.client.Element::typedRemote()();
+											var elem = bi.@com.google.gwt.dom.client.Element::jsoRemote()();
 											try {
 											elem.focus();
 											} catch (e) {

@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicListener;
-import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
+import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.gwt.persistence.client.LogStore;
 
 @Reflected
@@ -28,13 +28,13 @@ public abstract class UserStoryTeller
 	 * The 4000 ms timer is so that editors can see - vaguely live - what peeps
 	 * are doing
 	 */
-	private AtEndOfEventSeriesTimer<ClientLogRecord> seriesTimer = new AtEndOfEventSeriesTimer<>(
+	private EventCollator<ClientLogRecord> seriesTimer = new EventCollator<>(
 			4000, new Runnable() {
 				@Override
 				public void run() {
 					publish();
 				}
-			}).maxDelayFromFirstAction(20000);
+			}).withMaxDelayFromFirstEvent(20000);
 
 	protected boolean listening = false;
 

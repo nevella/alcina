@@ -153,7 +153,7 @@ public class WidgetUtils {
 	}-*/;
 
 	public static final native void click(Element elt) /*-{
-    var elem_remote = elt.@com.google.gwt.dom.client.Element::ensureRemote()();
+    var elem_remote = elt.@com.google.gwt.dom.client.Element::ensureJsoRemote()();
     elem_remote.click();
     try {
       elem_remote.focus();
@@ -264,7 +264,7 @@ public class WidgetUtils {
 
 	public static native void focus(Element elem) /*-{
     var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureJsoRemote()();
     remote.focus();
 	}-*/;
 
@@ -333,7 +333,7 @@ public class WidgetUtils {
       };
     }
     var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureJsoRemote()();
     var rect = remote.getBoundingClientRect();
     return "x:{0}, y:{1},w:{2},h:{3}".format(rect.x, rect.y, rect.width,
         rect.height);
@@ -341,7 +341,7 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element eltMulti,
 			String attributeName)/*-{
-    var elt = eltMulti.@com.google.gwt.dom.client.Element::ensureRemote()();
+    var elt = eltMulti.@com.google.gwt.dom.client.Element::ensureJsoRemote()();
     if (elt.currentStyle) {
       return elt.currentStyle[attributeName];
     }
@@ -352,7 +352,7 @@ public class WidgetUtils {
 
 	public static native String getComputedStyleProperty(Element eltMulti,
 			String strCssRule) /*-{
-    var elem = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = eltMulti.@com.google.gwt.dom.client.Element::jsoRemote()();
     if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
       strValue = $doc.defaultView.getComputedStyle(elem, "").getPropertyValue(
           strCssRule);
@@ -475,7 +475,7 @@ public class WidgetUtils {
       return null;
     }
     @cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(elto);
-    var elt = elto.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elt = elto.@com.google.gwt.dom.client.Element::jsoRemote()();
     var from = (elt) ? elt : $doc;
     var splits = selector.split("::");
     for (var idx = 0; idx < splits.length; idx += 2) {
@@ -509,7 +509,7 @@ public class WidgetUtils {
     if (!($doc.querySelector)) {
       return null;
     }
-    var elt = elto.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elt = elto.@com.google.gwt.dom.client.Element::jsoRemote()();
     var from = (elt) ? elt : $doc;
     var nodeList = from.querySelectorAll(selector);
     return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/ClientDomNodeList;)(nodeList);
@@ -526,7 +526,7 @@ public class WidgetUtils {
 
 	public static native int getOffsetHeightWithMargins(Element elem) /*-{
     var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureJsoRemote()();
     if (remote.style.display == 'none') {
       return 0;
     }
@@ -965,7 +965,7 @@ public class WidgetUtils {
 	public static native void selectElement(Element elem)/*-{
     var sel, range;
     var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureJsoRemote()();
     if ($wnd.getSelection && $doc.createRange) {
       sel = $wnd.getSelection();
       range = $doc.createRange();
@@ -1079,7 +1079,7 @@ public class WidgetUtils {
 	}
 
 	private static void ensureRemote(Element element) {
-		element.implAccess().ensureRemote();
+		element.implAccess().ensureJsoRemote();
 	}
 
 	private static int getBestOffsetHeight(Element e, boolean parentPass) {
@@ -1157,7 +1157,7 @@ public class WidgetUtils {
 
 	private native static boolean isVisibleWithOffsetParent(Element elem)/*-{
     var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureJsoRemote()();
     return (remote.style.display != 'none' && remote.offsetParent != null);
 	}-*/;
 

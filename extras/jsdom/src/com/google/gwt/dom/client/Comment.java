@@ -148,18 +148,23 @@ public class Comment extends Node
 	}
 
 	@Override
-	protected CommentRemote typedRemote() {
-		return (CommentRemote) remote();
+	protected CommentJso jsoRemote() {
+		return (CommentJso) remote();
 	}
 
 	public class CommentImplAccess extends Node.ImplAccess {
-		public CommentRemote ensureRemote() {
+		public CommentJso ensureRemote() {
 			ensureRemoteCheck();
-			return Comment.this.typedRemote();
+			return Comment.this.jsoRemote();
 		}
 
-		public CommentRemote typedRemote() {
-			return Comment.this.typedRemote();
+		@Override
+		public void putRemote(ClientDomNode remote) {
+			Comment.this.remote = (ClientDomComment) remote;
+		}
+
+		public CommentJso typedRemote() {
+			return Comment.this.jsoRemote();
 		}
 	}
 }

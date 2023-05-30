@@ -8,20 +8,20 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.TextBox;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
+import cc.alcina.framework.gwt.client.util.EventCollator;
 
 public abstract class CellFilter extends Composite implements KeyUpHandler {
 	private FlowPanel fp;
 
 	protected TextBox textBox;
 
-	private AtEndOfEventSeriesTimer seriesTimer = new AtEndOfEventSeriesTimer(
+	private EventCollator seriesTimer = new EventCollator(
 			200, new Runnable() {
 				@Override
 				public void run() {
 					afterSeries();
 				}
-			}).maxDelayFromFirstAction(3000);
+			}).withMaxDelayFromFirstEvent(3000);
 
 	public CellFilter() {
 		this.fp = new FlowPanel();
@@ -44,7 +44,7 @@ public abstract class CellFilter extends Composite implements KeyUpHandler {
 
 	@Override
 	public void onKeyUp(KeyUpEvent event) {
-		seriesTimer.triggerEventOccurred();
+		seriesTimer.eventOccurred();
 	}
 
 	protected abstract void afterSeries();

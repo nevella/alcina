@@ -17,7 +17,7 @@ package com.google.gwt.user.client.impl;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 
@@ -34,7 +34,7 @@ public abstract class DOMImpl {
 	public static EventListener getEventListener(Element elem) {
 		if (elem.implAccess().linkedToRemote()) {
 			EventListener eventListener = getEventListener0(
-					elem.implAccess().typedRemote());
+					elem.implAccess().jsoRemote());
 			if (eventListener != null) {
 				return eventListener;
 			}
@@ -43,7 +43,7 @@ public abstract class DOMImpl {
 	}
 
 	public static void setEventListener(Element elem, EventListener listener) {
-		ElementRemote remote = elem.implAccess().typedRemoteOrNull();
+		ElementJso remote = elem.implAccess().jsoRemoteOrNull();
 		if (remote != null) {
 			setEventListener0(remote, listener);
 		} else {
@@ -51,7 +51,7 @@ public abstract class DOMImpl {
 		}
 	}
 
-	private static native EventListener getEventListener0(ElementRemote elem) /*-{
+	private static native EventListener getEventListener0(ElementJso elem) /*-{
     // Return elem.__listener if and only if it was assigned from our module
     var maybeListener = elem.__listener;
     return @com.google.gwt.user.client.impl.DOMImpl::isMyListener(*)(maybeListener) ? maybeListener
@@ -89,7 +89,7 @@ public abstract class DOMImpl {
 				&& (object instanceof com.google.gwt.user.client.EventListener);
 	}
 
-	private static native void setEventListener0(ElementRemote elem,
+	private static native void setEventListener0(ElementJso elem,
 			EventListener listener) /*-{
     elem.__listener = listener;
 	}-*/;
@@ -184,8 +184,8 @@ public abstract class DOMImpl {
 	public abstract int getChildIndex(Element parent, Element child);
 
 	public int getEventsSunk(Element elem) {
-		if (elem.implAccess().linkedToRemote()) {
-			ElementRemote remote = elem.implAccess().typedRemote();
+		if (elem.implAccess().isJsoRemote()) {
+			ElementJso remote = elem.implAccess().jsoRemote();
 			return getEventsSunk0(remote);
 		} else {
 			return elem.localEventBitsSunk();
@@ -214,7 +214,7 @@ public abstract class DOMImpl {
 	 */
 	protected abstract void initEventSystem();
 
-	native int getEventsSunk0(ElementRemote elem) /*-{
+	native int getEventsSunk0(ElementJso elem) /*-{
     return elem.__eventBits || 0;
 	}-*/;
 }

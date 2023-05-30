@@ -31,7 +31,7 @@ abstract class DOMImplStandard extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native NativeEvent createHtmlEvent(DocumentRemote doc,
+	protected native NativeEvent createHtmlEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable) /*-{
     var evt = doc.createEvent('HTMLEvents');
     evt.initEvent(type, canBubble, cancelable);
@@ -40,7 +40,7 @@ abstract class DOMImplStandard extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native ElementRemote createInputRadioElement(DocumentRemote doc,
+	protected native ElementJso createInputRadioElement(DocumentJso doc,
 			String name) /*-{
     var elem = doc.createElement("INPUT");
     elem.type = 'radio';
@@ -50,11 +50,11 @@ abstract class DOMImplStandard extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native NativeEvent createMouseEvent(DocumentRemote doc,
+	protected native NativeEvent createMouseEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
-			ElementRemote relatedTarget) /*-{
+			ElementJso relatedTarget) /*-{
     // Because Event.getButton() returns bitfield values [1, 4, 2] for [left,
     // middle, right], we need to translate them to the standard [0, 1, 2]
     // button constants.
@@ -75,7 +75,7 @@ abstract class DOMImplStandard extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native void dispatchEvent(ElementRemote target, NativeEvent evt) /*-{
+	protected native void dispatchEvent(ElementJso target, NativeEvent evt) /*-{
     target.dispatchEvent(evt);
 	}-*/;
 
@@ -130,12 +130,12 @@ abstract class DOMImplStandard extends DOMImpl {
 	 * styles as it does for innerText.
 	 */
 	@Override
-	protected native String getInnerText(ElementRemote elem) /*-{
+	protected native String getInnerText(ElementJso elem) /*-{
     return elem.textContent;
 	}-*/;
 
 	@Override
-	protected native boolean isOrHasChild(NodeRemote parent, NodeRemote child) /*-{
+	protected native boolean isOrHasChild(NodeJso parent, NodeJso child) /*-{
     return parent.contains(child);
 	}-*/;
 
@@ -143,12 +143,12 @@ abstract class DOMImplStandard extends DOMImpl {
 	 * See getInnerText for why textContent is used instead of innerText.
 	 */
 	@Override
-	protected native void setInnerText(ElementRemote elem, String text) /*-{
+	protected native void setInnerText(ElementJso elem, String text) /*-{
     elem.textContent = text || '';
 	}-*/;
 
 	@Override
-	Element getDocumentScrollingElement(DocumentRemote doc) {
+	Element getDocumentScrollingElement(DocumentJso doc) {
 		// Uses http://dev.w3.org/csswg/cssom-view/#dom-document-scrolling
 		// element to
 		// avoid trying to guess about browser behavior.
@@ -158,11 +158,11 @@ abstract class DOMImplStandard extends DOMImpl {
 		return getLegacyDocumentScrollingElement(doc);
 	}
 
-	Element getLegacyDocumentScrollingElement(DocumentRemote doc) {
+	Element getLegacyDocumentScrollingElement(DocumentJso doc) {
 		return doc.getViewportElement();
 	}
 
-	final native Element getNativeDocumentScrollingElement(DocumentRemote doc) /*-{
+	final native Element getNativeDocumentScrollingElement(DocumentJso doc) /*-{
 		return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(doc.scrollingElement);
 	}-*/;
 }

@@ -1,5 +1,6 @@
 package com.google.gwt.dom.client;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -287,6 +288,16 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public int indexInParentChildren() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<LocalDomNode> localDomChildren() {
+		throw new UnsupportedOperationException();
+	}
+
 	public void putElement(Element element) {
 	}
 
@@ -408,16 +419,6 @@ public class ElementNull extends NodeLocalNull
 	@Override
 	public String toString() {
 		return super.toString() + "\n\t" + getTagName();
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		throw new UnsupportedOperationException();
 	}
 
 	int orSunkEventsOfAllChildren(int sunk) {

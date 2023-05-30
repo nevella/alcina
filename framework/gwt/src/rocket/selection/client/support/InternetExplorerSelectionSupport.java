@@ -333,7 +333,7 @@ public class InternetExplorerSelectionSupport extends SelectionSupport {
 								//find elements around the node (binary)       
 								var childNodes = parent.childNodes;
 								if (childNodes.length == 0) {
-								var text = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirstWithParent(Lcom/google/gwt/dom/client/ElementRemote;I)(parent,toEndPoint?-1:1);
+								var text = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirstWithParent(Lcom/google/gwt/dom/client/ElementJso;I)(parent,toEndPoint?-1:1);
 								endPoint = @rocket.selection.client.SelectionEndPoint::new(Lcom/google/gwt/dom/client/Node;I)(text,toEndPoint?text.length:0);
 								return endPoint;
 								}
@@ -386,8 +386,8 @@ public class InternetExplorerSelectionSupport extends SelectionSupport {
 								if (rangeMax - rangeMin <= 1 && childNodes[rangeMax].nodeType == 1
 								&& childNodes[rangeMin].nodeType == 1) {
 								//between elements
-								var text = toEndPoint ? this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementRemote;II)(parent,rangeMin,-1)
-								: this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementRemote;II)(parent,rangeMin,+1);
+								var text = toEndPoint ? this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementJso;II)(parent,rangeMin,-1)
+								: this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementJso;II)(parent,rangeMin,+1);
 								endPoint = @rocket.selection.client.SelectionEndPoint::new(Lcom/google/gwt/dom/client/Node;I)(text,toEndPoint?text.length:0);
 								return endPoint;
 								}

@@ -4,7 +4,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 
-public class AtEndOfEventSeriesTimer<T> {
+/*
+ * Collects events and triggers an action after a specified delay
+ */
+public class EventCollator<T> {
 	private long lastEventOccurred = 0;
 
 	private long firstEventOccurred = 0;
@@ -18,8 +21,8 @@ public class AtEndOfEventSeriesTimer<T> {
 		public void run() {
 			long time = System.currentTimeMillis();
 			if (time - lastEventOccurred >= waitToPerformAction
-					|| (maxDelayFromFirstAction != 0 && (time
-							- firstEventOccurred >= maxDelayFromFirstAction))) {
+					|| (maxDelayFromFirstEvent != 0 && (time
+							- firstEventOccurred >= maxDelayFromFirstEvent))) {
 				synchronized (this) {
 					if (timer != null) {
 						timer.cancel();
@@ -48,16 +51,16 @@ public class AtEndOfEventSeriesTimer<T> {
 
 	private final TimerWrapperProvider timerWrapperProvider;
 
-	private long maxDelayFromFirstAction;
+	private long maxDelayFromFirstEvent;
 
 	private TimerWrapper timer = null;
 
-	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action) {
+	public EventCollator(long waitToPerformAction, Runnable action) {
 		this(waitToPerformAction, action,
 				Registry.impl(TimerWrapperProvider.class));
 	}
 
-	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action,
+	public EventCollator(long waitToPerformAction, Runnable action,
 			TimerWrapperProvider timerWrapperProvider) {
 		this.waitToPerformAction = waitToPerformAction;
 		this.action = action;
@@ -79,13 +82,7 @@ public class AtEndOfEventSeriesTimer<T> {
 		return this.lastObject;
 	}
 
-	public AtEndOfEventSeriesTimer
-			maxDelayFromFirstAction(long maxDelayFromFirstAction) {
-		this.maxDelayFromFirstAction = maxDelayFromFirstAction;
-		return this;
-	}
-
-	public void triggerEventOccurred() {
+	public void eventOccurred() {
 		synchronized (this) {
 			lastEventOccurred = System.currentTimeMillis();
 			if (firstEventOccurred == 0) {
@@ -105,6 +102,12 @@ public class AtEndOfEventSeriesTimer<T> {
 			}
 			lastObject = object;
 		}
-		triggerEventOccurred();
+		eventOccurred();
+	}
+
+	public EventCollator
+			withMaxDelayFromFirstEvent(long maxDelayFromFirstEvent) {
+		this.maxDelayFromFirstEvent = maxDelayFromFirstEvent;
+		return this;
 	}
 }

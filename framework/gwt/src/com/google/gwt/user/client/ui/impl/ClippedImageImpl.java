@@ -70,7 +70,7 @@ public class ClippedImageImpl {
 		Element tmp = Document.get().createSpanElement();
 		tmp.setInnerSafeHtml(getSafeHtml(url, left, top, width, height));
 		Element elem = tmp.getFirstChildElement();
-		elem.implAccess().ensureRemote();
+		elem.implAccess().ensureJsoRemote();
 		elem.setPropertyJSO("onload", createOnLoadHandlerFunction());
 		return elem;
 	}

@@ -2,13 +2,13 @@ package cc.alcina.framework.gwt.client.dirndl.model.dom;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.SelectionRemote;
+import com.google.gwt.dom.client.SelectionJso;
 
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.dom.Location;
 
 public class RelativeInputModel {
-	SelectionRemote selectionRemote;
+	SelectionJso selectionRemote;
 
 	private boolean triggerable;
 
@@ -17,7 +17,7 @@ public class RelativeInputModel {
 	private int focusOffset;
 
 	public RelativeInputModel() {
-		selectionRemote = Document.get().typedRemote().getSelection();
+		selectionRemote = Document.get().jsoRemote().getSelection();
 		boolean collapsed = selectionRemote.isCollapsed();
 		Node focusDomNode = selectionRemote.getFocusNode().node();
 		if (focusDomNode != null) {

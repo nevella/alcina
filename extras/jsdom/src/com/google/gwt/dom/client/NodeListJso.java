@@ -32,9 +32,9 @@ import com.google.gwt.core.client.JavaScriptObject;
  * @param <T>
  *            the type of contained node
  */
-public class NodeListRemote<T extends Node> extends JavaScriptObject
+public class NodeListJso<T extends Node> extends JavaScriptObject
 		implements ClientDomNodeList<T> {
-	protected NodeListRemote() {
+	protected NodeListJso() {
 	}
 
 	@Override
@@ -65,12 +65,12 @@ public class NodeListRemote<T extends Node> extends JavaScriptObject
 	 * @return the node at the indexth position in the NodeList, or null if that
 	 *         is not a valid index.
 	 */
-	final native NodeRemote getItem0(int index) /*-{
+	final native NodeJso getItem0(int index) /*-{
     return this[index];
 	}-*/;
 
-	final Stream<NodeRemote> streamRemote() {
-		List<NodeRemote> list = new ArrayList<>();
+	final Stream<NodeJso> streamRemote() {
+		List<NodeJso> list = new ArrayList<>();
 		for (int idx = 0; idx < this.getLength(); idx++) {
 			list.add(this.getItem0(idx));
 		}

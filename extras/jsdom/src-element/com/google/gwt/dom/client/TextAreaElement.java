@@ -146,7 +146,7 @@ public class TextAreaElement extends Element {
 		ensureRemoteCheck();
 		if ("value".equals(name)) {
 			if (linkedToRemote()) {
-				return typedRemote().getPropertyString(name);
+				return jsoRemote().getPropertyString(name);
 			} else {
 				return getInnerText();
 			}
@@ -214,7 +214,7 @@ public class TextAreaElement extends Element {
 	}
 
 	public final void select() {
-		select0(ensureRemote());
+		select0(ensureJsoRemote());
 	}
 
 	/**
@@ -336,7 +336,7 @@ public class TextAreaElement extends Element {
 	/**
 	 * Select the contents of the TEXTAREA.
 	 */
-	native void select0(ElementRemote elt) /*-{
+	native void select0(ElementJso elt) /*-{
     this.select();
 	}-*/;
 }

@@ -977,7 +977,7 @@ public class Style implements ClientDomStyle {
 	protected ClientDomStyle remote() {
 		element.ensureRemoteCheck();
 		if (!linkedToRemote() && element.linkedToRemote()) {
-			remote = element.typedRemote().getStyleRemote();
+			remote = element.jsoRemote().getStyleRemote();
 		}
 		return remote;
 	}

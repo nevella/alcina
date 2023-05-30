@@ -158,6 +158,11 @@ public abstract class NodeLocal implements LocalDomNode {
 	}
 
 	@Override
+	public boolean isJso() {
+		return false;
+	}
+
+	@Override
 	public boolean isOrHasChild(Node child) {
 		NodeLocal cursor = child.local();
 		while (cursor != null) {

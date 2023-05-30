@@ -16,7 +16,7 @@
 package com.google.gwt.user.client.impl;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 
 /**
  * Mozilla implementation of StandardBrowser.
@@ -35,7 +35,7 @@ class DOMImplMozilla extends DOMImplStandard {
 	public void sinkEvents(Element elem, int bits) {
 		super.sinkEvents(elem, bits);
 		if (elem.implAccess().linkedToRemote()) {
-			sinkEventsMozilla(elem.implAccess().typedRemoteOrNull(), bits);
+			sinkEventsMozilla(elem.implAccess().jsoRemoteOrNull(), bits);
 		}
 	}
 
@@ -65,7 +65,7 @@ class DOMImplMozilla extends DOMImplStandard {
 		initSyntheticMouseUpEvents();
 	}
 
-	native void sinkEventsMozilla(ElementRemote elem, int bits) /*-{
+	native void sinkEventsMozilla(ElementJso elem, int bits) /*-{
     if (bits & 0x20000) {
       elem.addEventListener('DOMMouseScroll',
           @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent,

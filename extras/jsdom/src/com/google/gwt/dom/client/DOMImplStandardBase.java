@@ -23,7 +23,7 @@ import com.google.gwt.core.client.JavaScriptObject;
  */
 class DOMImplStandardBase extends DOMImplStandard {
 	private static native double getAbsoluteLeftUsingOffsets(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     // Unattached elements and elements (or their ancestors) with style
     // 'display: none' have no offsetLeft.
     if (elem.offsetLeft == null) {
@@ -79,7 +79,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 	}-*/;
 
 	private static native double getAbsoluteTopUsingOffsets(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     // Unattached elements and elements (or their ancestors) with style
     // 'display: none' have no offsetTop.
     if (elem.offsetTop == null) {
@@ -126,11 +126,11 @@ class DOMImplStandardBase extends DOMImplStandard {
 	}-*/;
 
 	private static native ClientRect getBoundingClientRect(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     return elem.getBoundingClientRect && elem.getBoundingClientRect();
 	}-*/;
 
-	private native NativeEvent createKeyEvent(DocumentRemote doc, String type,
+	private native NativeEvent createKeyEvent(DocumentJso doc, String type,
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey) /*-{
     // WebKit's KeyboardEvent cannot set or even initialize charCode, keyCode, etc.
@@ -150,7 +150,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 	 * need to set it using setAttribute.
 	 */
 	@Override
-	protected native ElementRemote createButtonElement(DocumentRemote doc,
+	protected native ElementJso createButtonElement(DocumentJso doc,
 			String type) /*-{
     var e = doc.createElement("BUTTON");
     e.setAttribute('type', type);
@@ -158,31 +158,31 @@ class DOMImplStandardBase extends DOMImplStandard {
 	}-*/;
 
 	@Override
-	protected native NativeEvent createKeyCodeEvent(DocumentRemote doc,
+	protected native NativeEvent createKeyCodeEvent(DocumentJso doc,
 			String type, boolean ctrlKey, boolean altKey, boolean shiftKey,
 			boolean metaKey, int keyCode) /*-{
-    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, type, true, true, ctrlKey, altKey, shiftKey, metaKey)
+    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentJso;Ljava/lang/String;ZZZZZZ)(doc, type, true, true, ctrlKey, altKey, shiftKey, metaKey)
     evt.keyCode = keyCode;
     return evt;
 	}-*/;
 
 	@Override
 	@Deprecated
-	protected native NativeEvent createKeyEvent(DocumentRemote doc, String type,
+	protected native NativeEvent createKeyEvent(DocumentJso doc, String type,
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) /*-{
-    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, type, canBubble, cancelable, ctrlKey, altKey, shiftKey, metaKey)
+    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentJso;Ljava/lang/String;ZZZZZZ)(doc, type, canBubble, cancelable, ctrlKey, altKey, shiftKey, metaKey)
     evt.keyCode = keyCode;
     evt.charCode = charCode;
     return evt;
 	}-*/;
 
 	@Override
-	protected native NativeEvent createKeyPressEvent(DocumentRemote doc,
+	protected native NativeEvent createKeyPressEvent(DocumentJso doc,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode) /*-{
-    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentRemote;Ljava/lang/String;ZZZZZZ)(doc, 'keypress', true, true, ctrlKey, altKey, shiftKey, metaKey)
+    var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentJso;Ljava/lang/String;ZZZZZZ)(doc, 'keypress', true, true, ctrlKey, altKey, shiftKey, metaKey)
     evt.charCode = charCode;
     return evt;
 	}-*/;
@@ -191,7 +191,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 	 * Safari 2 does not support {@link ScriptElement#setText(String)}.
 	 */
 	@Override
-	protected ScriptElement createScriptElement(DocumentRemote doc,
+	protected ScriptElement createScriptElement(DocumentJso doc,
 			String source) {
 		ScriptElement elem = nodeFor(createElement(doc, "script"));
 		elem.setInnerText(source);
@@ -213,7 +213,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 		ClientRect rect = getBoundingClientRect(elem);
 		double left = rect != null
 				? rect.getSubPixelLeft()
-						+ getScrollLeft(elem.getOwnerDocument().typedRemote())
+						+ getScrollLeft(elem.getOwnerDocument().jsoRemote())
 				: getAbsoluteLeftUsingOffsets(elem);
 		return toInt32(left);
 	}
@@ -223,7 +223,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 		ClientRect rect = getBoundingClientRect(elem);
 		double top = rect != null
 				? rect.getSubPixelTop()
-						+ getScrollTop(elem.getOwnerDocument().typedRemote())
+						+ getScrollTop(elem.getOwnerDocument().jsoRemote())
 				: getAbsoluteTopUsingOffsets(elem);
 		return toInt32(top);
 	}
@@ -238,14 +238,14 @@ class DOMImplStandardBase extends DOMImplStandard {
 	}
 
 	@Override
-	protected native int getTabIndex(ElementRemote elem) /*-{
+	protected native int getTabIndex(ElementJso elem) /*-{
     // tabIndex is undefined for divs and other non-focusable elements prior to
     // Safari 4.
     return typeof elem.tabIndex != 'undefined' ? elem.tabIndex : -1;
 	}-*/;
 
 	protected native boolean isRTL(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     return elem.ownerDocument.defaultView.getComputedStyle(elem, '').direction == 'rtl';
 	}-*/;
 

@@ -21,7 +21,7 @@ package com.google.gwt.dom.client;
  */
 class DOMImplIE9 extends DOMImplStandardBase {
 	private native double getBoundingClientRectLeft(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     // getBoundingClientRect() throws a JS exception if the elem is not attached
     // to the doc, so we wrap it in a try/catch block
     try {
@@ -33,7 +33,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
 	}-*/;
 
 	private native double getBoundingClientRectTop(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     // getBoundingClientRect() throws a JS exception if the elem is not attached
     // to the doc, so we wrap it in a try/catch block
     try {
@@ -53,7 +53,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
 	}-*/;
 
 	private native double getParentOffsetDelta(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     var offsetParent = elem.offsetParent;
     if (offsetParent) {
       return offsetParent.offsetWidth - offsetParent.clientWidth;
@@ -62,12 +62,12 @@ class DOMImplIE9 extends DOMImplStandardBase {
 	}-*/;
 
 	private native double getScrollLeftImpl(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     return elem.scrollLeft || 0;
 	}-*/;
 
 	private native void setScrollLeftImpl(Element multiplex, int left) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     elem.scrollLeft = left;
 	}-*/;
 
@@ -99,7 +99,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
 	}-*/;
 
 	@Override
-	protected int getScrollLeft(DocumentRemote doc) {
+	protected int getScrollLeft(DocumentJso doc) {
 		return toInt32(getDocumentScrollLeftImpl());
 	}
 
@@ -113,23 +113,23 @@ class DOMImplIE9 extends DOMImplStandardBase {
 	}
 
 	@Override
-	protected int getScrollTop(DocumentRemote doc) {
+	protected int getScrollTop(DocumentJso doc) {
 		return toInt32(getDocumentScrollTopImpl());
 	}
 
 	@Override
-	protected native int getTabIndex(ElementRemote elem) /*-{
+	protected native int getTabIndex(ElementJso elem) /*-{
     return elem.tabIndex < 65535 ? elem.tabIndex : -(elem.tabIndex % 65535) - 1;
 	}-*/;
 
 	@Override
-	protected boolean isOrHasChild(NodeRemote parent, NodeRemote child) {
+	protected boolean isOrHasChild(NodeJso parent, NodeJso child) {
 		// IE9 still behaves like IE8 for this method
 		return DOMImplTrident.isOrHasChildImpl(parent, child);
 	}
 
 	@Override
-	protected native void selectRemoveOption(ElementRemote select, int index) /*-{
+	protected native void selectRemoveOption(ElementJso select, int index) /*-{
     try {
       // IE9 throws if elem at index is an optgroup
       select.remove(index);
@@ -139,7 +139,7 @@ class DOMImplIE9 extends DOMImplStandardBase {
 	}-*/;
 
 	@Override
-	protected void setScrollLeft(DocumentRemote doc, int left) {
+	protected void setScrollLeft(DocumentJso doc, int left) {
 		setScrollLeft(doc.getDocumentElement(), left);
 	}
 

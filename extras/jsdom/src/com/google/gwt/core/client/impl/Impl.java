@@ -285,7 +285,8 @@ public final class Impl {
 		boolean initialEntry = enter();
 		try {
 			if (initialEntry) {
-				if (firstTimeClient) {
+				if (GWT.isScript() && firstTimeClient) {
+					LocalDom.initalize();
 					firstTimeClient = false;
 				} else {
 					LocalDom.getMutations().syncMutationsAndStopObserving();

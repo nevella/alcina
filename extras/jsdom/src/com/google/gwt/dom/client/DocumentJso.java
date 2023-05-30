@@ -8,14 +8,14 @@ import org.w3c.dom.ProcessingInstruction;
 import com.google.gwt.core.client.GWT;
 
 @SuppressWarnings("deprecation")
-public class DocumentRemote extends NodeRemote implements ClientDomDocument {
+public class DocumentJso extends NodeJso implements ClientDomDocument {
 	/**
 	 * We cache Document.nativeGet() in DevMode, because crossing the JSNI
 	 * boundary thousands of times just to read a constant value is slow.
 	 */
-	private static DocumentRemote doc;
+	private static DocumentJso doc;
 
-	private static native DocumentRemote nativeGet() /*-{
+	private static native DocumentJso nativeGet() /*-{
     return $doc;
 	}-*/;
 
@@ -25,7 +25,7 @@ public class DocumentRemote extends NodeRemote implements ClientDomDocument {
 	 *
 	 * @return the default document
 	 */
-	static DocumentRemote get() {
+	static DocumentJso get() {
 		if (GWT.isScript()) {
 			return nativeGet();
 		}
@@ -36,7 +36,7 @@ public class DocumentRemote extends NodeRemote implements ClientDomDocument {
 		return doc;
 	}
 
-	protected DocumentRemote() {
+	protected DocumentJso() {
 	}
 
 	@Override
@@ -130,7 +130,7 @@ public class DocumentRemote extends NodeRemote implements ClientDomDocument {
 
 	@Override
 	public final Comment createComment(String data) {
-		CommentRemote remote = createCommentNode0(data);
+		CommentJso remote = createCommentNode0(data);
 		return LocalDom.nodeFor(remote);
 	}
 
@@ -561,7 +561,7 @@ public class DocumentRemote extends NodeRemote implements ClientDomDocument {
 	 */
 	@Override
 	public final Text createTextNode(String data) {
-		TextRemote remote = createTextNode0(data);
+		TextJso remote = createTextNode0(data);
 		return LocalDom.nodeFor(remote);
 	}
 
@@ -830,7 +830,7 @@ public class DocumentRemote extends NodeRemote implements ClientDomDocument {
 		return getViewportElement().getScrollWidth();
 	}
 
-	public native final SelectionRemote getSelection()/*-{
+	public native final SelectionJso getSelection()/*-{
     return this.getSelection();
 	}-*/;
 
@@ -957,33 +957,33 @@ public class DocumentRemote extends NodeRemote implements ClientDomDocument {
 	 *
 	 * @return the document's body
 	 */
-	private final native NodeRemote getBody0() /*-{
+	private final native NodeJso getBody0() /*-{
     return this.body;
 	}-*/;
 
-	native final CommentRemote createCommentNode0(String data) /*-{
+	native final CommentJso createCommentNode0(String data) /*-{
     return this.createComment(data);
 	}-*/;
 
-	native final ElementRemote createElementNode0(String tagName) /*-{
+	native final ElementJso createElementNode0(String tagName) /*-{
     return this.createElement(tagName);
 	}-*/;
 
-	native final TextRemote createTextNode0(String data) /*-{
+	native final TextJso createTextNode0(String data) /*-{
     return this.createTextNode(data);
 	}-*/;
 
-	final native ElementRemote generateFromOuterHtml(String outer) /*-{
+	final native ElementJso generateFromOuterHtml(String outer) /*-{
     var div = this.createElement("div");
     div.innerHTML = outer;
     return div.childNodes[0];
 	}-*/;
 
-	final native ElementRemote getDocumentElement0() /*-{
+	final native ElementJso getDocumentElement0() /*-{
     return this.documentElement;
 	}-*/;
 
-	final native ElementRemote getElementById0(String elementId) /*-{
+	final native ElementJso getElementById0(String elementId) /*-{
     return this.getElementById(elementId);
 	}-*/;
 
@@ -997,7 +997,7 @@ public class DocumentRemote extends NodeRemote implements ClientDomDocument {
 	 *            <code>"*"</code> matches all tags)
 	 * @return a list containing all the matched elements
 	 */
-	final native NodeListRemote<Element> getElementsByTagName0(String tagName) /*-{
+	final native NodeListJso<Element> getElementsByTagName0(String tagName) /*-{
     return this.getElementsByTagName(tagName);
 	}-*/;
 }

@@ -93,7 +93,7 @@ public class TableElement extends Element {
 	public TableSectionElement createTHead() {
 		Preconditions.checkState(!linkedToRemote());
 		return (TableSectionElement) local().createOrReturnChild("thead");
-		// else case remote to TableElementRemote, write there
+		// else case remote to TableElementJso, write there
 	}
 
 	public void deleteCaption() {
@@ -347,7 +347,7 @@ public class TableElement extends Element {
 	 * 
 	 * @return A CAPTION element.
 	 */
-	private native ElementRemote createCaption0(ElementRemote elt) /*-{
+	private native ElementJso createCaption0(ElementJso elt) /*-{
 																	return elt.createCaption();
 																	}-*/;
 
@@ -356,14 +356,14 @@ public class TableElement extends Element {
 	 * 
 	 * @return A footer element (TFOOT)
 	 */
-	private native ElementRemote createTFoot0(ElementRemote elt) /*-{
+	private native ElementJso createTFoot0(ElementJso elt) /*-{
 																	return elt.createTFoot();
 																	}-*/;
 
 	/**
 	 * Returns a collection of the table bodies (including implicit ones).
 	 */
-	private final native NodeListRemote getTBodies0(ElementRemote elem) /*-{
+	private final native NodeListJso getTBodies0(ElementJso elem) /*-{
 																		return elem.tBodies;
 																		}-*/;
 
@@ -372,14 +372,14 @@ public class TableElement extends Element {
 	 * 
 	 * @return A new table header element (THEAD)
 	 */
-	native ElementRemote createTHead0(ElementRemote elt) /*-{
+	native ElementJso createTHead0(ElementJso elt) /*-{
 															return elt.createTHead();
 															}-*/;
 
 	/**
 	 * Delete the table caption, if one exists.
 	 */
-	native void deleteCaption0(ElementRemote elt) /*-{
+	native void deleteCaption0(ElementJso elt) /*-{
 													elt.deleteCaption();
 													}-*/;
 
@@ -392,35 +392,35 @@ public class TableElement extends Element {
 	 *            all the rows contained inside the table. If the index is -1
 	 *            the last row in the table is deleted
 	 */
-	native void deleteRow0(ElementRemote elt, int index) /*-{
+	native void deleteRow0(ElementJso elt, int index) /*-{
 															elt.deleteRow(index);
 															}-*/;
 
 	/**
 	 * Delete the header from the table, if one exists.
 	 */
-	native void deleteTFoot0(ElementRemote elt) /*-{
+	native void deleteTFoot0(ElementJso elt) /*-{
 												elt.deleteTFoot();
 												}-*/;
 
 	/**
 	 * Delete the header from the table, if one exists.
 	 */
-	native void deleteTHead0(ElementRemote elt) /*-{
+	native void deleteTHead0(ElementJso elt) /*-{
 												elt.deleteTHead();
 												}-*/;
 
 	/**
 	 * The table's TFOOT, or null if none exists.
 	 */
-	final native ElementRemote getTFoot0(ElementRemote elem) /*-{
+	final native ElementJso getTFoot0(ElementJso elem) /*-{
 																return elem.tFoot;
 																}-*/;
 
 	/**
 	 * The table's THEAD, or null if none exists.
 	 */
-	final native ElementRemote getTHead0(ElementRemote elem) /*-{
+	final native ElementJso getTHead0(ElementJso elem) /*-{
 																return elem.tHead;
 																}-*/;
 }

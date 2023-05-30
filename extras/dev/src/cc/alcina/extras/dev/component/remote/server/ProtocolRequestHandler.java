@@ -10,17 +10,21 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage;
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentRequest;
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentResponse;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.servlet.dom.PathrefDom;
 import cc.alcina.framework.servlet.dom.Environment;
+import cc.alcina.framework.servlet.dom.PathrefDom;
 
 public class ProtocolRequestHandler extends AbstractHandler {
+	// FIXME - remcon - remove (and possibly the whole class, since most of it
+	// is/should be covered by Environment)
 	private RemoteComponentRemote consoleRemote;
 
 	public ProtocolRequestHandler() {
@@ -101,16 +105,27 @@ public class ProtocolRequestHandler extends AbstractHandler {
 				LooseContext.set(
 						RemoteComponentRemote.CONTEXT_CALLER_CLIENT_INSTANCE_UID,
 						request.session.clientInstanceUid);
-				ProtocolMessageHandler messageHandler = Registry.impl(
-						ProtocolMessageHandler.class,
+				ProtocolMessageHandlerServer messageHandler = Registry.impl(
+						ProtocolMessageHandlerServer.class,
 						request.protocolMessage.getClass());
 				RemoteComponentResponse response = new RemoteComponentResponse();
 				response.requestId = request.requestId;
 				response.session = request.session;
-				Environment env = PathrefDom.get().getEnvironment(
-						request.session,
-						messageHandler.isValidateClientInstanceUid());
-				// FIXME - handle missed, out-of-order messages
+				Environment env = PathrefDom.get()
+						.getEnvironment(request.session);
+				try {
+					env.validateSession(request.session,
+							messageHandler.isValidateClientInstanceUid());
+				} catch (Exception e) {
+					e.printStackTrace();
+					ProtocolMessage.ProcessingException processingException = new ProtocolMessage.ProcessingException();
+					processingException.exceptionClassName = e.getClass()
+							.getName();
+					processingException.exceptionMessage = CommonUtils
+							.toSimpleExceptionMessage(e);
+					response.protocolMessage = processingException;
+				}
+				// FIXME - remcon - handle missed, out-of-order messages
 				synchronized (env) {
 					messageHandler.handle(request, response, env,
 							request.protocolMessage);

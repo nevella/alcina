@@ -162,18 +162,23 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	}
 
 	@Override
-	protected TextRemote typedRemote() {
-		return (TextRemote) remote();
+	protected TextJso jsoRemote() {
+		return (TextJso) remote();
 	}
 
 	public class TextImplAccess extends Node.ImplAccess {
-		public TextRemote ensureRemote() {
+		public TextJso ensureRemote() {
 			ensureRemoteCheck();
-			return Text.this.typedRemote();
+			return Text.this.jsoRemote();
 		}
 
-		public TextRemote typedRemote() {
-			return Text.this.typedRemote();
+		@Override
+		public void putRemote(ClientDomNode remote) {
+			Text.this.remote = (ClientDomText) remote;
+		}
+
+		public TextJso typedRemote() {
+			return Text.this.jsoRemote();
 		}
 	}
 }

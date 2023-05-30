@@ -24,7 +24,7 @@ import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
@@ -1773,12 +1773,12 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	@SuppressWarnings("unused") // used due to rebinding
 	private static class HTMLTableIEImpl extends HTMLTableStandardImpl {
 		@Override
-		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
+		native JsArray<ElementJso> getCells0(ElementJso row) /*-{
       return row.children;
 		}-*/;
 
 		@Override
-		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
+		native JsArray<ElementJso> getRows0(ElementJso tbody) /*-{
       return tbody.children;
 		}-*/;
 	}
@@ -1809,23 +1809,23 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 							.provideChildNodeList());
 		}
 
-		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
+		native JsArray<ElementJso> getCells0(ElementJso row) /*-{
       return row.cells;
 		}-*/;
 
-		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
+		native JsArray<ElementJso> getRows0(ElementJso tbody) /*-{
       return tbody.rows;
 		}-*/;
 	}
 
 	static class ElementArray<T extends Node> {
-		private JsArray<ElementRemote> jsArray;
+		private JsArray<ElementJso> jsArray;
 
 		private NodeList<? extends Element> nodeList;
 
 		private List<? extends Element> jvmList;
 
-		public ElementArray(JsArray<ElementRemote> elements) {
+		public ElementArray(JsArray<ElementJso> elements) {
 			this.jsArray = elements;
 		}
 

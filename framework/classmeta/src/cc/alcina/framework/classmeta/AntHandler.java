@@ -27,7 +27,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
-import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
+import cc.alcina.framework.gwt.client.util.EventCollator;
 
 /*
  * Locking - only have one system-wide compile job run at once - use the file
@@ -182,13 +182,13 @@ public class AntHandler extends AbstractHandler {
 		}
 
 		class CachingAntListener {
-			private AtEndOfEventSeriesTimer seriesTimer = new AtEndOfEventSeriesTimer(
+			private EventCollator seriesTimer = new EventCollator(
 					200, new Runnable() {
 						@Override
 						public void run() {
 							runBuildTargets();
 						}
-					}).maxDelayFromFirstAction(99999);
+					}).withMaxDelayFromFirstEvent(99999);
 
 			private CachingAntProject project;
 
@@ -231,7 +231,7 @@ public class AntHandler extends AbstractHandler {
 
 			public void addPendingBuild(CachingAntProject project) {
 				pendingBuilds.add(project);
-				seriesTimer.triggerEventOccurred();
+				seriesTimer.eventOccurred();
 			}
 
 			public void flush() {
