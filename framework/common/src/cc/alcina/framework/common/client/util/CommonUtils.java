@@ -1334,6 +1334,11 @@ public class CommonUtils {
 		return items;
 	}
 
+	public static <E> Set<E> orderedSet(E... elements) {
+		return Arrays.stream(elements)
+				.collect(AlcinaCollectors.toLinkedHashSet());
+	}
+
 	public static String padEight(int number) {
 		if (number < 10000000) {
 			String s = String.valueOf(number);
