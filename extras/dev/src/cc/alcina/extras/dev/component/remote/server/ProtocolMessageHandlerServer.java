@@ -5,7 +5,6 @@ import java.util.function.Consumer;
 
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage;
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.AwaitRemote;
-import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.Startup;
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentRequest;
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentResponse;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -23,6 +22,14 @@ public abstract class ProtocolMessageHandlerServer<PM extends ProtocolMessage> {
 
 	public boolean isValidateClientInstanceUid() {
 		return true;
+	}
+
+	/*
+	 * Most handlers block on the environment - AwaitRemoteHandler is one that
+	 * has more complex sync logic
+	 */
+	Object provideMonitor(Environment env) {
+		return env;
 	}
 
 	public static class AwaitRemoteHandler
@@ -48,9 +55,15 @@ public abstract class ProtocolMessageHandlerServer<PM extends ProtocolMessage> {
 			}
 		}
 
+		@Override
+		Object provideMonitor(Environment env) {
+			return this;
+		}
+
 		class MessageConsumer implements Consumer<ProtocolMessage> {
-			// will be on a different thread to the parent instance handle
-			// method
+			// will be called on a different thread to the parent instance
+			// handle
+			// method (the calling frame owns the env monitor)
 			@Override
 			public void accept(ProtocolMessage message) {
 				AwaitRemoteHandler.this.message = message;
@@ -60,12 +73,22 @@ public abstract class ProtocolMessageHandlerServer<PM extends ProtocolMessage> {
 		}
 	}
 
+	public static class DomEventMessageHandler extends
+			ProtocolMessageHandlerServer<ProtocolMessage.DomEventMessage> {
+		@Override
+		public void handle(RemoteComponentRequest request,
+				RemoteComponentResponse response, Environment env,
+				ProtocolMessage.DomEventMessage message) {
+			env.applyEvent(message);
+		}
+	}
+
 	public static class StartupHandler
 			extends ProtocolMessageHandlerServer<ProtocolMessage.Startup> {
 		@Override
 		public void handle(RemoteComponentRequest request,
 				RemoteComponentResponse response, Environment env,
-				Startup message) {
+				ProtocolMessage.Startup message) {
 			env.initialiseClient(request.session);
 			env.applyMutations(message.domMutations);
 			/*

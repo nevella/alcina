@@ -214,7 +214,12 @@ public class DevConsoleRemote {
 		server.setAttribute(
 				"org.eclipse.jetty.server.Request.maxFormContentSize", -1);
 		server.setHandler(handlers);
-		server.start();
+		try {
+			server.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 		// server.dumpStdErr();
 		server.join();
 	}

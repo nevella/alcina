@@ -126,7 +126,7 @@ public class ProtocolRequestHandler extends AbstractHandler {
 					response.protocolMessage = processingException;
 				}
 				// FIXME - remcon - handle missed, out-of-order messages
-				synchronized (env) {
+				synchronized (messageHandler.provideMonitor(env)) {
 					messageHandler.handle(request, response, env,
 							request.protocolMessage);
 				}

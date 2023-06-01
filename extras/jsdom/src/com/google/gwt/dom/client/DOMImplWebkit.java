@@ -42,7 +42,7 @@ class DOMImplWebkit extends DOMImplStandardBase {
 	 * parent of the Text_Dom Node_Dom.
 	 */
 	@Override
-	public native EventTarget eventGetTarget(NativeEvent evt) /*-{
+	public native EventTarget eventGetTarget(NativeEventJso evt) /*-{
     var target = evt.target;
     if (target && target.nodeType == 3) {
       target = target.parentNode;

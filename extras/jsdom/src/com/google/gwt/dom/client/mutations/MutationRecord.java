@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.ClientDomElement;
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
@@ -40,7 +39,8 @@ public class MutationRecord {
 	 * This includes creating an insert mutation IFF the node has a parent
 	 * element
 	 */
-	public static void generateInsertMutations(Node node, List<MutationRecord> records) {
+	public static void generateInsertMutations(Node node,
+			List<MutationRecord> records) {
 		Element parentElement = node.getParentElement();
 		if (parentElement != null) {
 			MutationRecord record = new MutationRecord();
@@ -246,8 +246,7 @@ public class MutationRecord {
 		if (mutationNode == null) {
 			return;
 		}
-		mutationNode.node = Document.get().getDocumentElement().implAccess()
-				.local().queryRelativePath(mutationNode.path).node();
+		mutationNode.node = mutationNode.path.node();
 		mutationNode.sync = sync;
 	}
 

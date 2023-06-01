@@ -553,6 +553,17 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 		throw new UnsupportedOperationException();
 	}
 
+	public void emitSinkBitlessEvent(ElementPathref elementPathref,
+			String eventTypeName) {
+		mutationProxy.onSinkBitlessEvent(Pathref.forNode(elementPathref.node()),
+				eventTypeName);
+	}
+
+	public void emitSinkEvents(ElementPathref elementPathref, int eventBits) {
+		mutationProxy.onSinkEvents(Pathref.forNode(elementPathref.node()),
+				eventBits);
+	}
+
 	@Override
 	public void enableScrolling(boolean enable) {
 		throw new UnsupportedOperationException();
@@ -715,5 +726,9 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 
 	public interface MutationProxy {
 		void onMutation(MutationRecord mutationRecord);
+
+		void onSinkBitlessEvent(Pathref from, String eventTypeName);
+
+		void onSinkEvents(Pathref from, int eventBits);
 	}
 }

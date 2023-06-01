@@ -130,7 +130,7 @@ class DOMImplStandardBase extends DOMImplStandard {
     return elem.getBoundingClientRect && elem.getBoundingClientRect();
 	}-*/;
 
-	private native NativeEvent createKeyEvent(DocumentJso doc, String type,
+	private native NativeEventJso createKeyEvent(DocumentJso doc, String type,
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey) /*-{
     // WebKit's KeyboardEvent cannot set or even initialize charCode, keyCode, etc.
@@ -158,7 +158,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 	}-*/;
 
 	@Override
-	protected native NativeEvent createKeyCodeEvent(DocumentJso doc,
+	protected native NativeEventJso createKeyCodeEvent(DocumentJso doc,
 			String type, boolean ctrlKey, boolean altKey, boolean shiftKey,
 			boolean metaKey, int keyCode) /*-{
     var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentJso;Ljava/lang/String;ZZZZZZ)(doc, type, true, true, ctrlKey, altKey, shiftKey, metaKey)
@@ -168,7 +168,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 
 	@Override
 	@Deprecated
-	protected native NativeEvent createKeyEvent(DocumentJso doc, String type,
+	protected native NativeEventJso createKeyEvent(DocumentJso doc, String type,
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) /*-{
@@ -179,7 +179,7 @@ class DOMImplStandardBase extends DOMImplStandard {
 	}-*/;
 
 	@Override
-	protected native NativeEvent createKeyPressEvent(DocumentJso doc,
+	protected native NativeEventJso createKeyPressEvent(DocumentJso doc,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode) /*-{
     var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentJso;Ljava/lang/String;ZZZZZZ)(doc, 'keypress', true, true, ctrlKey, altKey, shiftKey, metaKey)
@@ -199,12 +199,12 @@ class DOMImplStandardBase extends DOMImplStandard {
 	}
 
 	@Override
-	protected native EventTarget eventGetCurrentTarget(NativeEvent event) /*-{
+	protected native EventTarget eventGetCurrentTarget(NativeEventJso event) /*-{
     return @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(event.currentTarget || $wnd);
 	}-*/;
 
 	@Override
-	protected native int eventGetMouseWheelVelocityY(NativeEvent evt) /*-{
+	protected native int eventGetMouseWheelVelocityY(NativeEventJso evt) /*-{
     return Math.round(-evt.wheelDelta / 40) || 0;
 	}-*/;
 
@@ -261,6 +261,10 @@ class DOMImplStandardBase extends DOMImplStandard {
 		protected ClientRect() {
 		}
 
+		protected final int getLeft() {
+			return toInt32(getSubPixelLeft());
+		}
+
 		protected final native double getSubPixelLeft() /*-{
       return this.left;
 		}-*/;
@@ -268,10 +272,6 @@ class DOMImplStandardBase extends DOMImplStandard {
 		protected final native double getSubPixelTop() /*-{
       return this.top;
 		}-*/;
-
-		protected final int getLeft() {
-			return toInt32(getSubPixelLeft());
-		}
 
 		protected final int getTop() {
 			return toInt32(getSubPixelTop());

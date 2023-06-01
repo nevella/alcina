@@ -252,7 +252,7 @@ public class ClassReflection extends ReflectionElement {
 		propertyReflection.addMethod(m);
 	}
 
-	List<JField> getAllFields() {
+	List<JField> getAllVisibleFields() {
 		List<JField> propertyFields = new ArrayList<>();
 		JClassType cursor = type;
 		/*
@@ -261,9 +261,19 @@ public class ClassReflection extends ReflectionElement {
 		 * 
 		 */
 		while (cursor.getSuperclass() != null) {
-			JField[] fields = type.getFields();
+			JField[] fields = cursor.getFields();
 			for (int idx = 0; idx < fields.length; idx++) {
-				propertyFields.add(idx, fields[idx]);
+				JField field = fields[idx];
+				/*
+				 * FIDME - reflection - this restriction shd be removed, by
+				 * reworking the GWT accessors (to call the superclass)
+				 */
+				if (!Objects.equals(cursor.getPackage(), type.getPackage())) {
+					if (!field.isPublic()) {
+						continue;
+					}
+				}
+				propertyFields.add(idx, field);
 			}
 			cursor = cursor.getSuperclass();
 		}
@@ -297,13 +307,13 @@ public class ClassReflection extends ReflectionElement {
 				|| propertySource == PropertySource.IMMUTABLE_FIELDS;
 		boolean hasMutableFields = propertySource == PropertySource.FIELDS;
 		if (hasFields) {
-			if (type.getName().endsWith("Section")) {
-				int debug = 3;
-			}
-			List<JField> fields = getAllFields();
+			List<JField> fields = getAllVisibleFields();
 			fields.stream().
-			// non-transient, non-private and immutable unless Bean.Fields
-					filter(f -> !f.isTransient()).filter(f -> !f.isPrivate())
+			// non-transient, non-private, non-static and immutable unless
+			// Bean.Fields. Note that this includes superclass fields (including
+			// package- and protected-)
+					filter(f -> !f.isTransient() && !f.isPrivate()
+							&& !f.isStatic())
 					.filter(f -> f.isFinal() || hasMutableFields)
 					.forEach(this::addFieldMethods);
 		}

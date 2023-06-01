@@ -5,9 +5,11 @@ import java.util.concurrent.ConcurrentMap;
 
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentRequest.Session;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.Client;
 
 /*
  * PathrefDom DOM(s) are a server-side dom pair (local, pathref) coupled to an
@@ -26,6 +28,12 @@ public class PathrefDom {
 	}
 
 	private ConcurrentMap<String, Environment> environments = new ConcurrentHashMap<>();
+
+	public PathrefDom() {
+		Client.contextProvider = ContextProvider.createProvider(
+				ctx -> Registry.impl(Client.class), null, null, Client.class,
+				true);
+	}
 
 	public Environment getEnvironment(Session session) {
 		Environment environment = environments.get(session.environmentId);

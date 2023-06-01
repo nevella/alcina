@@ -14,15 +14,19 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
+import cc.alcina.extras.dev.component.remote.protocol.EventSystemMutation;
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage;
+import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.DomEventMessage;
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.InvalidClientUidException;
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentRequest.Session;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 
 /*
@@ -68,6 +72,8 @@ public class Environment {
 
 	private EventCollator<Object> eventCollator;
 
+	private Client client;
+
 	Environment(RemoteUi ui) {
 		this.ui = ui;
 		uid = SEUtilities.generatePrettyUuid();
@@ -81,8 +87,13 @@ public class Environment {
 		this.eventCollator = new EventCollator<Object>(5, this::emitMutations);
 	}
 
+	public void applyEvent(DomEventMessage message) {
+		runInClientFrame(
+				() -> LocalDom.pathRefRepresentations().applyEvent(message));
+	}
+
 	public void applyMutations(List<MutationRecord> mutations) {
-		runInDocumentFrame(() -> LocalDom.pathRefRepresentations()
+		runInClientFrame(() -> LocalDom.pathRefRepresentations()
 				.applyMutations(mutations, false));
 	}
 
@@ -93,6 +104,7 @@ public class Environment {
 		connectedClientUid = session.clientInstanceUid;
 		try {
 			LooseContext.push();
+			client = Client.contextProvider.createFrame(null);
 			document = Document.contextProvider.createFrame(RemoteType.PATHREF);
 			document.createDocumentElement("html");
 			document.implAccess().pathrefRemote().mutationProxy = mutationProxy;
@@ -103,13 +115,13 @@ public class Environment {
 		}
 	}
 
-	public void
+	public synchronized void
 			registerRemoteMessageConsumer(Consumer<ProtocolMessage> consumer) {
 		queue.registerConsumer(consumer);
 	}
 
 	public void renderInitialUi() {
-		runInDocumentFrame(() -> ui.render());
+		runInClientFrame(() -> ui.render());
 	}
 
 	@Override
@@ -131,9 +143,10 @@ public class Environment {
 		}
 	}
 
-	private void runInDocumentFrame(Runnable runnable) {
+	private void runInClientFrame(Runnable runnable) {
 		try {
 			LooseContext.push();
+			Client.contextProvider.registerFrame(client);
 			Document.contextProvider.registerFrame(document);
 			runnable.run();
 			LocalDom.flush();
@@ -153,6 +166,7 @@ public class Environment {
 	// see class doc re sync
 	synchronized void emitMutations() {
 		queue.send(mutations);
+		mutations = null;
 	}
 
 	class ClientProtocolMessageQueue implements Runnable {
@@ -209,10 +223,27 @@ public class Environment {
 	class MutationProxyImpl implements DocumentPathref.MutationProxy {
 		@Override
 		public void onMutation(MutationRecord mutationRecord) {
+			runWithMutations(() -> mutations.domMutations.add(mutationRecord));
+		}
+
+		@Override
+		public void onSinkBitlessEvent(Pathref from, String eventTypeName) {
+			runWithMutations(() -> mutations.eventMutations
+					.add(new EventSystemMutation(from, eventTypeName)));
+		}
+
+		@Override
+		public void onSinkEvents(Pathref from, int eventBits) {
+			runWithMutations(() -> mutations.eventMutations
+					.add(new EventSystemMutation(from, eventBits)));
+		}
+
+		// run the runnable in a mutation-processing context
+		void runWithMutations(Runnable runnable) {
 			if (mutations == null) {
 				mutations = new ProtocolMessage.Mutations();
 			}
-			mutations.domMutations.add(mutationRecord);
+			runnable.run();
 			eventCollator.eventOccurred();
 		}
 	}

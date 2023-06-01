@@ -21,6 +21,7 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.NativeEventJso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -110,11 +111,13 @@ public abstract class DOMImplStandard extends DOMImpl {
 		captureEventDispatchers.merge(eventMap);
 	}
 
-	private static void dispatchCapturedEvent(Event evt) {
+	private static void dispatchCapturedEvent(NativeEventJso jso) {
+		Event evt = new Event(jso);
 		DOM.previewEvent(evt);
 	}
 
-	private static void dispatchCapturedMouseEvent(Event evt) {
+	private static void dispatchCapturedMouseEvent(NativeEventJso jso) {
+		Event evt = new Event(jso);
 		boolean cancelled = !DOM.previewEvent(evt);
 		if (cancelled || captureElem == null) {
 			return;
@@ -124,14 +127,16 @@ public abstract class DOMImplStandard extends DOMImpl {
 		}
 	}
 
-	private static void dispatchDragEvent(Event evt) {
+	private static void dispatchDragEvent(NativeEventJso jso) {
 		// Some drag events must call preventDefault to prevent native text
 		// selection.
+		Event evt = new Event(jso);
 		evt.preventDefault();
-		dispatchEvent(evt);
+		dispatchEvent(jso);
 	}
 
-	private static void dispatchEvent(Event evt) {
+	private static void dispatchEvent(NativeEventJso jso) {
+		Event evt = new Event(jso);
 		Element element = getFirstAncestorWithListener(evt);
 		if (element == null) {
 			return;
@@ -140,10 +145,13 @@ public abstract class DOMImplStandard extends DOMImpl {
 				getEventListener(element));
 	}
 
-	private static void dispatchUnhandledEvent(Event evt) {
+	private static void dispatchUnhandledEvent(NativeEventJso jso) {
+		Event evt = new Event(jso);
 		Element element = evt.getCurrentEventTarget().cast();
+		// FIXME - dom - a gwt hack (not mine) - can probably remove (and with
+		// it clippedimageimpl - just use css...?
 		element.setPropertyString("__gwtLastUnhandledEvent", evt.getType());
-		dispatchEvent(evt);
+		dispatchEvent(jso);
 	}
 
 	private static void ensureInit() {
@@ -296,8 +304,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 	public void sinkBitlessEvent(Element elem, String eventTypeName) {
 		maybeInitializeEventSystem();
 		if (elem.implAccess().linkedToRemote()) {
-			sinkBitlessEventImpl(elem.implAccess().jsoRemote(),
-					eventTypeName);
+			sinkBitlessEventImpl(elem.implAccess().jsoRemote(), eventTypeName);
 		}
 	}
 

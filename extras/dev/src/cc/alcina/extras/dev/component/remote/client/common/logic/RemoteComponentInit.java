@@ -8,6 +8,6 @@ import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage;
  */
 public class RemoteComponentInit {
 	public void init() {
-		RemoteComponentClientRpc.send(ProtocolMessage.Startup.forClient());
+		ClientRpc.send(ProtocolMessage.Startup.forClient());
 	}
 }

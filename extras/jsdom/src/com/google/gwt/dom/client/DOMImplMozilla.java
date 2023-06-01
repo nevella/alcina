@@ -90,7 +90,7 @@ class DOMImplMozilla extends DOMImplStandard {
 		return (geckoVersion != -1) && (geckoVersion < 2000000);
 	}
 
-	private native NativeEvent createKeyEventImpl(DocumentJso doc,
+	private native NativeEventJso createKeyEventImpl(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) /*-{
@@ -175,7 +175,7 @@ class DOMImplMozilla extends DOMImplStandard {
 	}-*/;
 
 	@Override
-	protected NativeEvent createKeyCodeEvent(DocumentJso doc, String type,
+	protected NativeEventJso createKeyCodeEvent(DocumentJso doc, String type,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
 		return createKeyEventImpl(doc, type, true, true, ctrlKey, altKey,
@@ -184,7 +184,7 @@ class DOMImplMozilla extends DOMImplStandard {
 
 	@Override
 	@Deprecated
-	protected NativeEvent createKeyEvent(DocumentJso doc, String type,
+	protected NativeEventJso createKeyEvent(DocumentJso doc, String type,
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
@@ -193,7 +193,7 @@ class DOMImplMozilla extends DOMImplStandard {
 	}
 
 	@Override
-	protected NativeEvent createKeyPressEvent(DocumentJso doc,
+	protected NativeEventJso createKeyPressEvent(DocumentJso doc,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode) {
 		return createKeyEventImpl(doc, "keypress", true, true, ctrlKey, altKey,
@@ -201,12 +201,12 @@ class DOMImplMozilla extends DOMImplStandard {
 	}
 
 	@Override
-	protected native int eventGetMouseWheelVelocityY(NativeEvent evt) /*-{
+	protected native int eventGetMouseWheelVelocityY(NativeEventJso evt) /*-{
     return evt.detail || 0;
 	}-*/;
 
 	@Override
-	protected native EventTarget eventGetRelatedTarget(NativeEvent evt) /*-{
+	protected native EventTarget eventGetRelatedTarget(NativeEventJso evt) /*-{
     // Hack around Mozilla bug 497780 (relatedTarget sometimes returns XUL
     // elements). Trying to access relatedTarget.nodeName will throw an
     // exception if it's a XUL Element.

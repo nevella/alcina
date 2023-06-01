@@ -18,23 +18,29 @@ package com.google.gwt.dom.client;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 
-public class DomDispatch implements IDomDispatch {
+/*
+ * FIXME - dom - could possibly be package-protected
+ */
+public class DomDispatch implements DomDispatchContract {
 	//
-	IDomDispatch local = new DomDispatchNull();
+	private final DomDispatchContract local;
 
-	IDomDispatch remote = new DomDispatchNull();
+	private final DomDispatchContract remote;
 
 	public DomDispatch() {
 		if (GWT.isClient()) {
 			local = new DomDispatchLocal();
 			remote = new DomDispatchJso();
-			dispatchRemote().domImpl = GWT.create(DOMImpl.class);
+			dispatchJso().domImpl = GWT.create(DOMImpl.class);
+		} else {
+			local = new DomDispatchNull();
+			remote = new DomDispatchNull();
 		}
 	}
 
 	@Override
 	public void buttonClick(ButtonElement button) {
-		remote.buttonClick(button);
+		remote().buttonClick(button);
 	}
 
 	public ButtonElement createButtonElement(Document doc, String type) {
@@ -55,8 +61,9 @@ public class DomDispatch implements IDomDispatch {
 
 	public NativeEvent createHtmlEvent(Document doc, String type,
 			boolean canBubble, boolean cancelable) {
-		return remoteImpl().createHtmlEvent(doc.jsoRemote(), type, canBubble,
-				cancelable);
+		return jsoImpl()
+				.createHtmlEvent(doc.jsoRemote(), type, canBubble, cancelable)
+				.asNativeEvent();
 	}
 
 	public InputElement createInputElement(Document doc, String type) {
@@ -75,8 +82,8 @@ public class DomDispatch implements IDomDispatch {
 	public NativeEvent createKeyCodeEvent(Document document, String type,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int keyCode) {
-		return remoteImpl().createKeyCodeEvent(document.jsoRemote(), type,
-				ctrlKey, altKey, shiftKey, metaKey, keyCode);
+		return jsoImpl().createKeyCodeEvent(document.jsoRemote(), type, ctrlKey,
+				altKey, shiftKey, metaKey, keyCode).asNativeEvent();
 	}
 
 	@Deprecated
@@ -84,15 +91,16 @@ public class DomDispatch implements IDomDispatch {
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
-		return remoteImpl().createKeyEvent(doc.jsoRemote(), type, canBubble,
-				cancelable, ctrlKey, altKey, shiftKey, metaKey, keyCode,
-				charCode);
+		return jsoImpl()
+				.createKeyEvent(doc.jsoRemote(), type, canBubble, cancelable,
+						ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode)
+				.asNativeEvent();
 	}
 
 	public NativeEvent createKeyPressEvent(Document document, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
-		return remoteImpl().createKeyPressEvent(document.jsoRemote(), ctrlKey,
-				altKey, shiftKey, metaKey, charCode);
+		return jsoImpl().createKeyPressEvent(document.jsoRemote(), ctrlKey,
+				altKey, shiftKey, metaKey, charCode).asNativeEvent();
 	}
 
 	public NativeEvent createMouseEvent(Document doc, String type,
@@ -100,10 +108,11 @@ public class DomDispatch implements IDomDispatch {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return remoteImpl().createMouseEvent(doc.jsoRemote(), type, canBubble,
+		return jsoImpl().createMouseEvent(doc.jsoRemote(), type, canBubble,
 				cancelable, detail, screenX, screenY, clientX, clientY, ctrlKey,
 				altKey, shiftKey, metaKey, button,
-				relatedTarget == null ? null : relatedTarget.jsoRemote());
+				relatedTarget == null ? null : relatedTarget.jsoRemote())
+				.asNativeEvent();
 	}
 
 	public ScriptElement createScriptElement(Document doc, String source) {
@@ -114,126 +123,126 @@ public class DomDispatch implements IDomDispatch {
 
 	@Override
 	public void cssClearOpacity(Style style) {
-		local.cssClearOpacity(style);
-		remote.cssClearOpacity(style);
+		local().cssClearOpacity(style);
+		remote().cssClearOpacity(style);
 	}
 
 	@Override
 	public String cssFloatPropertyName() {
-		return remote.cssFloatPropertyName();
+		return remote().cssFloatPropertyName();
 	}
 
 	@Override
 	public void cssSetOpacity(Style style, double value) {
-		local.cssSetOpacity(style, value);
-		remote.cssSetOpacity(style, value);
+		local().cssSetOpacity(style, value);
+		remote().cssSetOpacity(style, value);
 	}
 
-	public void dispatchEvent(Element target, NativeEvent evt) {
-		remoteImpl().dispatchEvent(target.jsoRemote(), evt);
+	public void dispatchEvent(Element target, NativeEventJso evt) {
+		jsoImpl().dispatchEvent(target.jsoRemote(), evt);
 	}
 
-	public boolean eventGetAltKey(NativeEvent evt) {
-		return remoteImpl().eventGetAltKey(evt);
+	public boolean eventGetAltKey(NativeEventJso evt) {
+		return jsoImpl().eventGetAltKey(evt);
 	}
 
-	public int eventGetButton(NativeEvent evt) {
-		return remoteImpl().eventGetButton(evt);
+	public int eventGetButton(NativeEventJso evt) {
+		return jsoImpl().eventGetButton(evt);
 	}
 
-	public int eventGetCharCode(NativeEvent evt) {
-		return remoteImpl().eventGetCharCode(evt);
+	public int eventGetCharCode(NativeEventJso evt) {
+		return jsoImpl().eventGetCharCode(evt);
 	}
 
-	public int eventGetClientX(NativeEvent evt) {
-		return remoteImpl().eventGetClientX(evt);
+	public int eventGetClientX(NativeEventJso evt) {
+		return jsoImpl().eventGetClientX(evt);
 	}
 
-	public int eventGetClientY(NativeEvent evt) {
-		return remoteImpl().eventGetClientY(evt);
+	public int eventGetClientY(NativeEventJso evt) {
+		return jsoImpl().eventGetClientY(evt);
 	}
 
-	public boolean eventGetCtrlKey(NativeEvent evt) {
-		return remoteImpl().eventGetCtrlKey(evt);
+	public boolean eventGetCtrlKey(NativeEventJso evt) {
+		return jsoImpl().eventGetCtrlKey(evt);
 	}
 
-	public EventTarget eventGetCurrentTarget(NativeEvent event) {
-		return remoteImpl().eventGetCurrentTarget(event);
+	public EventTarget eventGetCurrentTarget(NativeEventJso evt) {
+		return jsoImpl().eventGetCurrentTarget(evt);
 	}
 
-	public int eventGetKeyCode(NativeEvent evt) {
-		return remoteImpl().eventGetKeyCode(evt);
+	public int eventGetKeyCode(NativeEventJso evt) {
+		return jsoImpl().eventGetKeyCode(evt);
 	}
 
-	public boolean eventGetMetaKey(NativeEvent evt) {
-		return remoteImpl().eventGetMetaKey(evt);
+	public boolean eventGetMetaKey(NativeEventJso evt) {
+		return jsoImpl().eventGetMetaKey(evt);
 	}
 
-	public int eventGetMouseWheelVelocityY(NativeEvent evt) {
-		return remoteImpl().eventGetMouseWheelVelocityY(evt);
+	public int eventGetMouseWheelVelocityY(NativeEventJso evt) {
+		return jsoImpl().eventGetMouseWheelVelocityY(evt);
 	}
 
-	public EventTarget eventGetRelatedTarget(NativeEvent nativeEvent) {
-		return remoteImpl().eventGetRelatedTarget(nativeEvent);
+	public EventTarget eventGetRelatedTarget(NativeEventJso evt) {
+		return jsoImpl().eventGetRelatedTarget(evt);
 	}
 
-	public double eventGetRotation(NativeEvent evt) {
-		return remoteImpl().eventGetRotation(evt);
+	public double eventGetRotation(NativeEventJso evt) {
+		return jsoImpl().eventGetRotation(evt);
 	}
 
-	public double eventGetScale(NativeEvent evt) {
-		return remoteImpl().eventGetScale(evt);
+	public double eventGetScale(NativeEventJso evt) {
+		return jsoImpl().eventGetScale(evt);
 	}
 
-	public int eventGetScreenX(NativeEvent evt) {
-		return remoteImpl().eventGetScreenX(evt);
+	public int eventGetScreenX(NativeEventJso evt) {
+		return jsoImpl().eventGetScreenX(evt);
 	}
 
-	public int eventGetScreenY(NativeEvent evt) {
-		return remoteImpl().eventGetScreenY(evt);
+	public int eventGetScreenY(NativeEventJso evt) {
+		return jsoImpl().eventGetScreenY(evt);
 	}
 
-	public boolean eventGetShiftKey(NativeEvent evt) {
-		return remoteImpl().eventGetShiftKey(evt);
+	public boolean eventGetShiftKey(NativeEventJso evt) {
+		return jsoImpl().eventGetShiftKey(evt);
 	}
 
-	public EventTarget eventGetTarget(NativeEvent evt) {
-		return remoteImpl().eventGetTarget(evt);
+	public EventTarget eventGetTarget(NativeEventJso evt) {
+		return jsoImpl().eventGetTarget(evt);
 	}
 
-	public String eventGetType(NativeEvent evt) {
-		return remoteImpl().eventGetType(evt);
+	public String eventGetType(NativeEventJso evt) {
+		return jsoImpl().eventGetType(evt);
 	}
 
 	@Override
 	public void eventPreventDefault(NativeEvent evt) {
 		LocalDom.eventMod(evt, "eventPreventDefault");
-		local.eventPreventDefault(evt);
-		remote.eventPreventDefault(evt);
+		local().eventPreventDefault(evt);
+		remote().eventPreventDefault(evt);
 	}
 
-	public void eventSetKeyCode(NativeEvent evt, char key) {
-		remoteImpl().eventSetKeyCode(evt, key);
+	public void eventSetKeyCode(NativeEventJso evt, char key) {
+		jsoImpl().eventSetKeyCode(evt, key);
 	}
 
 	@Override
 	public void eventStopPropagation(NativeEvent evt) {
-		local.eventStopPropagation(evt);
-		remote.eventStopPropagation(evt);
+		local().eventStopPropagation(evt);
+		remote().eventStopPropagation(evt);
 	}
 
-	public String eventToString(NativeEvent evt) {
-		return remoteImpl().eventToString(evt);
+	public String eventToString(NativeEventJso evt) {
+		return jsoImpl().eventToString(evt);
 	}
 
 	public int getAbsoluteLeft(Element elem) {
 		resolveAllPending();
-		return remoteImpl().getAbsoluteLeft(elem);
+		return jsoImpl().getAbsoluteLeft(elem);
 	}
 
 	public int getAbsoluteTop(Element elem) {
 		resolveAllPending();
-		return remoteImpl().getAbsoluteTop(elem);
+		return jsoImpl().getAbsoluteTop(elem);
 	}
 
 	public String getAttribute(Element elem, String name) {
@@ -241,15 +250,15 @@ public class DomDispatch implements IDomDispatch {
 	}
 
 	public int getBodyOffsetLeft(Document doc) {
-		return remoteImpl().getBodyOffsetLeft(doc.jsoRemote());
+		return jsoImpl().getBodyOffsetLeft(doc.jsoRemote());
 	}
 
 	public int getBodyOffsetTop(Document doc) {
-		return remoteImpl().getBodyOffsetTop(doc.jsoRemote());
+		return jsoImpl().getBodyOffsetTop(doc.jsoRemote());
 	}
 
-	public JsArray<Touch> getChangedTouches(NativeEvent evt) {
-		return remoteImpl().getChangedTouches(evt);
+	public JsArray<Touch> getChangedTouches(NativeEventJso evt) {
+		return jsoImpl().getChangedTouches(evt);
 	}
 
 	public Element getFirstChildElement(Element elem) {
@@ -291,17 +300,17 @@ public class DomDispatch implements IDomDispatch {
 
 	public int getScrollLeft(Document doc) {
 		resolveAllPending();
-		return remoteImpl().getScrollLeft(doc.jsoRemote());
+		return jsoImpl().getScrollLeft(doc.jsoRemote());
 	}
 
 	public int getScrollLeft(Element elem) {
 		resolveAllPending();
-		return remoteImpl().getScrollLeft(elem);
+		return jsoImpl().getScrollLeft(elem);
 	}
 
 	public int getScrollTop(Document doc) {
 		resolveAllPending();
-		return remoteImpl().getScrollTop(doc.jsoRemote());
+		return jsoImpl().getScrollTop(doc.jsoRemote());
 	}
 
 	public String getStyleProperty(Style style, String name) {
@@ -320,12 +329,12 @@ public class DomDispatch implements IDomDispatch {
 		throw new RemoteOnlyException();
 	}
 
-	public JsArray<Touch> getTargetTouches(NativeEvent evt) {
-		return remoteImpl().getTargetTouches(evt);
+	public JsArray<Touch> getTargetTouches(NativeEventJso evt) {
+		return jsoImpl().getTargetTouches(evt);
 	}
 
-	public JsArray<Touch> getTouches(NativeEvent evt) {
-		return remoteImpl().getTouches(evt);
+	public JsArray<Touch> getTouches(NativeEventJso evt) {
+		return jsoImpl().getTouches(evt);
 	}
 
 	public boolean hasAttribute(Element elem, String name) {
@@ -338,7 +347,7 @@ public class DomDispatch implements IDomDispatch {
 
 	public void scrollIntoView(Element elem) {
 		resolveAllPending();
-		remoteImpl().scrollIntoView(elem.jsoRemote());
+		jsoImpl().scrollIntoView(elem.jsoRemote());
 	}
 
 	@Override
@@ -352,15 +361,15 @@ public class DomDispatch implements IDomDispatch {
 			}
 		}
 		// remote before local - otherwise the indicies will be out
-		remote.selectAdd(select, option, before);
-		local.selectAdd(select, option, before);
+		remote().selectAdd(select, option, before);
+		local().selectAdd(select, option, before);
 	}
 
 	@Override
 	public void selectClear(SelectElement select) {
 		select.ensureRemoteCheck();
-		remote.selectClear(select);
-		local.selectClear(select);
+		remote().selectClear(select);
+		local().selectClear(select);
 	}
 
 	public int selectGetLength(SelectElement select) {
@@ -375,18 +384,18 @@ public class DomDispatch implements IDomDispatch {
 	@Override
 	public void selectRemoveOption(SelectElement select, int index) {
 		select.ensureRemoteCheck();
-		remote.selectRemoveOption(select, index);
-		local.selectRemoveOption(select, index);
+		remote().selectRemoveOption(select, index);
+		local().selectRemoveOption(select, index);
 	}
 
 	public void setDraggable(Element elem, String draggable) {
 		elem.ensureJsoRemote();
-		remoteImpl().setDraggable(elem.jsoRemote(), draggable);
+		jsoImpl().setDraggable(elem.jsoRemote(), draggable);
 	}
 
 	public void setInnerText(Element elem, String text) {
 		elem.ensureJsoRemote();
-		remoteImpl().setInnerText(elem.jsoRemote(), text);
+		jsoImpl().setInnerText(elem.jsoRemote(), text);
 	}
 
 	public void setScrollLeft(Document doc, int left) {
@@ -396,7 +405,7 @@ public class DomDispatch implements IDomDispatch {
 
 	public void setScrollLeft(Element elem, int left) {
 		elem.ensureJsoRemote();
-		remoteImpl().setScrollLeft(elem, left);
+		jsoImpl().setScrollLeft(elem, left);
 	}
 
 	public void setScrollTop(Document doc, int top) {
@@ -409,47 +418,71 @@ public class DomDispatch implements IDomDispatch {
 	}
 
 	public int touchGetClientX(Touch touch) {
-		return remoteImpl().touchGetClientX(touch);
+		return jsoImpl().touchGetClientX(touch);
 	}
 
 	public int touchGetClientY(Touch touch) {
-		return remoteImpl().touchGetClientY(touch);
+		return jsoImpl().touchGetClientY(touch);
 	}
 
 	public int touchGetIdentifier(Touch touch) {
-		return remoteImpl().touchGetIdentifier(touch);
+		return jsoImpl().touchGetIdentifier(touch);
 	}
 
 	public int touchGetPageX(Touch touch) {
-		return remoteImpl().touchGetPageX(touch);
+		return jsoImpl().touchGetPageX(touch);
 	}
 
 	public int touchGetPageY(Touch touch) {
-		return remoteImpl().touchGetPageY(touch);
+		return jsoImpl().touchGetPageY(touch);
 	}
 
 	public int touchGetScreenX(Touch touch) {
-		return remoteImpl().touchGetScreenX(touch);
+		return jsoImpl().touchGetScreenX(touch);
 	}
 
 	public int touchGetScreenY(Touch touch) {
-		return remoteImpl().touchGetScreenY(touch);
+		return jsoImpl().touchGetScreenY(touch);
 	}
 
 	public EventTarget touchGetTarget(Touch touch) {
-		return remoteImpl().touchGetTarget(touch);
+		return jsoImpl().touchGetTarget(touch);
 	}
 
-	private DomDispatchJso dispatchRemote() {
-		return (DomDispatchJso) remote;
+	private DomDispatchJso dispatchJso() {
+		return (DomDispatchJso) remote();
 	}
 
-	private DOMImpl remoteImpl() {
-		return dispatchRemote().domImpl;
+	private DOMImpl jsoImpl() {
+		return dispatchJso().domImpl;
 	}
 
 	private void resolveAllPending() {
 		LocalDom.flush();
+	}
+
+	DomDispatchContract local() {
+		switch (Document.get().remoteType) {
+		case NONE:
+		case JSO:
+			return local;
+		case PATHREF:
+			return new DomDispatchLocal();
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	DomDispatchContract remote() {
+		switch (Document.get().remoteType) {
+		case NONE:
+		case JSO:
+			return remote;
+		case PATHREF:
+			return new DomDispatchLocal();
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public static class RemoteOnlyException

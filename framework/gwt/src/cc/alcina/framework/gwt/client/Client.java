@@ -11,6 +11,8 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 
+import cc.alcina.framework.common.client.context.ContextFrame;
+import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
@@ -35,8 +37,10 @@ import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @Reflected
-@Registration.Singleton
-public abstract class Client {
+@Registration(Client.class)
+public abstract class Client implements ContextFrame {
+	public static ContextProvider<Void, Client> contextProvider;
+
 	public static CommonRemoteServiceAsync commonRemoteService() {
 		return Registry.impl(CommonRemoteServiceAsync.class);
 	}
@@ -57,7 +61,7 @@ public abstract class Client {
 	}
 
 	public static Client get() {
-		return Registry.impl(Client.class);
+		return contextProvider.contextFrame();
 	}
 
 	// prefer place.go
@@ -137,9 +141,7 @@ public abstract class Client {
 			/*
 			 * initialise localdom, mutations
 			 */
-			if (GWT.isClient()) {
-				Document.initialiseContextProvider(RemoteType.JSO);
-			}
+			Document.initialiseContextProvider(RemoteType.JSO);
 			/*
 			 * Called in the Impl event loop if in a script context
 			 */
@@ -153,6 +155,13 @@ public abstract class Client {
 			Optional<AppDebug> appDebug = Registry
 					.optional(ProcessObserver.AppDebug.class);
 			appDebug.ifPresent(AppDebug::attach);
+			/*
+			 * Setup client context provider. One client for client apps,
+			 * multiple (one per environment) for server
+			 */
+			contextProvider = ContextProvider.createProvider(
+					ctx -> Registry.impl(Client.class), null, null,
+					Client.class, false);
 		}
 
 		public static boolean isComplete() {

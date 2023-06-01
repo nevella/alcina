@@ -1,46 +1,44 @@
 package com.google.gwt.dom.client;
 
-public class DomDispatchLocal implements DomDispatchContract {
+public class DomDispatchPathref implements DomDispatchContract {
 	@Override
 	public void buttonClick(ButtonElement button) {
-		throw new UnsupportedOperationException();
+		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void cssClearOpacity(Style style) {
-		style.local.removeProperty("opacity");
+		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void cssSetOpacity(Style style, double value) {
-		style.local.setProperty("opacity", String.valueOf(value));
+		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void eventPreventDefault(NativeEvent evt) {
-		LocalDom.eventMod(evt, "eventPreventDefault");
+		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void eventStopPropagation(NativeEvent evt) {
-		LocalDom.eventMod(evt, "eventStopPropagation");
+		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
-		select.local().insertBefore(option, before);
+		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void selectClear(SelectElement select) {
-		select.local().removeAllChildren();
+		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void selectRemoveOption(SelectElement select, int index) {
-		NodeList<Node> list = select.getChildNodes()
-				.filteredSubList(n -> n instanceof OptionElement);
-		list.getItem(index).removeFromParent();
+		// TODO Auto-generated method stub
 	}
 }

@@ -149,7 +149,7 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	 */
 	@Override
 	public final void dispatchEvent(NativeEvent evt) {
-		DOMImpl.impl.dispatchEvent(elementFor(), evt);
+		DOMImpl.impl.dispatchEvent(elementFor(), evt.jso);
 	}
 
 	@Override
@@ -567,7 +567,8 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	@Override
 	public final void replaceClassName(String oldClassName,
 			String newClassName) {
-		ClientDomElementStatic.replaceClassName(this, oldClassName, newClassName);
+		ClientDomElementStatic.replaceClassName(this, oldClassName,
+				newClassName);
 	}
 
 	public final void replaceWith(ElementJso replacement) {
@@ -820,8 +821,7 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	 *            all tags
 	 * @return A list of matching Element nodes
 	 */
-	private final native NodeListJso<Element>
-			getElementsByTagName0(String name) /*-{
+	private final native NodeListJso<Element> getElementsByTagName0(String name) /*-{
     return this.getElementsByTagName(name);
 	}-*/;
 

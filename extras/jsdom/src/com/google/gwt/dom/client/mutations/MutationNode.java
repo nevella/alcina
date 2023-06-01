@@ -48,7 +48,7 @@ public final class MutationNode {
 		MutationNode result = new MutationNode();
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
-		result.path = Pathref.from(node);
+		result.path = Pathref.forNode(node);
 		return result;
 	}
 

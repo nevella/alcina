@@ -91,8 +91,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native NodeJso createButtonElement(DocumentJso doc,
-			String type) /*-{
+	protected native NodeJso createButtonElement(DocumentJso doc, String type) /*-{
     return doc.createElement("<BUTTON type='" + type + "'></BUTTON>");
 	}-*/;
 
@@ -119,7 +118,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	}
 
 	@Override
-	protected native NativeEvent createHtmlEvent(DocumentJso doc,
+	protected native NativeEventJso createHtmlEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable) /*-{
     // NOTE: IE doesn't support changing bubbling and canceling behavior (this
     // is documented publicly in doc.createHtmlEvent()).
@@ -135,7 +134,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native NativeEvent createKeyCodeEvent(DocumentJso doc,
+	protected native NativeEventJso createKeyCodeEvent(DocumentJso doc,
 			String type, boolean ctrlKey, boolean altKey, boolean shiftKey,
 			boolean metaKey, int keyCode) /*-{
     var evt = doc.createEventObject();
@@ -150,7 +149,7 @@ abstract class DOMImplTrident extends DOMImpl {
 
 	@Override
 	@Deprecated
-	protected native NativeEvent createKeyEvent(DocumentJso doc, String type,
+	protected native NativeEventJso createKeyEvent(DocumentJso doc, String type,
 			boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) /*-{
@@ -162,7 +161,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected NativeEvent createKeyPressEvent(DocumentJso doc,
+	protected NativeEventJso createKeyPressEvent(DocumentJso doc,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode) {
 		// NOTE: in IE, keyCode is used in both keydown/keyup and keypress, so
@@ -173,7 +172,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	}
 
 	@Override
-	protected native NativeEvent createMouseEvent(DocumentJso doc,
+	protected native NativeEventJso createMouseEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
@@ -208,27 +207,27 @@ abstract class DOMImplTrident extends DOMImpl {
 	}
 
 	@Override
-	protected native void dispatchEvent(ElementJso target, NativeEvent evt) /*-{
+	protected native void dispatchEvent(ElementJso target, NativeEventJso evt) /*-{
     target.fireEvent("on" + evt.type, evt);
 	}-*/;
 
 	@Override
-	protected native int eventGetCharCode(NativeEvent evt) /*-{
+	protected native int eventGetCharCode(NativeEventJso evt) /*-{
     return evt.keyCode || 0;
 	}-*/;
 
 	@Override
-	protected EventTarget eventGetCurrentTarget(NativeEvent event) {
+	protected EventTarget eventGetCurrentTarget(NativeEventJso event) {
 		return currentEventTarget;
 	}
 
 	@Override
-	protected native int eventGetMouseWheelVelocityY(NativeEvent evt) /*-{
+	protected native int eventGetMouseWheelVelocityY(NativeEventJso evt) /*-{
     return Math.round(-evt.wheelDelta / 40) || 0;
 	}-*/;
 
 	@Override
-	protected native EventTarget eventGetRelatedTarget(NativeEvent evt) /*-{
+	protected native EventTarget eventGetRelatedTarget(NativeEventJso evt) /*-{
     // Prefer 'relatedTarget' if it's set (see createMouseEvent(), which
     // explicitly sets relatedTarget when synthesizing mouse events).
     return evt.relatedTarget
@@ -236,22 +235,22 @@ abstract class DOMImplTrident extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native EventTarget eventGetTarget(NativeEvent evt) /*-{
+	protected native EventTarget eventGetTarget(NativeEventJso evt) /*-{
     return @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(evt.srcElement);
 	}-*/;
 
 	@Override
-	protected native void eventPreventDefault(NativeEvent evt) /*-{
+	protected native void eventPreventDefault(NativeEventJso evt) /*-{
     evt.returnValue = false;
 	}-*/;
 
 	@Override
-	protected native void eventStopPropagation(NativeEvent evt) /*-{
+	protected native void eventStopPropagation(NativeEventJso evt) /*-{
     evt.cancelBubble = true;
 	}-*/;
 
 	@Override
-	protected native String eventToString(NativeEvent evt) /*-{
+	protected native String eventToString(NativeEventJso evt) /*-{
     if (evt.toString)
       return evt.toString();
     return "[event" + evt.type + "]";

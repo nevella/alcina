@@ -6,6 +6,34 @@ import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 
 import cc.alcina.framework.common.client.util.Ax;
 
+/**
+ * <p>
+ * Root of the hierarchy used to mirror server dom mutations (including event
+ * system) to the client/browser
+ * 
+ * <p>
+ * Event mutations (see event lifecycle in package javadoc) to intercept
+ * <ul>
+ * <li>DOMImplStandard.sinkEvents - emit sinkEvents mutation
+ * <li>Event.addNativePreviewHandler(NativePreviewHandler) - emit
+ * NativePreviewHandler mutation
+ * 
+ * </ul>
+ * *
+ * <p>
+ * Dom event handling paths to intercept (note, these should block)
+ * <ul>
+ * <li>com.google.gwt.user.client.Event.fireNativePreviewEvent(NativeEvent)
+ * <li>com.google.gwt.user.client.DOM.dispatchEventImpl(Event, Element,
+ * EventListener)
+ * 
+ * will need to synthesize event/payload (but start with click)
+ * 
+ * </ul>
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public abstract class NodePathref implements ClientDomNode {
 	public static NodePathref create(Node node) {
 		switch (node.getNodeType()) {
@@ -155,7 +183,7 @@ public abstract class NodePathref implements ClientDomNode {
 
 	@Override
 	public Node node() {
-		throw new UnsupportedOperationException();
+		return node;
 	}
 
 	@Override

@@ -5,7 +5,9 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.google.gwt.core.client.GWTBridge;
+import com.google.gwt.user.client.impl.WindowImpl;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -38,6 +40,46 @@ public class GWTBridgeHeadless extends GWTBridge {
 		}
 		if (e != null) {
 			e.printStackTrace();
+		}
+	}
+
+	@Registration(WindowImpl.class)
+	public static class WindowImplHeadles extends WindowImpl {
+		private String hash = "";
+
+		private String queryString = "";
+
+		@Override
+		public String getHash() {
+			return this.hash;
+		}
+
+		@Override
+		public String getQueryString() {
+			return this.queryString;
+		}
+
+		@Override
+		public void initWindowCloseHandler() {
+			// FIXME - remocom
+		}
+
+		@Override
+		public void initWindowResizeHandler() {
+			// FIXME - remocom
+		}
+
+		@Override
+		public void initWindowScrollHandler() {
+			// FIXME - remocom
+		}
+
+		public void setHash(String hash) {
+			this.hash = hash;
+		}
+
+		public void setQueryString(String queryString) {
+			this.queryString = queryString;
 		}
 	}
 }

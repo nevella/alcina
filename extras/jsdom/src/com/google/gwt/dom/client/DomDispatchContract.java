@@ -1,6 +1,9 @@
 package com.google.gwt.dom.client;
 
-public interface IDomDispatch {
+/*
+ * So named to avoid 'IDomDispatch' which is so COM+
+ */
+public interface DomDispatchContract {
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before);
 

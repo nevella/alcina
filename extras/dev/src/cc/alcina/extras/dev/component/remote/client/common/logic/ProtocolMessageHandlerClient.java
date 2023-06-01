@@ -1,11 +1,17 @@
 package cc.alcina.extras.dev.component.remote.client.common.logic;
 
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.Pathref;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.extras.dev.component.remote.client.RemoteComponentState;
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage;
+import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.DomEventMessage;
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.InvalidClientUidException;
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentResponse;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -23,9 +29,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends ProtocolMessage> {
 		@Override
 		public void handle(RemoteComponentResponse response,
 				ProtocolMessage.BeginAwaitLoop message) {
-			Document.get().setTitle("start");
-			Ax.out("bruce");
-			RemoteComponentClientRpc.send(new ProtocolMessage.AwaitRemote());
+			ClientRpc.send(new ProtocolMessage.AwaitRemote());
 		}
 	}
 
@@ -36,8 +40,36 @@ public abstract class ProtocolMessageHandlerClient<PM extends ProtocolMessage> {
 				ProtocolMessage.Mutations message) {
 			LocalDom.pathRefRepresentations()
 					.applyMutations(message.domMutations, true);
+			message.eventMutations.forEach(m -> {
+				Element elem = (Element) m.path.node();
+				if (m.eventBits == -1) {
+					DOM.sinkBitlessEvent(elem, m.eventTypeName);
+				} else {
+					DOM.sinkEvents(elem, m.eventBits);
+				}
+				elem.uiObjectListener = new DispatchListener(elem);
+			});
 			Document.get().setTitle("bruce");
-			Ax.err("jaaaaa");
+		}
+
+		static class DispatchListener implements EventListener {
+			private Element elem;
+
+			public DispatchListener(Element elem) {
+				this.elem = elem;
+			}
+
+			@Override
+			public void onBrowserEvent(Event event) {
+				// just send the lowest event receiver - things will bubble from
+				// here
+				DomEventMessage message = new ProtocolMessage.DomEventMessage();
+				message.event = event.serializableForm();
+				message.firstReceiver = Pathref.forNode(elem);
+				event.stopPropagation();
+				event.preventDefault();
+				ClientRpc.send(message, true);
+			}
 		}
 	}
 

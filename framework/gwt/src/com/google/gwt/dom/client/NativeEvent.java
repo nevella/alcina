@@ -15,13 +15,20 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.client.JsArray;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.reflection.Reflections;
+
 /**
- * The native dom event.
+ * A wrapper around the native dom event. It either dispatches to the jso (via
+ * DOMImpl.impl) or uses the cached values. Because of the caching mechanism,
+ * serialization is relatively simple
  */
-public class NativeEvent extends JavaScriptObject {
+@Bean(PropertySource.FIELDS)
+public class NativeEvent implements JavascriptObjectEquivalent {
 	/**
 	 * The left mouse button.
 	 */
@@ -37,10 +44,27 @@ public class NativeEvent extends JavaScriptObject {
 	 */
 	public static final int BUTTON_RIGHT = 2;
 
-	/**
-	 * Required constructor for GWT compiler to function.
+	public transient NativeEventJso jso;
+
+	/*
+	 * FIXME - reflection - package (the gwt accessors should call through to
+	 * this package)
 	 */
-	protected NativeEvent() {
+	public Data data = new Data();
+
+	private boolean altKey;
+
+	public NativeEvent() {
+	}
+
+	public NativeEvent(NativeEventJso jso) {
+		this.jso = jso;
+	}
+
+	@Override
+	public <T extends JavascriptObjectEquivalent> T cast() {
+		// only a few calls from the days of Trident
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -49,7 +73,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return <code>true</code> if ALT was depressed when the event occurred
 	 */
 	public final boolean getAltKey() {
-		return DOMImpl.impl.eventGetAltKey(this);
+		if (data.altKey == null) {
+			data.altKey = DOMImpl.impl.eventGetAltKey(jso);
+		}
+		return data.altKey;
 	}
 
 	/**
@@ -60,7 +87,10 @@ public class NativeEvent extends JavaScriptObject {
 	 *         {@link NativeEvent#BUTTON_RIGHT}
 	 */
 	public final int getButton() {
-		return DOMImpl.impl.eventGetButton(this);
+		if (data.button == null) {
+			data.button = DOMImpl.impl.eventGetButton(jso);
+		}
+		return data.button;
 	}
 
 	/**
@@ -69,7 +99,7 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return array of touches which have changed since the last touch event
 	 */
 	public final JsArray<Touch> getChangedTouches() {
-		return DOMImpl.impl.getChangedTouches(this);
+		return DOMImpl.impl.getChangedTouches(jso);
 	}
 
 	/**
@@ -78,7 +108,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the Unicode codepoint.
 	 */
 	public final int getCharCode() {
-		return DOMImpl.impl.eventGetCharCode(this);
+		if (data.charCode == null) {
+			data.charCode = DOMImpl.impl.eventGetCharCode(jso);
+		}
+		return data.charCode;
 	}
 
 	/**
@@ -87,7 +120,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the mouse x-position
 	 */
 	public final int getClientX() {
-		return DOMImpl.impl.eventGetClientX(this);
+		if (data.clientX == null) {
+			data.clientX = DOMImpl.impl.eventGetClientX(jso);
+		}
+		return data.clientX;
 	}
 
 	/**
@@ -96,7 +132,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the mouse y-position
 	 */
 	public final int getClientY() {
-		return DOMImpl.impl.eventGetClientY(this);
+		if (data.clientY == null) {
+			data.clientY = DOMImpl.impl.eventGetClientY(jso);
+		}
+		return data.clientY;
 	}
 
 	/**
@@ -105,7 +144,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return <code>true</code> if CTRL was depressed when the event occurred
 	 */
 	public final boolean getCtrlKey() {
-		return DOMImpl.impl.eventGetCtrlKey(this);
+		if (data.ctrlKey == null) {
+			data.ctrlKey = DOMImpl.impl.eventGetCtrlKey(jso);
+		}
+		return data.ctrlKey;
 	}
 
 	/**
@@ -115,7 +157,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the event's current target element
 	 */
 	public final EventTarget getCurrentEventTarget() {
-		return DOMImpl.impl.eventGetCurrentTarget(this);
+		if (data.currentEventTarget == null) {
+			data.currentEventTarget = DOMImpl.impl.eventGetCurrentTarget(jso);
+		}
+		return data.currentEventTarget;
 	}
 
 	/**
@@ -127,41 +172,16 @@ public class NativeEvent extends JavaScriptObject {
     return this.dataTransfer || null;
 	}-*/;
 
-	public final NativeBeforeInputEvent getNativeBeforeInputEvent() {
-		return new NativeBeforeInputEvent(this);
-	}
-
-	public static class NativeBeforeInputEvent {
-		private NativeEvent event;
-
-		NativeBeforeInputEvent(NativeEvent event) {
-			this.event = event;
-		}
-
-		public native String getDataTransfer() /*-{
-      return event.dataTransfer;
-		}-*/;
-
-		public native String getData() /*-{
-      return event.data;
-		}-*/;
-
-		public native String getInputType() /*-{
-      return event.inputType;
-		}-*/;
-
-		public native boolean getIsComposing() /*-{
-      return event.isComposing;
-		}-*/;
-	}
-
 	/**
 	 * Returns the element that was the actual target of the given event.
 	 * 
 	 * @return the target element
 	 */
 	public final EventTarget getEventTarget() {
-		return DOMImpl.impl.eventGetTarget(this);
+		if (data.eventTarget == null) {
+			data.eventTarget = DOMImpl.impl.eventGetTarget(jso);
+		}
+		return data.eventTarget;
 	}
 
 	/**
@@ -172,7 +192,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @see com.google.gwt.event.dom.client.KeyCodes
 	 */
 	public final int getKeyCode() {
-		return DOMImpl.impl.eventGetKeyCode(this);
+		if (data.keyCode == null) {
+			data.keyCode = DOMImpl.impl.eventGetKeyCode(jso);
+		}
+		return data.keyCode;
 	}
 
 	/**
@@ -181,7 +204,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return <code>true</code> if META was depressed when the event occurred
 	 */
 	public final boolean getMetaKey() {
-		return DOMImpl.impl.eventGetMetaKey(this);
+		if (data.metaKey == null) {
+			data.metaKey = DOMImpl.impl.eventGetMetaKey(jso);
+		}
+		return data.metaKey;
 	}
 
 	/**
@@ -200,7 +226,15 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return The velocity of the mouse wheel.
 	 */
 	public final int getMouseWheelVelocityY() {
-		return DOMImpl.impl.eventGetMouseWheelVelocityY(this);
+		if (data.mouseWheelVelocityY == null) {
+			data.mouseWheelVelocityY = DOMImpl.impl
+					.eventGetMouseWheelVelocityY(jso);
+		}
+		return data.mouseWheelVelocityY;
+	}
+
+	public final NativeBeforeInputEvent getNativeBeforeInputEvent() {
+		return new NativeBeforeInputEvent(jso);
 	}
 
 	/**
@@ -209,7 +243,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the related target
 	 */
 	public final EventTarget getRelatedEventTarget() {
-		return DOMImpl.impl.eventGetRelatedTarget(this);
+		if (data.relatedEventTarget == null) {
+			data.relatedEventTarget = DOMImpl.impl.eventGetRelatedTarget(jso);
+		}
+		return data.relatedEventTarget;
 	}
 
 	/**
@@ -219,7 +256,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the rotation in degrees since the gesture started
 	 */
 	public final double getRotation() {
-		return DOMImpl.impl.eventGetRotation(this);
+		if (data.rotation == null) {
+			data.rotation = DOMImpl.impl.eventGetRotation(jso);
+		}
+		return data.rotation;
 	}
 
 	/**
@@ -229,7 +269,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the amount scaled since the gesture started
 	 */
 	public final double getScale() {
-		return DOMImpl.impl.eventGetScale(this);
+		if (data.scale == null) {
+			data.scale = DOMImpl.impl.eventGetScale(jso);
+		}
+		return data.scale;
 	}
 
 	/**
@@ -238,7 +281,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the mouse x-position
 	 */
 	public final int getScreenX() {
-		return DOMImpl.impl.eventGetScreenX(this);
+		if (data.screenX == null) {
+			data.screenX = DOMImpl.impl.eventGetScreenX(jso);
+		}
+		return data.screenX;
 	}
 
 	/**
@@ -247,7 +293,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the mouse y-position
 	 */
 	public final int getScreenY() {
-		return DOMImpl.impl.eventGetScreenY(this);
+		if (data.screenY == null) {
+			data.screenY = DOMImpl.impl.eventGetScreenY(jso);
+		}
+		return data.screenY;
 	}
 
 	/**
@@ -256,7 +305,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return <code>true</code> if shift was depressed when the event occurred
 	 */
 	public final boolean getShiftKey() {
-		return DOMImpl.impl.eventGetShiftKey(this);
+		if (data.shiftKey == null) {
+			data.shiftKey = DOMImpl.impl.eventGetShiftKey(jso);
+		}
+		return data.shiftKey;
 	}
 
 	/**
@@ -268,7 +320,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the string representation of this event
 	 */
 	public final String getString() {
-		return DOMImpl.impl.eventToString(this);
+		if (data.string == null) {
+			data.string = DOMImpl.impl.eventToString(jso);
+		}
+		return data.string;
 	}
 
 	/**
@@ -277,7 +332,7 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return array of touches which have changed since the last touch event
 	 */
 	public final JsArray<Touch> getTargetTouches() {
-		return DOMImpl.impl.getTargetTouches(this);
+		return DOMImpl.impl.getTargetTouches(jso);
 	}
 
 	/**
@@ -286,7 +341,7 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return array of touches which have changed since the last touch event
 	 */
 	public final JsArray<Touch> getTouches() {
-		return DOMImpl.impl.getTouches(this);
+		return DOMImpl.impl.getTouches(jso);
 	}
 
 	/**
@@ -295,7 +350,10 @@ public class NativeEvent extends JavaScriptObject {
 	 * @return the event's enumerated type
 	 */
 	public final String getType() {
-		return DOMImpl.impl.eventGetType(this);
+		if (data.type == null) {
+			data.type = DOMImpl.impl.eventGetType(jso);
+		}
+		return data.type;
 	}
 
 	/**
@@ -305,10 +363,113 @@ public class NativeEvent extends JavaScriptObject {
 		DOMImpl.impl.eventPreventDefault(this);
 	}
 
+	public <NE extends NativeEvent> NE serializableForm() {
+		NativeEvent event = Reflections.newInstance(getClass());
+		event.jso = jso;
+		event.serializableForm0();
+		return (NE) event;
+	}
+
 	/**
 	 * Stops the event from being propagated to parent elements.
 	 */
 	public final void stopPropagation() {
 		DOMImpl.impl.eventStopPropagation(this);
+	}
+
+	void serializableForm0() {
+		getAltKey();
+		getButton();
+		getCharCode();
+		getClientX();
+		getClientY();
+		getCurrentEventTarget();
+		getEventTarget();
+		getKeyCode();
+		getMetaKey();
+		getMouseWheelVelocityY();
+		getRelatedEventTarget();
+		getRotation();
+		getScale();
+		getScreenX();
+		getScreenY();
+		getShiftKey();
+		getString();
+		getType();
+		data.toSerializableForm();
+		jso = null;
+	}
+
+	@Bean(PropertySource.FIELDS)
+	public static class Data {
+		String type;
+
+		String string;
+
+		Boolean shiftKey;
+
+		Integer screenY;
+
+		Integer screenX;
+
+		Double scale;
+
+		Double rotation;
+
+		EventTarget relatedEventTarget;
+
+		Integer mouseWheelVelocityY;
+
+		Boolean metaKey;
+
+		Integer keyCode;
+
+		EventTarget eventTarget;
+
+		EventTarget currentEventTarget;
+
+		Boolean ctrlKey;
+
+		Integer clientY;
+
+		Integer clientX;
+
+		Integer charCode;
+
+		Integer button;
+
+		Boolean altKey;
+
+		void toSerializableForm() {
+			relatedEventTarget = EventTarget
+					.serializableForm(relatedEventTarget);
+			eventTarget = EventTarget.serializableForm(eventTarget);
+			currentEventTarget = EventTarget
+					.serializableForm(currentEventTarget);
+		}
+	}
+
+	public static class NativeBeforeInputEvent {
+		private NativeEventJso eventJso;
+
+		NativeBeforeInputEvent(NativeEventJso eventJso) {
+			this.eventJso = eventJso;
+		}
+
+		public native String getData() /*-{
+      return eventJso.data;
+		}-*/;
+
+		public native String getDataTransfer() /*-{
+      return eventJso.dataTransfer;
+		}-*/;
+
+		public native String getInputType() /*-{
+      return eventJso.inputType;
+		}-*/;
+
+		public native boolean getIsComposing() /*-{
+      return eventJso.isComposing;
+		}-*/;
 	}
 }

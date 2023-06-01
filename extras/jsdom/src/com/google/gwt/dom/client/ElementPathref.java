@@ -35,6 +35,16 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 		throw new UnsupportedOperationException();
 	}
 
+	public void emitSinkBitlessEvent(String eventTypeName) {
+		getOwnerDocument().implAccess().pathrefRemote()
+				.emitSinkBitlessEvent(this, eventTypeName);
+	}
+
+	public void emitSinkEvents(int eventBits) {
+		getOwnerDocument().implAccess().pathrefRemote().emitSinkEvents(this,
+				eventBits);
+	}
+
 	@Override
 	public void ensureId() {
 		throw new UnsupportedOperationException();

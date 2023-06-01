@@ -23,15 +23,15 @@ package com.google.gwt.dom.client;
 abstract class DOMImplStandard extends DOMImpl {
 	private EventTarget lastEventTarget;
 
-	private NativeEvent lastEvent;
+	private NativeEventJso lastEvent;
 
-	private native EventTarget eventGetTarget0(NativeEvent evt) /*-{
+	private native EventTarget eventGetTarget0(NativeEventJso evt) /*-{
     return !evt.target ? null
         : @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(evt.target);
 	}-*/;
 
 	@Override
-	protected native NativeEvent createHtmlEvent(DocumentJso doc,
+	protected native NativeEventJso createHtmlEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable) /*-{
     var evt = doc.createEvent('HTMLEvents');
     evt.initEvent(type, canBubble, cancelable);
@@ -50,7 +50,7 @@ abstract class DOMImplStandard extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native NativeEvent createMouseEvent(DocumentJso doc,
+	protected native NativeEventJso createMouseEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
@@ -75,12 +75,12 @@ abstract class DOMImplStandard extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native void dispatchEvent(ElementJso target, NativeEvent evt) /*-{
+	protected native void dispatchEvent(ElementJso target, NativeEventJso evt) /*-{
     target.dispatchEvent(evt);
 	}-*/;
 
 	@Override
-	protected native int eventGetButton(NativeEvent evt) /*-{
+	protected native int eventGetButton(NativeEventJso evt) /*-{
     // All modern browsers return 0, 1, and 2 for left, middle, and right,
     // respectively. Because eventGetButton() is expected to return the IE
     // bitfield norms of 1, 4, and 2, we translate them here.
@@ -94,18 +94,18 @@ abstract class DOMImplStandard extends DOMImpl {
 	}-*/;
 
 	@Override
-	protected native int eventGetCharCode(NativeEvent evt) /*-{
+	protected native int eventGetCharCode(NativeEventJso evt) /*-{
     return evt.charCode || 0;
 	}-*/;
 
 	@Override
-	protected native EventTarget eventGetRelatedTarget(NativeEvent evt) /*-{
+	protected native EventTarget eventGetRelatedTarget(NativeEventJso evt) /*-{
     return !evt.relatedTarget ? null
         : @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(evt.relatedTarget);
 	}-*/;
 
 	@Override
-	protected EventTarget eventGetTarget(NativeEvent evt) {
+	protected EventTarget eventGetTarget(NativeEventJso evt) {
 		if (evt != lastEvent) {
 			lastEventTarget = eventGetTarget0(evt);
 			lastEvent = evt;
@@ -114,12 +114,12 @@ abstract class DOMImplStandard extends DOMImpl {
 	}
 
 	@Override
-	protected native void eventPreventDefault(NativeEvent evt) /*-{
+	protected native void eventPreventDefault(NativeEventJso evt) /*-{
     evt.preventDefault();
 	}-*/;
 
 	@Override
-	protected native String eventToString(NativeEvent evt) /*-{
+	protected native String eventToString(NativeEventJso evt) /*-{
     return evt.toString();
 	}-*/;
 
@@ -163,6 +163,6 @@ abstract class DOMImplStandard extends DOMImpl {
 	}
 
 	final native Element getNativeDocumentScrollingElement(DocumentJso doc) /*-{
-		return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(doc.scrollingElement);
+    return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(doc.scrollingElement);
 	}-*/;
 }

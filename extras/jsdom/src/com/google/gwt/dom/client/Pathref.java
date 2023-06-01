@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
  */
 @Bean(PropertySource.FIELDS)
 public class Pathref {
-	public static Pathref from(Node node) {
+	public static Pathref forNode(Node node) {
 		Pathref result = new Pathref();
 		Node cursor = node;
 		List<Integer> ordinals = new ArrayList<>();
@@ -53,6 +53,11 @@ public class Pathref {
 				.map(Integer::parseInt).collect(Collectors.toList());
 		ordinals.remove(0);
 		return ordinals;
+	}
+
+	public Node node() {
+		return Document.get().getDocumentElement().implAccess().local()
+				.queryRelativePath(this).node();
 	}
 
 	@Override

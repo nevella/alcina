@@ -17,6 +17,7 @@ package com.google.gwt.user.client;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.NativeEventJso;
 import com.google.gwt.event.dom.client.HasNativeEvent;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
@@ -406,12 +407,12 @@ public class Event extends NativeEvent {
 		DOM.sinkEvents(elem, eventBits);
 	}
 
-	/**
-	 * Not directly instantiable. Subclasses should also define a protected
-	 * no-arg constructor to prevent client code from directly instantiating the
-	 * class.
-	 */
-	protected Event() {
+	// public for serialization
+	public Event() {
+	}
+
+	public Event(NativeEventJso jso) {
+		super(jso);
 	}
 
 	/**
@@ -619,6 +620,7 @@ public class Event extends NativeEvent {
 			return TYPE;
 		}
 
+		@Override
 		public NativeEvent getNativeEvent() {
 			return nativeEvent;
 		}

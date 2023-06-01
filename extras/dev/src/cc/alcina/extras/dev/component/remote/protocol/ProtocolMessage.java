@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -24,6 +26,16 @@ public abstract class ProtocolMessage {
 	public static class BeginAwaitLoop extends ProtocolMessage {
 	}
 
+	/*
+	 * Not an album by Beck.
+	 */
+	public static class DomEventMessage extends ProtocolMessage {
+		public Pathref firstReceiver;
+
+		// But wait - is this serializable? Yes, it is!
+		public Event event;
+	}
+
 	public static class InvalidClientUidException extends Exception {
 	}
 
@@ -32,6 +44,8 @@ public abstract class ProtocolMessage {
 	 */
 	public static class Mutations extends ProtocolMessage {
 		public List<MutationRecord> domMutations = new ArrayList<>();
+
+		public List<EventSystemMutation> eventMutations = new ArrayList<>();
 	}
 
 	/*

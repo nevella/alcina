@@ -24,6 +24,8 @@ import com.google.gwt.user.client.Window.ClosingEvent;
 import com.google.gwt.user.client.Window.ClosingHandler;
 import com.google.web.bindery.event.shared.EventBus;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+
 /**
  * In charge of the user's location in the app.
  */
@@ -156,6 +158,7 @@ public class PlaceController {
 	/**
 	 * Default implementation of {@link Delegate}, based on {@link Window}.
 	 */
+	@Registration(DefaultDelegate.class)
 	public static class DefaultDelegate implements Delegate {
 		@Override
 		public HandlerRegistration

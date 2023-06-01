@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class DomDispatchJso implements IDomDispatch {
+public class DomDispatchJso implements DomDispatchContract {
 	// per-browser custom
 	DOMImpl domImpl;
 
@@ -34,12 +34,12 @@ public class DomDispatchJso implements IDomDispatch {
 
 	@Override
 	public void eventPreventDefault(NativeEvent evt) {
-		domImpl.eventPreventDefault(evt);
+		domImpl.eventPreventDefault(evt.jso);
 	}
 
 	@Override
 	public void eventStopPropagation(NativeEvent evt) {
-		domImpl.eventStopPropagation(evt);
+		domImpl.eventStopPropagation(evt.jso);
 	}
 
 	@Override

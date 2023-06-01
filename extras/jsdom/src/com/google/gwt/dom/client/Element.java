@@ -1105,6 +1105,20 @@ public class Element extends Node
 			local.getChildren().add(localOnly.local);
 		}
 
+		public void emitSinkBitlessEvent(String eventTypeName) {
+			ClientDomElement remote = remote();
+			if (remote instanceof ElementPathref) {
+				((ElementPathref) remote).emitSinkBitlessEvent(eventTypeName);
+			}
+		}
+
+		public void emitSinkEvents(int eventBits) {
+			ClientDomElement remote = remote();
+			if (remote instanceof ElementPathref) {
+				((ElementPathref) remote).emitSinkEvents(eventBits);
+			}
+		}
+
 		public ElementJso ensureJsoRemote() {
 			return Element.this.ensureJsoRemote();
 		}

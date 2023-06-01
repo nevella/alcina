@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.NestedNameProvider;
 /*
  * Nice thing about statics is they *ensure* statelessness
  */
-public class RemoteComponentClientRpc {
+public class ClientRpc {
 	public static void runAsync(Class clazz, Runnable runnable) {
 		GWT.runAsync(clazz, new RunAsyncCallback() {
 			@Override
@@ -98,6 +98,17 @@ public class RemoteComponentClientRpc {
 	}
 
 	static void send(ProtocolMessage message) {
+		send(message, false);
+	}
+
+	/**
+	 * @param block
+	 *            - currently not implemented, but should (could) be for
+	 *            client->server event dispatch - FIXME - remcon - for local
+	 *            clients, blocking makes sense - for truly remote (inet),
+	 *            probably not
+	 */
+	static void send(ProtocolMessage message, boolean block) {
 		RemoteComponentRequest request = RemoteComponentRequest.create();
 		request.protocolMessage = message;
 		submitRequest(request);
