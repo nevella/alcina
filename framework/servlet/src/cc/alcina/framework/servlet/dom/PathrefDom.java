@@ -3,6 +3,9 @@ package cc.alcina.framework.servlet.dom;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
+
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentRequest.Session;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.ContextProvider;
@@ -30,8 +33,14 @@ public class PathrefDom {
 	private ConcurrentMap<String, Environment> environments = new ConcurrentHashMap<>();
 
 	public PathrefDom() {
+		// initialise the primary contexts for each server-hosted 'client app'
 		Client.contextProvider = ContextProvider.createProvider(
-				ctx -> Registry.impl(Client.class), null, null, Client.class,
+				ctx -> ((RemoteUi) ctx).createClient(), null, null,
+				Client.class, true);
+		History.contextProvider = ContextProvider.createProvider(
+				ctx -> new History(), History::init, null, History.class, true);
+		Window.Location.contextProvider = ContextProvider.createProvider(
+				ctx -> new Window.Location(), null, null, Window.Location.class,
 				true);
 	}
 

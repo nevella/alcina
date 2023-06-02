@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -55,7 +56,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientState;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
-import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
+import cc.alcina.framework.gwt.client.util.Async;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
@@ -112,13 +113,7 @@ public class CommitToStorageTransformListener
 	}
 
 	public static void flushAndRun(Runnable runnable) {
-		Registry.impl(CommitToStorageTransformListener.class)
-				.flushWithOneoffCallback(new AsyncCallbackStd() {
-					@Override
-					public void onSuccess(Object result) {
-						runnable.run();
-					}
-				});
+		Registry.impl(WithFlushedTransforms.class).call(runnable);
 	}
 
 	public static void
@@ -468,6 +463,17 @@ public class CommitToStorageTransformListener
 			extends WrappedRuntimeException {
 		public UnknownTransformFailedException(Throwable cause) {
 			super(cause);
+		}
+	}
+
+	/*
+	 * Default (client) implementation
+	 */
+	@Registration.Singleton
+	public static class WithFlushedTransforms {
+		public void call(Runnable runnable) {
+			Registry.impl(CommitToStorageTransformListener.class)
+					.flushWithOneoffCallback(Async.untypedCallback(runnable));
 		}
 	}
 

@@ -1,12 +1,12 @@
 package cc.alcina.extras.dev.component.remote.client.common.logic;
 
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.extras.dev.component.remote.client.RemoteComponentState;
@@ -49,7 +49,9 @@ public abstract class ProtocolMessageHandlerClient<PM extends ProtocolMessage> {
 				}
 				elem.uiObjectListener = new DispatchListener(elem);
 			});
-			Document.get().setTitle("bruce");
+			if (message.locationMutation != null) {
+				History.newItem(message.locationMutation.hash);
+			}
 		}
 
 		static class DispatchListener implements EventListener {

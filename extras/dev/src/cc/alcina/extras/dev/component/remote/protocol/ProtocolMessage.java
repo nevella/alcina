@@ -43,9 +43,17 @@ public abstract class ProtocolMessage {
 	 * An album by Beck. Amazing.
 	 */
 	public static class Mutations extends ProtocolMessage {
+		public static Mutations ofLocation() {
+			Mutations result = new Mutations();
+			result.locationMutation = LocationMutation.ofWindow();
+			return result;
+		}
+
 		public List<MutationRecord> domMutations = new ArrayList<>();
 
 		public List<EventSystemMutation> eventMutations = new ArrayList<>();
+
+		public LocationMutation locationMutation;
 	}
 
 	/*
@@ -60,6 +68,7 @@ public abstract class ProtocolMessage {
 			try {
 				return Reflections.forName(exceptionClassName);
 			} catch (Exception e) {
+				e.printStackTrace();
 				return null;
 			}
 		}
@@ -74,8 +83,11 @@ public abstract class ProtocolMessage {
 			result.maxCharsPerTextNode = LocalDom.maxCharsPerTextNode;
 			result.domMutations = LocalDom.pathRefRepresentations()
 					.domAsMutations();
+			result.locationMutation = LocationMutation.ofWindow();
 			return result;
 		}
+
+		public LocationMutation locationMutation;
 
 		public List<MutationRecord> domMutations = new ArrayList<>();
 

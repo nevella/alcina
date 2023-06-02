@@ -25,6 +25,9 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 
+import cc.alcina.framework.common.client.context.ContextFrame;
+import cc.alcina.framework.common.client.context.ContextProvider;
+
 /**
  * This class allows you to interact with the browser's history stack. Each
  * "item" on the stack is represented by a single string, referred to as a
@@ -57,24 +60,19 @@ import com.google.gwt.event.shared.HandlerRegistration;
  * <li>;,/?:@&=+$-_.!~*()
  * </ul>
  * </p>
+ * <p>
  * Nick - because this class is now not really history/impl, just history, I
  * customised for pushState() directly
+ * <p>
+ * NR - 20230602 - years later, not sure what I meant here. Now - for
+ * client/server (remotecomponent) support, this becomes a context frame. Some
+ * methods are not supported server-side
  * 
  * @author nick@alcina.cc
  *
  */
-public class History {
-	private static HistoryImpl impl = GWT.create(HistoryImpl.class);
-
-	static HistoryEventSource historyEventSource = new HistoryEventSource();
-
-	private static HistoryTokenEncoder tokenEncoder = GWT
-			.create(HistoryTokenEncoder.class);
-
-	static String token = getDecodedHash();
-	static {
-		impl.init();
-	}
+public class History implements ContextFrame {
+	public static ContextProvider<Void, History> contextProvider;
 
 	public static Function<String, String> tokenInterceptor = null;
 
@@ -101,7 +99,7 @@ public class History {
 	 */
 	public static HandlerRegistration
 			addValueChangeHandler(ValueChangeHandler<String> handler) {
-		return historyEventSource.addValueChangeHandler(handler);
+		return get().historyEventSource.addValueChangeHandler(handler);
 	}
 
 	/**
@@ -119,11 +117,11 @@ public class History {
 	 * @return the encoded token, suitable for use as part of a URI
 	 */
 	public static String encodeHistoryToken(String historyToken) {
-		return tokenEncoder.encode(historyToken);
+		return get().tokenEncoder.encode(historyToken);
 	}
 
 	public static String encodeHistoryTokenWithHash(String targetHistoryToken) {
-		return impl.encodeHistoryTokenWithHash(targetHistoryToken);
+		return get().impl.encodeHistoryTokenWithHash(targetHistoryToken);
 	}
 
 	/**
@@ -136,7 +134,7 @@ public class History {
 	 */
 	public static void fireCurrentHistoryState() {
 		String currentToken = getToken();
-		historyEventSource.fireValueChangedEvent(currentToken);
+		get().historyEventSource.fireValueChangedEvent(currentToken);
 	}
 
 	/**
@@ -157,7 +155,11 @@ public class History {
 	 * @return the initial token, or the empty string if none is present.
 	 */
 	public static String getToken() {
-		return token;
+		return get().token;
+	}
+
+	public static void init() {
+		get().impl.init();
 	}
 
 	/**
@@ -190,11 +192,11 @@ public class History {
 			historyToken = tokenInterceptor.apply(historyToken);
 		}
 		if (!historyToken.equals(getToken())) {
-			token = historyToken;
+			get().token = historyToken;
 			String updateToken = encodeHistoryToken(historyToken);
-			impl.newToken(updateToken);
+			get().impl.newToken(updateToken);
 			if (issueEvent) {
-				historyEventSource.fireValueChangedEvent(historyToken);
+				get().historyEventSource.fireValueChangedEvent(historyToken);
 			}
 		}
 	}
@@ -213,7 +215,7 @@ public class History {
 	 */
 	@Deprecated
 	public static void onHistoryChanged(String historyToken) {
-		historyEventSource.fireValueChangedEvent(historyToken);
+		get().historyEventSource.fireValueChangedEvent(historyToken);
 	}
 
 	/**
@@ -224,7 +226,7 @@ public class History {
 	 */
 	@Deprecated
 	public static void removeHistoryListener(HistoryListener listener) {
-		WrapHistory.remove(historyEventSource.getHandlers(), listener);
+		WrapHistory.remove(get().historyEventSource.getHandlers(), listener);
 	}
 
 	/**
@@ -270,8 +272,8 @@ public class History {
 	 *            event should be issued
 	 */
 	public static void replaceItem(String historyToken, boolean issueEvent) {
-		token = historyToken;
-		impl.replaceToken(encodeHistoryToken(historyToken));
+		get().token = historyToken;
+		get().impl.replaceToken(encodeHistoryToken(historyToken));
 		if (issueEvent) {
 			fireCurrentHistoryState();
 		}
@@ -282,7 +284,7 @@ public class History {
 		if (hashToken == null || hashToken.isEmpty()) {
 			return "";
 		}
-		return tokenEncoder.decode(hashToken.substring(1));
+		return get().tokenEncoder.decode(hashToken.substring(1));
 	}
 
 	// this is called from JS when the native onhashchange occurs
@@ -293,23 +295,32 @@ public class History {
 		 */
 		String hashToken = getDecodedHash();
 		if (!hashToken.equals(getToken())) {
-			token = hashToken;
-			historyEventSource.fireValueChangedEvent(hashToken);
+			get().token = hashToken;
+			get().historyEventSource.fireValueChangedEvent(hashToken);
 		}
 	}
 
-	/**
-	 * History implementation for IE8 using onhashchange.
-	 */
-	@SuppressWarnings("unused")
-	private static class HistoryImplIE8 extends HistoryImpl {
+	static History get() {
+		return contextProvider.contextFrame();
+	}
+
+	HistoryImpl impl;
+
+	HistoryEventSource historyEventSource = new HistoryEventSource();
+
+	HistoryTokenEncoder tokenEncoder = GWT.create(HistoryTokenEncoder.class);
+
+	String token = getDecodedHash();
+
+	public History() {
+		impl = GWT.create(HistoryImpl.class);
 	}
 
 	/**
 	 * HistoryTokenEncoder is responsible for encoding and decoding history
 	 * token, thus ensuring that tokens are safe to use in the browsers URL.
 	 */
-	private static class HistoryTokenEncoder {
+	public static class HistoryTokenEncoder {
 		public native String decode(String toDecode) /*-{
       return $wnd.decodeURI(toDecode.replace("%23", "#"));
 		}-*/;
@@ -318,6 +329,13 @@ public class History {
       // encodeURI() does *not* encode the '#' character.
       return $wnd.encodeURI(toEncode).replace("#", "%23");
 		}-*/;
+	}
+
+	/**
+	 * History implementation for IE8 using onhashchange.
+	 */
+	@SuppressWarnings("unused")
+	private static class HistoryImplIE8 extends HistoryImpl {
 	}
 
 	/**

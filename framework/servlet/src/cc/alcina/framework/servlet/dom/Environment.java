@@ -16,8 +16,12 @@ import com.google.gwt.dom.client.DocumentPathref;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.extras.dev.component.remote.protocol.EventSystemMutation;
+import cc.alcina.extras.dev.component.remote.protocol.LocationMutation;
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage;
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.DomEventMessage;
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.InvalidClientUidException;
@@ -58,21 +62,25 @@ public class Environment {
 
 	/*
 	 * The uid of the most recent client to send a startup packet. All others
-	 * sent a "
+	 * will receive a 'reload' message on rpc calls
 	 */
 	String connectedClientUid;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	private Document document;
+	Document document;
 
 	MutationProxyImpl mutationProxy = new MutationProxyImpl();
 
 	ProtocolMessage.Mutations mutations = null;
 
-	private EventCollator<Object> eventCollator;
+	EventCollator<Object> eventCollator;
 
-	private Client client;
+	Client client;
+
+	History history;
+
+	Window.Location location;
 
 	Environment(RemoteUi ui) {
 		this.ui = ui;
@@ -92,6 +100,20 @@ public class Environment {
 				() -> LocalDom.pathRefRepresentations().applyEvent(message));
 	}
 
+	public void applyLocationMutation(LocationMutation locationMutation,
+			boolean startup) {
+		runInClientFrame(() -> {
+			if (startup) {
+				Window.Location.init(locationMutation.protocol,
+						locationMutation.host, locationMutation.port,
+						locationMutation.path, locationMutation.queryString);
+			}
+			if (locationMutation.hash.startsWith("#")) {
+				History.newItem(locationMutation.hash.substring(1));
+			}
+		});
+	}
+
 	public void applyMutations(List<MutationRecord> mutations) {
 		runInClientFrame(() -> LocalDom.pathRefRepresentations()
 				.applyMutations(mutations, false));
@@ -104,7 +126,13 @@ public class Environment {
 		connectedClientUid = session.clientInstanceUid;
 		try {
 			LooseContext.push();
-			client = Client.contextProvider.createFrame(null);
+			// the order - location, history, client, document - is necessary
+			location = Window.Location.contextProvider.createFrame(null);
+			history = History.contextProvider.createFrame(null);
+			History.addValueChangeHandler(this::onHistoryChange);
+			client = Client.contextProvider.createFrame(ui);
+			client.getPlaceController();
+			client.setupPlaceMapping();
 			document = Document.contextProvider.createFrame(RemoteType.PATHREF);
 			document.createDocumentElement("html");
 			document.implAccess().pathrefRemote().mutationProxy = mutationProxy;
@@ -147,6 +175,8 @@ public class Environment {
 		try {
 			LooseContext.push();
 			Client.contextProvider.registerFrame(client);
+			History.contextProvider.registerFrame(history);
+			Window.Location.contextProvider.registerFrame(location);
 			Document.contextProvider.registerFrame(document);
 			runnable.run();
 			LocalDom.flush();
@@ -167,6 +197,11 @@ public class Environment {
 	synchronized void emitMutations() {
 		queue.send(mutations);
 		mutations = null;
+	}
+
+	void onHistoryChange(ValueChangeEvent<String> event) {
+		mutationProxy.onLocationMutation(
+				ProtocolMessage.Mutations.ofLocation().locationMutation);
 	}
 
 	class ClientProtocolMessageQueue implements Runnable {
@@ -221,6 +256,12 @@ public class Environment {
 	}
 
 	class MutationProxyImpl implements DocumentPathref.MutationProxy {
+		@Override
+		public void onLocationMutation(LocationMutation locationMutation) {
+			runWithMutations(
+					() -> mutations.locationMutation = locationMutation);
+		}
+
 		@Override
 		public void onMutation(MutationRecord mutationRecord) {
 			runWithMutations(() -> mutations.domMutations.add(mutationRecord));

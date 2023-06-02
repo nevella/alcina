@@ -10,6 +10,8 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
+import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
@@ -39,7 +41,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 @Reflected
 @Registration(Client.class)
 public abstract class Client implements ContextFrame {
-	public static ContextProvider<Void, Client> contextProvider;
+	public static ContextProvider<Object, Client> contextProvider;
 
 	public static CommonRemoteServiceAsync commonRemoteService() {
 		return Registry.impl(CommonRemoteServiceAsync.class);
@@ -64,7 +66,7 @@ public abstract class Client implements ContextFrame {
 		return contextProvider.contextFrame();
 	}
 
-	// prefer place.go
+	// prefer place.go (which calls through to this, but is more fluent)
 	public static void goTo(Place place) {
 		Runnable runnable = () -> get().placeController.goTo(place);
 		CommitToStorageTransformListener.flushAndRun(runnable);
@@ -162,6 +164,12 @@ public abstract class Client implements ContextFrame {
 			contextProvider = ContextProvider.createProvider(
 					ctx -> Registry.impl(Client.class), null, null,
 					Client.class, false);
+			History.contextProvider = ContextProvider.createProvider(
+					ctx -> new History(), History::init, null, History.class,
+					false);
+			Window.Location.contextProvider = ContextProvider.createProvider(
+					ctx -> new Window.Location(), null, null,
+					Window.Location.class, false);
 		}
 
 		public static boolean isComplete() {

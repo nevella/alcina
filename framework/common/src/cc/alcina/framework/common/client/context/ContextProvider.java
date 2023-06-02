@@ -115,7 +115,9 @@ public interface ContextProvider<C, F extends ContextFrame> {
 
 		@Override
 		public void postRegisterCreatedFrame() {
-			onPostRegisterCreated.run();
+			if (onPostRegisterCreated != null) {
+				onPostRegisterCreated.run();
+			}
 		}
 
 		@Override

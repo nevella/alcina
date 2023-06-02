@@ -3,6 +3,8 @@ package cc.alcina.extras.dev.component.remote.server;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage;
 import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.AwaitRemote;
 import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentRequest;
@@ -83,6 +85,18 @@ public abstract class ProtocolMessageHandlerServer<PM extends ProtocolMessage> {
 		}
 	}
 
+	public static class MutationsHandler
+			extends ProtocolMessageHandlerServer<ProtocolMessage.Mutations> {
+		@Override
+		public void handle(RemoteComponentRequest request,
+				RemoteComponentResponse response, Environment env,
+				ProtocolMessage.Mutations message) {
+			Preconditions.checkState(message.domMutations.isEmpty());
+			Preconditions.checkState(message.eventMutations.isEmpty());
+			env.applyLocationMutation(message.locationMutation, false);
+		}
+	}
+
 	public static class StartupHandler
 			extends ProtocolMessageHandlerServer<ProtocolMessage.Startup> {
 		@Override
@@ -91,6 +105,7 @@ public abstract class ProtocolMessageHandlerServer<PM extends ProtocolMessage> {
 				ProtocolMessage.Startup message) {
 			env.initialiseClient(request.session);
 			env.applyMutations(message.domMutations);
+			env.applyLocationMutation(message.locationMutation, true);
 			/*
 			 * will enqueue a mutations event in the to-client queue
 			 */

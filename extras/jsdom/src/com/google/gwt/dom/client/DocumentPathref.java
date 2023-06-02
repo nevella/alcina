@@ -7,6 +7,8 @@ import org.w3c.dom.ProcessingInstruction;
 
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
+import cc.alcina.extras.dev.component.remote.protocol.LocationMutation;
+
 public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	Document document;
 
@@ -725,6 +727,8 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	}
 
 	public interface MutationProxy {
+		void onLocationMutation(LocationMutation locationMutation);
+
 		void onMutation(MutationRecord mutationRecord);
 
 		void onSinkBitlessEvent(Pathref from, String eventTypeName);

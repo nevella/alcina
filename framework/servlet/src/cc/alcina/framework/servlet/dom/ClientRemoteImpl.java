@@ -1,0 +1,23 @@
+package cc.alcina.framework.servlet.dom;
+
+import com.google.gwt.place.shared.Place;
+import com.google.gwt.place.shared.PlaceController;
+import com.google.gwt.place.shared.PlaceHistoryHandler;
+
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+
+@Registration(ClientRemoteImpl.class)
+public class ClientRemoteImpl extends Client {
+	@Override
+	public void setupPlaceMapping() {
+		historyHandler = new PlaceHistoryHandler(RegistryHistoryMapper.get());
+		historyHandler.register(placeController, eventBus, () -> Place.NOWHERE);
+	}
+
+	@Override
+	protected void createPlaceController() {
+		placeController = new PlaceController(eventBus);
+	}
+}
