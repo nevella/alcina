@@ -98,7 +98,7 @@ public class ProcessingInstruction extends Node implements
 
 	@Override
 	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasResolved() == resolved);
+		Preconditions.checkState(wasSynced() == resolved);
 		this.remote = (ClientDomProcessingInstruction) remote;
 	}
 

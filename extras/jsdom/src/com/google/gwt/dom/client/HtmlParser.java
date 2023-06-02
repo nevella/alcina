@@ -313,7 +313,7 @@ public class HtmlParser {
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
 		if (replaceContents != null) {
-			replaceContents.clearResolved();
+			replaceContents.clearSynced();
 		}
 		int length = html.length();
 		// gwt compiler hack - force string class init outside loop

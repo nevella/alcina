@@ -218,6 +218,10 @@ public abstract class NodeJso extends JavaScriptObject
 		return LocalDom.nodeFor(this);
 	}
 
+	@Override
+	public final void preRemove(Node node) {
+	}
+
 	public final boolean provideIsNonStructural() {
 		return getNodeType() == Node.TEXT_NODE
 				|| getNodeType() == Node.COMMENT_NODE;
@@ -348,11 +352,11 @@ public abstract class NodeJso extends JavaScriptObject
 		if (node.linkedToRemote()) {
 			return node.remote();
 		} else {
-			if (node.wasResolved()) {
+			if (node.wasSynced()) {
 				LocalDom.ensureRemote(node);
 				return node.remote();
 			} else {
-				return LocalDom.ensureRemoteNodeMaybePendingResolution(node);
+				return LocalDom.ensureRemoteNodeMaybePendingSync(node);
 			}
 		}
 	}

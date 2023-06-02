@@ -198,7 +198,13 @@ public class CollectionCreators {
 
 	@Reflected
 	@Registration.Singleton(CollectionCreators.WeakMapCreator.class)
-	public abstract static class WeakMapCreator {
-		public abstract <K, V> Map<K, V> create();
+	/*
+	 * FIXME - reflection - default (dev only, so not a big drama) impl is in
+	 * fact non-weak
+	 */
+	public static class WeakMapCreator {
+		public <K, V> Map<K, V> create() {
+			return new LinkedHashMap<>();
+		}
 	}
 }

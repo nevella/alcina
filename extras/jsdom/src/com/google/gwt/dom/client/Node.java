@@ -73,7 +73,7 @@ public abstract class Node
     }
 	}-*/;
 
-	private int resolvedEventId;
+	private int syncId;
 
 	protected Node() {
 	}
@@ -87,7 +87,7 @@ public abstract class Node
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		validateInsert(newChild);
-		doPreTreeResolution(newChild);
+		doPreTreeSync(newChild);
 		T node = local().appendChild(newChild);
 		sync(() -> remote().appendChild(newChild));
 		return node;
@@ -252,8 +252,8 @@ public abstract class Node
 		try {
 			// new child first
 			validateInsert(newChild);
-			doPreTreeResolution(newChild);
-			doPreTreeResolution(refChild);
+			doPreTreeSync(newChild);
+			doPreTreeSync(refChild);
 			Node result = local().insertBefore(newChild, refChild);
 			sync(() -> remote().insertBefore(newChild, refChild));
 			return result;
@@ -321,6 +321,10 @@ public abstract class Node
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public void preRemove(Node node) {
+	}
+
 	public List<Node> provideChildNodeList() {
 		return new ChildNodeList();
 	}
@@ -335,13 +339,14 @@ public abstract class Node
 
 	@Override
 	public Node removeAllChildren() {
-		getChildNodes().forEach(n -> doPreTreeResolution(n));
+		getChildNodes().forEach(n -> doPreTreeSync(n));
 		return ClientDomNodeStatic.removeAllChildren(this);
 	}
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		doPreTreeResolution(oldChild);
+		doPreTreeSync(oldChild);
+		sync(() -> remote().preRemove(oldChild));
 		Node result = local().removeChild(oldChild);
 		sync(() -> remote().removeChild(oldChild));
 		return result;
@@ -356,14 +361,16 @@ public abstract class Node
 	@Override
 	public void removeFromParent() {
 		ensureRemoteCheck();
+		sync(() -> remote().preRemove(this));
 		sync(() -> remote().removeFromParent());
 		local().removeFromParent();
 	}
 
 	@Override
 	public Node replaceChild(Node newChild, Node oldChild) {
-		doPreTreeResolution(oldChild);
-		doPreTreeResolution(newChild);
+		doPreTreeSync(oldChild);
+		doPreTreeSync(newChild);
+		sync(() -> remote().preRemove(oldChild));
 		sync(() -> remote().replaceChild(newChild, oldChild));
 		Node result = local().replaceChild(newChild, oldChild);
 		return result;
@@ -412,32 +419,33 @@ public abstract class Node
 		return getChildNodes().stream();
 	}
 
-	protected void doPreTreeResolution(Node child) {
+	protected void doPreTreeSync(Node child) {
 		if (child != null) {
-			boolean ensureBecauseChildResolved = (child.wasResolved()
+			boolean ensureBecauseChildSynced = (child.wasSynced()
 					|| child.linkedToRemote())
-					&& (!linkedToRemote() || isPendingResolution());
-			if (ensureBecauseChildResolved) {
+					&& (!linkedToRemote() || isPendingSync());
+			if (ensureBecauseChildSynced) {
 				LocalDom.ensureRemote(this);
 			}
 			boolean linkedBecauseFlushed = ensureRemoteCheck();
-			if (linkedToRemote() && (wasResolved() || child.wasResolved())) {
-				if (child.wasResolved()) {
+			if (linkedToRemote() && (wasSynced() || child.wasSynced())) {
+				if (child.wasSynced()) {
 					LocalDom.ensureRemote(child);
 				} else {
-					LocalDom.ensureRemoteNodeMaybePendingResolution(child);
+					LocalDom.ensureRemoteNodeMaybePendingSync(child);
 				}
 			}
 		}
 	}
 
 	/**
-	 * If the node was flushed, then we need to link to the remote (or our
+	 * If the node was flushed (i.e. part of a tree that was flushed, has a
+	 * non-zero syncEventId), then we need to link it to the remote (or our
 	 * local/remote will be inconsistent)
 	 *
 	 */
 	protected boolean ensureRemoteCheck() {
-		if (!linkedToRemote() && wasResolved()
+		if (!linkedToRemote() && wasSynced()
 				&& provideSelfOrAncestorLinkedToRemote() != null
 				&& getOwnerDocument().remoteType.hasRemote()
 				&& (provideIsText() || provideIsElement())) {
@@ -448,7 +456,7 @@ public abstract class Node
 		}
 	}
 
-	protected boolean isPendingResolution() {
+	protected boolean isPendingSync() {
 		return false;
 	}
 
@@ -475,17 +483,21 @@ public abstract class Node
 		return null;
 	}
 
-	protected abstract void putRemote(ClientDomNode remote, boolean resolved);
+	protected abstract void putRemote(ClientDomNode remote, boolean synced);
 
 	protected abstract <T extends ClientDomNode> T remote();
 
 	protected void resetRemote() {
-		clearResolved();
+		clearSynced();
 		resetRemote0();
 	}
 
 	protected abstract void resetRemote0();
 
+	/**
+	 * Apply the runnable (to the remote dom) only if the node + dom states
+	 * require it
+	 */
 	protected void sync(Runnable runnable) {
 		if (remote() instanceof NodeLocalNull || !LocalDom.isApplyToRemote()) {
 			return;
@@ -508,18 +520,17 @@ public abstract class Node
 	/**
 	 * only call on reparse
 	 */
-	void clearResolved() {
-		resolvedEventId = 0;
+	void clearSynced() {
+		syncId = 0;
 	}
 
-	void resolved(int wasResolvedEventId) {
-		Preconditions.checkState(this.resolvedEventId == 0
-				|| this.resolvedEventId == wasResolvedEventId);
-		this.resolvedEventId = wasResolvedEventId;
+	void onSync(int syncId) {
+		Preconditions.checkState(this.syncId == 0 || this.syncId == syncId);
+		this.syncId = syncId;
 	}
 
-	boolean wasResolved() {
-		return resolvedEventId > 0;
+	boolean wasSynced() {
+		return syncId > 0;
 	}
 
 	/**

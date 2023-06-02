@@ -265,7 +265,7 @@ public final class MutationNode {
 	public String toString() {
 		FormatBuilder format = new FormatBuilder().separator(" ");
 		format.appendPadRight(12, nodeName);
-		if (sync == null) {
+		if (sync == null || id == -1) {
 			format.appendIfNotBlankKv("path", path);
 		} else {
 			format.appendIfNotBlankKv("id", id);

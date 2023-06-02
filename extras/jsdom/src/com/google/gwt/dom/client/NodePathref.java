@@ -1,8 +1,8 @@
 package com.google.gwt.dom.client;
 
-import com.google.gwt.dom.client.mutations.MutationNode;
+import java.util.List;
+
 import com.google.gwt.dom.client.mutations.MutationRecord;
-import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -66,6 +66,7 @@ public abstract class NodePathref implements ClientDomNode {
 		// emit the entire subtree as a sequence of mutations
 		LocalDom.pathRefRepresentations().nodeAsMutations(newChild)
 				.forEach(this::emitMutation);
+		LocalDom.wasSynced((Element) node());
 		return newChild;
 	}
 
@@ -156,13 +157,10 @@ public abstract class NodePathref implements ClientDomNode {
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
 		ensurePathrefRemote(newChild);
-		MutationRecord mutation = new MutationRecord();
-		mutation.type = Type.childList;
-		mutation.nextSibling = MutationNode
-				.shallow(refChild.getPreviousSibling());
-		mutation.target = MutationNode.shallow(node);
-		mutation.addedNodes.add(MutationNode.shallow(newChild));
-		emitMutation(mutation);
+		// emit the entire subtree as a sequence of mutations
+		LocalDom.pathRefRepresentations().nodeAsMutations(newChild)
+				.forEach(this::emitMutation);
+		LocalDom.wasSynced((Element) node());
 		return newChild;
 	}
 
@@ -187,17 +185,27 @@ public abstract class NodePathref implements ClientDomNode {
 	}
 
 	@Override
+	public void preRemove(Node node) {
+		Pathref.onPreRemove(node);
+	}
+
+	@Override
 	public Node removeAllChildren() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		throw new UnsupportedOperationException();
+		ensurePathrefRemote(oldChild);
+		// emit the the remove mutation
+		List.of(LocalDom.pathRefRepresentations().asRemoveMutation(node(),
+				oldChild)).forEach(this::emitMutation);
+		return oldChild;
 	}
 
 	@Override
 	public void removeFromParent() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -216,5 +224,6 @@ public abstract class NodePathref implements ClientDomNode {
 	}
 
 	void setParentNode(NodeLocalNull local) {
+		throw new UnsupportedOperationException();
 	}
 }

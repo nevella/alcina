@@ -62,10 +62,10 @@ public class LocalDomDebugImpl {
 		}
 		if (!debugAll) {
 			switch (channel) {
-			case RESOLVE:
+			case SYNC:
 			case DOM_EVENT:
 			case REQUIRES_SYNC:
-			case CREATED_PENDING_RESOLUTION:
+			case CREATED_PENDING_SYNC:
 			case DISPATCH_DETAILS:
 			case DOM_MOUSE_EVENT:
 			case STYLE:

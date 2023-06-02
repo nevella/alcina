@@ -76,8 +76,13 @@ public class LocalDomMutations {
 				node,
 				n -> n.getChildNodes().stream().collect(Collectors.toList()),
 				false);
-		traversal.forEach(n -> MutationRecord.generateInsertMutations(n, records));
+		traversal.forEach(
+				n -> MutationRecord.generateInsertMutations(n, records));
 		return records;
+	}
+
+	public MutationRecord nodeAsRemoveMutation(Node parent, Node oldChild) {
+		return MutationRecord.generateRemoveMutation(parent, oldChild);
 	}
 
 	public String serializeHistory() {

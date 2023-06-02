@@ -282,7 +282,7 @@ class SyncMutations {
 					 */
 					ancestors.stream()
 							.filter(remote -> remote.provideIsNonStructural())
-							.forEach(mutationsAccess::markAsResolved);
+							.forEach(mutationsAccess::markAsSynced);
 				}
 				applyStructuralMutations
 						.add(mutationSubtreeParent.remoteNode());

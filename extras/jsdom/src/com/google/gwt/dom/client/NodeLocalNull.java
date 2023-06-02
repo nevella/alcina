@@ -121,6 +121,10 @@ public abstract class NodeLocalNull implements ClientDomNode {
 	}
 
 	@Override
+	public void preRemove(Node node) {
+	}
+
+	@Override
 	public Node removeAllChildren() {
 		return null;
 	}

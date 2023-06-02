@@ -19,6 +19,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.ElementJso.ContiguousTextNodes;
 import com.google.gwt.dom.client.ElementJso.ElementJsoIndex;
 import com.google.gwt.dom.client.mutations.LocalDomMutations;
@@ -30,6 +31,7 @@ import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.DomEventMe
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -103,20 +105,16 @@ public class LocalDom implements ContextFrame {
 		get().ensureRemote0(node);
 	}
 
-	public static void ensureRemoteDocument() {
-		nodeFor(Document.get().jsoRemote().getDocumentElement0());
-	};
-
-	public static NodeJso ensureRemoteNodeMaybePendingResolution(Node node) {
-		return get().ensureRemoteNodeMaybePendingResolution0(node);
-	}
-
 	public static void eventMod(NativeEvent evt, String eventName) {
 		get().eventMod0(evt, eventName);
-	}
+	};
 
+	/**
+	 * Flush any pending sync (sync local subtree to remote) jobs and mark the
+	 * subtrees as synced
+	 */
 	public static void flush() {
-		get().resolve0();
+		get().flush0();
 	}
 
 	public static LocalDomMutations getMutations() {
@@ -220,7 +218,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public static void syncToRemote(Element element) {
-		get().parseAndMarkResolved(element.jsoRemote(),
+		get().parseAndMarkSynced(element.jsoRemote(),
 				element.jsoRemote().getOuterHtml(), element);
 	}
 
@@ -379,6 +377,15 @@ public class LocalDom implements ContextFrame {
 		});
 	}
 
+	static void ensureRemoteDocument() {
+		nodeFor(Document.get().jsoRemote().getDocumentElement0());
+	}
+
+	static <C extends ClientDomNode> C
+			ensureRemoteNodeMaybePendingSync(Node node) {
+		return (C) get().ensureRemoteNodeMaybePendingSync0(node);
+	}
+
 	static boolean hasNode(JavaScriptObject remote) {
 		return get().remoteLookup.containsKey(remote);
 	}
@@ -391,6 +398,10 @@ public class LocalDom implements ContextFrame {
 		return GWT.isClient();
 	}
 
+	/**
+	 * Get the node corresponding to the nodeJso if it already exists, but don't
+	 * attempt to compute it by ascending the remote tree
+	 */
 	static Node nodeForNoResolve(NodeJso nodeJso) {
 		return get().remoteLookup.get(nodeJso);
 	}
@@ -414,8 +425,8 @@ public class LocalDom implements ContextFrame {
 		get().verifyMutatingState0();
 	}
 
-	static void wasResolved(Element elem) {
-		get().wasResolved0(elem);
+	static void wasSynced(Element elem) {
+		get().wasSynced0(elem);
 	}
 
 	private PathRefRepresentations pathRefRepresentations = new PathRefRepresentations();
@@ -436,33 +447,31 @@ public class LocalDom implements ContextFrame {
 
 	Map<NativeEvent, List<String>> eventMods = new LinkedHashMap<>();
 
-	List<Node> pendingResolution = new ArrayList<>();
+	List<Node> pendingSync = new ArrayList<>();
 
-	ScheduledCommand resolveCommand = null;
+	ScheduledCommand flushCommand = null;
 
-	private int resolutionEventId = 1;
+	private int syncEventId = 1;
 
-	private boolean resolutionEventIdDirty;
-
-	private boolean resolving;
+	private boolean syncEventIdDirty;
 
 	boolean syncing;
 
-	boolean markNonStructuralNodesAsResolvedOnResolve;
+	boolean markNonStructuralNodesAsSyncedOnSync;
 
 	LocalDom() {
 		if (GWT.isScript()) {
 			remoteLookup = JsUniqueMap.createWeakMap();
 		} else {
-			remoteLookup = new LinkedHashMap<>();
+			remoteLookup = AlcinaCollections.newWeakMap();
 		}
 		topicReportException.add(this::handleReportedException);
 	}
 
-	public void ensurePendingResolved(Node node) {
+	public void ensurePendingSynced(Node node) {
 		Preconditions.checkState(node.linkedToRemote());
 		Element element = (Element) node;
-		if (element.isPendingResolution()) {
+		if (element.isPendingSync()) {
 			ElementJso remote = (ElementJso) node.remote();
 			ClientDomElement local = node.local();
 			localToRemote(element, remote, local);
@@ -503,14 +512,20 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private void ensureFlush() {
-		if (resolveCommand == null) {
-			resolveCommand = () -> flush();
-			Scheduler.get().scheduleFinally(resolveCommand);
+		if (flushCommand == null && GWT.isClient()) {
+			flushCommand = () -> flush();
+			Scheduler.get().scheduleFinally(flushCommand);
 		}
 	}
 
 	private void ensureRemote0(Node node) {
-		resolve0(true);
+		if (isPathref()) {
+			// FIXME - localdom - factor a bunch of this out into
+			// LDjso/LDpathref classes
+			ensureRemote0Pathref(node);
+			return;
+		}
+		flush0(true);
 		List<Node> ancestors = new ArrayList<>();
 		Node cursor = node;
 		Node withRemote = null;
@@ -527,7 +542,7 @@ public class LocalDom implements ContextFrame {
 		if (withRemote == null) {
 			// attaching child with-remote to without-remote (say, a popup)
 			Node root = ancestors.get(0);
-			ensureRemoteNodeMaybePendingResolution(root);
+			ensureRemoteNodeMaybePendingSync(root);
 			ensureRemote0(node);
 			return;
 		}
@@ -546,22 +561,38 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	private NodeJso ensureRemoteNodeMaybePendingResolution0(Node node) {
+	private void ensureRemote0Pathref(Node node) {
+		Node cursor = node;
+		while (cursor != null) {
+			if (cursor.linkedToRemote()) {
+				break;
+			} else {
+				cursor.putRemote(NodePathref.create(node), cursor.wasSynced());
+			}
+			cursor = cursor.getParentNode();
+		}
+	}
+
+	private ClientDomNode ensureRemoteNodeMaybePendingSync0(Node node) {
 		if (node.linkedToRemote()) {
 			return node.remote();
 		}
 		ensureFlush();
-		NodeJso remote = null;
+		ClientDomNode remote = null;
 		int nodeType = node.getNodeType();
 		switch (nodeType) {
 		case Node.ELEMENT_NODE:
 			Element element = (Element) node;
-			remote = ((DomDispatchJso) DOMImpl.impl.remote())
-					.createElement(element.getTagName());
-			element.pendingResolution();
-			pendingResolution.add(node);
-			log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
-					"created pending resolution node:" + element.getTagName());
+			if (isPathref()) {
+				remote = NodePathref.create(node);
+			} else {
+				remote = ((DomDispatchJso) DOMImpl.impl.remote())
+						.createElement(element.getTagName());
+			}
+			element.pendingSync();
+			pendingSync.add(node);
+			log(LocalDomDebug.CREATED_PENDING_SYNC,
+					"created pending sync node:" + element.getTagName());
 			break;
 		case Node.TEXT_NODE:
 			remote = Document.get().jsoRemote()
@@ -573,7 +604,9 @@ public class LocalDom implements ContextFrame {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		linkRemote(remote, node);
+		if (remote.isJso()) {
+			linkRemote((NodeJso) remote, node);
+		}
 		node.putRemote(remote, false);
 		return remote;
 	}
@@ -626,8 +659,8 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private boolean isPending0(NodeJso nodeJso) {
-		return pendingResolution.size() > 0 && pendingResolution.stream()
-				.anyMatch(n -> n.remote() == nodeJso);
+		return pendingSync.size() > 0
+				&& pendingSync.stream().anyMatch(n -> n.remote() == nodeJso);
 	}
 
 	private boolean isStopPropagation0(NativeEvent evt) {
@@ -645,8 +678,7 @@ public class LocalDom implements ContextFrame {
 			ClientDomElement local) {
 		String innerHTML = local.getInnerHTML();
 		remote.setInnerHTML(innerHTML);
-		log(LocalDomDebug.RESOLVE, "%s - uiobj: %s - \n%s",
-				element.getTagName(),
+		log(LocalDomDebug.SYNC, "%s - uiobj: %s - \n%s", element.getTagName(),
 				Optional.ofNullable(element.uiObject)
 						.map(ui -> ui.getClass().getSimpleName())
 						.orElse("(null)"),
@@ -671,9 +703,9 @@ public class LocalDom implements ContextFrame {
 		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
 		bits |= DOM.getEventsSunk(element);
 		DOM.sinkEvents(element, bits);
-		pendingResolution.remove(element);
-		element.resolvePending();
-		wasResolved0(element);
+		pendingSync.remove(element);
+		element.resolvePendingSync();
+		wasSynced0(element);
 	}
 
 	private <T extends Node> T nodeFor0(NodeJso remote) {
@@ -707,9 +739,9 @@ public class LocalDom implements ContextFrame {
 			if (parent.getChildCount() == parentRemote.getChildCount()) {
 				Node childNode = parent.getChild(index);
 				linkRemote(remote, childNode);
-				if (markNonStructuralNodesAsResolvedOnResolve
-						&& !childNode.wasResolved()) {
-					childNode.resolved(resolutionEventId);
+				if (markNonStructuralNodesAsSyncedOnSync
+						&& !childNode.wasSynced()) {
+					childNode.onSync(syncEventId);
 				}
 				childNode.putRemote(remote, true);
 				return (T) childNode;
@@ -746,7 +778,7 @@ public class LocalDom implements ContextFrame {
 		boolean hadNode = hasNodeJso != null;
 		if (hasNodeJso == null) {
 			ElementJso root = remoteIndex.root();
-			Element hasNode = parseAndMarkResolved(root, root.getOuterHtml(),
+			Element hasNode = parseAndMarkSynced(root, root.getOuterHtml(),
 					null);
 			linkRemote(root, hasNode);
 			hasNode.putRemote(root, true);
@@ -796,7 +828,7 @@ public class LocalDom implements ContextFrame {
 		return (T) remoteLookup.get(remote);
 	}
 
-	private Element parseAndMarkResolved(ElementJso root, String outerHtml,
+	private Element parseAndMarkSynced(ElementJso root, String outerHtml,
 			Element replaceContents) {
 		Element parsed = null;
 		try {
@@ -818,7 +850,7 @@ public class LocalDom implements ContextFrame {
 				root.getAttributeMap()
 						.forEach((k, v) -> replaceContents.setAttribute(k, v));
 			}
-			wasResolved0(parsed);
+			wasSynced0(parsed);
 			root.getContiguousTextContainers()
 					.forEach(this::applyContiguousTextNodesToLocal);
 		} else {
@@ -829,8 +861,8 @@ public class LocalDom implements ContextFrame {
 
 	private void putRemote0(Element element, ElementJso remote) {
 		flush();
-		resolutionEventId++;
-		wasResolved(element);
+		syncEventId++;
+		wasSynced(element);
 		remoteLookup.put(remote, element);
 		element.putRemote(remote, true);
 	}
@@ -867,7 +899,7 @@ public class LocalDom implements ContextFrame {
 				cursor.local().clearChildrenAndAttributes0();
 				String builtOuterHtml = remoteCursor.buildOuterHtml();
 				String remoteOuterHtml = remoteCursor.getOuterHtml();
-				parseAndMarkResolved(remoteCursor, builtOuterHtml, cursor);
+				parseAndMarkSynced(remoteCursor, builtOuterHtml, cursor);
 				invalid = cursor.getChildCount() != size;
 				if (!invalid) {
 					int nodeIndex = indicies.get(idx);
@@ -969,9 +1001,9 @@ public class LocalDom implements ContextFrame {
 				|| (mutations.isObserverConnected() || !mutations.isEnabled()));
 	}
 
-	private void wasResolved0(Element elem) {
-		elem.local().walk(nl -> nl.node().resolved(resolutionEventId));
-		resolutionEventIdDirty = true;
+	private void wasSynced0(Element elem) {
+		elem.local().walk(nl -> nl.node().onSync(syncEventId));
+		syncEventIdDirty = true;
 	}
 
 	void applyContiguousTextNodesToLocal(ContiguousTextNodes contiguous) {
@@ -1023,6 +1055,38 @@ public class LocalDom implements ContextFrame {
 		return newChild;
 	}
 
+	void flush0() {
+		flush0(false);
+	}
+
+	void flush0(boolean force) {
+		if (syncing) {
+			return;
+		}
+		if (flushCommand == null && !force) {
+			return;
+		}
+		flushCommand = null;
+		try {
+			syncing = true;
+			if (syncEventIdDirty) {
+				syncEventId++;
+				syncEventIdDirty = false;
+			}
+			new ArrayList<>(pendingSync).stream()
+					.forEach(this::ensurePendingSynced);
+			if (syncEventIdDirty) {
+				syncEventId++;
+			}
+		} catch (RuntimeException re) {
+			topicReportException.publish(re);
+			throw re;
+		} finally {
+			syncEventIdDirty = false;
+			syncing = false;
+		}
+	}
+
 	void handleReportedException(Exception exception) {
 		String message = null;
 		if (loggingConfiguration.logHistoryOnEception) {
@@ -1034,36 +1098,8 @@ public class LocalDom implements ContextFrame {
 				.publish(new LocalDomException(exception, message));
 	}
 
-	void resolve0() {
-		resolve0(false);
-	}
-
-	void resolve0(boolean force) {
-		if (resolving) {
-			return;
-		}
-		if (resolveCommand == null && !force) {
-			return;
-		}
-		resolveCommand = null;
-		try {
-			resolving = true;
-			if (resolutionEventIdDirty) {
-				resolutionEventId++;
-				resolutionEventIdDirty = false;
-			}
-			new ArrayList<>(pendingResolution).stream()
-					.forEach(this::ensurePendingResolved);
-			if (resolutionEventIdDirty) {
-				resolutionEventId++;
-			}
-		} catch (RuntimeException re) {
-			topicReportException.publish(re);
-			throw re;
-		} finally {
-			resolutionEventIdDirty = false;
-			resolving = false;
-		}
+	boolean isPathref() {
+		return Document.get().remoteType == RemoteType.PATHREF;
 	}
 
 	public class BrowserBehaviour {
@@ -1166,12 +1202,12 @@ public class LocalDom implements ContextFrame {
 			return (Element) nodeForNoResolve(remote);
 		}
 
-		public void markAsResolved(NodeJso ancestor) {
+		public void markAsSynced(NodeJso ancestor) {
 			try {
-				markNonStructuralNodesAsResolvedOnResolve = true;
+				markNonStructuralNodesAsSyncedOnSync = true;
 				LocalDom.nodeFor(ancestor);
 			} finally {
-				markNonStructuralNodesAsResolvedOnResolve = false;
+				markNonStructuralNodesAsSyncedOnSync = false;
 			}
 		}
 
@@ -1189,8 +1225,8 @@ public class LocalDom implements ContextFrame {
 			for (int idx = 0; idx < remoteChildrenS0.size(); idx++) {
 				Node child = childNodes.getItem(idx);
 				NodeJso remote = remoteChildrenS0.get(idx);
-				// not sure about resolved here...
-				child.putRemote(remote, child.wasResolved());
+				// not sure about synced here...
+				child.putRemote(remote, child.wasSynced());
 				if (!remoteLookup.containsKey(remote)) {
 					linkRemote(remote, child);
 				}
@@ -1243,6 +1279,10 @@ public class LocalDom implements ContextFrame {
 				boolean applyToRemote) {
 			LocalDom.this.mutations.applyDetachedMutations(mutations,
 					applyToRemote);
+		}
+
+		public MutationRecord asRemoveMutation(Node parent, Node oldChild) {
+			return mutations.nodeAsRemoveMutation(parent, oldChild);
 		}
 
 		public List<MutationRecord> domAsMutations() {

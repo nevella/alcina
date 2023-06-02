@@ -133,7 +133,7 @@ public class Element extends Node
 
 	public EventListener uiObjectListener;
 
-	private boolean pendingResolution;
+	private boolean pendingSync;
 
 	protected Element() {
 	}
@@ -596,15 +596,8 @@ public class Element extends Node
 		sync(() -> remote().replaceClassName(oldClassName, newClassName));
 	}
 
-	/**
-	 * When it's quicker to redraw the whole DOM. Tree filtering springs to mind
-	 */
-	public void resolvedToPending() {
-		implAccess().resolvedToPending();
-	}
-
-	public void resolvePending() {
-		pendingResolution = false;
+	public void resolvePendingSync() {
+		pendingSync = false;
 	}
 
 	public boolean resolveRemoteDefined() {
@@ -720,7 +713,7 @@ public class Element extends Node
 	@Override
 	public void setInnerHTML(String html) {
 		ensureRemoteCheck();
-		clearResolved();
+		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
@@ -729,7 +722,7 @@ public class Element extends Node
 			// tbodies? foots? proudfeet?
 			String remoteHtml = jsoRemote().getInnerHTML0();
 			local().setInnerHTML(remoteHtml);
-			LocalDom.wasResolved(this);
+			LocalDom.wasSynced(this);
 		} else {
 			local().setInnerHTML(html);
 		}
@@ -743,14 +736,14 @@ public class Element extends Node
 	@Override
 	public void setInnerText(String text) {
 		ensureRemoteCheck();
-		clearResolved();
+		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
 		if (linkedAndNotPending()) {
 			remote().setInnerText(text);
 			local().setInnerText(text);
-			LocalDom.wasResolved(this);
+			LocalDom.wasSynced(this);
 		} else {
 			local().setInnerText(text);
 		}
@@ -852,6 +845,13 @@ public class Element extends Node
 		sync(() -> remote().sinkEvents(eventBits));
 	}
 
+	/**
+	 * When it's quicker to redraw the whole DOM. Tree filtering springs to mind
+	 */
+	public void syncedToPending() {
+		implAccess().sycnedToPending();
+	}
+
 	@Override
 	public void toggleClassName(String className) {
 		ensureRemoteCheck();
@@ -938,7 +938,7 @@ public class Element extends Node
 			// TODO - warn maybe? non optimal. SliderBar one major cause
 			return ensureJsoRemote();
 		}
-		if (!wasResolved()) {
+		if (!wasSynced()) {
 			return local();
 		}
 		ensureRemoteCheck();
@@ -952,7 +952,7 @@ public class Element extends Node
 	}
 
 	private boolean linkedAndNotPending() {
-		return linkedToRemote() && !isPendingResolution();
+		return linkedToRemote() && !isPendingSync();
 	}
 
 	private void runIfWithRemote(boolean flush, Runnable runnable) {
@@ -971,8 +971,8 @@ public class Element extends Node
 	}
 
 	@Override
-	protected boolean isPendingResolution() {
-		return this.pendingResolution;
+	protected boolean isPendingSync() {
+		return this.pendingSync;
 	}
 
 	@Override
@@ -991,19 +991,19 @@ public class Element extends Node
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
+	protected void putRemote(ClientDomNode remote, boolean synced) {
 		if (!GWT.isScript() && GWT.isClient()) {
 			// hosted mode (dev) check
 			String nodeName = remote.getNodeName();
 			Preconditions
 					.checkState(nodeName.equalsIgnoreCase(local.getNodeName()));
 		}
-		Preconditions.checkState(wasResolved() == resolved);
+		Preconditions.checkState(wasSynced() == synced);
 		Preconditions.checkState(
 				this.remote == ElementNull.INSTANCE || remote == this.remote);
 		Preconditions.checkState(remote != null);
-		if (remote.isJso()) {
-			this.remote = (ElementJso) remote;
+		if (this.remote == ElementNull.INSTANCE) {
+			this.remote = (ClientDomElement) remote;
 			if (remote != null) {
 				if (local() != null && local().getEventBits() != 0) {
 					int existingBits = DOM.getEventsSunk(this);
@@ -1032,7 +1032,7 @@ public class Element extends Node
 
 	protected void setInnerSafeHtml(SafeHtml html, boolean withPreRemove) {
 		ensureRemoteCheck();
-		clearResolved();
+		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		if (withPreRemove) {
@@ -1044,7 +1044,7 @@ public class Element extends Node
 			remote().setInnerSafeHtml(html);
 			String remoteHtml = jsoRemote().getInnerHTML0();
 			local().setInnerHTML(remoteHtml);
-			LocalDom.wasResolved(this);
+			LocalDom.wasSynced(this);
 		} else {
 			local().setInnerSafeHtml(html);
 		}
@@ -1071,8 +1071,8 @@ public class Element extends Node
     return cn;
 	}-*/;
 
-	void pendingResolution() {
-		this.pendingResolution = true;
+	void pendingSync() {
+		this.pendingSync = true;
 	}
 
 	Element putLocal(ElementLocal local) {
@@ -1167,19 +1167,19 @@ public class Element extends Node
 			return Element.this.remote();
 		}
 
-		public void resolvedToPending() {
+		public void sycnedToPending() {
 			if (linkedToRemote()) {
 				ElementJso oldRemote = jsoRemote();
 				sync(() -> oldRemote.removeAllChildren0());
 				local().walk(ln -> ln.node().resetRemote());
 				resetRemote();
-				LocalDom.ensureRemoteNodeMaybePendingResolution(Element.this);
+				LocalDom.ensureRemoteNodeMaybePendingSync(Element.this);
 				oldRemote.replaceWith(jsoRemote());
 			}
 		}
 
-		public boolean wasResolved() {
-			return Element.this.wasResolved();
+		public boolean wasSynced() {
+			return Element.this.wasSynced();
 		}
 	}
 }

@@ -82,6 +82,20 @@ public class MutationRecord {
 		}
 	}
 
+	/**
+	 * Generates a remove mutation for the oldChild node
+	 * 
+	 * @return
+	 */
+	public static MutationRecord generateRemoveMutation(Node parent,
+			Node oldChild) {
+		MutationRecord record = new MutationRecord();
+		record.target = MutationNode.shallow(parent);
+		record.type = Type.childList;
+		record.removedNodes.add(MutationNode.shallow(oldChild));
+		return record;
+	}
+
 	transient MutationRecordJso jso;
 
 	public List<MutationNode> addedNodes = new ArrayList<>();

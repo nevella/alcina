@@ -147,7 +147,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasResolved() == resolved);
+		Preconditions.checkState(wasSynced() == resolved);
 		this.remote = (ClientDomText) remote;
 	}
 

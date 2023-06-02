@@ -133,7 +133,7 @@ public class Comment extends Node
 
 	@Override
 	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasResolved() == resolved);
+		Preconditions.checkState(wasSynced() == resolved);
 		this.remote = (ClientDomComment) remote;
 	}
 
