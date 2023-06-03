@@ -215,6 +215,8 @@ public abstract class WebdriverTest implements Registration.Ensure {
 				// result will be in error state due to descendant exception
 				return result;
 			} else {
+				Ax.sysLogHigh("WDT framework - %s",
+						CommonUtils.toSimpleExceptionMessage(e));
 				throw e;
 			}
 		} finally {

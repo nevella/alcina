@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ResettingCounter;
@@ -50,6 +51,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.util.AnalyseThreadDump;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
@@ -256,6 +258,8 @@ public class InternalMetrics {
 					if (persistExecutor.getActiveCount() == 0) {
 						persistExecutor.submit(() -> {
 							try {
+								LooseContext.push();
+								LooseContext.set(JacksonJsonObjectSerializer.MAX_LENGTH, 40000000);
 								persist();
 							} catch (Throwable e) {
 								try {
@@ -266,6 +270,8 @@ public class InternalMetrics {
 									return;
 								}
 								e.printStackTrace();
+							} finally {
+								LooseContext.pop();
 							}
 						});
 					} else {
