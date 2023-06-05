@@ -32,6 +32,13 @@ public class SelectionFilter extends Model implements TreeSerializable {
 		return entry;
 	}
 
+	public void copyFrom(SelectionFilter other) {
+		allGenerationsLimit = other.allGenerationsLimit;
+		generations = other.generations;
+		maxExceptions = other.maxExceptions;
+		entriesByGeneration = null;
+	}
+
 	public int getAllGenerationsLimit() {
 		return this.allGenerationsLimit;
 	}
