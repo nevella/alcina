@@ -25,7 +25,8 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
  *
  * @author Nick Reddel
  */
-public interface IUser extends IVersionable, HasDisplayName.Settable {
+public interface IUser
+		extends IVersionable, HasDisplayName.Settable, AclSubject {
 	public static <IU extends IUser> IU current() {
 		return (IU) PermissionsManager.get().getUser();
 	}
