@@ -5,8 +5,6 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.domain.DomainStoreProperty;
-import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -52,7 +50,6 @@ public abstract class AclEntry extends VersionableEntity<AclEntry> {
 
 	@Lob
 	@Transient
-	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
 	public String getDataSerialized() {
 		return this.dataSerialized;
 	}
