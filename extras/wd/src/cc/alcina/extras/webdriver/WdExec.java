@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotInteractableException;
-import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
@@ -232,7 +231,7 @@ public class WdExec {
 				return false;
 			} catch (RuntimeException e) {
 				lastException = e;
-				if (e instanceof ElementNotVisibleException) {
+				if (e instanceof ElementNotInteractableException) {
 					if (returnIfNotVisible) {
 						return true;
 					}
