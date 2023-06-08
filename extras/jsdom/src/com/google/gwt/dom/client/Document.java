@@ -30,6 +30,8 @@ import org.w3c.dom.traversal.TreeWalker;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * <p>
@@ -73,10 +75,13 @@ public class Document extends Node
 
 	Element documentElement;
 
+	public final DomDocument domDocument;
+
 	protected Document(RemoteType remoteType) {
 		this.local = new DocumentLocal();
 		this.local.document = this;
 		this.remoteType = remoteType;
+		domDocument = DomDocument.from(this, true);
 		switch (remoteType) {
 		case JSO:
 			remote = DocumentJso.get();
@@ -1074,6 +1079,15 @@ public class Document extends Node
 	public class DocumentImplAccess extends ImplAccess {
 		public DocumentPathref pathrefRemote() {
 			return remote();
+		}
+	}
+
+	@Registration.Singleton(DomDocument.PerDocumentSupplier.class)
+	public static class PerDocumentSupplierGwtImpl
+			implements DomDocument.PerDocumentSupplier {
+		@Override
+		public DomDocument get(org.w3c.dom.Document document) {
+			return ((Document) document).domDocument;
 		}
 	}
 

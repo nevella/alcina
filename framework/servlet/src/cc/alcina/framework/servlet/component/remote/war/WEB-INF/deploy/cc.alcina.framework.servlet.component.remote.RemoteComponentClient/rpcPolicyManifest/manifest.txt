@@ -1,0 +1,2 @@
+# Module cc.alcina.framework.servlet.component.remote.RemoteComponentClient
+# RPC service class, partial path of RPC policy file

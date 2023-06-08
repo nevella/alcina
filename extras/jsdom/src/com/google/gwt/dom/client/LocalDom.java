@@ -27,7 +27,6 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.LocalDomDebug;
 
-import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.DomEventMessage;
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
@@ -1269,10 +1268,10 @@ public class LocalDom implements ContextFrame {
 	 * LocalDom
 	 */
 	public class PathRefRepresentations {
-		public void applyEvent(DomEventMessage message) {
-			Element elem = (Element) message.firstReceiver.node();
+		public void applyEvent(DomEventData eventData) {
+			Element elem = (Element) eventData.firstReceiver.node();
 			// um, is it that easy?
-			DOM.dispatchEvent(message.event, elem, elem.uiObjectListener);
+			DOM.dispatchEvent(eventData.event, elem, elem.uiObjectListener);
 		}
 
 		public void applyMutations(List<MutationRecord> mutations,

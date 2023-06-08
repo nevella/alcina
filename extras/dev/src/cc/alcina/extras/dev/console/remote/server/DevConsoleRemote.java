@@ -22,7 +22,6 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 
-import cc.alcina.extras.dev.component.remote.server.ProtocolRequestHandler;
 import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -33,6 +32,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.jscodeserver.JsCodeServerServlet;
+import cc.alcina.framework.servlet.component.remote.server.ProtocolRequestHandler;
 
 @Registration.Singleton(DevConsoleRemote.class)
 public class DevConsoleRemote {

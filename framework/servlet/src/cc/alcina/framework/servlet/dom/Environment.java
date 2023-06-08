@@ -13,25 +13,26 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
+import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Pathref;
+import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
-import cc.alcina.extras.dev.component.remote.protocol.EventSystemMutation;
-import cc.alcina.extras.dev.component.remote.protocol.LocationMutation;
-import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage;
-import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.DomEventMessage;
-import cc.alcina.extras.dev.component.remote.protocol.ProtocolMessage.InvalidClientUidException;
-import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentRequest.Session;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.util.EventCollator;
+import cc.alcina.framework.servlet.component.remote.protocol.EventSystemMutation;
+import cc.alcina.framework.servlet.component.remote.protocol.ProtocolMessage;
+import cc.alcina.framework.servlet.component.remote.protocol.ProtocolMessage.InvalidClientUidException;
+import cc.alcina.framework.servlet.component.remote.protocol.RemoteComponentRequest.Session;
+import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
 
 /*
  * Sync note - most methods will be called already synced on the environment
@@ -42,19 +43,12 @@ import cc.alcina.framework.gwt.client.util.EventCollator;
  * responsible for its own sync
  */
 public class Environment {
-	public static final transient String CONTEXT_TEST_CREDENTIALS = Environment.class
-			.getName() + ".CONTEXT_TEST_CREDENTIALS";
-
 	/*
 	 * Sent by the client to mark which environment it's communicating with.
 	 * This allows the client to switch environments after say a dev rebuild
 	 * (equal id/auth, unequal uid will force a refresh)
 	 */
 	public final String uid;
-
-	public final String id;
-
-	public final String auth;
 
 	RemoteUi ui;
 
@@ -82,22 +76,18 @@ public class Environment {
 
 	Window.Location location;
 
-	Environment(RemoteUi ui) {
+	final Credentials credentials;
+
+	Environment(RemoteUi ui, Credentials credentials) {
 		this.ui = ui;
-		uid = SEUtilities.generatePrettyUuid();
-		if (LooseContext.is(CONTEXT_TEST_CREDENTIALS)) {
-			id = "test";
-			auth = "test";
-		} else {
-			id = SEUtilities.generatePrettyUuid();
-			auth = SEUtilities.generatePrettyUuid();
-		}
+		this.credentials = credentials;
+		this.uid = SEUtilities.generatePrettyUuid();
 		this.eventCollator = new EventCollator<Object>(5, this::emitMutations);
 	}
 
-	public void applyEvent(DomEventMessage message) {
+	public void applyEvent(DomEventData eventData) {
 		runInClientFrame(
-				() -> LocalDom.pathRefRepresentations().applyEvent(message));
+				() -> LocalDom.pathRefRepresentations().applyEvent(eventData));
 	}
 
 	public void applyLocationMutation(LocationMutation locationMutation,
@@ -154,13 +144,15 @@ public class Environment {
 
 	@Override
 	public String toString() {
-		return Ax.format("env::%s [%s/%s]", uid, id, auth);
+		return Ax.format("env::%s [%s/%s]", uid, credentials.id,
+				credentials.auth);
 	}
 
 	public void validateSession(Session session,
 			boolean validateClientInstanceUid) throws Exception {
 		Preconditions.checkArgument(
-				Objects.equals(session.environmentAuth, auth), "Invalid auth");
+				Objects.equals(session.environmentAuth, credentials.auth),
+				"Invalid auth");
 		if (validateClientInstanceUid) {
 			if (!Objects.equals(session.clientInstanceUid,
 					connectedClientUid)) {
@@ -187,7 +179,7 @@ public class Environment {
 
 	private void startQueue() {
 		queue = new ClientProtocolMessageQueue();
-		String threadName = Ax.format("remcom-env-%s", id);
+		String threadName = Ax.format("remcom-env-%s", credentials.id);
 		Thread thread = new Thread(queue, threadName);
 		thread.setDaemon(true);
 		thread.start();
@@ -195,8 +187,10 @@ public class Environment {
 
 	// see class doc re sync
 	synchronized void emitMutations() {
-		queue.send(mutations);
-		mutations = null;
+		if (mutations != null) {
+			queue.send(mutations);
+			mutations = null;
+		}
 	}
 
 	void onHistoryChange(ValueChangeEvent<String> event) {

@@ -6,13 +6,14 @@ import java.util.concurrent.ConcurrentMap;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
-import cc.alcina.extras.dev.component.remote.protocol.RemoteComponentRequest.Session;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.servlet.component.remote.protocol.RemoteComponentRequest.Session;
 
 /*
  * PathrefDom DOM(s) are a server-side dom pair (local, pathref) coupled to an
@@ -58,8 +59,28 @@ public class PathrefDom {
 	}
 
 	public Environment register(RemoteUi ui) {
-		Environment environment = new Environment(ui);
-		environments.put(environment.id, environment);
+		return register(ui, Credentials.createUnique());
+	}
+
+	public Environment register(RemoteUi ui, Credentials credentials) {
+		Environment environment = new Environment(ui, credentials);
+		environments.put(credentials.id, environment);
 		return environment;
+	}
+
+	public static class Credentials {
+		public static Credentials createUnique() {
+			return new Credentials(SEUtilities.generatePrettyUuid(),
+					SEUtilities.generatePrettyUuid());
+		}
+
+		public final String id;
+
+		public final String auth;
+
+		public Credentials(String id, String auth) {
+			this.id = id;
+			this.auth = auth;
+		}
 	}
 }

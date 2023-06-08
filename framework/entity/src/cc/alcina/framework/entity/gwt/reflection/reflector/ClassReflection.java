@@ -401,8 +401,7 @@ public class ClassReflection extends ReflectionElement {
 	}
 
 	/*
-	 * Parallels cc.alcina.framework.entity.SEUtilities.
-	 * getPropertyDescriptorsSortedByField(Class<?>)
+	 * If non custom, ordering is (superclass)(fields)(subclass)(fields)
 	 */
 	class PropertyOrdering implements Comparator<PropertyReflection> {
 		private Map<String, Integer> fieldOrdinals;

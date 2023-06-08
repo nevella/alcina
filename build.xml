@@ -222,7 +222,9 @@
 				<include name="**/*.*" />
 				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
 				<!-- 14 years later - remove GWT restriction -->
+				<!--
 				<exclude name="com/google/gwt/dom/client/**/*.*" />
+				-->
 				<exclude name="org/w3c/dom/**/*.*" />
 			</fileset>
 			<fileset dir="${framework.entity.build.dir}">

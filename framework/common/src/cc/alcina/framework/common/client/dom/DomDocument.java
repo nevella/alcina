@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -245,24 +244,11 @@ public class DomDocument extends DomNode {
 		MutableDocument asMutableDocument(DomDocument document);
 	}
 
-	@Reflected
-	@Registration.Singleton
 	/*
-	 * Note that the map is not weak (so suitable only for single-doc, i.e.
-	 * GWT). JVM version uses CoreDocument.userData to avoid reference map use
+	 * GWT Document instances retain a reference to the DomDocument
 	 */
-	public static class PerDocumentSupplier {
-		private Map<Document, DomDocument> perDocument;
-
-		public PerDocumentSupplier() {
-			perDocument = new LinkedHashMap<>();
-		}
-
-		public DomDocument get(Document document) {
-			synchronized (perDocument) {
-				return perDocument.computeIfAbsent(document, DomDocument::new);
-			}
-		}
+	public interface PerDocumentSupplier {
+		public DomDocument get(Document document);
 	}
 
 	@Registration.Singleton

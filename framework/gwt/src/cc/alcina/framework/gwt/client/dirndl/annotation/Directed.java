@@ -103,7 +103,7 @@ public @interface Directed {
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Delegating {
 	}
@@ -323,7 +323,7 @@ public @interface Directed {
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Multiple {
 		Directed[] value();
@@ -375,7 +375,7 @@ public @interface Directed {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	/*
 	 * This allows resolution during render of the Transform.value property
 	 */
@@ -437,7 +437,7 @@ public @interface Directed {
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Wrap {
 		String value();

@@ -5,9 +5,8 @@ import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.ProcessingInstruction;
 
+import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
-
-import cc.alcina.extras.dev.component.remote.protocol.LocationMutation;
 
 public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	Document document;
