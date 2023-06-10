@@ -1270,6 +1270,10 @@ public class LocalDom implements ContextFrame {
 	public class PathRefRepresentations {
 		public void applyEvent(DomEventData eventData) {
 			Element elem = (Element) eventData.firstReceiver.node();
+			if (eventData.value != null) {
+				elem.implAccess().pathrefRemote().setPropertyString("value",
+						eventData.value);
+			}
 			// um, is it that easy?
 			DOM.dispatchEvent(eventData.event, elem, elem.uiObjectListener);
 		}

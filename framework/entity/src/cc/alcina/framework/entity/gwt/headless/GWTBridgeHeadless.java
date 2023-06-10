@@ -7,12 +7,17 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWTBridge;
+import com.google.gwt.i18n.client.BidiPolicy.BidiPolicyImpl;
+import com.google.gwt.i18n.client.impl.CldrImpl;
+import com.google.gwt.i18n.client.impl.LocaleInfoImpl;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.History.HistoryTokenEncoder;
 import com.google.gwt.user.client.HistoryImpl;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Window.LocationImpl;
 import com.google.gwt.user.client.impl.WindowImpl;
+import com.google.gwt.user.client.ui.impl.FocusImpl;
+import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -51,6 +56,27 @@ public class GWTBridgeHeadless extends GWTBridge {
 		}
 		if (e != null) {
 			e.printStackTrace();
+		}
+	}
+
+	@Registration(BidiPolicyImpl.class)
+	public static class BidiPolicyImplHeadless extends BidiPolicyImpl {
+		public BidiPolicyImplHeadless() {
+			super();
+		}
+	}
+
+	@Registration(CldrImpl.class)
+	public static class CldrImplHeadless extends CldrImpl {
+		public CldrImplHeadless() {
+			super();
+		}
+	}
+
+	@Registration(FocusImpl.class)
+	public static class FocusImplHeadless extends FocusImpl {
+		public FocusImplHeadless() {
+			super();
 		}
 	}
 
@@ -151,6 +177,13 @@ public class GWTBridgeHeadless extends GWTBridge {
 		}
 	}
 
+	@Registration(LocaleInfoImpl.class)
+	public static class LocaleInfoImplHeadless extends LocaleInfoImpl {
+		public LocaleInfoImplHeadless() {
+			super();
+		}
+	}
+
 	@Registration(LocationImpl.class)
 	public static class LocationImplHeadless extends LocationImpl {
 		private String hash;
@@ -239,7 +272,8 @@ public class GWTBridgeHeadless extends GWTBridge {
 		public void setHash(String hash) {
 			String old_hash = this.hash;
 			this.hash = hash;
-			if (!Objects.equals(old_hash, hash)) {
+			if (!Objects.equals(old_hash, hash) && old_hash != null) {
+				// old_hash == null -> startup, do not publish
 				Window.Location.topicHashChanged().publish(hash);
 			}
 		}
@@ -262,6 +296,13 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		public void setQueryString(String queryString) {
 			this.queryString = queryString;
+		}
+	}
+
+	@Registration(TextBoxImpl.class)
+	public static class TextBoxImplHeadless extends TextBoxImpl {
+		public TextBoxImplHeadless() {
+			super();
 		}
 	}
 
@@ -301,11 +342,17 @@ public class GWTBridgeHeadless extends GWTBridge {
 		priority = Priority.PREFERRED_LIBRARY)
 	public static class WithFlushedTransformsImpl
 			extends CommitToStorageTransformListener.WithFlushedTransforms {
+		public boolean requireNoTransforms;
+
 		@Override
 		public void call(Runnable runnable) {
 			// currently r/o
-			Preconditions.checkState(
-					TransformManager.get().getTransforms().isEmpty());
+			if (requireNoTransforms) {
+				// r/o - otherwise assume the server-hosted client can use
+				// transforms, but never commit
+				Preconditions.checkState(
+						TransformManager.get().getTransforms().isEmpty());
+			}
 			runnable.run();
 		}
 	}

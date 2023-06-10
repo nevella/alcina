@@ -334,7 +334,7 @@ function cc_alcina_framework_servlet_component_remote_RemoteComponentClient(){
     }
     var strongName;
     try {
-      strongName = '46F15BC83D1C947F3D674659966E8722';
+      strongName = '75BFA769BC1001C8A2A63A8914486898';
       var idx = strongName.indexOf(':');
       if (idx != -1) {
         softPermutationId = parseInt(strongName.substring(idx + 1), 10);

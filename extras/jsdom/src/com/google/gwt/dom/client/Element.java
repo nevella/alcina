@@ -990,6 +990,10 @@ public class Element extends Node
 		return local;
 	}
 
+	protected ElementPathref pathrefRemote() {
+		return (ElementPathref) remote();
+	}
+
 	@Override
 	protected void putRemote(ClientDomNode remote, boolean synced) {
 		if (!GWT.isScript() && GWT.isClient()) {
@@ -1151,6 +1155,10 @@ public class Element extends Node
 		@Override
 		public ElementLocal local() {
 			return Element.this.local();
+		}
+
+		public ElementPathref pathrefRemote() {
+			return Element.this.pathrefRemote();
 		}
 
 		public Node provideSelfOrAncestorLinkedToRemote() {

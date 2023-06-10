@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target({ ElementType.METHOD, ElementType.TYPE })
+@Target({ ElementType.METHOD, ElementType.TYPE, ElementType.FIELD })
 @ClientVisible
 @Resolution(
 	inheritance = { Inheritance.PROPERTY },

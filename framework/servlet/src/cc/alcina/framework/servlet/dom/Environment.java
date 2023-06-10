@@ -98,9 +98,11 @@ public class Environment {
 						locationMutation.host, locationMutation.port,
 						locationMutation.path, locationMutation.queryString);
 			}
-			if (locationMutation.hash.startsWith("#")) {
-				History.newItem(locationMutation.hash.substring(1));
-			}
+			String token = locationMutation.hash.startsWith("#")
+					? locationMutation.hash.substring(1)
+					: locationMutation.hash;
+			Ax.out("Navigate %s:: -> %s", startup ? "(startup) " : "", token);
+			History.newItem(token, !startup);
 		});
 	}
 

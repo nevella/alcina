@@ -394,6 +394,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		getScreenX();
 		getScreenY();
 		getShiftKey();
+		getCtrlKey();
 		getString();
 		getType();
 		data.toSerializableForm();

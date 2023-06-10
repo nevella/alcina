@@ -226,13 +226,9 @@ public class WidgetUtils {
 		elt.setAttribute("spellcheck", "false");
 	}
 
-	public static native boolean docHasFocus() /*-{
-    if (typeof $wnd.document.hasFocus !== "undefined") {
-      return $wnd.document.hasFocus();
-    } else {
-      return true;
-    }
-	}-*/;
+	public static boolean docHasFocus() {
+		return GWT.isClient() ? docHasFocus0() : true;
+	}
 
 	public static native boolean docIsVisible() /*-{
     if (typeof $wnd.document.hidden !== "undefined") {
@@ -1186,6 +1182,14 @@ public class WidgetUtils {
 		debugScroll(Ax.format("elt:%s", e));
 		e.scrollIntoView();
 	}
+
+	static native boolean docHasFocus0() /*-{
+    if (typeof $wnd.document.hasFocus !== "undefined") {
+      return $wnd.document.hasFocus();
+    } else {
+      return true;
+    }
+	}-*/;
 
 	// those values might be needed for non-webkit
 	@SuppressWarnings("unused")

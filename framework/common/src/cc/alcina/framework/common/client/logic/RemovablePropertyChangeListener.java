@@ -33,6 +33,7 @@ public class RemovablePropertyChangeListener
 
 	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents source,
 			Object propertyName, Consumer<PropertyChangeEvent> handler) {
+		Preconditions.checkNotNull(source);
 		this.source = source;
 		this.propertyName = PropertyEnum.asPropertyName(propertyName);
 		this.handler = handler;
@@ -85,7 +86,8 @@ public class RemovablePropertyChangeListener
 				source.removePropertyChangeListener(propertyName, this);
 			}
 			bound = false;
-			source = null;
+			// prevents subsequent rebind
+			// source = null;
 		}
 	}
 

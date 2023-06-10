@@ -45,12 +45,14 @@ public @interface PropertyOrder {
 	// PropertyEnum> - to define ordering from an enum element ordering.
 	// also add a task to validate propertyenum elements on load/refl.
 	// generation (task.ref.sign.?)
-	public Class<? extends PropertyOrder.Custom> custom() default Custom.Default.class;
+	Class<? extends PropertyOrder.Custom> custom() default Custom.Default.class;
 
-	public String[] value();
+	boolean fieldOrder() default false;
+
+	String[] value() default {};
 
 	@Reflected
-	public abstract class Custom implements Comparator<String> {
+	public static abstract class Custom implements Comparator<String> {
 		public static class Default extends PropertyOrder.Custom {
 			@Override
 			public int compare(String o1, String o2) {

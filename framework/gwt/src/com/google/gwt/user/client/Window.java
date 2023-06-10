@@ -607,8 +607,6 @@ public class Window {
 	public static class Location implements ContextFrame {
 		public static ContextProvider<Void, Location> contextProvider;
 
-		private static Topic<String> topicHashChanged = Topic.create();
-
 		/**
 		 * Assigns the window to a new URL. All GWT state will be lost.
 		 *
@@ -830,6 +828,8 @@ public class Window {
 		static Location get() {
 			return contextProvider.contextFrame();
 		}
+
+		private Topic<String> topicHashChanged = Topic.create();
 
 		private String cachedQueryString = "";
 

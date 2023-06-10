@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Document.PerDocumentSupplierGwtImpl;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.place.shared.Place;
@@ -15,6 +16,7 @@ import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.dom.DomDocument.PerDocumentSupplier;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
@@ -151,6 +153,8 @@ public abstract class Client implements ContextFrame {
 				LocalDom.initalize();
 			}
 			Document.get();
+			Registry.register().singleton(PerDocumentSupplier.class,
+					new PerDocumentSupplierGwtImpl());
 			/*
 			 * Attach non-vcs process debugging
 			 */

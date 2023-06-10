@@ -279,21 +279,13 @@ public class History implements ContextFrame {
 		}
 	}
 
-	private static String getDecodedHash() {
-		String hashToken = Window.Location.getHash();
-		if (hashToken == null || hashToken.isEmpty()) {
-			return "";
-		}
-		return get().tokenEncoder.decode(hashToken.substring(1));
-	}
-
 	// this is called from JS when the native onhashchange occurs
 	private static void onHashChanged() {
 		/*
 		 * We guard against firing events twice, some browser (e.g. safari) tend
 		 * to fire events on startup if HTML5 pushstate is used.
 		 */
-		String hashToken = getDecodedHash();
+		String hashToken = get().getDecodedHash();
 		if (!hashToken.equals(getToken())) {
 			get().token = hashToken;
 			get().historyEventSource.fireValueChangedEvent(hashToken);
@@ -310,10 +302,19 @@ public class History implements ContextFrame {
 
 	HistoryTokenEncoder tokenEncoder = GWT.create(HistoryTokenEncoder.class);
 
-	String token = getDecodedHash();
+	String token;
 
 	public History() {
 		impl = GWT.create(HistoryImpl.class);
+		token = getDecodedHash();
+	}
+
+	private String getDecodedHash() {
+		String hashToken = Window.Location.getHash();
+		if (hashToken == null || hashToken.isEmpty()) {
+			return "";
+		}
+		return tokenEncoder.decode(hashToken.substring(1));
 	}
 
 	/**

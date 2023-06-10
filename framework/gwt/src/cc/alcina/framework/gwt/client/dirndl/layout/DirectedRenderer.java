@@ -213,7 +213,7 @@ public abstract class DirectedRenderer {
 	/*
 	 * Note the difference to DirectedRenderer.Collection is really that by
 	 * default the @Directed generated for each collection element is *all* of
-	 * the incoming directed (tag, class, bindings, evetns), wheras for
+	 * the incoming directed (tag, class, bindings, events), wheras for
 	 * TransformRenderer:
 	 *
 	 * tag, cssClass are passed down

@@ -749,6 +749,12 @@ public class GwittirBridge {
 						.indexOf(o1.getPropertyName());
 				int idx2 = Arrays.asList(propertyOrder.value())
 						.indexOf(o2.getPropertyName());
+				if (propertyOrder.fieldOrder()) {
+					idx1 = classReflector.properties().indexOf(
+							classReflector.property(o1.getPropertyName()));
+					idx2 = classReflector.properties().indexOf(
+							classReflector.property(o1.getPropertyName()));
+				}
 				if (idx1 == -1) {
 					if (idx2 == -1) {
 						// fall through

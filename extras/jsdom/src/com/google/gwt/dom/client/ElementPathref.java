@@ -1,11 +1,21 @@
 package com.google.gwt.dom.client;
 
 import java.util.Map;
+import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
+/*
+ * Currently an outlier in this is support for the 'value' property - which
+ * provides a lot of basic editing support with little kit.
+ * 
+ * That support could be generalised.
+ */
 public class ElementPathref extends NodePathref implements ClientDomElement {
+	String valueProperty;
+
 	ElementPathref(Node node) {
 		super(node);
 	}
@@ -222,7 +232,11 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public String getPropertyString(String name) {
-		throw new UnsupportedOperationException();
+		if (Objects.equals(name, "value")) {
+			return valueProperty;
+		} else {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	@Override
@@ -296,16 +310,18 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public void removeAttribute(String name) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public final boolean removeClassName(String className) {
-		return false;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public final void replaceClassName(String oldClassName,
 			String newClassName) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -315,94 +331,118 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public void setAttribute(String name, String value) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setClassName(String className) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setDir(String dir) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public final void setDraggable(String draggable) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setId(String id) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setInnerHTML(String html) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setInnerText(String text) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setLang(String lang) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setNodeValue(String nodeValue) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setPropertyDouble(String name, double value) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setPropertyInt(String name, int value) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setPropertyJSO(String name, JavaScriptObject value) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setPropertyObject(String name, Object value) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setPropertyString(String name, String value) {
+		Preconditions.checkArgument(Objects.equals(name, "value"));
+		this.valueProperty = value;
 	}
 
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setScrollTop(int scrollTop) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setTabIndex(int tabIndex) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setTitle(String title) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void sinkBitlessEvent(String eventTypeName) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void sinkEvents(int eventBits) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public final void toggleClassName(String className) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

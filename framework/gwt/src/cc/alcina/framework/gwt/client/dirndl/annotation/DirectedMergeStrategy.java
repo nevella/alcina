@@ -103,7 +103,9 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 			result.add(new Delegating());
 		}
 		if (transform != null && result.isEmpty()) {
-			result.add(new Directed.Impl());
+			Directed.Impl impl = new Directed.Impl();
+			impl.setRenderer(DirectedRenderer.TransformRenderer.class);
+			result.add(impl);
 		}
 		return result;
 	}

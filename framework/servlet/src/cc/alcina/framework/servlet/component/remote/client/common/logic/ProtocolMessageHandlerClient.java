@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.remote.client.common.logic;
 
+import java.util.Objects;
+
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
@@ -71,7 +73,32 @@ public abstract class ProtocolMessageHandlerClient<PM extends ProtocolMessage> {
 				message.data.event = event.serializableForm();
 				message.data.firstReceiver = Pathref.forNode(elem);
 				event.stopPropagation();
-				event.preventDefault();
+				if (Element.is(event.getEventTarget())) {
+					Element elem = Element.as(event.getEventTarget());
+					String eventType = event.getType();
+					/*
+					 * Cancel a few events if they're in a form (assume form
+					 * auto-submit just not wanted)
+					 */
+					if (elem.asDomNode().ancestors().has("form")) {
+						if (eventType.equals("keydown")
+								&& event.getKeyCode() == 13) {
+							event.preventDefault();
+						}
+						if (eventType.equals("click")) {
+							if (!(elem.hasAttribute("href")
+									&& elem.hasTagName("a"))) {
+								event.preventDefault();
+							}
+						}
+					}
+					/*
+					 * Propagate value property changes
+					 */
+					if (Objects.equals(eventType, "change")) {
+						message.data.value = elem.getPropertyString("value");
+					}
+				}
 				ClientRpc.send(message, true);
 			}
 		}

@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
-@Target({ ElementType.METHOD, ElementType.TYPE })
+@Target({ ElementType.METHOD, ElementType.TYPE, ElementType.FIELD })
 @Resolution(
 	inheritance = { Inheritance.PROPERTY, Inheritance.ERASED_PROPERTY },
 	mergeStrategy = Display.MergeStrategy.class)

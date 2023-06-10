@@ -47,9 +47,13 @@ public class DomDocument extends DomNode {
 	}
 
 	public static DomDocument from(Document document) {
-		synchronized (DomDocument.class) {
-			if (perDocumentSupplier == null)
-				perDocumentSupplier = Registry.impl(PerDocumentSupplier.class);
+		if (perDocumentSupplier == null) {
+			synchronized (DomDocument.class) {
+				if (perDocumentSupplier == null) {
+					perDocumentSupplier = Registry
+							.impl(PerDocumentSupplier.class);
+				}
+			}
 		}
 		return perDocumentSupplier.get(document);
 	}

@@ -9,6 +9,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 public class DomEventData {
 	public Pathref firstReceiver;
 
+	public String value;
+
 	// But wait - is this serializable? Yes, it is!
 	public Event event;
 }

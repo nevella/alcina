@@ -127,6 +127,8 @@ public class ProtocolRequestHandler extends AbstractHandler {
 			}
 			servletResponse.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);
+		} catch (Throwable e) {
+			e.printStackTrace();
 		} finally {
 			LooseContext.pop();
 		}
