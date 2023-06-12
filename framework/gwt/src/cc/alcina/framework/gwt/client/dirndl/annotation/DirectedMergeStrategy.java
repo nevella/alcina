@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.annotation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
@@ -9,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMer
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
@@ -104,7 +106,19 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		}
 		if (transform != null && result.isEmpty()) {
 			Directed.Impl impl = new Directed.Impl();
-			impl.setRenderer(DirectedRenderer.TransformRenderer.class);
+			/*
+			 * if collection property, render the collection normally (the
+			 * transform will be applied to the collection elements), otherwise
+			 * use the transform renderer)
+			 */
+			boolean isCollection = reflector instanceof Property
+					&& Reflections.isAssignableFrom(Collection.class,
+							((Property) reflector).getType());
+			if (isCollection) {
+				impl.setRenderer(DirectedRenderer.ModelClass.class);
+			} else {
+				impl.setRenderer(DirectedRenderer.TransformRenderer.class);
+			}
 			result.add(impl);
 		}
 		return result;
