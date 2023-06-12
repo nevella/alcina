@@ -43,6 +43,9 @@ import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
  * responsible for its own sync
  */
 public class Environment {
+	private static final transient String CONTEXT_ENVIRONMENT = Environment.class
+			.getName() + ".CONTEXT_ENVIRONMENT";
+
 	/*
 	 * Sent by the client to mark which environment it's communicating with.
 	 * This allows the client to switch environments after say a dev rebuild
@@ -111,6 +114,13 @@ public class Environment {
 				.applyMutations(mutations, false));
 	}
 
+	/**
+	 * Executes the runnable within the environment's context
+	 */
+	public void dispatch(Runnable runnable) {
+		runInClientFrame(runnable);
+	}
+
 	public void initialiseClient(Session session) {
 		if (queue == null) {
 			startQueue();
@@ -118,6 +128,7 @@ public class Environment {
 		connectedClientUid = session.clientInstanceUid;
 		try {
 			LooseContext.push();
+			LooseContext.set(CONTEXT_ENVIRONMENT, this);
 			// the order - location, history, client, document - is necessary
 			location = Window.Location.contextProvider.createFrame(null);
 			history = History.contextProvider.createFrame(null);
@@ -158,24 +169,35 @@ public class Environment {
 		if (validateClientInstanceUid) {
 			if (!Objects.equals(session.clientInstanceUid,
 					connectedClientUid)) {
-				logger.warn("Expired client (tab) : {}",
-						session.clientInstanceUid);
+				if (connectedClientUid == null) {
+					logger.warn(
+							"Call against new (dev) server with no connected client : {}",
+							session.clientInstanceUid);
+				} else {
+					logger.warn("Expired client (tab) : {}",
+							session.clientInstanceUid);
+				}
 				throw new InvalidClientUidException();
 			}
 		}
 	}
 
 	private void runInClientFrame(Runnable runnable) {
-		try {
-			LooseContext.push();
-			Client.contextProvider.registerFrame(client);
-			History.contextProvider.registerFrame(history);
-			Window.Location.contextProvider.registerFrame(location);
-			Document.contextProvider.registerFrame(document);
+		if (LooseContext.has(CONTEXT_ENVIRONMENT)) {
 			runnable.run();
-			LocalDom.flush();
-		} finally {
-			LooseContext.pop();
+		} else {
+			try {
+				LooseContext.push();
+				LooseContext.set(CONTEXT_ENVIRONMENT, this);
+				Client.contextProvider.registerFrame(client);
+				History.contextProvider.registerFrame(history);
+				Window.Location.contextProvider.registerFrame(location);
+				Document.contextProvider.registerFrame(document);
+				runnable.run();
+				LocalDom.flush();
+			} finally {
+				LooseContext.pop();
+			}
 		}
 	}
 

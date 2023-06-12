@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.BrowserEvents;
@@ -537,8 +538,7 @@ public class InferredDomEvents {
 
 		public static final class ResizeObserver extends JavaScriptObject {
 			public static final native ResizeObserver observerFor(
-					ResizeObserved.BindingImpl resizeObserved,
-					ElementJso elt) /*-{
+					ResizeObserved.BindingImpl resizeObserved, ElementJso elt) /*-{
         var callback = $entry(function(entries, observer) {
           for ( var k in entries) {
             //there's info in the entry (a contentBox or contentRect, browser-dependent) - but not interested
@@ -570,7 +570,7 @@ public class InferredDomEvents {
 	 */
 	static abstract class EventRelativeBinding<E extends NodeEvent>
 			extends DomBinding<E> implements NativePreviewHandler {
-		static boolean mobile = BrowserMod.isMobile();
+		static boolean mobile = GWT.isClient() && BrowserMod.isMobile();
 
 		private Widget widget;
 

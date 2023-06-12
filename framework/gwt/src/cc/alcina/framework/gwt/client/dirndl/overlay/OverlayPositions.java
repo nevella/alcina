@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.overlay;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -29,7 +30,12 @@ public class OverlayPositions {
 			 * enqueue (don't mutate during event handling, since could trash
 			 * the emitting node)
 			 */
-			Client.eventBus().queued().lambda(overlay::remove).dispatch();
+			if (GWT.isClient()) {
+				Client.eventBus().queued().lambda(overlay::remove).dispatch();
+			} else {
+				// FIXME - romcom
+				overlay.remove();
+			}
 		} else {
 			throw new IllegalStateException(
 					Ax.format("Removing previously removed overlay - %s",

@@ -233,7 +233,12 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	@Override
 	public String getPropertyString(String name) {
 		if (Objects.equals(name, "value")) {
-			return valueProperty;
+			if (valueProperty != null) {
+				return valueProperty;
+			} else {
+				// FIXME - romcom - probably won't work for <textarea>, etc
+				return ((ClientDomElement) node()).getAttribute("value");
+			}
 		} else {
 			throw new UnsupportedOperationException();
 		}

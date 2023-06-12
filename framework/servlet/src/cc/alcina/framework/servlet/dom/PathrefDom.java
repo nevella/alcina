@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.dom;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
@@ -66,6 +67,11 @@ public class PathrefDom {
 		Environment environment = new Environment(ui, credentials);
 		environments.put(credentials.id, environment);
 		return environment;
+	}
+
+	public Environment singletonEnvironment() {
+		Preconditions.checkState(environments.size() == 1);
+		return environments.values().iterator().next();
 	}
 
 	public static class Credentials {

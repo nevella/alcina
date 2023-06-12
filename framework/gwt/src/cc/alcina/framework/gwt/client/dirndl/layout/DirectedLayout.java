@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 
@@ -253,6 +254,18 @@ public class DirectedLayout implements AlcinaProcess {
 	public int maxDepth = 99;
 
 	boolean checkedRecursion = false;
+
+	/**
+	 * <p>
+	 * The application may require that change listeners be dispatched in a
+	 * particular context. By default they're not (just dispatched in the
+	 * changing thread), which is fine for a single-threaded application.
+	 * 
+	 * <p>
+	 * It's assumed that the initial render is in the correct context,
+	 * mutationDispatch is only used for non-initial renders
+	 */
+	public Consumer<Runnable> mutationDispatch = Runnable::run;
 
 	// remove the root node (unbind all listeners following removal from the
 	// dom)
@@ -856,12 +869,14 @@ public class DirectedLayout implements AlcinaProcess {
 				// The input can mostly be constructed from this node (only the
 				// model differs)
 				Object newValue = evt.getNewValue();
-				RendererInput input = getResolver().layout.enqueueInput(
-						getResolver(), newValue,
-						annotationLocation.copyWithClassLocationOf(newValue),
-						null, parent);
-				input.replace = Node.this;
-				getResolver().layout.layout();
+				mutationDispatch.accept(() -> {
+					RendererInput input = getResolver().layout.enqueueInput(
+							getResolver(), newValue, annotationLocation
+									.copyWithClassLocationOf(newValue),
+							null, parent);
+					input.replace = Node.this;
+					getResolver().layout.layout();
+				});
 			}
 		}
 
