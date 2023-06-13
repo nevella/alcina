@@ -199,10 +199,10 @@ class SyncMutations {
 	private void syncTopmostMutatedIfContainedInInitialLocal() {
 		Set<MutationNode> mutationSubtreeParents = mutationNodes.values()
 				.stream().filter(MutationNode::hasRecords)
-				.filter(mn -> !mn.isParentModified())
+				.filter(mn -> !mn.provideParentModified())
 				.collect(Collectors.toSet());
 		Set<NodeJso> mutationSubtreeRoots = mutationNodes.values().stream()
-				.filter(MutationNode::isParentModified)
+				.filter(MutationNode::provideParentModified)
 				.map(MutationNode::remoteNode).collect(Collectors.toSet());
 		// there won't normally be many of these - so use a fairly inefficent
 		// (but clear) ancestry algorithm
