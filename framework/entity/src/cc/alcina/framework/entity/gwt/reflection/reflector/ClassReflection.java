@@ -262,6 +262,7 @@ public class ClassReflection extends ReflectionElement {
 		 */
 		while (cursor.getSuperclass() != null) {
 			JField[] fields = cursor.getFields();
+			int perClassIndex = 0;
 			for (int idx = 0; idx < fields.length; idx++) {
 				JField field = fields[idx];
 				/*
@@ -273,7 +274,7 @@ public class ClassReflection extends ReflectionElement {
 						continue;
 					}
 				}
-				propertyFields.add(idx, field);
+				propertyFields.add(perClassIndex++, field);
 			}
 			cursor = cursor.getSuperclass();
 		}

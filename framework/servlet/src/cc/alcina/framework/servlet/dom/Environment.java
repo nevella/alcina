@@ -28,10 +28,10 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.util.EventCollator;
-import cc.alcina.framework.servlet.component.remote.protocol.EventSystemMutation;
-import cc.alcina.framework.servlet.component.remote.protocol.ProtocolMessage;
-import cc.alcina.framework.servlet.component.remote.protocol.ProtocolMessage.InvalidClientUidException;
-import cc.alcina.framework.servlet.component.remote.protocol.RemoteComponentRequest.Session;
+import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
+import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage;
+import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage.InvalidClientUidException;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest.Session;
 import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
 
 /*

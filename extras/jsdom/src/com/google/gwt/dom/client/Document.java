@@ -77,6 +77,8 @@ public class Document extends Node
 
 	public final DomDocument domDocument;
 
+	public boolean resolveSvgStyles = false;
+
 	protected Document(RemoteType remoteType) {
 		this.local = new DocumentLocal();
 		this.local.document = this;

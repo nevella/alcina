@@ -586,9 +586,8 @@ public abstract class JClassType<T extends Type>
 					.filter(f -> !f.getName().contains("$"))
 					.map(f -> new JField(typeOracle, f))
 					.collect(Collectors.toList());
-			if (TypeOracle.reverseFieldOrder) {
-				// android
-				Collections.reverse(fields);
+			if (TypeOracle.customFieldOrder != null) {
+				Collections.sort(fields, new ExternalOrderFieldComparator());
 			}
 			methods = Arrays.stream(clazz.getDeclaredMethods())
 					.map(m -> new JMethod(typeOracle, m))
@@ -652,6 +651,28 @@ public abstract class JClassType<T extends Type>
 			}
 			// only allow exact (not covariant) matches
 			return m1.getReturnType() == m2.getReturnType();
+		}
+
+		class ExternalOrderFieldComparator implements Comparator<JField> {
+			private List<String> nameOrder;
+
+			ExternalOrderFieldComparator() {
+				this.nameOrder = TypeOracle.customFieldOrder
+						.fieldOrder(getQualifiedBinaryName());
+			}
+
+			@Override
+			public int compare(JField o1, JField o2) {
+				if (nameOrder == null) {
+					return 0;
+				}
+				int ord1 = nameOrder.indexOf(o1.getName());
+				int ord2 = nameOrder.indexOf(o2.getName());
+				if (ord1 == -1 || ord2 == -1) {
+					return 0;
+				}
+				return ord1 - ord2;
+			}
 		}
 	}
 

@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.servlet.component.remote.protocol.RemoteComponentRequest.Session;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest.Session;
 
 /*
  * PathrefDom DOM(s) are a server-side dom pair (local, pathref) coupled to an

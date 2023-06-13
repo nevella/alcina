@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.gwt.dom.client.BrowserEvents;
-import com.google.gwt.dom.client.DomState;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.LocalDom;
@@ -199,14 +199,15 @@ public class LogStoreInterceptors {
 					if (!e.getId().isEmpty()) {
 						parts.add("#" + e.getId());
 					}
+					boolean resolveSvgStyles = Document.get().resolveSvgStyles;
 					try {
-						DomState.domResolveSvgStyles = true;
+						Document.get().resolveSvgStyles = true;
 						String cn = e.getClassName();
 						if (!cn.isEmpty()) {
 							parts.add("." + cn);
 						}
 					} finally {
-						DomState.domResolveSvgStyles = false;
+						Document.get().resolveSvgStyles = resolveSvgStyles;
 					}
 				}
 				tags.add(CommonUtils.join(parts, ""));
