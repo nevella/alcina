@@ -76,7 +76,7 @@ public abstract class UserStoryTeller
 	@Override
 	public void topicPublished(ClientLogRecord message) {
 		persistLocal();
-		seriesTimer.triggerEventOccurred(message);
+		seriesTimer.eventOccurred(message);
 	}
 
 	private void ensurePublishing(String trigger) {
