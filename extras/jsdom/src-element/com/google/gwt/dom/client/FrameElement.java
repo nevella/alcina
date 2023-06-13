@@ -77,7 +77,7 @@ public class FrameElement extends Element {
 	}
 
 	public final Document getContentDocument() {
-		return LocalDom.nodeFor(getContentDocument0(typedRemote()));
+		return LocalDom.nodeFor(getContentDocument0(jsoRemote()));
 	}
 
 	/**
@@ -285,8 +285,8 @@ public class FrameElement extends Element {
 	 * The document this frame contains, if there is any and it is available, or
 	 * null otherwise.
 	 */
-	private final native DocumentRemote
-			getContentDocument0(ElementRemote element) /*-{
+	private final native DocumentJso
+			getContentDocument0(ElementJso element) /*-{
 														// This is known to work on all modern browsers.
 														return this.contentWindow.document;
 														}-*/;

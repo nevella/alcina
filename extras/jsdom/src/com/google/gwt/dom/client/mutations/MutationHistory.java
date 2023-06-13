@@ -6,8 +6,8 @@ import java.util.logging.Level;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.ClientDomNode;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.ClientNode;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
@@ -18,7 +18,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
-import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -136,7 +135,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 			issue.append("-----------------------------------");
 			issue.append("");
 			if (currentMutations != null) {
-				ClientNode triggeringRemote = equivalenceTest.firstInequivalent.right.domNode;
+				ClientDomNode triggeringRemote = equivalenceTest.firstInequivalent.right.remoteNode;
 				MutationNode mutationNodeWithRecords = currentMutations.mutationNodes
 						.get(triggeringRemote);
 				MutationRecord mutationRecord = mutationNodeWithRecords.records

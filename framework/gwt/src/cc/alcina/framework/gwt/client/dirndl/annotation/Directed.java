@@ -41,7 +41,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 // Not inherited - annotation resolution uses merging algorithm which would
 // conflict
 // @Inherited
@@ -103,7 +103,7 @@ public @interface Directed {
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Delegating {
 	}
@@ -323,7 +323,7 @@ public @interface Directed {
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Multiple {
 		Directed[] value();
@@ -375,7 +375,7 @@ public @interface Directed {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	/*
 	 * This allows resolution during render of the Transform.value property
 	 */
@@ -437,7 +437,7 @@ public @interface Directed {
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Wrap {
 		String value();

@@ -55,45 +55,37 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 @ClientVisible
 @Target({ ElementType.TYPE })
 public @interface Bean {
-	/**
-	 * <p>
-	 * Adds to @Bean by specifying that all non-private transient fields should
-	 * be modelled as properties.
-	 * 
-	 * <p>
-	 * See the {@link cc.alcina.framework.common.client.reflection reflection
-	 * spec}
-	 * 
-	 */
-	@Retention(RetentionPolicy.RUNTIME)
-	@Inherited
-	@Documented
-	@Target({ ElementType.TYPE })
-	public @interface Fields {
-	}
+	PropertySource value() default PropertySource.BEAN_METHODS;
 
 	/**
-	 * <p>
-	 * Adds to @Bean by specifying that all non-private transient final fields
-	 * should be modelled as read-only properties.
+	 * See the 'Beans 1x5 Manifesto' the
+	 * {@link cc.alcina.framework.common.client.reflection reflection spec} for
+	 * the reasoning behind these options (rather than just the Java Beans spec
+	 * variant, BEAN_METHODS)
 	 * 
-	 * <p>
-	 * See the {@link cc.alcina.framework.common.client.reflection reflection
-	 * spec}
+	 * FIXME - beans1x5 - check transient attr on field is respected
 	 * 
+	 * @author nick@alcina.cc
+	 *
 	 */
-	@Retention(RetentionPolicy.RUNTIME)
-	@Inherited
-	@Documented
-	@Target({ ElementType.TYPE })
-	public @interface ImmutableFields {
-	}
-
-	public static class Support {
-		public static boolean isIntrospectable(Class clazz) {
-			ClassReflector reflector = Reflections.at(clazz);
-			return reflector.has(Bean.class) || reflector.has(Bean.Fields.class)
-					|| reflector.has(Bean.ImmutableFields.class);
-		}
+	@Reflected
+	public enum PropertySource {
+		/**
+		 * All bean methods (getX/setX/isX with appropriate signatures) should
+		 * be modelled as properties
+		 */
+		BEAN_METHODS,
+		/**
+		 * All non-transient fields with access level &gt;= package should be
+		 * modelled as properties (in addition to properties derived from
+		 * BEAN_METHODS)
+		 */
+		FIELDS,
+		/**
+		 * All non-transient final fields with access level &gt;= package should
+		 * be modelled as read-only properties (in addition to properties
+		 * derived from BEAN_METHODS)
+		 */
+		IMMUTABLE_FIELDS;
 	}
 }

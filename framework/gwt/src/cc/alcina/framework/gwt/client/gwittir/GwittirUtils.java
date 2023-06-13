@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
@@ -124,7 +125,7 @@ public class GwittirUtils {
 	}
 
 	public static boolean isIntrospectable(Class clazz) {
-		return Bean.Support.isIntrospectable(clazz);
+		return Reflections.at(clazz).has(Bean.class);
 	}
 
 	public static void refreshAllTextBoxes(Binding binding) {

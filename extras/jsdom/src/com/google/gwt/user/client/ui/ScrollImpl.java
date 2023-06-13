@@ -19,7 +19,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 
 /**
  * Implementation of scrolling behavior.
@@ -84,10 +84,10 @@ class ScrollImpl {
 	 * @return true if the direction is RTL, false if LTR
 	 */
 	public boolean isRtl(Element scrollable) {
-		return isRtl0(scrollable.implAccess().ensureRemote());
+		return isRtl0(scrollable.implAccess().ensureJsoRemote());
 	}
 
-	private native boolean isRtl0(ElementRemote scrollable) /*-{
+	private native boolean isRtl0(ElementJso scrollable) /*-{
 															var computedStyle = $doc.defaultView.getComputedStyle(scrollable, null);
 															return computedStyle.getPropertyValue('direction') == 'rtl';
 															}-*/;
@@ -143,8 +143,8 @@ class ScrollImpl {
 
 		@Override
 		public native void initialize(Element scrollable, Element container) /*-{
-									var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::typedRemote()();
-									var containerRemote = container.@com.google.gwt.dom.client.Element::typedRemote()();
+									var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::jsoRemote()();
+									var containerRemote = container.@com.google.gwt.dom.client.Element::jsoRemote()();
 									// Remember the last scroll position.
 									scrollableRemote.__lastScrollTop = scrollableRemote.__lastScrollLeft = 0;
 									scrollableRemote.attachEvent('onscroll',
@@ -162,7 +162,7 @@ class ScrollImpl {
 
 		@Override
 		public native boolean isRtl(Element scrollable) /*-{
-														var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::typedRemote()();
+														var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::jsoRemote()();
 														return scrollableRemote.currentStyle.direction == 'rtl';
 														}-*/;
 	}

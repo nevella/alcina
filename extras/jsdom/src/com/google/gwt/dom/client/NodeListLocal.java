@@ -3,7 +3,7 @@ package com.google.gwt.dom.client;
 import java.util.List;
 import java.util.stream.Stream;
 
-class NodeListLocal<T extends Node> implements DomNodeList<T> {
+class NodeListLocal<T extends Node> implements ClientDomNodeList<T> {
 	private List<NodeLocal> nodes;
 
 	NodeListLocal(List<NodeLocal> nodes) {
@@ -30,6 +30,6 @@ class NodeListLocal<T extends Node> implements DomNodeList<T> {
 
 	@Override
 	public Stream<T> stream() {
-		return DomNodeListStatic.stream0(this);
+		return ClientDomNodeListStatic.stream0(this);
 	}
 }

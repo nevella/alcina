@@ -36,6 +36,7 @@ import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetada
  */
 /**
  *
+ *
  * @author Nick Reddel
  */
 public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
@@ -108,11 +109,16 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 			ClassMetadata found) {
 		RegistryScannerMetadata out = createMetadata(className, found);
 		clazz = maybeNormaliseClass(clazz);
-		// No need for abstract classes/interfaces because, although
-		// @Registration annotations on those are definitely valid,
-		// they're supplied to client code via resolution of concrete
-		// classes. Non-public ... not so sure. But certainly client code can't
-		// currently instantiate objects without a public no-args constructor
+		/*
+		 * No need for abstract classes/interfaces because, although
+		 * Registration annotations on those are definitely valid, they're
+		 * supplied to client code via resolution of concrete classes.
+		 * 
+		 * Non-public ... tricky choice with beans 1x5 (and movement away from
+		 * 'public') . But given any registered classes must have accessible
+		 * public methods - except in the rare case that everything registered
+		 * (and the consumer) is in the package - sticking with public
+		 */
 		if (!Modifier.isPublic(clazz.getModifiers())
 				|| Modifier.isAbstract(clazz.getModifiers())
 				|| clazz.isInterface()) {

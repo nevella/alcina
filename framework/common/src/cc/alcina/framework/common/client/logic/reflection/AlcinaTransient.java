@@ -29,7 +29,8 @@ import cc.alcina.framework.common.client.util.LooseContext;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target({ ElementType.METHOD })
+// where transience is simple, just use the java keyword 'transient' on a field
+@Target({ ElementType.METHOD, ElementType.FIELD })
 @ClientVisible
 public @interface AlcinaTransient {
 	TransienceContext[] unless() default {};

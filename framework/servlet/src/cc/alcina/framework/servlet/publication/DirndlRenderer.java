@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
@@ -13,7 +15,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.entity.impl.DocumentContextProviderImpl;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -67,7 +68,7 @@ public class DirndlRenderer {
 	private <T> T render(Supplier<T> supplier) {
 		try {
 			LooseContext.push();
-			DocumentContextProviderImpl.get().registerContextFrame();
+			Document.contextProvider.createFrame(RemoteType.NONE);
 			return supplier.get();
 		} finally {
 			LooseContext.pop();

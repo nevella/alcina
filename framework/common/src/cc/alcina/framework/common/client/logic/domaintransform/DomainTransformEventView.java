@@ -42,6 +42,12 @@ public class DomainTransformEventView extends DomainTransformEvent
 			PropertyChangeListener l) {
 	}
 
+	@Override
+	public void firePropertyChange(String propertyName, Object oldValue,
+			Object newValue) {
+		// NOOP
+	}
+
 	@Display(orderingHint = 1)
 	@Transient
 	public long getId() {
@@ -81,11 +87,6 @@ public class DomainTransformEventView extends DomainTransformEvent
 	}
 
 	@Override
-	public PropertyChangeListener[] propertyChangeListeners() {
-		return null;
-	}
-
-	@Override
 	@Display(name = "Property", orderingHint = 20)
 	public String getPropertyName() {
 		return super.getPropertyName();
@@ -118,6 +119,11 @@ public class DomainTransformEventView extends DomainTransformEvent
 	@Display(name = "User name", orderingHint = 6)
 	public String getUserName() {
 		return this.userName;
+	}
+
+	@Override
+	public PropertyChangeListener[] propertyChangeListeners() {
+		return null;
 	}
 
 	@Override

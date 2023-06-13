@@ -64,6 +64,14 @@ class ReachabilityData {
 
 	static Class<? extends ReachabilityLinkerPeer> linkerPeerClass;
 
+	public static <T> T newInstance(Class<? extends T> clazz) {
+		try {
+			return clazz.getConstructor().newInstance();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	private static Set<JClassType> computeImplementations(
 			JTypeParameter typeParameter,
 			Multiset<JClassType, Set<JClassType>> subtypes) {
@@ -482,15 +490,6 @@ class ReachabilityData {
 
 		Category category;
 
-		enum Category {
-			CODE, REGISTRY, RPC, HIERARCHY, EXPLICIT_PERMISSION
-		}
-
-		@Override
-		public String toString() {
-			return reason;
-		}
-
 		Reason() {
 		}
 
@@ -517,6 +516,11 @@ class ReachabilityData {
 		}
 
 		@Override
+		public int compareTo(Reason o) {
+			return reason.compareTo(o.reason);
+		}
+
+		@Override
 		public boolean equals(Object obj) {
 			return Objects.equals(reason, ((Reason) obj).reason);
 		}
@@ -527,8 +531,12 @@ class ReachabilityData {
 		}
 
 		@Override
-		public int compareTo(Reason o) {
-			return reason.compareTo(o.reason);
+		public String toString() {
+			return reason;
+		}
+
+		enum Category {
+			CODE, REGISTRY, RPC, HIERARCHY, EXPLICIT_PERMISSION
 		}
 	}
 
@@ -595,16 +603,6 @@ class ReachabilityData {
 					.equals(qualifiedSourceName);
 		}
 
-		@Override
-		public int hashCode() {
-			return qualifiedSourceName.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return qualifiedSourceName;
-		}
-
 		public Class<?> getType() {
 			if (clazz == null) {
 				try {
@@ -616,8 +614,18 @@ class ReachabilityData {
 			return clazz;
 		}
 
+		@Override
+		public int hashCode() {
+			return qualifiedSourceName.hashCode();
+		}
+
 		public boolean matchesClass(Class clazz) {
 			return qualifiedSourceName.equals(clazz.getCanonicalName());
+		}
+
+		@Override
+		public String toString() {
+			return qualifiedSourceName;
 		}
 	}
 
@@ -626,15 +634,7 @@ class ReachabilityData {
 
 		List<Type> typeAndSuperTypes;
 
-		Stream<Type> typeAndSuperTypes() {
-			return typeAndSuperTypes.stream();
-		}
-
 		List<Type> subtypes;
-
-		public Stream<Type> subtypes() {
-			return this.subtypes.stream();
-		}
 
 		/*
 		 * Types which are either arguments or parameterized type arguments of
@@ -669,11 +669,24 @@ class ReachabilityData {
 			this.rpcSerializableTypes = asList(classType, rpcSerializableTypes);
 		}
 
+		public Stream<Type> subtypes() {
+			return this.subtypes.stream();
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Hieararchy: %s", type);
+		}
+
 		private List<Type> asList(JClassType classType,
 				Multiset<JClassType, Set<JClassType>> associated) {
 			return associated.containsKey(classType) ? associated.get(classType)
 					.stream().map(Type::get).collect(Collectors.toList())
 					: new ArrayList<>();
+		}
+
+		Stream<Type> typeAndSuperTypes() {
+			return typeAndSuperTypes.stream();
 		}
 	}
 
@@ -722,6 +735,11 @@ class ReachabilityData {
 
 		transient Map<Reason, TypesReason> byReason = new LinkedHashMap<>();
 
+		public void sort() {
+			Collections.sort(typesReasons);
+			typesReasons.forEach(tr -> Collections.sort(tr.types));
+		}
+
 		void add(Reason reason, Type type) {
 			TypesReason typesReason = byReason.get(reason);
 			if (typesReason == null) {
@@ -735,19 +753,6 @@ class ReachabilityData {
 
 		void generateLookup() {
 			typesReasons.forEach(tr -> byReason.put(tr.reason, tr));
-		}
-
-		public void sort() {
-			Collections.sort(typesReasons);
-			typesReasons.forEach(tr -> Collections.sort(tr.types));
-		}
-	}
-
-	public static <T> T newInstance(Class<? extends T> clazz) {
-		try {
-			return clazz.getConstructor().newInstance();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 	}
 }

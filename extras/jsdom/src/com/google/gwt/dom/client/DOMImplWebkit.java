@@ -42,7 +42,7 @@ class DOMImplWebkit extends DOMImplStandardBase {
 	 * parent of the Text_Dom Node_Dom.
 	 */
 	@Override
-	public native EventTarget eventGetTarget(NativeEvent evt) /*-{
+	public native EventTarget eventGetTarget(NativeEventJso evt) /*-{
     var target = evt.target;
     if (target && target.nodeType == 3) {
       target = target.parentNode;
@@ -56,7 +56,7 @@ class DOMImplWebkit extends DOMImplStandardBase {
 	 * attribute to make an Element_Dom draggable.
 	 */
 	@Override
-	public void setDraggable(ElementRemote elem, String draggable) {
+	public void setDraggable(ElementJso elem, String draggable) {
 		super.setDraggable(elem, draggable);
 		if ("true".equals(draggable)) {
 			elem.getStyle().setProperty("webkitUserDrag", "Element_Dom");
@@ -66,7 +66,7 @@ class DOMImplWebkit extends DOMImplStandardBase {
 	}
 
 	@Override
-	Element getLegacyDocumentScrollingElement(DocumentRemote doc) {
+	Element getLegacyDocumentScrollingElement(DocumentJso doc) {
 		// Old WebKit needs body.scrollLeft in both quirks mode and strict mode.
 		return doc.getBody();
 	}

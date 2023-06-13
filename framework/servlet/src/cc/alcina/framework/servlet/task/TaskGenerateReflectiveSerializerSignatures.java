@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassMetadata;
@@ -248,11 +249,13 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 		this.signature = sha1;
 		String key = Ax.format("%s::%s",
 				ReflectiveSerializableSignatures.class.getName(), sha1);
-		MethodContext.instance().withRootPermissions(true).run(() -> {
-			UserProperty.ensure(key).domain().ensurePopulated()
-					.setValue(signaturesBytes);
-			Transaction.commit();
-		});
+		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
+			MethodContext.instance().withRootPermissions(true).run(() -> {
+				UserProperty.ensure(key).domain().ensurePopulated()
+						.setValue(signaturesBytes);
+				Transaction.commit();
+			});
+		}
 		logger.info(
 				"ReflectiveSerializableSignatures serializedDefaults signature: ({}) : {} ",
 				signatures.classNameDefaultSerializedForms.size(), sha1);

@@ -109,7 +109,7 @@ public class LabelElement extends Element {
 		ensureRemoteCheck();
 		if ("htmlFor".equals(name)) {
 			if (linkedToRemote()) {
-				return typedRemote().getPropertyString(name);
+				return jsoRemote().getPropertyString(name);
 			} else {
 				return getAttribute("for");
 			}

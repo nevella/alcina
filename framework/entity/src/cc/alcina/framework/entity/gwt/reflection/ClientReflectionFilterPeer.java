@@ -22,10 +22,6 @@ public interface ClientReflectionFilterPeer {
 		return true;
 	}
 
-	/*
-	 * Normally, use reachability. Returning non-null (generally fixing dev
-	 * relection issues) is a temporary fix
-	 */
 	default Boolean emitType(JClassType type, String moduleName) {
 		return null;
 	}

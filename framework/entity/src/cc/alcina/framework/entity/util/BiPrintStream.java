@@ -19,6 +19,12 @@ public class BiPrintStream extends PrintStream {
 
 	private PrintStream[] restoreStreams = null;
 
+	/*
+	 * The ignore parameter is ignored by this class (it's just to make the
+	 * super constructor happy)
+	 * 
+	 * FIXME - clean - should be able to remove
+	 */
 	public BiPrintStream(OutputStream ignore) {
 		super(ignore);
 	}

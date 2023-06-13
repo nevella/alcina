@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class DomDispatchLocal implements IDomDispatch {
+public class DomDispatchLocal implements DomDispatchContract {
 	@Override
 	public void buttonClick(ButtonElement button) {
 		throw new UnsupportedOperationException();

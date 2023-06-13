@@ -142,6 +142,8 @@ public class FormModel extends Model
 					.copy();
 			categoryNamePlace.nodeName = null;
 			categoryNamePlace.go();
+		} else {
+			event.getContext().bubble();
 		}
 	}
 

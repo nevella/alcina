@@ -369,7 +369,8 @@ function simpleEscape(originalString) {
 
 function tryConnectingToPlugin(sessionId, url) {
   // Note that the order is important
-  var pluginFinders = [findPluginXPCOM, findPluginObject, findPluginEmbed, findPluginJsCodeServer];
+  //var pluginFinders = [findPluginXPCOM, findPluginObject, findPluginEmbed, findPluginJsCodeServer];
+  var pluginFinders = [ findPluginJsCodeServer];
   var codeServer = getCodeServer();
   var plugin = null;
   for (var i = 0; i < pluginFinders.length; ++i) {
@@ -418,15 +419,27 @@ function gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePro
   
   doBrowserSpecificFixes();
 
+/*
   if (!findPluginXPCOM()) {
     embedPlugin();
   }
+*/
 
   var topWin = window.top;
+  try{
+      var test = !topWin.__gwt_SessionID;
+      if(test){
+        //force non-elision
+        var test = window.name;
+      }
+  }catch(e){
+      //top may not be accessible from this window/frame
+      topWin = window.parent
+  }
+
   if (!topWin.__gwt_SessionID) {
     topWin.__gwt_SessionID = generateSessionId();
   }
-
   var plugin = tryConnectingToPlugin(topWin.__gwt_SessionID, topWin.location.href);
   if (plugin == null) {
     loadIframe("http://www.gwtproject.org/missing-plugin/");
@@ -613,181 +626,182 @@ gwt_hm_JavaObject.create = function(plugin, id) {
 }
 
 class gwt_hm_ScriptableInstance {
-    javaObjects = new Map();
-    javaObjectsToFree = new Set();
-    localObjects = new gwt_hm_LocalObjectTable();
-    classes = [];
-    channel;
-    constructor() {}
-    init(win) {
-        this.win = win;
-        return true;
-    }
-    connect(url, sessionId, codeServer, moduleName,
-        hostedHtmlVersion, codeServerWs) {
-        this.url = url;
-        this.sessionId = sessionId;
-        this.codeServer = codeServer;
-        this.codeServerWs = codeServerWs;
-        this.moduleName = moduleName;
-        this.hostedHtmlVersion = hostedHtmlVersion;
-        this.channel = new gwt_hm_HostChannel();
-        var idx = codeServer.indexOf(":");
-        var host = codeServer.substring(0, idx);
-        var port = parseInt(codeServer.substring(idx + 1));
-        this.doConnect(host, port, codeServerWs, moduleName);
+	javaObjects = new Map();
+	javaObjectsToFree = new Set();
+	localObjects = new gwt_hm_LocalObjectTable();
+	classes = [];
+	channel;
+	constructor() { }
+	init(win) {
+		this.win = win;
+		return true;
+	}
+	connect(url, sessionId, codeServer, moduleName,
+		hostedHtmlVersion, codeServerWs) {
+		this.url = url;
+		this.sessionId = sessionId;
+		this.codeServer = codeServer;
+		this.codeServerWs = codeServerWs;
+		this.moduleName = moduleName;
+		this.hostedHtmlVersion = hostedHtmlVersion;
+		this.channel = new gwt_hm_HostChannel();
+		var idx = codeServer.indexOf(":");
+		var host = codeServer.substring(0, idx);
+		var port = parseInt(codeServer.substring(idx + 1));
+		this.doConnect(host, port, codeServerWs, moduleName);
 
-    }
-    async doConnect(host, port, codeServerWs, moduleName) {
-        await this.channel.connectToHost(host, port, codeServerWs, moduleName);
-        if (!this.channel.init(this, gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION,
-                gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION, this.hostedHtmlVersion)) {
-            return false;
-        }
-        gwt_hm_LoadModuleMessage.send(this.channel, this.url, "", this.sessionId,
-            this.moduleName, window.navigator.userAgent, this);
-    }
-    loadJsni(channel, js) {
-        window.eval(js);
-    }
-    invoke(channel, _thisRef,
-        methodName, numArgs, args) {
-        var retValue = {
-            value: null,
-            exception: false
-        };
-        try {
-            var thisRef = this.resolveLocal(_thisRef);
-            //            console.log(thisRef);
-            thisRef = (thisRef) ? thisRef : this.win;
-            var varArgs = [];
-            for (var idx = 0; idx < numArgs; idx++) {
-                varArgs.push(this.resolveLocal(args[idx]));
-            }
-            var ret = this.win[methodName].apply(thisRef, varArgs);
-            retValue.value = this.getAsValue(ret);
-        } catch (e) {
-            console.warn(e);
-            retValue.value = this.getAsValue(e.toString());
-            retValue.exception = true;
-        }
-        return retValue;
-    }
-    sendFreeValues(channel) {
-        if (this.javaObjectsToFree.size) {
-            var ids = [];
-            for (let item of ids) {
-                ids.push(item);
-            }
-            if (gwt_hm_ServerMethods.freeJava(channel, this, this.javaObjectsToFree.size, ids)) {
-                this.javaObjectsToFree.clear();
-            }
-        }
-    }
-    //free js object refs
-    freeValue(idCount, ids) {
-        for (var idx = 0; idx < idCount; idx++) {
-            this.localObjects.setFree(ids[idx]);
-        }
-    }
-    getAsValue(value) {
-        var scriptInstance = this;
-        var val = new gwt_hm_Value();
-        var unwrapJava = true;
-        if (value === undefined) {
-            val.setUndefined();
-        } else if (value === null) {
-            val.setNull();
-        } else if (typeof value == "boolean") {
-            val.setBoolean(value);
-        } else if (Number.isInteger(value)) {
-            val.setInt(value);
-        } else if (typeof value == "number") {
-            val.setDouble(value);
-        } else if (typeof value == "string") {
-            val.setString(value);
-        } else if (typeof value == "object" || typeof value == "function") {
-            if (unwrapJava && gwt_hm_JavaObject.isInstance(value)) {
-                val.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(value));
-            } else {
-                val.setJsObjectId(scriptInstance.getLocalObjectRef(value));
-            }
-        } else {
-            throw "Unsupported NPVariant type " + val;
-        }
-        return val;
-    }
-    getLocalObjectRef(obj) {
-        return this.localObjects.ensureObjectRef(obj);
-    }
-    resolveLocal(val) {
-        switch (val.type) {
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
-                return val.getBoolean()
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-                return val.getByte();
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-                return val.getChar();
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-                return val.getDouble();
-            case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
-                return val.getFloat();
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-                return val.getInt();
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-                return val.getLong();
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                return val.getShort();
-            case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
-                return null;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
-                return val.getString();
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
-                var id = val.getJavaObjectId();
-                if (!this.javaObjects.has(id)) {
-                    this.javaObjects.set(id, gwt_hm_JavaObject.create(this, id));
-                }
-                return this.javaObjects.get(id);
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
-                return this.localObjects.getById(val.getJsObjectId());
-            case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
-                return undefined
-            default:
-                throw "Unknown type";
-        }
-    }
-    javaObjectInvoke(javaThisId, dispId, args, numArgs) {
-        var varArgs = [];
-        for (var idx = 0; idx < numArgs; idx++) {
-            varArgs.push(this.getAsValue(args[idx]));
-        }
-        var javaThisValue = new gwt_hm_Value();
-        javaThisValue.setJavaObjectId(javaThisId);
-        gwt_hm_InvokeMessage.send(this.channel, javaThisValue, dispId, numArgs, varArgs);
-        var ret = this.channel.reactToMessagesWhileWaitingForReturn(this);
-        var retArr = [];
-        retArr.push(ret.isException);
-        if (ret.isException) {
-            var debug = 3;
-        }
-        retArr.push(this.resolveLocal(ret.retValue));
-        return retArr;
-    }
-    javaObjectSet(objectId, dispId, value) {
-        var ret = gwt_hm_ServerMethods.setProperty(this.channel, this, objectId, dispId, this.getAsValue(value));
-        if (ret.isException) {
-            //tostring
-            throw ret.retValue.toString();
-        }
-    }
-    javaObjectGet(objectId, dispId) {
-        var ret = gwt_hm_ServerMethods.getProperty(this.channel, this, objectId, dispId);
-        if (ret.isException) {
-            //tostring
-            throw ret.retValue.toString();
-        }
-        return this.resolveLocal(ret.retValue);
-    }
+	}
+	async doConnect(host, port, codeServerWs, moduleName) {
+		await this.channel.connectToHost(host, port, codeServerWs, moduleName);
+		if (!this.channel.init(this, gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION,
+			gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION, this.hostedHtmlVersion)) {
+			return false;
+		}
+		gwt_hm_LoadModuleMessage.send(this.channel, this.url, "", this.sessionId,
+			this.moduleName, window.navigator.userAgent, this);
+	}
+	loadJsni(channel, js) {
+		window.eval(js);
+	}
+	invoke(channel, _thisRef,
+		methodName, numArgs, args) {
+		var retValue = {
+			value: null,
+			exception: false
+		};
+		try {
+			var thisRef = this.resolveLocal(_thisRef);
+			//            console.log(thisRef);
+			thisRef = (thisRef) ? thisRef : this.win;
+			var varArgs = [];
+			for (var idx = 0; idx < numArgs; idx++) {
+				varArgs.push(this.resolveLocal(args[idx]));
+			}
+			var ret = this.win[methodName].apply(thisRef, varArgs);
+			retValue.value = this.getAsValue(ret);
+		} catch (e) {
+			console.warn(e);
+			retValue.value = this.getAsValue(e.toString());
+			retValue.exception = true;
+		}
+		return retValue;
+	}
+	sendFreeValues(channel) {
+		if (this.javaObjectsToFree.size) {
+			var ids = [];
+			for (let item of ids) {
+				ids.push(item);
+			}
+			if (gwt_hm_ServerMethods.freeJava(channel, this, this.javaObjectsToFree.size, ids)) {
+				this.javaObjectsToFree.clear();
+			}
+		}
+	}
+	//free js object refs
+	freeValue(idCount, ids) {
+		for (var idx = 0; idx < idCount; idx++) {
+			this.localObjects.setFree(ids[idx]);
+		}
+	}
+	getAsValue(value) {
+		var scriptInstance = this;
+		var val = new gwt_hm_Value();
+		var unwrapJava = true;
+		if (value === undefined) {
+			val.setUndefined();
+		} else if (value === null) {
+			val.setNull();
+		} else if (typeof value == "boolean") {
+			val.setBoolean(value);
+		} else if (Number.isInteger(value)) {
+			val.setInt(value);
+		} else if (typeof value == "number") {
+			val.setDouble(value);
+		} else if (typeof value == "string") {
+			val.setString(value);
+		} else if (typeof value == "object" || typeof value == "function") {
+			if (unwrapJava && gwt_hm_JavaObject.isInstance(value)) {
+				val.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(value));
+			} else {
+				val.setJsObjectId(scriptInstance.getLocalObjectRef(value));
+			}
+		} else {
+			throw "Unsupported NPVariant type " + val;
+		}
+		return val;
+	}
+	getLocalObjectRef(obj) {
+		return this.localObjects.ensureObjectRef(obj);
+	}
+	resolveLocal(val) {
+		switch (val.type) {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
+				return val.getBoolean()
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+				return val.getByte();
+			case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+				return val.getChar();
+			case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+				return val.getDouble();
+			case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
+				return val.getFloat();
+			case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+				return val.getInt();
+			case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+				return val.getLong();
+			case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+				return val.getShort();
+			case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
+				return null;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
+				return val.getString();
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
+				var id = val.getJavaObjectId();
+				if (!this.javaObjects.has(id)) {
+					this.javaObjects.set(id, gwt_hm_JavaObject.create(this, id));
+				}
+				return this.javaObjects.get(id);
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
+				return this.localObjects.getById(val.getJsObjectId());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
+				return undefined
+			default:
+				throw "Unknown type";
+		}
+	}
+	javaObjectInvoke(javaThisId, dispId, args, numArgs) {
+		var varArgs = [];
+		for (var idx = 0; idx < numArgs; idx++) {
+			varArgs.push(this.getAsValue(args[idx]));
+		}
+		var javaThisValue = new gwt_hm_Value();
+		javaThisValue.setJavaObjectId(javaThisId);
+		gwt_hm_InvokeMessage.send(this.channel, javaThisValue, dispId, numArgs, varArgs);
+		var ret = this.channel.reactToMessagesWhileWaitingForReturn(this);
+		var retArr = [];
+		if (ret == null) {
+			//connection closed
+			return 	retArr;
+		}
+		retArr.push(ret.isException);
+		retArr.push(this.resolveLocal(ret.retValue));
+		return retArr;
+	}
+	javaObjectSet(objectId, dispId, value) {
+		var ret = gwt_hm_ServerMethods.setProperty(this.channel, this, objectId, dispId, this.getAsValue(value));
+		if (ret.isException) {
+			//tostring
+			throw ret.retValue.toString();
+		}
+	}
+	javaObjectGet(objectId, dispId) {
+		var ret = gwt_hm_ServerMethods.getProperty(this.channel, this, objectId, dispId);
+		if (ret.isException) {
+			//tostring
+			throw ret.retValue.toString();
+		}
+		return this.resolveLocal(ret.retValue);
+	}
 }
 
 class gwt_hm_LocalObjectTable {
@@ -934,445 +948,455 @@ ieee754.write = function(buffer, value, offset, isLE, mLen, nBytes) {
 
 
 class gwt_hm_HostChannel {
-    // codepoints (binary string)
-    buf_out = "";
-    // codepoints (binary string)
-    buf_in;
-    buf_in_idx;
-    handler;
-    channelId;
-    closeSocket = false;
-    tcpHost = "";
-    /*
-     * Performance timing - is most of our overhead in http?
-     */
-    xhrTimingData = [];
-    xhrTimingCumulativeMilliseconds = 0;
+	// codepoints (binary string)
+	buf_out = "";
+	// codepoints (binary string)
+	buf_in;
+	buf_in_idx;
+	handler;
+	channelId;
+	closeSocket = false;
+	closedSocket = false;
+	tcpHost = "";
+	/*
+	 * Performance timing - is most of our overhead in http?
+	 */
+	xhrTimingData = [];
+	xhrTimingCumulativeMilliseconds = 0;
 
-    connectToHost(host, port, codeServerWs, moduleName) {
-        // ignore host (for the mo) - assume local, otherwise will need CORS
-        //
-        // correction, always use local (rather than routing through remote) -
-        // network round trips more than compensates
-        // this.host = "";
+	connectToHost(host, port, codeServerWs, moduleName) {
+		// ignore host (for the mo) - assume local, otherwise will need CORS
+		//
+		// correction, always use local (rather than routing through remote) -
+		// network round trips more than compensates
+		// this.host = "";
 
 
-        this.host = "http://127.0.0.1:" + (parseInt(port) + 1);
-        this.port = port;
-        if (codeServerWs) {
-            this.socketClient = new WebSocketTransportClient(`${host}:${port}`, codeServerWs, moduleName);
-            return new Promise(resolve => {
-                this.socketClient.connect(resolve);
-            });
-        } else {
-            /*
-             * use xhr
-             */
-            return new Promise(resolve => resolve());
-        }
-    }
-    init(handler, minVersion, maxVersion,
-        hostedHtmlVersion) {
-        this.handler = handler;
-        gwt_hm_CheckVersionsMessage.send(this, minVersion, maxVersion, hostedHtmlVersion);
-        var type = this.readByte();
-        switch (type) {
-            case gwt_hm_BrowserChannel.MESSAGE_TYPE_PROTOCOL_VERSION: {
-                var message = gwt_hm_ProtocolVersionMessage.receive(this);
-                break;
-            }
-            case MESSAGE_TYPE_FATAL_ERROR: {
-                var message = gwt_hm_FatalErrorMessage.receive(this);
-                handler.fatalError(this, message.getError());
-                return false;
-            }
-            default:
-                return false;
-        }
-        var self = this;
-        window.addEventListener("unload", function(event) {
-            self.disconnectFromHost();
-        });
-        return true;
-    }
-    isConnected() {
-        return true
-    }
-    readBytes(dataLen) {
-        var count = dataLen;
-        var buf = "";
-        while (count > 0) {
-            buf += this.readByte();
-            --count;
-        }
-    }
-    sendBytes(data) {
-        for (var idx = 0; idx < data.length(); idx++) {
-            this.sendByte(data.charCodeAt(idx));
-        }
-    }
-    readInt() {
-        var b0 = this.readByte();
-        var b1 = this.readByte();
-        var b2 = this.readByte();
-        var b3 = this.readByte();
-        return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
-    }
-    sendInt(v) {
-        this.sendByte((v >>> 24) & 0xFF);
-        this.sendByte((v >>> 16) & 0xFF);
-        this.sendByte((v >>> 8) & 0xFF);
-        this.sendByte((v >>> 0) & 0xFF);
-    }
-    readShort() {
-        var b0 = this.readByte();
-        var b1 = this.readByte();
-        return (b0 << 8) + b1;
-    }
-    sendShort(v) {
-        out.write((v >>> 8) & 0xFF);
-        out.write((v >>> 0) & 0xFF);
-    }
-    readLong() {
-        var i0 = this.readInt(data);
-        var i1 = this.readInt(data);
-        var ret = {
-            l: i1 & gwt_hm_HostChannel.long_MASK,
-            m: i1 >>> gwt_hm_HostChannel.long_BITS | ((i0 << 10) & gwt_hm_HostChannel.long_MASK),
-            h: (i0 >>> 10) & gwt_hm_HostChannel.long_MASK
-        };
-        return ret;
-    }
-    sendLong(v) {
-        var i0 = ((v.m >>> 10) & gwt_hm_HostChannel.long_MASK) | (v.h << 12);
-        var i1 = v.l | (v.m << gwt_hm_HostChannel.long_BITS);
-        this.sendInt(io);
-        this.sendInt(i1);
-    }
-    readFloat() {
-        var v = [this.readByte(), this.readByte(), this.readByte(), this.readByte()];
-        return ieee754.read(v, 0, false, 23, 4);
-    }
-    sendFloat(v) {
-        var buf = [];
-        ieee754.write(buf, v, 0, false, 23, 4);
-        for (var idx = 0; idx <= 3; idx++) {
-            this.sendByte(buf[idx]);
-        }
-    }
-    readDouble() {
-        var v = [this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte()];
-        return ieee754.read(v, 0, false, 52, 8);
-    }
-    sendDouble(v) {
-        var buf = [];
-        ieee754.write(buf, v, 0, false, 52, 8);
-        for (var idx = 0; idx <= 7; idx++) {
-            this.sendByte(buf[idx]);
-        }
-    }
-    readByte() {
-        if (this.buf_in_idx >= this.buf_in.length) {
-            throw "stream exhausted";
-        }
-        return this.buf_in.charCodeAt(this.buf_in_idx++);
-    }
-    sendByte(c) {
-        if (this.buf_out.length == 0) {
-            // console.log(`send >> ${c}`);
-        }
-        this.buf_out += String.fromCharCode(c);
-    }
-    readStringLength() {
-        return this.readInt();
-    }
-    readString() {
-        var len = this.readInt();
-        var utf8 = this.buf_in.substring(this.buf_in_idx, this.buf_in_idx + len);
-        var ret = this.utf8BinaryStringToStr(utf8);
-        this.buf_in_idx += len;
-        return ret;
-    }
-    sendString(str) {
-        var utf8 = this.utf16ToUtf8(str);
-        this.sendInt(utf8.length);
-        this.buf_out += utf8;
-    }
-    utf8BinaryStringToStr(str) {
-        var buf = new ArrayBuffer(str.length); // 1 bytes for each utf-8
-        // codepoint
-        var bufView = new Uint8Array(buf);
-        for (var i = 0, strLen = str.length; i < strLen; i++) {
-            bufView[i] = str.charCodeAt(i);
-        }
-        var str = new TextDecoder("UTF-8").decode(buf);
-        return str;
-    }
-    utf16ToUtf8(str) {
-        var u8a = new TextEncoder().encode(str);
-        var CHUNK_SZ = 0x8000;
-        var c = [];
-        for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
-            c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
-        }
-        return c.join("");
-    }
-    readValue() {
-        var type = this.readByte();
-        var value = new gwt_hm_Value();
-        switch (type) {
-            case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
-                value.setNull();
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
-                value.setUndefined();
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN: {
-                var val = this.readByte();
-                value.setBoolean(val != 0);
-            }
-            return value;
-        case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE: {
-            var val = this.readByte();
-            value.setByte(val);
-        }
-        return value;
-        case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR: {
-            var val = this.readShort();
-            value.setChar(val);
-        }
-        return value;
-        case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT: {
-            var val = this.readShort();
-            value.setShort(val);
-        }
-        return value;
-        case gwt_hm_BrowserChannel.VALUE_TYPE_STRING: {
-            var val = this.readString();
-            value.setString(val);
-        }
-        return value;
-        case gwt_hm_BrowserChannel.VALUE_TYPE_INT: {
-            var val = this.readInt();
-            value.setInt(val);
-        }
-        return value;
-        case gwt_hm_BrowserChannel.VALUE_TYPE_LONG: {
-            var val = this.readLong();
-            value.setLong(val);
-        }
-        return value;
-        case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE: {
-            var val = this.readDouble();
-            value.setDouble(val);
-        }
-        return value;
-        case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT: {
-            var val = this.readInt();
-            value.setJavaObjectId(val);
-        }
-        return value;
-        case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT: {
-            var val = this.readInt();
-            value.setJsObjectId(val);
-        }
-        return value;
-        default:
-            throw "Unhandled value type sent from server: " + type;
-        }
-        return false;
-    }
-    sendValue(value) {
-        var type = value.type;
-        this.sendByte(type);
-        switch (type) {
-            case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
-                return;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
-                return this.sendByte(value.getBoolean() ? 1 : 0);
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-                return this.sendByte(value.getByte());
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-                return this.sendShort(short(value.getChar()));
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                return this.sendShort(value.getShort());
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-                return this.sendInt(value.getInt());
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-                return this.sendLong(value.getLong());
-            case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
-                return this.sendString(value.getString());
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-                return this.sendDouble(value.getDouble());
-            case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
-                return this.sendFloat(value.getFloat());
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
-                return this.sendInt(value.getJsObjectId());
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
-                return this.sendInt(value.getJavaObjectId());
-            default:
-                throw "Unhandled value type sent to server: " + type;
-        }
-    }
-    reactToMessages(handler, expectReturn) {
-        try {
-            return this.reactToMessagesOrThrow(handler, expectReturn);
-        } catch (e) {
-            console.warn(e);
-            this.disconnectFromHost();
-        }
-    }
-    reactToMessagesOrThrow(handler, expectReturn) {
-        while (true) {
-            this.flush();
-            var type = this.readByte(type);
-            // console.log(`message: ${this.messageId} :: ${type} `);
-            switch (type) {
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE: {
-                    var message = gwt_hm_InvokeMessage.receive(this);
-                    if (parseInt(this.messageId) > 0) {
-                        // console.log(`invoke: ${this.messageId} :: ${message.methodName}
-                        // [${message.thisRef.intValue}]`);
-                    }
-                    var result = handler.invoke(this, message.thisRef, message.methodName,
-                        message.numArgs, message.args);
-                    handler.sendFreeValues(this);
-                    gwt_hm_ReturnMessage.send(this, result.exception, result.value);
-                }
-                break;
-            case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL: {
-                // scottb: I think this is never used; I think server
-                // never sends invokeSpecial
-                var message = gwt_hm_InvokeSpecialMessage.receive(this);
-                var result = handler.invokeSpecial(this, message._dispatchId, message.methodName,
-                    message.numArgs, message.args);
-                handler.sendFreeValues(this);
-                gwt_hm_ReturnMessage.send(this, result.exception, result.value);
-            }
-            break;
-            case gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE: {
-                var message = gwt_hm_FreeValueMessage.receive(this);
-                handler.freeValue(this, message.idCount, message.ids);
-            }
-            // do not send a response
-            break;
-            case gwt_hm_BrowserChannel.MESSAGE_TYPE_LOADJSNI: {
-                var message = gwt_hm_LoadJsniMessage.receive(this);
-                handler.loadJsni(this, message.js);
-            }
-            // do not send a response
-            break;
-            case gwt_hm_BrowserChannel.MESSAGE_TYPE_RETURN:
-                if (!expectReturn) {
-                    throw "Received unexpected RETURN";
-                }
-                return gwt_hm_ReturnMessage.receive(this);
-            case gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT:
-                if (expectReturn) {
-                    throw "Received QUIT while waiting for return";
-                }
-                this.disconnectFromHost();
-                return 0;
-            default:
-                // TODO(jat): error handling
-                throw "Unexpected message type " + type;
-            }
-        }
-    }
-    reactToMessagesWhileNotWaitingForReturn(handler) {
-        return !this.reactToMessages(handler, false);
-    }
-    flush() {
-        let body = null;
-        try {
-            body = btoa(this.buf_out);
-        } catch (e) {
-            debugger;
-        }
-        this.buf_out = "";
-        if (this.socketClient) {
-            this.flushWithBodyWs(body);
-        } else {
-            this.flushWithBodyXhr(body);
-        }
-    }
-    flushWithBodyWs(body) {
-        var t0 = performance.now();
-        var bytes = this.socketClient.send(body);
-        if (this.closeSocket) {
-            this.socketClient.close();
-            return;
-        }
-        let response = "";
-        for (var idx = 0; idx < bytes.length; idx++) {
-            response += String.fromCharCode(bytes[idx]);
-        }
-        this.buf_in = atob(response);
-        this.buf_in_idx = 0;
-        var t1 = performance.now();
-        var xhrTime = t1 - t0;
-        this.xhrTimingData.push(xhrTime);
-        this.xhrTimingCumulativeMilliseconds += xhrTime;
-        if (this.xhrTimingData.length % 1000 == 0) {
-            console.debug(`codeserver ws timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMilliseconds} `);
-        }
-    }
-    flushWithBodyXhr(body) {
-        var t0 = performance.now();
-        var xhr = new XMLHttpRequest();
-        var url = `${this.host}/jsCodeServer.tcp`;
-        xhr.open("POST", url, false);
-        xhr.setRequestHeader("XhrTcpBridge.codeserver_port", this.port);
-        xhr.setRequestHeader("mixed-content", "noupgrade");
-        if (this.channelId) {
-            xhr.setRequestHeader("XhrTcpBridge.handle_id", this.channelId);
-        }
-        if (this.closeSocket) {
-            xhr.setRequestHeader("XhrTcpBridge.meta", "close_socket");
-        }
-        try {
-            xhr.send(body);
-        } catch (e) {
-            if (this.channelId || this.host) {
-                throw e;
-            } else {
-                // retry with alt code server;
-                this.host = "http://127.0.0.1:10005";
-                this.flushWithBody(body);
-                return;
-            }
-        }
-        if (this.closeSocket) {
-            return;
-        }
-        var xhrChannelId = xhr.getResponseHeader("XhrTcpBridge.handle_id");
-        this.messageId = xhr.getResponseHeader("XhrTcpBridge.message_id");
-        if (this.channelId && this.channelId != xhrChannelId) {
-            throw "Different channel id";
-        }
-        this.channelId = xhrChannelId;
-        this.buf_in = atob(xhr.responseText);
-        this.buf_in_idx = 0;
-        var t1 = performance.now();
-        var xhrTime = t1 - t0;
-        this.xhrTimingData.push(xhrTime);
-        this.xhrTimingCumulativeMicroseconds += xhrTime;
-        if (this.xhrTimingData.length % 1000 == 0) {
-            console.log(`timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMicroseconds} `);
-        }
-    }
-    ensureClear() {
-        if (this.buf_out.length > 0) {
-            throw "pending message";
-        }
-    }
-    reactToMessagesWhileWaitingForReturn(handler) {
-        return this.reactToMessages(handler, true);
-    }
-    disconnectFromHost() {
-        new gwt_hm_QuitMessage.send(this);
-    }
+		this.host = "http://127.0.0.1:" + (parseInt(port) + 1);
+		this.port = port;
+		if (codeServerWs) {
+			this.socketClient = new WebSocketTransportClient(`${host}:${port}`, codeServerWs, moduleName);
+			return new Promise(resolve => {
+				this.socketClient.connect(resolve);
+			});
+		} else {
+			/*
+			 * use xhr
+			 */
+			return new Promise(resolve => resolve());
+		}
+	}
+	init(handler, minVersion, maxVersion,
+		hostedHtmlVersion) {
+		this.handler = handler;
+		gwt_hm_CheckVersionsMessage.send(this, minVersion, maxVersion, hostedHtmlVersion);
+		var type = this.readByte();
+		switch (type) {
+			case gwt_hm_BrowserChannel.MESSAGE_TYPE_PROTOCOL_VERSION: {
+				var message = gwt_hm_ProtocolVersionMessage.receive(this);
+				break;
+			}
+			case MESSAGE_TYPE_FATAL_ERROR: {
+				var message = gwt_hm_FatalErrorMessage.receive(this);
+				handler.fatalError(this, message.getError());
+				return false;
+			}
+			default:
+				return false;
+		}
+		var self = this;
+		window.addEventListener("unload", function(event) {
+			self.disconnectFromHost();
+		});
+		return true;
+	}
+	isConnected() {
+		return true
+	}
+	readBytes(dataLen) {
+		var count = dataLen;
+		var buf = "";
+		while (count > 0) {
+			buf += this.readByte();
+			--count;
+		}
+	}
+	sendBytes(data) {
+		for (var idx = 0; idx < data.length(); idx++) {
+			this.sendByte(data.charCodeAt(idx));
+		}
+	}
+	readInt() {
+		var b0 = this.readByte();
+		var b1 = this.readByte();
+		var b2 = this.readByte();
+		var b3 = this.readByte();
+		return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
+	}
+	sendInt(v) {
+		this.sendByte((v >>> 24) & 0xFF);
+		this.sendByte((v >>> 16) & 0xFF);
+		this.sendByte((v >>> 8) & 0xFF);
+		this.sendByte((v >>> 0) & 0xFF);
+	}
+	readShort() {
+		var b0 = this.readByte();
+		var b1 = this.readByte();
+		return (b0 << 8) + b1;
+	}
+	sendShort(v) {
+		out.write((v >>> 8) & 0xFF);
+		out.write((v >>> 0) & 0xFF);
+	}
+	readLong() {
+		var i0 = this.readInt(data);
+		var i1 = this.readInt(data);
+		var ret = {
+			l: i1 & gwt_hm_HostChannel.long_MASK,
+			m: i1 >>> gwt_hm_HostChannel.long_BITS | ((i0 << 10) & gwt_hm_HostChannel.long_MASK),
+			h: (i0 >>> 10) & gwt_hm_HostChannel.long_MASK
+		};
+		return ret;
+	}
+	sendLong(v) {
+		var i0 = ((v.m >>> 10) & gwt_hm_HostChannel.long_MASK) | (v.h << 12);
+		var i1 = v.l | (v.m << gwt_hm_HostChannel.long_BITS);
+		this.sendInt(io);
+		this.sendInt(i1);
+	}
+	readFloat() {
+		var v = [this.readByte(), this.readByte(), this.readByte(), this.readByte()];
+		return ieee754.read(v, 0, false, 23, 4);
+	}
+	sendFloat(v) {
+		var buf = [];
+		ieee754.write(buf, v, 0, false, 23, 4);
+		for (var idx = 0; idx <= 3; idx++) {
+			this.sendByte(buf[idx]);
+		}
+	}
+	readDouble() {
+		var v = [this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte()];
+		return ieee754.read(v, 0, false, 52, 8);
+	}
+	sendDouble(v) {
+		var buf = [];
+		ieee754.write(buf, v, 0, false, 52, 8);
+		for (var idx = 0; idx <= 7; idx++) {
+			this.sendByte(buf[idx]);
+		}
+	}
+	readByte() {
+		if (this.buf_in_idx >= this.buf_in.length) {
+			throw "stream exhausted";
+		}
+		return this.buf_in.charCodeAt(this.buf_in_idx++);
+	}
+	sendByte(c) {
+		if (this.buf_out.length == 0) {
+			// console.log(`send >> ${c}`);
+		}
+		this.buf_out += String.fromCharCode(c);
+	}
+	readStringLength() {
+		return this.readInt();
+	}
+	readString() {
+		var len = this.readInt();
+		var utf8 = this.buf_in.substring(this.buf_in_idx, this.buf_in_idx + len);
+		var ret = this.utf8BinaryStringToStr(utf8);
+		this.buf_in_idx += len;
+		return ret;
+	}
+	sendString(str) {
+		var utf8 = this.utf16ToUtf8(str);
+		this.sendInt(utf8.length);
+		this.buf_out += utf8;
+	}
+	utf8BinaryStringToStr(str) {
+		var buf = new ArrayBuffer(str.length); // 1 bytes for each utf-8
+		// codepoint
+		var bufView = new Uint8Array(buf);
+		for (var i = 0, strLen = str.length; i < strLen; i++) {
+			bufView[i] = str.charCodeAt(i);
+		}
+		var str = new TextDecoder("UTF-8").decode(buf);
+		return str;
+	}
+	utf16ToUtf8(str) {
+		var u8a = new TextEncoder().encode(str);
+		var CHUNK_SZ = 0x8000;
+		var c = [];
+		for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
+			c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
+		}
+		return c.join("");
+	}
+	readValue() {
+		var type = this.readByte();
+		var value = new gwt_hm_Value();
+		switch (type) {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
+				value.setNull();
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
+				value.setUndefined();
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN: {
+				var val = this.readByte();
+				value.setBoolean(val != 0);
+			}
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE: {
+				var val = this.readByte();
+				value.setByte(val);
+			}
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR: {
+				var val = this.readShort();
+				value.setChar(val);
+			}
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT: {
+				var val = this.readShort();
+				value.setShort(val);
+			}
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_STRING: {
+				var val = this.readString();
+				value.setString(val);
+			}
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_INT: {
+				var val = this.readInt();
+				value.setInt(val);
+			}
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_LONG: {
+				var val = this.readLong();
+				value.setLong(val);
+			}
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE: {
+				var val = this.readDouble();
+				value.setDouble(val);
+			}
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT: {
+				var val = this.readInt();
+				value.setJavaObjectId(val);
+			}
+				return value;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT: {
+				var val = this.readInt();
+				value.setJsObjectId(val);
+			}
+				return value;
+			default:
+				throw "Unhandled value type sent from server: " + type;
+		}
+		return false;
+	}
+	sendValue(value) {
+		var type = value.type;
+		this.sendByte(type);
+		switch (type) {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
+				return;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
+				return this.sendByte(value.getBoolean() ? 1 : 0);
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+				return this.sendByte(value.getByte());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+				return this.sendShort(short(value.getChar()));
+			case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+				return this.sendShort(value.getShort());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+				return this.sendInt(value.getInt());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+				return this.sendLong(value.getLong());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
+				return this.sendString(value.getString());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+				return this.sendDouble(value.getDouble());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
+				return this.sendFloat(value.getFloat());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
+				return this.sendInt(value.getJsObjectId());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
+				return this.sendInt(value.getJavaObjectId());
+			default:
+				throw "Unhandled value type sent to server: " + type;
+		}
+	}
+	reactToMessages(handler, expectReturn) {
+		try {
+			return this.reactToMessagesOrThrow(handler, expectReturn);
+		} catch (e) {
+			console.warn(e);
+			this.disconnectFromHost();
+		}
+	}
+	reactToMessagesOrThrow(handler, expectReturn) {
+		while (true) {
+			if (this.closedSocket) {
+				return null;
+			}
+			this.flush();
+			var type = this.readByte(type);
+			// console.log(`message: ${this.messageId} :: ${type} `);
+			switch (type) {
+				case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE: {
+					var message = gwt_hm_InvokeMessage.receive(this);
+					if (parseInt(this.messageId) > 0) {
+						// console.log(`invoke: ${this.messageId} :: ${message.methodName}
+						// [${message.thisRef.intValue}]`);
+					}
+					var result = handler.invoke(this, message.thisRef, message.methodName,
+						message.numArgs, message.args);
+					handler.sendFreeValues(this);
+					gwt_hm_ReturnMessage.send(this, result.exception, result.value);
+				}
+					break;
+				case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL: {
+					// scottb: I think this is never used; I think server
+					// never sends invokeSpecial
+					var message = gwt_hm_InvokeSpecialMessage.receive(this);
+					var result = handler.invokeSpecial(this, message._dispatchId, message.methodName,
+						message.numArgs, message.args);
+					handler.sendFreeValues(this);
+					gwt_hm_ReturnMessage.send(this, result.exception, result.value);
+				}
+					break;
+				case gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE: {
+					var message = gwt_hm_FreeValueMessage.receive(this);
+					handler.freeValue(this, message.idCount, message.ids);
+				}
+					// do not send a response
+					break;
+				case gwt_hm_BrowserChannel.MESSAGE_TYPE_LOADJSNI: {
+					var message = gwt_hm_LoadJsniMessage.receive(this);
+					handler.loadJsni(this, message.js);
+				}
+					// do not send a response
+					break;
+				case gwt_hm_BrowserChannel.MESSAGE_TYPE_RETURN:
+					if (!expectReturn) {
+						throw "Received unexpected RETURN";
+					}
+					return gwt_hm_ReturnMessage.receive(this);
+				case gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT:
+					if (expectReturn) {
+						throw "Received QUIT while waiting for return";
+					}
+					this.disconnectFromHost();
+					return 0;
+				default:
+					// TODO(jat): error handling
+					throw "Unexpected message type " + type;
+			}
+		}
+	}
+	reactToMessagesWhileNotWaitingForReturn(handler) {
+		return !this.reactToMessages(handler, false);
+	}
+	flush() {
+		if (this.closedSocket) {
+			return;
+		}
+		let body = null;
+		body = btoa(this.buf_out);
+		this.buf_out = "";
+		if (this.socketClient) {
+			this.flushWithBodyWs(body);
+		} else {
+			this.flushWithBodyXhr(body);
+		}
+	}
+	flushWithBodyWs(body) {
+		var t0 = performance.now();
+		var bytes = this.socketClient.send(body);
+		if (this.closeSocket) {
+			this.socketClient.close();
+			return;
+		}
+		let response = "";
+		for (var idx = 0; idx < bytes.length; idx++) {
+			response += String.fromCharCode(bytes[idx]);
+		}
+		this.buf_in = atob(response);
+		this.buf_in_idx = 0;
+		var t1 = performance.now();
+		var xhrTime = t1 - t0;
+		this.xhrTimingData.push(xhrTime);
+		this.xhrTimingCumulativeMilliseconds += xhrTime;
+		if (this.xhrTimingData.length % 1000 == 0) {
+			console.debug(`codeserver ws timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMilliseconds} `);
+		}
+	}
+	flushWithBodyXhr(body) {
+		var t0 = performance.now();
+		var xhr = new XMLHttpRequest();
+		var url = `${this.host}/jsCodeServer.tcp`;
+		xhr.open("POST", url, false);
+		xhr.setRequestHeader("XhrTcpBridge.codeserver_port", this.port);
+		xhr.setRequestHeader("mixed-content", "noupgrade");
+		if (this.channelId) {
+			xhr.setRequestHeader("XhrTcpBridge.handle_id", this.channelId);
+		}
+		if (this.closeSocket) {
+			xhr.setRequestHeader("XhrTcpBridge.meta", "close_socket");
+		}
+		try {
+			xhr.send(body);
+		} catch (e) {
+			if (this.channelId || this.host) {
+				throw e;
+			} else {
+				// retry with alt code server;
+				this.host = "http://127.0.0.1:10005";
+				this.flushWithBody(body);
+				return;
+			}
+		}
+		if (this.closeSocket) {
+			return;
+		}
+		var xhrChannelId = xhr.getResponseHeader("XhrTcpBridge.handle_id");
+		this.messageId = xhr.getResponseHeader("XhrTcpBridge.message_id");
+		if (this.channelId && this.channelId != xhrChannelId) {
+			throw "Different channel id";
+		}
+		this.channelId = xhrChannelId;
+		this.buf_in = atob(xhr.responseText);
+		this.buf_in_idx = 0;
+		var t1 = performance.now();
+		var xhrTime = t1 - t0;
+		this.xhrTimingData.push(xhrTime);
+		this.xhrTimingCumulativeMicroseconds += xhrTime;
+		if (this.xhrTimingData.length % 1000 == 0) {
+			console.log(`timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMicroseconds} `);
+		}
+	}
+	ensureClear() {
+		if (this.closedSocket) {
+			return;
+		}
+		if (this.buf_out.length > 0) {
+			throw "pending message";
+		}
+	}
+	reactToMessagesWhileWaitingForReturn(handler) {
+		return this.reactToMessages(handler, true);
+	}
+	disconnectFromHost() {
+		if (this.closedSocket) {
+			return;
+		}
+		this.closedSocket = true;
+		new gwt_hm_QuitMessage.send(this);
+	}
 }
 gwt_hm_HostChannel.long_BITS = 22;
 gwt_hm_HostChannel.long_BITS01 = 2 * gwt_hm_HostChannel.long_BITS;
@@ -1885,202 +1909,211 @@ gwt_hm_FreeValueMessage.send = function(channel, idCount, ids) {
  */
 class WebSocketTransport {
 
-    static MESSAGE_WAIT = 0;
-    static MESSAGE_CONNECT = 1;
-    static MESSAGE_DATA_PACKET = 2;
-    static MESSAGE_WINDOW_UNLOAD = 3;
-    static MESSAGE_SOCKET_CLOSED = 4;
-    
-  /*
-   * bytes - given comms are byte->int, effectively divide by 4. Make *big*
-   * (5*10^6) bcoz this can occasionally be huge, and failing here hurts
-   * debugging more than helps
-   * 
-   * ...bump - sometimes need 40 million int buffer - so it 160*10^6
-   */
-    static BUFFER_SIZE = 160*1000*1000; 
-    /*
-     * we may pause in the java codeserver debugger, so make timeout biiiig (5
-     * minutes)
-     */
-    static READ_TIMEOUT = 300000;
-    constructor() {
+	static MESSAGE_WAIT = 0;
+	static MESSAGE_CONNECT = 1;
+	static MESSAGE_DATA_PACKET = 2;
+	static MESSAGE_WINDOW_UNLOAD = 3;
+	static MESSAGE_SOCKET_CLOSED = 4;
 
-    };
-    setBuffers(inBuffer, outBuffer) {
-        this.inBuffer = new WebSocketTransportBuffer(inBuffer);
-        this.outBuffer = new WebSocketTransportBuffer(outBuffer);
-    }
-    sendConnect() {
-        return this.sendPacket(WebSocketTransport.MESSAGE_CONNECT, new TextEncoder().encode(""));
-    }
-    send(string) {
-        return this.sendPacket(WebSocketTransport.MESSAGE_DATA_PACKET, new TextEncoder().encode(string));
-    }
-    read(timeout) {
-        return this.inBuffer.read(timeout);
-    }
-    sendPacket(message, data) {
-        this.outBuffer.write(message, data);
-       
-        return this.read(WebSocketTransport.READ_TIMEOUT);
-    }
+	/*
+	 * bytes - given comms are byte->int, effectively divide by 4. Make *big*
+	 * (5*10^6) bcoz this can occasionally be huge, and failing here hurts
+	 * debugging more than helps
+	 * 
+	 * ...bump - sometimes need 40 million int buffer - so it 160*10^6
+	 */
+	static BUFFER_SIZE = 160 * 1000 * 1000;
+	/*
+	 * we may pause in the java codeserver debugger, so make timeout biiiig (5
+	 * minutes)
+	 */
+	static READ_TIMEOUT = 300000;
+	constructor() {
+
+	};
+	setBuffers(inBuffer, outBuffer) {
+		this.inBuffer = new WebSocketTransportBuffer(inBuffer);
+		this.outBuffer = new WebSocketTransportBuffer(outBuffer);
+	}
+	sendConnect() {
+		return this.sendPacket(WebSocketTransport.MESSAGE_CONNECT, new TextEncoder().encode(""));
+	}
+	send(string) {
+		return this.sendPacket(WebSocketTransport.MESSAGE_DATA_PACKET, new TextEncoder().encode(string));
+	}
+	read(timeout) {
+		return this.inBuffer.read(timeout);
+	}
+	sendPacket(message, data) {
+		this.outBuffer.write(message, data);
+
+		return this.read(WebSocketTransport.READ_TIMEOUT);
+	}
 }
 class WebSocketTransportBuffer {
-    closed = false;
-    /*
-     * buffer write operation (byte array b[n] - for Atomics.wait to work we
-     * need int32)
-     * 
-     * [0] ::op (0: wait - 1: connect - 2: data packet...etc, see MESSAGE
-     * constants in WebSocketTransport)
-     * 
-     * [1] : n (as int) byte
-     * 
-     * [2=>2+n-1] : data
-     * 
-     */
-    constructor(sharedArrayBuffer) {
-        this.sharedArrayBuffer = sharedArrayBuffer;
-        this.int32 = new Int32Array(sharedArrayBuffer);
-    }
-    read(timeout) {
-        if (this.closed) {
-            throw "Socket closed";
-        }
-        /*
-         * Wait fot the other thread
-         */
-        if (WebSocketTransport_is_worker) {
-            /*
-             * should not be needed (worker will already have a message saying
-             * 'packet ready'). Can't use this on main thread cos 'javascript
-             * doesn't block on main thread'...much
-             */
-            Atomics.wait(this.int32, 0, WebSocketTransport.MESSAGE_WAIT, timeout);
-        } else {
-            let t0 = performance.now();
-            let counter = 0;
-            /*
-             * This works! On the main thread! (this.int32 underlying buffer is
-             * changed by write() on the worker thread)
-             */
-            while (Atomics.load(this.int32, 0) == 0) {
-                if (counter++ % 1000000 == 0) {
-                    var t1 = performance.now();
-                    if (t1 - t0 > timeout) {
-                        this.closed = true;
-                        throw "Read timeout";
-                    }
-                }
-                // don't spook a spectre...?
-            }
-            let message = Atomics.load(this.int32, 0);
-            switch (message) {
-                case WebSocketTransport.MESSAGE_SOCKET_CLOSED:
-                  this.closed=true;
-                    throw "WebSocketTransportClient: received MESSAGE_SOCKET_CLOSED";
-                case WebSocketTransport.MESSAGE_WINDOW_UNLOAD:
-                  this.closed=true;
-                    throw "WebSocketTransportClient: received MESSAGE_WINDOW_UNLOAD";
-            }
-        }
-        var len = this.int32[1];
-        /*
-         * prep for next read (could probably make this array copy nicer, but
-         * dev tools got hung up...?)
-         */
-        Atomics.store(this.int32, 0, WebSocketTransport.MESSAGE_WAIT);
-        let result = [];
-        for (let idx = 0; idx < len; idx++) {
-            result[idx] = this.int32[idx + 2];
-        }
-        return result;
-    }
-    write(message, data) {
-        var v = data.length;
-        Atomics.store(this.int32, 1, data.length);
-        try{
-          if(data.length>1000000){
-           console.log(`dev.ws: large message: ${data.length} bytes`); 
-          }
-          this.int32.set(data, 2);
-        }catch(e){
-          debugger;
-          throw e;
-        }
-        /*
-         * and now...store the messaage code and wake one sleeping thread
-         * 
-         */
-        Atomics.store(this.int32, 0, message);
-        Atomics.notify(this.int32, 0, 1);
-    }
+	closed = false;
+	/*
+	 * buffer write operation (byte array b[n] - for Atomics.wait to work we
+	 * need int32)
+	 * 
+	 * [0] ::op (0: wait - 1: connect - 2: data packet...etc, see MESSAGE
+	 * constants in WebSocketTransport)
+	 * 
+	 * [1] : n (as int) byte
+	 * 
+	 * [2=>2+n-1] : data
+	 * 
+	 */
+	constructor(sharedArrayBuffer) {
+		this.sharedArrayBuffer = sharedArrayBuffer;
+		this.int32 = new Int32Array(sharedArrayBuffer);
+	}
+	read(timeout) {
+		if (this.closed) {
+			throw "Socket closed";
+		}
+		/*
+		 * Wait fot the other thread
+		 */
+		if (WebSocketTransport_is_worker) {
+			/*
+			 * should not be needed (worker will already have a message saying
+			 * 'packet ready'). Can't use this on main thread cos 'javascript
+			 * doesn't block on main thread'...much
+			 */
+			Atomics.wait(this.int32, 0, WebSocketTransport.MESSAGE_WAIT, timeout);
+		} else {
+			let t0 = performance.now();
+			let counter = 0;
+			/*
+			 * This works! On the main thread! (this.int32 underlying buffer is
+			 * changed by write() on the worker thread)
+			 */
+			while (Atomics.load(this.int32, 0) == 0) {
+				if (counter++ % 1000000 == 0) {
+					var t1 = performance.now();
+					if (t1 - t0 > timeout) {
+						this.closed = true;
+						throw "Read timeout";
+					}
+				}
+				// don't spook a spectre...?
+			}
+			let message = Atomics.load(this.int32, 0);
+			switch (message) {
+				case WebSocketTransport.MESSAGE_SOCKET_CLOSED:
+					this.closed = true;
+					throw "WebSocketTransportClient: received MESSAGE_SOCKET_CLOSED";
+				case WebSocketTransport.MESSAGE_WINDOW_UNLOAD:
+					this.closed = true;
+					throw "WebSocketTransportClient: received MESSAGE_WINDOW_UNLOAD";
+			}
+		}
+		var len = this.int32[1];
+		/*
+		 * prep for next read (could probably make this array copy nicer, but
+		 * dev tools got hung up...?)
+		 */
+		Atomics.store(this.int32, 0, WebSocketTransport.MESSAGE_WAIT);
+		let result = [];
+		for (let idx = 0; idx < len; idx++) {
+			result[idx] = this.int32[idx + 2];
+		}
+		return result;
+	}
+	write(message, data) {
+		var v = data.length;
+		Atomics.store(this.int32, 1, data.length);
+		try {
+			if (data.length > 1000000) {
+				console.log(`dev.ws: large message: ${data.length} bytes`);
+			}
+			this.int32.set(data, 2);
+		} catch (e) {
+			debugger;
+			throw e;
+		}
+		/*
+		 * and now...store the messaage code and wake one sleeping thread
+		 * 
+		 */
+		Atomics.store(this.int32, 0, message);
+		Atomics.notify(this.int32, 0, 1);
+	}
 }
 class WebSocketTransportSocketChannel extends WebSocketTransport {
-    constructor() {
-        super();
-        onmessage = e => {
-            switch (e.data.message) {
-                case "start":
-                    this.codeServerWs = e.data.codeServerWs;
-                    this.codeServer = e.data.codeServer;
-                    this.setBuffers(e.data.inBuffer.sharedArrayBuffer, e.data.outBuffer.sharedArrayBuffer);
-                    this.start();
-                    break;
-                case "data":
-                    this.onData();
-                    break;
-            }
-        };
-        /*
-         * worker receives close event (caused by window unload)
-         */
-        self.addEventListener('close', e => {
-            this.outBuffer.write(WebSocketTransport.MESSAGE_WINDOW_UNLOAD, new TextEncoder().encode(""));
-        });
-        
-    };
-    start() {
-        this.socket = new WebSocket(`ws://${this.codeServerWs}/jsCodeServerWs.tcp?gwt.codesvr=${this.codeServer}`);
-        this.socket.addEventListener('open', e => {
-            this.onOpen();
-        });
-        this.socket.onmessage = e => this.onMessage(e);
-        this.socket.onclose = e => {
-            this.outBuffer.write(WebSocketTransport.MESSAGE_SOCKET_CLOSED, new TextEncoder().encode(""));
-        };
-    }
-    onOpen() {
-        postMessage({
-            message: "connected"
-        });
-    }
-    onData() {
-        /*
-         * received data from gwt.hosted js - send to codeserver
-         */
-        let bytes = this.read(); // will be int array (but int in byte range -
-        // in fact ascii ) - in our case b64 text
-        let packet = "";
-        for (var idx = 0; idx < bytes.length; idx++) {
-            packet += String.fromCharCode(bytes[idx]);
-        }
-        this.socket.send(packet);
-    }
-    onMessage(e) {
-        /*
-         * received data from codeserver - send to gwt.hosted js
-         */
-        this.outBuffer.write(WebSocketTransport.MESSAGE_DATA_PACKET, new TextEncoder().encode(e.data));
 
-    }
+	socketClosed;
+
+	constructor() {
+		super();
+		onmessage = e => {
+			switch (e.data.message) {
+				case "start":
+					this.codeServerWs = e.data.codeServerWs;
+					this.codeServer = e.data.codeServer;
+					this.setBuffers(e.data.inBuffer.sharedArrayBuffer, e.data.outBuffer.sharedArrayBuffer);
+					this.start();
+					break;
+				case "data":
+					this.onData();
+					break;
+			}
+		};
+		/*
+		 * worker receives close event (caused by window unload)
+		 */
+		self.addEventListener('close', e => {
+			this.outBuffer.write(WebSocketTransport.MESSAGE_WINDOW_UNLOAD, new TextEncoder().encode(""));
+		});
+
+	};
+	start() {
+		this.socket = new WebSocket(`ws://${this.codeServerWs}/jsCodeServerWs.tcp?gwt.codesvr=${this.codeServer}`);
+		this.socket.addEventListener('open', e => {
+			this.onOpen();
+		});
+		this.socket.onmessage = e => this.onMessage(e);
+		let self = this;
+		this.socket.onclose = e => {
+			self.socketClosed = true;
+			this.outBuffer.write(WebSocketTransport.MESSAGE_SOCKET_CLOSED, new TextEncoder().encode(""));
+		};
+	}
+	onOpen() {
+		postMessage({
+			message: "connected"
+		});
+	}
+	onData() {
+		if (this.socketClosed) {
+			//almost certainly a setTimeout() that doesn't know about app teardown
+			return;
+		}
+		/*
+		 * received data from gwt.hosted js - send to codeserver
+		 */
+		let bytes = this.read(); // will be int array (but int in byte range -
+		// in fact ascii ) - in our case b64 text
+		let packet = "";
+		for (var idx = 0; idx < bytes.length; idx++) {
+			packet += String.fromCharCode(bytes[idx]);
+		}
+		this.socket.send(packet);
+	}
+	onMessage(e) {
+		/*
+		 * received data from codeserver - send to gwt.hosted js
+		 */
+		this.outBuffer.write(WebSocketTransport.MESSAGE_DATA_PACKET, new TextEncoder().encode(e.data));
+
+	}
 }
 
 function WebSocketTransport_maybeStartWorker() {
-    if (WebSocketTransport_is_worker) {
-        new WebSocketTransportSocketChannel();
-    }
+	if (WebSocketTransport_is_worker) {
+		new WebSocketTransportSocketChannel();
+	}
 }
 var WebSocketTransport_is_worker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
 WebSocketTransport_maybeStartWorker();

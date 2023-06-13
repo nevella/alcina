@@ -3,13 +3,13 @@ package cc.alcina.framework.gwt.client.place;
 import java.io.Serializable;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.Client;
 
 @Reflected
 @Registration(BasePlace.class)
@@ -42,7 +42,7 @@ public abstract class BasePlace extends Place
 	}
 
 	public void go() {
-		Preconditions.checkState(GWT.isClient());
+		Preconditions.checkState(Client.get() != null);
 		Registry.impl(PlaceNavigator.class).go(this);
 	}
 

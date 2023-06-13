@@ -24,7 +24,8 @@ import cc.alcina.framework.common.client.util.Ax;
 /**
  * The Comment interface represents textual content.
  */
-public class Comment extends Node implements DomComment, org.w3c.dom.Comment {
+public class Comment extends Node
+		implements ClientDomComment, org.w3c.dom.Comment {
 	/**
 	 * Assert that the given {@link Node} is of type {@link Node#COMMENT_NODE}
 	 * and automatically typecast it.
@@ -36,7 +37,7 @@ public class Comment extends Node implements DomComment, org.w3c.dom.Comment {
 
 	private CommentLocal local;
 
-	private DomComment remote;
+	private ClientDomComment remote;
 
 	protected Comment(CommentLocal local) {
 		this.local = local;
@@ -131,13 +132,13 @@ public class Comment extends Node implements DomComment, org.w3c.dom.Comment {
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote, boolean resolved) {
-		Preconditions.checkState(wasResolved() == resolved);
-		this.remote = (DomComment) remote;
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
+		Preconditions.checkState(wasSynced() == resolved);
+		this.remote = (ClientDomComment) remote;
 	}
 
 	@Override
-	protected DomComment remote() {
+	protected ClientDomComment remote() {
 		return remote;
 	}
 
@@ -147,18 +148,23 @@ public class Comment extends Node implements DomComment, org.w3c.dom.Comment {
 	}
 
 	@Override
-	protected CommentRemote typedRemote() {
-		return (CommentRemote) remote();
+	protected CommentJso jsoRemote() {
+		return (CommentJso) remote();
 	}
 
 	public class CommentImplAccess extends Node.ImplAccess {
-		public CommentRemote ensureRemote() {
+		public CommentJso ensureRemote() {
 			ensureRemoteCheck();
-			return Comment.this.typedRemote();
+			return Comment.this.jsoRemote();
 		}
 
-		public CommentRemote typedRemote() {
-			return Comment.this.typedRemote();
+		@Override
+		public void putRemote(ClientDomNode remote) {
+			Comment.this.remote = (ClientDomComment) remote;
+		}
+
+		public CommentJso typedRemote() {
+			return Comment.this.jsoRemote();
 		}
 	}
 }

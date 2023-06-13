@@ -32,7 +32,6 @@ import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.google.common.base.Preconditions;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
@@ -249,9 +248,8 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 		criterionHandlers.stream().forEach(handler -> {
 			Class<? extends SearchCriterion> searchCriterionClass = handler
 					.handlesSearchCriterion();
-			ClassOrInterfaceDeclarationWrapper declarationWrapper = compUnits
-					.declarationWrapperForClass(searchCriterionClass);
-			if (declarationWrapper == null) {
+			UnitType unitType = compUnits.typeForClass(searchCriterionClass);
+			if (unitType == null) {
 				Ax.out("--**-- omit -- %s", searchCriterionClass);
 				return;
 			}
@@ -267,7 +265,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 				configuration.className = name;
 				flatSerializationConfigurations.get().names.add(configuration);
 				o_configuration = Optional.of(configuration);
-				declarationWrapper.dirty();
+				unitType.dirty();
 			}
 			FlatSerializationConfiguration configuration = o_configuration
 					.get();
@@ -280,8 +278,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 			if (EnumMultipleCriterion.class
 					.isAssignableFrom(searchCriterionClass)) {
 				NormalAnnotationExpr typeSerialization = SourceMods
-						.ensureNormalTypeSerializationAnnotation(
-								declarationWrapper);
+						.ensureNormalTypeSerializationAnnotation(unitType);
 				String initialSource = typeSerialization.toString();
 				SourceMods.ensureValue(typeSerialization, "value", pathExpr);
 				ArrayInitializerExpr propertiesInitializerExpr = SourceMods
@@ -309,12 +306,11 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 						.filter(p -> p.getName().toString().equals("type"))
 						.forEach(p -> p.remove());
 				propertiesInitializerExpr.getValues().add(valueSerialization);
-				declarationWrapper.dirty(initialSource,
-						typeSerialization.toString());
+				unitType.dirty(initialSource, typeSerialization.toString());
 			} else {
 				SingleMemberAnnotationExpr typeSerialization = SourceMods
 						.ensureSingleMemberTypeSerializationAnnotation(
-								declarationWrapper);
+								unitType);
 				if (typeSerialization == null) {
 					// already set - ignore
 					return;
@@ -324,7 +320,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 				if (memberValue != null
 						&& memberValue.toString().equals(pathExpr.toString())) {
 				} else {
-					declarationWrapper.dirty();
+					unitType.dirty();
 				}
 			}
 		});
@@ -336,9 +332,8 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 			if (!EntitySearchDefinition.class.isAssignableFrom(clazz)) {
 				return;
 			}
-			ClassOrInterfaceDeclarationWrapper declarationWrapper = compUnits.declarations
-					.get(clazz.getName());
-			new SearchDefinitionModifier(declarationWrapper)
+			UnitType type = compUnits.declarations.get(clazz.getName());
+			new SearchDefinitionModifier(type)
 					.withCriterionHandlers(criterionHandlers)
 					.withSearchDefinitionClass(clazz).modify();
 		});
@@ -397,9 +392,8 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 
 		private Class<? extends SearchDefinition> searchDefinitionClass;
 
-		public SearchDefinitionModifier(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
-			super(declarationWrapper);
+		public SearchDefinitionModifier(UnitType type) {
+			super(type);
 		}
 
 		public SearchDefinitionModifier withCriterionHandlers(
@@ -461,7 +455,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 			}
 			String fqn = Ax.format("%s.%s", searchDefinitionClass.getName(),
 					entityCriteriaGroupName);
-			declarationWrapper.ensureImport(fqn);
+			type.ensureImport(fqn);
 		}
 
 		private void ensureNoGetCriteriaGroupsMethod() {
@@ -481,7 +475,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 					.map(dch -> {
 						Class<? extends SearchCriterion> searchCriterion = dch
 								.handlesSearchCriterion();
-						declarationWrapper.ensureImport(searchCriterion);
+						type.ensureImport(searchCriterion);
 						ClassOrInterfaceType type = StaticJavaParser
 								.parseClassOrInterfaceType(
 										searchCriterion.getSimpleName());
@@ -492,10 +486,10 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 
 		@Override
 		protected void ensureImports() {
-			declarationWrapper.ensureImport(CriteriaGroup.class);
-			declarationWrapper.ensureImport(Set.class);
-			declarationWrapper.ensureImport(TypeSerialization.class);
-			declarationWrapper.ensureImport(PropertySerialization.class);
+			type.ensureImport(CriteriaGroup.class);
+			type.ensureImport(Set.class);
+			type.ensureImport(TypeSerialization.class);
+			type.ensureImport(PropertySerialization.class);
 		}
 
 		@Override
@@ -541,26 +535,23 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
-						unit, node);
-				declaration.setDeclaration(node);
-				unit.declarations.add(declaration);
-				if (declaration
-						.isAssignableFrom(DomainCriterionHandler.class)) {
-					declaration.setFlag(Type.DomainCriterionHandler);
+				UnitType type = new UnitType(unit, node);
+				type.setDeclaration(node);
+				unit.declarations.add(type);
+				if (type.isAssignableFrom(DomainCriterionHandler.class)) {
+					type.setFlag(Type.DomainCriterionHandler);
 				}
-				if (declaration.isAssignableFrom(SearchCriterion.class)) {
-					declaration.setFlag(Type.SearchCriterion);
+				if (type.isAssignableFrom(SearchCriterion.class)) {
+					type.setFlag(Type.SearchCriterion);
 				}
-				if (declaration.isAssignableFrom(CriteriaGroup.class)) {
-					declaration.setFlag(Type.CriteriaGroup);
+				if (type.isAssignableFrom(CriteriaGroup.class)) {
+					type.setFlag(Type.CriteriaGroup);
 				}
-				if (declaration
-						.isAssignableFrom(BindableSearchDefinition.class)) {
-					declaration.setFlag(Type.BindableSearchDefinition);
+				if (type.isAssignableFrom(BindableSearchDefinition.class)) {
+					type.setFlag(Type.BindableSearchDefinition);
 				}
-				if (declaration.isAssignableFrom(Task.class)) {
-					declaration.setFlag(Type.Task);
+				if (type.isAssignableFrom(Task.class)) {
+					type.setFlag(Type.Task);
 				}
 			}
 			super.visit(node, arg);
@@ -571,46 +562,41 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 		static Logger logger = LoggerFactory
 				.getLogger(TaskRefactorDisplayName.class);
 
-		public static void ensureNoGetCriteriaGroupsMethod(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
-			ClassOrInterfaceDeclaration declaration = declarationWrapper
-					.getDeclaration();
+		public static void ensureNoGetCriteriaGroupsMethod(UnitType type) {
+			ClassOrInterfaceDeclaration declaration = type.getDeclaration();
 			List<MethodDeclaration> methods = declaration
 					.getMethodsByName("getCriteriaGroups");
-			declarationWrapper.ensureImport(CriteriaGroup.class);
-			declarationWrapper.ensureImport(Set.class);
+			type.ensureImport(CriteriaGroup.class);
+			type.ensureImport(Set.class);
 			if (methods.size() > 0) {
 				MethodDeclaration methodDeclaration = methods.get(0);
 				if (methodDeclaration.toString().contains("")) {
 					methodDeclaration.remove();
 					logger.info("Removed getCriteria() for {}",
 							declaration.getName());
-					declarationWrapper.dirty();
+					type.dirty();
 				}
 			}
 		}
 
 		public static NormalAnnotationExpr
-				ensureNormalTypeSerializationAnnotation(
-						ClassOrInterfaceDeclarationWrapper declarationWrapper) {
-			Optional<AnnotationExpr> o_typeSerialization = declarationWrapper
-					.getDeclaration()
+				ensureNormalTypeSerializationAnnotation(UnitType type) {
+			Optional<AnnotationExpr> o_typeSerialization = type.getDeclaration()
 					.getAnnotationByClass(TypeSerialization.class);
 			if (o_typeSerialization.isPresent() && o_typeSerialization
 					.get() instanceof SingleMemberAnnotationExpr) {
 				o_typeSerialization.get().remove();
-				o_typeSerialization = declarationWrapper.getDeclaration()
+				o_typeSerialization = type.getDeclaration()
 						.getAnnotationByClass(TypeSerialization.class);
 			}
 			if (!o_typeSerialization.isPresent()) {
-				NormalAnnotationExpr annotationExpr = declarationWrapper
-						.getDeclaration()
+				NormalAnnotationExpr annotationExpr = type.getDeclaration()
 						.addAndGetAnnotation(TypeSerialization.class);
-				declarationWrapper.ensureImport(TypeSerialization.class);
-				declarationWrapper.ensureImport(PropertySerialization.class);
+				type.ensureImport(TypeSerialization.class);
+				type.ensureImport(PropertySerialization.class);
 				annotationExpr.addPair("properties",
 						new ArrayInitializerExpr());
-				o_typeSerialization = declarationWrapper.getDeclaration()
+				o_typeSerialization = type.getDeclaration()
 						.getAnnotationByClass(TypeSerialization.class);
 			}
 			NormalAnnotationExpr typeSerialization = (NormalAnnotationExpr) o_typeSerialization
@@ -619,19 +605,16 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 		}
 
 		public static SingleMemberAnnotationExpr
-				ensureSingleMemberTypeSerializationAnnotation(
-						ClassOrInterfaceDeclarationWrapper declarationWrapper) {
-			Optional<AnnotationExpr> o_typeSerialization = declarationWrapper
-					.getDeclaration()
+				ensureSingleMemberTypeSerializationAnnotation(UnitType type) {
+			Optional<AnnotationExpr> o_typeSerialization = type.getDeclaration()
 					.getAnnotationByClass(TypeSerialization.class);
 			if (!o_typeSerialization.isPresent()) {
-				declarationWrapper.getDeclaration()
+				type.getDeclaration()
 						.addAnnotation(new SingleMemberAnnotationExpr(
 								new Name("TypeSerialization"),
-								new StringLiteralExpr(
-										declarationWrapper.simpleName())));
-				declarationWrapper.ensureImport(TypeSerialization.class);
-				o_typeSerialization = declarationWrapper.getDeclaration()
+								new StringLiteralExpr(type.simpleName())));
+				type.ensureImport(TypeSerialization.class);
+				o_typeSerialization = type.getDeclaration()
 						.getAnnotationByClass(TypeSerialization.class);
 			} else {
 				if (o_typeSerialization.get() instanceof NormalAnnotationExpr) {

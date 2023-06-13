@@ -3,7 +3,7 @@ package com.google.gwt.dom.client;
 import java.util.List;
 import java.util.stream.Stream;
 
-class NodeListWrapped<T extends Node> implements DomNodeList<T> {
+class NodeListWrapped<T extends Node> implements ClientDomNodeList<T> {
 	private List<T> nodes;
 
 	NodeListWrapped(List<T> nodes) {

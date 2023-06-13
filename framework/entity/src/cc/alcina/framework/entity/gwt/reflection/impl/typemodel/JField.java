@@ -18,15 +18,22 @@ package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.function.BiFunction;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JEnumConstant;
 import com.google.gwt.core.ext.typeinfo.JType;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.reflection.Method;
+import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.ProvidesPropertyMethod;
 
 /**
  * Represents a field declaration.
  */
-public class JField implements com.google.gwt.core.ext.typeinfo.JField {
+public class JField implements com.google.gwt.core.ext.typeinfo.JField,
+		ProvidesPropertyMethod {
 	private TypeOracle typeOracle;
 
 	private Field field;
@@ -132,7 +139,60 @@ public class JField implements com.google.gwt.core.ext.typeinfo.JField {
 		return Modifier.isVolatile(modifierBits);
 	}
 
+	@Override
+	public Method providePropertyMethod(boolean getter,
+			boolean firePropertyChangeEvents) {
+		return new cc.alcina.framework.common.client.reflection.Method(field,
+				new MethodInvokerImpl(field, getter, firePropertyChangeEvents),
+				field.getType());
+	}
+
 	public void setType(JType type) {
 		this.type = type;
+	}
+
+	@Override
+	public String toString() {
+		return field.toString();
+	}
+
+	static class MethodInvokerImpl<T>
+			implements BiFunction<Object, Object[], T> {
+		java.lang.reflect.Field reflectField;
+
+		boolean getter;
+
+		boolean firePropertyChangeEvents;
+
+		MethodInvokerImpl(java.lang.reflect.Field reflectField, boolean getter,
+				boolean firePropertyChangeEvents) {
+			this.reflectField = reflectField;
+			reflectField.setAccessible(true);
+			this.getter = getter;
+			this.firePropertyChangeEvents = firePropertyChangeEvents;
+		}
+
+		@Override
+		public T apply(Object target, Object[] args) {
+			try {
+				if (getter) {
+					return (T) reflectField.get(target);
+				} else {
+					Object value = args[0];
+					if (firePropertyChangeEvents) {
+						Object oldValue = reflectField.get(target);
+						reflectField.set(target, value);
+						SourcesPropertyChangeEvents eventSource = (SourcesPropertyChangeEvents) target;
+						eventSource.firePropertyChange(reflectField.getName(),
+								oldValue, value);
+					} else {
+						reflectField.set(target, value);
+					}
+					return null;
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 	}
 }

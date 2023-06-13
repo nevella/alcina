@@ -63,7 +63,6 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
-import cc.alcina.framework.entity.impl.DocumentContextProviderImpl;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -327,7 +326,7 @@ public abstract class DevHelper {
 		initDataFolder();
 		ClassMetadata.USE_MD5_CHANGE_CHECK = true;
 		scanRegistry();
-		Document.registerContextProvider(DocumentContextProviderImpl.get());
+		Document.initialiseContextProvider(null);
 		LocalDom.initalize();
 		initDummyServices();
 		TransformManager.register(createTransformManager());

@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 import com.google.gwt.core.ext.typeinfo.JType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.ProvidesMethod;
+import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.ProvidesPropertyMethod;
 
 /**
  * Represents a method declaration.
  */
-public class JMethod extends JAbstractMethod
-		implements com.google.gwt.core.ext.typeinfo.JMethod, ProvidesMethod {
+public class JMethod extends JAbstractMethod implements
+		com.google.gwt.core.ext.typeinfo.JMethod, ProvidesPropertyMethod {
 	private Method method;
 
 	private JType returnType;
@@ -89,7 +89,11 @@ public class JMethod extends JAbstractMethod
 	}
 
 	@Override
-	public cc.alcina.framework.common.client.reflection.Method provideMethod() {
+	public cc.alcina.framework.common.client.reflection.Method
+			providePropertyMethod(boolean getter,
+					// ignored for JMethod accessor (the method itself should
+					// fire changes)
+					boolean firePropertyChangeEvents) {
 		return new cc.alcina.framework.common.client.reflection.Method(method,
 				new MethodInvokerImpl(method), method.getReturnType());
 	}
@@ -108,6 +112,7 @@ public class JMethod extends JAbstractMethod
 		private java.lang.reflect.Method reflectMethod;
 
 		public MethodInvokerImpl(java.lang.reflect.Method reflectMethod) {
+			reflectMethod.setAccessible(true);
 			this.reflectMethod = reflectMethod;
 		}
 

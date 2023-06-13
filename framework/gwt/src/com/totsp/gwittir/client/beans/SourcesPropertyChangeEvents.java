@@ -33,6 +33,9 @@ public interface SourcesPropertyChangeEvents {
 	public void addPropertyChangeListener(String propertyName,
 			PropertyChangeListener l);
 
+	public void firePropertyChange(String propertyName, Object oldValue,
+			Object newValue);
+
 	public PropertyChangeListener[] propertyChangeListeners();
 
 	public void removePropertyChangeListener(PropertyChangeListener l);

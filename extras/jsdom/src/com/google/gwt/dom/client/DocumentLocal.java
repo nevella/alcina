@@ -2,7 +2,7 @@ package com.google.gwt.dom.client;
 
 import org.w3c.dom.DOMException;
 
-public class DocumentLocal extends NodeLocal implements DomDocument {
+public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 	public Document document;
 
 	private Element bodyElement;
@@ -16,27 +16,27 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final AnchorElement createAnchorElement() {
-		return DomDocumentStatic.createAnchorElement(this);
+		return ClientDomDocumentStatic.createAnchorElement(this);
 	}
 
 	@Override
 	public final AreaElement createAreaElement() {
-		return DomDocumentStatic.createAreaElement(this);
+		return ClientDomDocumentStatic.createAreaElement(this);
 	}
 
 	@Override
 	public final AudioElement createAudioElement() {
-		return DomDocumentStatic.createAudioElement(this);
+		return ClientDomDocumentStatic.createAudioElement(this);
 	}
 
 	@Override
 	public final BaseElement createBaseElement() {
-		return DomDocumentStatic.createBaseElement(this);
+		return ClientDomDocumentStatic.createBaseElement(this);
 	}
 
 	@Override
 	public final QuoteElement createBlockQuoteElement() {
-		return DomDocumentStatic.createBlockQuoteElement(this);
+		return ClientDomDocumentStatic.createBlockQuoteElement(this);
 	}
 
 	@Override
@@ -46,28 +46,28 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final BRElement createBRElement() {
-		return DomDocumentStatic.createBRElement(this);
+		return ClientDomDocumentStatic.createBRElement(this);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Override
 	public final ButtonElement createButtonElement() {
-		return DomDocumentStatic.createButtonElement(this);
+		return ClientDomDocumentStatic.createButtonElement(this);
 	}
 
 	@Override
 	public final InputElement createButtonInputElement() {
-		return DomDocumentStatic.createButtonInputElement(this);
+		return ClientDomDocumentStatic.createButtonInputElement(this);
 	}
 
 	@Override
 	public final CanvasElement createCanvasElement() {
-		return DomDocumentStatic.createCanvasElement(this);
+		return ClientDomDocumentStatic.createCanvasElement(this);
 	}
 
 	@Override
 	public final TableCaptionElement createCaptionElement() {
-		return DomDocumentStatic.createCaptionElement(this);
+		return ClientDomDocumentStatic.createCaptionElement(this);
 	}
 
 	@Override
@@ -85,7 +85,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final InputElement createCheckInputElement() {
-		return DomDocumentStatic.createCheckInputElement(this);
+		return ClientDomDocumentStatic.createCheckInputElement(this);
 	}
 
 	@Override
@@ -97,12 +97,12 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final TableColElement createColElement() {
-		return DomDocumentStatic.createColElement(this);
+		return ClientDomDocumentStatic.createColElement(this);
 	}
 
 	@Override
 	public final TableColElement createColGroupElement() {
-		return DomDocumentStatic.createColGroupElement(this);
+		return ClientDomDocumentStatic.createColGroupElement(this);
 	}
 
 	@Override
@@ -127,17 +127,17 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final ModElement createDelElement() {
-		return DomDocumentStatic.createDelElement(this);
+		return ClientDomDocumentStatic.createDelElement(this);
 	}
 
 	@Override
 	public final DivElement createDivElement() {
-		return DomDocumentStatic.createDivElement(this);
+		return ClientDomDocumentStatic.createDivElement(this);
 	}
 
 	@Override
 	public final DListElement createDLElement() {
-		return DomDocumentStatic.createDLElement(this);
+		return ClientDomDocumentStatic.createDLElement(this);
 	}
 
 	@Override
@@ -162,12 +162,12 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final FieldSetElement createFieldSetElement() {
-		return DomDocumentStatic.createFieldSetElement(this);
+		return ClientDomDocumentStatic.createFieldSetElement(this);
 	}
 
 	@Override
 	public final InputElement createFileInputElement() {
-		return DomDocumentStatic.createFileInputElement(this);
+		return ClientDomDocumentStatic.createFileInputElement(this);
 	}
 
 	@Override
@@ -177,37 +177,37 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final FormElement createFormElement() {
-		return DomDocumentStatic.createFormElement(this);
+		return ClientDomDocumentStatic.createFormElement(this);
 	}
 
 	@Override
 	public final FrameElement createFrameElement() {
-		return DomDocumentStatic.createFrameElement(this);
+		return ClientDomDocumentStatic.createFrameElement(this);
 	}
 
 	@Override
 	public final FrameSetElement createFrameSetElement() {
-		return DomDocumentStatic.createFrameSetElement(this);
+		return ClientDomDocumentStatic.createFrameSetElement(this);
 	}
 
 	@Override
 	public final HeadElement createHeadElement() {
-		return DomDocumentStatic.createHeadElement(this);
+		return ClientDomDocumentStatic.createHeadElement(this);
 	}
 
 	@Override
 	public final HeadingElement createHElement(int n) {
-		return DomDocumentStatic.createHElement(this, n);
+		return ClientDomDocumentStatic.createHElement(this, n);
 	}
 
 	@Override
 	public final InputElement createHiddenInputElement() {
-		return DomDocumentStatic.createHiddenInputElement(this);
+		return ClientDomDocumentStatic.createHiddenInputElement(this);
 	}
 
 	@Override
 	public final HRElement createHRElement() {
-		return DomDocumentStatic.createHRElement(this);
+		return ClientDomDocumentStatic.createHRElement(this);
 	}
 
 	@Override
@@ -218,17 +218,17 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final IFrameElement createIFrameElement() {
-		return DomDocumentStatic.createIFrameElement(this);
+		return ClientDomDocumentStatic.createIFrameElement(this);
 	}
 
 	@Override
 	public final ImageElement createImageElement() {
-		return DomDocumentStatic.createImageElement(this);
+		return ClientDomDocumentStatic.createImageElement(this);
 	}
 
 	@Override
 	public final InputElement createImageInputElement() {
-		return DomDocumentStatic.createImageInputElement(this);
+		return ClientDomDocumentStatic.createImageInputElement(this);
 	}
 
 	@Override
@@ -238,7 +238,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final ModElement createInsElement() {
-		return DomDocumentStatic.createInsElement(this);
+		return ClientDomDocumentStatic.createInsElement(this);
 	}
 
 	@Override
@@ -292,37 +292,37 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final LabelElement createLabelElement() {
-		return DomDocumentStatic.createLabelElement(this);
+		return ClientDomDocumentStatic.createLabelElement(this);
 	}
 
 	@Override
 	public final LegendElement createLegendElement() {
-		return DomDocumentStatic.createLegendElement(this);
+		return ClientDomDocumentStatic.createLegendElement(this);
 	}
 
 	@Override
 	public final LIElement createLIElement() {
-		return DomDocumentStatic.createLIElement(this);
+		return ClientDomDocumentStatic.createLIElement(this);
 	}
 
 	@Override
 	public final LinkElement createLinkElement() {
-		return DomDocumentStatic.createLinkElement(this);
+		return ClientDomDocumentStatic.createLinkElement(this);
 	}
 
 	@Override
 	public final NativeEvent createLoadEvent() {
-		return DomDocumentStatic.createLoadEvent(this);
+		return ClientDomDocumentStatic.createLoadEvent(this);
 	}
 
 	@Override
 	public final MapElement createMapElement() {
-		return DomDocumentStatic.createMapElement(this);
+		return ClientDomDocumentStatic.createMapElement(this);
 	}
 
 	@Override
 	public final MetaElement createMetaElement() {
-		return DomDocumentStatic.createMetaElement(this);
+		return ClientDomDocumentStatic.createMetaElement(this);
 	}
 
 	@Override
@@ -373,42 +373,42 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final ObjectElement createObjectElement() {
-		return DomDocumentStatic.createObjectElement(this);
+		return ClientDomDocumentStatic.createObjectElement(this);
 	}
 
 	@Override
 	public final OListElement createOLElement() {
-		return DomDocumentStatic.createOLElement(this);
+		return ClientDomDocumentStatic.createOLElement(this);
 	}
 
 	@Override
 	public final OptGroupElement createOptGroupElement() {
-		return DomDocumentStatic.createOptGroupElement(this);
+		return ClientDomDocumentStatic.createOptGroupElement(this);
 	}
 
 	@Override
 	public final OptionElement createOptionElement() {
-		return DomDocumentStatic.createOptionElement(this);
+		return ClientDomDocumentStatic.createOptionElement(this);
 	}
 
 	@Override
 	public final ParamElement createParamElement() {
-		return DomDocumentStatic.createParamElement(this);
+		return ClientDomDocumentStatic.createParamElement(this);
 	}
 
 	@Override
 	public final InputElement createPasswordInputElement() {
-		return DomDocumentStatic.createPasswordInputElement(this);
+		return ClientDomDocumentStatic.createPasswordInputElement(this);
 	}
 
 	@Override
 	public final ParagraphElement createPElement() {
-		return DomDocumentStatic.createPElement(this);
+		return ClientDomDocumentStatic.createPElement(this);
 	}
 
 	@Override
 	public final PreElement createPreElement() {
-		return DomDocumentStatic.createPreElement(this);
+		return ClientDomDocumentStatic.createPreElement(this);
 	}
 
 	@Override
@@ -424,37 +424,37 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final ButtonElement createPushButtonElement() {
-		return DomDocumentStatic.createPushButtonElement(this);
+		return ClientDomDocumentStatic.createPushButtonElement(this);
 	}
 
 	@Override
 	public final QuoteElement createQElement() {
-		return DomDocumentStatic.createQElement(this);
+		return ClientDomDocumentStatic.createQElement(this);
 	}
 
 	@Override
 	public final InputElement createRadioInputElement(String name) {
-		return DomDocumentStatic.createRadioInputElement(this, name);
+		return ClientDomDocumentStatic.createRadioInputElement(this, name);
 	}
 
 	@Override
 	public final ButtonElement createResetButtonElement() {
-		return DomDocumentStatic.createResetButtonElement(this);
+		return ClientDomDocumentStatic.createResetButtonElement(this);
 	}
 
 	@Override
 	public final InputElement createResetInputElement() {
-		return DomDocumentStatic.createResetInputElement(this);
+		return ClientDomDocumentStatic.createResetInputElement(this);
 	}
 
 	@Override
 	public final ScriptElement createScriptElement() {
-		return DomDocumentStatic.createScriptElement(this);
+		return ClientDomDocumentStatic.createScriptElement(this);
 	}
 
 	@Override
 	public final ScriptElement createScriptElement(String source) {
-		return DomDocumentStatic.createScriptElement(this, source);
+		return ClientDomDocumentStatic.createScriptElement(this, source);
 	}
 
 	@Override
@@ -464,63 +464,63 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final SelectElement createSelectElement() {
-		return DomDocumentStatic.createSelectElement(this);
+		return ClientDomDocumentStatic.createSelectElement(this);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Override
 	public final SelectElement createSelectElement(boolean multiple) {
-		return DomDocumentStatic.createSelectElement(this, multiple);
+		return ClientDomDocumentStatic.createSelectElement(this, multiple);
 	}
 
 	@Override
 	public final SourceElement createSourceElement() {
-		return DomDocumentStatic.createSourceElement(this);
+		return ClientDomDocumentStatic.createSourceElement(this);
 	}
 
 	@Override
 	public final SpanElement createSpanElement() {
-		return DomDocumentStatic.createSpanElement(this);
+		return ClientDomDocumentStatic.createSpanElement(this);
 	}
 
 	@Override
 	public final StyleElement createStyleElement() {
-		return DomDocumentStatic.createStyleElement(this);
+		return ClientDomDocumentStatic.createStyleElement(this);
 	}
 
 	@Override
 	public final ButtonElement createSubmitButtonElement() {
-		return DomDocumentStatic.createSubmitButtonElement(this);
+		return ClientDomDocumentStatic.createSubmitButtonElement(this);
 	}
 
 	@Override
 	public final InputElement createSubmitInputElement() {
-		return DomDocumentStatic.createSubmitInputElement(this);
+		return ClientDomDocumentStatic.createSubmitInputElement(this);
 	}
 
 	@Override
 	public final TableElement createTableElement() {
-		return DomDocumentStatic.createTableElement(this);
+		return ClientDomDocumentStatic.createTableElement(this);
 	}
 
 	@Override
 	public final TableSectionElement createTBodyElement() {
-		return DomDocumentStatic.createTBodyElement(this);
+		return ClientDomDocumentStatic.createTBodyElement(this);
 	}
 
 	@Override
 	public final TableCellElement createTDElement() {
-		return DomDocumentStatic.createTDElement(this);
+		return ClientDomDocumentStatic.createTDElement(this);
 	}
 
 	@Override
 	public final TextAreaElement createTextAreaElement() {
-		return DomDocumentStatic.createTextAreaElement(this);
+		return ClientDomDocumentStatic.createTextAreaElement(this);
 	}
 
 	@Override
 	public final InputElement createTextInputElement() {
-		return DomDocumentStatic.createTextInputElement(this);
+		return ClientDomDocumentStatic.createTextInputElement(this);
 	}
 
 	@Override
@@ -533,32 +533,32 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final TableSectionElement createTFootElement() {
-		return DomDocumentStatic.createTFootElement(this);
+		return ClientDomDocumentStatic.createTFootElement(this);
 	}
 
 	@Override
 	public final TableSectionElement createTHeadElement() {
-		return DomDocumentStatic.createTHeadElement(this);
+		return ClientDomDocumentStatic.createTHeadElement(this);
 	}
 
 	@Override
 	public final TableCellElement createTHElement() {
-		return DomDocumentStatic.createTHElement(this);
+		return ClientDomDocumentStatic.createTHElement(this);
 	}
 
 	@Override
 	public final TitleElement createTitleElement() {
-		return DomDocumentStatic.createTitleElement(this);
+		return ClientDomDocumentStatic.createTitleElement(this);
 	}
 
 	@Override
 	public final TableRowElement createTRElement() {
-		return DomDocumentStatic.createTRElement(this);
+		return ClientDomDocumentStatic.createTRElement(this);
 	}
 
 	@Override
 	public final UListElement createULElement() {
-		return DomDocumentStatic.createULElement(this);
+		return ClientDomDocumentStatic.createULElement(this);
 	}
 
 	@Override
@@ -568,7 +568,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 
 	@Override
 	public final VideoElement createVideoElement() {
-		return DomDocumentStatic.createVideoElement(this);
+		return ClientDomDocumentStatic.createVideoElement(this);
 	}
 
 	@Override

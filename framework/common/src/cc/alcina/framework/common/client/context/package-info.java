@@ -1,7 +1,7 @@
 /**
  * <p>
  * WIP. This will become the general support for Alcina contexts - transform,
- * permissions, http, document.
+ * permissions, http, document, localdom.
  * <p>
  * A {@code Provider} returns context instances - generally three classes of
  * provider :: threadlocal (server/console), single (script) and single/threaded

@@ -41,6 +41,14 @@ public class StyleInjector {
 
 	private static boolean needsInjection = false;
 
+	public static void flush() {
+		String contents = pending.stream().collect(Collectors.joining(""));
+		StyleElement style = createElement(contents);
+		getHead().appendChild(style);
+		pending.clear();
+		needsInjection = false;
+	}
+
 	public static void inject(String contents) {
 		pending.add(contents);
 		schedule();
@@ -57,19 +65,10 @@ public class StyleInjector {
 		return style;
 	}
 
-	private static void flush() {
-		String contents = pending.stream().collect(Collectors.joining(""));
-		StyleElement style = createElement(contents);
-		getHead().appendChild(style);
-		pending.clear();
-		;
-		needsInjection = false;
-	}
-
 	private static HeadElement getHead() {
 		if (head == null) {
-			Element elt = Document.get().getElementsByTagName("head")
-					.getItem(0);
+			Element elt = (Element) Document.get().getDocumentElement()
+					.asDomNode().children.byTag("head").get(0).domElement();
 			assert elt != null : "The host HTML page does not have a <head> element"
 					+ " which is required by StyleInjector";
 			head = HeadElement.as(elt);

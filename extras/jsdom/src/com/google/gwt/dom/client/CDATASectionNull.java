@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client;
 
-public class CDATASectionNull extends NodeLocalNull implements DomCDATASection {
+public class CDATASectionNull extends NodeLocalNull
+		implements ClientDomCDATASection {
 	static final CDATASectionNull INSTANCE = new CDATASectionNull();
 
 	CDATASectionNull() {
@@ -42,6 +43,11 @@ public class CDATASectionNull extends NodeLocalNull implements DomCDATASection {
 	}
 
 	@Override
+	public int indexInParentChildren() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void insertData(int offset, String data) {
 		// noop
 	}
@@ -63,16 +69,6 @@ public class CDATASectionNull extends NodeLocalNull implements DomCDATASection {
 
 	@Override
 	public Text splitText(int offset) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
 		throw new UnsupportedOperationException();
 	}
 

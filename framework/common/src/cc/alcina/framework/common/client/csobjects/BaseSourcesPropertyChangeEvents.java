@@ -15,10 +15,8 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Objects;
 
 import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -93,25 +91,43 @@ public class BaseSourcesPropertyChangeEvents
 	}
 
 	public void firePropertyChange(PropertyChangeEvent evt) {
+		if (propertyChangeSupport == null) {
+			return;
+		}
 		this.propertyChangeSupport().firePropertyChange(evt);
 	}
 
 	public void firePropertyChange(String propertyName, boolean oldValue,
 			boolean newValue) {
+		if (propertyChangeSupport == null) {
+			return;
+		}
 		this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
 				newValue);
 	}
 
 	public void firePropertyChange(String propertyName, int oldValue,
 			int newValue) {
+		if (propertyChangeSupport == null) {
+			return;
+		}
 		this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
 				newValue);
 	}
 
+	@Override
 	public void firePropertyChange(String propertyName, Object oldValue,
 			Object newValue) {
+		if (propertyChangeSupport == null) {
+			return;
+		}
 		this.propertyChangeSupport().firePropertyChange(propertyName, oldValue,
 				newValue);
+	}
+
+	// optimisation for non-mutating callers
+	public boolean hasPropertyChangeSupport() {
+		return propertyChangeSupport != null;
 	}
 
 	@Override
@@ -158,9 +174,16 @@ public class BaseSourcesPropertyChangeEvents
 				() -> property.set(this, newValue));
 	}
 
-	// optimisation for non-mutating callers
-	protected boolean hasPropertyChangeSupport() {
-		return propertyChangeSupport != null;
+	/*
+	 * MVCC access - 'this' correctly refers to the version, *not*
+	 * domainIdentity()
+	 */
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+	public void set(String propertyName, Object newValue) {
+		Property property = Reflections.at(getClass()).property(propertyName);
+		Object oldValue = property.get(this);
+		set(propertyName, oldValue, newValue,
+				() -> property.set(this, newValue));
 	}
 
 	protected <V> void set(PropertyEnum propertyName, V oldValue, V newValue,
@@ -170,9 +193,12 @@ public class BaseSourcesPropertyChangeEvents
 
 	protected <V> void set(String propertyName, V oldValue, V newValue,
 			Runnable setter) {
-		if (Objects.equals(oldValue, newValue)) {
-			return;
-		}
+		// this would cause a double comparison of collections (if non equal),
+		// probably a de-opt rather than an opt
+		//
+		// if (Objects.equals(oldValue, newValue)) {
+		// return;
+		// }
 		setter.run();
 		if (propertyChangeSupport == null) {
 			return;

@@ -16,7 +16,7 @@
 package com.google.gwt.user.client.impl;
 
 import com.google.gwt.dom.client.BrowserEvents;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 
 /**
  * IE9 implementation of
@@ -24,7 +24,7 @@ import com.google.gwt.dom.client.ElementRemote;
  */
 class DOMImplIE9 extends DOMImplStandardBase {
 	@Override
-	protected void sinkBitlessEventImpl(ElementRemote elem,
+	protected void sinkBitlessEventImpl(ElementJso elem,
 			String eventTypeName) {
 		super.sinkBitlessEventImpl(elem, eventTypeName);
 		if (BrowserEvents.DRAGOVER.equals(eventTypeName)) {

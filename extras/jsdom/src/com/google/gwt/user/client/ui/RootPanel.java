@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -46,6 +47,7 @@ public class RootPanel extends AbsolutePanel {
 	 * The singleton command used to detach widgets.
 	 */
 	private static final AttachDetachException.Command maybeDetachCommand = new AttachDetachException.Command() {
+		@Override
 		public void execute(Widget w) {
 			if (w.isAttached()) {
 				w.onDetach();
@@ -172,12 +174,14 @@ public class RootPanel extends AbsolutePanel {
 		// on the first RootPanel.get(String) or RootPanel.get()
 		// call.
 		if (rootPanels.size() == 0) {
-			hookWindowClosing();
-			// If we're in a RTL locale, set the RTL directionality
-			// on the entire document.
-			if (LocaleInfo.getCurrentLocale().isRTL()) {
-				BidiUtils.setDirectionOnElement(getRootElement(),
-						HasDirection.Direction.RTL);
+			if (GWT.isClient()) {
+				hookWindowClosing();
+				// If we're in a RTL locale, set the RTL directionality
+				// on the entire document.
+				if (LocaleInfo.getCurrentLocale().isRTL()) {
+					BidiUtils.setDirectionOnElement(getRootElement(),
+							HasDirection.Direction.RTL);
+				}
 			}
 		}
 		// Create the panel and put it in the map.
@@ -220,6 +224,7 @@ public class RootPanel extends AbsolutePanel {
 	private static void hookWindowClosing() {
 		// Catch the window closing event.
 		Window.addCloseHandler(new CloseHandler<Window>() {
+			@Override
 			public void onClose(CloseEvent<Window> closeEvent) {
 				detachWidgets();
 			}

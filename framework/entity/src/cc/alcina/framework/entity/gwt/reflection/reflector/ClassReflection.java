@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPoint
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -36,7 +37,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ClassUtil;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
-import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyMethod;
+import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyAccessor;
 
 /**
  * Builds a class reflector (or data required for ClassReflector source
@@ -84,6 +85,8 @@ public class ClassReflection extends ReflectionElement {
 
 	public final JClassType type;
 
+	public final boolean sourcesPropertyChanges;
+
 	ReflectionVisibility reflectionVisibility;
 
 	JConstructor noArgsConstructor;
@@ -108,11 +111,10 @@ public class ClassReflection extends ReflectionElement {
 
 	AnnotationLocationTypeInfo typeAnnotationLocation;
 
-	boolean hasPackageProtectionProperties;
-
-	public ClassReflection(JType type,
+	public ClassReflection(JType type, boolean sourcesPropertyChanges,
 			ReflectionVisibility reflectionVisibility,
 			ProvidesTypeBounds providesTypeBounds) {
+		this.sourcesPropertyChanges = sourcesPropertyChanges;
 		this.providesTypeBounds = providesTypeBounds;
 		this.type = type instanceof JClassType ? (JClassType) type : null;
 		this.reflectionVisibility = reflectionVisibility;
@@ -185,8 +187,6 @@ public class ClassReflection extends ReflectionElement {
 		}
 		this.typeAnnotationLocation = new AnnotationLocationTypeInfo(type,
 				annotationResolver);
-		this.hasPackageProtectionProperties = typeAnnotationLocation.hasAny(
-				Bean.class, Bean.Fields.class, Bean.ImmutableFields.class);
 		this.hasAbstractModifier = type.isAbstract();
 		this.hasFinalModifier = type.isFinal();
 		boolean isExternalConstructible = !hasAbstractModifier
@@ -229,14 +229,22 @@ public class ClassReflection extends ReflectionElement {
 
 	void addFieldMethods(JField field) {
 		boolean hasMutableFields = typeAnnotationLocation
-				.hasAnnotation(Bean.Fields.class);
+				.hasAnnotation(Bean.class)
+				&& typeAnnotationLocation.getAnnotation(Bean.class)
+						.value() == PropertySource.FIELDS;
 		PropertyReflection propertyReflection = propertyReflections
 				.computeIfAbsent(field.getName(),
 						name -> new PropertyReflection(this, name,
 								reflectionVisibility, providesTypeBounds));
+		propertyReflection.addMethod(new PropertyAccessor.Field(field, true,
+				sourcesPropertyChanges));
+		if (hasMutableFields && !field.isFinal()) {
+			propertyReflection.addMethod(new PropertyAccessor.Field(field,
+					false, sourcesPropertyChanges));
+		}
 	}
 
-	void addPropertyMethod(PropertyMethod m) {
+	void addPropertyMethod(PropertyAccessor m) {
 		PropertyReflection propertyReflection = propertyReflections
 				.computeIfAbsent(m.propertyName,
 						name -> new PropertyReflection(this, name,
@@ -244,7 +252,7 @@ public class ClassReflection extends ReflectionElement {
 		propertyReflection.addMethod(m);
 	}
 
-	List<JField> getAllFields() {
+	List<JField> getAllVisibleFields() {
 		List<JField> propertyFields = new ArrayList<>();
 		JClassType cursor = type;
 		/*
@@ -253,9 +261,19 @@ public class ClassReflection extends ReflectionElement {
 		 * 
 		 */
 		while (cursor.getSuperclass() != null) {
-			JField[] fields = type.getFields();
+			JField[] fields = cursor.getFields();
 			for (int idx = 0; idx < fields.length; idx++) {
-				propertyFields.add(idx, fields[idx]);
+				JField field = fields[idx];
+				/*
+				 * FIDME - reflection - this restriction shd be removed, by
+				 * reworking the GWT accessors (to call the superclass)
+				 */
+				if (!Objects.equals(cursor.getPackage(), type.getPackage())) {
+					if (!field.isPublic()) {
+						continue;
+					}
+				}
+				propertyFields.add(idx, field);
 			}
 			cursor = cursor.getSuperclass();
 		}
@@ -280,24 +298,29 @@ public class ClassReflection extends ReflectionElement {
 		 * Add field-derived properties. Note that method-first means any method
 		 * will override, if it exists
 		 */
-		boolean hasFields = typeAnnotationLocation.hasAny(Bean.Fields.class,
-				Bean.ImmutableFields.class);
-		boolean hasMutableFields = typeAnnotationLocation
-				.hasAnnotation(Bean.Fields.class);
+		Bean.PropertySource propertySource = typeAnnotationLocation
+				.hasAnnotation(Bean.class)
+						? typeAnnotationLocation.getAnnotation(Bean.class)
+								.value()
+						: null;
+		boolean hasFields = propertySource == PropertySource.FIELDS
+				|| propertySource == PropertySource.IMMUTABLE_FIELDS;
+		boolean hasMutableFields = propertySource == PropertySource.FIELDS;
 		if (hasFields) {
-			List<JField> fields = getAllFields();
+			List<JField> fields = getAllVisibleFields();
 			fields.stream().
-			// non-transient, non-private and immutable unless Bean.Fields
-					filter(f -> !f.isTransient()).filter(f -> !f.isPrivate())
+			// non-transient, non-private, non-static and immutable unless
+			// Bean.Fields. Note that this includes superclass fields (including
+			// package- and protected-)
+					filter(f -> !f.isTransient() && !f.isPrivate()
+							&& !f.isStatic())
 					.filter(f -> f.isFinal() || hasMutableFields)
 					.forEach(this::addFieldMethods);
 		}
 		/*
 		 * Cleanup, sort, prepare
 		 */
-		propertyReflections.entrySet().removeIf(
-				e -> e.getValue().getter != null && e.getValue().getter.method
-						.getAnnotation(Omit.class) != null);
+		propertyReflections.values().removeIf(refl -> refl.has(Omit.class));
 		propertyReflections.values().stream().sorted(new PropertyOrdering())
 				.forEach(sortedPropertyReflections::add);
 		sortedPropertyReflections.forEach(PropertyReflection::prepare);
@@ -310,7 +333,7 @@ public class ClassReflection extends ReflectionElement {
 				.forEach(getRegistrations()::add);
 	}
 
-	PropertyReflection.PropertyMethod toPropertyMethod(JMethod method) {
+	PropertyReflection.PropertyAccessor toPropertyMethod(JMethod method) {
 		if (!method.isPublic()) {
 			return null;
 		}
@@ -326,7 +349,7 @@ public class ClassReflection extends ReflectionElement {
 								method.getReturnType().getQualifiedSourceName(),
 								"boolean");
 				if (!ignoreableIs) {
-					return new PropertyReflection.PropertyMethod(
+					return new PropertyReflection.PropertyAccessor.Method(
 							methodNamePartToPropertyName(m.group(1)), true,
 							method);
 				}
@@ -340,7 +363,7 @@ public class ClassReflection extends ReflectionElement {
 								.equals("void"))) {
 			Matcher m = setterPattern.matcher(method.getName());
 			if (m.matches()) {
-				return new PropertyReflection.PropertyMethod(
+				return new PropertyReflection.PropertyAccessor.Method(
 						methodNamePartToPropertyName(m.group(1)), false,
 						method);
 			}
@@ -378,8 +401,7 @@ public class ClassReflection extends ReflectionElement {
 	}
 
 	/*
-	 * Parallels cc.alcina.framework.entity.SEUtilities.
-	 * getPropertyDescriptorsSortedByField(Class<?>)
+	 * If non custom, ordering is (superclass)(fields)(subclass)(fields)
 	 */
 	class PropertyOrdering implements Comparator<PropertyReflection> {
 		private Map<String, Integer> fieldOrdinals;

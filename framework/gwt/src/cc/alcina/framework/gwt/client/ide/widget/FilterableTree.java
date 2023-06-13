@@ -132,7 +132,7 @@ public class FilterableTree extends Tree
 		filterText = filterText == null ? null : filterText.toLowerCase();
 		for (int i = 0; i < getItemCount(); i++) {
 			TreeItem child = getItem(i);
-			child.getElement().resolvedToPending();
+			child.getElement().syncedToPending();
 		}
 		for (int i = 0; i < getItemCount(); i++) {
 			TreeItem child = getItem(i);

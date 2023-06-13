@@ -19,9 +19,9 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeRemote;
+import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.Text;
-import com.google.gwt.dom.client.TextRemote;
+import com.google.gwt.dom.client.TextJso;
 
 import rocket.selection.client.Selection;
 import rocket.selection.client.SelectionEndPoint;
@@ -39,12 +39,12 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 		int debugInfo = 0;
 		try {
 			final SelectionEndPoint end = new SelectionEndPoint();
-			NodeRemote nodeRemote = JavaScript
+			NodeJso nodeJso = JavaScript
 					.getObject(selection, Constants.FOCUS_NODE).cast();
-			if (nodeRemote == null) {
+			if (nodeJso == null) {
 				return null;
 			}
-			end.setNode(LocalDom.nodeFor(nodeRemote));
+			end.setNode(LocalDom.nodeFor(nodeJso));
 			end.setOffset(
 					JavaScript.getInteger(selection, Constants.FOCUS_OFFSET));
 			debugInfo = 1;
@@ -66,9 +66,9 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 					end.setOffset(0);
 				} else {
 					debugInfo = 6;
-					TextRemote textRemote = getFirstTextDepthFirstWithParent(
-							((Element) node).implAccess().typedRemote(), 1);
-					Text text = LocalDom.nodeFor(textRemote);
+					TextJso textJso = getFirstTextDepthFirstWithParent(
+							((Element) node).implAccess().jsoRemote(), 1);
+					Text text = LocalDom.nodeFor(textJso);
 					end.setTextNode(text);
 					end.setOffset(0);
 				}
@@ -93,13 +93,13 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 		int debugInfo = 0;
 		try {
 			final SelectionEndPoint start = new SelectionEndPoint();
-			NodeRemote nodeRemote = JavaScript
+			NodeJso nodeJso = JavaScript
 					.getObject(selection, Constants.ANCHOR_NODE).cast();
-			if (nodeRemote == null) {
+			if (nodeJso == null) {
 				return null;
 			}
 			debugInfo = 1;
-			start.setNode(LocalDom.nodeFor(nodeRemote));
+			start.setNode(LocalDom.nodeFor(nodeJso));
 			debugInfo = 2;
 			start.setOffset(
 					JavaScript.getInteger(selection, Constants.ANCHOR_OFFSET));
@@ -115,10 +115,10 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 					start.setOffset(0);
 				} else {
 					debugInfo = 7;
-					TextRemote textRemote = getFirstTextDepthFirstWithParent(
-							((Element) node).implAccess().typedRemote(), 1);
+					TextJso textJso = getFirstTextDepthFirstWithParent(
+							((Element) node).implAccess().jsoRemote(), 1);
 					debugInfo = 8;
-					Text text = LocalDom.nodeFor(textRemote);
+					Text text = LocalDom.nodeFor(textJso);
 					debugInfo = 9;
 					start.setTextNode(text);
 					start.setOffset(0);

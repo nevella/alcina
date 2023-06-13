@@ -34,9 +34,9 @@ import java.util.stream.Stream;
  *            the type of contained node
  */
 public class NodeList<T extends Node>
-		implements DomNodeList<T>, Iterable<T>, org.w3c.dom.NodeList {
-	public static DomNodeList<? extends Node>
-			gwtOnlySubList(DomNodeList<? extends Node> childNodes) {
+		implements ClientDomNodeList<T>, Iterable<T>, org.w3c.dom.NodeList {
+	public static ClientDomNodeList<? extends Node>
+			gwtOnlySubList(ClientDomNodeList<? extends Node> childNodes) {
 		return new NodeList<>(childNodes).filteredSubList(n -> {
 			switch (n.getNodeType()) {
 			case Node.DOCUMENT_NODE:
@@ -49,9 +49,9 @@ public class NodeList<T extends Node>
 		});
 	}
 
-	DomNodeList<T> impl;
+	ClientDomNodeList<T> impl;
 
-	public NodeList(DomNodeList<T> impl) {
+	public NodeList(ClientDomNodeList<T> impl) {
 		this.impl = impl;
 	}
 
@@ -76,7 +76,7 @@ public class NodeList<T extends Node>
 
 	@Override
 	public Stream<T> stream() {
-		return DomNodeListStatic.stream0(this);
+		return ClientDomNodeListStatic.stream0(this);
 	}
 
 	private class NodeListIterator implements Iterator<T> {

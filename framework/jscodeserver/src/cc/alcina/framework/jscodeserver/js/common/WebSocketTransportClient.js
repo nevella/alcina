@@ -11,7 +11,10 @@ class WebSocketTransportClient extends WebSocketTransport {
          * load socket worker, wait for connect event
          */
         this.setBuffers(new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE), new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE));
-        this.socketWorker = new Worker(`/${this.moduleName}/WebSocketTransport.js`);
+        var clientPrefix = $wnd._alc_websocket_transport_client_prefix;
+        var pathPrefix = typeof clientPrefix == 'undefined' ? '' : clientPrefix;
+        this.socketWorker = new Worker(`/${pathPrefix}${this.moduleName}/WebSocketTransport.js`);
+
         this.socketWorker.postMessage({
             message: "start",
             codeServerWs: this.codeServerWs,

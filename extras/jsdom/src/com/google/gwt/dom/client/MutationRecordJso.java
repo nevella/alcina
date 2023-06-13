@@ -6,7 +6,7 @@ public class MutationRecordJso extends JavaScriptObject {
 	protected MutationRecordJso() {
 	}
 
-	public final native NodeListRemote<Node> getAddedNodes() /*-{
+	public final native NodeListJso<Node> getAddedNodes() /*-{
     return this.addedNodes;
 	}-*/;
 
@@ -37,7 +37,7 @@ public class MutationRecordJso extends JavaScriptObject {
 		return MutationRecordType.valueOf(getType());
 	}
 
-	public final native NodeRemote getNextSibling() /*-{
+	public final native NodeJso getNextSibling() /*-{
     return this.nextSibling;
 	}-*/;
 
@@ -45,15 +45,15 @@ public class MutationRecordJso extends JavaScriptObject {
     return this.oldValue;
 	}-*/;
 
-	public final native NodeRemote getPreviousSibling() /*-{
+	public final native NodeJso getPreviousSibling() /*-{
     return this.previousSibling;
 	}-*/;
 
-	public final native NodeListRemote<Node> getRemovedNodes() /*-{
+	public final native NodeListJso<Node> getRemovedNodes() /*-{
     return this.removedNodes;
 	}-*/;
 
-	public final native NodeRemote getTarget() /*-{
+	public final native NodeJso getTarget() /*-{
     return this.target;
 	}-*/;
 

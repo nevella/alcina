@@ -13,7 +13,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
+import cc.alcina.framework.gwt.client.util.EventCollator;
 
 @Registration.Singleton
 /*
@@ -24,7 +24,7 @@ public class JobLogTimer implements DomainTransformPersistenceListener {
 		return Registry.impl(JobLogTimer.class);
 	}
 
-	private AtEndOfEventSeriesTimer<Job> timer;
+	private EventCollator<Job> timer;
 
 	public JobLogTimer() {
 	}
@@ -33,7 +33,7 @@ public class JobLogTimer implements DomainTransformPersistenceListener {
 		DomainStore.stores().writableStore().getPersistenceEvents()
 				.addDomainTransformPersistenceListener(this);
 		int delay = 2000;
-		this.timer = new AtEndOfEventSeriesTimer<Job>(delay, () -> {
+		this.timer = new EventCollator<Job>(delay, () -> {
 			MethodContext.instance().withWrappingTransaction().run(() -> {
 				Job job = timer.getLastObject();
 				if (job.provideIsActive()) {
@@ -41,7 +41,7 @@ public class JobLogTimer implements DomainTransformPersistenceListener {
 							job.getStatusMessage());
 				}
 			});
-		}).maxDelayFromFirstAction(delay);
+		}).withMaxDelayFromFirstEvent(delay);
 	}
 
 	@Override

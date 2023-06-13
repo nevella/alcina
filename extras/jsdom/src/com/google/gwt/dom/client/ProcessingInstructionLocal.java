@@ -3,7 +3,7 @@ package com.google.gwt.dom.client;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class ProcessingInstructionLocal extends NodeLocal
-		implements DomProcessingInstruction {
+		implements ClientDomProcessingInstruction {
 	private String data;
 
 	private String target;

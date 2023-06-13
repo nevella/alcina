@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
-import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
+import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.Lzw;
 
@@ -69,7 +69,7 @@ public class LogStore {
 	private ClientLogRecords logs = new ClientLogRecords();
 
 	// persist logs to local db
-	private AtEndOfEventSeriesTimer localPersistenceTimer = new AtEndOfEventSeriesTimer(
+	private EventCollator localPersistenceTimer = new EventCollator(
 			1000, new Runnable() {
 				@Override
 				public void run() {
@@ -78,7 +78,7 @@ public class LogStore {
 			});
 
 	// push logs to remote store
-	private AtEndOfEventSeriesTimer remotePersistenceTimer = new AtEndOfEventSeriesTimer(
+	private EventCollator remotePersistenceTimer = new EventCollator(
 			20000, new Runnable() {
 				@Override
 				public void run() {
@@ -101,7 +101,7 @@ public class LogStore {
 		@Override
 		public void onSuccess(Integer result) {
 			AlcinaTopics.muteStatisticsLogging.publish(false);
-			remotePersistenceTimer.triggerEventOccurred();
+			remotePersistenceTimer.eventOccurred();
 		}
 	};
 
@@ -334,7 +334,7 @@ public class LogStore {
 		if (logs.size > RemoteLogPersister.PREFERRED_MAX_PUSH_SIZE) {
 			flushToLocalPersistence();
 		} else {
-			localPersistenceTimer.triggerEventOccurred();
+			localPersistenceTimer.eventOccurred();
 		}
 		topicEventOccurred.publish(logRecord);
 	}

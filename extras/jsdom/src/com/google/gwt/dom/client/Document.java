@@ -15,6 +15,8 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.function.Function;
+
 import org.w3c.dom.Attr;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMException;
@@ -26,6 +28,11 @@ import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
 import org.w3c.dom.traversal.TreeWalker;
 
+import cc.alcina.framework.common.client.context.ContextFrame;
+import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+
 /**
  * <p>
  * A Document is the root of the HTML hierarchy and holds the entire content.
@@ -35,64 +42,55 @@ import org.w3c.dom.traversal.TreeWalker;
  * <p>
  * Server-side, {@code Document.get()} returns a context-dependent instance
  */
-public class Document extends Node implements DomDocument, org.w3c.dom.Document,
-		org.w3c.dom.traversal.DocumentTraversal {
-	private static Document doc;
+public class Document extends Node
+		implements ClientDomDocument, org.w3c.dom.Document,
+		org.w3c.dom.traversal.DocumentTraversal, ContextFrame {
+	public static ContextProvider<RemoteType, Document> contextProvider;
 
-	private static DocumentContextProvider contextProvider;
-
-	public static Document create(DocumentLocal local) {
-		Document doc = new Document();
-		doc.local = local;
-		if (LocalDom.isUseRemoteDom()) {
-			doc.remote = DocumentRemote.get();
-		}
-		return doc;
-	}
-
-	/**
-	 * Gets the default document. This is the document in which the module is
-	 * running.
-	 *
-	 * @return the default document
-	 */
 	public static Document get() {
-		if (doc == null) {
-			if (contextProvider == null) {
-				doc = createDocumentInstance();
-				LocalDom.register(doc);
-			} else {
-				Document doc = contextProvider.contextDocument();
-				if (doc == null) {
-					doc = createDocumentInstance();
-					contextProvider.registerCreatedDocument(doc);
-					LocalDom.register(doc);
-				}
-				return doc;
-			}
-		}
-		return doc;
+		return contextProvider.contextFrame();
 	}
 
-	public static void
-			registerContextProvider(DocumentContextProvider contextProvider) {
-		Document.contextProvider = contextProvider;
+	// remoteType null :: multiiple context (remote type specified in frame
+	// construction)
+	public static void initialiseContextProvider(RemoteType remoteType) {
+		Function<RemoteType, Document> frameConstructor = Document::new;
+		Runnable onPostRegisterCreated = Document::registerWithLocalDom;
+		contextProvider = ContextProvider.createProvider(frameConstructor,
+				onPostRegisterCreated, remoteType, Document.class,
+				remoteType == null);
 	}
 
-	private static Document createDocumentInstance() {
-		DocumentLocal local = new DocumentLocal();
-		Document doc = create(local);
-		local.document = doc;
-		return doc;
+	private static void registerWithLocalDom() {
+		LocalDom.register(Document.get());
 	}
+
+	RemoteType remoteType;
+
+	LocalDom localDom;
 
 	DocumentLocal local;
 
-	DomDocument remote;
+	ClientDomDocument remote;
 
 	Element documentElement;
 
-	protected Document() {
+	public final DomDocument domDocument;
+
+	protected Document(RemoteType remoteType) {
+		this.local = new DocumentLocal();
+		this.local.document = this;
+		this.remoteType = remoteType;
+		domDocument = DomDocument.from(this, true);
+		switch (remoteType) {
+		case JSO:
+			remote = DocumentJso.get();
+			break;
+		case PATHREF:
+			remote = new DocumentPathref(this);
+			break;
+		}
+		localDom = new LocalDom();
 	}
 
 	@Override
@@ -154,7 +152,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public NativeEvent createBlurEvent() {
-		return typedRemote().createBlurEvent();
+		return jsoRemote().createBlurEvent();
 	}
 
 	@Override
@@ -189,7 +187,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public NativeEvent createChangeEvent() {
-		return typedRemote().createChangeEvent();
+		return jsoRemote().createChangeEvent();
 	}
 
 	@Override
@@ -201,7 +199,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	public NativeEvent createClickEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey) {
-		return typedRemote().createClickEvent(detail, screenX, screenY, clientX,
+		return jsoRemote().createClickEvent(detail, screenX, screenY, clientX,
 				clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
@@ -222,14 +220,14 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public NativeEvent createContextMenuEvent() {
-		return typedRemote().createContextMenuEvent();
+		return jsoRemote().createContextMenuEvent();
 	}
 
 	@Override
 	public NativeEvent createDblClickEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey) {
-		return typedRemote().createDblClickEvent(detail, screenX, screenY,
+		return jsoRemote().createDblClickEvent(detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
@@ -240,12 +238,16 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public DivElement createDivElement() {
-		return DomDocumentStatic.createDivElement(this);
+		return ClientDomDocumentStatic.createDivElement(this);
 	}
 
 	@Override
 	public DListElement createDLElement() {
 		return local.createDLElement();
+	}
+
+	public void createDocumentElement(String tagName) {
+		documentElement = createElement(tagName);
 	}
 
 	@Override
@@ -272,7 +274,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public NativeEvent createErrorEvent() {
-		return typedRemote().createErrorEvent();
+		return jsoRemote().createErrorEvent();
 	}
 
 	@Override
@@ -287,7 +289,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public NativeEvent createFocusEvent() {
-		return typedRemote().createFocusEvent();
+		return jsoRemote().createFocusEvent();
 	}
 
 	@Override
@@ -328,7 +330,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	@Override
 	public NativeEvent createHtmlEvent(String type, boolean canBubble,
 			boolean cancelable) {
-		return typedRemote().createHtmlEvent(type, canBubble, cancelable);
+		return jsoRemote().createHtmlEvent(type, canBubble, cancelable);
 	}
 
 	@Override
@@ -348,7 +350,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public NativeEvent createInputEvent() {
-		return typedRemote().createInputEvent();
+		return jsoRemote().createInputEvent();
 	}
 
 	@Override
@@ -359,21 +361,21 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	@Override
 	public NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
-		return typedRemote().createKeyCodeEvent(type, ctrlKey, altKey, shiftKey,
+		return jsoRemote().createKeyCodeEvent(type, ctrlKey, altKey, shiftKey,
 				metaKey, keyCode);
 	}
 
 	@Override
 	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return typedRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey,
+		return jsoRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey,
 				metaKey, keyCode);
 	}
 
 	@Override
 	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return typedRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey,
+		return jsoRemote().createKeyDownEvent(ctrlKey, altKey, shiftKey,
 				metaKey, keyCode, charCode);
 	}
 
@@ -381,36 +383,36 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	public NativeEvent createKeyEvent(String type, boolean canBubble,
 			boolean cancelable, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return typedRemote().createKeyEvent(type, canBubble, cancelable,
-				ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
+		return jsoRemote().createKeyEvent(type, canBubble, cancelable, ctrlKey,
+				altKey, shiftKey, metaKey, keyCode, charCode);
 	}
 
 	@Override
 	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int charCode) {
-		return typedRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey,
+		return jsoRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey,
 				metaKey, charCode);
 	}
 
 	@Override
 	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return typedRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey,
+		return jsoRemote().createKeyPressEvent(ctrlKey, altKey, shiftKey,
 				metaKey, keyCode, charCode);
 	}
 
 	@Override
 	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
-		return typedRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey,
-				metaKey, keyCode);
+		return jsoRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
+				keyCode);
 	}
 
 	@Override
 	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return typedRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey,
-				metaKey, keyCode, charCode);
+		return jsoRemote().createKeyUpEvent(ctrlKey, altKey, shiftKey, metaKey,
+				keyCode, charCode);
 	}
 
 	@Override
@@ -435,7 +437,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public NativeEvent createLoadEvent() {
-		return typedRemote().createLoadEvent();
+		return jsoRemote().createLoadEvent();
 	}
 
 	@Override
@@ -452,7 +454,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	public NativeEvent createMouseDownEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return typedRemote().createMouseDownEvent(detail, screenX, screenY,
+		return jsoRemote().createMouseDownEvent(detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
@@ -462,16 +464,16 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return typedRemote().createMouseEvent(type, canBubble, cancelable,
-				detail, screenX, screenY, clientX, clientY, ctrlKey, altKey,
-				shiftKey, metaKey, button, relatedTarget);
+		return jsoRemote().createMouseEvent(type, canBubble, cancelable, detail,
+				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
+				metaKey, button, relatedTarget);
 	}
 
 	@Override
 	public NativeEvent createMouseMoveEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return typedRemote().createMouseMoveEvent(detail, screenX, screenY,
+		return jsoRemote().createMouseMoveEvent(detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
@@ -480,7 +482,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return typedRemote().createMouseOutEvent(detail, screenX, screenY,
+		return jsoRemote().createMouseOutEvent(detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
@@ -490,7 +492,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return typedRemote().createMouseOverEvent(detail, screenX, screenY,
+		return jsoRemote().createMouseOverEvent(detail, screenX, screenY,
 				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button,
 				relatedTarget);
 	}
@@ -499,8 +501,8 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	public NativeEvent createMouseUpEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button) {
-		return typedRemote().createMouseUpEvent(detail, screenX, screenY,
-				clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button);
+		return jsoRemote().createMouseUpEvent(detail, screenX, screenY, clientX,
+				clientY, ctrlKey, altKey, shiftKey, metaKey, button);
 	}
 
 	@Override
@@ -593,7 +595,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public NativeEvent createScrollEvent() {
-		return typedRemote().createScrollEvent();
+		return jsoRemote().createScrollEvent();
 	}
 
 	@Override
@@ -956,6 +958,11 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	}
 
 	@Override
+	public DocumentImplAccess implAccess() {
+		return new DocumentImplAccess();
+	}
+
+	@Override
 	public void importNode(Node node, boolean deep) {
 		local.importNode(node, deep);
 		remote.importNode(node, deep);
@@ -970,6 +977,11 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	@Override
 	public boolean isCSS1Compat() {
 		return remote.isCSS1Compat();
+	}
+
+	@Override
+	public DocumentJso jsoRemote() {
+		return (DocumentJso) remote;
 	}
 
 	@Override
@@ -1034,11 +1046,6 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	}
 
 	@Override
-	public DocumentRemote typedRemote() {
-		return (DocumentRemote) remote;
-	}
-
-	@Override
 	protected boolean linkedToRemote() {
 		return true;
 	}
@@ -1049,12 +1056,12 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote, boolean resolved) {
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	protected DomDocument remote() {
+	protected ClientDomDocument remote() {
 		return remote;
 	}
 
@@ -1067,6 +1074,34 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 		Document contextDocument();
 
 		void registerCreatedDocument(Document document);
+	}
+
+	public class DocumentImplAccess extends ImplAccess {
+		public DocumentPathref pathrefRemote() {
+			return remote();
+		}
+	}
+
+	@Registration.Singleton(DomDocument.PerDocumentSupplier.class)
+	public static class PerDocumentSupplierGwtImpl
+			implements DomDocument.PerDocumentSupplier {
+		@Override
+		public DomDocument get(org.w3c.dom.Document document) {
+			return ((Document) document).domDocument;
+		}
+	}
+
+	public enum RemoteType {
+		NONE, JSO, PATHREF;
+
+		boolean hasRemote() {
+			switch (this) {
+			case NONE:
+				return false;
+			default:
+				return true;
+			}
+		}
 	}
 
 	class TreeWalkerImpl implements TreeWalker {

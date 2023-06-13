@@ -32,7 +32,7 @@ public abstract class NodeLocal implements LocalDomNode {
 
 	@Override
 	public void callMethod(String methodName) {
-		DomNodeStatic.callMethod(this, methodName);
+		ClientDomNodeStatic.callMethod(this, methodName);
 	}
 
 	@Override
@@ -42,7 +42,7 @@ public abstract class NodeLocal implements LocalDomNode {
 
 	@Override
 	public Node getChild(int index) {
-		return DomNodeStatic.getChild(this, index);
+		return ClientDomNodeStatic.getChild(this, index);
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public abstract class NodeLocal implements LocalDomNode {
 		if (children == null) {
 			return 0;
 		}
-		return DomNodeStatic.getChildCount(this);
+		return ClientDomNodeStatic.getChildCount(this);
 	}
 
 	@Override
@@ -125,7 +125,7 @@ public abstract class NodeLocal implements LocalDomNode {
 
 	@Override
 	public boolean hasParentElement() {
-		return DomNodeStatic.hasParentElement(this);
+		return ClientDomNodeStatic.hasParentElement(this);
 	}
 
 	@Override
@@ -158,6 +158,11 @@ public abstract class NodeLocal implements LocalDomNode {
 	}
 
 	@Override
+	public boolean isJso() {
+		return false;
+	}
+
+	@Override
 	public boolean isOrHasChild(Node child) {
 		NodeLocal cursor = child.local();
 		while (cursor != null) {
@@ -177,6 +182,10 @@ public abstract class NodeLocal implements LocalDomNode {
 	@Override
 	public abstract Node node();
 
+	@Override
+	public void preRemove(Node node) {
+	}
+
 	public final String provideLocalDomTree() {
 		return provideLocalDomTree0(new StringBuilder(), 0).toString();
 	}
@@ -184,7 +193,7 @@ public abstract class NodeLocal implements LocalDomNode {
 	@Override
 	public Node removeAllChildren() {
 		// respects local/remote; OK
-		return DomNodeStatic.removeAllChildren(this);
+		return ClientDomNodeStatic.removeAllChildren(this);
 	}
 
 	@Override
@@ -196,7 +205,7 @@ public abstract class NodeLocal implements LocalDomNode {
 
 	@Override
 	public void removeFromParent() {
-		DomNodeStatic.removeFromParent(this);
+		ClientDomNodeStatic.removeFromParent(this);
 	}
 
 	@Override

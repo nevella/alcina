@@ -33,6 +33,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.Edito
 @Directed(emits = { EditorAsk.class, EditorExit.class })
 public class TagEditor extends Model implements Suggestor.Editor,
 		DomEvents.Input.Handler, DomEvents.Focusout.Handler {
+	@SuppressWarnings("unused")
 	private Builder builder;
 
 	private Element inputContainer;

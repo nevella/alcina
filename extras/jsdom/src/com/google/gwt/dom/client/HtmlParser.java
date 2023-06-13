@@ -8,6 +8,7 @@ import org.w3c.dom.Comment;
 import org.w3c.dom.ProcessingInstruction;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.Document.RemoteType;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
@@ -18,8 +19,8 @@ import cc.alcina.framework.gwt.client.util.DomUtils;
 public class HtmlParser {
 	public static boolean debugCursor = false;
 
-	public static void appendTextNodes(DomDocument document, DomElement element,
-			String string) {
+	public static void appendTextNodes(ClientDomDocument document,
+			ClientDomElement element, String string) {
 		// will not emit a zero-length text node (but that won't be parseable
 		// anyway, although can be programatically created)
 		if (string.isEmpty()) {
@@ -135,7 +136,7 @@ public class HtmlParser {
 		return this.emitBrowserCompatibleDom;
 	}
 
-	public Element parse(DomElement root, Element replaceContents,
+	public Element parse(ClientDomElement root, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
 		return parse(root.getOuterHtml(), replaceContents,
 				emitHtmlHeadBodyTags);
@@ -143,12 +144,12 @@ public class HtmlParser {
 
 	public Element parse(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
-		boolean preSet = LocalDom.isDisableRemoteWrite();
+		RemoteType preParse = Document.get().remoteType;
 		try {
-			LocalDom.setDisableRemoteWrite(true);
+			Document.get().remoteType = RemoteType.NONE;
 			return parse0(html, replaceContents, emitHtmlHeadBodyTags);
 		} finally {
-			LocalDom.setDisableRemoteWrite(preSet);
+			Document.get().remoteType = preParse;
 		}
 	}
 
@@ -312,7 +313,7 @@ public class HtmlParser {
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
 		if (replaceContents != null) {
-			replaceContents.clearResolved();
+			replaceContents.clearSynced();
 		}
 		int length = html.length();
 		// gwt compiler hack - force string class init outside loop

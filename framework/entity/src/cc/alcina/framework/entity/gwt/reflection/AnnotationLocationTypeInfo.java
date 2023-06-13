@@ -281,7 +281,13 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			Resolution resolution = annotationClass
 					.getAnnotation(Resolution.class);
 			if (resolution == null) {
-				return super.resolveAnnotations0(annotationClass, location);
+				/*
+				 * don't call super - this a simple case (class-only locations).
+				 */
+				Preconditions.checkArgument(location.property == null);
+				A annotation = typedLocation.type
+						.getAnnotation(annotationClass);
+				return annotation != null ? List.of(annotation) : List.of();
 			}
 			Preconditions.checkState(
 					annotationClass.getAnnotation(Inherited.class) == null);

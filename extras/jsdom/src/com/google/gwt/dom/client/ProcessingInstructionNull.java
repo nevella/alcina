@@ -1,7 +1,7 @@
 package com.google.gwt.dom.client;
 
 public class ProcessingInstructionNull extends NodeLocalNull
-		implements DomProcessingInstruction {
+		implements ClientDomProcessingInstruction {
 	static final ProcessingInstructionNull INSTANCE = new ProcessingInstructionNull();
 
 	ProcessingInstructionNull() {
@@ -38,6 +38,11 @@ public class ProcessingInstructionNull extends NodeLocalNull
 	}
 
 	@Override
+	public int indexInParentChildren() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void setData(String data) {
 		// noop
 	}
@@ -45,16 +50,6 @@ public class ProcessingInstructionNull extends NodeLocalNull
 	@Override
 	public void setNodeValue(String nodeValue) {
 		// noop
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		throw new UnsupportedOperationException();
 	}
 
 	void appendUnescaped(UnsafeHtmlBuilder builder) {

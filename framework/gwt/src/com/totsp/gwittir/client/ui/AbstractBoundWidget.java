@@ -63,6 +63,12 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	}
 
 	@Override
+	public void firePropertyChange(String propertyName, Object oldValue,
+			Object newValue) {
+		changes.firePropertyChange(propertyName, oldValue, newValue);
+	}
+
+	@Override
 	public Action<BoundWidget<T>> getAction() {
 		return action;
 	}

@@ -361,8 +361,8 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 		setTouchScrollingDisabled(false);
 		// Initialize the scrollable element.
 		Scheduler.get().scheduleFinally(() -> {
-			scrollableElem.implAccess().ensureRemote();
-			containerElem.implAccess().ensureRemote();
+			scrollableElem.implAccess().ensureJsoRemote();
+			containerElem.implAccess().ensureJsoRemote();
 			ScrollImpl.get().initialize(scrollableElem, containerElem);
 		});
 	}

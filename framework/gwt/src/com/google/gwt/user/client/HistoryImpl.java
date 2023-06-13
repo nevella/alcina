@@ -76,11 +76,11 @@ public class HistoryImpl {
 	}
 
 	public void fireHistoryChangedImpl(String token) {
-		History.historyEventSource.fireValueChangedEvent(token);
+		History.get().historyEventSource.fireValueChangedEvent(token);
 	}
 
 	public String getToken() {
-		return History.token;
+		return History.get().token;
 	}
 
 	public boolean init() {
@@ -100,6 +100,6 @@ public class HistoryImpl {
 	}
 
 	public void setToken(String token) {
-		History.token = token;
+		History.get().token = token;
 	}
 }

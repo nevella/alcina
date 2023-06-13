@@ -19,14 +19,18 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.dom.client.ElementRemote.ContiguousTextNodes;
-import com.google.gwt.dom.client.ElementRemote.ElementRemoteIndex;
+import com.google.gwt.dom.client.Document.RemoteType;
+import com.google.gwt.dom.client.ElementJso.ContiguousTextNodes;
+import com.google.gwt.dom.client.ElementJso.ElementJsoIndex;
 import com.google.gwt.dom.client.mutations.LocalDomMutations;
+import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.LocalDomDebug;
 
+import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -69,8 +73,17 @@ import cc.alcina.framework.gwt.client.logic.ClientProperties;
  *
  *
  */
-public class LocalDom {
-	private static LocalDom instance;
+public class LocalDom implements ContextFrame {
+	// FIXME - remcom - move to Document
+	public static int maxCharsPerTextNode = 65536;
+
+	public static Topic<Exception> topicPublishException;
+
+	public static Topic<String> topicUnableToParse;
+
+	static Topic<Exception> topicReportException;
+
+	private static LocalDomContextProvider contextProvider;
 
 	private static LocalDomCollections collections;
 
@@ -78,39 +91,29 @@ public class LocalDom {
 
 	private static boolean disableRemoteWrite;
 
-	public static Topic<Exception> topicPublishException;
-
-	static Topic<Exception> topicReportException;
-
-	public static Topic<String> topicUnableToParse;
-
 	// FIXME - localdom - remove
 	private static boolean logParseAndMutationIssues;
 
-	public static int maxCharsPerTextNode = 65536;
+	private static Map<String, Supplier<Element>> elementCreators;
 
-	public static void debug(ElementRemote elementRemote) {
-		get().debug0(elementRemote);
-	};
+	public static void debug(ElementJso elementJso) {
+		get().debug0(elementJso);
+	}
 
 	public static void ensureRemote(Node node) {
 		get().ensureRemote0(node);
 	}
 
-	public static void ensureRemoteDocument() {
-		nodeFor(Document.get().typedRemote().getDocumentElement0());
-	}
-
-	public static NodeRemote ensureRemoteNodeMaybePendingResolution(Node node) {
-		return get().ensureRemoteNodeMaybePendingResolution0(node);
-	}
-
 	public static void eventMod(NativeEvent evt, String eventName) {
 		get().eventMod0(evt, eventName);
-	}
+	};
 
+	/**
+	 * Flush any pending sync (sync local subtree to remote) jobs and mark the
+	 * subtrees as synced
+	 */
 	public static void flush() {
-		get().resolve0();
+		get().flush0();
 	}
 
 	public static LocalDomMutations getMutations() {
@@ -118,24 +121,32 @@ public class LocalDom {
 	}
 
 	public static void initalize() {
-		Preconditions.checkState(instance == null);
+		Preconditions.checkState(topicPublishException == null);
 		disableRemoteWrite = !GWT.isClient();
 		topicPublishException = Topic.create();
 		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
-		instance = new LocalDom();
+		if (GWT.isScript()) {
+			JavascriptKeyableLookup.initJs();
+			collections = new LocalDomCollections_Script();
+		} else {
+			collections = new LocalDomCollections();
+		}
+		declarativeCssNames = collections.createStringMap();
+		elementCreators = collections.createIdentityEqualsMap(String.class);
+		initElementCreators();
+	}
+
+	public static void initalizeDetachedSync() {
+		get().initalizeDetachedSync0();
 	}
 
 	public static void invokeExternal(Runnable runnable) {
 		get().invokeExternal0(runnable);
 	}
 
-	public static boolean isDisableRemoteWrite() {
-		return disableRemoteWrite;
-	}
-
-	public static boolean isPending(NodeRemote nodeRemote) {
-		return get().isPending0(nodeRemote);
+	public static boolean isPending(NodeJso nodeJso) {
+		return get().isPending0(nodeJso);
 	}
 
 	public static boolean isStopPropagation(NativeEvent evt) {
@@ -162,10 +173,10 @@ public class LocalDom {
 	}
 
 	public static <T extends Node> T nodeFor(JavaScriptObject jso) {
-		return nodeFor((NodeRemote) jso);
+		return nodeFor((NodeJso) jso);
 	}
 
-	public static <T extends Node> T nodeFor(NodeRemote remote) {
+	public static <T extends Node> T nodeFor(NodeJso remote) {
 		return (T) get().nodeFor0(remote);
 	}
 
@@ -178,15 +189,23 @@ public class LocalDom {
 		}
 	}
 
+	public static PathRefRepresentations pathRefRepresentations() {
+		return get().pathRefRepresentations;
+	}
+
 	public static void register(Document doc) {
-		if (isUseRemoteDom()) {
-			initalize();
-			get().initalizeSync(doc);
+		if (GWT.isClient()) {
+			get().initalizeRemoteSync(doc);
 		}
 	}
 
-	public static Node resolveExternal(NodeRemote nodeRemote) {
-		return get().resolveExternal0(nodeRemote);
+	public static void
+			registerContextProvider(LocalDomContextProvider contextProvider) {
+		LocalDom.contextProvider = contextProvider;
+	}
+
+	public static Node resolveExternal(NodeJso nodeJso) {
+		return get().resolveExternal0(nodeJso);
 	}
 
 	public static void setDisableRemoteWrite(boolean disableRemoteWrite) {
@@ -198,8 +217,8 @@ public class LocalDom {
 	}
 
 	public static void syncToRemote(Element element) {
-		get().parseAndMarkResolved(element.typedRemote(),
-				element.typedRemote().getOuterHtml(), element);
+		get().parseAndMarkSynced(element.jsoRemote(),
+				element.jsoRemote().getOuterHtml(), element);
 	}
 
 	public static void triggerLocalDomException() {
@@ -236,281 +255,10 @@ public class LocalDom {
 	}-*/;
 
 	private static LocalDom get() {
-		return instance;
+		return Document.get().localDom;
 	}
 
-	static LocalDomCollections collections() {
-		return collections;
-	}
-
-	static void consoleLog(String message) {
-		if (LocalDomDebugImpl.debugAll) {
-			consoleLog0(message);
-		}
-	}
-
-	static void consoleLog(Supplier<String> messageSupplier) {
-		if (LocalDomDebugImpl.debugAll) {
-			consoleLog0(messageSupplier.get());
-		}
-	}
-
-	native static void consoleLog0(String message) /*-{
-    console.log(message);
-
-	}-*/;
-
-	static Element createElement(String tagName) {
-		return get().createElement0(tagName);
-	}
-
-	synchronized static String declarativeCssName(String key) {
-		return declarativeCssNames.computeIfAbsent(key, k -> {
-			String lcKey = k.toLowerCase();
-			if (!lcKey.equals(k)) {
-				StringBuilder sb = new StringBuilder();
-				for (int idx = 0; idx < k.length(); idx++) {
-					char c = k.charAt(idx);
-					if (c >= 'A' && c <= 'Z') {
-						sb.append("-");
-						sb.append(String.valueOf(c).toLowerCase());
-					} else {
-						sb.append(c);
-					}
-				}
-				return sb.toString();
-			} else {
-				return k;
-			}
-		});
-	}
-
-	static boolean hasNode(JavaScriptObject remote) {
-		return get().remoteLookup.containsKey(remote);
-	}
-
-	static boolean isReplaying() {
-		return get().isReplaying0();
-	}
-
-	static boolean isUseRemoteDom() {
-		return GWT.isClient();
-	}
-
-	static Node nodeForNoResolve(NodeRemote nodeRemote) {
-		return get().remoteLookup.get(nodeRemote);
-	}
-
-	static void putRemote(Element element, ElementRemote remote) {
-		get().putRemote0(element, remote);
-	}
-
-	static String safeParseByBrowser(String html) {
-		ElementRemote remote = Document.get().typedRemote()
-				.generateFromOuterHtml(html);
-		return remote.buildOuterHtml();
-	}
-
-	/**
-	 * Check that it's valid to mutate (if non-localdom javascript is
-	 * manipulating NodeRemote instances, the MutationObserver must be connected
-	 * - and the converse)
-	 */
-	static void verifyMutatingState() {
-		get().verifyMutatingState0();
-	}
-
-	static void wasResolved(Element elem) {
-		get().wasResolved0(elem);
-	}
-
-	boolean replaying;
-
-	LocalDomMutations mutations;
-
-	private LoggingConfiguration loggingConfiguration;
-
-	public BrowserBehaviour browserBehaviour;
-
-	private DocumentRemote docRemote;
-
-	LocalDomDebugImpl debugImpl = new LocalDomDebugImpl();
-
-	private Map<NodeRemote, Node> remoteLookup;
-
-	private Map<String, Supplier<Element>> elementCreators;
-
-	Map<NativeEvent, List<String>> eventMods = new LinkedHashMap<>();
-
-	List<Node> pendingResolution = new ArrayList<>();
-
-	ScheduledCommand resolveCommand = null;
-
-	private int resolutionEventId = 1;
-
-	private boolean resolutionEventIdDirty;
-
-	private boolean resolving;
-
-	boolean syncing;
-
-	boolean markNonStructuralNodesAsResolvedOnResolve;
-
-	private LocalDom() {
-		if (GWT.isScript()) {
-			remoteLookup = JsUniqueMap.createWeakMap();
-		} else {
-			remoteLookup = new LinkedHashMap<>();
-		}
-		if (collections == null) {
-			initStatics();
-		}
-		topicReportException.add(this::handleReportedException);
-	}
-
-	public void ensurePendingResolved(Node node) {
-		Preconditions.checkState(node.linkedToRemote());
-		Element element = (Element) node;
-		if (element.isPendingResolution()) {
-			ElementRemote remote = (ElementRemote) node.remote();
-			DomElement local = node.local();
-			localToRemote(element, remote, local);
-		}
-	}
-
-	public Node resolveExternal0(NodeRemote nodeRemote) {
-		switch (nodeRemote.getNodeType()) {
-		case Node.ELEMENT_NODE:
-			ElementRemote elementRemote = (ElementRemote) nodeRemote;
-			Element element = Document.get().local()
-					.createElement(elementRemote.getTagNameRemote());
-			element.putRemote(nodeRemote, false);
-			syncToRemote(element);
-			linkRemote(elementRemote, element);
-			return element;
-		case Node.TEXT_NODE:
-			Text textNode = Document.get()
-					.createTextNode(nodeRemote.getNodeValue());
-			textNode.putRemote(nodeRemote, true);
-			return textNode;
-		default:
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	private Element createElement0(String tagName) {
-		Supplier<Element> creator = elementCreators.get(tagName.toLowerCase());
-		if (creator == null) {
-			return new Element();
-		} else {
-			return creator.get();
-		}
-	}
-
-	private void debug0(ElementRemote elementRemote) {
-		int debug = 4;
-	}
-
-	private void ensureFlush() {
-		if (resolveCommand == null) {
-			resolveCommand = () -> flush();
-			Scheduler.get().scheduleFinally(resolveCommand);
-		}
-	}
-
-	private void ensureRemote0(Node node) {
-		resolve0(true);
-		List<Node> ancestors = new ArrayList<>();
-		Node cursor = node;
-		Node withRemote = null;
-		while (cursor != null) {
-			if (cursor.linkedToRemote()) {
-				withRemote = cursor;
-				break;
-			} else {
-				ancestors.add(cursor);
-				cursor = cursor.getParentElement();
-			}
-		}
-		Collections.reverse(ancestors);
-		if (withRemote == null) {
-			// attaching child with-remote to without-remote (say, a popup)
-			Node root = ancestors.get(0);
-			ensureRemoteNodeMaybePendingResolution(root);
-			ensureRemote0(node);
-			return;
-		}
-		for (Node needsRemote : ancestors) {
-			int idx = needsRemote.indexInParentChildren();
-			if (needsRemote instanceof Element
-					&& withRemote instanceof Element) {
-				debugImpl.debugPutRemote((Element) needsRemote, idx,
-						(Element) withRemote);
-			}
-			NodeRemote remote = withRemote.typedRemote().getChildNodes0()
-					.getItem0(idx);
-			linkRemote(remote, needsRemote);
-			needsRemote.putRemote(remote, true);
-			withRemote = needsRemote;
-		}
-	}
-
-	private NodeRemote ensureRemoteNodeMaybePendingResolution0(Node node) {
-		if (node.linkedToRemote()) {
-			return node.remote();
-		}
-		ensureFlush();
-		NodeRemote remote = null;
-		int nodeType = node.getNodeType();
-		switch (nodeType) {
-		case Node.ELEMENT_NODE:
-			Element element = (Element) node;
-			remote = ((DomDispatchRemote) DOMImpl.impl.remote)
-					.createElement(element.getTagName());
-			element.pendingResolution();
-			pendingResolution.add(node);
-			log(LocalDomDebug.CREATED_PENDING_RESOLUTION,
-					"created pending resolution node:" + element.getTagName());
-			break;
-		case Node.TEXT_NODE:
-			remote = Document.get().typedRemote()
-					.createTextNode0(((Text) node).getData());
-			break;
-		// case Node.DOCUMENT_NODE:
-		// nodeDom = doc.domImpl();
-		// break;
-		default:
-			throw new UnsupportedOperationException();
-		}
-		linkRemote(remote, node);
-		node.putRemote(remote, false);
-		return remote;
-	}
-
-	private void eventMod0(NativeEvent evt, String eventName) {
-		log(LocalDomDebug.EVENT_MOD,
-				Ax.format("eventMod - %s %s", evt, eventName));
-		if (!eventMods.keySet().contains(evt)) {
-			eventMods.clear();
-			eventMods.put(evt, new ArrayList<>());
-		}
-		eventMods.get(evt).add(eventName);
-	}
-
-	private void initalizeSync(Document doc) {
-		docRemote = doc.typedRemote();
-		loggingConfiguration = new LoggingConfiguration();
-		browserBehaviour = new BrowserBehaviour();
-		browserBehaviour.test();
-		linkRemote(docRemote, doc);
-		nodeFor0(docRemote.getDocumentElement0());
-		mutations = GWT.isClient()
-				? new LocalDomMutations(new MutationsAccess(),
-						loggingConfiguration.asMutationsConfiguration())
-				: null;
-	}
-
-	private void initElementCreators() {
+	private static void initElementCreators() {
 		elementCreators.put(DivElement.TAG, () -> new DivElement());
 		elementCreators.put(SpanElement.TAG, () -> new SpanElement());
 		elementCreators.put(BodyElement.TAG, () -> new BodyElement());
@@ -582,16 +330,310 @@ public class LocalDom {
 		elementCreators.put(LegendElement.TAG, () -> new LegendElement());
 	}
 
-	private void initStatics() {
-		if (GWT.isScript()) {
-			JavascriptKeyableLookup.initJs();
-			collections = new LocalDomCollections_Script();
-		} else {
-			collections = new LocalDomCollections();
+	static LocalDomCollections collections() {
+		return collections;
+	}
+
+	static void consoleLog(String message) {
+		if (LocalDomDebugImpl.debugAll) {
+			consoleLog0(message);
 		}
-		declarativeCssNames = collections.createStringMap();
-		elementCreators = collections.createIdentityEqualsMap(String.class);
-		initElementCreators();
+	}
+
+	static void consoleLog(Supplier<String> messageSupplier) {
+		if (LocalDomDebugImpl.debugAll) {
+			consoleLog0(messageSupplier.get());
+		}
+	}
+
+	native static void consoleLog0(String message) /*-{
+    console.log(message);
+
+	}-*/;
+
+	static Element createElement(String tagName) {
+		return get().createElement0(tagName);
+	}
+
+	synchronized static String declarativeCssName(String key) {
+		return declarativeCssNames.computeIfAbsent(key, k -> {
+			String lcKey = k.toLowerCase();
+			if (!lcKey.equals(k)) {
+				StringBuilder sb = new StringBuilder();
+				for (int idx = 0; idx < k.length(); idx++) {
+					char c = k.charAt(idx);
+					if (c >= 'A' && c <= 'Z') {
+						sb.append("-");
+						sb.append(String.valueOf(c).toLowerCase());
+					} else {
+						sb.append(c);
+					}
+				}
+				return sb.toString();
+			} else {
+				return k;
+			}
+		});
+	}
+
+	static void ensureRemoteDocument() {
+		nodeFor(Document.get().jsoRemote().getDocumentElement0());
+	}
+
+	static <C extends ClientDomNode> C
+			ensureRemoteNodeMaybePendingSync(Node node) {
+		return (C) get().ensureRemoteNodeMaybePendingSync0(node);
+	}
+
+	static boolean hasNode(JavaScriptObject remote) {
+		return get().remoteLookup.containsKey(remote);
+	}
+
+	static boolean isApplyToRemote() {
+		return get().isApplyToRemote0();
+	}
+
+	static boolean isUseRemoteDom() {
+		return GWT.isClient();
+	}
+
+	/**
+	 * Get the node corresponding to the nodeJso if it already exists, but don't
+	 * attempt to compute it by ascending the remote tree
+	 */
+	static Node nodeForNoResolve(NodeJso nodeJso) {
+		return get().remoteLookup.get(nodeJso);
+	}
+
+	static void putRemote(Element element, ElementJso remote) {
+		get().putRemote0(element, remote);
+	}
+
+	static String safeParseByBrowser(String html) {
+		ElementJso remote = Document.get().jsoRemote()
+				.generateFromOuterHtml(html);
+		return remote.buildOuterHtml();
+	}
+
+	/**
+	 * Check that it's valid to mutate (if non-localdom javascript is
+	 * manipulating NodeJso instances, the MutationObserver must be connected -
+	 * and the converse)
+	 */
+	static void verifyMutatingState() {
+		get().verifyMutatingState0();
+	}
+
+	static void wasSynced(Element elem) {
+		get().wasSynced0(elem);
+	}
+
+	private PathRefRepresentations pathRefRepresentations = new PathRefRepresentations();
+
+	boolean applyToRemote = true;
+
+	LocalDomMutations mutations;
+
+	private LoggingConfiguration loggingConfiguration;
+
+	public BrowserBehaviour browserBehaviour;
+
+	private DocumentJso docRemote;
+
+	LocalDomDebugImpl debugImpl = new LocalDomDebugImpl();
+
+	private Map<NodeJso, Node> remoteLookup;
+
+	Map<NativeEvent, List<String>> eventMods = new LinkedHashMap<>();
+
+	List<Node> pendingSync = new ArrayList<>();
+
+	ScheduledCommand flushCommand = null;
+
+	private int syncEventId = 1;
+
+	private boolean syncEventIdDirty;
+
+	boolean syncing;
+
+	boolean markNonStructuralNodesAsSyncedOnSync;
+
+	LocalDom() {
+		if (GWT.isScript()) {
+			remoteLookup = JsUniqueMap.createWeakMap();
+		} else {
+			remoteLookup = AlcinaCollections.newWeakMap();
+		}
+		topicReportException.add(this::handleReportedException);
+	}
+
+	public void ensurePendingSynced(Node node) {
+		Preconditions.checkState(node.linkedToRemote());
+		Element element = (Element) node;
+		if (element.isPendingSync()) {
+			ElementJso remote = (ElementJso) node.remote();
+			ClientDomElement local = node.local();
+			localToRemote(element, remote, local);
+		}
+	}
+
+	public Node resolveExternal0(NodeJso nodeJso) {
+		switch (nodeJso.getNodeType()) {
+		case Node.ELEMENT_NODE:
+			ElementJso elementJso = (ElementJso) nodeJso;
+			Element element = Document.get().local()
+					.createElement(elementJso.getTagNameRemote());
+			element.putRemote(nodeJso, false);
+			syncToRemote(element);
+			linkRemote(elementJso, element);
+			return element;
+		case Node.TEXT_NODE:
+			Text textNode = Document.get()
+					.createTextNode(nodeJso.getNodeValue());
+			textNode.putRemote(nodeJso, true);
+			return textNode;
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	private Element createElement0(String tagName) {
+		Supplier<Element> creator = elementCreators.get(tagName.toLowerCase());
+		if (creator == null) {
+			return new Element();
+		} else {
+			return creator.get();
+		}
+	}
+
+	private void debug0(ElementJso elementJso) {
+		int debug = 4;
+	}
+
+	private void ensureFlush() {
+		if (flushCommand == null && GWT.isClient()) {
+			flushCommand = () -> flush();
+			Scheduler.get().scheduleFinally(flushCommand);
+		}
+	}
+
+	private void ensureRemote0(Node node) {
+		if (isPathref()) {
+			// FIXME - localdom - factor a bunch of this out into
+			// LDjso/LDpathref classes
+			ensureRemote0Pathref(node);
+			return;
+		}
+		flush0(true);
+		List<Node> ancestors = new ArrayList<>();
+		Node cursor = node;
+		Node withRemote = null;
+		while (cursor != null) {
+			if (cursor.linkedToRemote()) {
+				withRemote = cursor;
+				break;
+			} else {
+				ancestors.add(cursor);
+				cursor = cursor.getParentElement();
+			}
+		}
+		Collections.reverse(ancestors);
+		if (withRemote == null) {
+			// attaching child with-remote to without-remote (say, a popup)
+			Node root = ancestors.get(0);
+			ensureRemoteNodeMaybePendingSync(root);
+			ensureRemote0(node);
+			return;
+		}
+		for (Node needsRemote : ancestors) {
+			int idx = needsRemote.indexInParentChildren();
+			if (needsRemote instanceof Element
+					&& withRemote instanceof Element) {
+				debugImpl.debugPutRemote((Element) needsRemote, idx,
+						(Element) withRemote);
+			}
+			NodeJso remote = withRemote.jsoRemote().getChildNodes0()
+					.getItem0(idx);
+			linkRemote(remote, needsRemote);
+			needsRemote.putRemote(remote, true);
+			withRemote = needsRemote;
+		}
+	}
+
+	private void ensureRemote0Pathref(Node node) {
+		Node cursor = node;
+		while (cursor != null) {
+			if (cursor.linkedToRemote()) {
+				break;
+			} else {
+				cursor.putRemote(NodePathref.create(node), cursor.wasSynced());
+			}
+			cursor = cursor.getParentNode();
+		}
+	}
+
+	private ClientDomNode ensureRemoteNodeMaybePendingSync0(Node node) {
+		if (node.linkedToRemote()) {
+			return node.remote();
+		}
+		ensureFlush();
+		ClientDomNode remote = null;
+		int nodeType = node.getNodeType();
+		switch (nodeType) {
+		case Node.ELEMENT_NODE:
+			Element element = (Element) node;
+			if (isPathref()) {
+				remote = NodePathref.create(node);
+			} else {
+				remote = ((DomDispatchJso) DOMImpl.impl.remote())
+						.createElement(element.getTagName());
+			}
+			element.pendingSync();
+			pendingSync.add(node);
+			log(LocalDomDebug.CREATED_PENDING_SYNC,
+					"created pending sync node:" + element.getTagName());
+			break;
+		case Node.TEXT_NODE:
+			remote = Document.get().jsoRemote()
+					.createTextNode0(((Text) node).getData());
+			break;
+		// case Node.DOCUMENT_NODE:
+		// nodeDom = doc.domImpl();
+		// break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		if (remote.isJso()) {
+			linkRemote((NodeJso) remote, node);
+		}
+		node.putRemote(remote, false);
+		return remote;
+	}
+
+	private void eventMod0(NativeEvent evt, String eventName) {
+		log(LocalDomDebug.EVENT_MOD,
+				Ax.format("eventMod - %s %s", evt, eventName));
+		if (!eventMods.keySet().contains(evt)) {
+			eventMods.clear();
+			eventMods.put(evt, new ArrayList<>());
+		}
+		eventMods.get(evt).add(eventName);
+	}
+
+	private void initalizeDetachedSync0() {
+		mutations = new LocalDomMutations(new MutationsAccess(),
+				new LocalDomMutations.LoggingConfiguration());
+	}
+
+	private void initalizeRemoteSync(Document doc) {
+		docRemote = doc.jsoRemote();
+		loggingConfiguration = new LoggingConfiguration();
+		browserBehaviour = new BrowserBehaviour();
+		browserBehaviour.test();
+		linkRemote(docRemote, doc);
+		nodeFor0(docRemote.getDocumentElement0());
+		mutations = new LocalDomMutations(new MutationsAccess(),
+				loggingConfiguration.asMutationsConfiguration());
 	}
 
 	private void invokeExternal0(Runnable runnable) {
@@ -611,13 +653,13 @@ public class LocalDom {
 		}
 	}
 
-	private boolean isPending0(NodeRemote nodeRemote) {
-		return pendingResolution.size() > 0 && pendingResolution.stream()
-				.anyMatch(n -> n.remote() == nodeRemote);
+	private boolean isApplyToRemote0() {
+		return applyToRemote;
 	}
 
-	private boolean isReplaying0() {
-		return replaying;
+	private boolean isPending0(NodeJso nodeJso) {
+		return pendingSync.size() > 0
+				&& pendingSync.stream().anyMatch(n -> n.remote() == nodeJso);
 	}
 
 	private boolean isStopPropagation0(NativeEvent evt) {
@@ -626,22 +668,21 @@ public class LocalDom {
 				|| list.contains("eventCancelBubble"));
 	}
 
-	private void linkRemote(NodeRemote remote, Node node) {
+	private void linkRemote(NodeJso remote, Node node) {
 		Preconditions.checkState(!remoteLookup.containsKey(remote));
 		remoteLookup.put(remote, node);
 	}
 
-	private void localToRemote(Element element, ElementRemote remote,
-			DomElement local) {
+	private void localToRemote(Element element, ElementJso remote,
+			ClientDomElement local) {
 		String innerHTML = local.getInnerHTML();
 		remote.setInnerHTML(innerHTML);
-		log(LocalDomDebug.RESOLVE, "%s - uiobj: %s - \n%s",
-				element.getTagName(),
+		log(LocalDomDebug.SYNC, "%s - uiobj: %s - \n%s", element.getTagName(),
 				Optional.ofNullable(element.uiObject)
 						.map(ui -> ui.getClass().getSimpleName())
 						.orElse("(null)"),
 				CommonUtils.trimToWsChars(innerHTML, 1000));
-		ElementRemote f_remote = remote;
+		ElementJso f_remote = remote;
 		// doesn't include style
 		local.getAttributeMap().entrySet().forEach(e -> {
 			String value = e.getValue();
@@ -661,16 +702,16 @@ public class LocalDom {
 		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
 		bits |= DOM.getEventsSunk(element);
 		DOM.sinkEvents(element, bits);
-		pendingResolution.remove(element);
-		element.resolvePending();
-		wasResolved0(element);
+		pendingSync.remove(element);
+		element.resolvePendingSync();
+		wasSynced0(element);
 	}
 
-	private <T extends Node> T nodeFor0(NodeRemote remote) {
+	private <T extends Node> T nodeFor0(NodeJso remote) {
 		return nodeFor0(remote, false);
 	}
 
-	private <T extends Node> T nodeFor0(NodeRemote remote, boolean postReparse)
+	private <T extends Node> T nodeFor0(NodeJso remote, boolean postReparse)
 			throws LocalDomException {
 		try {
 			return nodeFor1(remote, postReparse);
@@ -680,8 +721,7 @@ public class LocalDom {
 		}
 	}
 
-	private <T extends Node> T nodeFor1(NodeRemote remote,
-			boolean postReparse) {
+	private <T extends Node> T nodeFor1(NodeJso remote, boolean postReparse) {
 		if (remote == null) {
 			return null;
 		}
@@ -692,16 +732,15 @@ public class LocalDom {
 		if (remote.provideIsNonStructural()) {
 			// FIXME - dirndl 1x1e - non-performant, but rare (exception
 			// for selectionish)
-			ElementRemote parentRemote = (ElementRemote) remote
-					.getParentNodeRemote();
+			ElementJso parentRemote = (ElementJso) remote.getParentNodeJso();
 			Node parent = nodeFor0(parentRemote);
 			int index = remote.indexInParentChildren();
 			if (parent.getChildCount() == parentRemote.getChildCount()) {
 				Node childNode = parent.getChild(index);
 				linkRemote(remote, childNode);
-				if (markNonStructuralNodesAsResolvedOnResolve
-						&& !childNode.wasResolved()) {
-					childNode.resolved(resolutionEventId);
+				if (markNonStructuralNodesAsSyncedOnSync
+						&& !childNode.wasSynced()) {
+					childNode.onSync(syncEventId);
 				}
 				childNode.putRemote(remote, true);
 				return (T) childNode;
@@ -719,10 +758,10 @@ public class LocalDom {
 							((Element) parent).getOuterHtml()));
 					throw new RuntimeException("Text node reparse");
 				}
-				ElementRemoteIndex remoteIndex = parentRemote
+				ElementJsoIndex remoteIndex = parentRemote
 						.provideRemoteIndex(false);
-				ElementRemote hasNodeRemote = remoteIndex.hasNode();
-				reparseFromRemote(hasNodeRemote, (Element) parent, remoteIndex);
+				ElementJso hasNodeJso = remoteIndex.hasNode();
+				reparseFromRemote(hasNodeJso, (Element) parent, remoteIndex);
 				return nodeFor0(remote, true);
 			}
 		}
@@ -732,19 +771,19 @@ public class LocalDom {
 		if (remote.getNodeName().equalsIgnoreCase("iframe")) {
 			return null;// SEP
 		}
-		ElementRemote elem = (ElementRemote) remote;
-		ElementRemoteIndex remoteIndex = elem.provideRemoteIndex(false);
-		ElementRemote hasNodeRemote = remoteIndex.hasNode();
-		boolean hadNode = hasNodeRemote != null;
-		if (hasNodeRemote == null) {
-			ElementRemote root = remoteIndex.root();
-			Element hasNode = parseAndMarkResolved(root, root.getOuterHtml(),
+		ElementJso elem = (ElementJso) remote;
+		ElementJsoIndex remoteIndex = elem.provideRemoteIndex(false);
+		ElementJso hasNodeJso = remoteIndex.hasNode();
+		boolean hadNode = hasNodeJso != null;
+		if (hasNodeJso == null) {
+			ElementJso root = remoteIndex.root();
+			Element hasNode = parseAndMarkSynced(root, root.getOuterHtml(),
 					null);
 			linkRemote(root, hasNode);
 			hasNode.putRemote(root, true);
-			hasNodeRemote = root;
+			hasNodeJso = root;
 		}
-		Element hasNode = (Element) remoteLookup.get(hasNodeRemote);
+		Element hasNode = (Element) remoteLookup.get(hasNodeJso);
 		// if this returns true, we knew the remote element has DOM manipulated
 		// outside GWT - parse the tree
 		if (hasNode.resolveRemoteDefined()) {
@@ -752,7 +791,7 @@ public class LocalDom {
 		}
 		// htmlparser will sometimes fail to parse dodgy DOM - reparse from
 		// browser DOM
-		if (!isReplaying()
+		if (isApplyToRemote()
 				&& shouldTryReparseFromRemote(elem, hasNode, remoteIndex)
 				&& !postReparse) {
 			/*
@@ -767,7 +806,7 @@ public class LocalDom {
 			 */
 			Ax.err(">> Reparsing from remote - will remove event handlers");
 			// mutations.verifyDomEquivalence();
-			reparseFromRemote(hasNodeRemote, hasNode, remoteIndex);
+			reparseFromRemote(hasNodeJso, hasNode, remoteIndex);
 			return nodeFor0(remote, true);
 		}
 		List<Integer> indicies = remoteIndex.indicies();
@@ -779,7 +818,7 @@ public class LocalDom {
 			int nodeIndex = indicies.get(idx);
 			cursor.resolveRemoteDefined();
 			Element child = (Element) cursor.getChild(nodeIndex);
-			NodeRemote childRemote = (NodeRemote) ancestors.get(idx);
+			NodeJso childRemote = (NodeJso) ancestors.get(idx);
 			linkRemote(childRemote, child);
 			child.putRemote(childRemote, true);
 			cursor = child;
@@ -788,19 +827,19 @@ public class LocalDom {
 		return (T) remoteLookup.get(remote);
 	}
 
-	private Element parseAndMarkResolved(ElementRemote root, String outerHtml,
+	private Element parseAndMarkSynced(ElementJso root, String outerHtml,
 			Element replaceContents) {
 		Element parsed = null;
 		try {
 			parsed = new HtmlParser().parse(outerHtml, replaceContents,
-					root == Document.get().typedRemote().getDocumentElement0());
+					root == Document.get().jsoRemote().getDocumentElement0());
 		} catch (Exception e) {
 			// TODO - possibly log. But maybe not - full support of dodgy dom wd
 			// be truly hard
 			// FIXME - dirndl 1x3 - DEVEX (or retire - IE legacy?)
 			parsed = new HtmlParser().parse(safeParseByBrowser(outerHtml),
 					replaceContents,
-					root == Document.get().typedRemote().getDocumentElement0());
+					root == Document.get().jsoRemote().getDocumentElement0());
 		}
 		if (parsed != null) {
 			if (replaceContents != null) {
@@ -810,7 +849,7 @@ public class LocalDom {
 				root.getAttributeMap()
 						.forEach((k, v) -> replaceContents.setAttribute(k, v));
 			}
-			wasResolved0(parsed);
+			wasSynced0(parsed);
 			root.getContiguousTextContainers()
 					.forEach(this::applyContiguousTextNodesToLocal);
 		} else {
@@ -819,26 +858,26 @@ public class LocalDom {
 		return parsed;
 	}
 
-	private void putRemote0(Element element, ElementRemote remote) {
+	private void putRemote0(Element element, ElementJso remote) {
 		flush();
-		resolutionEventId++;
-		wasResolved(element);
+		syncEventId++;
+		wasSynced(element);
 		remoteLookup.put(remote, element);
 		element.putRemote(remote, true);
 	}
 
-	private void reparseFromRemote(ElementRemote elem, Element hasNode,
-			ElementRemoteIndex remoteIndex) {
+	private void reparseFromRemote(ElementJso elem, Element hasNode,
+			ElementJsoIndex remoteIndex) {
 		List<Integer> sizes = remoteIndex.sizes();
 		List<Integer> indicies = remoteIndex.indicies();
 		boolean sizesMatch = true;
 		Element cursor = hasNode;
-		ElementRemote remoteCursor = elem;
+		ElementJso remoteCursor = elem;
 		for (int idx = sizes.size() - 1; idx >= 0; idx--) {
 			int size = sizes.get(idx);
 			boolean invalid = cursor.getChildCount() != size;
 			Node node = null;
-			NodeRemote remoteNode = null;
+			NodeJso remoteNode = null;
 			if (!invalid) {
 				int nodeIndex = indicies.get(idx);
 				node = cursor.getChild(nodeIndex);
@@ -859,7 +898,7 @@ public class LocalDom {
 				cursor.local().clearChildrenAndAttributes0();
 				String builtOuterHtml = remoteCursor.buildOuterHtml();
 				String remoteOuterHtml = remoteCursor.getOuterHtml();
-				parseAndMarkResolved(remoteCursor, builtOuterHtml, cursor);
+				parseAndMarkSynced(remoteCursor, builtOuterHtml, cursor);
 				invalid = cursor.getChildCount() != size;
 				if (!invalid) {
 					int nodeIndex = indicies.get(idx);
@@ -910,13 +949,13 @@ public class LocalDom {
 				}
 			}
 			cursor = (Element) node;
-			remoteCursor = (ElementRemote) remoteNode;
+			remoteCursor = (ElementJso) remoteNode;
 		}
 		Ax.out("Reparse successful");
 	}
 
-	private boolean shouldTryReparseFromRemote(ElementRemote elem,
-			Element hasNode, ElementRemoteIndex remoteIndex) {
+	private boolean shouldTryReparseFromRemote(ElementJso elem, Element hasNode,
+			ElementJsoIndex remoteIndex) {
 		if (remoteIndex.hasRemoteDefined()) {
 			return false;
 		}
@@ -946,7 +985,7 @@ public class LocalDom {
 	private String validateHtml0(String html) {
 		DivElement div = Document.get().createDivElement();
 		ensureRemote(div);
-		ElementRemote typedRemote = div.implAccess().typedRemote();
+		ElementJso typedRemote = div.implAccess().jsoRemote();
 		typedRemote.setInnerHTML(html);
 		try {
 			return typedRemote.getInnerHTML0();
@@ -961,9 +1000,9 @@ public class LocalDom {
 				|| (mutations.isObserverConnected() || !mutations.isEnabled()));
 	}
 
-	private void wasResolved0(Element elem) {
-		elem.local().walk(nl -> nl.node().resolved(resolutionEventId));
-		resolutionEventIdDirty = true;
+	private void wasSynced0(Element elem) {
+		elem.local().walk(nl -> nl.node().onSync(syncEventId));
+		syncEventIdDirty = true;
 	}
 
 	void applyContiguousTextNodesToLocal(ContiguousTextNodes contiguous) {
@@ -977,7 +1016,8 @@ public class LocalDom {
 		Node parent = previousNode.getParentNode();
 		NodeLocal contiguousLocal = null;
 		Node created = createAndInsertAfter(parent, previousNode,
-				contiguous.node);
+				contiguous.node.getNodeType(), contiguous.node.getNodeName(),
+				contiguous.node.getNodeValue(), contiguous.node);
 		String previousLocalText = previousNode.getTextContent();
 		String remotePreviousTextContent = contiguous.previous.getNodeValue();
 		previousNode.setTextContent(remotePreviousTextContent);
@@ -986,29 +1026,64 @@ public class LocalDom {
 	}
 
 	Node createAndInsertAfter(Node parentNode, Node previousSibling,
-			NodeRemote remoteNode) {
+			short nodeType, String nodeName, String nodeValue,
+			NodeJso remoteNode) {
 		ElementLocal parent = parentNode.local();
 		Node newChild = null;
-		switch (remoteNode.getNodeType()) {
+		switch (nodeType) {
 		case Node.COMMENT_NODE:
-			newChild = parent.ownerDocument
-					.createComment(remoteNode.getNodeValue());
+			newChild = parent.ownerDocument.createComment(nodeValue);
 			break;
 		case Node.TEXT_NODE:
-			newChild = parent.ownerDocument
-					.createTextNode(remoteNode.getNodeValue());
+			newChild = parent.ownerDocument.createTextNode(nodeValue);
 			break;
 		case Node.ELEMENT_NODE:
-			newChild = parent.ownerDocument
-					.createElement(remoteNode.getNodeName());
+			newChild = parent.ownerDocument.createElement(nodeName);
 			break;
 		default:
 			throw new UnsupportedOperationException();
 		}
-		newChild.putRemote(remoteNode, false);
+		// FIXME - remoteNode
+		if (remoteNode != null) {
+			newChild.putRemote(remoteNode, false);
+		}
 		parentNode.insertAfter(newChild, previousSibling);
-		linkRemote(remoteNode, newChild);
+		if (remoteNode != null) {
+			linkRemote(remoteNode, newChild);
+		}
 		return newChild;
+	}
+
+	void flush0() {
+		flush0(false);
+	}
+
+	void flush0(boolean force) {
+		if (syncing) {
+			return;
+		}
+		if (flushCommand == null && !force) {
+			return;
+		}
+		flushCommand = null;
+		try {
+			syncing = true;
+			if (syncEventIdDirty) {
+				syncEventId++;
+				syncEventIdDirty = false;
+			}
+			new ArrayList<>(pendingSync).stream()
+					.forEach(this::ensurePendingSynced);
+			if (syncEventIdDirty) {
+				syncEventId++;
+			}
+		} catch (RuntimeException re) {
+			topicReportException.publish(re);
+			throw re;
+		} finally {
+			syncEventIdDirty = false;
+			syncing = false;
+		}
 	}
 
 	void handleReportedException(Exception exception) {
@@ -1022,36 +1097,8 @@ public class LocalDom {
 				.publish(new LocalDomException(exception, message));
 	}
 
-	void resolve0() {
-		resolve0(false);
-	}
-
-	void resolve0(boolean force) {
-		if (resolving) {
-			return;
-		}
-		if (resolveCommand == null && !force) {
-			return;
-		}
-		resolveCommand = null;
-		try {
-			resolving = true;
-			if (resolutionEventIdDirty) {
-				resolutionEventId++;
-				resolutionEventIdDirty = false;
-			}
-			new ArrayList<>(pendingResolution).stream()
-					.forEach(this::ensurePendingResolved);
-			if (resolutionEventIdDirty) {
-				resolutionEventId++;
-			}
-		} catch (RuntimeException re) {
-			topicReportException.publish(re);
-			throw re;
-		} finally {
-			resolutionEventIdDirty = false;
-			resolving = false;
-		}
+	boolean isPathref() {
+		return Document.get().remoteType == RemoteType.PATHREF;
 	}
 
 	public class BrowserBehaviour {
@@ -1069,8 +1116,8 @@ public class LocalDom {
 				lengthTest = lengthTest + lengthTest;
 			}
 			FormatBuilder format = new FormatBuilder();
-			ElementRemote div = docRemote.createElementNode0("div");
-			TextRemote text = docRemote.createTextNode0(lengthTest);
+			ElementJso div = docRemote.createElementNode0("div");
+			TextJso text = docRemote.createTextNode0(lengthTest);
 			div.appendChild0(text);
 			int childNodesLengthNodeOperation = div.getChildNodes0()
 					.getLength();
@@ -1109,6 +1156,10 @@ public class LocalDom {
 		}
 	}
 
+	public interface LocalDomContextProvider {
+		LocalDom contextInstance();
+	}
+
 	public static class LoggingConfiguration {
 		public boolean mutationLogDoms;
 
@@ -1140,40 +1191,41 @@ public class LocalDom {
 
 	public class MutationsAccess {
 		public Node createAndInsertAfter(Node target, Node previousSibling,
-				NodeRemote remoteNode) {
+				short nodeType, String nodeName, String nodeValue,
+				NodeJso remoteNode) {
 			return LocalDom.this.createAndInsertAfter(target, previousSibling,
-					remoteNode);
+					nodeType, nodeName, nodeValue, remoteNode);
 		}
 
-		public Element elementForNoResolve(ElementRemote remote) {
+		public Element elementForNoResolve(ElementJso remote) {
 			return (Element) nodeForNoResolve(remote);
 		}
 
-		public void markAsResolved(NodeRemote ancestor) {
+		public void markAsSynced(NodeJso ancestor) {
 			try {
-				markNonStructuralNodesAsResolvedOnResolve = true;
+				markNonStructuralNodesAsSyncedOnSync = true;
 				LocalDom.nodeFor(ancestor);
 			} finally {
-				markNonStructuralNodesAsResolvedOnResolve = false;
+				markNonStructuralNodesAsSyncedOnSync = false;
 			}
 		}
 
-		public Node nodeForNoResolve(NodeRemote remote) {
+		public Node nodeForNoResolve(NodeJso remote) {
 			return LocalDom.nodeForNoResolve(remote);
 		}
 
-		public NodeRemote parentNoResolve(NodeRemote cursor) {
-			return cursor.getParentNodeRemote();
+		public NodeJso parentNoResolve(NodeJso cursor) {
+			return cursor.getParentNodeJso();
 		}
 
 		public void putRemoteChildren(Element elem,
-				List<NodeRemote> remoteChildrenS0) {
+				List<NodeJso> remoteChildrenS0) {
 			NodeList<Node> childNodes = elem.getChildNodes();
 			for (int idx = 0; idx < remoteChildrenS0.size(); idx++) {
 				Node child = childNodes.getItem(idx);
-				NodeRemote remote = remoteChildrenS0.get(idx);
-				// not sure about resolved here...
-				child.putRemote(remote, child.wasResolved());
+				NodeJso remote = remoteChildrenS0.get(idx);
+				// not sure about synced here...
+				child.putRemote(remote, child.wasSynced());
 				if (!remoteLookup.containsKey(remote)) {
 					linkRemote(remote, child);
 				}
@@ -1194,21 +1246,54 @@ public class LocalDom {
 			topicReportException.publish(exception);
 		}
 
-		public void setReplaying(boolean replaying) {
-			get().replaying = replaying;
+		public void setApplyToRemote(boolean applyToRemote) {
+			get().applyToRemote = applyToRemote;
 		}
 
-		public Stream<NodeRemote> streamChildren(NodeRemote node) {
+		public Stream<NodeJso> streamChildren(NodeJso node) {
 			return node.getChildNodes0().streamRemote();
 		}
 
-		public Stream<NodeRemote>
-				streamRemote(NodeListRemote<Node> nodeListRemote) {
+		public Stream<NodeJso> streamRemote(NodeListJso<Node> nodeListRemote) {
 			return nodeListRemote.streamRemote();
 		}
 
-		public NodeRemote typedRemote(Node n) {
-			return n.typedRemote();
+		public NodeJso typedRemote(Node n) {
+			return n.jsoRemote();
+		}
+	}
+
+	/*
+	 * Bridging class between the server-side DetachedDom and the client-side
+	 * LocalDom
+	 */
+	public class PathRefRepresentations {
+		public void applyEvent(DomEventData eventData) {
+			Element elem = (Element) eventData.firstReceiver.node();
+			if (eventData.value != null) {
+				elem.implAccess().pathrefRemote().setPropertyString("value",
+						eventData.value);
+			}
+			// um, is it that easy?
+			DOM.dispatchEvent(eventData.event, elem, elem.uiObjectListener);
+		}
+
+		public void applyMutations(List<MutationRecord> mutations,
+				boolean applyToRemote) {
+			LocalDom.this.mutations.applyDetachedMutations(mutations,
+					applyToRemote);
+		}
+
+		public MutationRecord asRemoveMutation(Node parent, Node oldChild) {
+			return mutations.nodeAsRemoveMutation(parent, oldChild);
+		}
+
+		public List<MutationRecord> domAsMutations() {
+			return nodeAsMutations(Document.get().getDocumentElement());
+		}
+
+		public List<MutationRecord> nodeAsMutations(Node node) {
+			return mutations.nodeAsMutations(node);
 		}
 	}
 }

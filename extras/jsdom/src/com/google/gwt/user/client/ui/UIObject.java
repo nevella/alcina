@@ -21,7 +21,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.debug.client.DebugInfo;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.user.client.DOM;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -308,7 +308,7 @@ public abstract class UIObject implements HasVisibility {
 	 * newPrimaryStyleName.
 	 */
 	private static native void updatePrimaryAndDependentStyleNames0(
-			ElementRemote elem, String newPrimaryStyle) /*-{
+			ElementJso elem, String newPrimaryStyle) /*-{
 														var classes = (elem.className || "").split(/\s+/);
 														if (!classes) {
 														return;
@@ -592,7 +592,7 @@ public abstract class UIObject implements HasVisibility {
 	 * @return the object's offset height
 	 */
 	public int getOffsetHeight() {
-		return getElement().implAccess().ensureRemote()
+		return getElement().implAccess().ensureJsoRemote()
 				.getPropertyInt("offsetHeight");
 	}
 
@@ -603,7 +603,7 @@ public abstract class UIObject implements HasVisibility {
 	 * @return the object's offset width
 	 */
 	public int getOffsetWidth() {
-		return getElement().implAccess().ensureRemote()
+		return getElement().implAccess().ensureJsoRemote()
 				.getPropertyInt("offsetWidth");
 	}
 

@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 class NodeIndex {
-	static NodeIndex forNode(NodeRemote node) {
+	static NodeIndex forNode(NodeJso node) {
 		NodeIndex result = new NodeIndex();
-		NodeRemote cursor = node;
+		NodeJso cursor = node;
 		while (true) {
 			result.indices.add(0, cursor.indexInParentChildren());
-			cursor = cursor.getParentNodeRemote();
+			cursor = cursor.getParentNodeJso();
 			if (cursor == null) {
 				break;
 			} else if (cursor.getNodeType() == Node.DOCUMENT_NODE) {

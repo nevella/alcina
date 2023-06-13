@@ -22,8 +22,6 @@ abstract class DOMImpl {
 	static final DomDispatch impl = new DomDispatch();
 	// static final DOMImpl impl = GWT.create(DOMImpl.class);
 
-	private static DomImplCache cache = new DomImplCache();
-
 	/**
 	 * Fast helper method to convert small doubles to 32-bit int.
 	 *
@@ -39,28 +37,37 @@ abstract class DOMImpl {
     return val | 0;
 	}-*/;
 
-	private native JavaScriptObject eventGetNativeTarget(NativeEvent event) /*-{
+	private Element ensureDocumentScrollingElement(DocumentJso document) {
+		// In some case (e.g SVG document and old Webkit browsers),
+		// getDocumentScrollingElement can
+		// return null. In this case, default to documentElement.
+		Element scrollingElement = getDocumentScrollingElement(document);
+		return scrollingElement != null ? scrollingElement
+				: document.getDocumentElement();
+	}
+
+	private native JavaScriptObject eventGetNativeTarget(NativeEventJso event) /*-{
     return event.currentTarget;
 	}-*/;
 
-	private native double eventGetSubPixelClientX(NativeEvent evt) /*-{
+	private native double eventGetSubPixelClientX(NativeEventJso evt) /*-{
     return evt.clientX || 0;
 	}-*/;
 
-	private native double eventGetSubPixelClientY(NativeEvent evt) /*-{
+	private native double eventGetSubPixelClientY(NativeEventJso evt) /*-{
     return evt.clientY || 0;
 	}-*/;
 
-	private native double eventGetSubPixelScreenX(NativeEvent evt) /*-{
+	private native double eventGetSubPixelScreenX(NativeEventJso evt) /*-{
     return evt.screenX || 0;
 	}-*/;
 
-	private native double eventGetSubPixelScreenY(NativeEvent evt) /*-{
+	private native double eventGetSubPixelScreenY(NativeEventJso evt) /*-{
     return evt.screenY || 0;
 	}-*/;
 
 	private native double getSubPixelAbsoluteLeft(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     var left = 0;
     var curr = elem;
     // This intentionally excludes body which has a null offsetParent.
@@ -76,7 +83,7 @@ abstract class DOMImpl {
 	}-*/;
 
 	private native double getSubPixelAbsoluteTop(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     var top = 0;
     var curr = elem;
     // This intentionally excludes body which has a null offsetParent.
@@ -92,7 +99,7 @@ abstract class DOMImpl {
 	}-*/;
 
 	private native double getSubPixelScrollLeft(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     return elem.scrollLeft || 0;
 	}-*/;
 
@@ -120,70 +127,67 @@ abstract class DOMImpl {
     return touch.screenY || 0;
 	}-*/;
 
-	protected native void buttonClick(ElementRemote button) /*-{
+	protected native void buttonClick(ElementJso button) /*-{
     button.click();
 	}-*/;
 
-	protected native NodeRemote createButtonElement(DocumentRemote doc,
-			String type) /*-{
+	protected native NodeJso createButtonElement(DocumentJso doc, String type) /*-{
     var e = doc.createElement("BUTTON");
     e.type = type;
     return e;
 	}-*/;
 
-	protected native ElementRemote createCheckInputElement(DocumentRemote doc) /*-{
+	protected native ElementJso createCheckInputElement(DocumentJso doc) /*-{
     var e = doc.createElement("INPUT");
     e.type = 'checkbox';
     e.value = 'on';
     return e;
 	}-*/;
 
-	protected native ElementRemote createElement(DocumentRemote doc, String tag) /*-{
+	protected native ElementJso createElement(DocumentJso doc, String tag) /*-{
     return doc.createElement(tag);
 	}-*/;
 
-	protected abstract NativeEvent createHtmlEvent(DocumentRemote doc,
+	protected abstract NativeEventJso createHtmlEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable);
 
-	protected native ElementRemote createInputElement(DocumentRemote doc,
-			String type) /*-{
+	protected native ElementJso createInputElement(DocumentJso doc, String type) /*-{
     var e = doc.createElement("INPUT");
     e.type = type;
     return e;
 	}-*/;
 
-	protected abstract ElementRemote createInputRadioElement(DocumentRemote doc,
+	protected abstract ElementJso createInputRadioElement(DocumentJso doc,
 			String name);
 
-	protected abstract NativeEvent createKeyCodeEvent(DocumentRemote doc,
+	protected abstract NativeEventJso createKeyCodeEvent(DocumentJso doc,
 			String type, boolean ctrlKey, boolean altKey, boolean shiftKey,
 			boolean metaKey, int keyCode);
 
 	@Deprecated
-	protected abstract NativeEvent createKeyEvent(DocumentRemote doc,
+	protected abstract NativeEventJso createKeyEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode);
 
-	protected abstract NativeEvent createKeyPressEvent(DocumentRemote doc,
+	protected abstract NativeEventJso createKeyPressEvent(DocumentJso doc,
 			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
 			int charCode);
 
-	protected abstract NativeEvent createMouseEvent(DocumentRemote doc,
+	protected abstract NativeEventJso createMouseEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable, int detail,
 			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
-			ElementRemote relatedTarget);
+			ElementJso relatedTarget);
 
-	protected ScriptElement createScriptElement(DocumentRemote doc,
+	protected ScriptElement createScriptElement(DocumentJso doc,
 			String source) {
 		ScriptElement elem = nodeFor(createElement(doc, "script"));
 		elem.setText(source);
 		return elem;
 	}
 
-	protected native ElementRemote createTextNode(DocumentRemote doc,
-			String data) /*-{
+	protected native ElementJso createTextNode(DocumentJso doc, String data) /*-{
     return doc.createTextNode(data);
 	}-*/;
 
@@ -199,94 +203,86 @@ abstract class DOMImpl {
 		style.setProperty("opacity", String.valueOf(value));
 	}
 
-	protected abstract void dispatchEvent(ElementRemote target,
-			NativeEvent evt);
+	protected abstract void dispatchEvent(ElementJso target,
+			NativeEventJso evt);
 
-	protected native boolean eventGetAltKey(NativeEvent evt) /*-{
+	protected native boolean eventGetAltKey(NativeEventJso evt) /*-{
     return !!evt.altKey;
 	}-*/;
 
-	protected native int eventGetButton(NativeEvent evt) /*-{
+	protected native int eventGetButton(NativeEventJso evt) /*-{
     return evt.button | 0;
 	}-*/;
 
-	protected abstract int eventGetCharCode(NativeEvent evt);
+	protected abstract int eventGetCharCode(NativeEventJso evt);
 
-	protected int eventGetClientX(NativeEvent evt) {
+	protected int eventGetClientX(NativeEventJso evt) {
 		return toInt32(eventGetSubPixelClientX(evt));
 	}
 
-	protected int eventGetClientY(NativeEvent evt) {
+	protected int eventGetClientY(NativeEventJso evt) {
 		return toInt32(eventGetSubPixelClientY(evt));
 	}
 
-	protected native boolean eventGetCtrlKey(NativeEvent evt) /*-{
+	protected native boolean eventGetCtrlKey(NativeEventJso evt) /*-{
     return !!evt.ctrlKey;
 	}-*/;
 
-	protected EventTarget eventGetCurrentTarget(NativeEvent event) {
+	protected EventTarget eventGetCurrentTarget(NativeEventJso event) {
 		JavaScriptObject jso = eventGetNativeTarget(event);
 		return jso == null ? null : new EventTarget(jso);
 	}
 
-	protected final native int eventGetKeyCode(NativeEvent evt) /*-{
+	protected final native int eventGetKeyCode(NativeEventJso evt) /*-{
     return evt.keyCode | 0;
 	}-*/;
 
-	protected native boolean eventGetMetaKey(NativeEvent evt) /*-{
+	protected native boolean eventGetMetaKey(NativeEventJso evt) /*-{
     return !!evt.metaKey;
 	}-*/;
 
-	protected abstract int eventGetMouseWheelVelocityY(NativeEvent evt);
+	protected abstract int eventGetMouseWheelVelocityY(NativeEventJso evt);
 
 	protected abstract EventTarget
-			eventGetRelatedTarget(NativeEvent nativeEvent);
+			eventGetRelatedTarget(NativeEventJso nativeEvent);
 
-	protected native double eventGetRotation(NativeEvent evt) /*-{
-    return evt.rotation;
+	protected native double eventGetRotation(NativeEventJso evt) /*-{
+    return evt.rotation || 0.0;
 	}-*/;
 
-	protected native double eventGetScale(NativeEvent evt) /*-{
-    return evt.scale;
+	protected native double eventGetScale(NativeEventJso evt) /*-{
+    return evt.scale || 0.0;
 	}-*/;
 
-	protected int eventGetScreenX(NativeEvent evt) {
+	protected int eventGetScreenX(NativeEventJso evt) {
 		return toInt32(eventGetSubPixelScreenX(evt));
 	}
 
-	protected int eventGetScreenY(NativeEvent evt) {
+	protected int eventGetScreenY(NativeEventJso evt) {
 		return toInt32(eventGetSubPixelScreenY(evt));
 	}
 
-	protected native boolean eventGetShiftKey(NativeEvent evt) /*-{
+	protected native boolean eventGetShiftKey(NativeEventJso evt) /*-{
     return !!evt.shiftKey;
 	}-*/;
 
-	protected abstract EventTarget eventGetTarget(NativeEvent evt);
+	protected abstract EventTarget eventGetTarget(NativeEventJso evt);
 
-	protected final String eventGetType(NativeEvent evt) {
-		if (cache.lastEventForGetType != evt) {
-			cache.lastEventForGetType = evt;
-			cache.lastEventType = eventGetType0(evt);
-		}
-		return cache.lastEventType;
-	}
-
-	protected final native String eventGetType0(NativeEvent evt) /*-{
+	protected final native String eventGetType(NativeEventJso evt) /*-{
     return evt.type;
 	}-*/;
 
-	protected abstract void eventPreventDefault(NativeEvent evt);
+	protected abstract void eventPreventDefault(NativeEventJso evt);
 
-	protected native void eventSetKeyCode(NativeEvent evt, char key) /*-{
+	protected native void eventSetKeyCode(NativeEventJso evt, char key) /*-{
     evt.keyCode = key;
 	}-*/;
 
-	protected native void eventStopPropagation(NativeEvent evt) /*-{
+	protected native void eventStopPropagation(NativeEventJso evt) /*-{
     evt.stopPropagation();
 	}-*/;
 
-	protected abstract String eventToString(NativeEvent evt);
+	protected abstract String eventToString(NativeEventJso evt);
 
 	protected int getAbsoluteLeft(Element elem) {
 		return toInt32(getSubPixelAbsoluteLeft(elem));
@@ -296,41 +292,41 @@ abstract class DOMImpl {
 		return toInt32(getSubPixelAbsoluteTop(elem));
 	}
 
-	protected native String getAttribute(ElementRemote elem, String name) /*-{
+	protected native String getAttribute(ElementJso elem, String name) /*-{
     return elem.getAttribute(name) || '';
 	}-*/;
 
-	protected native int getBodyOffsetLeft(DocumentRemote doc) /*-{
+	protected native int getBodyOffsetLeft(DocumentJso doc) /*-{
     return 0;
 	}-*/;
 
-	protected native int getBodyOffsetTop(DocumentRemote doc) /*-{
+	protected native int getBodyOffsetTop(DocumentJso doc) /*-{
     return 0;
 	}-*/;
 
-	protected native JsArray<Touch> getChangedTouches(NativeEvent evt) /*-{
+	protected native JsArray<Touch> getChangedTouches(NativeEventJso evt) /*-{
     return evt.changedTouches;
 	}-*/;
 
-	protected native ElementRemote getFirstChildElement(ElementRemote elem) /*-{
+	protected native ElementJso getFirstChildElement(ElementJso elem) /*-{
     var child = elem.firstChild;
     while (child && child.nodeType != 1)
       child = child.nextSibling;
     return child;
 	}-*/;
 
-	protected native String getInnerHTML(ElementRemote elem) /*-{
+	protected native String getInnerHTML(ElementJso elem) /*-{
     return elem.innerHTML;
 	}-*/;
 
-	protected native String getInnerText(ElementRemote node) /*-{
+	protected native String getInnerText(ElementJso node) /*-{
     // To mimic IE's 'innerText' property in the W3C DOM, we need to recursively
     // concatenate all child Text_Dom nodes (depth first).
     var text = '', child = node.firstChild;
     while (child) {
       // 1 == Element_Dom Node_Dom
       if (child.nodeType == 1) {
-        text += this.@com.google.gwt.dom.client.DOMImpl::getInnerText(Lcom/google/gwt/dom/client/ElementRemote;)(child);
+        text += this.@com.google.gwt.dom.client.DOMImpl::getInnerText(Lcom/google/gwt/dom/client/ElementJso;)(child);
       } else if (child.nodeValue) {
         text += child.nodeValue;
       }
@@ -339,14 +335,14 @@ abstract class DOMImpl {
     return text;
 	}-*/;
 
-	protected native ElementRemote getNextSiblingElement(ElementRemote elem) /*-{
+	protected native ElementJso getNextSiblingElement(ElementJso elem) /*-{
     var sib = elem.nextSibling;
     while (sib && sib.nodeType != 1)
       sib = sib.nextSibling;
     return sib;
 	}-*/;
 
-	protected native int getNodeType(NodeRemote node) /*-{
+	protected native int getNodeType(NodeJso node) /*-{
     return node.nodeType;
 	}-*/;
 
@@ -358,7 +354,7 @@ abstract class DOMImpl {
 		return getStyleProperty(style, name);
 	}
 
-	protected native ElementRemote getParentElement(NodeRemote node) /*-{
+	protected native ElementJso getParentElement(NodeJso node) /*-{
     var parent = node.parentNode;
     if (!parent || parent.nodeType != 1) {
       parent = null;
@@ -366,14 +362,14 @@ abstract class DOMImpl {
     return parent;
 	}-*/;
 
-	protected native ElementRemote getPreviousSiblingElement(ElementRemote elem) /*-{
+	protected native ElementJso getPreviousSiblingElement(ElementJso elem) /*-{
     var sib = elem.previousSibling;
     while (sib && sib.nodeType != 1)
       sib = sib.previousSibling;
     return sib;
 	}-*/;
 
-	protected int getScrollLeft(DocumentRemote doc) {
+	protected int getScrollLeft(DocumentJso doc) {
 		return ensureDocumentScrollingElement(doc).getScrollLeft();
 	}
 
@@ -381,7 +377,7 @@ abstract class DOMImpl {
 		return toInt32(getSubPixelScrollLeft(elem));
 	}
 
-	protected int getScrollTop(DocumentRemote doc) {
+	protected int getScrollTop(DocumentJso doc) {
 		return ensureDocumentScrollingElement(doc).getScrollTop();
 	}
 
@@ -389,34 +385,33 @@ abstract class DOMImpl {
     return style[name];
 	}-*/;
 
-	protected native int getTabIndex(ElementRemote elem) /*-{
+	protected native int getTabIndex(ElementJso elem) /*-{
     return elem.tabIndex;
 	}-*/;
 
-	protected native String getTagName(ElementRemote elem) /*-{
+	protected native String getTagName(ElementJso elem) /*-{
     return elem.tagName;
 	}-*/;
 
-	protected native JsArray<Touch> getTargetTouches(NativeEvent evt) /*-{
+	protected native JsArray<Touch> getTargetTouches(NativeEventJso evt) /*-{
     return evt.targetTouches;
 	}-*/;
 
-	protected native JsArray<Touch> getTouches(NativeEvent evt) /*-{
+	protected native JsArray<Touch> getTouches(NativeEventJso evt) /*-{
     return evt.touches;
 	}-*/;
 
-	protected native boolean hasAttribute(ElementRemote elem, String name) /*-{
+	protected native boolean hasAttribute(ElementJso elem, String name) /*-{
     return elem.hasAttribute(name);
 	}-*/;
 
-	protected abstract boolean isOrHasChild(NodeRemote parent,
-			NodeRemote child);
+	protected abstract boolean isOrHasChild(NodeJso parent, NodeJso child);
 
-	protected <N extends Node> N nodeFor(NodeRemote node_dom) {
+	protected <N extends Node> N nodeFor(NodeJso node_dom) {
 		return LocalDom.nodeFor(node_dom);
 	}
 
-	protected native void scrollIntoView(ElementRemote elem) /*-{
+	protected native void scrollIntoView(ElementJso elem) /*-{
     //safer to rely on emulated behaviour
     //        if (elem.scrollIntoView) {
     //            elem.scrollIntoView();
@@ -457,34 +452,33 @@ abstract class DOMImpl {
     }
 	}-*/;
 
-	protected native void selectAdd(ElementRemote select, ElementRemote option,
-			ElementRemote before) /*-{
+	protected native void selectAdd(ElementJso select, ElementJso option,
+			ElementJso before) /*-{
     select.add(option, before);
 	}-*/;
 
-	protected native void selectClear(ElementRemote select) /*-{
+	protected native void selectClear(ElementJso select) /*-{
     select.options.length = 0;
 	}-*/;
 
-	protected native int selectGetLength(ElementRemote select) /*-{
+	protected native int selectGetLength(ElementJso select) /*-{
     return select.options.length;
 	}-*/;
 
-	protected native NodeList<OptionElement>
-			selectGetOptions(ElementRemote select) /*-{
-    var out = @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(select.options);
+	protected native NodeList<OptionElement> selectGetOptions(ElementJso select) /*-{
+    var out = @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/ClientDomNodeList;)(select.options);
     return out;
 	}-*/;
 
-	protected native void selectRemoveOption(ElementRemote domImpl, int index) /*-{
+	protected native void selectRemoveOption(ElementJso domImpl, int index) /*-{
     select.remove(index);
 	}-*/;
 
-	protected native void setDraggable(ElementRemote elem, String draggable) /*-{
+	protected native void setDraggable(ElementJso elem, String draggable) /*-{
     elem.draggable = draggable;
 	}-*/;
 
-	protected native void setInnerText(ElementRemote elem, String text) /*-{
+	protected native void setInnerText(ElementJso elem, String text) /*-{
     // Remove all children first.
     while (elem.firstChild) {
       elem.removeChild(elem.firstChild);
@@ -495,33 +489,20 @@ abstract class DOMImpl {
     }
 	}-*/;
 
-	protected void setScrollLeft(DocumentRemote doc, int left) {
+	protected void setScrollLeft(DocumentJso doc, int left) {
 		ensureDocumentScrollingElement(doc).setScrollLeft(left);
 	}
 
 	protected native void setScrollLeft(Element multiplex, int left) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     elem.scrollLeft = left;
 	}-*/;
 
-	protected void setScrollTop(DocumentRemote doc, int top) {
+	protected void setScrollTop(DocumentJso doc, int top) {
 		ensureDocumentScrollingElement(doc).setScrollTop(top);
 	}
 
-	private Element ensureDocumentScrollingElement(DocumentRemote document) {
-		// In some case (e.g SVG document and old Webkit browsers),
-		// getDocumentScrollingElement can
-		// return null. In this case, default to documentElement.
-		Element scrollingElement = getDocumentScrollingElement(document);
-		return scrollingElement != null ? scrollingElement
-				: document.getDocumentElement();
-	}
-
-	Element getDocumentScrollingElement(DocumentRemote doc) {
-		return doc.getViewportElement();
-	}
-
-	protected native String toString(ElementRemote elem) /*-{
+	protected native String toString(ElementJso elem) /*-{
     return elem.outerHTML;
 	}-*/;
 
@@ -561,9 +542,7 @@ abstract class DOMImpl {
 		return "";
 	}
 
-	private static class DomImplCache {
-		public String lastEventType;
-
-		public NativeEvent lastEventForGetType;
+	Element getDocumentScrollingElement(DocumentJso doc) {
+		return doc.getViewportElement();
 	}
 }

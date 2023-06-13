@@ -170,13 +170,13 @@ public class TableRowElement extends Element {
 	 *      W3C HTML Specification</a>
 	 */
 	public final native TableCellElement insertCell(int index) /*-{
-																var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
+																var remote = this.@com.google.gwt.dom.client.Element::jsoRemote()();
 																var cell = remote.insertCell(index);
 																return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(cell);
 																}-*/;
 
-	public final native ElementRemote insertCellRemote(int index) /*-{
-																	var remote = this.@com.google.gwt.dom.client.Element::typedRemote()();
+	public final native ElementJso insertCellRemote(int index) /*-{
+																	var remote = this.@com.google.gwt.dom.client.Element::jsoRemote()();
 																	var cell = remote.insertCell(index);
 																	return cell;
 																	}-*/;
@@ -225,7 +225,7 @@ public class TableRowElement extends Element {
 		this.setPropertyString("vAlign", vAlign);
 	}
 
-	private final native NodeListRemote getCells0(ElementRemote elem) /*-{
+	private final native NodeListJso getCells0(ElementJso elem) /*-{
 																		return elem.cells;
 																		}-*/;
 
@@ -246,7 +246,7 @@ public class TableRowElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">
 	 *      W3C HTML Specification</a>
 	 */
-	native void deleteCell0(ElementRemote elt, int index) /*-{
+	native void deleteCell0(ElementJso elt, int index) /*-{
 															elt.deleteCell(index);
 															}-*/;
 }

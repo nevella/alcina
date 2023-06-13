@@ -46,7 +46,6 @@ import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.google.common.base.Preconditions;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -237,7 +236,7 @@ public class ConvertToProxiesPerformer
 	}
 
 	void instrumentClass(CompilationUnitWrapper unit) {
-		for (ClassOrInterfaceDeclarationWrapper decl : unit.declarations) {
+		for (UnitType decl : unit.declarations) {
 			RedirectVisitor visitor = new RedirectVisitor(unit);
 			decl.getDeclaration().accept(visitor, null);
 		}
@@ -534,14 +533,13 @@ public class ConvertToProxiesPerformer
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
-						unit, node);
-				if (declaration.invalid) {
+				UnitType type = new UnitType(unit, node);
+				if (type.invalid) {
 					Ax.err("Invalid decl: %s", unit.getFile().getName());
 					return;
 				}
-				declaration.setDeclaration(node);
-				unit.declarations.add(declaration);
+				type.setDeclaration(node);
+				unit.declarations.add(type);
 			}
 			super.visit(node, arg);
 		}

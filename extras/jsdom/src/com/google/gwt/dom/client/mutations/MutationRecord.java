@@ -5,12 +5,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.ClientDomElement;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.MutationRecordJso;
-import com.google.gwt.dom.client.NodeRemote;
+import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeJso;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -26,33 +29,97 @@ import elemental.json.JsonValue;
  * @author nick@alcina.cc
  *
  */
-@Bean
+@Bean(PropertySource.FIELDS)
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 @SuppressWarnings("deprecation")
 public class MutationRecord {
-	MutationRecordJso jso;
+	/**
+	 * Creates a list of mutations which would recreate the (shallow) node
+	 * 
+	 * This includes creating an insert mutation IFF the node has a parent
+	 * element
+	 */
+	public static void generateInsertMutations(Node node,
+			List<MutationRecord> records) {
+		Element parentElement = node.getParentElement();
+		if (parentElement != null) {
+			MutationRecord record = new MutationRecord();
+			record.target = MutationNode.shallow(parentElement);
+			record.type = Type.childList;
+			record.addedNodes.add(MutationNode.shallow(node));
+			Node previousSibling = node.getPreviousSibling();
+			if (previousSibling != null) {
+				record.previousSibling = MutationNode.shallow(previousSibling);
+			}
+			records.add(record);
+		} else {
+			// node is the root, just send attr mods
+		}
+		switch (node.getNodeType()) {
+		case Node.ELEMENT_NODE: {
+			ClientDomElement elem = (ClientDomElement) node;
+			elem.getAttributeMap().forEach((k, v) -> {
+				MutationRecord record = new MutationRecord();
+				record.target = MutationNode.shallow(node);
+				record.type = Type.attributes;
+				record.attributeName = k;
+				record.newValue = v;
+				records.add(record);
+			});
+			break;
+		}
+		case Node.COMMENT_NODE:
+		case Node.TEXT_NODE: {
+			MutationRecord record = new MutationRecord();
+			record.target = MutationNode.shallow(node);
+			record.type = Type.characterData;
+			record.newValue = node.getNodeValue();
+			records.add(record);
+			break;
+		}
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
 
-	List<MutationNode> addedNodes = new ArrayList<>();
+	/**
+	 * Generates a remove mutation for the oldChild node
+	 * 
+	 * @return
+	 */
+	public static MutationRecord generateRemoveMutation(Node parent,
+			Node oldChild) {
+		MutationRecord record = new MutationRecord();
+		record.target = MutationNode.shallow(parent);
+		record.type = Type.childList;
+		record.removedNodes.add(MutationNode.shallow(oldChild));
+		return record;
+	}
 
-	List<MutationNode> removedNodes = new ArrayList<>();
+	transient MutationRecordJso jso;
 
-	MutationNode target;
+	public List<MutationNode> addedNodes = new ArrayList<>();
 
-	MutationNode previousSibling;
+	public List<MutationNode> removedNodes = new ArrayList<>();
 
-	MutationNode nextSibling;
+	public MutationNode target;
 
-	private String attributeName;
+	public MutationNode previousSibling;
 
-	String attributeNamespace;
+	// never used
+	public MutationNode nextSibling;
 
-	private Type type;
+	public String attributeName;
 
-	SyncMutations sync;
+	public String attributeNamespace;
 
-	String oldValue;
+	public Type type;
 
-	String newValue;
+	transient SyncMutations sync;
+
+	public String oldValue;
+
+	public String newValue;
 
 	// for serialization
 	public MutationRecord() {
@@ -103,89 +170,8 @@ public class MutationRecord {
 		}
 	}
 
-	public List<MutationNode> getAddedNodes() {
-		return this.addedNodes;
-	}
-
-	public String getAttributeName() {
-		return this.attributeName;
-	}
-
-	public String getAttributeNamespace() {
-		return this.attributeNamespace;
-	}
-
-	public String getNewValue() {
-		return this.newValue;
-	}
-
-	// never used
-	public MutationNode getNextSibling() {
-		return this.nextSibling;
-	}
-
-	public String getOldValue() {
-		return this.oldValue;
-	}
-
-	public MutationNode getPreviousSibling() {
-		return this.previousSibling;
-	}
-
-	public List<MutationNode> getRemovedNodes() {
-		return this.removedNodes;
-	}
-
-	public MutationNode getTarget() {
-		return this.target;
-	}
-
-	public Type getType() {
-		return this.type;
-	}
-
 	public boolean provideIsStructuralMutation() {
 		return type == Type.childList;
-	}
-
-	public void setAddedNodes(List<MutationNode> addedNodes) {
-		this.addedNodes = addedNodes;
-	}
-
-	public void setAttributeName(String attributeName) {
-		this.attributeName = attributeName;
-	}
-
-	public void setAttributeNamespace(String attributeNamespace) {
-		this.attributeNamespace = attributeNamespace;
-	}
-
-	public void setNewValue(String newValue) {
-		this.newValue = newValue;
-	}
-
-	public void setNextSibling(MutationNode nextSibling) {
-		this.nextSibling = nextSibling;
-	}
-
-	public void setOldValue(String oldValue) {
-		this.oldValue = oldValue;
-	}
-
-	public void setPreviousSibling(MutationNode previousSibling) {
-		this.previousSibling = previousSibling;
-	}
-
-	public void setRemovedNodes(List<MutationNode> removedNodes) {
-		this.removedNodes = removedNodes;
-	}
-
-	public void setTarget(MutationNode target) {
-		this.target = target;
-	}
-
-	public void setType(Type type) {
-		this.type = type;
 	}
 
 	@Override
@@ -270,8 +256,24 @@ public class MutationRecord {
 		}
 	}
 
-	MutationNode mutationNode(NodeRemote nodeRemote) {
-		return sync.mutationNode(nodeRemote);
+	void connectMutationNodeRef(MutationNode mutationNode) {
+		if (mutationNode == null) {
+			return;
+		}
+		mutationNode.node = mutationNode.path.node();
+		mutationNode.sync = sync;
+	}
+
+	void connectMutationNodeRefs() {
+		connectMutationNodeRef(target);
+		connectMutationNodeRef(previousSibling);
+		// Nope! they won't exist yet
+		// addedNodes.forEach(this::connectMutationNodeRef);
+		removedNodes.forEach(this::connectMutationNodeRef);
+	}
+
+	MutationNode mutationNode(NodeJso nodeJso) {
+		return sync.mutationNode(nodeJso);
 	}
 
 	@Reflected

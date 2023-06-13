@@ -5,10 +5,18 @@ import java.util.Optional;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Document.PerDocumentSupplierGwtImpl;
+import com.google.gwt.dom.client.Document.RemoteType;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
+import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.context.ContextFrame;
+import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.dom.DomDocument.PerDocumentSupplier;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
@@ -33,8 +41,10 @@ import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @Reflected
-@Registration.Singleton
-public abstract class Client {
+@Registration(Client.class)
+public abstract class Client implements ContextFrame {
+	public static ContextProvider<Object, Client> contextProvider;
+
 	public static CommonRemoteServiceAsync commonRemoteService() {
 		return Registry.impl(CommonRemoteServiceAsync.class);
 	}
@@ -55,10 +65,10 @@ public abstract class Client {
 	}
 
 	public static Client get() {
-		return Registry.impl(Client.class);
+		return contextProvider.contextFrame();
 	}
 
-	// prefer place.go
+	// prefer place.go (which calls through to this, but is more fluent)
 	public static void goTo(Place place) {
 		Runnable runnable = () -> get().placeController.goTo(place);
 		CommitToStorageTransformListener.flushAndRun(runnable);
@@ -135,13 +145,35 @@ public abstract class Client {
 			/*
 			 * initialise localdom, mutations
 			 */
+			Document.initialiseContextProvider(RemoteType.JSO);
+			/*
+			 * Called in the Impl event loop if in a script context
+			 */
+			if (!GWT.isScript()) {
+				LocalDom.initalize();
+			}
 			Document.get();
+			Registry.register().singleton(PerDocumentSupplier.class,
+					new PerDocumentSupplierGwtImpl());
 			/*
 			 * Attach non-vcs process debugging
 			 */
 			Optional<AppDebug> appDebug = Registry
 					.optional(ProcessObserver.AppDebug.class);
 			appDebug.ifPresent(AppDebug::attach);
+			/*
+			 * Setup client context provider. One client for client apps,
+			 * multiple (one per environment) for server
+			 */
+			contextProvider = ContextProvider.createProvider(
+					ctx -> Registry.impl(Client.class), null, null,
+					Client.class, false);
+			History.contextProvider = ContextProvider.createProvider(
+					ctx -> new History(), History::init, null, History.class,
+					false);
+			Window.Location.contextProvider = ContextProvider.createProvider(
+					ctx -> new Window.Location(), null, null,
+					Window.Location.class, false);
 		}
 
 		public static boolean isComplete() {

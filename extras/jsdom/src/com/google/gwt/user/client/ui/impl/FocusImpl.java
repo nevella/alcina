@@ -59,7 +59,7 @@ public class FocusImpl {
 	/**
 	 * Not externally instantiable or extensible.
 	 */
-	FocusImpl() {
+	protected FocusImpl() {
 	}
 
 	public void blur(Element elem) {
@@ -81,9 +81,9 @@ public class FocusImpl {
 	}
 
 	public native void setAccessKey(Element elem, char key) /*-{
-															var remote=elem.@com.google.gwt.dom.client.Element::typedRemote()();
-															remote.accessKey = String.fromCharCode(key);
-															}-*/;
+    var remote = elem.@com.google.gwt.dom.client.Element::jsoRemote()();
+    remote.accessKey = String.fromCharCode(key);
+	}-*/;
 
 	public void setTabIndex(Element elem, int index) {
 		elem.setTabIndex(index);

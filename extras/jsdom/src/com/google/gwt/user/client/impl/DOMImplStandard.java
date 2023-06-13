@@ -19,8 +19,9 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.NativeEventJso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -110,11 +111,13 @@ public abstract class DOMImplStandard extends DOMImpl {
 		captureEventDispatchers.merge(eventMap);
 	}
 
-	private static void dispatchCapturedEvent(Event evt) {
+	private static void dispatchCapturedEvent(NativeEventJso jso) {
+		Event evt = new Event(jso);
 		DOM.previewEvent(evt);
 	}
 
-	private static void dispatchCapturedMouseEvent(Event evt) {
+	private static void dispatchCapturedMouseEvent(NativeEventJso jso) {
+		Event evt = new Event(jso);
 		boolean cancelled = !DOM.previewEvent(evt);
 		if (cancelled || captureElem == null) {
 			return;
@@ -124,14 +127,16 @@ public abstract class DOMImplStandard extends DOMImpl {
 		}
 	}
 
-	private static void dispatchDragEvent(Event evt) {
+	private static void dispatchDragEvent(NativeEventJso jso) {
 		// Some drag events must call preventDefault to prevent native text
 		// selection.
+		Event evt = new Event(jso);
 		evt.preventDefault();
-		dispatchEvent(evt);
+		dispatchEvent(jso);
 	}
 
-	private static void dispatchEvent(Event evt) {
+	private static void dispatchEvent(NativeEventJso jso) {
+		Event evt = new Event(jso);
 		Element element = getFirstAncestorWithListener(evt);
 		if (element == null) {
 			return;
@@ -140,10 +145,13 @@ public abstract class DOMImplStandard extends DOMImpl {
 				getEventListener(element));
 	}
 
-	private static void dispatchUnhandledEvent(Event evt) {
+	private static void dispatchUnhandledEvent(NativeEventJso jso) {
+		Event evt = new Event(jso);
 		Element element = evt.getCurrentEventTarget().cast();
+		// FIXME - dom - a gwt hack (not mine) - can probably remove (and with
+		// it clippedimageimpl - just use css...?
 		element.setPropertyString("__gwtLastUnhandledEvent", evt.getType());
-		dispatchEvent(evt);
+		dispatchEvent(jso);
 	}
 
 	private static void ensureInit() {
@@ -296,8 +304,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 	public void sinkBitlessEvent(Element elem, String eventTypeName) {
 		maybeInitializeEventSystem();
 		if (elem.implAccess().linkedToRemote()) {
-			sinkBitlessEventImpl(elem.implAccess().typedRemote(),
-					eventTypeName);
+			sinkBitlessEventImpl(elem.implAccess().jsoRemote(), eventTypeName);
 		}
 	}
 
@@ -305,7 +312,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 	public void sinkEvents(Element elem, int bits) {
 		maybeInitializeEventSystem();
 		if (elem.implAccess().linkedToRemote()) {
-			sinkEventsImpl(elem.implAccess().typedRemote(), bits);
+			sinkEventsImpl(elem.implAccess().jsoRemote(), bits);
 		}
 	}
 
@@ -332,14 +339,14 @@ public abstract class DOMImplStandard extends DOMImpl {
 											foreach(captureEvents, function(e, fn) { $wnd.addEventListener(e, fn, true); });
 											}-*/;
 
-	protected native void sinkBitlessEventImpl(ElementRemote elem,
+	protected native void sinkBitlessEventImpl(ElementJso elem,
 			String eventTypeName) /*-{
     var dispatchMap = @com.google.gwt.user.client.impl.DOMImplStandard::bitlessEventDispatchers;
     var dispatcher = dispatchMap[eventTypeName] || dispatchMap['_default_'];
     elem.addEventListener(eventTypeName, dispatcher, false);
 	}-*/;
 
-	protected native void sinkEventsImpl(ElementRemote elem, int bits) /*-{
+	protected native void sinkEventsImpl(ElementJso elem, int bits) /*-{
     var chMask = (elem.__eventBits || 0) ^ bits;
     elem.__eventBits = bits;
     if (!chMask)
@@ -428,7 +435,7 @@ public abstract class DOMImplStandard extends DOMImpl {
           : null;
 	}-*/;
 
-	native ElementRemote getChild0(ElementRemote elem, int index) /*-{
+	native ElementJso getChild0(ElementJso elem, int index) /*-{
     var count = 0, child = elem.firstChild;
     while (child) {
       if (child.nodeType == 1) {
@@ -442,7 +449,7 @@ public abstract class DOMImplStandard extends DOMImpl {
     return null;
 	}-*/;
 
-	native int getChildIndex0(ElementRemote parent, ElementRemote toFind) /*-{
+	native int getChildIndex0(ElementJso parent, ElementJso toFind) /*-{
     var count = 0, child = parent.firstChild;
     while (child) {
       if (child === toFind) {

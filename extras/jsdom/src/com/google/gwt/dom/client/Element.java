@@ -46,11 +46,12 @@ import cc.alcina.framework.common.client.util.TextUtils;
 /**
  * All HTML element interfaces derive from this class.
  */
-public class Element extends Node implements DomElement, org.w3c.dom.Element {
+public class Element extends Node
+		implements ClientDomElement, org.w3c.dom.Element {
 	public static final String REMOTE_DEFINED = "__localdom-remote-defined";
 
 	public static final Predicate<Element> DISPLAY_NONE = e -> e.implAccess()
-			.ensureRemote().getComputedStyle()
+			.ensureJsoRemote().getComputedStyle()
 			.getDisplayTyped() == Style.Display.NONE;
 
 	/**
@@ -107,7 +108,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 			}
 		} else if (o instanceof JavaScriptObject) {
 			JavaScriptObject jso = (JavaScriptObject) o;
-			return ElementRemote.is(jso);
+			return ElementJso.is(jso);
 		} else {
 			return o instanceof Element;
 		}
@@ -124,7 +125,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 	private ElementLocal local;
 
-	private DomElement remote;
+	private ClientDomElement remote;
 
 	private Style style;
 
@@ -132,7 +133,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 	public EventListener uiObjectListener;
 
-	private boolean pendingResolution;
+	private boolean pendingSync;
 
 	protected Element() {
 	}
@@ -205,27 +206,27 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 	@Override
 	public void focus() {
-		ensureRemote().focus();
+		ensureJsoRemote().focus();
 	}
 
 	@Override
 	public int getAbsoluteBottom() {
-		return ensureRemote().getAbsoluteBottom();
+		return ensureJsoRemote().getAbsoluteBottom();
 	}
 
 	@Override
 	public int getAbsoluteLeft() {
-		return ensureRemote().getAbsoluteLeft();
+		return ensureJsoRemote().getAbsoluteLeft();
 	}
 
 	@Override
 	public int getAbsoluteRight() {
-		return ensureRemote().getAbsoluteRight();
+		return ensureJsoRemote().getAbsoluteRight();
 	}
 
 	@Override
 	public int getAbsoluteTop() {
-		return ensureRemote().getAbsoluteTop();
+		return ensureJsoRemote().getAbsoluteTop();
 	}
 
 	@Override
@@ -260,7 +261,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	}
 
 	public DomRect getBoundingClientRect() {
-		return ensureRemote().getBoundingClientRect();
+		return ensureJsoRemote().getBoundingClientRect();
 	}
 
 	@Override
@@ -280,7 +281,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		return null;
 	}
 
-	public int getChildIndexLocal(Element child) {
+	public int getChildIndexLocal(Node child) {
 		if (child.getParentElement() != this) {
 			return -1;
 		}
@@ -318,7 +319,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 	@Override
 	public NodeList<Element> getElementsByTagName(String name) {
-		ensureRemote();
+		ensureJsoRemote();
 		return remote().getElementsByTagName(name);
 	}
 
@@ -595,15 +596,8 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		sync(() -> remote().replaceClassName(oldClassName, newClassName));
 	}
 
-	/**
-	 * When it's quicker to redraw the whole DOM. Tree filtering springs to mind
-	 */
-	public void resolvedToPending() {
-		implAccess().resolvedToPending();
-	}
-
-	public void resolvePending() {
-		pendingResolution = false;
+	public void resolvePendingSync() {
+		pendingSync = false;
 	}
 
 	public boolean resolveRemoteDefined() {
@@ -611,7 +605,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 			if (getClassName() != null
 					&& getClassName().contains(REMOTE_DEFINED)) {
 				Ax.out("resolve remote defined: %s", hashCode());
-				ensureRemote();
+				ensureJsoRemote();
 				LocalDom.syncToRemote(this);
 				UIObject.setStyleName(this, REMOTE_DEFINED, false);
 				return true;
@@ -719,16 +713,16 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	@Override
 	public void setInnerHTML(String html) {
 		ensureRemoteCheck();
-		clearResolved();
+		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
 		if (linkedAndNotPending()) {
 			remote().setInnerHTML(html);
 			// tbodies? foots? proudfeet?
-			String remoteHtml = typedRemote().getInnerHTML0();
+			String remoteHtml = jsoRemote().getInnerHTML0();
 			local().setInnerHTML(remoteHtml);
-			LocalDom.wasResolved(this);
+			LocalDom.wasSynced(this);
 		} else {
 			local().setInnerHTML(html);
 		}
@@ -742,14 +736,14 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	@Override
 	public void setInnerText(String text) {
 		ensureRemoteCheck();
-		clearResolved();
+		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
 		if (linkedAndNotPending()) {
 			remote().setInnerText(text);
 			local().setInnerText(text);
-			LocalDom.wasResolved(this);
+			LocalDom.wasSynced(this);
 		} else {
 			local().setInnerText(text);
 		}
@@ -817,12 +811,12 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 	@Override
 	public void setScrollLeft(int scrollLeft) {
-		ensureRemote().setScrollLeft(scrollLeft);
+		ensureJsoRemote().setScrollLeft(scrollLeft);
 	}
 
 	@Override
 	public void setScrollTop(int scrollTop) {
-		ensureRemote().setScrollTop(scrollTop);
+		ensureJsoRemote().setScrollTop(scrollTop);
 	}
 
 	@Override
@@ -849,6 +843,13 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public void sinkEvents(int eventBits) {
 		local().sinkEvents(eventBits);
 		sync(() -> remote().sinkEvents(eventBits));
+	}
+
+	/**
+	 * When it's quicker to redraw the whole DOM. Tree filtering springs to mind
+	 */
+	public void syncedToPending() {
+		implAccess().sycnedToPending();
 	}
 
 	@Override
@@ -880,7 +881,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	private <T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
 			T defaultValue) {
 		if (!linkedToRemote() && flush) {
-			ensureRemote();
+			ensureJsoRemote();
 		}
 		if (linkedToRemote()) {
 			return supplier.get();
@@ -894,11 +895,11 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
 		String paadedPrefix = CommonUtils.padStringRight(prefix, 30, ' ');
 		if (!linkedToRemote() && linkToRemote) {
-			implAccess().ensureRemote();
+			implAccess().ensureJsoRemote();
 		}
 		String code = !linkedToRemote() ? "f" : "t";
 		if (linkedToRemote()) {
-			if (local().getChildren().size() != typedRemote().getChildNodes0()
+			if (local().getChildren().size() != jsoRemote().getChildNodes0()
 					.getLength()) {
 				code = "x";
 			}
@@ -930,14 +931,14 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		}
 	}
 
-	private DomElement implForPropertyName(String name) {
+	private ClientDomElement implForPropertyName(String name) {
 		switch (name) {
 		case "clientWidth":
 		case "offsetWidth":
 			// TODO - warn maybe? non optimal. SliderBar one major cause
-			return ensureRemote();
+			return ensureJsoRemote();
 		}
-		if (!wasResolved()) {
+		if (!wasSynced()) {
 			return local();
 		}
 		ensureRemoteCheck();
@@ -951,27 +952,32 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	}
 
 	private boolean linkedAndNotPending() {
-		return linkedToRemote() && !isPendingResolution();
+		return linkedToRemote() && !isPendingSync();
 	}
 
 	private void runIfWithRemote(boolean flush, Runnable runnable) {
 		if (!linkedToRemote() && flush) {
-			ensureRemote();
+			ensureJsoRemote();
 		}
 		if (linkedToRemote()) {
 			runnable.run();
 		}
 	}
 
-	protected ElementRemote ensureRemote() {
+	protected ElementJso ensureJsoRemote() {
 		LocalDom.flush();
 		LocalDom.ensureRemote(this);
-		return typedRemote();
+		return jsoRemote();
 	}
 
 	@Override
-	protected boolean isPendingResolution() {
-		return this.pendingResolution;
+	protected boolean isPendingSync() {
+		return this.pendingSync;
+	}
+
+	@Override
+	protected ElementJso jsoRemote() {
+		return (ElementJso) remote();
 	}
 
 	@Override
@@ -984,32 +990,40 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		return local;
 	}
 
+	protected ElementPathref pathrefRemote() {
+		return (ElementPathref) remote();
+	}
+
 	@Override
-	protected void putRemote(NodeRemote remote, boolean resolved) {
-		if (!GWT.isScript()) {
+	protected void putRemote(ClientDomNode remote, boolean synced) {
+		if (!GWT.isScript() && GWT.isClient()) {
+			// hosted mode (dev) check
 			String nodeName = remote.getNodeName();
 			Preconditions
 					.checkState(nodeName.equalsIgnoreCase(local.getNodeName()));
 		}
-		Preconditions.checkState(wasResolved() == resolved);
+		Preconditions.checkState(wasSynced() == synced);
 		Preconditions.checkState(
 				this.remote == ElementNull.INSTANCE || remote == this.remote);
 		Preconditions.checkState(remote != null);
-		this.remote = (ElementRemote) remote;
-		if (remote != null) {
-			if (local() != null && local().getEventBits() != 0) {
-				int existingBits = DOM.getEventsSunk(this);
-				DOM.sinkEvents(this, existingBits | local().getEventBits());
+		if (this.remote == ElementNull.INSTANCE) {
+			this.remote = (ClientDomElement) remote;
+			if (remote != null) {
+				if (local() != null && local().getEventBits() != 0) {
+					int existingBits = DOM.getEventsSunk(this);
+					DOM.sinkEvents(this, existingBits | local().getEventBits());
+				}
 			}
 		}
 	}
 
 	@Override
-	protected DomElement remote() {
-		if (LocalDom.isDisableRemoteWrite()) {
+	protected ClientDomElement remote() {
+		if (getOwnerDocument().remoteType.hasRemote()) {
+			return remote;
+		} else {
 			return ElementNull.INSTANCE;
 		}
-		return remote;
 	}
 
 	@Override
@@ -1022,7 +1036,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 	protected void setInnerSafeHtml(SafeHtml html, boolean withPreRemove) {
 		ensureRemoteCheck();
-		clearResolved();
+		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		if (withPreRemove) {
@@ -1032,21 +1046,16 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		}
 		if (linkedAndNotPending()) {
 			remote().setInnerSafeHtml(html);
-			String remoteHtml = typedRemote().getInnerHTML0();
+			String remoteHtml = jsoRemote().getInnerHTML0();
 			local().setInnerHTML(remoteHtml);
-			LocalDom.wasResolved(this);
+			LocalDom.wasSynced(this);
 		} else {
 			local().setInnerSafeHtml(html);
 		}
 	}
 
-	@Override
-	protected ElementRemote typedRemote() {
-		return (ElementRemote) remote();
-	}
-
 	final native String getClassNameSvg() /*-{
-    var elem = this.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elem = this.@com.google.gwt.dom.client.Element::jsoRemote()();
     var cn = elem.className;
     //note - someone says IE DOM objects don't support - hence try/catch
     try {
@@ -1066,8 +1075,8 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
     return cn;
 	}-*/;
 
-	void pendingResolution() {
-		this.pendingResolution = true;
+	void pendingSync() {
+		this.pendingSync = true;
 	}
 
 	Element putLocal(ElementLocal local) {
@@ -1078,32 +1087,78 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		return this;
 	}
 
-	void replaceRemote(ElementRemote remote) {
-		ElementRemote parentRemote = typedRemote().getParentElementRemote();
+	void replaceRemote(ElementJso remote) {
+		ElementJso parentRemote = jsoRemote().getParentElementJso();
 		if (parentRemote != null) {
-			parentRemote.insertBefore0(remote, typedRemote());
-			typedRemote().removeFromParent0();
+			parentRemote.insertBefore0(remote, jsoRemote());
+			jsoRemote().removeFromParent0();
 		}
 		Preconditions.checkState(remote != null);
 		this.remote = remote;
 	}
 
+	/**
+	 * Most of these methods assume the remote() is a NodeJso
+	 * 
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public class ElementImplAccess extends Node.ImplAccess {
 		public void appendChildLocalOnly(Element localOnly) {
 			// IE special case
 			local.getChildren().add(localOnly.local);
 		}
 
-		public ElementRemote ensureRemote() {
-			return Element.this.ensureRemote();
+		public void emitSinkBitlessEvent(String eventTypeName) {
+			ClientDomElement remote = remote();
+			if (remote instanceof ElementPathref) {
+				((ElementPathref) remote).emitSinkBitlessEvent(eventTypeName);
+			}
+		}
+
+		public void emitSinkEvents(int eventBits) {
+			ClientDomElement remote = remote();
+			if (remote instanceof ElementPathref) {
+				((ElementPathref) remote).emitSinkEvents(eventBits);
+			}
+		}
+
+		public ElementJso ensureJsoRemote() {
+			return Element.this.ensureJsoRemote();
+		}
+
+		public NodeJso jsoChild(int index) {
+			return ensureJsoRemote().getChildNodes0().getItem0(index);
+		}
+
+		public ElementJso jsoRemote() {
+			return Element.this.jsoRemote();
+		}
+
+		public ElementJso jsoRemoteOrNull() {
+			if (linkedToRemote()) {
+				ClientDomElement remote = remote();
+				if (remote instanceof NodePathref) {
+					return null;
+				} else {
+					return (ElementJso) remote;
+				}
+			} else {
+				return null;
+			}
 		}
 
 		public boolean linkedToRemote() {
 			return Element.this.linkedToRemote();
 		}
 
+		@Override
 		public ElementLocal local() {
 			return Element.this.local();
+		}
+
+		public ElementPathref pathrefRemote() {
+			return Element.this.pathrefRemote();
 		}
 
 		public Node provideSelfOrAncestorLinkedToRemote() {
@@ -1111,39 +1166,28 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		}
 
 		@Override
-		public DomElement remote() {
+		public void putRemote(ClientDomNode remote) {
+			Element.this.remote = (ClientDomElement) remote;
+		}
+
+		@Override
+		public ClientDomElement remote() {
 			return Element.this.remote();
 		}
 
-		public void resolvedToPending() {
+		public void sycnedToPending() {
 			if (linkedToRemote()) {
-				ElementRemote oldRemote = typedRemote();
+				ElementJso oldRemote = jsoRemote();
 				sync(() -> oldRemote.removeAllChildren0());
 				local().walk(ln -> ln.node().resetRemote());
 				resetRemote();
-				LocalDom.ensureRemoteNodeMaybePendingResolution(Element.this);
-				oldRemote.replaceWith(typedRemote());
+				LocalDom.ensureRemoteNodeMaybePendingSync(Element.this);
+				oldRemote.replaceWith(jsoRemote());
 			}
 		}
 
-		public void setRemote(ElementRemote remote) {
-			LocalDom.putRemote(Element.this, remote);
-		}
-
-		public NodeRemote typedChild(int index) {
-			return ensureRemote().getChildNodes0().getItem0(index);
-		}
-
-		public ElementRemote typedRemote() {
-			return Element.this.typedRemote();
-		}
-
-		public ElementRemote typedRemoteOrNull() {
-			return linkedToRemote() ? Element.this.typedRemote() : null;
-		}
-
-		public boolean wasResolved() {
-			return Element.this.wasResolved();
+		public boolean wasSynced() {
+			return Element.this.wasSynced();
 		}
 	}
 }

@@ -24,8 +24,8 @@ import cc.alcina.framework.common.client.util.Ax;
 /**
  * The ProcessingInstruction interface represents textual content.
  */
-public class ProcessingInstruction extends Node
-		implements DomProcessingInstruction, org.w3c.dom.ProcessingInstruction {
+public class ProcessingInstruction extends Node implements
+		ClientDomProcessingInstruction, org.w3c.dom.ProcessingInstruction {
 	/**
 	 * Assert that the given {@link Node} is of type
 	 * {@link Node#PROCESSING_INSTRUCTION_NODE} and automatically typecast it.
@@ -37,7 +37,7 @@ public class ProcessingInstruction extends Node
 
 	private ProcessingInstructionLocal local;
 
-	private DomProcessingInstruction remote;
+	private ClientDomProcessingInstruction remote;
 
 	protected ProcessingInstruction(ProcessingInstructionLocal local) {
 		this.local = local;
@@ -97,13 +97,13 @@ public class ProcessingInstruction extends Node
 	}
 
 	@Override
-	protected void putRemote(NodeRemote remote, boolean resolved) {
-		Preconditions.checkState(wasResolved() == resolved);
-		this.remote = (DomProcessingInstruction) remote;
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
+		Preconditions.checkState(wasSynced() == resolved);
+		this.remote = (ClientDomProcessingInstruction) remote;
 	}
 
 	@Override
-	protected DomProcessingInstruction remote() {
+	protected ClientDomProcessingInstruction remote() {
 		return remote;
 	}
 
@@ -113,18 +113,18 @@ public class ProcessingInstruction extends Node
 	}
 
 	@Override
-	protected ProcessingInstructionRemote typedRemote() {
-		return (ProcessingInstructionRemote) remote();
+	protected ProcessingInstructionJso jsoRemote() {
+		return (ProcessingInstructionJso) remote();
 	}
 
 	public class ProcessingInstructionImplAccess extends Node.ImplAccess {
-		public ProcessingInstructionRemote ensureRemote() {
+		public ProcessingInstructionJso ensureRemote() {
 			ensureRemoteCheck();
-			return ProcessingInstruction.this.typedRemote();
+			return ProcessingInstruction.this.jsoRemote();
 		}
 
-		public ProcessingInstructionRemote typedRemote() {
-			return ProcessingInstruction.this.typedRemote();
+		public ProcessingInstructionJso typedRemote() {
+			return ProcessingInstruction.this.jsoRemote();
 		}
 	}
 }

@@ -13,19 +13,17 @@ import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
-
 abstract class SourceModifier {
-	protected ClassOrInterfaceDeclarationWrapper declarationWrapper;
+	protected UnitType type;
 
 	protected ClassOrInterfaceDeclaration declaration;
 
 	private String initialSource;
 
 	public SourceModifier(
-			ClassOrInterfaceDeclarationWrapper declarationWrapper) {
-		this.declarationWrapper = declarationWrapper;
-		this.declaration = this.declarationWrapper.getDeclaration();
+			UnitType type) {
+		this.type = type;
+		this.declaration = this.type.getDeclaration();
 	}
 
 	protected void clear(ArrayInitializerExpr expr) {
@@ -69,7 +67,7 @@ abstract class SourceModifier {
 		initialSource = declaration.toString();
 		ensureImports();
 		modify0();
-		declarationWrapper.dirty(initialSource, declaration.toString());
+		type.dirty(initialSource, declaration.toString());
 	}
 
 	protected abstract void modify0();

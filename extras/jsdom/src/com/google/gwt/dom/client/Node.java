@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
  * all objects implementing the Node interface may have children.
  */
 public abstract class Node
-		implements JavascriptObjectEquivalent, ClientNode, org.w3c.dom.Node {
+		implements JavascriptObjectEquivalent, ClientDomNode, org.w3c.dom.Node {
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -73,7 +73,7 @@ public abstract class Node
     }
 	}-*/;
 
-	private int resolvedEventId;
+	private int syncId;
 
 	protected Node() {
 	}
@@ -87,7 +87,7 @@ public abstract class Node
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		validateInsert(newChild);
-		doPreTreeResolution(newChild);
+		doPreTreeSync(newChild);
 		T node = local().appendChild(newChild);
 		sync(() -> remote().appendChild(newChild));
 		return node;
@@ -99,7 +99,7 @@ public abstract class Node
 
 	@Override
 	public void callMethod(String methodName) {
-		DomNodeStatic.callMethod(this, methodName);
+		ClientDomNodeStatic.callMethod(this, methodName);
 	}
 
 	@Override
@@ -130,12 +130,12 @@ public abstract class Node
 
 	@Override
 	public Node getChild(int index) {
-		return DomNodeStatic.getChild(this, index);
+		return ClientDomNodeStatic.getChild(this, index);
 	}
 
 	@Override
 	public int getChildCount() {
-		return DomNodeStatic.getChildCount(this);
+		return ClientDomNodeStatic.getChildCount(this);
 	}
 
 	@Override
@@ -230,7 +230,7 @@ public abstract class Node
 
 	@Override
 	public boolean hasParentElement() {
-		return DomNodeStatic.hasParentElement(this);
+		return ClientDomNodeStatic.hasParentElement(this);
 	}
 
 	public ImplAccess implAccess() {
@@ -244,7 +244,7 @@ public abstract class Node
 
 	@Override
 	public Node insertAfter(Node newChild, Node refChild) {
-		return DomNodeStatic.insertAfter(this, newChild, refChild);
+		return ClientDomNodeStatic.insertAfter(this, newChild, refChild);
 	}
 
 	@Override
@@ -252,8 +252,8 @@ public abstract class Node
 		try {
 			// new child first
 			validateInsert(newChild);
-			doPreTreeResolution(newChild);
-			doPreTreeResolution(refChild);
+			doPreTreeSync(newChild);
+			doPreTreeSync(refChild);
 			Node result = local().insertBefore(newChild, refChild);
 			sync(() -> remote().insertBefore(newChild, refChild));
 			return result;
@@ -270,7 +270,7 @@ public abstract class Node
 
 	@Override
 	public Node insertFirst(Node child) {
-		return DomNodeStatic.insertFirst(this, child);
+		return ClientDomNodeStatic.insertFirst(this, child);
 	}
 
 	@Override
@@ -281,6 +281,11 @@ public abstract class Node
 	@Override
 	public boolean isEqualNode(org.w3c.dom.Node arg0) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isJso() {
+		return false;
 	}
 
 	@Override
@@ -316,6 +321,10 @@ public abstract class Node
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public void preRemove(Node node) {
+	}
+
 	public List<Node> provideChildNodeList() {
 		return new ChildNodeList();
 	}
@@ -330,13 +339,14 @@ public abstract class Node
 
 	@Override
 	public Node removeAllChildren() {
-		getChildNodes().forEach(n -> doPreTreeResolution(n));
-		return DomNodeStatic.removeAllChildren(this);
+		getChildNodes().forEach(n -> doPreTreeSync(n));
+		return ClientDomNodeStatic.removeAllChildren(this);
 	}
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		doPreTreeResolution(oldChild);
+		doPreTreeSync(oldChild);
+		sync(() -> remote().preRemove(oldChild));
 		Node result = local().removeChild(oldChild);
 		sync(() -> remote().removeChild(oldChild));
 		return result;
@@ -351,14 +361,16 @@ public abstract class Node
 	@Override
 	public void removeFromParent() {
 		ensureRemoteCheck();
+		sync(() -> remote().preRemove(this));
 		sync(() -> remote().removeFromParent());
 		local().removeFromParent();
 	}
 
 	@Override
 	public Node replaceChild(Node newChild, Node oldChild) {
-		doPreTreeResolution(oldChild);
-		doPreTreeResolution(newChild);
+		doPreTreeSync(oldChild);
+		doPreTreeSync(newChild);
+		sync(() -> remote().preRemove(oldChild));
 		sync(() -> remote().replaceChild(newChild, oldChild));
 		Node result = local().replaceChild(newChild, oldChild);
 		return result;
@@ -370,7 +382,7 @@ public abstract class Node
 		return replaceChild((Node) arg0, (Node) arg1);
 	}
 
-	public ClientNode sameTreeNodeFor(ClientNode domNode) {
+	public ClientDomNode sameTreeNodeFor(ClientDomNode domNode) {
 		if (domNode == null) {
 			return null;
 		}
@@ -407,34 +419,35 @@ public abstract class Node
 		return getChildNodes().stream();
 	}
 
-	protected void doPreTreeResolution(Node child) {
+	protected void doPreTreeSync(Node child) {
 		if (child != null) {
-			boolean ensureBecauseChildResolved = (child.wasResolved()
+			boolean ensureBecauseChildSynced = (child.wasSynced()
 					|| child.linkedToRemote())
-					&& (!linkedToRemote() || isPendingResolution());
-			if (ensureBecauseChildResolved) {
+					&& (!linkedToRemote() || isPendingSync());
+			if (ensureBecauseChildSynced) {
 				LocalDom.ensureRemote(this);
 			}
 			boolean linkedBecauseFlushed = ensureRemoteCheck();
-			if (linkedToRemote() && (wasResolved() || child.wasResolved())) {
-				if (child.wasResolved()) {
+			if (linkedToRemote() && (wasSynced() || child.wasSynced())) {
+				if (child.wasSynced()) {
 					LocalDom.ensureRemote(child);
 				} else {
-					LocalDom.ensureRemoteNodeMaybePendingResolution(child);
+					LocalDom.ensureRemoteNodeMaybePendingSync(child);
 				}
 			}
 		}
 	}
 
 	/**
-	 * If the node was flushed, then we need to link to the remote (or our
+	 * If the node was flushed (i.e. part of a tree that was flushed, has a
+	 * non-zero syncEventId), then we need to link it to the remote (or our
 	 * local/remote will be inconsistent)
 	 *
 	 */
 	protected boolean ensureRemoteCheck() {
-		if (!linkedToRemote() && wasResolved()
+		if (!linkedToRemote() && wasSynced()
 				&& provideSelfOrAncestorLinkedToRemote() != null
-				&& !LocalDom.isDisableRemoteWrite()
+				&& getOwnerDocument().remoteType.hasRemote()
 				&& (provideIsText() || provideIsElement())) {
 			LocalDom.ensureRemote(this);
 			return true;
@@ -443,9 +456,11 @@ public abstract class Node
 		}
 	}
 
-	protected boolean isPendingResolution() {
+	protected boolean isPendingSync() {
 		return false;
 	}
+
+	protected abstract NodeJso jsoRemote();
 
 	protected abstract boolean linkedToRemote();
 
@@ -468,19 +483,23 @@ public abstract class Node
 		return null;
 	}
 
-	protected abstract void putRemote(NodeRemote nodeDom, boolean resolved);
+	protected abstract void putRemote(ClientDomNode remote, boolean synced);
 
-	protected abstract <T extends ClientNode> T remote();
+	protected abstract <T extends ClientDomNode> T remote();
 
 	protected void resetRemote() {
-		clearResolved();
+		clearSynced();
 		resetRemote0();
 	}
 
 	protected abstract void resetRemote0();
 
+	/**
+	 * Apply the runnable (to the remote dom) only if the node + dom states
+	 * require it
+	 */
 	protected void sync(Runnable runnable) {
-		if (remote() instanceof NodeLocalNull || LocalDom.isReplaying()) {
+		if (remote() instanceof NodeLocalNull || !LocalDom.isApplyToRemote()) {
 			return;
 		}
 		try {
@@ -491,31 +510,52 @@ public abstract class Node
 		}
 	}
 
-	protected abstract NodeRemote typedRemote();
-
+	/*
+	 * For subclasses (tables essentially) to disallow invalid *local* dom,
+	 * since that would cause a local/remote mismatch
+	 */
 	protected void validateInsert(Node newChild) {
 	}
 
 	/**
 	 * only call on reparse
 	 */
-	void clearResolved() {
-		resolvedEventId = 0;
+	void clearSynced() {
+		syncId = 0;
 	}
 
-	void resolved(int wasResolvedEventId) {
-		Preconditions.checkState(this.resolvedEventId == 0
-				|| this.resolvedEventId == wasResolvedEventId);
-		this.resolvedEventId = wasResolvedEventId;
+	void onSync(int syncId) {
+		Preconditions.checkState(this.syncId == 0 || this.syncId == syncId);
+		this.syncId = syncId;
 	}
 
-	boolean wasResolved() {
-		return resolvedEventId > 0;
+	boolean wasSynced() {
+		return syncId > 0;
 	}
 
+	/**
+	 * For subtypes, most of the methods assume the remote() is a NodeJso -
+	 * where that's not the case, the methods should return null if the remote
+	 * is a NodePathref subtype
+	 * 
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public class ImplAccess {
-		public <E extends ClientNode> E remote() {
-			return (E) typedRemote();
+		public boolean isJsoRemote() {
+			return remote().isJso();
+		}
+
+		public <E extends ClientDomNode> E local() {
+			return (E) Node.this.local();
+		}
+
+		public void putRemote(ClientDomNode remote) {
+			throw new UnsupportedOperationException();
+		}
+
+		public <E extends ClientDomNode> E remote() {
+			return (E) Node.this.remote();
 		}
 	}
 

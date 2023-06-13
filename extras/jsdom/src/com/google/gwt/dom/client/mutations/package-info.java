@@ -4,7 +4,7 @@
  * <li>Completely correct NodeLocal structure at all time
  * <ul>
  * <li>Track all mutations outside blessed ({@code LocalDom.flush},
- * {@code NodeRemote.mutate()}} methods.
+ * {@code NodeJso.mutate()}} methods.
  * <li>Optionally: LocalDom.invokeExternal becomes a no-op (if trackAllMutations
  * is on)
  * <li>Create an in-client verifier that will generate nodetree dumps - a

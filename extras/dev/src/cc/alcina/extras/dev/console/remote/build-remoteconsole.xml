@@ -33,7 +33,7 @@
 			<jvmarg value="${project.gwt.compile.jvmarg3}" />
 			<arg line="-style ${gwt.codestyle}" />
 			<arg value="-sourceLevel" />
-			<arg value="1.8" />
+			<arg value="11" />
 
 
 			<arg line="${project.gwt.compile.flags}" />

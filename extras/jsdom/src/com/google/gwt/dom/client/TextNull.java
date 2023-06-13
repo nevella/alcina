@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class TextNull extends NodeLocalNull implements DomText {
+public class TextNull extends NodeLocalNull implements ClientDomText {
 	static final TextNull INSTANCE = new TextNull();
 
 	TextNull() {
@@ -42,6 +42,11 @@ public class TextNull extends NodeLocalNull implements DomText {
 	}
 
 	@Override
+	public int indexInParentChildren() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void insertData(int offset, String data) {
 		// noop
 	}
@@ -65,16 +70,6 @@ public class TextNull extends NodeLocalNull implements DomText {
 	public Text splitText(int offset) {
 		// noop
 		return null;
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		throw new UnsupportedOperationException();
 	}
 
 	void appendUnescaped(UnsafeHtmlBuilder builder) {

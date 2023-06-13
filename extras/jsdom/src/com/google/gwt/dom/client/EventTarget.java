@@ -18,6 +18,10 @@ package com.google.gwt.dom.client;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
+import com.google.gwt.dom.client.Document.RemoteType;
+
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 
 /**
  * Represents the target of a JavaScript event.
@@ -34,8 +38,28 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
  * IDL (dispatchEvent, addEventListener, and removeEventListener).
  * </p>
  */
+@Bean(PropertySource.FIELDS)
 public class EventTarget implements JavascriptObjectEquivalent {
-	private JavaScriptObject nativeTarget;
+	public static EventTarget serializableForm(EventTarget target) {
+		if (target == null) {
+			return null;
+		} else {
+			EventTarget result = new EventTarget();
+			if (target.isElement()) {
+				result.pathref = Pathref.forNode(target.asElement());
+			}
+			return result;
+		}
+	}
+
+	transient JavaScriptObject nativeTarget;
+
+	transient Node pathrefTarget;
+
+	Pathref pathref;
+
+	public EventTarget() {
+	}
 
 	EventTarget(JavaScriptObject nativeTarget) {
 		this.nativeTarget = nativeTarget;
@@ -48,14 +72,23 @@ public class EventTarget implements JavascriptObjectEquivalent {
 
 	@Override
 	public <T extends JavascriptObjectEquivalent> T cast() {
-		if (ElementRemote.is(nativeTarget)) {
+		if (ElementJso.is(nativeTarget)) {
 			return (T) LocalDom.nodeFor(nativeTarget);
+		}
+		ensurePathrefTarget();
+		if (pathrefTarget instanceof ClientDomElement) {
+			return (T) pathrefTarget;
 		}
 		throw new FixmeUnsupportedOperationException();
 	}
 
 	public boolean is(Class<? extends JavascriptObjectEquivalent> clazz) {
-		if (clazz == Element.class && ElementRemote.is(nativeTarget)) {
+		if (clazz == Element.class && ElementJso.is(nativeTarget)) {
+			return true;
+		}
+		ensurePathrefTarget();
+		if (clazz == Element.class
+				&& pathrefTarget instanceof ClientDomElement) {
 			return true;
 		}
 		return false;
@@ -68,5 +101,12 @@ public class EventTarget implements JavascriptObjectEquivalent {
 	@Override
 	public String toString() {
 		return super.toString() + ":" + nativeTarget;
+	}
+
+	void ensurePathrefTarget() {
+		if (pathrefTarget == null && pathref != null
+				&& Document.get().remoteType == RemoteType.PATHREF) {
+			pathrefTarget = pathref.node();
+		}
 	}
 }

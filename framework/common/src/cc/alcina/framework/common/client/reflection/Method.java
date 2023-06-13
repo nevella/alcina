@@ -6,15 +6,15 @@ public class Method<T> {
 	public static final transient Method EXISTS_REF = new Method(null, null,
 			null);
 
-	private Object nativeMethod;
+	private Object nativeReflected;
 
 	private BiFunction<Object, Object[], T> invoker;
 
 	private Class returnType;
 
-	public Method(Object nativeMethod, BiFunction<Object, Object[], T> invoker,
-			Class returnType) {
-		this.nativeMethod = nativeMethod;
+	public Method(Object nativeReflected,
+			BiFunction<Object, Object[], T> invoker, Class returnType) {
+		this.nativeReflected = nativeReflected;
 		this.invoker = invoker;
 		this.returnType = returnType;
 	}
@@ -29,6 +29,6 @@ public class Method<T> {
 
 	@Override
 	public String toString() {
-		return nativeMethod.toString();
+		return nativeReflected.toString();
 	}
 }

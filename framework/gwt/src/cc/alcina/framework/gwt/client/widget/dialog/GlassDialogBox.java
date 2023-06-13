@@ -22,7 +22,7 @@ import com.google.gwt.user.client.Window.ScrollHandler;
 import com.google.gwt.user.client.ui.DialogBox;
 
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
+import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.gwt.client.widget.GlassDisplayer;
 
 /**
@@ -40,7 +40,7 @@ public class GlassDialogBox extends DialogBox {
 
 	private int scrollTop;
 
-	private AtEndOfEventSeriesTimer scrollBackTimer = new AtEndOfEventSeriesTimer(
+	private EventCollator scrollBackTimer = new EventCollator(
 			100, new Runnable() {
 				@Override
 				public void run() {
@@ -55,7 +55,7 @@ public class GlassDialogBox extends DialogBox {
 		public void onWindowScroll(ScrollEvent event) {
 			if (scrollLeft != Window.getScrollLeft()
 					|| scrollTop != Window.getScrollTop()) {
-				scrollBackTimer.triggerEventOccurred();
+				scrollBackTimer.eventOccurred();
 			}
 		}
 	};

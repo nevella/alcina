@@ -3,11 +3,12 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.ElementRemote;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -306,7 +307,7 @@ public class InferredDomEvents {
 					if (!removed) {
 						intersectionObserver = IntersectionObserver
 								.observerFor(this, widget.getElement()
-										.implAccess().ensureRemote());
+										.implAccess().ensureJsoRemote());
 					}
 				});
 				return new HandlerRegistration() {
@@ -324,7 +325,7 @@ public class InferredDomEvents {
 					extends JavaScriptObject {
 				public static final native IntersectionObserver observerFor(
 						IntersectionObserved.BindingImpl intersectionObserved,
-						ElementRemote elt) /*-{
+						ElementJso elt) /*-{
           var callback = $entry(function(entries, observer) {
             for ( var k in entries) {
               intersectionObserved.@cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.IntersectionObserved.BindingImpl::fireEvent(Z)(entries[k].isIntersecting);
@@ -504,7 +505,7 @@ public class InferredDomEvents {
 				Scheduler.get().scheduleFinally(() -> {
 					if (!removed) {
 						resizeObserver = ResizeObserver.observerFor(this, widget
-								.getElement().implAccess().ensureRemote());
+								.getElement().implAccess().ensureJsoRemote());
 					}
 				});
 				return new HandlerRegistration() {
@@ -537,8 +538,7 @@ public class InferredDomEvents {
 
 		public static final class ResizeObserver extends JavaScriptObject {
 			public static final native ResizeObserver observerFor(
-					ResizeObserved.BindingImpl resizeObserved,
-					ElementRemote elt) /*-{
+					ResizeObserved.BindingImpl resizeObserved, ElementJso elt) /*-{
         var callback = $entry(function(entries, observer) {
           for ( var k in entries) {
             //there's info in the entry (a contentBox or contentRect, browser-dependent) - but not interested
@@ -570,7 +570,7 @@ public class InferredDomEvents {
 	 */
 	static abstract class EventRelativeBinding<E extends NodeEvent>
 			extends DomBinding<E> implements NativePreviewHandler {
-		static boolean mobile = BrowserMod.isMobile();
+		static boolean mobile = GWT.isClient() && BrowserMod.isMobile();
 
 		private Widget widget;
 

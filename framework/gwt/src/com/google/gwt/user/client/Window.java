@@ -38,6 +38,8 @@ import com.google.gwt.http.client.URL;
 import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.impl.WindowImpl;
 
+import cc.alcina.framework.common.client.context.ContextFrame;
+import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Topic;
 
@@ -602,10 +604,8 @@ public class Window {
 	 * manipulate it. <code>Location</code> is a very simple wrapper, so not all
 	 * browser quirks are hidden from the user.
 	 */
-	public static class Location {
-		private static String cachedQueryString = "";
-
-		private static Map<String, List<String>> listParamMap;
+	public static class Location implements ContextFrame {
+		public static ContextProvider<Void, Location> contextProvider;
 
 		/**
 		 * Assigns the window to a new URL. All GWT state will be lost.
@@ -613,9 +613,9 @@ public class Window {
 		 * @param newURL
 		 *            the new URL
 		 */
-		public static native void assign(String newURL) /*-{
-      $wnd.location.assign(newURL);
-		}-*/;
+		public static void assign(String newURL) {
+			get().impl.assign(newURL);
+		}
 
 		/**
 		 * Create a {@link UrlBuilder} based on this {@link Location}.
@@ -656,7 +656,7 @@ public class Window {
 		 * @return the string to the right of the URL's hash.
 		 */
 		public static String getHash() {
-			return impl.getHash();
+			return get().impl.getHash();
 		}
 
 		/**
@@ -664,36 +664,36 @@ public class Window {
 		 *
 		 * @return the host and port name
 		 */
-		public static native String getHost() /*-{
-      return $wnd.location.host;
-		}-*/;
+		public static String getHost() {
+			return get().impl.getHost();
+		}
 
 		/**
 		 * Gets the URL's host name.
 		 *
 		 * @return the host name
 		 */
-		public static native String getHostName() /*-{
-      return $wnd.location.hostname;
-		}-*/;
+		public static String getHostName() {
+			return get().impl.getHostName();
+		}
 
 		/**
 		 * Gets the entire URL.
 		 *
 		 * @return the URL
 		 */
-		public static native String getHref() /*-{
-      return $wnd.location.href;
-		}-*/;
+		public static String getHref() {
+			return get().impl.getHref();
+		}
 
 		/**
 		 * Gets the URL's origin.
 		 *
 		 * @return the URL's origin
 		 */
-		public static native String getOrigin() /*-{
-      return $wnd.location.origin;
-		}-*/;
+		public static String getOrigin() {
+			return get().impl.getOrigin();
+		}
 
 		/**
 		 * Gets the URL's parameter of the specified name. Note that if multiple
@@ -705,13 +705,7 @@ public class Window {
 		 * @return the value of the URL's parameter, or null if missing
 		 */
 		public static String getParameter(String name) {
-			ensureListParameterMap();
-			List<String> paramsForName = listParamMap.get(name);
-			if (paramsForName == null) {
-				return null;
-			} else {
-				return paramsForName.get(paramsForName.size() - 1);
-			}
+			return get().getParameter0(name);
 		}
 
 		/**
@@ -722,8 +716,7 @@ public class Window {
 		 * @return a map from URL query parameter names to a list of values
 		 */
 		public static Map<String, List<String>> getParameterMap() {
-			ensureListParameterMap();
-			return listParamMap;
+			return get().getParameterMap0();
 		}
 
 		/**
@@ -731,27 +724,27 @@ public class Window {
 		 *
 		 * @return the path to the URL.
 		 */
-		public static native String getPath() /*-{
-      return $wnd.location.pathname;
-		}-*/;
+		public static String getPath() {
+			return get().impl.getPath();
+		}
 
 		/**
 		 * Gets the URL's port.
 		 *
 		 * @return the URL's port
 		 */
-		public static native String getPort() /*-{
-      return $wnd.location.port;
-		}-*/;
+		public static String getPort() {
+			return get().impl.getPort();
+		}
 
 		/**
 		 * Gets the URL's protocol.
 		 *
 		 * @return the URL's protocol.
 		 */
-		public static native String getProtocol() /*-{
-      return $wnd.location.protocol;
-		}-*/;
+		public static String getProtocol() {
+			return get().impl.getProtocol();
+		}
 
 		/**
 		 * Gets the URL's query string.
@@ -759,15 +752,20 @@ public class Window {
 		 * @return the URL's query string
 		 */
 		public static String getQueryString() {
-			return impl.getQueryString();
+			return get().impl.getQueryString();
+		}
+
+		public static void init(String protocol, String host, String port,
+				String path, String queryString) {
+			get().impl.init(protocol, host, port, path, queryString);
 		}
 
 		/**
 		 * Reloads the current browser window. All GWT state will be lost.
 		 */
-		public static native void reload() /*-{
-      $wnd.location.reload();
-		}-*/;
+		public static void reload() {
+			get().impl.reload();
+		}
 
 		/**
 		 * Replaces the current URL with a new one. All GWT state will be lost.
@@ -777,17 +775,16 @@ public class Window {
 		 * @param newURL
 		 *            the new URL
 		 */
-		public static native void replace(String newURL) /*-{
-      $wnd.location.replace(newURL);
-		}-*/;
+		public static void replace(String newURL) {
+			get().impl.replace(newURL);
+		}
 
-		private static void ensureListParameterMap() {
-			final String currentQueryString = getQueryString();
-			if (listParamMap == null
-					|| !cachedQueryString.equals(currentQueryString)) {
-				listParamMap = buildListParamMap(currentQueryString);
-				cachedQueryString = currentQueryString;
-			}
+		public static void setHash(String token) {
+			get().impl.setHash(token);
+		}
+
+		public static Topic<String> topicHashChanged() {
+			return get().topicHashChanged;
 		}
 
 		/**
@@ -828,7 +825,105 @@ public class Window {
 			return out;
 		}
 
-		private Location() {
+		static Location get() {
+			return contextProvider.contextFrame();
+		}
+
+		private Topic<String> topicHashChanged = Topic.create();
+
+		private String cachedQueryString = "";
+
+		private Map<String, List<String>> listParamMap;
+
+		private LocationImpl impl = GWT.create(LocationImpl.class);
+
+		/*
+		 * Should not be called by non-context code
+		 */
+		public Location() {
+		}
+
+		private void ensureListParameterMap() {
+			final String currentQueryString = getQueryString();
+			if (listParamMap == null
+					|| !cachedQueryString.equals(currentQueryString)) {
+				listParamMap = buildListParamMap(currentQueryString);
+				cachedQueryString = currentQueryString;
+			}
+		}
+
+		String getParameter0(String name) {
+			ensureListParameterMap();
+			List<String> paramsForName = listParamMap.get(name);
+			if (paramsForName == null) {
+				return null;
+			} else {
+				return paramsForName.get(paramsForName.size() - 1);
+			}
+		}
+
+		Map<String, List<String>> getParameterMap0() {
+			ensureListParameterMap();
+			return listParamMap;
+		}
+	}
+
+	public static class LocationImpl {
+		public native void assign(String newURL) /*-{
+      $wnd.location.assign(newURL);
+		}-*/;
+
+		public String getHash() {
+			return Window.impl.getHash();
+		}
+
+		public native String getHost() /*-{
+      return $wnd.location.host;
+		}-*/;
+
+		public native String getHostName() /*-{
+      return $wnd.location.hostname;
+		}-*/;
+
+		public native String getHref() /*-{
+      return $wnd.location.href;
+		}-*/;
+
+		public native String getOrigin() /*-{
+      return $wnd.location.origin;
+		}-*/;
+
+		public native String getPath() /*-{
+      return $wnd.location.pathname;
+		}-*/;
+
+		public native String getPort() /*-{
+      return $wnd.location.port;
+		}-*/;
+
+		public native String getProtocol() /*-{
+      return $wnd.location.protocol;
+		}-*/;
+
+		public String getQueryString() {
+			return Window.impl.getQueryString();
+		}
+
+		public void init(String protocol, String host, String port, String path,
+				String queryString) {
+			throw new UnsupportedOperationException();
+		}
+
+		public native void reload() /*-{
+      $wnd.location.reload();
+		}-*/;
+
+		public native void replace(String newURL) /*-{
+      $wnd.location.replace(newURL);
+		}-*/;
+
+		public void setHash(String token) {
+			throw new UnsupportedOperationException();
 		}
 	}
 
