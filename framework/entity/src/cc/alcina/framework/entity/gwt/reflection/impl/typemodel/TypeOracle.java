@@ -27,7 +27,7 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.Provi
 
 public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle
 		implements ProvidesTypeBounds {
-	public static boolean reverseFieldOrder = false;
+	public static CustomFieldOrder customFieldOrder = null;
 
 	private final Map<String, JPackage> packages = new HashMap<>();
 
@@ -326,5 +326,9 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle
 		} else {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	public interface CustomFieldOrder {
+		List<String> fieldOrder(String className);
 	}
 }

@@ -1,0 +1,2 @@
+# Module cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient
+# RPC service class, partial path of RPC policy file

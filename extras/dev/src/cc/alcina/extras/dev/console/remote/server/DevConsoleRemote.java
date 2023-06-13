@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.jscodeserver.JsCodeServerServlet;
-import cc.alcina.framework.servlet.component.remote.server.ProtocolRequestHandler;
+import cc.alcina.framework.servlet.component.romcom.server.ProtocolRequestHandler;
 
 @Registration.Singleton(DevConsoleRemote.class)
 public class DevConsoleRemote {

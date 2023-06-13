@@ -18,7 +18,40 @@
  * </ul>
  * <h3>'Beans 1x5 manifesto'</h3>
  * <p>
- * Make beans pretty again!
+ * Make beans pretty again! Beans of the world unite, you have nothing to lose
+ * except your crusty boilerplate! Hello Portland!
+ * </p>
+ * <p>
+ * TL;DR
+ * 
+ * <pre>
+ * <code>
+
+// A dirndl UI example
+&#64;Bean
+&#64;Directed
+public static class HelloBeans1x0 {
+	private String world = "World!";
+
+	&#64;Directed
+	public String getWorld() {
+		return this.world;
+	}
+
+	public void setWorld(String world) {
+		this.world = world;
+	}
+}
+
+// A dirndl UI example
+&#64;Bean(PropertySource.FIELDS)
+&#64;Directed
+static class HelloBeans1x5 {
+	&#64;Directed
+	String world = "World!";
+}
+<code>
+ * </pre>
  * </p>
  * <ul>
  * <li>No-args constructors not required

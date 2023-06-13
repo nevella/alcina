@@ -4,7 +4,7 @@
     <booleanAttribute key="com.gwtplugins.gdt.eclipse.core.RUN_SERVER" value="false"/>
     <stringAttribute key="com.gwtplugins.gdt.eclipse.suiteMainTypeProcessor.PREVIOUSLY_SET_MAIN_TYPE_NAME" value="com.google.gwt.dev.DevMode"/>
     <listAttribute key="com.gwtplugins.gwt.eclipse.core.ENTRY_POINT_MODULES">
-        <listEntry value="cc.alcina.framework.servlet.component.remote.RemoteComponentClient"/>
+        <listEntry value="cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient"/>
     </listAttribute>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
         <listEntry value="/alcina"/>
@@ -61,7 +61,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.google.gwt.dev.DevMode"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="opsol_client"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-noserver -logLevel INFO -war /apdm/build/gwt.dev -gen /apdm/build/gen -remoteUI &quot;${gwt_remote_ui_server_port}:${unique_id}&quot; -codeServerPort 9997 -sourceLevel 11 cc.alcina.framework.servlet.component.remote.RemoteComponentClient"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-noserver -logLevel INFO -war /apdm/build/gwt.dev -gen /apdm/build/gen -remoteUI &quot;${gwt_remote_ui_server_port}:${unique_id}&quot; -codeServerPort 9997 -sourceLevel 11 cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="alcina"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx1g -Xmx2500m -XX:ReservedCodeCacheSize=500m --add-opens java.logging/java.util.logging=ALL-UNNAMED --add-opens java.base/sun.net.www.protocol.jar=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED"/>
 </launchConfiguration>

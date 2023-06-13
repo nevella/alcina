@@ -290,7 +290,7 @@ public class Element extends Node
 
 	@Override
 	public String getClassName() {
-		if (DomState.domResolveSvgStyles && linkedToRemote()) {
+		if (Document.get().resolveSvgStyles && linkedToRemote()) {
 			return getClassNameSvg();
 		} else {
 			return local().getClassName();
