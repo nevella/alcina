@@ -240,6 +240,9 @@ public class PropertyReflection extends ReflectionElement
 
 			Method(String propertyName, boolean getter, JMethod method) {
 				super(propertyName, getter, false);
+				if (method.getName().equals("setClass0")) {
+					int debug = 3;
+				}
 				this.method = method;
 			}
 
