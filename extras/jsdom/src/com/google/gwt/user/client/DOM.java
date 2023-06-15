@@ -1703,7 +1703,7 @@ public class DOM {
 		 * dom events
 		 */
 		if (elem.uiObjectListener != null
-				&& !dispatchInfo.wasDispatchedTo(elem)) {
+				&& dispatchInfo.wasDispatchedTo(elem)) {
 			return;
 		}
 		if (Element.is(eventTarget)) {
@@ -1797,7 +1797,7 @@ public class DOM {
 		}
 
 		public boolean isForEvent(Event event) {
-			return this.event.jso == event.jso;
+			return this.event.jso != null && this.event.jso == event.jso;
 		}
 
 		public boolean wasDispatchedTo(Element element) {

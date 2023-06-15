@@ -335,7 +335,7 @@ public class ClassReflection extends ReflectionElement {
 	}
 
 	PropertyReflection.PropertyAccessor toPropertyMethod(JMethod method) {
-		if (!method.isPublic()) {
+		if (method.isPrivate()) {
 			return null;
 		}
 		if (method.isStatic()) {

@@ -196,9 +196,10 @@ public class FormModel extends Model
 	// the dom 'Submit' event - fired for instance by <submit> elements
 	@Override
 	public void onSubmit(ModelEvents.Submit event) {
-		submit();
-		// also propagate
-		event.getContext().bubble();
+		if (submit()) {
+			// then propagate
+			event.getContext().bubble();
+		}
 	}
 
 	public boolean submit() {
