@@ -5,7 +5,9 @@ import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
+@Reflected
 public enum EntityAction {
 	VIEW {
 		@Override

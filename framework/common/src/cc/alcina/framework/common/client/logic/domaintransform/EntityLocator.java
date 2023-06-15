@@ -240,6 +240,14 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return toRecoverableNumericString0(',');
 	}
 
+	public String toIdOrNegativeLocalIdString() {
+		if (id != 0) {
+			return String.valueOf(id);
+		} else {
+			return String.valueOf(-localId);
+		}
+	}
+
 	public String toIdPairCommaString() {
 		return Ax.format("%s,%s", id, localId);
 	}

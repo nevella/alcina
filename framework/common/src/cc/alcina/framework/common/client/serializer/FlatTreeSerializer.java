@@ -1594,6 +1594,7 @@ public class FlatTreeSerializer {
 				int tzMultiplier = plusMinus.equals("+") ? 1 : -1;
 				Date date = new Date(year, month, day, hrs, min, sec);
 				long time = date.getTime();
+				time += millis;
 				int tzOffset = date.getTimezoneOffset();
 				// adjust for tz diff
 				time += date.getTimezoneOffset() * TimeConstants.ONE_MINUTE_MS;

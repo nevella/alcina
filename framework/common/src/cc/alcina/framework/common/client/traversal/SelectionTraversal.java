@@ -373,6 +373,9 @@ public class SelectionTraversal
 						}
 					}
 					executor.awaitCompletion();
+				} catch (RuntimeException e) {
+					e.printStackTrace();
+					throw e;
 				} finally {
 					layer.onAfterIteration();
 				}

@@ -29,7 +29,8 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
  *
  * @author Nick Reddel
  */
-public interface IGroup extends IVersionable, HasDisplayName.Settable {
+public interface IGroup
+		extends IVersionable, HasDisplayName.Settable, AclSubject {
 	public static IGroup byId(long id) {
 		Class<? extends IGroup> implementation = PersistentImpl
 				.getImplementation(IGroup.class);

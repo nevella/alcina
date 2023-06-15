@@ -211,9 +211,10 @@ public class ClientUtils {
 		return null;
 	}
 
-	public static native void invokeJsDebugger() /*-{
-    debugger;
-	}-*/;
+	public static void invokeJsDebugger() {
+		int debug = 3;
+		invokeJsDebugger0();
+	}
 
 	public static native void invokeJsDebugger(Element e) /*-{
     var v = e;
@@ -224,6 +225,10 @@ public class ClientUtils {
 	public static native void invokeJsDebugger(JavaScriptObject jso) /*-{
     debugger;
     var v = jso;
+	}-*/;
+
+	public static native void invokeJsDebugger0() /*-{
+    debugger;
 	}-*/;
 
 	public static <T extends JavaScriptObject> List<T>

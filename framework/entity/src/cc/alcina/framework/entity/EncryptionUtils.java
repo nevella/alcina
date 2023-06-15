@@ -78,14 +78,17 @@ public class EncryptionUtils {
 				(byte) (value >>> 8), (byte) value };
 	}
 
-	public static String MD5(byte[] bytes)
-			throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		MessageDigest md;
-		md = MessageDigest.getInstance("MD5");
-		byte[] md5hash = new byte[32];
-		md.update(bytes, 0, bytes.length);
-		md5hash = md.digest();
-		return convertToHex(md5hash);
+	public static String MD5(byte[] bytes) {
+		try {
+			MessageDigest md;
+			md = MessageDigest.getInstance("MD5");
+			byte[] md5hash = new byte[32];
+			md.update(bytes, 0, bytes.length);
+			md5hash = md.digest();
+			return convertToHex(md5hash);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	public static String MD5(List<byte[]> byties)
