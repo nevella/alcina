@@ -537,13 +537,17 @@ public abstract class Node
 	 * For subtypes, most of the methods assume the remote() is a NodeJso -
 	 * where that's not the case, the methods should return null if the remote
 	 * is a NodePathref subtype
-	 * 
+	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
 	public class ImplAccess {
 		public boolean isJsoRemote() {
 			return remote().isJso();
+		}
+
+		public NodeJso jsoRemote() {
+			return remote();
 		}
 
 		public <E extends ClientDomNode> E local() {

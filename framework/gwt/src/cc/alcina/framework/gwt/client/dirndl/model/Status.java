@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import com.google.gwt.dom.client.ClientDomStyleConstants;
+import com.google.gwt.dom.client.DomStyleConstants;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -38,7 +38,7 @@ public enum Status implements ProvidesStatus {
 				@Binding(from = "displayText", type = Type.INNER_TEXT),
 				@Binding(
 					from = "status",
-					to = ClientDomStyleConstants.STYLE_BACKGROUND_COLOR,
+					to = DomStyleConstants.STYLE_BACKGROUND_COLOR,
 					type = Type.STYLE_ATTRIBUTE,
 					transform = StatusTransform.class) })
 	public static class StatusReason extends Model implements ProvidesStatus {
