@@ -21,6 +21,7 @@ import com.google.gwt.core.client.JsArray;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 
 /**
  * A wrapper around the native dom event. It either dispatches to the jso (via
@@ -377,6 +378,17 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		DOMImpl.impl.eventStopPropagation(this);
 	}
 
+	@Override
+	public String toString() {
+		if (jso != null) {
+			return jso.toString();
+		}
+		if (data.type != null) {
+			return data.toString();
+		}
+		return super.toString();
+	}
+
 	void serializableForm0() {
 		getAltKey();
 		getButton();
@@ -440,6 +452,11 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		Integer button;
 
 		Boolean altKey;
+
+		@Override
+		public String toString() {
+			return ReflectiveSerializer.serialize(this);
+		}
 
 		void toSerializableForm() {
 			relatedEventTarget = EventTarget

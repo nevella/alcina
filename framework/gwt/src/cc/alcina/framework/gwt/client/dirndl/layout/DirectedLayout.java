@@ -46,6 +46,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
@@ -1093,8 +1094,15 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 
 			void set() {
-				Property property = Reflections.at(model)
-						.property(binding.from());
+				Property property = null;
+				if (Ax.notBlank(binding.from())) {
+					property = Reflections.at(model).property(binding.from());
+					if (property == null) {
+						throw new IllegalArgumentException(Ax.format(
+								"No property %s for model %s", binding.from(),
+								NestedNameProvider.get(model)));
+					}
+				}
 				Object value = binding.from().length() > 0 ? property.get(model)
 						: binding.literal();
 				boolean hasTransform = (Class) binding

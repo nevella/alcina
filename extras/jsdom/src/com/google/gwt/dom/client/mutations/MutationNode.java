@@ -182,10 +182,6 @@ public final class MutationNode {
 		}
 	}
 
-	public boolean isParentModified() {
-		return this.parentModified;
-	}
-
 	public String putAttributeData(ApplyTo applyTo, String attributeName,
 			String characterData) {
 		switch (applyTo) {
@@ -310,6 +306,10 @@ public final class MutationNode {
 
 	Node node() {
 		return node != null ? node : remoteNode.node();
+	}
+
+	boolean provideParentModified() {
+		return this.parentModified;
 	}
 
 	EquivalenceTest testEquivalence(MutationNode other) {

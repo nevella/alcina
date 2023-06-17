@@ -1684,10 +1684,6 @@ public class DOM {
 		EventTarget eventTarget = event.getEventTarget();
 		String lcType = event.getType().toLowerCase();
 		int eventTypeInt = Event.getTypeInt(lcType);
-		if (recentDispatches.stream()
-				.anyMatch(di -> di.dispatchedToListener(event, listener))) {
-			return;
-		}
 		DispatchInfo dispatchInfo = null;
 		Optional<DispatchInfo> first = recentDispatches.stream()
 				.filter(di -> di.isForEvent(event)).findFirst();
@@ -1699,6 +1695,16 @@ public class DOM {
 			if (recentDispatches.size() > 10) {
 				recentDispatches.remove(0);
 			}
+		}
+		/*
+		 * This is not a patch - it recognises that we can get a multiple fire
+		 * of the same event due to dom bubbling, but we implement our own
+		 * bubbling handling in the local dom so don't want/need the non-first
+		 * dom events
+		 */
+		if (elem.uiObjectListener != null
+				&& dispatchInfo.wasDispatchedTo(elem)) {
+			return;
 		}
 		if (Element.is(eventTarget)) {
 			Element childElement = Element.as(eventTarget);
@@ -1726,8 +1732,8 @@ public class DOM {
 			}
 			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
 				eventCurrentTarget = entry.getKey();
-				EventListener eventListener = entry.getValue();
-				eventListener.onBrowserEvent(event);
+				EventListener elementListener = entry.getValue();
+				elementListener.onBrowserEvent(event);
 				if (LocalDom.isStopPropagation(event)) {
 					return;
 				}
@@ -1784,22 +1790,14 @@ public class DOM {
 	static class DispatchInfo {
 		Event event;
 
-		List<EventListener> dispatchedToListeners = new ArrayList<>();
-
 		List<Element> dispatchedToElements = new ArrayList<>();
 
 		public DispatchInfo(Event event) {
 			this.event = event;
 		}
 
-		public boolean dispatchedToListener(Event event,
-				EventListener listener) {
-			return this.event == event
-					&& dispatchedToListeners.contains(listener);
-		}
-
 		public boolean isForEvent(Event event) {
-			return this.event == event;
+			return this.event.jso != null && this.event.jso == event.jso;
 		}
 
 		public boolean wasDispatchedTo(Element element) {

@@ -28,6 +28,7 @@ import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.action.BindingAction;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 /**
  *
@@ -35,6 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
  *         Cooper</a>
  */
 @Bean
+@TypeSerialization(reflectiveSerializable = false)
 public abstract class AbstractBoundWidget<T> extends Composite
 		implements BoundWidget<T> {
 	private Action<BoundWidget<T>> action;

@@ -335,8 +335,17 @@ public class ClassReflection extends ReflectionElement {
 	}
 
 	PropertyReflection.PropertyAccessor toPropertyMethod(JMethod method) {
-		if (!method.isPublic()) {
+		if (method.isPrivate()) {
 			return null;
+		}
+		if (!method.isPublic()) {
+			if (method.getEnclosingType() != type) {
+				return null;
+			}
+			if (method.getEnclosingType().getPackage().getName()
+					.startsWith("java")) {
+				return null;
+			}
 		}
 		if (method.isStatic()) {
 			return null;
