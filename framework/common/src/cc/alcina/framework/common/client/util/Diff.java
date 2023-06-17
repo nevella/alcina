@@ -559,6 +559,11 @@ public class Diff {
 								lineResult.changedLinePercent, deleted,
 								inserted,
 								new SingleLineDiff(deleted, inserted).text);
+					} else {
+						format.format(
+								"--------------------\nWord change: %s%\n%s\n%s\n%s\n--------------------\n",
+								100, deleted, inserted,
+								new SingleLineDiff(deleted, inserted).text);
 					}
 				}
 				atEndNonMinor |= !minor && (change.line0
