@@ -63,13 +63,13 @@ class SyncMutations {
 		List<MutationRecord> recordList = null;
 		try {
 			// ensure remote is not updated
-			mutationsAccess.setApplyToRemote(true);
+			mutationsAccess.setApplyToRemote(false);
 			recordList = sync0(records);
 		} catch (RuntimeException e) {
 			hadException = true;
 			throw e;
 		} finally {
-			mutationsAccess.setApplyToRemote(false);
+			mutationsAccess.setApplyToRemote(true);
 			LocalDom.log(Level.INFO, "mutations - sync - %s ms",
 					System.currentTimeMillis() - start);
 		}
