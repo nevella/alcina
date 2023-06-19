@@ -18,8 +18,7 @@ package com.google.gwt.dom.client;
 import com.google.gwt.core.client.JavaScriptObject;
 
 /*
- * Derived from elemental.js.html.JsSelection. Includes only desired
- * methods/accessors
+ * Derived from elemental.js.html.JsSelection.
  */
 public class SelectionJso extends JavaScriptObject {
 	protected SelectionJso() {
@@ -31,6 +30,14 @@ public class SelectionJso extends JavaScriptObject {
 
 	public final native void collapse(NodeJso node, int offset) /*-{
     this.collapse(node, offset);
+	}-*/;
+
+	public final native void extend(NodeJso node) /*-{
+    this.extend(node);
+	}-*/;
+
+	public final native void extend(NodeJso node, int offset) /*-{
+    this.extend(node, offset);
 	}-*/;
 
 	public final native NodeJso getAnchorNode() /*-{
@@ -68,21 +75,5 @@ public class SelectionJso extends JavaScriptObject {
 
 	public final native void removeAllRanges() /*-{
     this.removeAllRanges();
-	}-*/;
-
-	public final native void setAnchorNode(NodeJso node) /*-{
-    this.anchorNode = node;
-	}-*/;
-
-	public final native void setAnchorOffset(int offset) /*-{
-    this.anchorOffset = offset;
-	}-*/;
-
-	public final native void setFocusNode(NodeJso node) /*-{
-    this.focusNode = node;
-	}-*/;
-
-	public final native void setFocusOffset(int offset) /*-{
-    this.focusOffset = offset;
 	}-*/;
 }

@@ -19,7 +19,7 @@ public class GwtDomUtils {
 
 	public static Element getContainingBlock(org.w3c.dom.Node node) {
 		return (Element) DomNode.from(node).style().containingBlock().get()
-				.domElement();
+				.w3cElement();
 	}
 
 	public static Element getMinimalParentWithOffsetHeight(Text text) {

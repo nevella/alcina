@@ -1120,7 +1120,7 @@ public class DomUtils implements NodeFromXpathProvider {
 									.checkState(nonProcesingInstructionChildren
 											.get(0).isText());
 							kids.add(nonProcesingInstructionChildren.get(0)
-									.domNode());
+									.w3cNode());
 						}
 					} else {
 						if (Ax.notBlank(currentEltUnwrapId)) {

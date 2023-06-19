@@ -1159,6 +1159,8 @@ public interface ClientDomDocument extends ClientDomNode {
 
 	String getVisibilityState();
 
+	boolean hasFocus();
+
 	void importNode(Node node, boolean deep);
 
 	boolean isCSS1Compat();

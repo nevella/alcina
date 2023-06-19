@@ -27,14 +27,22 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 		if (xpathEvaluator != null) {
 			xh = ((OptimizingXpathEvaluator) xpathEvaluator).getXpathHelper();
 		} else {
-			xh = new XpathHelper(xmlNode.domNode());
+			xh = new XpathHelper(xmlNode.w3cNode());
 		}
-		return xh.createOptimisedEvaluator(xmlNode.domNode());
+		return xh.createOptimisedEvaluator(xmlNode.w3cNode());
 	}
 
 	@Override
 	public boolean isEarlierThan(Node o1, Node o2) {
 		return XmlUtils.isEarlierThan(o1, o2);
+	}
+
+	@Override
+	public boolean isMutateOnlyViaAlcinaDom() {
+		// although this is possibly more nuanced, assume initially true (this
+		// enables DomNode.children.nodes caching, which could also be handled
+		// by invalidate-on-mutate)
+		return true;
 	}
 
 	@Override
@@ -51,14 +59,14 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	public String log(DomNode xmlNode, boolean pretty) {
 		try {
 			if (pretty) {
-				XmlUtils.logToFilePretty(xmlNode.domNode());
+				XmlUtils.logToFilePretty(xmlNode.w3cNode());
 			} else {
-				XmlUtils.logToFile(xmlNode.domNode());
+				XmlUtils.logToFile(xmlNode.w3cNode());
 			}
 			return "ok";
 		} catch (Exception e) {
 			try {
-				XmlUtils.logToFile(xmlNode.domNode());
+				XmlUtils.logToFile(xmlNode.w3cNode());
 				return "could not log pretty - logged raw instead";
 			} catch (Exception e1) {
 				throw new WrappedRuntimeException(e);
@@ -73,7 +81,7 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 
 	@Override
 	public String prettyToString(DomNode xmlNode) {
-		Node node = xmlNode.domNode();
+		Node node = xmlNode.w3cNode();
 		try {
 			if (node.getNodeType() == Node.DOCUMENT_FRAGMENT_NODE) {
 				return XmlUtils
