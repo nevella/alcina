@@ -141,6 +141,10 @@ public class Domain {
 		return v == null ? false : handler.isDomainVersion(v);
 	}
 
+	public static <V extends Entity> boolean isMvccObject(V v) {
+		return v == null ? false : handler.isMvccObject(v);
+	}
+
 	// development aid, most recently created Entity of type V
 	public static <V extends Entity> V last(Class<V> clazz) {
 		return stream(clazz).sorted(EntityComparator.REVERSED_INSTANCE)
@@ -238,6 +242,8 @@ public class Domain {
 
 		<V extends Entity> boolean isDomainVersion(V v);
 
+		<V extends Entity> boolean isMvccObject(V v);
+
 		default <V extends Entity> List<V> listByProperty(Class<V> clazz,
 				String propertyName, Object value) {
 			Property property = Reflections.at(clazz).property(propertyName);
@@ -290,6 +296,11 @@ public class Domain {
 		@Override
 		public <V extends Entity> boolean isDomainVersion(V v) {
 			return v.getId() != 0 || v.getLocalId() != 0;
+		}
+
+		@Override
+		public <V extends Entity> boolean isMvccObject(V v) {
+			return false;
 		}
 
 		@Override

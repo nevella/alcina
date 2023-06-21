@@ -230,6 +230,7 @@
 			</fileset>
 			<fileset dir="${framework.dir}/common/src">
 				<include name="**/*.java" />
+				<include name="**/*.properties" />
 				<exclude name="org/w3c/dom/**/*.*" />
 			</fileset>
 			<fileset dir="${framework.dir}/gwt/src">
