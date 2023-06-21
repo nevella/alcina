@@ -330,6 +330,22 @@ public class DomDocument extends DomNode {
 		public Location createRelativeLocation(Location location, int offset,
 				boolean after) {
 			int index = location.index + offset;
+			/*
+			 * Special case, preserve existing text node if possible)
+			 */
+			DomNode containingNode = location.containingNode();
+			if (containingNode.isText()) {
+				int relativeIndex = location.index
+						- byNode.get(containingNode).index;
+				int textLength = containingNode.textContent().length();
+				if (relativeIndex >= 0 && relativeIndex <= textLength) {
+					if (relativeIndex == textLength) {
+						after = true;
+					}
+					return new Location(location.treeIndex, index, after,
+							location.containingNode, this);
+				}
+			}
 			Location test = new Location(-1, index, after);
 			Location containingLocation = getContainingLocation(test);
 			return new Location(containingLocation.treeIndex, index,

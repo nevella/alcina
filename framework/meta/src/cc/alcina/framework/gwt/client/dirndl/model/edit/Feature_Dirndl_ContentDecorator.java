@@ -14,6 +14,33 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
 public interface Feature_Dirndl_ContentDecorator extends Feature {
 	/**
 	 * <p>
+	 * If the cursor is at the end of a decorator tag, move it to an editable
+	 * location - either to the start of the next logical text node (if not a
+	 * decorator descendant), or insert a zero-length text node after the
+	 * decorator and position there
+	 *
+	 * <p>
+	 * State - RelativeInputModel positions selection points at 'end' - which
+	 * ...nah. Look at ProseMirror :
+	 *
+	 * Ensure zero-widthspace before + after each decorator
+	 *
+	 * Remove cursor expansion validation
+	 *
+	 * validate on CE setup, input
+	 *
+	 *
+	 *
+	 */
+	@Feature.Status.Ref(Feature.Status.In_Progress.class)
+	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
+	@Feature.Type.Ref(Ui_support.class)
+	public interface Constraint_NonSuggesting_DecoratorTag_EndOfDecoratorCursor
+			extends Feature {
+	}
+
+	/**
+	 * <p>
 	 * Selection modification: decorator tags should not allow partial
 	 * selection:
 	 * <ul>
@@ -29,8 +56,8 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 * DomMutations)), delete any with empty text/no entity id (DONE) (although
 	 * it turns out the mention was deleted - weird font resurrection is webkit
 	 * CR issue)
-	 * <li>If typing into a whitespace-only box, ensure no font tags are
-	 * generated (fix previous issue)
+	 * <li>If typing into a text node that's a direct child of the CE root,
+	 * ensure no font tags are generated (fix previous issue)
 	 * </ul>
 	 *
 	 *

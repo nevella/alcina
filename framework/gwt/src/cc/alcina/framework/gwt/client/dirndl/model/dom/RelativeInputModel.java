@@ -28,6 +28,16 @@ public class RelativeInputModel {
 
 	Location.Range range;
 
+	/*
+	 * Note
+	 *
+	 * for a selection of #TEXT[@] - after the char '@' - the selection offset
+	 * is 1, but our location offset is 0/end (since max location offset =
+	 * length of content)
+	 *
+	 * And...this gives rise to 'do we need Location.after' - and answer is
+	 * probably 'maybe',
+	 */
 	public RelativeInputModel() {
 		selection = Document.get().jsoRemote().getSelection();
 		collapsed = selection.isCollapsed();
@@ -36,7 +46,7 @@ public class RelativeInputModel {
 			if (focusDomNode != null) {
 				focusOffset = selection.getFocusOffset();
 				focusLocation = focusDomNode.asDomNode().asLocation()
-						.createRelativeLocation(focusOffset, true);
+						.createRelativeLocation(focusOffset, false);
 			}
 		}
 		{
@@ -44,7 +54,7 @@ public class RelativeInputModel {
 			if (anchorDomNode != null) {
 				anchorOffset = selection.getAnchorOffset();
 				anchorLocation = anchorDomNode.asDomNode().asLocation()
-						.createRelativeLocation(anchorOffset, true);
+						.createRelativeLocation(anchorOffset, false);
 				range = new Location.Range(anchorLocation, focusLocation);
 			}
 		}
