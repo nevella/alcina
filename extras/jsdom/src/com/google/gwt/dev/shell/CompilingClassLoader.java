@@ -167,6 +167,14 @@ public final class CompilingClassLoader extends ClassLoader
 		}
 	}
 
+	/*
+	 * https://mail.openjdk.org/pipermail/mlvm-dev/2014-October/006125.html
+	 *
+	 * (try) prefer speeding up debugging over GC-ing unused classloaders
+	 */
+	static List<CompilingClassLoader> retainRefList = Collections
+			.synchronizedList(new ArrayList<>());
+
 	private static void classDump(String name, byte[] bytes) {
 		String packageName, className;
 		int pos = name.lastIndexOf('.');
@@ -338,6 +346,7 @@ public final class CompilingClassLoader extends ClassLoader
 		// Assertions are always on in hosted mode.
 		setDefaultAssertionStatus(true);
 		ensureJavaScriptHostBytes(logger);
+		retainRefList.add(this);
 		// Create a class rewriter based on all the subtypes of the JSO class.
 		JClassType jsoType = typeOracle.findType(JsValueGlue.JSO_CLASS);
 		if (jsoType != null) {
