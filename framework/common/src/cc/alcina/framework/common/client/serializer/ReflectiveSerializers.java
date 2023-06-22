@@ -21,6 +21,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.features.FeatureFlagProvider;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -30,6 +31,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIte
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.GraphNode;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.PropertyNode;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerialNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -37,6 +39,7 @@ import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import elemental.json.Json;
@@ -54,6 +57,20 @@ public class ReflectiveSerializers {
 		@Override
 		public Class serializeAs(Class incoming) {
 			return Domain.resolveEntityClass(incoming);
+		}
+
+		@Override
+		public void writeValueOrContainer(GraphNode node,
+				SerialNode serialNode) {
+			// TODO: Remove after serialization change is tested (2022-05-26)
+			boolean mvccSerializationPrevention = FeatureFlagProvider.get()
+					.isEnabled(getClass(), "mvccSerializationPrevention");
+			if (mvccSerializationPrevention
+					&& Domain.isMvccObject((Entity) node.value)) {
+				throw new RuntimeException(
+						"Cannot serialize MVCC objects, project the object first");
+			}
+			super.writeValueOrContainer(node, serialNode);
 		}
 	}
 
