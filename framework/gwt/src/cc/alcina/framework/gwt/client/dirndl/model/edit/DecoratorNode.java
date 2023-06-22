@@ -34,10 +34,20 @@ class DecoratorNode {
 		this.relativeInput = relativeInput;
 	}
 
+	public void toNonEditable() {
+		node.setAttr("contentEditable", "false");
+		node.builder().tag("span").className("cursor-target").text("\u200B")
+				.insertBeforeThis();
+		node.builder().tag("span").className("cursor-target").text("\u200B")
+				.insertAfterThis();
+	}
+
 	boolean isValid() {
 		return node.has("_entity");
 	}
 
+	// more fixmes - most of this isn't about setting the entity, it's about
+	// moving the decorator from 'editing' to 'edited'
 	void setEntity(Entity entity, String render) {
 		DomNode textNode = node.children.firstNode();
 		textNode.setText(decorator.triggerSequence
@@ -50,30 +60,33 @@ class DecoratorNode {
 		// 'cursor validator' to move it to a correct location
 		// try positioning cursor immediately after the decorator
 		DomNode cursorTarget = textNode.tree().nextTextNode(true).orElse(null);
-		if (cursorTarget != null) {
-			// ensure next text node is within the root CR
-			if (!cursorTarget.ancestors().has(
-					decorator.logicalParent.provideElement().asDomNode())) {
-				cursorTarget = null;
-				// and that not in a decorator
-			} else if (decorator.hasDecorator(cursorTarget)) {
-				cursorTarget = null;
-			}
-		}
-		if (cursorTarget == null) {
-			/*
-			 * Add a text node containing a zero-width space - this gets us out
-			 * of the decorator tag.
-			 */
-			cursorTarget = node.builder().text("\u200B").insertAfterThis();
-		}
+		/*
+		 * see zwspace abouve
+		 */
+		// if (cursorTarget != null) {
+		// // ensure next text node is within the root CR
+		// if (!cursorTarget.ancestors().has(
+		// decorator.logicalParent.provideElement().asDomNode())) {
+		// cursorTarget = null;
+		// // and that not in a decorator
+		// } else if (decorator.hasDecorator(cursorTarget)) {
+		// cursorTarget = null;
+		// }
+		// }
+		// if (cursorTarget == null) {
+		// /*
+		// * Add a text node containing a zero-width space - this gets us out
+		// * of the decorator tag.
+		// */
+		// cursorTarget = node.builder().text("\u200B").insertAfterThis();
+		// }
 		LocalDom.flush();
 		Node cursorNode = cursorTarget.gwtNode();
 		SelectionJso selection = Document.get().jsoRemote().getSelection();
 		cursorNode.implAccess().ensureRemote();
 		NodeJso remote = cursorNode.implAccess().jsoRemote();
 		NodeJso rr1 = remote.getParentNodeJso();
-		selection.collapse(remote, 1);
+		selection.collapse(remote, 1);// after zws
 	}
 
 	void setModel(Object model, String render) {
@@ -82,8 +95,7 @@ class DecoratorNode {
 
 	void splitAndWrap() {
 		splits = relativeInput.splitAt(-1, 0);
-		this.node = splits.contents.builder().tag(decorator.tag)
-				.attr("contentEditable", "false").wrap();
+		this.node = splits.contents.builder().tag(decorator.tag).wrap();
 		LocalDom.flush();
 		SelectionJso selection = Document.get().jsoRemote().getSelection();
 		Text text = (Text) splits.contents.w3cNode();

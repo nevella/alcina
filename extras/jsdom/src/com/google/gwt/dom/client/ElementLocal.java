@@ -3,11 +3,18 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.w3c.dom.DOMException;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.TypeInfo;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -138,6 +145,10 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public Map<String, String> getAttributeMap() {
 		return attributes;
+	}
+
+	public NamedNodeMap getAttributes() {
+		return new AttributeMap();
 	}
 
 	@Override
@@ -762,6 +773,149 @@ public class ElementLocal extends NodeLocal
 		}
 		sunk |= eventBits;
 		return sunk;
+	}
+
+	class AttributeMap implements NamedNodeMap {
+		@Override
+		public int getLength() {
+			return attributes.size();
+		}
+
+		@Override
+		public org.w3c.dom.Node getNamedItem(String name) {
+			return new AttrImpl(attributes.entrySet().stream()
+					.filter(e -> e.getKey().equals(name)).findFirst()
+					.orElse(null));
+		}
+
+		@Override
+		public org.w3c.dom.Node getNamedItemNS(String namespaceURI,
+				String localName) throws DOMException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public org.w3c.dom.Node item(int index) {
+			List<String> keys = getAttributeMap().keySet().stream()
+					.collect(Collectors.toList());
+			return getNamedItem(keys.get(index));
+		}
+
+		@Override
+		public org.w3c.dom.Node removeNamedItem(String name)
+				throws DOMException {
+			org.w3c.dom.Node existing = getNamedItem(name);
+			attributes.remove(name);
+			return existing;
+		}
+
+		@Override
+		public org.w3c.dom.Node removeNamedItemNS(String namespaceURI,
+				String localName) throws DOMException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public org.w3c.dom.Node setNamedItem(org.w3c.dom.Node arg)
+				throws DOMException {
+			Preconditions.checkArgument(arg instanceof org.w3c.dom.Attr);
+			attributes.put(arg.getNodeName(), arg.getNodeValue());
+			return getNamedItem(arg.getNodeName());
+		}
+
+		@Override
+		public org.w3c.dom.Node setNamedItemNS(org.w3c.dom.Node arg)
+				throws DOMException {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	static class AttrImpl extends Node implements org.w3c.dom.Attr {
+		Entry<String, String> entry;
+
+		AttrImpl(Map.Entry<String, String> entry) {
+			this.entry = entry;
+		}
+
+		@Override
+		public <T extends JavascriptObjectEquivalent> T cast() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getName() {
+			return entry.getKey();
+		}
+
+		@Override
+		public org.w3c.dom.Element getOwnerElement() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public TypeInfo getSchemaTypeInfo() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean getSpecified() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getTextContent() throws DOMException {
+			return getValue();
+		}
+
+		@Override
+		public String getValue() {
+			return entry.getValue();
+		}
+
+		@Override
+		public boolean isId() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Node node() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setValue(String value) throws DOMException {
+			entry.setValue(value);
+		}
+
+		@Override
+		protected NodeJso jsoRemote() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected boolean linkedToRemote() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected <T extends NodeLocal> T local() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void putRemote(ClientDomNode remote, boolean synced) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected <T extends ClientDomNode> T remote() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void resetRemote0() {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	enum AttrParseState {

@@ -222,6 +222,7 @@ public class ContentDecorator<T>
 	@Override
 	public void onReferenceSelected(ReferenceSelected event) {
 		if (event.getContext().getPrevious().node.getModel() == chooser) {
+			decorator.toNonEditable();
 			T model = (T) event.getModel();
 			decorator.setModel(model, itemRenderer.apply(model));
 		}

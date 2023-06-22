@@ -257,7 +257,7 @@ public class Element extends Node
 
 	@Override
 	public NamedNodeMap getAttributes() {
-		throw new UnsupportedOperationException();
+		return local().getAttributes();
 	}
 
 	public DomRect getBoundingClientRect() {
@@ -827,6 +827,13 @@ public class Element extends Node
 	}
 
 	@Override
+	public void setTextContent(String textContent) throws DOMException {
+		Preconditions.checkState(getChildCount() == 0);
+		Text text = getOwnerDocument().createTextNode(textContent);
+		appendChild(text);
+	}
+
+	@Override
 	public void setTitle(String title) {
 		ensureRemoteCheck();
 		local().setTitle(title);
@@ -1099,7 +1106,7 @@ public class Element extends Node
 
 	/**
 	 * Most of these methods assume the remote() is a NodeJso
-	 * 
+	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
@@ -1131,6 +1138,7 @@ public class Element extends Node
 			return ensureJsoRemote().getChildNodes0().getItem0(index);
 		}
 
+		@Override
 		public ElementJso jsoRemote() {
 			return Element.this.jsoRemote();
 		}

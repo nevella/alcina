@@ -121,8 +121,25 @@ public class EditArea extends Model implements FocusOnBind, HasTag,
 
 	@Override
 	public void onFocusout(Focusout event) {
+		// FIXME - editor.model - handle earlier (strip as soon as an edit
+		// occurs)
+		//
+		// Also - should *insert* pre edit
+		//
+		/// List<DomNode> zeroWidthSpaceContainers =
+		/// provideElement().asDomNode()
+		// .stream().filter(DomNode::isElement)
+		// .filter(n -> n.tagAndClassIs("span", "cursor-target"))
+		// .collect(Collectors.toList());
+		// zeroWidthSpaceContainers.forEach(DomNode::strip);
+		// List<DomNode> removeZeroWidthSpace = provideElement().asDomNode()
+		// .stream().filter(DomNode::isText)
+		// .filter(n -> n.textContains("\u200b"))
+		// .collect(Collectors.toList());
+		// removeZeroWidthSpace
+		// .forEach(n -> n.setText(n.textContent().replace("\u200b", "")));
 		String elementValue = elementValue();
-		if (Ax.ntrim(elementValue).isEmpty()) {
+		if (Ax.ntrim(elementValue.replaceAll("<br>", "")).isEmpty()) {
 			elementValue = "";
 		}
 		setValue(elementValue);
