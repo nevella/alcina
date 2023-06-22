@@ -273,7 +273,7 @@ public class LocalDomainStore {
 		/*
 		 * A simplified version of the superclass methods (which just pushes the
 		 * grouped transforms as a 'persistent' request)
-		 * 
+		 *
 		 * Deliberately don't sync on the superclass collectionsMonitor (any
 		 * access should be single-threaded)
 		 */
@@ -336,6 +336,11 @@ public class LocalDomainStore {
 		@Override
 		public <V extends Entity> boolean isDomainVersion(V v) {
 			return true;
+		}
+
+		@Override
+		public <V extends Entity> boolean isMvccObject(V v) {
+			return false;
 		}
 
 		@Override
