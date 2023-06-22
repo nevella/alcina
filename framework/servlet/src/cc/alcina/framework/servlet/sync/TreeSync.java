@@ -494,6 +494,12 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			public void skip() {
 				syncPosition.skip = true;
 			}
+
+			@Override
+			public String toString() {
+				return FormatBuilder.keyValues("left", left, "right", right,
+						"action", action, "syncPosition", syncPosition);
+			}
 		}
 	}
 

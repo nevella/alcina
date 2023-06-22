@@ -112,6 +112,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
@@ -1400,6 +1401,11 @@ public class DomainStore implements IDomainStore {
 										.isDomainVersion(v);
 			}
 
+			public <V extends Entity> boolean isMvccObject(V v) {
+				return v == null ? false 
+						: MvccObject.class.isAssignableFrom(v.getClass());
+			};
+
 			@Override
 			public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
 				return storeHandler(clazz).query(clazz);
@@ -1822,6 +1828,11 @@ public class DomainStore implements IDomainStore {
 		public <V extends Entity> boolean isDomainVersion(V v) {
 			return isRawValue(v);
 		}
+
+		public <V extends Entity> boolean isMvccObject(V v) {
+			return v == null ? false 
+					: MvccObject.class.isAssignableFrom(v.getClass());
+		};
 
 		@Override
 		public <V extends Entity> List<V> listByProperty(Class<V> clazz,
