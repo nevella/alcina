@@ -542,6 +542,11 @@ public abstract class Node
 	 *
 	 */
 	public class ImplAccess {
+		public <E extends ClientDomNode> E ensureRemote() {
+			LocalDom.ensureRemote(Node.this);
+			return remote();
+		}
+
 		public boolean isJsoRemote() {
 			return remote().isJso();
 		}

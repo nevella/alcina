@@ -104,7 +104,8 @@ public class ContentDecorator<T>
 		implements DomEvents.BeforeInput.Handler, DomEvents.Input.Handler,
 		DomEvents.MouseUp.Handler, DomEvents.KeyDown.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
-		KeyboardNavigation.Navigation.Handler, ModelEvents.Close.Handler {
+		KeyboardNavigation.Navigation.Handler, ModelEvents.Close.Handler,
+		HasDecorator {
 	public static ContentDecorator.Builder builder() {
 		return new Builder();
 	}
@@ -127,12 +128,27 @@ public class ContentDecorator<T>
 
 	Function<T, String> itemRenderer;
 
+	HasDecorator decoratorParent;
+
 	private ContentDecorator(ContentDecorator.Builder builder) {
 		this.logicalParent = builder.logicalParent;
 		this.tag = builder.tag;
 		this.chooserProvider = builder.chooserProvider;
 		this.triggerSequence = builder.triggerSequence;
 		this.itemRenderer = builder.itemRenderer;
+		this.decoratorParent = builder.decoratorParent;
+	}
+
+	/*
+	 * Pass up to the container (since there may be multiple decorators)
+	 */
+	@Override
+	public boolean hasDecorator(DomNode node) {
+		return decoratorParent.hasDecorator(node);
+	}
+
+	public boolean hasDecoratorSelf(DomNode node) {
+		return node.ancestors().has(tag);
 	}
 
 	@Override
@@ -265,6 +281,8 @@ public class ContentDecorator<T>
 	public static class Builder<T> {
 		Model logicalParent;
 
+		HasDecorator decoratorParent;
+
 		BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider;
 
 		String triggerSequence;
@@ -275,6 +293,7 @@ public class ContentDecorator<T>
 
 		public ContentDecorator build() {
 			Preconditions.checkNotNull(logicalParent);
+			Preconditions.checkNotNull(decoratorParent);
 			Preconditions.checkNotNull(chooserProvider);
 			Preconditions.checkNotNull(triggerSequence);
 			Preconditions.checkNotNull(tag);
@@ -285,6 +304,10 @@ public class ContentDecorator<T>
 		public void setChooserProvider(
 				BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider) {
 			this.chooserProvider = chooserProvider;
+		}
+
+		public void setDecoratorParent(HasDecorator decoratorParent) {
+			this.decoratorParent = decoratorParent;
 		}
 
 		public void setItemRenderer(Function<T, String> itemRenderer) {
