@@ -29,7 +29,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 *
 	 * validate on CE setup, input
 	 *
-	 *
+	 * FIXME - ContentEditableSync - revisit
 	 *
 	 */
 	@Feature.Status.Ref(Feature.Status.In_Progress.class)
@@ -67,5 +67,24 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	@Feature.Type.Ref(Ui_support.class)
 	public interface Constraint_NonSuggesting_DecoratorTag_Selection
 			extends Feature {
+	}
+
+	/**
+	 * Sync a content editable node to a model tree rooted in a container which
+	 * provides quick access to something like 'nodes by tag/model class'
+	 *
+	 * <ul>
+	 * <li>Can't use model fields, since the document structure is arbitrary
+	 * <li>Need to model 'generic element/attr/txt/pi/comment' and descend
+	 * <li>Model comment, cdata, pi as special tags
+	 * </ul>
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Feature.Status.Ref(Feature.Status.Open.class)
+	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
+	@Feature.Type.Ref(Ui_support.class)
+	public interface ContentEditableSync extends Feature {
 	}
 }
