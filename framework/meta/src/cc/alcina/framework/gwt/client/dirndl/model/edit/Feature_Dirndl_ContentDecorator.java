@@ -70,6 +70,19 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	}
 
 	/**
+	 * Exit the suggestor if the trigger is deleted
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Feature.Status.Ref(Feature.Status.Open.class)
+	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
+	@Feature.Type.Ref(Ui_support.class)
+	public interface Constraint_NonSuggesting_DecoratorTag_TriggerDeletion
+			extends Feature {
+	}
+
+	/**
 	 * Sync a content editable node to a model tree rooted in a container which
 	 * provides quick access to something like 'nodes by tag/model class'
 	 *
@@ -86,5 +99,20 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
 	@Feature.Type.Ref(Ui_support.class)
 	public interface ContentEditableSync extends Feature {
+	}
+
+	/**
+	 * Resize to fit based on content domrect
+	 *
+	 * Constraint: no more than 50% screen height (unless full-height), and
+	 * customisable if non-editing
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Feature.Status.Ref(Feature.Status.Open.class)
+	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
+	@Feature.Type.Ref(Ui_support.class)
+	public interface Resizing extends Feature {
 	}
 }

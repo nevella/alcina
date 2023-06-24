@@ -242,6 +242,7 @@ public class ContentDecorator<T>
 		Overlay.Builder builder = Overlay.builder();
 		Element domElement = (Element) decorator.w3cElement();
 		chooser = chooserProvider.apply(this, decorator);
+		builder.withCssClass("decorator-chooser");
 		Overlay overlay = builder.dropdown(OverlayPosition.Position.START,
 				domElement.getBoundingClientRect(), logicalParent, chooser)
 				.build();

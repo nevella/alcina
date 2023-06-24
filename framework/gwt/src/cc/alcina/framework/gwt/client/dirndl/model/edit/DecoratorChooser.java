@@ -27,6 +27,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * entities filter on user text
  */
 @Directed(
+	// but see
+	// cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.computeCssClass()
+	cssClass = "decorator-chooser",
 	receives = { ModelEvents.SelectionChanged.class, ModelEvents.Close.class },
 	emits = ModelEvents.Selected.class)
 public abstract class DecoratorChooser extends Model.Fields implements

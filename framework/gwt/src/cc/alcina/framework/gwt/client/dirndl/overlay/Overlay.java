@@ -115,6 +115,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 	 */
 	private Overlay childOverlay;
 
+	private String cssClassParameter;
+
 	private Overlay(Builder builder) {
 		contents = builder.contents;
 		position = builder.position;
@@ -126,6 +128,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		logicalAncestors = builder.logicalAncestors;
 		modalSubmitHandler = builder.modalSubmitHandler;
 		modalClosedHandler = builder.modalClosedHandler;
+		cssClassParameter = builder.cssClass;
 		computeCssClass();
 	}
 
@@ -300,23 +303,6 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 				contents, logicalParent, childOverlay);
 	}
 
-	/*
-	 * Compute the overlay class based on logical ancestors + contents
-	 */
-	private void computeCssClass() {
-		// deliberately does not try to access @Directed(cssClass) - since
-		// overlay creation is imperative and the caller has essentially full
-		// control of the class selector (via logicalAncestors)...this is good
-		// enough, I think
-		String cssClass = Stream
-				.concat(logicalAncestors.stream(),
-						Stream.of(logicalParent, this, contents))
-				.filter(Objects::nonNull).map(CommonUtils::classOrSelf)
-				.map(Class::getSimpleName).map(Ax::cssify)
-				.collect(Collectors.joining(" "));
-		setCssClass(cssClass);
-	}
-
 	private boolean selfOrDescendantOverlayContains(Element element) {
 		if (provideElement().provideIsAncestorOf(element, true)) {
 			return true;
@@ -334,6 +320,28 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	protected void setChildOverlay(Overlay childOverlay) {
 		this.childOverlay = childOverlay;
+	}
+
+	/*
+	 * Compute the overlay class based on logical ancestors + contents
+	 */
+	void computeCssClass() {
+		// deliberately does not try to access @Directed(cssClass) - since
+		// overlay creation is imperative and the caller has essentially full
+		// control of the class selector (via logicalAncestors)...this is good
+		// enough, I think
+		//
+		// FIXME - dirndl 1x3 - actually, at least for contentdecorator it would
+		// be nice
+		Stream<String> derivedClasses = Stream
+				.concat(logicalAncestors.stream(),
+						Stream.of(logicalParent, this, contents))
+				.filter(Objects::nonNull).map(CommonUtils::classOrSelf)
+				.map(Class::getSimpleName);
+		String cssClass = Stream
+				.concat(derivedClasses, Stream.of(cssClassParameter))
+				.map(Ax::cssify).collect(Collectors.joining(" "));
+		setCssClass(cssClass);
 	}
 
 	public static class Actions extends Model implements HasLinks {
@@ -377,23 +385,25 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 	public static class Builder {
 		List<Class<? extends Model>> logicalAncestors = List.of();
 
-		private Model contents;
+		Model contents;
 
-		private OverlayPosition position = new OverlayPosition();
+		OverlayPosition position = new OverlayPosition();
 
-		private Actions actions;
+		Actions actions;
 
-		private boolean modal;
+		boolean modal;
 
 		boolean removeOnMouseDownOutside = true;
 
 		boolean allowCloseWithoutSubmit = true;
 
-		private Model logicalParent;
+		Model logicalParent;
 
 		ModelEvents.Submit.Handler modalSubmitHandler;
 
 		ModelEvents.Closed.Handler modalClosedHandler;
+
+		String cssClass;
 
 		public Overlay build() {
 			return new Overlay(this);
@@ -410,14 +420,6 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			withContents(contents);
 			withRemoveOnMouseDownOutside(true);
 			return this;
-		}
-
-		public Model getLogicalParent() {
-			return this.logicalParent;
-		}
-
-		public OverlayPosition getPosition() {
-			return this.position;
 		}
 
 		public Builder positionViewportCentered() {
@@ -438,6 +440,11 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		public Builder withContents(Model contents) {
 			this.contents = contents;
+			return this;
+		}
+
+		public Builder withCssClass(String cssClass) {
+			this.cssClass = cssClass;
 			return this;
 		}
 
