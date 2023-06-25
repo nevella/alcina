@@ -650,6 +650,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						.addImplementedInterface(Supplier.class.getName());
 			}
 			sourceWriter = createWriter(composerFactory, printWriter);
+			sourceWriter.println("public static final Class clazz = %s.class;",
+					reflectedTypeFqn());
 			/*
 			 * Write no-args constructor
 			 */
@@ -667,7 +669,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			 */
 			sourceWriter.println("protected void init0(){");
 			sourceWriter.indent();
-			sourceWriter.println("Class clazz = %s.class;", reflectedTypeFqn());
 			sourceWriter
 					.println("List<Property> properties = new ArrayList<>();");
 			reflection.getSortedPropertyReflections().stream()
@@ -751,7 +752,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			sourceWriter.println("case \"%s\":",
 					reflection.type.getQualifiedBinaryName());
 			sourceWriter.indent();
-			sourceWriter.println("return %s.class;", reflectedTypeFqn());
+			sourceWriter.println("return %s.clazz;", implementationFqn());
 			sourceWriter.outdent();
 		}
 
@@ -770,8 +771,15 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			reflection.getRegistrations().stream()
 					.sorted(REGISTRY_LOCATION_COMPARATOR)
 					.forEach(registryLocation -> {
-						sourceWriter.print("Registry.register().add(%s.class,",
-								reflection.type.getQualifiedSourceName());
+						if (reflection.type.isPublic()) {
+							sourceWriter.print(
+									"Registry.register().add(%s.class,",
+									reflection.type.getQualifiedSourceName());
+						} else {
+							sourceWriter.print(
+									"Registry.register().add(%s___refImpl.clazz,",
+									reflection.type.getQualifiedSourceName());
+						}
 						AnnotationExpressionWriter instanceGenerator = new AnnotationExpressionWriter(
 								new AnnotationReflection(registryLocation));
 						instanceGenerator.writeExpression(sourceWriter);
@@ -805,7 +813,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						/*
 						 * See BaseSourcesPropertyChangeEvents.set for similar code - basically, prep the propertyChange
 						 * @formatter:off
-						 * output is: 
+						 * output is:
 						 @Override
 					      public void set(Object bean,Object value){
 					      		<beantypefqn> typed = (<dbeantypefqn>)bean;
@@ -831,7 +839,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					} else {
 						/*
 						 * @formatter:off
-						 * output is: 
+						 * output is:
 						 @Override
 					      public void set(Object bean,Object value){
 					            ((<beantypefqn>)bean).<fieldName>=((valuetypefqn)value);}
@@ -1198,13 +1206,12 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		List<JClassType> computeReachableTypes() {
 			return Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> isReflectable(t))
+					.filter(this::isReflectable)
 					.map(JClassType::getFlattenedSupertypeHierarchy)
 					.flatMap(Collection::stream).map(ClassReflection::erase)
-					.distinct().filter(t -> t.isPublic())
+					.distinct().filter(this::isProtectionVisible)
 					.collect(Collectors.toList());
 		}
-
 		Stream<TypeHierarchy> computeReflectableTypes() {
 			subtypes = computeSubtypes();
 			Multiset<JClassType, Set<JClassType>> asyncSerializableTypes = computeAsyncSerializableTypes(
@@ -1228,6 +1235,16 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					// only interested in instantiable types
 					.filter(t -> t.isPublic() && !t.isAbstract())
 					.collect(Collectors.toList());
+		}
+
+		boolean isProtectionVisible(JClassType type){
+			if(type.isPrivate()){
+			return false;
+			}
+			if(type.isPublic()){
+				return true;
+			}
+			return !type.getQualifiedSourceName().startsWith("java");
 		}
 
 		void prepareAnnotationImplementationGenerators() {
