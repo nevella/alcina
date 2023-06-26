@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.component.featuretree;
 import cc.alcina.framework.common.client.meta.Feature;
 
 /**
- * Show feature implementation as a tree
+ * Show feature implementation as a tree, with detail
  */
 @Feature.Status.Ref(Feature.Status.Open.class)
 @Feature.Type.Ref(Feature.Type.Ui_support.class)
