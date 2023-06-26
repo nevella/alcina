@@ -1,10 +1,11 @@
-package cc.alcina.framework.gwt.client.dirndl.model;
+package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.Validator;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 public class EditableStringModel extends Model {

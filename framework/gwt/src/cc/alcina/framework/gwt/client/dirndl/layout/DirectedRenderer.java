@@ -2,8 +2,6 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.util.AbstractCollection;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -295,10 +293,8 @@ public abstract class DirectedRenderer {
 
 	interface GeneratesPropertyInputs {
 		default void generatePropertyInputs(RendererInput input) {
-			List<Property> properties = Reflections.at((input.model))
-					.properties();
-			properties = properties.stream().collect(Collectors.toList());
-			for (Property property : properties) {
+			for (Property property : Reflections.at((input.model))
+					.properties()) {
 				Property directedProperty = input.resolver
 						.resolveDirectedProperty(property);
 				if (directedProperty != null) {
