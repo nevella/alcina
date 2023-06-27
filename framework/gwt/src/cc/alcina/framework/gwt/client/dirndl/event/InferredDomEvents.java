@@ -24,7 +24,6 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
@@ -107,8 +106,8 @@ public class InferredDomEvents {
 			}
 
 			@Override
-			protected HandlerRegistration bind1(Widget widget) {
-				return widget.addDomHandler(this::onKeyUp,
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::onKeyUp,
 						KeyUpEvent.getType());
 			}
 		}
@@ -142,8 +141,8 @@ public class InferredDomEvents {
 			}
 
 			@Override
-			protected HandlerRegistration bind1(Widget widget) {
-				return widget.addDomHandler(this::onKeyUp,
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::onKeyUp,
 						KeyUpEvent.getType());
 			}
 		}
@@ -175,8 +174,8 @@ public class InferredDomEvents {
 			}
 
 			@Override
-			protected HandlerRegistration bind1(Widget widget) {
-				return widget.addDomHandler(this::onKeyUp,
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::onKeyUp,
 						KeyUpEvent.getType());
 			}
 		}
@@ -246,12 +245,12 @@ public class InferredDomEvents {
 			}
 
 			@Override
-			protected HandlerRegistration bind1(Widget widget) {
+			protected HandlerRegistration bind1(Element element) {
 				MultiHandlerRegistration multiHandlerRegistration = new MultiHandlerRegistration();
-				multiHandlerRegistration.add(widget
+				multiHandlerRegistration.add(element
 						.addDomHandler(this::onChange, ChangeEvent.getType()));
-				multiHandlerRegistration.add(widget.addDomHandler(this::onKeyUp,
-						KeyUpEvent.getType()));
+				multiHandlerRegistration.add(element
+						.addDomHandler(this::onKeyUp, KeyUpEvent.getType()));
 				return multiHandlerRegistration;
 			}
 		}
@@ -302,12 +301,11 @@ public class InferredDomEvents {
 			}
 
 			@Override
-			protected HandlerRegistration bind1(Widget widget) {
+			protected HandlerRegistration bind1(Element element) {
 				Scheduler.get().scheduleFinally(() -> {
 					if (!removed) {
-						intersectionObserver = IntersectionObserver
-								.observerFor(this, widget.getElement()
-										.implAccess().ensureJsoRemote());
+						intersectionObserver = IntersectionObserver.observerFor(
+								this, element.implAccess().ensureJsoRemote());
 					}
 				});
 				return new HandlerRegistration() {
@@ -391,8 +389,8 @@ public class InferredDomEvents {
 			}
 
 			@Override
-			protected HandlerRegistration bind1(Widget widget) {
-				return widget.addDomHandler(this::onClick,
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::onClick,
 						ClickEvent.getType());
 			}
 		}
@@ -501,11 +499,11 @@ public class InferredDomEvents {
 			}
 
 			@Override
-			protected HandlerRegistration bind1(Widget widget) {
+			protected HandlerRegistration bind1(Element element) {
 				Scheduler.get().scheduleFinally(() -> {
 					if (!removed) {
-						resizeObserver = ResizeObserver.observerFor(this, widget
-								.getElement().implAccess().ensureJsoRemote());
+						resizeObserver = ResizeObserver.observerFor(this,
+								element.implAccess().ensureJsoRemote());
 					}
 				});
 				return new HandlerRegistration() {
@@ -572,9 +570,9 @@ public class InferredDomEvents {
 			extends DomBinding<E> implements NativePreviewHandler {
 		static boolean mobile = GWT.isClient() && BrowserMod.isMobile();
 
-		private Widget widget;
-
 		protected boolean modal;
+
+		Element element;
 
 		/*
 		 * follows com.google.gwt.user.client.ui.PopupPanel.previewNativeEvent(
@@ -619,21 +617,21 @@ public class InferredDomEvents {
 		private boolean eventTargetsWidget(NativePreviewEvent event) {
 			EventTarget target = event.getNativeEvent().getEventTarget();
 			if (Element.is(target)) {
-				return widget.getElement().isOrHasChild(Element.as(target));
+				return element.isOrHasChild(Element.as(target));
 			}
 			return false;
 		}
 
 		@Override
-		protected HandlerRegistration bind0(Widget widget, Object model) {
-			this.widget = widget;
+		protected HandlerRegistration bind0(Element element, Object model) {
+			this.element = element;
 			this.modal = model instanceof IsModal
 					&& ((IsModal) model).provideModal();
 			return Event.addNativePreviewHandler(this);
 		}
 
 		@Override
-		protected HandlerRegistration bind1(Widget widget) {
+		protected HandlerRegistration bind1(Element element) {
 			// never called
 			throw new UnsupportedOperationException();
 		}

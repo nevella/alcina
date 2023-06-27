@@ -4,7 +4,7 @@ import java.util.AbstractCollection;
 import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -43,9 +43,10 @@ public abstract class DirectedRenderer {
 		return Ax.cssify(clazz.getSimpleName());
 	}
 
-	protected void applyCssClass(Node node, Widget widget) {
-		if (node.directed.cssClass().length() > 0) {
-			widget.addStyleName(node.directed.cssClass());
+	protected void applyCssClass(Node node, Element element) {
+		String cssClass = node.directed.cssClass();
+		if (cssClass.length() > 0) {
+			element.addStyleName(cssClass);
 		}
 	}
 
@@ -87,9 +88,7 @@ public abstract class DirectedRenderer {
 		protected void render(RendererInput input) {
 			Node node = input.node;
 			String tag = getTag(node, null);
-			FlowPanel widget = new FlowPanel(tag);
-			node.widget = widget;
-			applyCssClass(node, widget);
+			node.resolver.renderElement(node, tag);
 			generatePropertyInputs(input);
 		}
 	}
@@ -171,9 +170,7 @@ public abstract class DirectedRenderer {
 			Node node = input.node;
 			String tag = node.directed.tag();
 			Preconditions.checkState(tag.length() > 0);
-			FlowPanel widget = new FlowPanel(tag);
-			node.widget = widget;
-			applyCssClass(node, widget);
+			node.resolver.renderElement(node, tag);
 		}
 	}
 
@@ -287,7 +284,8 @@ public abstract class DirectedRenderer {
 	public static class WidgetRenderer extends DirectedRenderer {
 		@Override
 		protected void render(RendererInput input) {
-			input.node.widget = (Widget) input.model;
+			Widget model = (Widget) input.model;
+			input.resolver.renderObject(input.node, input.model);
 		}
 	}
 

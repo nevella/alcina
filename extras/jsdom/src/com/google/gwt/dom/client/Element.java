@@ -32,10 +32,18 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.logical.shared.AttachEvent;
+import com.google.gwt.event.logical.shared.AttachEvent.Handler;
+import com.google.gwt.event.logical.shared.HasAttachHandlers;
+import com.google.gwt.event.shared.EventHandler;
+import com.google.gwt.event.shared.GwtEvent;
+import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
-import com.google.gwt.user.client.LocalDomDebug;
 import com.google.gwt.user.client.ui.UIObject;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -45,9 +53,11 @@ import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
  * All HTML element interfaces derive from this class.
+ *
+ * Note that the event-related code in Widget has been moved here
  */
-public class Element extends Node
-		implements ClientDomElement, org.w3c.dom.Element {
+public class Element extends Node implements ClientDomElement,
+		org.w3c.dom.Element, EventListener, HasAttachHandlers {
 	public static final String REMOTE_DEFINED = "__localdom-remote-defined";
 
 	public static final Predicate<Element> DISPLAY_NONE = e -> e.implAccess()
@@ -129,13 +139,47 @@ public class Element extends Node
 
 	private Style style;
 
-	public UIObject uiObject;
-
-	public EventListener uiObjectListener;
+	public EventListener eventListener;
 
 	private boolean pendingSync;
 
+	int eventsToSink;
+
+	private boolean attached;
+
+	private HandlerManager handlerManager;
+
 	protected Element() {
+	}
+
+	@Override
+	public HandlerRegistration addAttachHandler(Handler handler) {
+		return addHandler(handler, AttachEvent.getType());
+	}
+
+	/**
+	 * For <a href=
+	 * "http://code.google.com/p/google-web-toolkit/wiki/UnderstandingMemoryLeaks"
+	 * >browsers which do not leak</a>, adds a native event handler to the
+	 * widget. Note that, unlike the
+	 * {@link #addDomHandler(EventHandler, com.google.gwt.event.dom.client.DomEvent.Type)}
+	 * implementation, there is no need to attach the widget to the DOM in order
+	 * to cause the event handlers to be attached.
+	 *
+	 * @param <H>
+	 *            the type of handler to add
+	 * @param type
+	 *            the event key
+	 * @param handler
+	 *            the handler
+	 * @return {@link HandlerRegistration} used to remove the handler
+	 */
+	public final <H extends EventHandler> HandlerRegistration
+			addBitlessDomHandler(final H handler, DomEvent.Type<H> type) {
+		assert handler != null : "handler must not be null";
+		assert type != null : "type must not be null";
+		sinkBitlessEvent(type.getName());
+		return ensureHandlers().addHandler(type, handler);
 	}
 
 	@Override
@@ -144,6 +188,52 @@ public class Element extends Node
 		boolean result = local().addClassName(className);
 		sync(() -> remote().addClassName(className));
 		return result;
+	}
+
+	/**
+	 * Adds a native event handler to the widget and sinks the corresponding
+	 * native event. If you do not want to sink the native event, use the
+	 * generic addHandler method instead.
+	 *
+	 * @param <H>
+	 *            the type of handler to add
+	 * @param type
+	 *            the event key
+	 * @param handler
+	 *            the handler
+	 * @return {@link HandlerRegistration} used to remove the handler
+	 */
+	public final <H extends EventHandler> HandlerRegistration
+			addDomHandler(final H handler, DomEvent.Type<H> type) {
+		assert handler != null : "handler must not be null";
+		assert type != null : "type must not be null";
+		int typeInt = Event.getTypeInt(type.getName());
+		if (typeInt == -1) {
+			sinkBitlessEvent(type.getName());
+		} else {
+			sinkEvents(typeInt);
+		}
+		return ensureHandlers().addHandler(type, handler);
+	}
+
+	/**
+	 * Adds this handler to the widget.
+	 *
+	 * @param <H>
+	 *            the type of handler to add
+	 * @param type
+	 *            the event type
+	 * @param handler
+	 *            the handler
+	 * @return {@link HandlerRegistration} used to remove the handler
+	 */
+	public final <H extends EventHandler> HandlerRegistration
+			addHandler(final H handler, GwtEvent.Type<H> type) {
+		return ensureHandlers().addHandler(type, handler);
+	}
+
+	public void addStyleName(String cssClass) {
+		UIObject.setStyleName(this, cssClass, true);
 	}
 
 	@Override
@@ -190,6 +280,13 @@ public class Element extends Node
 	public void ensureId() {
 		if (!linkedToRemote()) {
 			local().ensureId();
+		}
+	}
+
+	@Override
+	public void fireEvent(GwtEvent<?> event) {
+		if (handlerManager != null) {
+			handlerManager.fireEvent(event);
 		}
 	}
 
@@ -542,6 +639,11 @@ public class Element extends Node
 		return new ElementImplAccess();
 	}
 
+	@Override
+	public boolean isAttached() {
+		return attached;
+	}
+
 	public List<String> localBitlessEventsSunk() {
 		return local().bitlessEvents;
 	}
@@ -553,6 +655,27 @@ public class Element extends Node
 	@Override
 	public Element node() {
 		return this;
+	}
+
+	@Override
+	public void onBrowserEvent(Event event) {
+		switch (DOM.eventGetType(event)) {
+		case Event.ONMOUSEOVER:
+			// Only fire the mouse over event if it's coming from outside this
+			// widget.
+		case Event.ONMOUSEOUT:
+			// Only fire the mouse out event if it's leaving this
+			// widget.
+			EventTarget relatedEventTarget = event.getRelatedEventTarget();
+			if (relatedEventTarget != null && Element.is(relatedEventTarget)) {
+				Element related = relatedEventTarget.cast();
+				if (related != null && isOrHasChild(related)) {
+					return;
+				}
+			}
+			break;
+		}
+		DomEvent.fireNativeEvent(event, this, this);
 	}
 
 	public boolean provideIsAncestorOf(Element potentialChild,
@@ -869,11 +992,9 @@ public class Element extends Node
 	@Override
 	public String toString() {
 		FormatBuilder fb = new FormatBuilder();
-		fb.format("%s#%s.%s - %s", local().toString(),
+		fb.format("%s#%s.%s", local().toString(),
 				Ax.blankTo(local.getId(), "---"),
-				Ax.blankTo(local.getClassName(), "---"),
-				(uiObject == null ? "(no uiobject)"
-						: uiObject.getClass().getSimpleName()));
+				Ax.blankTo(local.getClassName(), "---"));
 		if (getChildCount() != 0) {
 			fb.format("\n\t");
 			NodeLocal cursor = local();
@@ -915,7 +1036,6 @@ public class Element extends Node
 				getTagName(), code);
 		stringBuilder.append(message);
 		stringBuilder.append("\n");
-		LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
 		int idx = 0;
 		for (Node node : getChildNodes()) {
 			switch (node.getNodeType()) {
@@ -928,7 +1048,7 @@ public class Element extends Node
 										50, true));
 				stringBuilder.append(message);
 				stringBuilder.append("\n");
-				LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
+				Ax.out(stringBuilder);
 				break;
 			case Node.ELEMENT_NODE:
 				((Element) node).dumpLocal0(depth + 1, prefix + "." + (idx++),
@@ -1059,6 +1179,17 @@ public class Element extends Node
 		} else {
 			local().setInnerSafeHtml(html);
 		}
+	}
+
+	/**
+	 * Ensures the existence of the handler manager.
+	 *
+	 * @return the handler manager
+	 */
+	HandlerManager ensureHandlers() {
+		return handlerManager == null
+				? handlerManager = new HandlerManager(this)
+				: handlerManager;
 	}
 
 	final native String getClassNameSvg() /*-{

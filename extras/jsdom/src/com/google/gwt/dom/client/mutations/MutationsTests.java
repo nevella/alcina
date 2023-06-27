@@ -8,7 +8,6 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationsTests.Tests.Phase;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
@@ -21,6 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagTextModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -235,11 +235,10 @@ public class MutationsTests {
 					}).collect(Collectors.toList())
 							.forEach(Node::removeFromParent);
 					TestContainer cont = new TestContainer(color);
-					Widget widget = new DirectedLayout().render(cont);
-					RootPanel.get().add(widget);
+					Rendered rendered = new DirectedLayout().render(cont);
+					rendered.appendToRoot();
 					LocalDom.flush();
-					this.remote = widget.getElement().implAccess()
-							.jsoRemote();
+					this.remote = rendered.asElement().implAccess().jsoRemote();
 					LocalDom.invokeExternal(this::mutate);
 					new Timer() {
 						@Override

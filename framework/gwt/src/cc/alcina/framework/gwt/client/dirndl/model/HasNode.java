@@ -11,7 +11,7 @@ public interface HasNode extends HasElement {
 	 * provideIsBound if unsure
 	 */
 	default Element provideElement() {
-		return provideNode().getWidget().getElement();
+		return provideNode().getRendered().asElement();
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import java.util.Objects;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
@@ -149,7 +150,8 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 			} else if (nonStandardObjectAction != null) {
 				WidgetUtils.squelchCurrentEvent();
 				DefaultPermissibleActionHandler.handleAction(
-						((DirectedLayout.Node) event.getSource()).getWidget(),
+						((DirectedLayout.Node) event.getSource()).getRendered()
+								.as(Widget.class),
 						Reflections.newInstance(nonStandardObjectAction),
 						((EntityPlace) Client.currentPlace()).provideEntity());
 			} else {

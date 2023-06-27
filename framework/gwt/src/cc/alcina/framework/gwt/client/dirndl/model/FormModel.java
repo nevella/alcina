@@ -254,7 +254,7 @@ public class FormModel extends Model
 			Node childWithModel = event.getContext().node
 					.childWithModel(m -> m != null && m instanceof ValueModel
 							&& m == focus.get().getValue());
-			((Focusable) childWithModel.getWidget()).setFocus(true);
+			((Focusable) childWithModel.getRendered()).setFocus(true);
 		}
 		// FIXME - dirndl 1x2 - this should be an annotation on the field,
 		//

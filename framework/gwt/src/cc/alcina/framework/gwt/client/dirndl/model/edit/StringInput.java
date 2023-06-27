@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -15,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
@@ -140,8 +140,8 @@ public class StringInput extends Model
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (isSelectAllOnBind()) {
-			Widget widget = event.getContext().node.getWidget();
-			Element elem = widget.getElement();
+			Rendered rendered = event.getContext().node.getRendered();
+			Element elem = rendered.asElement();
 			TextBoxImpl.setTextBoxSelectionRange(elem, 0,
 					elem.getPropertyString("value").length());
 		}

@@ -50,7 +50,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends ProtocolMessage> {
 				} else {
 					DOM.sinkEvents(elem, m.eventBits);
 				}
-				elem.uiObjectListener = new DispatchListener(elem);
+				elem.eventListener = new DispatchListener(elem);
 			});
 			if (message.locationMutation != null) {
 				History.newItem(message.locationMutation.hash);

@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -36,7 +36,7 @@ import com.google.gwt.user.client.Window;
  * The panel to which all other widgets must ultimately be added. RootPanels are
  * never created directly. Rather, they are accessed via {@link RootPanel#get()}
  * .
- * 
+ *
  * <p>
  * Most applications will add widgets to the default root panel in their
  * {@link com.google.gwt.core.client.EntryPoint#onModuleLoad} methods.
@@ -59,9 +59,17 @@ public class RootPanel extends AbsolutePanel {
 
 	private static Set<Widget> widgetsToDetach = new HashSet<Widget>();
 
+	// FIXME - dirndl - support for external attach/detach
+	public static void attachNow(Widget widget) {
+		assert widgetsToDetach
+				.contains(widget) : "detachNow() called on a widget "
+						+ "not currently in the detach list";
+		widget.onAttach();
+	}
+
 	/**
 	 * Marks a widget as detached and removes it from the detach list.
-	 * 
+	 *
 	 * <p>
 	 * If an element belonging to a widget originally passed to
 	 * {@link #detachOnWindowClose(Widget)} has been removed from the document,
@@ -69,12 +77,12 @@ public class RootPanel extends AbsolutePanel {
 	 * Failure to do so will keep the widget from being garbage collected until
 	 * the page is unloaded.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This method may only be called per widget, and only for widgets that were
 	 * originally passed to {@link #detachOnWindowClose(Widget)}.
 	 * </p>
-	 * 
+	 *
 	 * @param widget
 	 *            the widget that no longer needs to be cleaned up when the page
 	 *            closes
@@ -94,7 +102,7 @@ public class RootPanel extends AbsolutePanel {
 	/**
 	 * Adds a widget to the detach list. This is the list of widgets to be
 	 * detached when the page unloads.
-	 * 
+	 *
 	 * <p>
 	 * This method must be called for all widgets that have no parent widgets.
 	 * These are most commonly {@link RootPanel RootPanels}, but can also be any
@@ -103,13 +111,13 @@ public class RootPanel extends AbsolutePanel {
 	 * automatically by widgets' wrap methods (e.g.
 	 * {@link Button#wrap(com.google.gwt.dom.client.Element)}).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This method may <em>not</em> be called on any widget whose element is
 	 * contained in another widget. This is to ensure that the DOM and Widget
 	 * hierarchies cannot get into an inconsistent state.
 	 * </p>
-	 * 
+	 *
 	 * @param widget
 	 *            the widget to be cleaned up when the page closes
 	 * @see #detachNow(Widget)
@@ -129,7 +137,7 @@ public class RootPanel extends AbsolutePanel {
 	 * document. This root panel can contain any number of widgets, which will
 	 * be laid out in their natural HTML ordering. Many applications, however,
 	 * will add a single panel to the RootPanel to provide more structure.
-	 * 
+	 *
 	 * @return the default RootPanel
 	 */
 	public static RootPanel get() {
@@ -140,7 +148,7 @@ public class RootPanel extends AbsolutePanel {
 	 * Gets the root panel associated with a given browser element. For this to
 	 * work, the HTML document into which the application is loaded must have
 	 * specified an element with the given id.
-	 * 
+	 *
 	 * @param id
 	 *            the id of the element to be wrapped with a root panel (
 	 *            <code>null</code> specifies the default instance, which wraps
@@ -203,7 +211,7 @@ public class RootPanel extends AbsolutePanel {
 
 	/**
 	 * Determines whether the given widget is in the detach list.
-	 * 
+	 *
 	 * @param widget
 	 *            the widget to be checked
 	 * @return <code>true</code> if the widget is in the detach list
@@ -214,12 +222,12 @@ public class RootPanel extends AbsolutePanel {
 
 	/**
 	 * Convenience method for getting the document's root (<html>) element.
-	 * 
+	 *
 	 * @return the document's root element
 	 */
 	private static native Element getRootElement() /*-{
-													return $doc;
-													}-*/;
+    return $doc;
+	}-*/;
 
 	private static void hookWindowClosing() {
 		// Catch the window closing event.

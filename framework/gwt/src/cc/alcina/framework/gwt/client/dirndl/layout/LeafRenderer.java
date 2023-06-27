@@ -4,7 +4,6 @@ import java.util.Date;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -12,7 +11,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
-import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
 
 /**
  * <p>
@@ -45,23 +43,17 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	@Override
 	protected void render(RendererInput input) {
 		Node node = input.node;
-		renderWidget(node);
+		renderElement(node);
 		renderNode(node);
 	}
 
-	protected abstract void renderNode(Node node);
-
-	protected void renderWidget(Node node) {
+	protected void renderElement(Node node) {
 		String tag = getTag(node, "span");
 		Preconditions.checkArgument(Ax.notBlank(tag));
-		Widget widget = new SimpleWidget(tag);
-		applyCssClass(node, widget);
-		setWidget(node, widget);
+		node.resolver.renderElement(node, tag);
 	}
 
-	protected void setWidget(Node node, Widget widget) {
-		node.widget = widget;
-	}
+	protected abstract void renderNode(Node node);
 
 	@Registration({ DirectedRenderer.class, Boolean.class })
 	public static class BooleanRenderer extends Text {
@@ -105,7 +97,7 @@ public abstract class LeafRenderer extends DirectedRenderer {
 
 		@Override
 		protected void renderNode(Node node) {
-			node.widget.getElement().setInnerHTML(getText(node));
+			node.rendered.asElement().setInnerHTML(getText(node));
 		}
 	}
 
@@ -121,7 +113,7 @@ public abstract class LeafRenderer extends DirectedRenderer {
 
 		@Override
 		protected void renderNode(Node node) {
-			Element element = node.widget.getElement();
+			Element element = node.rendered.asElement();
 			element.setInnerSafeHtml(
 					(com.google.gwt.safehtml.shared.SafeHtml) node.model);
 			if (element.hasTagName("a")) {
@@ -146,7 +138,7 @@ public abstract class LeafRenderer extends DirectedRenderer {
 
 		@Override
 		protected void renderNode(Node node) {
-			node.widget.getElement().setInnerText(getText(node));
+			node.rendered.asElement().setInnerText(getText(node));
 		}
 	}
 }

@@ -39,7 +39,7 @@ public abstract class DOMImpl {
 				return eventListener;
 			}
 		}
-		return elem.uiObjectListener;
+		return elem.eventListener;
 	}
 
 	public static void setEventListener(Element elem, EventListener listener) {
@@ -47,7 +47,7 @@ public abstract class DOMImpl {
 		if (remote != null) {
 			setEventListener0(remote, listener);
 		} else {
-			elem.uiObjectListener = listener;
+			elem.eventListener = listener;
 		}
 	}
 

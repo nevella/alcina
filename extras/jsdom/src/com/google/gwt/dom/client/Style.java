@@ -19,10 +19,8 @@ import static com.google.gwt.dom.client.DomStyleConstants.*;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.user.client.LocalDomDebug;
 
 /**
  * Provides programmatic access to properties of the style object.
@@ -837,13 +835,6 @@ public class Style implements ClientDomStyle {
 	@Override
 	public void setProperty(String name, String value) {
 		Preconditions.checkArgument(name.length() > 0);
-		if (name.equals("display") && element.linkedToRemote()) {
-			LocalDom.log(LocalDomDebug.STYLE, "%s %s : %s", element,
-					Optional.ofNullable(element.uiObject).map(
-							uiObject -> uiObject.getClass().getSimpleName())
-							.orElse("(null)"),
-					value);
-		}
 		String current = local().getProperty(name);
 		if (Objects.equals(current, value)) {
 		} else {

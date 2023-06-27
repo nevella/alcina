@@ -36,7 +36,6 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.impl.DOMImpl;
-import com.google.gwt.user.client.ui.FlexTable;
 
 /**
  * This class provides a set of static methods that allow you to manipulate the
@@ -1585,12 +1584,14 @@ public class DOM {
 					.provideSelfOrAncestorLinkedToRemote();
 			boolean attachToAncestor = attachedAncestor != null
 					&& attachedAncestor != elem;
-			if (attachToAncestor && attachedAncestor.uiObject != null) {
-				if (attachedAncestor.uiObject instanceof FlexTable) {
-					// celltable hack
-					attachToAncestor = false;
-				}
-			}
+			// FIXME - dirndl - no celltable hack (Celltable shd be deprecated
+			// anyway)
+			// if (attachToAncestor && attachedAncestor.uiObject != null) {
+			// if (attachedAncestor.uiObject instanceof FlexTable) {
+			// // celltable hack
+			// attachToAncestor = false;
+			// }
+			// }
 			if (attachToAncestor) {
 				impl.sinkBitlessEvent(attachedAncestor, eventTypeName);
 			} else {
@@ -1623,12 +1624,12 @@ public class DOM {
 					.provideSelfOrAncestorLinkedToRemote();
 			boolean attachToAncestor = attachedAncestor != null
 					&& attachedAncestor != elem;
-			if (attachToAncestor && attachedAncestor.uiObject != null) {
-				if (attachedAncestor.uiObject instanceof FlexTable) {
-					// celltable hack
-					attachToAncestor = false;
-				}
-			}
+			// if (attachToAncestor && attachedAncestor.uiObject != null) {
+			// if (attachedAncestor.uiObject instanceof FlexTable) {
+			// // celltable hack
+			// attachToAncestor = false;
+			// }
+			// }
 			if (attachToAncestor) {
 				impl.sinkEvents(attachedAncestor,
 						DOM.getEventsSunk(attachedAncestor) | eventBits);
@@ -1702,7 +1703,7 @@ public class DOM {
 		 * bubbling handling in the local dom so don't want/need the non-first
 		 * dom events
 		 */
-		if (elem.uiObjectListener != null
+		if (elem.eventListener != null
 				&& dispatchInfo.wasDispatchedTo(elem)) {
 			return;
 		}
@@ -1715,7 +1716,7 @@ public class DOM {
 			// actually - is it not 'perfect'?
 			Map<Element, EventListener> forDispatch = new LinkedHashMap<>();
 			while (childElement != elem && childElement != null) {
-				if (childElement.uiObjectListener != null
+				if (childElement.eventListener != null
 						&& !dispatchInfo.wasDispatchedTo(childElement)) {
 					// FIXME - dirndl 1x1e - does this handle bitless events
 					// - i.e. touch events? Also this code is dense (works),
@@ -1725,7 +1726,7 @@ public class DOM {
 					} else {
 						dispatchInfo.willDispatchTo(childElement);
 						forDispatch.put(childElement,
-								childElement.uiObjectListener);
+								childElement.eventListener);
 					}
 				}
 				childElement = childElement.getParentElement();

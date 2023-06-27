@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * The superclass for all user-interface objects. It simply wraps a DOM element,
  * and cannot receive events. Most interesting user-interface classes derive
  * from {@link com.google.gwt.user.client.ui.Widget}.
- * 
+ *
  * <h3>Styling With CSS</h3>
  * <p>
  * All <code>UIObject</code> objects can be styled using CSS. Style names that
@@ -40,32 +40,32 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * CSS "class". By convention, GWT style names are of the form
  * <code>[project]-[widget]</code>.
  * </p>
- * 
+ *
  * <p>
  * For example, the {@link Button} widget has the style name
  * <code>gwt-Button</code>, meaning that within the <code>Button</code>
  * constructor, the following call occurs:
- * 
+ *
  * <pre class="code">
  * setStyleName("gwt-Button");
  * </pre>
- * 
+ *
  * A corresponding CSS style rule can then be written as follows:
- * 
+ *
  * <pre class="code">
- * // Example of how you might choose to style a Button widget 
+ * // Example of how you might choose to style a Button widget
  * .gwt-Button {
  *   background-color: yellow;
  *   color: black;
  *   font-size: 24pt;
  * }
  * </pre>
- * 
+ *
  * Note the dot prefix in the CSS style rule. This syntax is called a
  * <a href="http://www.w3.org/TR/REC-CSS2/selector.html#class-html">CSS class
  * selector</a>.
  * </p>
- * 
+ *
  * <h3>Style Name Specifics</h3>
  * <p>
  * Every <code>UIObject</code> has a <i>primary style name</i> that identifies
@@ -75,7 +75,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * and never changes again during execution. In the case that no primary style
  * name is specified, it defaults to the first style name that is added.
  * </p>
- * 
+ *
  * <p>
  * More complex styling behavior can be achieved by manipulating an object's
  * <i>secondary style names</i>. Secondary style names can be added and removed
@@ -84,60 +84,60 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * is to associate a variety of CSS style rules over time as an object
  * progresses through different visual states.
  * </p>
- * 
+ *
  * <p>
  * There is an important special formulation of secondary style names called
  * <i>dependent style names</i>. A dependent style name is a secondary style
  * name prefixed with the primary style name of the widget itself. See
  * {@link #addStyleName(String)} for details.
  * </p>
- * 
+ *
  * <h3>Use in UiBinder Templates</h3>
  * <p>
  * Setter methods that follow JavaBean property conventions are exposed as
  * attributes in {@link com.google.gwt.uibinder.client.UiBinder UiBinder}
  * templates. For example, because UiObject implements {@link #setWidth(String)}
  * you can set the width of any widget like so:
- * 
+ *
  * <pre>
  * &lt;g:Label width='15em'>Hello there&lt;/g:Label>
  * </pre>
- * 
+ *
  * Generally speaking, values are parsed as if they were Java literals, so
  * methods like {@link #setVisible(boolean)} are also available:
- * 
+ *
  * <pre>
  * &lt;g:Label width='15em' visible='false'>Hello there&lt;/g:Label>
  * </pre>
- * 
+ *
  * Enum properties work this way too. Imagine a Bagel widget with a handy Type
  * enum and a setType(Type) method:
- * 
+ *
  * <pre>
  * enum Type { poppy, sesame, raisin, jalapeno }
- * 
+ *
  * &lt;my:Bagel type='poppy' />
  * </pre>
- * 
+ *
  * There is also special case handling for two common method signatures,
- * <code>(int, int)</code> and <code>(double, {@link 
+ * <code>(int, int)</code> and <code>(double, {@link
  * com.google.gwt.dom.client.Style.Unit Unit})</code>
- * 
+ *
  * <pre>
  * &lt;g:Label pixelSize='100, 100'>Hello there&lt;/g:Label>
  * </pre>
- * 
+ *
  * Finally, a few UiObject methods get special handling. The debug id (see
  * {@link #ensureDebugId}) of any UiObject can be set via the
  * <code>debugId</code> attribute, and addtional style names and dependent style
  * names can be set with the <code>addStyleNames</code> and
  * <code>addStyleDependentNames</code> attributes.
- * 
+ *
  * <pre>
- * &lt;g:Label debugId='helloLabel' 
+ * &lt;g:Label debugId='helloLabel'
  *     addStyleNames='pretty rounded big'>Hello there&lt;/g:Label>
  * </pre>
- * 
+ *
  * Style names can be space or comma separated.
  */
 public abstract class UIObject implements HasVisibility {
@@ -152,7 +152,7 @@ public abstract class UIObject implements HasVisibility {
 	 * in this code. The dom.Element (com.google.gwt.dom.client.Element) class
 	 * is explicitly imported, while user.Element
 	 * (com.google.gwt.user.client.Element) is fully-qualified in the code.
-	 * 
+	 *
 	 * All new methods should use dom.Element, because user.Element extends it
 	 * but adds no methods.
 	 */
@@ -178,17 +178,17 @@ public abstract class UIObject implements HasVisibility {
 	 * this method WILL override it. The ID that you specify will be prefixed by
 	 * the static string {@link #DEBUG_ID_PREFIX}.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This method will be compiled out and will have no effect unless you
 	 * inherit the DebugID module in your gwt.xml file by adding the following
 	 * line:
-	 * 
+	 *
 	 * <pre class="code">
 	 * &lt;inherits name="com.google.gwt.user.Debug"/&gt;
 	 * </pre>
 	 * </p>
-	 * 
+	 *
 	 * @param elem
 	 *            the target {@link Element}
 	 * @param id
@@ -215,7 +215,7 @@ public abstract class UIObject implements HasVisibility {
 
 	/**
 	 * Clears all of the element's style names and sets it to the given style.
-	 * 
+	 *
 	 * @param elem
 	 *            the element whose style is to be modified
 	 * @param styleName
@@ -231,7 +231,7 @@ public abstract class UIObject implements HasVisibility {
 	 * but it can be used to remove primary stylenames as well, but that is not
 	 * recommended. See {@link #setStyleName(String)} for a description of how
 	 * primary and secondary style names are used.
-	 * 
+	 *
 	 * @param elem
 	 *            the element whose style is to be modified
 	 * @param style
@@ -309,31 +309,31 @@ public abstract class UIObject implements HasVisibility {
 	 */
 	private static native void updatePrimaryAndDependentStyleNames0(
 			ElementJso elem, String newPrimaryStyle) /*-{
-														var classes = (elem.className || "").split(/\s+/);
-														if (!classes) {
-														return;
-														}
-														
-														var oldPrimaryStyle = classes[0];
-														var oldPrimaryStyleLen = oldPrimaryStyle.length;
-														
-														classes[0] = newPrimaryStyle;
-														for (var i = 1, n = classes.length; i < n; i++) {
-														var name = classes[i];
-														if (name.length > oldPrimaryStyleLen
-														&& name.charAt(oldPrimaryStyleLen) == '-'
-														&& name.indexOf(oldPrimaryStyle) == 0) {
-														classes[i] = newPrimaryStyle + name.substring(oldPrimaryStyleLen);
-														}
-														}
-														elem.className = classes.join(" ");
-														}-*/;
+    var classes = (elem.className || "").split(/\s+/);
+    if (!classes) {
+      return;
+    }
+
+    var oldPrimaryStyle = classes[0];
+    var oldPrimaryStyleLen = oldPrimaryStyle.length;
+
+    classes[0] = newPrimaryStyle;
+    for (var i = 1, n = classes.length; i < n; i++) {
+      var name = classes[i];
+      if (name.length > oldPrimaryStyleLen
+          && name.charAt(oldPrimaryStyleLen) == '-'
+          && name.indexOf(oldPrimaryStyle) == 0) {
+        classes[i] = newPrimaryStyle + name.substring(oldPrimaryStyleLen);
+      }
+    }
+    elem.className = classes.join(" ");
+	}-*/;
 
 	/**
 	 * Set the debug id of a specific element. The id will be appended to the
 	 * end of the base debug id, with a dash separator. The base debug id is the
 	 * ID of the main element in this UIObject.
-	 * 
+	 *
 	 * @param elem
 	 *            the element
 	 * @param baseID
@@ -348,7 +348,7 @@ public abstract class UIObject implements HasVisibility {
 
 	/**
 	 * Gets all of the element's style names, as a space-separated list.
-	 * 
+	 *
 	 * @param elem
 	 *            the element whose style is to be retrieved
 	 * @return the objects's space-separated style names
@@ -359,7 +359,7 @@ public abstract class UIObject implements HasVisibility {
 
 	/**
 	 * Gets the element's primary style name.
-	 * 
+	 *
 	 * @param elem
 	 *            the element whose primary style name is to be retrieved
 	 * @return the element's primary style name
@@ -381,7 +381,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Sets the element's primary style name and updates all dependent style
 	 * names.
-	 * 
+	 *
 	 * @param elem
 	 *            the element whose style is to be reset
 	 * @param style
@@ -406,11 +406,11 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Adds a dependent style name by specifying the style name's suffix. The
 	 * actual form of the style name that is added is:
-	 * 
+	 *
 	 * <pre class="code">
 	 * getStylePrimaryName() + '-' + styleSuffix
 	 * </pre>
-	 * 
+	 *
 	 * @param styleSuffix
 	 *            the suffix of the dependent style to be added.
 	 * @see #setStylePrimaryName(String)
@@ -427,7 +427,7 @@ public abstract class UIObject implements HasVisibility {
 	 * style name is an additional style name that is, in HTML/CSS terms,
 	 * included as a space-separated token in the value of the CSS
 	 * <code>class</code> attribute for this object's root element.
-	 * 
+	 *
 	 * <p>
 	 * The most important use for this method is to add a special kind of
 	 * secondary style name called a <i>dependent style name</i>. To add a
@@ -437,7 +437,7 @@ public abstract class UIObject implements HasVisibility {
 	 * the primary style name is <code>gwt-TextBox</code>. If the following
 	 * method is called as <code>obj.setReadOnly(true)</code>:
 	 * </p>
-	 * 
+	 *
 	 * <pre class="code">
 	 * public void setReadOnly(boolean readOnly) {
 	 * 	isReadOnlyMode = readOnly;
@@ -450,18 +450,18 @@ public abstract class UIObject implements HasVisibility {
 	 * 	}
 	 * }
 	 * </pre>
-	 * 
+	 *
 	 * <p>
 	 * then both of the CSS style rules below will be applied:
 	 * </p>
-	 * 
+	 *
 	 * <pre class="code">
 	 *
 	 * // This rule is based on the primary style name and is always active.
 	 * .gwt-TextBox {
 	 *   font-size: 12pt;
 	 * }
-	 * 
+	 *
 	 * // This rule is based on a dependent style name that is only active
 	 * // when the widget has called addStyleName(getStylePrimaryName() +
 	 * // "-readonly").
@@ -482,38 +482,38 @@ public abstract class UIObject implements HasVisibility {
 	 * 	setStyleDependentName("readonly", readOnly);
 	 * }
 	 * </pre>
-	 * 
+	 *
 	 * <p>
 	 * Dependent style names are powerful because they are automatically updated
 	 * whenever the primary style name changes. Continuing with the example
 	 * above, if the primary style name changed due to the following call:
 	 * </p>
-	 * 
+	 *
 	 * <pre class="code">
 	 * setStylePrimaryName("my-TextThingy");
 	 * </pre>
-	 * 
+	 *
 	 * <p>
 	 * then the object would be re-associated with following style rules,
 	 * removing those that were shown above.
 	 * </p>
-	 * 
+	 *
 	 * <pre class="code">
 	 * .my-TextThingy {
 	 *   font-size: 20pt;
 	 * }
-	 * 
+	 *
 	 * .my-TextThingy-readonly {
 	 *   background-color: red;
 	 *   border: 2px solid yellow;
 	 * }
 	 * </pre>
-	 * 
+	 *
 	 * <p>
 	 * Secondary style names that are not dependent style names are not
 	 * automatically updated when the primary style name changes.
 	 * </p>
-	 * 
+	 *
 	 * @param style
 	 *            the secondary style name to be added
 	 * @see UIObject
@@ -528,20 +528,20 @@ public abstract class UIObject implements HasVisibility {
 	 * property set, which allows it to integrate with third-party libraries and
 	 * test tools. Complex {@link Widget}s will also set the IDs of their
 	 * important sub-elements.
-	 * 
+	 *
 	 * If the main element already has an ID, this method WILL override it.
-	 * 
+	 *
 	 * The ID that you specify will be prefixed by the static string
 	 * {@link #DEBUG_ID_PREFIX}.
-	 * 
+	 *
 	 * This method will be compiled out and will have no effect unless you
 	 * inherit the DebugID module in your gwt.xml file by adding the following
 	 * line:
-	 * 
+	 *
 	 * <pre class="code">
 	 * &lt;inherits name="com.google.gwt.user.Debug"/&gt;
 	 * </pre>
-	 * 
+	 *
 	 * @param id
 	 *            the ID to set on the main element
 	 */
@@ -552,7 +552,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Gets the object's absolute left position in pixels, as measured from the
 	 * browser window's client area.
-	 * 
+	 *
 	 * @return the object's absolute left position
 	 */
 	public int getAbsoluteLeft() {
@@ -562,7 +562,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Gets the object's absolute top position in pixels, as measured from the
 	 * browser window's client area.
-	 * 
+	 *
 	 * @return the object's absolute top position
 	 */
 	public int getAbsoluteTop() {
@@ -571,12 +571,12 @@ public abstract class UIObject implements HasVisibility {
 
 	/**
 	 * Gets a handle to the object's underlying DOM element.
-	 * 
+	 *
 	 * This method should not be overridden. It is non-final solely to support
 	 * legacy code that depends upon overriding it. If it is overridden, the
 	 * subclass implementation must not return a different element than was
 	 * previously set using {@link #setElement(Element)}.
-	 * 
+	 *
 	 * @return the object's browser element
 	 */
 	public Element getElement() {
@@ -588,7 +588,7 @@ public abstract class UIObject implements HasVisibility {
 	 * Gets the object's offset height in pixels. This is the total height of
 	 * the object, including decorations such as border and padding, but not
 	 * margin.
-	 * 
+	 *
 	 * @return the object's offset height
 	 */
 	public int getOffsetHeight() {
@@ -599,7 +599,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Gets the object's offset width in pixels. This is the total width of the
 	 * object, including decorations such as border and padding, but not margin.
-	 * 
+	 *
 	 * @return the object's offset width
 	 */
 	public int getOffsetWidth() {
@@ -611,7 +611,7 @@ public abstract class UIObject implements HasVisibility {
 	 * Gets all of the object's style names, as a space-separated list. If you
 	 * wish to retrieve only the primary style name, call
 	 * {@link #getStylePrimaryName()}.
-	 * 
+	 *
 	 * @return the objects's space-separated style names
 	 * @see #getStylePrimaryName()
 	 */
@@ -621,7 +621,7 @@ public abstract class UIObject implements HasVisibility {
 
 	/**
 	 * Gets the primary style name associated with the object.
-	 * 
+	 *
 	 * @return the object's primary style name
 	 * @see #setStyleName(String)
 	 * @see #addStyleName(String)
@@ -634,7 +634,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Gets the title associated with this object. The title is the 'tool-tip'
 	 * displayed to users when they hover over the object.
-	 * 
+	 *
 	 * @return the object's title
 	 */
 	public String getTitle() {
@@ -648,7 +648,7 @@ public abstract class UIObject implements HasVisibility {
 
 	/**
 	 * Removes a dependent style name by specifying the style name's suffix.
-	 * 
+	 *
 	 * @param styleSuffix
 	 *            the suffix of the dependent style to be removed
 	 * @see #setStylePrimaryName(Element, String)
@@ -663,7 +663,7 @@ public abstract class UIObject implements HasVisibility {
 	 * Removes a style name. This method is typically used to remove secondary
 	 * style names, but it can be used to remove primary stylenames as well.
 	 * That use is not recommended.
-	 * 
+	 *
 	 * @param style
 	 *            the secondary style name to be removed
 	 * @see #addStyleName(String)
@@ -676,7 +676,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Sets the object's height. This height does not include decorations such
 	 * as border, margin, and padding.
-	 * 
+	 *
 	 * @param height
 	 *            the object's new height, in CSS units (e.g. "10px", "1em")
 	 */
@@ -692,7 +692,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Sets the object's size, in pixels, not including decorations such as
 	 * border, margin, and padding.
-	 * 
+	 *
 	 * @param width
 	 *            the object's new width, in pixels
 	 * @param height
@@ -710,7 +710,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Sets the object's size. This size does not include decorations such as
 	 * border, margin, and padding.
-	 * 
+	 *
 	 * @param width
 	 *            the object's new width, in CSS units (e.g. "10px", "1em")
 	 * @param height
@@ -724,11 +724,11 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Adds or removes a dependent style name by specifying the style name's
 	 * suffix. The actual form of the style name that is added is:
-	 * 
+	 *
 	 * <pre class="code">
 	 * getStylePrimaryName() + '-' + styleSuffix
 	 * </pre>
-	 * 
+	 *
 	 * @param styleSuffix
 	 *            the suffix of the dependent style to be added or removed
 	 * @param add
@@ -747,7 +747,7 @@ public abstract class UIObject implements HasVisibility {
 	 * Clears all of the object's style names and sets it to the given style.
 	 * You should normally use {@link #setStylePrimaryName(String)} unless you
 	 * wish to explicitly remove all existing styles.
-	 * 
+	 *
 	 * @param style
 	 *            the new style name
 	 * @see #setStylePrimaryName(String)
@@ -760,7 +760,7 @@ public abstract class UIObject implements HasVisibility {
 	 * Adds or removes a style name. This method is typically used to remove
 	 * secondary style names, but it can be used to remove primary stylenames as
 	 * well. That use is not recommended.
-	 * 
+	 *
 	 * @param style
 	 *            the style name to be added or removed
 	 * @param add
@@ -776,7 +776,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Sets the object's primary style name and updates all dependent style
 	 * names.
-	 * 
+	 *
 	 * @param style
 	 *            the new primary style name
 	 * @see #addStyleName(String)
@@ -789,7 +789,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Sets the title associated with this object. The title is the 'tool-tip'
 	 * displayed to users when they hover over the object.
-	 * 
+	 *
 	 * @param title
 	 *            the object's new title
 	 */
@@ -809,7 +809,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Sets the object's width. This width does not include decorations such as
 	 * border, margin, and padding.
-	 * 
+	 *
 	 * @param width
 	 *            the object's new width, in CSS units (e.g. "10px", "1em")
 	 */
@@ -826,7 +826,7 @@ public abstract class UIObject implements HasVisibility {
 	 * Sinks a named event. Note that only {@link Widget widgets} may actually
 	 * receive events, but can receive events from all objects contained within
 	 * them.
-	 * 
+	 *
 	 * @param eventTypeName
 	 *            name of the event to sink on this element
 	 * @see com.google.gwt.user.client.Event
@@ -839,7 +839,7 @@ public abstract class UIObject implements HasVisibility {
 	 * Adds a set of events to be sunk by this object. Note that only
 	 * {@link Widget widgets} may actually receive events, but can receive
 	 * events from all objects contained within them.
-	 * 
+	 *
 	 * @param eventBitsToAdd
 	 *            a bitfield representing the set of events to be added to this
 	 *            element's event set
@@ -853,7 +853,7 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * This method is overridden so that any object can be viewed in the
 	 * debugger as an HTML snippet.
-	 * 
+	 *
 	 * @return a string representation of the object
 	 */
 	@Override
@@ -866,7 +866,7 @@ public abstract class UIObject implements HasVisibility {
 
 	/**
 	 * Removes a set of events from this object's event list.
-	 * 
+	 *
 	 * @param eventBitsToRemove
 	 *            a bitfield representing the set of events to be removed from
 	 *            this element's event set
@@ -881,44 +881,44 @@ public abstract class UIObject implements HasVisibility {
 	/**
 	 * Intended to be used to pull the value out of a CSS length. If the value
 	 * is "auto" or "inherit", 0 will be returned.
-	 * 
+	 *
 	 * @param s
 	 *            The CSS length string to extract
 	 * @return The leading numeric portion of <code>s</code>, or 0 if "auto" or
 	 *         "inherit" are passed in.
 	 */
 	private native double extractLengthValue(String s) /*-{
-														if (s == "auto" || s == "inherit" || s == "") {
-														return 0;
-														} else {
-														// numberRegex is similar to java.lang.Number.floatRegex, but divides
-														// the string into a leading numeric portion followed by an arbitrary
-														// portion.
-														var numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex;
-														if (!numberRegex) {
-														numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex = /^(\s*[+-]?((\d+\.?\d*)|(\.\d+))([eE][+-]?\d+)?)(.*)$/;
-														}
-														
-														// Extract the leading numeric portion of s
-														s = s.replace(numberRegex, "$1");
-														return parseFloat(s);
-														}
-														}-*/;
+    if (s == "auto" || s == "inherit" || s == "") {
+      return 0;
+    } else {
+      // numberRegex is similar to java.lang.Number.floatRegex, but divides
+      // the string into a leading numeric portion followed by an arbitrary
+      // portion.
+      var numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex;
+      if (!numberRegex) {
+        numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex = /^(\s*[+-]?((\d+\.?\d*)|(\.\d+))([eE][+-]?\d+)?)(.*)$/;
+      }
+
+      // Extract the leading numeric portion of s
+      s = s.replace(numberRegex, "$1");
+      return parseFloat(s);
+    }
+	}-*/;
 
 	private native void replaceNode(Element node, Element newNode) /*-{
-																	var p = node.parentNode;
-																	if (!p) {
-																	return;
-																	}
-																	p.insertBefore(newNode, node);
-																	p.removeChild(node);
-																	}-*/;
+    var p = node.parentNode;
+    if (!p) {
+      return;
+    }
+    p.insertBefore(newNode, node);
+    p.removeChild(node);
+	}-*/;
 
 	/**
 	 * Template method that returns the element to which style names will be
 	 * applied. By default it returns the root element, but this method may be
 	 * overridden to apply styles to a child element.
-	 * 
+	 *
 	 * @return the element to which style names will be applied
 	 */
 	protected Element getStyleElement() {
@@ -934,17 +934,17 @@ public abstract class UIObject implements HasVisibility {
 	 * <ul>
 	 * <li>-mysubelement = Applies to my sub element.</li>
 	 * </ul>
-	 * 
+	 *
 	 * Subclasses should make a super call to this method to ensure that the ID
 	 * of the main element is set.
-	 * 
+	 *
 	 * This method will not be called unless you inherit the DebugID module in
 	 * your gwt.xml file by adding the following line:
-	 * 
+	 *
 	 * <pre class="code">
 	 * &lt;inherits name="com.google.gwt.user.Debug"/&gt;
 	 * </pre>
-	 * 
+	 *
 	 * @param baseID
 	 *            the base ID used by the main element
 	 */
@@ -985,7 +985,7 @@ public abstract class UIObject implements HasVisibility {
 	 * Sets this object's browser element. UIObject subclasses must call this
 	 * method before attempting to call any other methods, and it may only be
 	 * called once.
-	 * 
+	 *
 	 * @param elem
 	 *            the object's element
 	 */
@@ -993,15 +993,14 @@ public abstract class UIObject implements HasVisibility {
 		assert (element == null || PotentialElement
 				.isPotential(element)) : SETELEMENT_TWICE_ERROR;
 		this.element = elem;
-		elem.uiObject = this;
 	}
 
 	/**
 	 * Replaces this object's browser element.
-	 * 
+	 *
 	 * This method exists only to support a specific use-case in Image, and
 	 * should not be used by other classes.
-	 * 
+	 *
 	 * @param elem
 	 *            the object's new element
 	 */

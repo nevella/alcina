@@ -213,8 +213,8 @@ public abstract class Choices<T> extends Model
 		public void onChange(Change event) {
 			DirectedLayout.Node node = provideNode()
 					.provideMostSpecificNodeForModel();
-			SelectElement selectElement = (SelectElement) node.getWidget()
-					.getElement();
+			SelectElement selectElement = (SelectElement) node.getRendered()
+					.asElement();
 			int index = selectElement.getSelectedIndex();
 			T value = index >= 0 ? choices.get(index).getValue() : null;
 			setSelectedValue(value);

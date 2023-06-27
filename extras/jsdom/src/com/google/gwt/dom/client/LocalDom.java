@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -25,7 +24,6 @@ import com.google.gwt.dom.client.ElementJso.ElementJsoIndex;
 import com.google.gwt.dom.client.mutations.LocalDomMutations;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.LocalDomDebug;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
@@ -165,11 +163,6 @@ public class LocalDom implements ContextFrame {
 			Ax.out(message);
 		}
 		consoleLog(message, error);
-	}
-
-	public static void log(LocalDomDebug channel, String message,
-			Object... args) {
-		get().debugImpl.log(channel, message, args);
 	}
 
 	public static <T extends Node> T nodeFor(JavaScriptObject jso) {
@@ -590,8 +583,6 @@ public class LocalDom implements ContextFrame {
 			}
 			element.pendingSync();
 			pendingSync.add(node);
-			log(LocalDomDebug.CREATED_PENDING_SYNC,
-					"created pending sync node:" + element.getTagName());
 			break;
 		case Node.TEXT_NODE:
 			remote = Document.get().jsoRemote()
@@ -611,8 +602,6 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private void eventMod0(NativeEvent evt, String eventName) {
-		log(LocalDomDebug.EVENT_MOD,
-				Ax.format("eventMod - %s %s", evt, eventName));
 		if (!eventMods.keySet().contains(evt)) {
 			eventMods.clear();
 			eventMods.put(evt, new ArrayList<>());
@@ -677,11 +666,6 @@ public class LocalDom implements ContextFrame {
 			ClientDomElement local) {
 		String innerHTML = local.getInnerHTML();
 		remote.setInnerHTML(innerHTML);
-		log(LocalDomDebug.SYNC, "%s - uiobj: %s - \n%s", element.getTagName(),
-				Optional.ofNullable(element.uiObject)
-						.map(ui -> ui.getClass().getSimpleName())
-						.orElse("(null)"),
-				CommonUtils.trimToWsChars(innerHTML, 1000));
 		ElementJso f_remote = remote;
 		// doesn't include style
 		local.getAttributeMap().entrySet().forEach(e -> {
@@ -797,11 +781,11 @@ public class LocalDom implements ContextFrame {
 			/*
 			 * FIXME - ldm2 - this clobbers event handlers. So is an exception
 			 * (effectively) in generated DOM (but not in parsed HTML)
-			 * 
+			 *
 			 * FIXME - ldm2 - one cause of this is the following: <a
 			 * type='outer'><a type='inner></a></a> - it might be best to throw
 			 * during localdom generation with a construct like this
-			 * 
+			 *
 			 * Call mutations.verifyDomEquivalence(); if debugging needed
 			 */
 			Ax.err(">> Reparsing from remote - will remove event handlers");
@@ -1275,7 +1259,7 @@ public class LocalDom implements ContextFrame {
 						eventData.value);
 			}
 			// um, is it that easy?
-			DOM.dispatchEvent(eventData.event, elem, elem.uiObjectListener);
+			DOM.dispatchEvent(eventData.event, elem, elem.eventListener);
 		}
 
 		public void applyMutations(List<MutationRecord> mutations,

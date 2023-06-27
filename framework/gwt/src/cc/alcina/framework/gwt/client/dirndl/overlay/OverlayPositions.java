@@ -4,8 +4,6 @@ import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -13,6 +11,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @Registration.Singleton
@@ -46,11 +45,11 @@ public class OverlayPositions {
 	void show(Overlay model, ContainerOptions containerOptions) {
 		Preconditions.checkState(!openOverlays.containsKey(model));
 		DirectedLayout layout = new DirectedLayout();
-		Widget rendered = layout
+		Rendered rendered = layout
 				.render(new OverlayContainer(model, containerOptions));
 		RenderedOverlay renderedOverlay = new RenderedOverlay(layout, rendered);
 		openOverlays.put(model, renderedOverlay);
-		RootPanel.get().add(rendered);
+		rendered.appendToRoot();
 	}
 
 	static class ContainerOptions {
@@ -80,9 +79,9 @@ public class OverlayPositions {
 	static class RenderedOverlay {
 		DirectedLayout layout;
 
-		Widget rendered;
+		Rendered rendered;
 
-		RenderedOverlay(DirectedLayout layout, Widget rendered) {
+		RenderedOverlay(DirectedLayout layout, Rendered rendered) {
 			this.layout = layout;
 			this.rendered = rendered;
 		}

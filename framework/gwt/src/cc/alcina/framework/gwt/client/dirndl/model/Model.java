@@ -6,7 +6,6 @@ import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
@@ -282,7 +281,7 @@ public abstract class Model extends Bindable implements
 		/*
 		 * This recomputes source.leftPropertyName on any property change to
 		 * right. It does *not* create a 1-1 property binding
-		 * 
+		 *
 		 * in fact - this looks incorrectly implemented (leftPropertyName is
 		 * unused)...possibly remove
 		 */
@@ -394,9 +393,8 @@ public abstract class Model extends Bindable implements
 				// definitely deferred (not finally), since the dom can be
 				// mutated in finally blocks
 				Scheduler.get().scheduleDeferred(() -> {
-					Widget widget = event.getContext().node.getWidget();
-					FocusImpl.getFocusImplForWidget()
-							.focus(widget.getElement());
+					FocusImpl.getFocusImplForWidget().focus(
+							event.getContext().node.getRendered().asElement());
 				});
 			}
 		}

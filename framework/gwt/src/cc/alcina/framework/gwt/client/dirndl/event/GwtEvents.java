@@ -1,9 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 
@@ -59,8 +59,8 @@ public class GwtEvents {
 
 		public static class BindingImpl extends DomBinding<ValueChange> {
 			@Override
-			protected HandlerRegistration bind1(Widget widget) {
-				return widget.addHandler(this::fireEvent,
+			protected HandlerRegistration bind1(Element element) {
+				return element.addHandler(this::fireEvent,
 						ValueChangeEvent.getType());
 			}
 		}

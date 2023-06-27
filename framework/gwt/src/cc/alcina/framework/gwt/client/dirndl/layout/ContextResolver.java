@@ -3,6 +3,11 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 import java.lang.annotation.Annotation;
 import java.util.List;
 
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.Widget;
+
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -11,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 
 /**
  * <p>
@@ -58,8 +64,44 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	public ContextResolver() {
 	}
 
+	public void appendToRoot(Rendered rendered) {
+		Registry.impl(RootModifier.class)
+				.appendToRoot(rendered);
+	}
+
 	public <T> T getRootModel() {
 		return (T) this.rootModel;
+	}
+
+	public void renderElement(DirectedLayout.Node layoutNode, String tagName) {
+		Element element = Document.get().createElement(tagName);
+		String cssClass = layoutNode.directed.cssClass();
+		if (cssClass.length() > 0) {
+			element.addStyleName(cssClass);
+		}
+		layoutNode.rendered = new RenderedW3cNode(element);
+	}
+
+	/**
+	 * Associate an arbitrary object with the renderer tree Node. Default
+	 * handles gwt widget
+	 *
+	 * FIXME - dirndl - remove post-widget-removal
+	 */
+	public void renderObject(DirectedLayout.Node layoutNode, Object model) {
+		if (model instanceof Widget) {
+			Widget widget = (Widget) model;
+			// before dom attach (breaks widget contract, alas)
+			RootPanel.attachNow(widget);
+			layoutNode.rendered = new RenderedW3cNode(widget.getElement());
+			layoutNode.onUnbind(() -> RootPanel.detachNow(widget));
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public void replaceRoot(Rendered rendered) {
+		Registry.impl(RootModifier.class).replaceRoot(rendered);
 	}
 
 	// FIXME - dirndl 1x2 - remove

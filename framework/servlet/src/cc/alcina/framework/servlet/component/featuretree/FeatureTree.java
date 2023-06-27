@@ -3,9 +3,6 @@ package cc.alcina.framework.servlet.component.featuretree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.Widget;
-
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.meta.Feature;
@@ -68,8 +65,7 @@ public class FeatureTree {
 
 		@Override
 		public void render() {
-			Widget widget = new DirectedLayout().render(new Mock());
-			RootPanel.get().add(widget);
+			new DirectedLayout().render(new Mock()).appendToRoot();
 		}
 	}
 }

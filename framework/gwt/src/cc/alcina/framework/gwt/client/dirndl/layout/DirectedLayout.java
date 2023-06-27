@@ -25,10 +25,6 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
-import com.google.gwt.user.client.ui.ComplexPanel;
-import com.google.gwt.user.client.ui.InsertPanel.ForIsWidget;
-import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.Widget;
 import com.google.web.bindery.event.shared.SimpleEventBus;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -135,7 +131,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * - While RI.DL[] is non-empty, compute renderer R from DL0 (first element of RI.DL[])
  * - Apply R to RI via [DL0,CR], which (decidedly non-functional - i.e. results in multiple changes):
  * -- generates Node n which will be added to the children of PN
- * -- optionally generates Widget W which will be added as a child to the nearest parent Widget in the Node tree
+ * -- optionally generates Rendered W which will be added as a child to the nearest parent Rendered in the Node tree
  * -- optionally modifies RI.DL (TODO - examples)
  * -- can emit RI[] - the primary examples of that are:
  * --- if RI.DL[].length>1, emit a copy of RI with first element of RI.DL[] removed
@@ -279,7 +275,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * Render a model object and add top-level output widgets to the parent
 	 * widget
 	 */
-	public Widget render(ContextResolver resolver, Object model) {
+	public Rendered render(ContextResolver resolver, Object model) {
 		if (resolver == null) {
 			resolver = ContextResolver.Default.get().createResolver();
 		}
@@ -288,10 +284,10 @@ public class DirectedLayout implements AlcinaProcess {
 				null);
 		enqueueInput(resolver, model, location, null, null);
 		layout();
-		return root.firstDescendantWidget();
+		return root.firstDescendantRendered();
 	}
 
-	public Widget render(Object model) {
+	public Rendered render(Object model) {
 		return render(null, model);
 	}
 
@@ -457,7 +453,7 @@ public class DirectedLayout implements AlcinaProcess {
 		// many below may be null if a 'simple' node (particularly a leaf)
 		private List<Node> children;
 
-		Widget widget;
+		Rendered rendered;
 
 		List<NodeEventBinding> eventBindings;
 
@@ -466,6 +462,8 @@ public class DirectedLayout implements AlcinaProcess {
 		private ChildReplacer replacementListener;
 
 		private InsertionPoint insertionPoint;
+
+		private Runnable onUnbind;
 
 		protected Node(ContextResolver resolver, Node parent,
 				AnnotationLocation annotationLocation, Object model) {
@@ -514,20 +512,28 @@ public class DirectedLayout implements AlcinaProcess {
 			return (T) this.model;
 		}
 
-		public ContextResolver getResolver() {
-			return resolver;
+		public DirectedLayout.Rendered getRendered() {
+			return rendered;
 		}
 
-		public Widget getWidget() {
-			return widget;
+		public ContextResolver getResolver() {
+			return resolver;
 		}
 
 		public <A extends Annotation> boolean has(Class<A> clazz) {
 			return annotation(clazz) != null;
 		}
 
-		public boolean hasWidget() {
-			return widget != null;
+		public boolean hasRendered() {
+			return rendered != null;
+		}
+
+		/**
+		 * FIMXE - dirndl - tmp, until widget system completely removed (i.e.
+		 * value editors)
+		 */
+		public void onUnbind(Runnable runnable) {
+			this.onUnbind = runnable;
 		}
 
 		public <A extends Annotation> Optional<A> optional(Class<A> clazz) {
@@ -584,7 +590,7 @@ public class DirectedLayout implements AlcinaProcess {
 			if (model == null) {
 				return;
 			}
-			if (hasWidget() && directed.bindings().length > 0) {
+			if (hasRendered() && directed.bindings().length > 0) {
 				propertyBindings = new PropertyBindings();
 				propertyBindings.bind();
 			}
@@ -654,32 +660,32 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		private Widget provideWidgetOrLastDescendantChildWidget() {
+		private Rendered provideRenderedOrLastDescendantChildRendered() {
 			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
 					this, Node::readOnlyChildren, true);
 			for (Node node : traversal) {
-				if (node.widget != null) {
-					return node.widget;
+				if (node.rendered != null) {
+					return node.rendered;
 				}
 			}
 			return null;
 		}
 
 		private void remove() {
-			resolveRenderedWidgets().forEach(Widget::removeFromParent);
+			resolveRenderedRendereds().forEach(Rendered::removeFromParent);
 			if (parent != null) {
 				parent.children.remove(this);
 			}
 			unbind();
 		}
 
-		private void resolveRenderedWidgets0(List<Widget> list) {
-			if (hasWidget()) {
-				list.add(getWidget());
+		private void resolveRenderedRendereds0(List<Rendered> list) {
+			if (hasRendered()) {
+				list.add(getRendered());
 			} else {
 				if (children != null) {
 					for (Node child : children) {
-						child.resolveRenderedWidgets0(list);
+						child.resolveRenderedRendereds0(list);
 					}
 				}
 			}
@@ -693,6 +699,9 @@ public class DirectedLayout implements AlcinaProcess {
 					((LayoutEvents.Bind.Handler) model)
 							.onBind(new LayoutEvents.Bind(this, false));
 				}
+			}
+			if (onUnbind != null) {
+				onUnbind.run();
 			}
 			if (children != null) {
 				children.forEach(Node::unbind);
@@ -726,22 +735,23 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		Widget firstDescendantWidget() {
+		Rendered firstDescendantRendered() {
 			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
 					this, Node::readOnlyChildren, false);
 			for (Node node : traversal) {
-				if (node.widget != null) {
-					return node.widget;
+				if (node.rendered != null) {
+					return node.rendered;
 				}
 			}
 			return null;
 		}
 
-		Optional<Widget> firstSelfOrAncestorWidget(boolean includeSelf) {
+		Optional<Rendered> firstSelfOrAncestorRendered(boolean includeSelf) {
 			Node cursor = this;
 			do {
-				if ((includeSelf || cursor != this) && cursor.widget != null) {
-					return Optional.of(cursor.widget);
+				if ((includeSelf || cursor != this)
+						&& cursor.rendered != null) {
+					return Optional.of(cursor.rendered);
 				} else {
 					cursor = cursor.parent;
 				}
@@ -804,18 +814,18 @@ public class DirectedLayout implements AlcinaProcess {
 		// TODO - optimise use of index/indexOf
 		InsertionPoint resolveInsertionPoint() {
 			InsertionPoint result = new InsertionPoint();
-			Optional<Widget> firstSelfOrAncestorWidget = firstSelfOrAncestorWidget(
+			Optional<Rendered> firstSelfOrAncestorRendered = firstSelfOrAncestorRendered(
 					false);
-			if (firstSelfOrAncestorWidget.isEmpty()) {
+			if (firstSelfOrAncestorRendered.isEmpty()) {
 				return result;// default, append
 			}
 			result.point = Point.FIRST;
 			Node cursor = this;
-			result.container = firstSelfOrAncestorWidget.get();
+			result.container = firstSelfOrAncestorRendered.get();
 			while (true) {
 				if (cursor != this) {
-					Widget widget = cursor
-							.provideWidgetOrLastDescendantChildWidget();
+					Rendered widget = cursor
+							.provideRenderedOrLastDescendantChildRendered();
 					if (widget != null) {
 						if (widget == result.container) {
 							// no preceding widget, insert first
@@ -837,24 +847,24 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		/*
-		 * Either self.optionalWidget, or
-		 * sum(children.resolveRenderedWidgets()), recursive
+		 * Either self.optionalRendered, or
+		 * sum(children.resolveRenderedRendereds()), recursive
 		 *
 		 * Used only for node.replace
 		 *
 		 * That's the delegation logic -
 		 */
-		List<Widget> resolveRenderedWidgets() {
-			List<Widget> list = new ArrayList<>();
+		List<Rendered> resolveRenderedRendereds() {
+			List<Rendered> list = new ArrayList<>();
 			// visitor, minimises list creation
-			resolveRenderedWidgets0(list);
+			resolveRenderedRendereds0(list);
 			return list;
 		}
 
 		// i.e. that the node doesn't correspond to @Directed.Delegating
-		Widget verifySingleWidget() {
-			Preconditions.checkState(widget != null);
-			return widget;
+		Rendered verifySingleRendered() {
+			Preconditions.checkState(rendered != null);
+			return rendered;
 		}
 
 		/**
@@ -980,12 +990,13 @@ public class DirectedLayout implements AlcinaProcess {
 							.indexOf(type.getName()) == 0);
 				}
 				domBinding.nodeEventBinding = this;
-				if (widget == null) {
+				if (rendered == null) {
 					Ax.err(toParentStack());
 					Ax.err("No widget for model binding dom event %s - possibly delegating",
 							model);
 				}
-				domBinding.bind(getBindingWidget(), model, true);
+				domBinding.bind(getBindingRendered().as(Element.class), model,
+						true);
 			}
 
 			/*
@@ -1053,8 +1064,8 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 
-			Widget getBindingWidget() {
-				return verifySingleWidget();
+			Rendered getBindingRendered() {
+				return verifySingleRendered();
 			}
 
 			Node getNode() {
@@ -1125,7 +1136,7 @@ public class DirectedLayout implements AlcinaProcess {
 							.apply(value);
 				}
 				String stringValue = value == null ? "null" : value.toString();
-				Element element = verifySingleWidget().getElement();
+				Element element = verifySingleRendered().asElement();
 				switch (binding.type()) {
 				case INNER_HTML:
 					if (value != null) {
@@ -1232,6 +1243,33 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	/**
+	 * The output of RendererInputs - for Uis with events the default is a GWT
+	 * element
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	public interface Rendered {
+		void append(Rendered rendered);
+
+		void appendToRoot();
+
+		<T> T as(Class<T> class1);
+
+		Element asElement();
+
+		int getChildCount();
+
+		int getChildIndex(Rendered after);
+
+		org.w3c.dom.Node getNode();
+
+		void insertChild(Rendered rendered, int i);
+
+		void removeFromParent();
+	}
+
+	/**
 	 * Usage:
 	 *
 	 * <code>
@@ -1277,9 +1315,9 @@ public class DirectedLayout implements AlcinaProcess {
 	static class InsertionPoint {
 		Point point = Point.LAST;
 
-		Widget after;
+		Rendered after;
 
-		Widget container;
+		Rendered container;
 
 		void clear() {
 			// clear refs to possibly removed widgets
@@ -1397,11 +1435,10 @@ public class DirectedLayout implements AlcinaProcess {
 
 		void afterRender() {
 			node.postRender();
-			if (node.hasWidget()) {
-				Optional<Widget> firstAncestorWidget = firstAncestorWidget();
-				if (firstAncestorWidget.isPresent()) {
-					ComplexPanel panel = (ComplexPanel) firstAncestorWidget
-							.get();
+			if (node.hasRendered()) {
+				Optional<Rendered> firstAncestorRendered = firstAncestorRendered();
+				if (firstAncestorRendered.isPresent()) {
+					Rendered container = firstAncestorRendered.get();
 					// in most cases, insertionPoint will be the default (LAST),
 					// so don't set the field in that case . But use here to
 					// make the logic clearer
@@ -1412,27 +1449,27 @@ public class DirectedLayout implements AlcinaProcess {
 					// FIRST and AFTER only occur during replace (and that not
 					// at the end of a parent's children)
 					case FIRST:
-						((ForIsWidget) panel).insert(node.widget, 0);
+						container.insertChild(node.rendered, 0);
 						// bump insertion point
 						insertionPoint.point = Point.AFTER;
-						insertionPoint.after = node.widget;
+						insertionPoint.after = node.rendered;
 						break;
 					case AFTER:
-						int insertAfterIndex = panel
-								.getWidgetIndex(insertionPoint.after);
-						if (insertAfterIndex < panel.getWidgetCount() - 1) {
-							((ForIsWidget) panel).insert(node.widget,
+						int insertAfterIndex = container
+								.getChildIndex(insertionPoint.after);
+						if (insertAfterIndex < container.getChildCount() - 1) {
+							container.insertChild(node.rendered,
 									insertAfterIndex + 1);
 							// bump insertion point
-							insertionPoint.after = node.widget;
+							insertionPoint.after = node.rendered;
 						} else {
-							panel.add(node.widget);
+							container.append(node.rendered);
 							// bump insertion point
 							insertionPoint.point = Point.LAST;
 						}
 						break;
 					case LAST:
-						panel.add(node.widget);
+						container.append(node.rendered);
 						break;
 					}
 					// the node *did* provide a widget, so its children will
@@ -1441,7 +1478,7 @@ public class DirectedLayout implements AlcinaProcess {
 				} else {
 					// root - if this is a replace, append to root panel
 					if (replace != null) {
-						RootPanel.get().add(node.widget);
+						resolver.replaceRoot(node.rendered);
 					}
 				}
 			}
@@ -1466,9 +1503,9 @@ public class DirectedLayout implements AlcinaProcess {
 					directeds, parentNode);
 		}
 
-		Optional<Widget> firstAncestorWidget() {
+		Optional<Rendered> firstAncestorRendered() {
 			return parentNode == null ? Optional.empty()
-					: parentNode.firstSelfOrAncestorWidget(true);
+					: parentNode.firstSelfOrAncestorRendered(true);
 		}
 
 		void init(ContextResolver resolver, Object model,
