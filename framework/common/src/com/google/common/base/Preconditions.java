@@ -132,6 +132,23 @@ public final class Preconditions {
 	}
 
 	/**
+	 * Ensures the truth of an expression involving one or more parameters to
+	 * the calling method.
+	 *
+	 * <p>
+	 * See {@link #checkArgument(boolean, String, Object...)} for details.
+	 *
+	 * @since 20.0 (varargs overload since 2.0)
+	 */
+	public static void checkArgument(boolean expression,
+			String errorMessageTemplate, int p1) {
+		if (!expression) {
+			throw new IllegalArgumentException(
+					format(errorMessageTemplate, p1));
+		}
+	}
+
+	/**
 	 * Ensures that {@code index} specifies a valid <i>element</i> in an array,
 	 * list or string of size {@code size}. An element index may range from
 	 * zero, inclusive, to {@code size}, exclusive.
