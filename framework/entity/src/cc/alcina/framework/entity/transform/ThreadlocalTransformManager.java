@@ -97,9 +97,14 @@ import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExce
 import cc.alcina.framework.entity.util.MethodContext;
 
 /**
+ *
+ * TODO - mvcc.5 - remove/encapsulate dependence on DomainStore
+ *
+ * FIXME - security - see commit message for
+ * f07d1cab8b3ed4e13bdf1b796d5edb83ba881ddc
+ *
  * @author Nick Reddel
  *
- *         TODO - mvcc.5 - remove/encapsulate dependence on DomainStore
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalTransformManager extends TransformManager {
@@ -593,7 +598,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	public boolean testPermissions(Entity entity, DomainTransformEvent evt,
-			String propertyName, Object change, boolean read) {
+			String propertyName, Entity change, boolean read) {
 		if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
 			throw new DomainTransformRuntimeException("test property not set");
 		}
@@ -620,7 +625,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	private boolean checkPermissions(Entity entity, DomainTransformEvent evt,
-			String propertyName, Object change, boolean muteLogging) {
+			String propertyName, Entity<?> entityChange, boolean muteLogging) {
 		if (isIgnoreTransformPermissions()) {
 			return true;
 		}
@@ -641,9 +646,6 @@ public class ThreadlocalTransformManager extends TransformManager {
 			op = op == null
 					? PermissionsManager.get().getDefaultObjectPermissions()
 					: op;
-			Entity<? extends Entity> entityChange = (Entity) (change instanceof Entity
-					? change
-					: null);
 			ObjectPermissions oph = null;
 			AssignmentPermission aph = propertyName == null ? null
 					: Reflections.at(objectClass).property(propertyName)
@@ -861,7 +863,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	@Override
 	protected boolean checkPermissions(Entity entity, DomainTransformEvent evt,
-			String propertyName, Object change) {
+			String propertyName, Entity change) {
 		return checkPermissions(entity, evt, propertyName, change, false);
 	}
 

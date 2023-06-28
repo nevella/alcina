@@ -479,12 +479,13 @@ public abstract class TransformManager
 			throws DomainTransformException {
 		currentEvent = event;
 		ApplyToken token = createApplyToken(event);
+		// permissions don't apply to sets, so use xxTargetEntity
 		if (!checkPermissions(token.object, event, event.getPropertyName(),
-				token.existingTargetObject)) {
+				token.existingTargetEntity)) {
 			return;
 		}
 		if (!checkPermissions(token.object, event, event.getPropertyName(),
-				token.newTargetObject)) {
+				token.existingTargetEntity)) {
 			return;
 		}
 		if (markedForDeletion.contains(token.object)
@@ -1661,7 +1662,7 @@ public abstract class TransformManager
 	 * @return true if OK
 	 */
 	protected boolean checkPermissions(Entity eventTarget,
-			DomainTransformEvent evt, String propertyName, Object change) {
+			DomainTransformEvent evt, String propertyName, Entity change) {
 		return true;
 	}
 
@@ -2202,6 +2203,13 @@ public abstract class TransformManager
 			existingTargetEntity = null;
 			if (existingTargetObject instanceof Entity) {
 				existingTargetEntity = (Entity) existingTargetObject;
+			} else if (event
+					.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION
+					&& existingTargetObject instanceof Set) {
+				EntityLocator valueLocator = event.toValueLocator();
+				existingTargetEntity = getObjectStore().getObject(valueLocator);
+				existingTargetEntity = (Entity) ensureEndpointInTransformGraph(
+						existingTargetEntity);
 			}
 			newTargetObject = transformType == null ? null
 					: getTargetObject(event, false);
@@ -2209,6 +2217,13 @@ public abstract class TransformManager
 			newTargetEntity = null;
 			if (newTargetObject instanceof Entity) {
 				newTargetEntity = (Entity) newTargetObject;
+			} else if (event
+					.getTransformType() == TransformType.ADD_REF_TO_COLLECTION
+					&& newTargetObject instanceof Set) {
+				EntityLocator valueLocator = event.toValueLocator();
+				newTargetEntity = getObjectStore().getObject(valueLocator);
+				newTargetEntity = (Entity) ensureEndpointInTransformGraph(
+						newTargetEntity);
 			}
 			if (propertyName != null
 					&& propertyName.endsWith(SERIALIZED_SUFFIX)) {
