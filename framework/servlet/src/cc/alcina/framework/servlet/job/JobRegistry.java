@@ -645,8 +645,10 @@ public class JobRegistry {
 						CancelledException.class) != null) {
 				} else {
 					logger.warn(Ax.format("Job exception in job %s", job), t);
-					EntityLayerLogging
-							.persistentLog(LogMessageType.TASK_EXCEPTION, e);
+					if (!Ax.isTest()) {
+						EntityLayerLogging.persistentLog(
+								LogMessageType.TASK_EXCEPTION, e);
+					}
 				}
 			});
 		} finally {
