@@ -146,6 +146,10 @@ public class Environment {
 		}
 	}
 
+	public boolean isInitialised() {
+		return client != null;
+	}
+
 	public synchronized void
 			registerRemoteMessageConsumer(Consumer<ProtocolMessage> consumer) {
 		queue.registerConsumer(consumer);
