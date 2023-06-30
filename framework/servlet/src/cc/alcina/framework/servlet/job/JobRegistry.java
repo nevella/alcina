@@ -62,6 +62,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -315,10 +316,14 @@ public class JobRegistry {
 	 */
 	public Job ensureScheduled(Task task, boolean scheduleAfterInFlight) {
 		ObjectWrapper<Job> jobRef = new ObjectWrapper<>();
+		String serialized = FlatTreeSerializer.serialize(task);
 		withJobMetadataLock(task.getClass().getName(), () -> {
 			Optional<? extends Job> pending = JobDomain.get()
 					.getJobsForTask(task.getClass())
-					.filter(j -> j.getState() == JobState.PENDING).findFirst();
+					.filter(j -> j.getState() == JobState.PENDING)
+					.filter(j -> Objects.equals(serialized,
+							j.getTaskSerialized()))
+					.findFirst();
 			if (pending.isPresent()) {
 				jobRef.set(pending.get());
 				return;
@@ -329,6 +334,8 @@ public class JobRegistry {
 						.getJobsForTask(task.getClass())
 						.filter(j -> j.getState() == JobState.ALLOCATED
 								|| j.getState() == JobState.PROCESSING)
+						.filter(j -> Objects.equals(serialized,
+								j.getTaskSerialized()))
 						.findFirst();
 				if (inFlight.isPresent()) {
 					inFlight.get().createRelation(job,
