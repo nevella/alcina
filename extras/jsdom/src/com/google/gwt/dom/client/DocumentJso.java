@@ -143,8 +143,9 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	public final NativeEvent createDblClickEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey) {
-		return ClientDomDocumentStatic.createDblClickEvent(this, detail, screenX,
-				screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey);
+		return ClientDomDocumentStatic.createDblClickEvent(this, detail,
+				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
+				metaKey);
 	}
 
 	@Override
@@ -257,8 +258,8 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	@Override
 	public final NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
-		return ClientDomDocumentStatic.createKeyCodeEvent(this, type, ctrlKey, altKey,
-				shiftKey, metaKey, keyCode);
+		return ClientDomDocumentStatic.createKeyCodeEvent(this, type, ctrlKey,
+				altKey, shiftKey, metaKey, keyCode);
 	}
 
 	@Override
@@ -287,16 +288,16 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	@Override
 	public final NativeEvent createKeyPressEvent(boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
-		return ClientDomDocumentStatic.createKeyPressEvent(this, ctrlKey, altKey,
-				shiftKey, metaKey, charCode);
+		return ClientDomDocumentStatic.createKeyPressEvent(this, ctrlKey,
+				altKey, shiftKey, metaKey, charCode);
 	}
 
 	@Override
 	public final NativeEvent createKeyPressEvent(boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
-		return ClientDomDocumentStatic.createKeyPressEvent(this, ctrlKey, altKey,
-				shiftKey, metaKey, keyCode, charCode);
+		return ClientDomDocumentStatic.createKeyPressEvent(this, ctrlKey,
+				altKey, shiftKey, metaKey, keyCode, charCode);
 	}
 
 	@Override
@@ -352,9 +353,9 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	public final NativeEvent createMouseDownEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return ClientDomDocumentStatic.createMouseDownEvent(this, detail, screenX,
-				screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey,
-				button);
+		return ClientDomDocumentStatic.createMouseDownEvent(this, detail,
+				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
+				metaKey, button);
 	}
 
 	@Override
@@ -372,9 +373,9 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	public final NativeEvent createMouseMoveEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return ClientDomDocumentStatic.createMouseMoveEvent(this, detail, screenX,
-				screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey,
-				button);
+		return ClientDomDocumentStatic.createMouseMoveEvent(this, detail,
+				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
+				metaKey, button);
 	}
 
 	@Override
@@ -382,9 +383,9 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return ClientDomDocumentStatic.createMouseOutEvent(this, detail, screenX,
-				screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey,
-				button, relatedTarget);
+		return ClientDomDocumentStatic.createMouseOutEvent(this, detail,
+				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
+				metaKey, button, relatedTarget);
 	}
 
 	@Override
@@ -392,9 +393,9 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
-		return ClientDomDocumentStatic.createMouseOverEvent(this, detail, screenX,
-				screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey,
-				button, relatedTarget);
+		return ClientDomDocumentStatic.createMouseOverEvent(this, detail,
+				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
+				metaKey, button, relatedTarget);
 	}
 
 	@Override
@@ -873,6 +874,11 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	@Override
 	public final native String getVisibilityState() /*-{
     return this.visibilityState;
+	}-*/;
+
+	@Override
+	public final native boolean hasFocus() /*-{
+    return this.hasFocus();
 	}-*/;
 
 	/**

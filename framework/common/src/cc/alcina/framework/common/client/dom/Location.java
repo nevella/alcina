@@ -3,9 +3,15 @@ package cc.alcina.framework.common.client.dom;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 
 /**
  * Models a position in an alcina dom document via [T,I,A]
+ *
+ * FIXME - Feature_Dirndl_ContentDecorator - make immutable, and encapsulate
+ * fields
+ *
+ * Add plan re tracking of dom mutations
  */
 public class Location implements Comparable<Location> {
 	/**
@@ -115,6 +121,10 @@ public class Location implements Comparable<Location> {
 		return treeIndex ^ index;
 	}
 
+	public int indexInNode() {
+		return index - containingNode.asLocation().index;
+	}
+
 	public boolean isAfter(Location other) {
 		return compareTo(other) > 0;
 	}
@@ -172,6 +182,11 @@ public class Location implements Comparable<Location> {
 		private transient String textContent;
 
 		public Range(Location start, Location end) {
+			if (start.isAfter(end)) {
+				Location tmp = start;
+				start = end;
+				end = tmp;
+			}
 			this.start = start;
 			this.end = end;
 		}
@@ -204,6 +219,10 @@ public class Location implements Comparable<Location> {
 			return start.containingNode();
 		}
 
+		public boolean contains(Range o) {
+			return start.compareTo(o.start) <= 0 && end.compareTo(o.end) >= 0;
+		}
+
 		public void detach() {
 			start.detach();
 			end.detach();
@@ -223,6 +242,12 @@ public class Location implements Comparable<Location> {
 				textContent = start.locationContext.textContent(this);
 			}
 			return textContent;
+		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("start", start, "end", end, "text",
+					Ax.trimForLogging(text()));
 		}
 	}
 

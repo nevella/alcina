@@ -955,6 +955,11 @@ public class Document extends Node
 	}
 
 	@Override
+	public boolean hasFocus() {
+		return remote.hasFocus();
+	}
+
+	@Override
 	public boolean hasParentElement() {
 		return false;
 	}

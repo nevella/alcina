@@ -68,7 +68,7 @@ public class StyleInjector {
 	private static HeadElement getHead() {
 		if (head == null) {
 			Element elt = (Element) Document.get().getDocumentElement()
-					.asDomNode().children.byTag("head").get(0).domElement();
+					.asDomNode().children.byTag("head").get(0).w3cElement();
 			assert elt != null : "The host HTML page does not have a <head> element"
 					+ " which is required by StyleInjector";
 			head = HeadElement.as(elt);

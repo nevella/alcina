@@ -256,14 +256,6 @@ public class DomNode {
 		return stream(false);
 	}
 
-	public Element domElement() {
-		return (Element) node;
-	}
-
-	public Node domNode() {
-		return node;
-	}
-
 	public DomNode ensurePath(String path) {
 		if (path.contains("/")) {
 			DomNode cursor = this;
@@ -288,10 +280,6 @@ public class DomNode {
 
 	public String getClassName() {
 		return attr("class");
-	}
-
-	public Element getElement() {
-		return (Element) node;
 	}
 
 	public com.google.gwt.dom.client.Node gwtNode() {
@@ -325,7 +313,7 @@ public class DomNode {
 
 	public boolean isAncestorOf(DomNode cursor) {
 		while (cursor != null) {
-			if (cursor.domNode() == this.domNode()) {
+			if (cursor.w3cNode() == this.w3cNode()) {
 				return true;
 			}
 			cursor = cursor.parent();
@@ -514,7 +502,7 @@ public class DomNode {
 
 	public boolean tagIs(String tagName) {
 		return isElement()
-				&& getElement().getTagName().equalsIgnoreCase(tagName)
+				&& w3cElement().getTagName().equalsIgnoreCase(tagName)
 				|| isProcessingInstruction() && getProcessingInstruction()
 						.getNodeName().equalsIgnoreCase(tagName);
 	}
@@ -558,7 +546,7 @@ public class DomNode {
 
 	public DocumentFragment toFragment() {
 		DocumentFragment fragment = domDoc().createDocumentFragment();
-		fragment.appendChild(domNode());
+		fragment.appendChild(w3cNode());
 		return fragment;
 	}
 
@@ -579,6 +567,14 @@ public class DomNode {
 
 	public DomNodeTree tree() {
 		return new DomNodeTree();
+	}
+
+	public Element w3cElement() {
+		return (Element) node;
+	}
+
+	public Node w3cNode() {
+		return node;
 	}
 
 	public DomNodeXpath xpath(String query) {
@@ -631,7 +627,7 @@ public class DomNode {
 			if (o1 == o2) {
 				return 0;
 			}
-			return domEnvironment.isEarlierThan(o1.domNode(), o2.domNode()) ? -1
+			return domEnvironment.isEarlierThan(o1.w3cNode(), o2.w3cNode()) ? -1
 					: 1;
 		}
 	}
@@ -853,13 +849,13 @@ public class DomNode {
 
 		public boolean isFirstNonWhitespaceChild(DomNode xmlNode) {
 			return xmlNode != null && firstNonWhitespaceNode() != null
-					&& firstNonWhitespaceNode().domNode() == xmlNode.domNode();
+					&& firstNonWhitespaceNode().w3cNode() == xmlNode.w3cNode();
 		}
 
 		public boolean isFirstNonWhitespaceTextDescendant(DomNode xmlNode) {
 			return xmlNode != null && firstNonWhitespaceTextDescendant() != null
-					&& firstNonWhitespaceTextDescendant().domNode() == xmlNode
-							.domNode();
+					&& firstNonWhitespaceTextDescendant().w3cNode() == xmlNode
+							.w3cNode();
 		}
 
 		public boolean isLastChild(DomNode node) {
@@ -872,7 +868,7 @@ public class DomNode {
 
 		public boolean isLastNonWhitespaceChild(DomNode node) {
 			return node != null
-					&& lastNonWhitespaceNode().domNode() == node.domNode();
+					&& lastNonWhitespaceNode().w3cNode() == node.w3cNode();
 		}
 
 		public DomNode lastElementNode() {
@@ -915,7 +911,8 @@ public class DomNode {
 		}
 
 		public List<DomNode> nodes() {
-			if (nodes == null) {
+			if (nodes == null
+					|| !DomEnvironment.get().isMutateOnlyViaAlcinaDom()) {
 				nodes = DomEnvironment.nodeListToList(node.getChildNodes())
 						.stream().map(document::nodeFor)
 						.collect(Collectors.toList());
@@ -1679,7 +1676,7 @@ public class DomNode {
 				String attrName = xpath.replaceFirst(tagAttrNodeRegex, "$2");
 				query.predicate = node -> node.has(attrName);
 				query.map = node -> node.document.nodeFor(
-						((Element) node.domNode()).getAttributeNode(attrName));
+						((Element) node.w3cNode()).getAttributeNode(attrName));
 				query.valid = true;
 			} else if (xpath.matches(tagAttrValueRegex)) {
 				query.tag = xpath.replaceFirst(tagAttrValueRegex, "$1");

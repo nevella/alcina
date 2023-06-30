@@ -252,7 +252,7 @@
 				<include name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
-		
+
 			<!-- give the server handy access to stylesheets for print, static serving etc -->
 			<fileset dir="${framework.gwt.src.dir}">
 				<include name="**/*.css" />
@@ -288,6 +288,18 @@
 		</jar>
 		<jar update="${alcina.update-jars}" destfile="${extras.dist.dir}/${ant.project.name}-extras-rpc-client.jar">
 			<fileset dir="${extras.rpc.client.src.dir}">
+				<include name="**/*.*" />
+				<exclude name="**/*.class" />
+			</fileset>
+			<fileset dir="${extras.rpc.client.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+		</jar>
+		<jar update="${alcina.update-jars}" destfile="${extras.dist.dir}/${ant.project.name}-extras-rpc-servlet.jar">
+			<fileset dir="${extras.rpc.servlet.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${extras.rpc.servlet.src.dir}">
 				<include name="**/*.*" />
 				<exclude name="**/*.class" />
 			</fileset>

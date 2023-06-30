@@ -153,7 +153,7 @@ public class PublicationViews {
 		// }
 		// }
 		html = XmlUtils.streamNCleanForBrowserHtmlFragment(
-				doc.getDocumentElementNode().domNode());
+				doc.getDocumentElementNode().w3cNode());
 	}
 
 	private String untilFirstCamel(String text) {

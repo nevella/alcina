@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public interface ClientDomStyleConstants {
+public interface DomStyleConstants {
 	static final String BORDER_STYLE_SOLID = "solid";
 
 	static final String BORDER_STYLE_DASHED = "dashed";
