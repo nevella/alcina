@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -115,7 +115,7 @@ public abstract class Composite extends Widget implements IsRenderable {
 	/**
 	 * Provides subclasses access to the topmost widget that defines this
 	 * composite.
-	 * 
+	 *
 	 * @return the widget
 	 */
 	protected Widget getWidget() {
@@ -127,7 +127,7 @@ public abstract class Composite extends Widget implements IsRenderable {
 	 * be set before calling any {@link Widget} methods on this object, or
 	 * adding it to a panel. This method may only be called once for a given
 	 * composite.
-	 * 
+	 *
 	 * @param widget
 	 *            the widget to be wrapped
 	 */
@@ -163,10 +163,6 @@ public abstract class Composite extends Widget implements IsRenderable {
 	@Override
 	protected void onAttach() {
 		checkInit();
-		if (!isOrWasAttached()) {
-			widget.sinkEvents(eventsToSink);
-			eventsToSink = -1;
-		}
 		widget.onAttach();
 		// Clobber the widget's call to setEventListener(), causing all events
 		// to
@@ -208,7 +204,7 @@ public abstract class Composite extends Widget implements IsRenderable {
 	 * This method was for initializing the Widget to be wrapped by this
 	 * Composite, but has been deprecated in favor of
 	 * {@link #initWidget(Widget)}.
-	 * 
+	 *
 	 * @deprecated Use {@link #initWidget(Widget)} instead
 	 */
 	@Deprecated

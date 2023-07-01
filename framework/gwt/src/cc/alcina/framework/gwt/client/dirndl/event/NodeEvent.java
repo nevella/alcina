@@ -7,6 +7,7 @@ import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -24,6 +25,11 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	private Context context;
 
 	protected Object model;
+
+	@Override
+	public NodeEvent clone() {
+		return (NodeEvent) Reflections.newInstance(getClass());
+	}
 
 	@Override
 	public abstract void dispatch(H handler);

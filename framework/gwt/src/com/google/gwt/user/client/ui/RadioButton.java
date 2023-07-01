@@ -1,12 +1,12 @@
 /*
  * Copyright 2007 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -33,7 +33,7 @@ import com.google.gwt.user.client.Event;
  * button becomes checked. Note, however, that browser limitations prevent
  * ValueChangeEvents from being sent when the radio button is cleared as a side
  * effect of another in the group being clicked.
- * 
+ *
  * <p>
  * <img class='gallery' src='doc-files/RadioButton.png'/>
  * </p>
@@ -50,7 +50,7 @@ import com.google.gwt.user.client.Event;
  * <dt>.gwt-RadioButton</dt>
  * <dd>the outer element</dd>
  * </dl>
- * 
+ *
  * <p>
  * <h3>Example</h3> {@example com.google.gwt.examples.RadioButtonExample}
  * </p>
@@ -64,10 +64,10 @@ public class RadioButton extends CheckBox {
 	 * Creates a new radio associated with a particular group name. All radio
 	 * buttons associated with the same group name belong to a
 	 * mutually-exclusive set.
-	 * 
+	 *
 	 * Radio buttons are grouped by their name attribute, so changing their name
 	 * using the setName() method will also change their associated group.
-	 * 
+	 *
 	 * @param name
 	 *            the group name with which to associate the radio button
 	 */
@@ -85,10 +85,10 @@ public class RadioButton extends CheckBox {
 	 * Creates a new radio associated with a particular group, and initialized
 	 * with the given HTML label. All radio buttons associated with the same
 	 * group name belong to a mutually-exclusive set.
-	 * 
+	 *
 	 * Radio buttons are grouped by their name attribute, so changing their name
 	 * using the setName() method will also change their associated group.
-	 * 
+	 *
 	 * @param name
 	 *            the group name with which to associate the radio button
 	 * @param label
@@ -100,7 +100,7 @@ public class RadioButton extends CheckBox {
 
 	/**
 	 * @see #RadioButton(String, SafeHtml)
-	 * 
+	 *
 	 * @param name
 	 *            the group name with which to associate the radio button
 	 * @param label
@@ -117,7 +117,7 @@ public class RadioButton extends CheckBox {
 
 	/**
 	 * @see #RadioButton(String, SafeHtml)
-	 * 
+	 *
 	 * @param name
 	 *            the group name with which to associate the radio button
 	 * @param label
@@ -138,10 +138,10 @@ public class RadioButton extends CheckBox {
 	 * Creates a new radio associated with a particular group, and initialized
 	 * with the given HTML label. All radio buttons associated with the same
 	 * group name belong to a mutually-exclusive set.
-	 * 
+	 *
 	 * Radio buttons are grouped by their name attribute, so changing their name
 	 * using the setName() method will also change their associated group.
-	 * 
+	 *
 	 * @param name
 	 *            the group name with which to associate the radio button
 	 * @param label
@@ -180,7 +180,7 @@ public class RadioButton extends CheckBox {
 
 	/**
 	 * @see #RadioButton(String, SafeHtml)
-	 * 
+	 *
 	 * @param name
 	 *            the group name with which to associate the radio button
 	 * @param label
@@ -197,7 +197,7 @@ public class RadioButton extends CheckBox {
 
 	/**
 	 * @see #RadioButton(String, SafeHtml)
-	 * 
+	 *
 	 * @param name
 	 *            the group name with which to associate the radio button
 	 * @param label
@@ -249,14 +249,14 @@ public class RadioButton extends CheckBox {
 
 	/**
 	 * Change the group name of this radio button.
-	 * 
+	 *
 	 * Radio buttons are grouped by their name attribute, so changing their name
 	 * using the setName() method will also change their associated group.
-	 * 
+	 *
 	 * If changing this group name results in a new radio group with multiple
 	 * radio buttons selected, this radio button will remain selected and the
 	 * other radio buttons will be unselected.
-	 * 
+	 *
 	 * @param name
 	 *            name the group with which to associate the radio button
 	 */
@@ -274,15 +274,11 @@ public class RadioButton extends CheckBox {
 		// also want to know what's going on with the label, to
 		// make sure onBrowserEvent is able to record value changes
 		// initiated by label events
-		if (isOrWasAttached()) {
-			Event.sinkEvents(inputElem,
-					eventBitsToAdd | Event.getEventsSunk(inputElem));
-			if (labelElem != null) {
-				Event.sinkEvents(labelElem,
-						eventBitsToAdd | Event.getEventsSunk(labelElem));
-			}
-		} else {
-			super.sinkEvents(eventBitsToAdd);
+		Event.sinkEvents(inputElem,
+				eventBitsToAdd | Event.getEventsSunk(inputElem));
+		if (labelElem != null) {
+			Event.sinkEvents(labelElem,
+					eventBitsToAdd | Event.getEventsSunk(labelElem));
 		}
 	}
 

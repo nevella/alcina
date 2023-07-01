@@ -44,12 +44,12 @@ public class MutationRecord {
 		Element parentElement = node.getParentElement();
 		if (parentElement != null) {
 			MutationRecord record = new MutationRecord();
-			record.target = MutationNode.shallow(parentElement);
+			record.target = MutationNode.pathref(parentElement);
 			record.type = Type.childList;
-			record.addedNodes.add(MutationNode.shallow(node));
+			record.addedNodes.add(MutationNode.pathref(node));
 			Node previousSibling = node.getPreviousSibling();
 			if (previousSibling != null) {
-				record.previousSibling = MutationNode.shallow(previousSibling);
+				record.previousSibling = MutationNode.pathref(previousSibling);
 			}
 			records.add(record);
 		} else {
@@ -60,7 +60,7 @@ public class MutationRecord {
 			ClientDomElement elem = (ClientDomElement) node;
 			elem.getAttributeMap().forEach((k, v) -> {
 				MutationRecord record = new MutationRecord();
-				record.target = MutationNode.shallow(node);
+				record.target = MutationNode.pathref(node);
 				record.type = Type.attributes;
 				record.attributeName = k;
 				record.newValue = v;
@@ -71,7 +71,7 @@ public class MutationRecord {
 		case Node.COMMENT_NODE:
 		case Node.TEXT_NODE: {
 			MutationRecord record = new MutationRecord();
-			record.target = MutationNode.shallow(node);
+			record.target = MutationNode.pathref(node);
 			record.type = Type.characterData;
 			record.newValue = node.getNodeValue();
 			records.add(record);
@@ -90,9 +90,9 @@ public class MutationRecord {
 	public static MutationRecord generateRemoveMutation(Node parent,
 			Node oldChild) {
 		MutationRecord record = new MutationRecord();
-		record.target = MutationNode.shallow(parent);
+		record.target = MutationNode.pathref(parent);
 		record.type = Type.childList;
-		record.removedNodes.add(MutationNode.shallow(oldChild));
+		record.removedNodes.add(MutationNode.pathref(oldChild));
 		return record;
 	}
 

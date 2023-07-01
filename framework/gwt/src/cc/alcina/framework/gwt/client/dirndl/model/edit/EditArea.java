@@ -9,6 +9,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.BeforeInput;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
+import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Mutation;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -16,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
  * <p>
@@ -50,11 +53,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
 				literal = "true",
 				to = "contenteditable") },
 	receives = { DomEvents.Input.class, DomEvents.BeforeInput.class,
-			DomEvents.Focusout.class },
+			DomEvents.Focusout.class, InferredDomEvents.Mutation.class },
 	emits = { ModelEvents.Input.class })
-public class EditArea extends Model implements FocusOnBind, HasTag,
-		DomEvents.Input.Handler, DomEvents.BeforeInput.Handler,
-		LayoutEvents.BeforeRender.Handler, DomEvents.Focusout.Handler {
+public class EditArea extends Model
+		implements FocusOnBind, HasTag, DomEvents.Input.Handler,
+		DomEvents.BeforeInput.Handler, LayoutEvents.BeforeRender.Handler,
+		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler {
 	private String value;
 
 	private String currentValue;
@@ -68,6 +72,8 @@ public class EditArea extends Model implements FocusOnBind, HasTag,
 	private boolean selectAllOnBind;
 
 	boolean stripFontTagsOnInput = false;
+
+	FragmentModel fragmentModel = new FragmentModel(this);
 
 	public EditArea() {
 	}
@@ -152,6 +158,11 @@ public class EditArea extends Model implements FocusOnBind, HasTag,
 			new RelativeInputModel().strip(provideElement(), "font");
 		}
 		event.reemitAs(this, ModelEvents.Input.class);
+	}
+
+	@Override
+	public void onMutation(Mutation event) {
+		fragmentModel.onMutation(event);
 	}
 
 	@Override

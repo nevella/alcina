@@ -22,6 +22,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 
+// FIXME - dirndl - move all event code from Element to here?
 public class ElementLocal extends NodeLocal
 		implements ClientDomElement, LocalDomElement {
 	static int _idCounter;
@@ -773,6 +774,17 @@ public class ElementLocal extends NodeLocal
 		}
 		sunk |= eventBits;
 		return sunk;
+	}
+
+	@Override
+	void setParentNode(NodeLocal local) {
+		super.setParentNode(local);
+		if (local instanceof ElementLocal) {
+			ElementLocal elementLocal = (ElementLocal) local;
+			element.setAttached(elementLocal.element.attached);
+		} else {
+			element.setAttached(false);
+		}
 	}
 
 	class AttributeMap implements NamedNodeMap {

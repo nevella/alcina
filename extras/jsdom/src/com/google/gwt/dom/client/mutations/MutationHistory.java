@@ -46,14 +46,14 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 	private List<MutationHistory.Event> events = new ArrayList<>();
 
-	private LocalDomMutations mutations;
+	private RemoteMutations mutations;
 
 	SyncMutations currentMutations;
 
 	public MutationHistory() {
 	}
 
-	public MutationHistory(LocalDomMutations mutations) {
+	public MutationHistory(RemoteMutations mutations) {
 		this.mutations = mutations;
 		if (mutations.loggingConfiguration.provideIsObserveHistory()) {
 			ProcessObservers.observe(this, true);

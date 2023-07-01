@@ -23,8 +23,8 @@ public class MutableDocumentDecoratorImpl
 		public MutableDocumentImpl(DomDocument document) {
 			this.document = document;
 			// since document is a singleton, can just piggyback of
-			// LocalDomMutations
-			LocalDom.getMutations().topicMutationOccurred
+			// RemoteMutations
+			LocalDom.getRemoteMutations().topicMutationOccurred
 					.add(() -> mutationOcurred.signal());
 		}
 

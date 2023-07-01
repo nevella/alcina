@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
-public class LocalDomMutations {
+public class RemoteMutations {
 	MutationsAccess mutationsAccess;
 
 	private JavaScriptObject observer = null;
@@ -40,7 +40,7 @@ public class LocalDomMutations {
 
 	Topic<Void> topicMutationOccurred = Topic.create();
 
-	public LocalDomMutations(LocalDom.MutationsAccess mutationsAccess,
+	public RemoteMutations(LocalDom.MutationsAccess mutationsAccess,
 			LoggingConfiguration configuration) {
 		this.mutationsAccess = mutationsAccess;
 		this.loggingConfiguration = configuration;
@@ -137,29 +137,29 @@ public class LocalDomMutations {
 	}
 
 	private native void checkReceivedRecords() /*-{
-    if (this.@LocalDomMutations::records.length == 0) {
+    if (this.@RemoteMutations::records.length == 0) {
       return;
     }
-    var records = this.@LocalDomMutations::records;
-    this.@LocalDomMutations::records = [];
-    this.@LocalDomMutations::syncMutations(*)(records);
+    var records = this.@RemoteMutations::records;
+    this.@RemoteMutations::records = [];
+    this.@RemoteMutations::syncMutations(*)(records);
 	}-*/;
 
 	private native void connectObserver() /*-{
-    if (!this.@LocalDomMutations::enabled) {
+    if (!this.@RemoteMutations::enabled) {
       var message = "Mutation tracking not defined";
-      this.@LocalDomMutations::log(Ljava/lang/String;Z)(message,true);
+      this.@RemoteMutations::log(Ljava/lang/String;Z)(message,true);
       return;
     }
 
     //clear the buffer and discard
-    var mutationsList = this.@LocalDomMutations::observer.takeRecords();
+    var mutationsList = this.@RemoteMutations::observer.takeRecords();
     if (mutationsList.length > 0) {
       var message = "Warning - mutation observer :: had records (was not disconnected?)";
-      this.@LocalDomMutations::log(Ljava/lang/String;Z)(message,true);
+      this.@RemoteMutations::log(Ljava/lang/String;Z)(message,true);
       throw message;
     }
-    this.@LocalDomMutations::records = [];
+    this.@RemoteMutations::records = [];
 
     var config = {
       childList : true,
@@ -169,48 +169,48 @@ public class LocalDomMutations {
       characterData : true,
       characterDataOldValue : true
     };
-    this.@LocalDomMutations::observer.observe(
-        this.@LocalDomMutations::documentElement, config);
-    //this.@LocalDomMutations::log(Ljava/lang/String;Z)("Mutation observer :: connected ",false);
+    this.@RemoteMutations::observer.observe(
+        this.@RemoteMutations::documentElement, config);
+    //this.@RemoteMutations::log(Ljava/lang/String;Z)("Mutation observer :: connected ",false);
 	}-*/;
 
 	private native void disconnectObserver() /*-{
-    if (this.@LocalDomMutations::observer == null) {
+    if (this.@RemoteMutations::observer == null) {
       return;
     }
-    var mutationsList = this.@LocalDomMutations::observer.takeRecords();
-    var records = this.@LocalDomMutations::records;
+    var mutationsList = this.@RemoteMutations::observer.takeRecords();
+    var records = this.@RemoteMutations::records;
     mutationsList.forEach(function(mutation) {
       records.push(mutation);
     });
-    if (!this.@LocalDomMutations::observerConnected) {
-      this.@LocalDomMutations::log(Ljava/lang/String;Z)("Mutation observer :: warning  - was not connected ",true);
+    if (!this.@RemoteMutations::observerConnected) {
+      this.@RemoteMutations::log(Ljava/lang/String;Z)("Mutation observer :: warning  - was not connected ",true);
     }
-    this.@LocalDomMutations::observerConnected = false;
-    this.@LocalDomMutations::observer.disconnect();
-    //this.@LocalDomMutations::log(Ljava/lang/String;Z)("Mutation observer :: disconnected ",false);
+    this.@RemoteMutations::observerConnected = false;
+    this.@RemoteMutations::observer.disconnect();
+    //this.@RemoteMutations::log(Ljava/lang/String;Z)("Mutation observer :: disconnected ",false);
 	}-*/;
 
 	private native void setupObserver() /*-{
-    this.@LocalDomMutations::enabled = this.@LocalDomMutations::enabled
+    this.@RemoteMutations::enabled = this.@RemoteMutations::enabled
         && !(typeof MutationObserver == "undefined");
-    if (!this.@LocalDomMutations::enabled) {
+    if (!this.@RemoteMutations::enabled) {
       var message = "Mutation tracking not defined";
-      this.@LocalDomMutations::log(Ljava/lang/String;Z)(message,false);
+      this.@RemoteMutations::log(Ljava/lang/String;Z)(message,false);
       return;
     }
 
-    this.@LocalDomMutations::documentElement = $doc.documentElement;
+    this.@RemoteMutations::documentElement = $doc.documentElement;
     var _this = this;
     var callback = function(mutationsList, observer) {
-      var records = _this.@LocalDomMutations::records;
+      var records = _this.@RemoteMutations::records;
       mutationsList.forEach(function(mutation) {
         records.push(mutation);
       });
     };
-    this.@LocalDomMutations::observer = new MutationObserver(callback);
+    this.@RemoteMutations::observer = new MutationObserver(callback);
     var message = "Tracking remote dom mutations :: ok";
-    this.@LocalDomMutations::log(Ljava/lang/String;Z)(message,false);
+    this.@RemoteMutations::log(Ljava/lang/String;Z)(message,false);
 	}-*/;
 
 	private void syncMutations0(JsArray<MutationRecordJso> records) {

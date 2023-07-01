@@ -1015,10 +1015,23 @@ public class DirectedLayout implements AlcinaProcess {
 			 * obviously problematic. Solution is to disallow that with an
 			 * informative exception (as above)
 			 *
+			 * FIXME - dirndl 1x1h - doc - note that a new NodeEvent is at each
+			 * point in the model ancestor chain that it's fired - since an
+			 * event is immutable and we want to fire additional (context)
+			 * information at each point. Hence the cloning of the originating
+			 * event, which should copy any additional payload fields of the
+			 * originating event
+			 *
 			 */
 			private void fireEvent(Class<? extends NodeEvent> actualEventType,
 					Context context, Object model) {
-				NodeEvent nodeEvent = Reflections.newInstance(actualEventType);
+				NodeEvent nodeEvent = context.getNodeEvent();
+				if (nodeEvent != null
+						&& nodeEvent.getClass() == actualEventType) {
+					nodeEvent = context.getNodeEvent().clone();
+				} else {
+					nodeEvent = Reflections.newInstance(actualEventType);
+				}
 				context.setNodeEvent(nodeEvent);
 				nodeEvent.setModel(model);
 				ProcessObservers.publish(EventObservable.class,

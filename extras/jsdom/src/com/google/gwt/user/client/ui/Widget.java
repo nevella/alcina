@@ -15,8 +15,6 @@
  */
 package com.google.gwt.user.client.ui;
 
-import java.util.List;
-
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -47,15 +45,6 @@ public class Widget extends UIObject
 	public static Widget asWidgetOrNull(IsWidget w) {
 		return w == null ? null : w.asWidget();
 	}
-
-	/**
-	 * A bit-map of the events that should be sunk when the widget is attached
-	 * to the DOM. (We delay the sinking of events to improve startup
-	 * performance.) When the widget is attached, this is set to -1
-	 * <p>
-	 * Package protected to allow Composite to see it.
-	 */
-	int eventsToSink;
 
 	private boolean attached;
 
@@ -256,42 +245,6 @@ public class Widget extends UIObject
 	}
 
 	/**
-	 * Overridden to defer the call to super.sinkEvents until the first time
-	 * this widget is attached to the dom, as a performance enhancement.
-	 * Subclasses wishing to customize sinkEvents can preserve this deferred
-	 * sink behavior by putting their implementation behind a check of
-	 * <code>isOrWasAttached()</code>:
-	 *
-	 * <pre>
-	 * {@literal @}Override
-	 * public void sinkEvents(int eventBitsToAdd) {
-	 *   if (isOrWasAttached()) {
-	 *     /{@literal *} customized sink code goes here {@literal *}/
-	 *   } else {
-	 *     super.sinkEvents(eventBitsToAdd);
-	 *  }
-	 *}
-	 * </pre>
-	 */
-	@Override
-	public void sinkEvents(int eventBitsToAdd) {
-		if (isOrWasAttached()) {
-			super.sinkEvents(eventBitsToAdd);
-		} else {
-			eventsToSink |= eventBitsToAdd;
-		}
-	}
-
-	@Override
-	public void unsinkEvents(int eventBitsToRemove) {
-		if (isOrWasAttached()) {
-			super.unsinkEvents(eventBitsToRemove);
-		} else {
-			eventsToSink &= ~eventBitsToRemove;
-		}
-	}
-
-	/**
 	 * Creates the {@link HandlerManager} used by this Widget. You can override
 	 * this method to create a custom {@link HandlerManager}.
 	 *
@@ -349,16 +302,6 @@ public class Widget extends UIObject
 	}
 
 	/**
-	 * Has this widget ever been attached?
-	 *
-	 * @return true if this widget ever been attached to the DOM, false
-	 *         otherwise
-	 */
-	protected final boolean isOrWasAttached() {
-		return eventsToSink == -1;
-	}
-
-	/**
 	 * <p>
 	 * This method is called when a widget is attached to the browser's
 	 * document. To receive notification after a Widget has been added to the
@@ -387,21 +330,19 @@ public class Widget extends UIObject
 					"Should only call onAttach when the widget is detached from the browser's document");
 		}
 		attached = true;
-		// Event hookup code
-		DOM.setEventListener(getElement(), this);
-		int bitsToAdd = eventsToSink;
-		eventsToSink = -1;
-		if (bitsToAdd > 0) {
-			sinkEvents(bitsToAdd);
-		}
-		List<String> localBitlessEventsSunk = getElement()
-				.localBitlessEventsSunk();
-		if (localBitlessEventsSunk != null) {
-			localBitlessEventsSunk.forEach(eventTypeName -> {
-				DOM.sinkBitlessEvent(getElement(), eventTypeName);
-			});
-			localBitlessEventsSunk = null;
-		}
+		// Event hookup code moved to element
+		// eventsToSink = -1;
+		// if (bitsToAdd > 0) {
+		// sinkEvents(bitsToAdd);
+		// }
+		// List<String> localBitlessEventsSunk = getElement()
+		// .localBitlessEventsSunk();
+		// if (localBitlessEventsSunk != null) {
+		// localBitlessEventsSunk.forEach(eventTypeName -> {
+		// DOM.sinkBitlessEvent(getElement(), eventTypeName);
+		// });
+		// localBitlessEventsSunk = null;
+		// }
 		doAttachChildren();
 		// onLoad() gets called only *after* all of the children are attached
 		// and

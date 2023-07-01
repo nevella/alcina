@@ -1,0 +1,61 @@
+package com.google.gwt.dom.client.mutations;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.LocalDom.MutationsAccess;
+import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.mutations.MutationRecord.Type;
+
+import cc.alcina.framework.common.client.util.Topic;
+
+public class LocalMutations {
+	MutationsAccess mutationsAccess;
+
+	List<MutationRecord> mutations = new ArrayList<>();
+
+	public Topic<List<MutationRecord>> topicMutations = Topic.create();
+
+	ScheduledCommand finallyCommand;
+
+	public LocalMutations(MutationsAccess mutationsAccess) {
+		this.mutationsAccess = mutationsAccess;
+	}
+
+	public void fireMutations() {
+		if (this.mutations.isEmpty()) {
+			return;
+		}
+		List<MutationRecord> mutations = this.mutations;
+		this.mutations = new ArrayList<>();
+		topicMutations.publish(mutations);
+	}
+
+	public void notify(Runnable runnable) {
+		if (!topicMutations.hasListeners()) {
+			return;
+		}
+		if (GWT.isClient() && finallyCommand == null) {
+			finallyCommand = () -> fireMutations();
+			Scheduler.get().scheduleFinally(finallyCommand);
+		}
+		runnable.run();
+	}
+
+	public void notifyChildListMutation(Node target, Node child,
+			Node previousSibling, boolean add) {
+		MutationRecord record = new MutationRecord();
+		record.type = Type.childList;
+		record.target = MutationNode.forNode(target);
+		record.previousSibling = MutationNode.forNode(previousSibling);
+		if (add) {
+			record.addedNodes.add(MutationNode.forNode(child));
+		} else {
+			record.removedNodes.add(MutationNode.forNode(child));
+		}
+		mutations.add(record);
+	}
+}

@@ -78,12 +78,17 @@ public class ProcessingInstruction extends Node implements
 	public void setData(String data) {
 		ensureRemoteCheck();
 		local().setData(data);
-		remote().setData(data);
+		sync(() -> remote().setData(data));
 	}
 
 	@Override
 	public String toString() {
 		return Ax.format("<?%s %s?>", local().getTarget(), local().getData());
+	}
+
+	@Override
+	protected ProcessingInstructionJso jsoRemote() {
+		return (ProcessingInstructionJso) remote();
 	}
 
 	@Override
@@ -112,12 +117,8 @@ public class ProcessingInstruction extends Node implements
 		this.remote = ProcessingInstructionNull.INSTANCE;
 	}
 
-	@Override
-	protected ProcessingInstructionJso jsoRemote() {
-		return (ProcessingInstructionJso) remote();
-	}
-
 	public class ProcessingInstructionImplAccess extends Node.ImplAccess {
+		@Override
 		public ProcessingInstructionJso ensureRemote() {
 			ensureRemoteCheck();
 			return ProcessingInstruction.this.jsoRemote();

@@ -33,13 +33,11 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.DomEvent;
-import com.google.gwt.event.logical.shared.AttachEvent;
-import com.google.gwt.event.logical.shared.AttachEvent.Handler;
-import com.google.gwt.event.logical.shared.HasAttachHandlers;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.event.shared.HasHandlers;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -57,7 +55,7 @@ import cc.alcina.framework.common.client.util.TextUtils;
  * Note that the event-related code in Widget has been moved here
  */
 public class Element extends Node implements ClientDomElement,
-		org.w3c.dom.Element, EventListener, HasAttachHandlers {
+		org.w3c.dom.Element, EventListener, HasHandlers {
 	public static final String REMOTE_DEFINED = "__localdom-remote-defined";
 
 	public static final Predicate<Element> DISPLAY_NONE = e -> e.implAccess()
@@ -143,18 +141,11 @@ public class Element extends Node implements ClientDomElement,
 
 	private boolean pendingSync;
 
-	int eventsToSink;
-
-	private boolean attached;
+	boolean attached;
 
 	private HandlerManager handlerManager;
 
 	protected Element() {
-	}
-
-	@Override
-	public HandlerRegistration addAttachHandler(Handler handler) {
-		return addHandler(handler, AttachEvent.getType());
 	}
 
 	/**
@@ -639,11 +630,6 @@ public class Element extends Node implements ClientDomElement,
 		return new ElementImplAccess();
 	}
 
-	@Override
-	public boolean isAttached() {
-		return attached;
-	}
-
 	public List<String> localBitlessEventsSunk() {
 		return local().bitlessEvents;
 	}
@@ -1117,6 +1103,43 @@ public class Element extends Node implements ClientDomElement,
 		return local;
 	}
 
+	/*
+	 * See Widget.onAttach. Functionality moved from Widget to here
+	 *
+	 * Note that element attach/detach is always called before Widget
+	 * attach/detach
+	 */
+	protected void onAttach() {
+		// Event hookup code
+		DOM.setEventListener(this, this);
+		List<String> localBitlessEventsSunk = localBitlessEventsSunk();
+		if (localBitlessEventsSunk != null) {
+			localBitlessEventsSunk.forEach(eventTypeName -> {
+				DOM.sinkBitlessEvent(this, eventTypeName);
+			});
+			localBitlessEventsSunk = null;
+		}
+		streamChildren().filter(Node::provideIsElement)
+				.forEach(n -> ((Element) n).setAttached(true));
+	}
+
+	/*
+	 * See Widget.onDetach. Functionality moved from Widget to here
+	 *
+	 * Note that element attach/detach is always called before Widget
+	 * attach/detach
+	 */
+	protected void onDetach() {
+		/*
+		 * Note that this doesn't use the same ordering as Widget (assumes no
+		 * fails - and note that no events/side-effects are produced, this code
+		 * is just concerned with listener attach/detach)
+		 */
+		DOM.setEventListener(this, null);
+		streamChildren().filter(Node::provideIsElement)
+				.forEach(n -> ((Element) n).setAttached(false));
+	}
+
 	protected ElementPathref pathrefRemote() {
 		return (ElementPathref) remote();
 	}
@@ -1233,6 +1256,18 @@ public class Element extends Node implements ClientDomElement,
 		}
 		Preconditions.checkState(remote != null);
 		this.remote = remote;
+	}
+
+	void setAttached(boolean attached) {
+		if (attached == this.attached) {
+			return;
+		}
+		this.attached = attached;
+		if (attached) {
+			onAttach();
+		} else {
+			onDetach();
+		}
 	}
 
 	/**

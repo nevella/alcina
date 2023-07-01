@@ -1,5 +1,5 @@
 /**
- * 
+ *
  * <h2>The great heist of the GWT dom</h2>
  * <p>
  * The GWT dom is completely rewritten in Alcina. Prior to the rewrite, the
@@ -11,7 +11,7 @@
  * representations - <i>local</i> (local to the .js or hostedmode java vvm) and
  * <i>remote</i> - which varies depending on the context but, in the case of a
  * GWT client is the browser DOM.
- * 
+ *
  * <p>
  * When the remote DOM representation is the browser DOM, the remote fields are
  * subtypes of {@link NodeJso}, which is where the code of the pre-localDom Node
@@ -20,7 +20,7 @@
  * <p>
  * LocalDom uses two parallel trees - 'local' (jvm/js) and 'remote' (browser
  * dom, or remote computer local/remote pair).
- * 
+ *
  * <p>
  * "Node" (unqualified) refers to the logical objects used (Element, Node, Text,
  * Document) etc which have references to both the local and remote trees, ditto
@@ -89,6 +89,19 @@
  * <li>if {@code childElement == original :: add to dispatch list}
  * </ul>
  * </ul>
+ * <h4>DOM processes</h4>
+ * <h5>Attach</h5>
+ * <p>
+ * Formerly GWT widget-only, this process is now mostly moved to Element
+ * (responsible for bind/unbind dom event handlers). It's possible (TODO -
+ * dirndl) that event handler binding could be further simplified in the future,
+ * by merging 'bitless' and 'bitted' - but not yet.
+ * <p>
+ * On bootstrap, the &lt;html&gt; element is marked as attached, and its
+ * descendants at the time are attached by recursive calls. Subsequently, any
+ * call to setParent will check the attached state of the parent and propagate
+ * if there's a delta
+ * <h5>local --&gt; remote flush</h5>
  *
  *
  *

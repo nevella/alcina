@@ -21,8 +21,9 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.ElementJso.ContiguousTextNodes;
 import com.google.gwt.dom.client.ElementJso.ElementJsoIndex;
-import com.google.gwt.dom.client.mutations.LocalDomMutations;
+import com.google.gwt.dom.client.mutations.LocalMutations;
 import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.dom.client.mutations.RemoteMutations;
 import com.google.gwt.user.client.DOM;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
@@ -114,8 +115,12 @@ public class LocalDom implements ContextFrame {
 		get().flush0();
 	}
 
-	public static LocalDomMutations getMutations() {
-		return get().mutations;
+	public static LocalMutations getLocalMutations() {
+		return get().localMutations;
+	}
+
+	public static RemoteMutations getRemoteMutations() {
+		return get().remoteMutations;
 	}
 
 	public static void initalize() {
@@ -189,6 +194,7 @@ public class LocalDom implements ContextFrame {
 	public static void register(Document doc) {
 		if (GWT.isClient()) {
 			get().initalizeRemoteSync(doc);
+			doc.getDocumentElement().setAttached(true);
 		}
 	}
 
@@ -228,7 +234,7 @@ public class LocalDom implements ContextFrame {
 			if (fromUserGesture) {
 				get().loggingConfiguration.logEvents = true;
 			}
-			get().mutations.verifyDomEquivalence();
+			get().remoteMutations.verifyDomEquivalence();
 		} catch (Exception e) {
 			e.printStackTrace();
 			topicReportException.publish(e);
@@ -425,7 +431,9 @@ public class LocalDom implements ContextFrame {
 
 	boolean applyToRemote = true;
 
-	LocalDomMutations mutations;
+	RemoteMutations remoteMutations;
+
+	LocalMutations localMutations;
 
 	private LoggingConfiguration loggingConfiguration;
 
@@ -610,8 +618,9 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private void initalizeDetachedSync0() {
-		mutations = new LocalDomMutations(new MutationsAccess(),
-				new LocalDomMutations.LoggingConfiguration());
+		remoteMutations = new RemoteMutations(new MutationsAccess(),
+				new RemoteMutations.LoggingConfiguration());
+		localMutations = new LocalMutations(new MutationsAccess());
 	}
 
 	private void initalizeRemoteSync(Document doc) {
@@ -620,8 +629,9 @@ public class LocalDom implements ContextFrame {
 		browserBehaviour = new BrowserBehaviour();
 		browserBehaviour.test();
 		linkRemote(docRemote, doc);
+		localMutations = new LocalMutations(new MutationsAccess());
 		nodeFor0(docRemote.getDocumentElement0());
-		mutations = new LocalDomMutations(new MutationsAccess(),
+		remoteMutations = new RemoteMutations(new MutationsAccess(),
 				loggingConfiguration.asMutationsConfiguration());
 	}
 
@@ -635,10 +645,10 @@ public class LocalDom implements ContextFrame {
 		}
 		flush();
 		try {
-			mutations.startObserving();
+			remoteMutations.startObserving();
 			runnable.run();
 		} finally {
-			mutations.syncMutationsAndStopObserving();
+			remoteMutations.syncMutationsAndStopObserving();
 		}
 	}
 
@@ -821,6 +831,7 @@ public class LocalDom implements ContextFrame {
 			// TODO - possibly log. But maybe not - full support of dodgy dom wd
 			// be truly hard
 			// FIXME - dirndl 1x3 - DEVEX (or retire - IE legacy?)
+			e.printStackTrace();
 			parsed = new HtmlParser().parse(safeParseByBrowser(outerHtml),
 					replaceContents,
 					root == Document.get().jsoRemote().getDocumentElement0());
@@ -980,8 +991,9 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private void verifyMutatingState0() {
-		Preconditions.checkArgument(syncing
-				|| (mutations.isObserverConnected() || !mutations.isEnabled()));
+		Preconditions
+				.checkArgument(syncing || (remoteMutations.isObserverConnected()
+						|| !remoteMutations.isEnabled()));
 	}
 
 	private void wasSynced0(Element elem) {
@@ -1072,8 +1084,9 @@ public class LocalDom implements ContextFrame {
 
 	void handleReportedException(Exception exception) {
 		String message = null;
-		if (loggingConfiguration.logHistoryOnEception) {
-			message = mutations.serializeHistory();
+		if (loggingConfiguration.logHistoryOnEception
+				&& remoteMutations != null) {
+			message = remoteMutations.serializeHistory();
 		}
 		log(Level.WARNING, "local dom :: %s",
 				CommonUtils.toSimpleExceptionMessage(exception));
@@ -1164,9 +1177,8 @@ public class LocalDom implements ContextFrame {
 					"logHistoryOnEception", true);
 		}
 
-		public LocalDomMutations.LoggingConfiguration
-				asMutationsConfiguration() {
-			LocalDomMutations.LoggingConfiguration result = new LocalDomMutations.LoggingConfiguration();
+		public RemoteMutations.LoggingConfiguration asMutationsConfiguration() {
+			RemoteMutations.LoggingConfiguration result = new RemoteMutations.LoggingConfiguration();
 			result.logDoms = mutationLogDoms;
 			result.logEvents = mutationLogEvents;
 			return result;
@@ -1264,12 +1276,12 @@ public class LocalDom implements ContextFrame {
 
 		public void applyMutations(List<MutationRecord> mutations,
 				boolean applyToRemote) {
-			LocalDom.this.mutations.applyDetachedMutations(mutations,
+			LocalDom.this.remoteMutations.applyDetachedMutations(mutations,
 					applyToRemote);
 		}
 
 		public MutationRecord asRemoveMutation(Node parent, Node oldChild) {
-			return mutations.nodeAsRemoveMutation(parent, oldChild);
+			return remoteMutations.nodeAsRemoveMutation(parent, oldChild);
 		}
 
 		public List<MutationRecord> domAsMutations() {
@@ -1277,7 +1289,7 @@ public class LocalDom implements ContextFrame {
 		}
 
 		public List<MutationRecord> nodeAsMutations(Node node) {
-			return mutations.nodeAsMutations(node);
+			return remoteMutations.nodeAsMutations(node);
 		}
 	}
 }

@@ -89,6 +89,8 @@ public abstract class Node
 		validateInsert(newChild);
 		doPreTreeSync(newChild);
 		T node = local().appendChild(newChild);
+		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
+				node, node.getPreviousSibling(), true));
 		sync(() -> remote().appendChild(newChild));
 		return node;
 	}
@@ -465,6 +467,14 @@ public abstract class Node
 	protected abstract boolean linkedToRemote();
 
 	protected abstract <T extends NodeLocal> T local();
+
+	/**
+	 * Apply the runnable (to the local mutation list) only if the mutation
+	 * tracking state requires it
+	 */
+	protected final void notify(Runnable runnable) {
+		LocalDom.getLocalMutations().notify(runnable);
+	}
 
 	protected Node provideRoot() {
 		if (getParentElement() != null) {

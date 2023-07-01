@@ -243,7 +243,7 @@ public class MutationsTests {
 					new Timer() {
 						@Override
 						public void run() {
-							if (LocalDom.getMutations().hadExceptions()) {
+							if (LocalDom.getRemoteMutations().hadExceptions()) {
 								consoleLog("Cancelling tests - exceptions",
 										true);
 							} else {

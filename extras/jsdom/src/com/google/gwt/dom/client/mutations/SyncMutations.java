@@ -128,7 +128,7 @@ class SyncMutations {
 	private List<MutationRecord> sync0(JsArray<MutationRecordJso> records) {
 		int unfilteredLength = records.length();
 		records = filterForRepeatedModification(records);
-		LocalDom.getMutations().log(Ax.format("Syncing records :: %s/%s",
+		LocalDom.getRemoteMutations().log(Ax.format("Syncing records :: %s/%s",
 				records.length(), unfilteredLength), false);
 		List<MutationRecordJso> recordJsoList = ClientUtils
 				.jsArrayToTypedArray(records);

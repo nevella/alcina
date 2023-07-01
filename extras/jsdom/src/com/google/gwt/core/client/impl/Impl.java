@@ -289,7 +289,7 @@ public final class Impl {
 					LocalDom.initalize();
 					firstTimeClient = false;
 				} else {
-					LocalDom.getMutations().syncMutationsAndStopObserving();
+					LocalDom.getRemoteMutations().syncMutationsAndStopObserving();
 				}
 			}
 			/*
@@ -320,7 +320,7 @@ public final class Impl {
 		} finally {
 			exit(initialEntry);
 			if (initialEntry) {
-				LocalDom.getMutations().startObserving();
+				LocalDom.getRemoteMutations().startObserving();
 			}
 		}
 	}

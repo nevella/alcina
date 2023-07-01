@@ -10,7 +10,9 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -26,6 +28,7 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -438,6 +441,53 @@ public class InferredDomEvents {
 		@Override
 		public void removeHandler() {
 			registrations.forEach(HandlerRegistration::removeHandler);
+		}
+	}
+
+	public static class Mutation extends NodeEvent<Mutation.Handler> {
+		public List<MutationRecord> records;
+
+		@Override
+		public NodeEvent clone() {
+			Mutation mutation = new Mutation();
+			return super.clone();
+		}
+
+		@Override
+		public void dispatch(Mutation.Handler handler) {
+			handler.onMutation(this);
+		}
+
+		@Override
+		public Class<Mutation.Handler> getHandlerClass() {
+			return Mutation.Handler.class;
+		}
+
+		public static class BindingImpl extends DomBinding<Mutation> {
+			TopicListener<List<MutationRecord>> mutationListener = this::onMutations;
+
+			@Override
+			protected HandlerRegistration bind1(Element element) {
+				LocalDom.getLocalMutations().topicMutations
+						.add(mutationListener);
+				return new HandlerRegistration() {
+					@Override
+					public void removeHandler() {
+						LocalDom.getLocalMutations().topicMutations
+								.remove(mutationListener);
+					}
+				};
+			}
+
+			void onMutations(List<MutationRecord> mutations) {
+				Mutation mutation = new Mutation();
+				mutation.records = mutations;
+				super.fireEvent(mutation);
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onMutation(Mutation event);
 		}
 	}
 

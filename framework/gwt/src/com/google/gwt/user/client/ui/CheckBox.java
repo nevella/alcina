@@ -1,12 +1,12 @@
 /*
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -39,10 +39,10 @@ import com.google.gwt.user.client.Event;
 
 /**
  * A standard check box widget.
- * 
+ *
  * This class also serves as a base class for
  * {@link com.google.gwt.user.client.ui.RadioButton}.
- * 
+ *
  * <p>
  * <img class='gallery' src='doc-files/CheckBox.png'/>
  * </p>
@@ -61,7 +61,7 @@ import com.google.gwt.user.client.Event;
  * <dt>.gwt-CheckBox-disabled</dt>
  * <dd>applied when Checkbox is disabled</dd>
  * </dl>
- * 
+ *
  * <p>
  * <h3>Example</h3> {@example com.google.gwt.examples.CheckBoxExample}
  * </p>
@@ -95,7 +95,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 
 	/**
 	 * Creates a check box with the specified text label.
-	 * 
+	 *
 	 * @param label
 	 *            the check box's label
 	 */
@@ -105,7 +105,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 
 	/**
 	 * Creates a check box with the specified text label.
-	 * 
+	 *
 	 * @param label
 	 *            the check box's label
 	 * @param dir
@@ -120,7 +120,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 
 	/**
 	 * Creates a check box with the specified text label.
-	 * 
+	 *
 	 * @param label
 	 *            the check box's label
 	 * @param directionEstimator
@@ -136,7 +136,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 
 	/**
 	 * Creates a check box with the specified text label.
-	 * 
+	 *
 	 * @param label
 	 *            the check box's label
 	 */
@@ -165,7 +165,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 
 	/**
 	 * Creates a check box with the specified text label.
-	 * 
+	 *
 	 * @param label
 	 *            the check box's label
 	 * @param dir
@@ -181,7 +181,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	/**
 	 * Creates a label with the specified text and a default direction
 	 * estimator.
-	 * 
+	 *
 	 * @param label
 	 *            the check box's label
 	 * @param directionEstimator
@@ -291,7 +291,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	 * Note that this <em>does not</em> return the value property of the
 	 * checkbox input element wrapped by this widget. For access to that
 	 * property, see {@link #getFormValue()}
-	 * 
+	 *
 	 * @return <code>true</code> if the check box is checked, false otherwise.
 	 *         Will not return null
 	 */
@@ -312,7 +312,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 
 	/**
 	 * Determines whether this check box is currently checked.
-	 * 
+	 *
 	 * @return <code>true</code> if the check box is checked
 	 * @deprecated Use {@link #getValue} instead
 	 */
@@ -336,7 +336,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	 * Checks or unchecks this check box. Does not fire
 	 * {@link ValueChangeEvent}. (If you want the event to fire, use
 	 * {@link #setValue(Boolean, boolean)})
-	 * 
+	 *
 	 * @param checked
 	 *            <code>true</code> to check the check box.
 	 * @deprecated Use {@link #setValue(Boolean)} instead
@@ -397,7 +397,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	 * <p>
 	 * Don't confuse this with {@link #setValue}, which actually checks and
 	 * unchecks the box.
-	 * 
+	 *
 	 * @param value
 	 */
 	public void setFormValue(String value) {
@@ -448,7 +448,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	 * Note that this <em>does not</em> set the value property of the checkbox
 	 * input element wrapped by this widget. For access to that property, see
 	 * {@link #setFormValue(String)}
-	 * 
+	 *
 	 * @param value
 	 *            true to check, false to uncheck; null value implies false
 	 */
@@ -464,7 +464,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	 * Note that this <em>does not</em> set the value property of the checkbox
 	 * input element wrapped by this widget. For access to that property, see
 	 * {@link #setFormValue(String)}
-	 * 
+	 *
 	 * @param value
 	 *            true to check, false to uncheck; null value implies false
 	 * @param fireEvents
@@ -497,12 +497,8 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	// its wrapper
 	@Override
 	public void sinkEvents(int eventBitsToAdd) {
-		if (isOrWasAttached()) {
-			Event.sinkEvents(inputElem,
-					eventBitsToAdd | Event.getEventsSunk(inputElem));
-		} else {
-			super.sinkEvents(eventBitsToAdd);
-		}
+		Event.sinkEvents(inputElem,
+				eventBitsToAdd | Event.getEventsSunk(inputElem));
 	}
 
 	protected void ensureDomEventHandlers() {
@@ -522,7 +518,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	 * <ul>
 	 * <li>-label = label next to checkbox.</li>
 	 * </ul>
-	 * 
+	 *
 	 * @see UIObject#onEnsureDebugId(String)
 	 */
 	@Override
@@ -599,7 +595,7 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	 * Replace the current input element with a new one. Preserves all state
 	 * except for the name property, for nasty reasons related to radio button
 	 * grouping. (See implementation of {@link RadioButton#setName}.)
-	 * 
+	 *
 	 * @param elem
 	 *            the new input element
 	 */
