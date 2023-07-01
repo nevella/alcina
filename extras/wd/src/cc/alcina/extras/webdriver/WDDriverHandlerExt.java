@@ -10,7 +10,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.HttpCommandExecutor;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -165,15 +164,17 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 			driverClass = clazz;
 			sessionId = driver.getSessionId().toString();
 			currentUrl = driver.getCurrentUrl();
-			MutableCapabilities caps = (MutableCapabilities) driver
-					.getCapabilities();
-			caps.asMap().keySet().forEach(k -> {
-				Object capability = caps.getCapability(k);
-				if (capability instanceof Map) {
-					caps.setCapability(k, new LinkedHashMap((Map) capability));
-				}
-			});
-			capabilities = driver.getCapabilities();
+			// FIXME: This is probably unused, it converts existing capability
+			// values to mutable maps if they implement Map.
+			// MutableCapabilities caps = (MutableCapabilities) driver
+			// .getCapabilities();
+			// caps.asMap().keySet().forEach(k -> {
+			// Object capability = caps.getCapability(k);
+			// if (capability instanceof Map) {
+			// caps.setCapability(k, new LinkedHashMap((Map) capability));
+			// }
+			// });
+			// capabilities = driver.getCapabilities();
 			try {
 				{
 					Field field = RemoteWebDriver.class

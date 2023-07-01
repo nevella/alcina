@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.ElementNotVisibleException;
+import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
@@ -142,7 +142,7 @@ public class WDUtils {
 			ok = true;
 			try {
 				elt.click();
-			} catch (ElementNotVisibleException e) {
+			} catch (ElementNotInteractableException e) {
 				ok = false;
 				try {
 					Thread.sleep(100);
