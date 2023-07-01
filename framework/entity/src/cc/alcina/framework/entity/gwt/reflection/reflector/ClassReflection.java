@@ -194,8 +194,11 @@ public class ClassReflection extends ReflectionElement {
 				&& (type.isStatic() || !type.isMemberType());
 		if (isExternalConstructible) {
 			noArgsConstructor = Arrays.stream(type.getConstructors())
-					.filter(c -> c.getParameters().length == 0)
-					.filter(c -> c.isPublic()).findFirst().orElse(null);
+					.filter(c -> c.getParameters().length == 0).findFirst()
+					.orElse(null);
+			if (noArgsConstructor != null) {
+				((AccessibleConstructor) noArgsConstructor).makeAccessible();
+			}
 		}
 		Arrays.stream(type.getAnnotations())
 				.filter(a -> reflectionVisibility
@@ -380,6 +383,10 @@ public class ClassReflection extends ReflectionElement {
 		}
 		// not a property method
 		return null;
+	}
+
+	public interface AccessibleConstructor {
+		void makeAccessible();
 	}
 
 	public interface JdkTypeModelMapper {
