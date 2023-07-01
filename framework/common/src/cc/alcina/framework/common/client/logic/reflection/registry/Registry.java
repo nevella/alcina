@@ -645,10 +645,13 @@ public class Registry {
 
 		class Node {
 			// will be concurrent if in a concurrent environment
-			Map<RegistryKey, Node> map = delegateCreator.createDelegateMap(0,
-					0);
+			Map<RegistryKey, Node> map;
 
 			T value;
+
+			Node() {
+				map = delegateCreator.createDelegateMap(0, 0);
+			}
 
 			void add(Iterator<RegistryKey> itr, Object value) {
 				RegistryKey key = itr.next();

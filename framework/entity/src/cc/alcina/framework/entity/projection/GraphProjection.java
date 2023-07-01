@@ -127,6 +127,8 @@ public class GraphProjection {
 	static Map<Class, Constructor> constructorLookup = new ConcurrentHashMap<Class, Constructor>(
 			LOOKUP_SIZE);
 
+	private static GraphProjection fieldwiseEqualityProjection;
+
 	public static final String CONTEXT_REPLACE_MAP = GraphProjection.class
 			+ ".CONTEXT_REPLACE_MAP";
 
@@ -148,9 +150,6 @@ public class GraphProjection {
 	public static final Topic<Integer> topicProjectCountDelta = Topic.create();
 
 	protected static final Object NULL_MARKER = new Object();
-
-	static GraphProjection fieldwiseEqualityProjection = new GraphProjection(
-			new AllFieldsFilter(), null);
 
 	public static String classSimpleName(Class clazz) {
 		if (clazz == null) {
@@ -174,7 +173,7 @@ public class GraphProjection {
 			boolean oneLine, int maxLen, String... excludeFields) {
 		try {
 			List<String> fieldNames = new ArrayList<>();
-			GraphProjection graphProjection = fieldwiseEqualityProjection;
+			GraphProjection graphProjection = fieldwiseEqualityProjection();
 			StringBuilder sb = new StringBuilder();
 			List<String> excludeList = Arrays.asList(excludeFields);
 			for (Field field : graphProjection
@@ -214,7 +213,7 @@ public class GraphProjection {
 	public static String generateFieldwiseEqualString(Class clazz)
 			throws Exception {
 		List<String> fieldNames = new ArrayList<>();
-		GraphProjection graphProjection = fieldwiseEqualityProjection;
+		GraphProjection graphProjection = fieldwiseEqualityProjection();
 		for (Field field : graphProjection.getFieldsForClass(clazz)) {
 			String name = field.getName();
 			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
@@ -252,7 +251,7 @@ public class GraphProjection {
 	public static String generateFieldwiseEquivalentString(Class clazz)
 			throws Exception {
 		List<String> fieldNames = new ArrayList<>();
-		GraphProjection graphProjection = fieldwiseEqualityProjection;
+		GraphProjection graphProjection = fieldwiseEqualityProjection();
 		for (Field field : graphProjection.getFieldsForClass(clazz)) {
 			String name = field.getName();
 			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
@@ -378,7 +377,7 @@ public class GraphProjection {
 			return false;
 		}
 		try {
-			for (Field field : fieldwiseEqualityProjection
+			for (Field field : fieldwiseEqualityProjection()
 					.getFieldsForClass(o1.getClass())) {
 				Object v1 = field.get(o1);
 				Object v2 = field.get(o2);
@@ -396,7 +395,7 @@ public class GraphProjection {
 		try {
 			StringBuilder sb = new StringBuilder();
 			int hash = 0;
-			for (Field field : fieldwiseEqualityProjection
+			for (Field field : fieldwiseEqualityProjection()
 					.getFieldsForClass(o1.getClass())) {
 				Object v1 = field.get(o1);
 				hash ^= Objects.hashCode(v1);
@@ -427,6 +426,14 @@ public class GraphProjection {
 		GraphProjections projections = GraphProjections.defaultProjections()
 				.maxDepth(depth);
 		return projections.project(original);
+	}
+
+	static GraphProjection fieldwiseEqualityProjection() {
+		if (fieldwiseEqualityProjection == null) {
+			fieldwiseEqualityProjection = new GraphProjection(
+					new AllFieldsFilter(), null);
+		}
+		return fieldwiseEqualityProjection;
 	}
 
 	static PropertyPermissions getPropertyPermission(Field field) {
