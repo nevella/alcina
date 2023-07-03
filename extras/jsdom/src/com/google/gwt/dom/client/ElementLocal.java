@@ -143,7 +143,7 @@ public class ElementLocal extends NodeLocal
 	}
 
 	@Override
-	public Map<String, String> getAttributeMap() {
+	public LightMap<String, String> getAttributeMap() {
 		return attributes;
 	}
 
@@ -763,6 +763,30 @@ public class ElementLocal extends NodeLocal
 	@Override
 	void appendTextContent(StringBuilder builder) {
 		getChildren().stream().forEach(node -> node.appendTextContent(builder));
+	}
+
+	Map<String, String> getAttributeMapIncludingStyles() {
+		if (element.getStyle() == null
+				|| element.getStyle().local().isEmpty()) {
+			return this.attributes;
+		}
+		LightMap<String, String> attributes = this.attributes.clone();
+		StringBuilder styleBuilder = new StringBuilder();
+		String styleAttributeValue = attributes.get("style");
+		if (Ax.notBlank(styleAttributeValue)) {
+			styleBuilder.append(styleAttributeValue);
+			styleBuilder.append("; ");
+		}
+		((StyleLocal) element.getStyle().local()).properties.entrySet()
+				.forEach(e -> {
+					styleBuilder
+							.append(LocalDom.declarativeCssName(e.getKey()));
+					styleBuilder.append(":");
+					styleBuilder.append(e.getValue());
+					styleBuilder.append("; ");
+				});
+		attributes.put("style", styleBuilder.toString());
+		return attributes;
 	}
 
 	int orSunkEventsOfAllChildren(int sunk) {

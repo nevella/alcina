@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 import java.io.Serializable;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -43,6 +44,21 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 	@Override
 	public void clear() {
 		entrySet().clear();
+	}
+
+	@Override
+	public LightMap clone() {
+		LightMap<K, V> clone = new LightMap<>();
+		clone.size = size;
+		clone.modCount = modCount;
+		if (degenerate != null) {
+			clone.degenerate = DomainCollections.get().createUnsortedMap();
+			clone.degenerate.putAll(this);
+			clone.elementData = null;
+		} else {
+			clone.elementData = Arrays.copyOf(elementData, elementData.length);
+		}
+		return clone;
 	}
 
 	@Override

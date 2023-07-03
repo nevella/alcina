@@ -236,7 +236,7 @@ public class Element extends Node
 
 	@Override
 	public Map<String, String> getAttributeMap() {
-		return local().getAttributeMap();
+		return local.getAttributeMapIncludingStyles();
 	}
 
 	@Override
