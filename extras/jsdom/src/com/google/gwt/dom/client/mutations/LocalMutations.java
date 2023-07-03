@@ -25,24 +25,33 @@ public class LocalMutations {
 		this.mutationsAccess = mutationsAccess;
 	}
 
-	public void fireMutations() {
-		if (this.mutations.isEmpty()) {
-			return;
-		}
-		List<MutationRecord> mutations = this.mutations;
-		this.mutations = new ArrayList<>();
-		topicMutations.publish(mutations);
-	}
-
 	public void notify(Runnable runnable) {
 		if (!topicMutations.hasListeners()) {
 			return;
 		}
 		if (GWT.isClient() && finallyCommand == null) {
-			finallyCommand = () -> fireMutations();
+			finallyCommand = this::fireMutations;
 			Scheduler.get().scheduleFinally(finallyCommand);
 		}
 		runnable.run();
+	}
+
+	public void notifyAttributeModification(Node target, String name,
+			String data) {
+		MutationRecord record = new MutationRecord();
+		record.type = Type.attributes;
+		record.target = MutationNode.forNode(target);
+		record.attributeName = name;
+		record.newValue = data;
+		mutations.add(record);
+	}
+
+	public void notifyCharacterData(Node target, String data) {
+		MutationRecord record = new MutationRecord();
+		record.type = Type.characterData;
+		record.target = MutationNode.forNode(target);
+		record.newValue = data;
+		mutations.add(record);
 	}
 
 	public void notifyChildListMutation(Node target, Node child,
@@ -57,5 +66,15 @@ public class LocalMutations {
 			record.removedNodes.add(MutationNode.forNode(child));
 		}
 		mutations.add(record);
+	}
+
+	void fireMutations() {
+		finallyCommand = null;
+		if (this.mutations.isEmpty()) {
+			return;
+		}
+		List<MutationRecord> mutations = this.mutations;
+		this.mutations = new ArrayList<>();
+		topicMutations.publish(mutations);
 	}
 }

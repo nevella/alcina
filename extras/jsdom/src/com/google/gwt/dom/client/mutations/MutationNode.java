@@ -41,14 +41,14 @@ import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 @Bean(PropertySource.FIELDS)
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 public final class MutationNode {
-	public static MutationNode forNode(Node node) {
+	public static MutationNode forNode(org.w3c.dom.Node node) {
 		if (node == null) {
 			return null;
 		}
 		MutationNode result = new MutationNode();
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
-		result.node = node;
+		result.w3cNode = node;
 		return result;
 	}
 
@@ -62,6 +62,8 @@ public final class MutationNode {
 		result.path = Pathref.forNode(node);
 		return result;
 	}
+
+	public transient org.w3c.dom.Node w3cNode;
 
 	public Pathref path = new Pathref();
 

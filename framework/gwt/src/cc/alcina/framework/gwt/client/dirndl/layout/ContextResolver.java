@@ -1,7 +1,12 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -13,8 +18,10 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 
@@ -61,12 +68,17 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	DefaultAnnotationResolver annotationResolver = new DefaultAnnotationResolver();
 
+	BindingsCache bindingsCache = new BindingsCache();
+
 	public ContextResolver() {
 	}
 
 	public void appendToRoot(Rendered rendered) {
-		Registry.impl(RootModifier.class)
-				.appendToRoot(rendered);
+		Registry.impl(RootModifier.class).appendToRoot(rendered);
+	}
+
+	public List<Binding> getBindings(Directed directed, Object model) {
+		return bindingsCache.getBindings(directed, model.getClass());
 	}
 
 	public <T> T getRootModel() {
@@ -117,9 +129,8 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 
 	protected void init(DirectedLayout.Node node) {
-		this.parent = node.getResolver();
-		this.layout = this.parent.layout;
-		this.rootModel = node.getModel();
+		init(node.getResolver(), this.parent.layout,
+				this.rootModel = node.getModel());
 	}
 
 	@Override
@@ -204,6 +215,60 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		public void setDefaultResolver(
 				Class<? extends ContextResolver> defaultResolver) {
 			this.defaultResolver = defaultResolver;
+		}
+	}
+
+	class BindingsCache {
+		Map<Key, List<Binding>> byKey = new LinkedHashMap<>();
+
+		List<Binding> computeBindings(Key key) {
+			List<Binding> result = new ArrayList<>();
+			Arrays.asList(key.directed.bindings()).forEach(result::add);
+			ClassReflector<? extends Object> reflector = Reflections
+					.at(key.clazz);
+			if (reflector != null) {
+				reflector.properties().stream()
+						.filter(p -> p.has(Binding.class))
+						.map(p -> Binding.Impl.propertyBinding(p,
+								p.annotation(Binding.class)))
+						.forEach(result::add);
+			}
+			return result;
+		}
+
+		List<Binding> getBindings(Directed directed,
+				Class<? extends Object> clazz) {
+			Key key = new Key(directed, clazz);
+			return byKey.computeIfAbsent(key, this::computeBindings);
+		}
+
+		class Key {
+			Directed directed;
+
+			Class<? extends Object> clazz;
+
+			Key(Directed directed, Class<? extends Object> clazz) {
+				this.directed = directed;
+				this.clazz = clazz;
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (this == obj)
+					return true;
+				if (obj == null)
+					return false;
+				if (getClass() != obj.getClass())
+					return false;
+				Key other = (Key) obj;
+				return Objects.equals(this.clazz, other.clazz)
+						&& Objects.equals(this.directed, other.directed);
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash(clazz, directed);
+			}
 		}
 	}
 }

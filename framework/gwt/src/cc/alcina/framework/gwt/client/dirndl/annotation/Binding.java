@@ -1,20 +1,24 @@
 package cc.alcina.framework.gwt.client.dirndl.annotation;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Objects;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-// in fact, should only be an inner annotation for @Directed
-@Target(ElementType.TYPE_USE)
+// Use as a field of @Directed, or on a property
+@Target({ ElementType.METHOD, ElementType.FIELD })
 @ClientVisible
 public @interface Binding {
 	String from() default "";
@@ -32,6 +36,137 @@ public @interface Binding {
 		@Override
 		public String apply(Boolean t) {
 			return CommonUtils.bv(t) ? "block" : "none";
+		}
+	}
+
+	public static class Impl implements Binding {
+		public static final Impl DEFAULT_INSTANCE = new Binding.Impl();
+
+		public static Impl propertyBinding(Property property, Binding binding) {
+			Impl impl = new Impl(binding);
+			impl.from = property.getName();
+			return impl;
+		}
+
+		String from = "";
+
+		String literal = "";
+
+		String to = "";
+
+		Class<? extends ToStringFunction> transform = ToStringFunction.Identity.class;
+
+		Type type;
+
+		public Impl() {
+		}
+
+		public Impl(Binding binding) {
+			this.from = binding.from();
+			this.literal = binding.literal();
+			this.to = binding.to();
+			this.transform = binding.transform();
+			this.type = binding.type();
+		}
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Binding.class;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof Impl)) {
+				return false;
+			}
+			Impl other = (Impl) obj;
+			return Objects.equals(this.from, other.from)
+					&& Objects.equals(this.literal, other.literal)
+					&& Objects.equals(this.to, other.to)
+					&& Objects.equals(this.transform, other.transform)
+					&& this.type == other.type;
+		}
+
+		@Override
+		public String from() {
+			return from;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(from, literal, to, transform, type);
+		}
+
+		@Override
+		public String literal() {
+			return literal;
+		}
+
+		@Override
+		public String to() {
+			return to;
+		}
+
+		@Override
+		public String toString() {
+			return toString(false);
+		}
+
+		public String toStringElideDefaults() {
+			return toString(true);
+		}
+
+		@Override
+		public Class<? extends ToStringFunction> transform() {
+			return transform;
+		}
+
+		@Override
+		public Type type() {
+			return type;
+		}
+
+		private String __stringValue(Object o) {
+			if (o instanceof Class) {
+				return ((Class) o).getSimpleName() + ".class";
+			}
+			if (o.getClass().isArray()) {
+				return "[" + java.util.Arrays.stream((Object[]) o)
+						.map(this::__stringValue).collect(
+								java.util.stream.Collectors.joining(","))
+						+ "]";
+			}
+			return o.toString();
+		}
+
+		private void append(StringBuilder stringBuilder, String fieldName,
+				Function<Impl, ?> function, boolean elideDefaults) {
+			Object value = function.apply(this);
+			if (elideDefaults) {
+				Object defaultValue = function.apply(DEFAULT_INSTANCE);
+				if (Objects.deepEquals(value, defaultValue)) {
+					return;
+				}
+			}
+			if (stringBuilder.length() > 0) {
+				stringBuilder.append(',');
+			}
+			stringBuilder.append(fieldName);
+			stringBuilder.append('=');
+			stringBuilder.append(__stringValue(value));
+		}
+
+		String toString(boolean elideDefaults) {
+			StringBuilder stringBuilder = new StringBuilder();
+			append(stringBuilder, "from", Impl::from, elideDefaults);
+			append(stringBuilder, "literal", Impl::literal, elideDefaults);
+			append(stringBuilder, "to", Impl::to, elideDefaults);
+			append(stringBuilder, "transform", Impl::transform, elideDefaults);
+			append(stringBuilder, "type", Impl::type, elideDefaults);
+			return stringBuilder.toString();
 		}
 	}
 

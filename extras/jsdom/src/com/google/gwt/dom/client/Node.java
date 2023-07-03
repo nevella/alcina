@@ -257,6 +257,8 @@ public abstract class Node
 			doPreTreeSync(newChild);
 			doPreTreeSync(refChild);
 			Node result = local().insertBefore(newChild, refChild);
+			notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
+					this, newChild, newChild.getPreviousSibling(), true));
 			sync(() -> remote().insertBefore(newChild, refChild));
 			return result;
 		} catch (Exception e) {
@@ -349,6 +351,8 @@ public abstract class Node
 	public Node removeChild(Node oldChild) {
 		doPreTreeSync(oldChild);
 		sync(() -> remote().preRemove(oldChild));
+		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
+				oldChild, null, false));
 		Node result = local().removeChild(oldChild);
 		sync(() -> remote().removeChild(oldChild));
 		return result;
@@ -365,6 +369,8 @@ public abstract class Node
 		ensureRemoteCheck();
 		sync(() -> remote().preRemove(this));
 		sync(() -> remote().removeFromParent());
+		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
+				this, null, false));
 		local().removeFromParent();
 	}
 
@@ -374,6 +380,10 @@ public abstract class Node
 		doPreTreeSync(newChild);
 		sync(() -> remote().preRemove(oldChild));
 		sync(() -> remote().replaceChild(newChild, oldChild));
+		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
+				oldChild, null, false));
+		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
+				newChild, newChild.getPreviousSibling(), true));
 		Node result = local().replaceChild(newChild, oldChild);
 		return result;
 	}
@@ -399,6 +409,8 @@ public abstract class Node
 	public void setNodeValue(String nodeValue) {
 		ensureRemoteCheck();
 		local().setNodeValue(nodeValue);
+		notify(() -> LocalDom.getLocalMutations().notifyCharacterData(this,
+				nodeValue));
 		sync(() -> remote().setNodeValue(nodeValue));
 	}
 

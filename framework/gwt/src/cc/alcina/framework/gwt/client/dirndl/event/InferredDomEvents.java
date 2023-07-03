@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -449,8 +450,9 @@ public class InferredDomEvents {
 
 		@Override
 		public NodeEvent clone() {
-			Mutation mutation = new Mutation();
-			return super.clone();
+			Mutation mutation = (Mutation) super.clone();
+			mutation.records = records;
+			return mutation;
 		}
 
 		@Override
@@ -466,8 +468,11 @@ public class InferredDomEvents {
 		public static class BindingImpl extends DomBinding<Mutation> {
 			TopicListener<List<MutationRecord>> mutationListener = this::onMutations;
 
+			Element mutationRoot;
+
 			@Override
 			protected HandlerRegistration bind1(Element element) {
+				this.mutationRoot = element;
 				LocalDom.getLocalMutations().topicMutations
 						.add(mutationListener);
 				return new HandlerRegistration() {
@@ -480,8 +485,15 @@ public class InferredDomEvents {
 			}
 
 			void onMutations(List<MutationRecord> mutations) {
+				List<MutationRecord> applicableMutations = mutations.stream()
+						.filter(m -> mutationRoot.isOrHasChild(
+								(com.google.gwt.dom.client.Node) m.target.w3cNode))
+						.collect(Collectors.toList());
+				if (applicableMutations.isEmpty()) {
+					return;
+				}
 				Mutation mutation = new Mutation();
-				mutation.records = mutations;
+				mutation.records = applicableMutations;
 				super.fireEvent(mutation);
 			}
 		}

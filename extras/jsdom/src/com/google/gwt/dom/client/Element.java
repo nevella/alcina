@@ -177,6 +177,8 @@ public class Element extends Node implements ClientDomElement,
 	public boolean addClassName(String className) {
 		ensureRemoteCheck();
 		boolean result = local().addClassName(className);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, "class", local().getClassName()));
 		sync(() -> remote().addClassName(className));
 		return result;
 	}
@@ -676,6 +678,9 @@ public class Element extends Node implements ClientDomElement,
 	public void removeAttribute(String name) {
 		ensureRemoteCheck();
 		local().removeAttribute(name);
+		// FIXME - dirndl - dodesn't actually remove
+		notify(() -> LocalDom.getLocalMutations()
+				.notifyAttributeModification(this, name, ""));
 		sync(() -> remote().removeAttribute(name));
 	}
 
@@ -694,6 +699,8 @@ public class Element extends Node implements ClientDomElement,
 	public boolean removeClassName(String className) {
 		ensureRemoteCheck();
 		boolean result = local().removeClassName(className);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, "class", local().getClassName()));
 		sync(() -> remote().removeClassName(className));
 		return result;
 	}
@@ -702,6 +709,8 @@ public class Element extends Node implements ClientDomElement,
 	public void replaceClassName(String oldClassName, String newClassName) {
 		ensureRemoteCheck();
 		local().replaceClassName(oldClassName, newClassName);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, "class", local().getClassName()));
 		sync(() -> remote().replaceClassName(oldClassName, newClassName));
 	}
 
@@ -743,6 +752,8 @@ public class Element extends Node implements ClientDomElement,
 		}
 		ensureRemoteCheck();
 		local().setAttribute(name, value);
+		notify(() -> LocalDom.getLocalMutations()
+				.notifyAttributeModification(this, name, value));
 		sync(() -> remote().setAttribute(name, value));
 	}
 
@@ -770,6 +781,8 @@ public class Element extends Node implements ClientDomElement,
 		}
 		ensureRemoteCheck();
 		local().setClassName(className);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, "class", local().getClassName()));
 		sync(() -> remote().setClassName(className));
 	}
 
@@ -785,6 +798,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setDir(String dir) {
 		ensureRemoteCheck();
 		local().setDir(dir);
+		notify(() -> LocalDom.getLocalMutations()
+				.notifyAttributeModification(this, "dir", local().getDir()));
 		sync(() -> remote().setDir(dir));
 	}
 
@@ -792,6 +807,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setDraggable(String draggable) {
 		ensureRemoteCheck();
 		local().setDraggable(draggable);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, "draggable", local().getDraggable()));
 		sync(() -> remote().setDraggable(draggable));
 	}
 
@@ -799,6 +816,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setId(String id) {
 		ensureRemoteCheck();
 		local().setId(id);
+		notify(() -> LocalDom.getLocalMutations()
+				.notifyAttributeModification(this, "id", local().getId()));
 		sync(() -> remote().setId(id));
 	}
 
@@ -862,14 +881,17 @@ public class Element extends Node implements ClientDomElement,
 	public void setLang(String lang) {
 		ensureRemoteCheck();
 		local().setLang(lang);
+		notify(() -> LocalDom.getLocalMutations()
+				.notifyAttributeModification(this, "lang", local().getLang()));
 		sync(() -> remote().setLang(lang));
 	}
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		ensureRemoteCheck();
-		local().setNodeValue(nodeValue);
-		sync(() -> remote().setNodeValue(nodeValue));
+		// ensureRemoteCheck();
+		// local().setNodeValue(nodeValue);
+		// sync(() -> remote().setNodeValue(nodeValue));
+		throw new UnsupportedOperationException();
 	}
 
 	public void setOuterHtml(String html) {
@@ -881,6 +903,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setPropertyBoolean(String name, boolean value) {
 		ensureRemoteCheck();
 		local().setPropertyBoolean(name, value);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, name, String.valueOf(value)));
 		sync(() -> remote().setPropertyBoolean(name, value));
 	}
 
@@ -888,6 +912,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setPropertyDouble(String name, double value) {
 		ensureRemoteCheck();
 		local().setPropertyDouble(name, value);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, name, String.valueOf(value)));
 		sync(() -> remote().setPropertyDouble(name, value));
 	}
 
@@ -895,6 +921,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setPropertyInt(String name, int value) {
 		ensureRemoteCheck();
 		local().setPropertyInt(name, value);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, name, String.valueOf(value)));
 		sync(() -> remote().setPropertyInt(name, value));
 	}
 
@@ -908,6 +936,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setPropertyObject(String name, Object value) {
 		ensureRemoteCheck();
 		local().setPropertyObject(name, value);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, name, String.valueOf(value)));
 		sync(() -> remote().setPropertyObject(name, value));
 	}
 
@@ -915,6 +945,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setPropertyString(String name, String value) {
 		ensureRemoteCheck();
 		local().setPropertyString(name, value);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, name, String.valueOf(value)));
 		sync(() -> remote().setPropertyString(name, value));
 	}
 
@@ -932,6 +964,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setTabIndex(int tabIndex) {
 		ensureRemoteCheck();
 		local().setTabIndex(tabIndex);
+		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
+				this, "tabIndex", String.valueOf(tabIndex)));
 		sync(() -> remote().setTabIndex(tabIndex));
 	}
 
@@ -946,6 +980,8 @@ public class Element extends Node implements ClientDomElement,
 	public void setTitle(String title) {
 		ensureRemoteCheck();
 		local().setTitle(title);
+		notify(() -> LocalDom.getLocalMutations()
+				.notifyAttributeModification(this, "title", title));
 		sync(() -> remote().setTitle(title));
 	}
 
@@ -972,6 +1008,8 @@ public class Element extends Node implements ClientDomElement,
 	public void toggleClassName(String className) {
 		ensureRemoteCheck();
 		local().toggleClassName(className);
+		notify(() -> LocalDom.getLocalMutations()
+				.notifyAttributeModification(this, "class", getClassName()));
 		sync(() -> remote().toggleClassName(className));
 	}
 
