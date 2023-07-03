@@ -236,7 +236,7 @@ public class Element extends Node
 
 	@Override
 	public Map<String, String> getAttributeMap() {
-		return local().getAttributeMap();
+		return local.getAttributeMapIncludingStyles();
 	}
 
 	@Override
@@ -1131,6 +1131,7 @@ public class Element extends Node
 			return ensureJsoRemote().getChildNodes0().getItem0(index);
 		}
 
+		@Override
 		public ElementJso jsoRemote() {
 			return Element.this.jsoRemote();
 		}
