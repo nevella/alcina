@@ -51,6 +51,7 @@ public abstract class NodePathref implements ClientDomNode {
 	static void ensurePathrefRemote(Node child) {
 		if (!child.linkedToRemote()) {
 			child.putRemote(create(child), false);
+			child.streamChildren().forEach(NodePathref::ensurePathrefRemote);
 		}
 	}
 

@@ -22,7 +22,7 @@ public interface TransactionEnvironment {
 		get().withDomainAccess0(runnable);
 	}
 
-	public static <T> T withDomainAccess(Supplier<T> supplier) {
+	public static <T> T withDomain(Supplier<T> supplier) {
 		return get().withDomainAccess0(supplier);
 	}
 

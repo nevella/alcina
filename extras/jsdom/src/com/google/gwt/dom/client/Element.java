@@ -326,7 +326,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public Map<String, String> getAttributeMap() {
-		return local().getAttributeMap();
+		return local.getAttributeMapIncludingStyles();
 	}
 
 	@Override
