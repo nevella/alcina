@@ -481,7 +481,9 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		public void applyReverseBindings() {
-			propertyBindings.setLeft();
+			if (propertyBindings != null) {
+				propertyBindings.setLeft();
+			}
 		}
 
 		// FIXME - dirndl 1x2 (use models for form intermediates) (remove, let

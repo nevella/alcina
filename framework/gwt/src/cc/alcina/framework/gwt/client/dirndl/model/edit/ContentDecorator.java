@@ -49,7 +49,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  * <ul>
  * <li>User enters some triggering key events - say the '@' key
  * <li>BeforeInput event interception marks the next input event as requiring a
- * check (query - can we just check the input data?)
+ * check (query - can we just check the input data?)(answer - beforeinput is
+ * easier, since it tells us about the delta)
  * <li>Input event interception checks if the state is valid for content
  * decoration (particularly that the cursor (DOM selection) is collapsed) and,
  * if checks pass:

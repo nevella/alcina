@@ -2,13 +2,16 @@ package cc.alcina.framework.gwt.client.dirndl.model.fragment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.w3c.dom.Node;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.meta.Feature;
@@ -84,21 +87,21 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	public FragmentModel(Model rootModel) {
 		this.rootModel = rootModel;
+		addDefaultModelledTypes();
 	}
 
-	/*
-	 * Add at the end (for correct priority order)
+	/**
+	 * types will be added at the start of the modelledTypes list, so will be
+	 * checked for a match before the default modelled types
 	 */
-	public void addDefaultModelledTypes() {
-		addModelled(FragmentNode.Text.class, FragmentNode.Generic.class);
-	}
-
 	public void addModelled(Class<? extends FragmentNode>... types) {
 		// ensure the types also extend Model (they will, but...you know...make
 		// it clear)
 		Preconditions.checkArgument(Arrays.stream(types)
 				.allMatch(t -> Reflections.isAssignableFrom(Model.class, t)));
-		Arrays.stream(types).forEach(modelledTypes::add);
+		for (int idx = types.length - 1; idx >= 0; idx--) {
+			modelledTypes.add(0, types[idx]);
+		}
 	}
 
 	@Override
@@ -117,13 +120,16 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		/*
 		 * initialise the transformer/attach structure with a root
 		 */
-		DirectedLayout.Node layoutNode = rootModel.provideNode();
-		Node w3cNode = layoutNode.getRendered().getNode();
-		FragmentRoot transformer = new NodeTransformer.FragmentRoot(layoutNode);
-		domNodeTransformer.put(w3cNode, transformer);
-		currentModelMutation = new ModelMutation(this);
-		addDescent(w3cNode);
-		scheduleEmitMutationEvent();
+		if (event.isBound()) {
+			DirectedLayout.Node layoutNode = rootModel.provideNode();
+			Node w3cNode = layoutNode.getRendered().getNode();
+			FragmentRoot transformer = new NodeTransformer.FragmentRoot(
+					layoutNode);
+			domNodeTransformer.put(w3cNode, transformer);
+			currentModelMutation = new ModelMutation(this);
+			addDescent(w3cNode);
+			scheduleEmitMutationEvent();
+		}
 	}
 
 	@Override
@@ -144,6 +150,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		currentModelMutation.getData().updateRecords.values()
 				.forEach(UpdateRecord::apply);
 		scheduleEmitMutationEvent();
+	}
+
+	protected void addDefaultModelledTypes() {
+		addModelled(FragmentNode.Text.class, FragmentNode.Generic.class);
 	}
 
 	void addDescent(Node node) {
@@ -276,6 +286,42 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		}
 	}
 
+	class MinimalAncestorSet {
+		Set<org.w3c.dom.Node> nodes = new LinkedHashSet<>();
+
+		void removeDescendants() {
+			List<org.w3c.dom.Node> toRemove = new ArrayList<>();
+			nodes.forEach(n -> {
+				org.w3c.dom.Node cursor = n.getParentNode();
+				while (cursor != null && cursor != rootModel.provideNode()
+						.getRendered().getNode()) {
+					if (nodes.contains(cursor)) {
+						toRemove.add(n);
+						break;
+					}
+					cursor = cursor.getParentNode();
+				}
+			});
+			toRemove.forEach(nodes::remove);
+		}
+
+		void removeIfContained(Set<Node> contained) {
+			List<org.w3c.dom.Node> toRemove = new ArrayList<>();
+			nodes.forEach(n -> {
+				org.w3c.dom.Node cursor = n;
+				while (cursor != null && cursor != rootModel.provideNode()
+						.getRendered().getNode()) {
+					if (contained.contains(cursor)) {
+						toRemove.add(n);
+						break;
+					}
+					cursor = cursor.getParentNode();
+				}
+			});
+			toRemove.forEach(nodes::remove);
+		}
+	}
+
 	class UpdateRecord {
 		Node node;
 
@@ -305,13 +351,25 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				 */
 				transformer.refreshBindings();
 			}
+			/*
+			 * Due to the possibility of 'add, then move to a wrapping node'
+			 * mutation combinations exist, only
+			 */
+			MinimalAncestorSet adds = new MinimalAncestorSet();
+			MinimalAncestorSet removes = new MinimalAncestorSet();
 			records.stream()
 					.filter(r -> r.type == MutationRecord.Type.childList)
 					.forEach(record -> {
-						record.addedNodes.forEach(n -> addDescent(n.w3cNode));
-						record.removedNodes
-								.forEach(n -> removeDescent(n.w3cNode));
+						record.addedNodes.stream().map(MutationNode::w3cNode)
+								.forEach(adds.nodes::add);
+						record.removedNodes.stream().map(MutationNode::w3cNode)
+								.forEach(removes.nodes::add);
+						adds.removeDescendants();
+						removes.removeDescendants();
 					});
+			adds.removeIfContained(removes.nodes);
+			adds.nodes.forEach(FragmentModel.this::addDescent);
+			removes.nodes.forEach(FragmentModel.this::removeDescent);
 		}
 	}
 }

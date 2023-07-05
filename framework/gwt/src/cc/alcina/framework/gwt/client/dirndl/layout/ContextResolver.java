@@ -100,7 +100,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	 *
 	 * FIXME - dirndl - remove post-widget-removal
 	 */
-	public void renderObject(DirectedLayout.Node layoutNode, Object model) {
+	public void linkRenderedObject(DirectedLayout.Node layoutNode, Object model) {
 		if (model instanceof Widget) {
 			Widget widget = (Widget) model;
 			// before dom attach (breaks widget contract, alas)
@@ -129,7 +129,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 
 	protected void init(DirectedLayout.Node node) {
-		init(node.getResolver(), this.parent.layout,
+		init(node.getResolver(), node.parent.resolver.layout,
 				this.rootModel = node.getModel());
 	}
 

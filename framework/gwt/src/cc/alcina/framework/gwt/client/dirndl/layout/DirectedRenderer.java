@@ -285,7 +285,7 @@ public abstract class DirectedRenderer {
 		@Override
 		protected void render(RendererInput input) {
 			Widget model = (Widget) input.model;
-			input.resolver.renderObject(input.node, input.model);
+			input.resolver.linkRenderedObject(input.node, input.model);
 		}
 	}
 

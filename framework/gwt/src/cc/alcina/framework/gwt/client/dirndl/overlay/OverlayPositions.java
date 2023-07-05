@@ -87,7 +87,6 @@ public class OverlayPositions {
 		}
 
 		void remove() {
-			rendered.removeFromParent();
 			layout.remove();
 		}
 	}

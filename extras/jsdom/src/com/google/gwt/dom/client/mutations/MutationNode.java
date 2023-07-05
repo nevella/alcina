@@ -283,6 +283,10 @@ public final class MutationNode {
 		return format.toString();
 	}
 
+	public org.w3c.dom.Node w3cNode() {
+		return w3cNode;
+	}
+
 	void ensureChildNodes() {
 		if (childNodes == null) {
 			childNodes = new ArrayList<>();
