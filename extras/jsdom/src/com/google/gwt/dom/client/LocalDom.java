@@ -758,11 +758,11 @@ public class LocalDom {
 			/*
 			 * FIXME - ldm2 - this clobbers event handlers. So is an exception
 			 * (effectively) in generated DOM (but not in parsed HTML)
-			 * 
+			 *
 			 * FIXME - ldm2 - one cause of this is the following: <a
 			 * type='outer'><a type='inner></a></a> - it might be best to throw
 			 * during localdom generation with a construct like this
-			 * 
+			 *
 			 * Call mutations.verifyDomEquivalence(); if debugging needed
 			 */
 			Ax.err(">> Reparsing from remote - will remove event handlers");
@@ -1014,7 +1014,12 @@ public class LocalDom {
 	void handleReportedException(Exception exception) {
 		String message = null;
 		if (loggingConfiguration.logHistoryOnEception) {
-			message = mutations.serializeHistory();
+			try {
+				message = mutations.serializeHistory();
+			} catch (Exception serializeException) {
+				message = CommonUtils
+						.toSimpleExceptionMessage(serializeException);
+			}
 		}
 		log(Level.WARNING, "local dom :: %s",
 				CommonUtils.toSimpleExceptionMessage(exception));
