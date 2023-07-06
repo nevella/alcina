@@ -441,6 +441,8 @@ public class ModelEvents {
 	 * Emitted by multiple-item and single-item selection sources, such as
 	 * {@code Choices.Multiple}, {@code Choices.Single}) .
 	 *
+	 * Not to be confused with the selectionchange DOM event
+	 *
 	 * @author nick@alcina.cc
 	 *
 	 */

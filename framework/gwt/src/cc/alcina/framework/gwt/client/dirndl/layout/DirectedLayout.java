@@ -261,7 +261,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * The application may require that change listeners be dispatched in a
 	 * particular context. By default they're not (just dispatched in the
 	 * changing thread), which is fine for a single-threaded application.
-	 * 
+	 *
 	 * <p>
 	 * It's assumed that the initial render is in the correct context,
 	 * mutationDispatch is only used for non-initial renders
@@ -383,6 +383,15 @@ public class DirectedLayout implements AlcinaProcess {
 		return Reflections.newInstance(rendererClass);
 	}
 
+	/**
+	 * Usage:
+	 *
+	 * ProcessObservers.observe(DirectedLayout.EventObservable.class, Ax::out,
+	 * true);
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static class EventObservable implements ProcessObservable {
 		Class<? extends NodeEvent> type;
 
@@ -972,6 +981,11 @@ public class DirectedLayout implements AlcinaProcess {
 							.indexOf(type.getName()) == 0);
 				}
 				domBinding.nodeEventBinding = this;
+				if (widget == null) {
+					Ax.err(toParentStack());
+					Ax.err("No widget for model binding dom event %s - possibly delegating",
+							model);
+				}
 				domBinding.bind(getBindingWidget(), model, true);
 			}
 
@@ -1219,6 +1233,42 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	/**
+	 * Usage:
+	 *
+	 * <code>
+	 * <pre>
+	public class MyClientObservers extends ProcessObserver.AppDebug {
+	public MyClientObservers() {j
+		ProcessObservers.observe(DirectedLayout.RenderObservable.class, o -> {
+			if (o.node.getModel() instanceof MyModel) {
+				boolean breakpointHere = true;
+			}
+		}, true);
+	}
+	}
+	 * </pre>
+	 *</code>
+	 *
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	public static class RenderObservable implements ProcessObservable {
+		public Node node;
+
+		public RenderObservable(Node node) {
+			this.node = node;
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder fb = new FormatBuilder().separator("\n");
+			fb.append(node);
+			return fb.toString();
+		}
+	}
+
+	/**
 	 * A resolved location in the widget tree relative to which a widget should
 	 * be inserted
 	 *
@@ -1454,6 +1504,8 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void render() {
+			ProcessObservers.publish(RenderObservable.class,
+					() -> new RenderObservable(node));
 			if (replace != null) {
 				node.insertionPoint = replace.resolveInsertionPoint();
 				DirectedLayout.this.insertionPoint = node.insertionPoint;

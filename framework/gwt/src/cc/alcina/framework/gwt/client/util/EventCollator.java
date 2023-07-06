@@ -95,7 +95,7 @@ public class EventCollator<T> {
 		}
 	}
 
-	public void triggerEventOccurred(T object) {
+	public void eventOccurred(T object) {
 		synchronized (this) {
 			if (firstObject == null) {
 				firstObject = object;

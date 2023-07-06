@@ -29,6 +29,11 @@ public interface ProcessObserver<T extends ProcessObservable>
 		public void attach() {
 			ProcessObservers.observe(this);
 		}
+
+		@Override
+		public List<ProcessObserver> getObservers() {
+			return List.of();
+		}
 	}
 
 	public interface HasObservers {

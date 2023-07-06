@@ -191,11 +191,23 @@ public class ClassReflection extends ReflectionElement {
 		this.hasFinalModifier = type.isFinal();
 		boolean isExternalConstructible = !hasAbstractModifier
 				&& !type.getQualifiedSourceName().equals("java.lang.Class")
-				&& (type.isStatic() || !type.isMemberType());
+				&& (type.isStatic() || !type.isMemberType())
+				&& !(!type.isPublic()
+						&& type.getQualifiedSourceName().startsWith("java"));
 		if (isExternalConstructible) {
 			noArgsConstructor = Arrays.stream(type.getConstructors())
-					.filter(c -> c.getParameters().length == 0)
-					.filter(c -> c.isPublic()).findFirst().orElse(null);
+					.filter(c -> c.getParameters().length == 0).findFirst()
+					.orElse(null);
+			if (noArgsConstructor != null && noArgsConstructor.isPrivate()) {
+				noArgsConstructor = null;
+			}
+			if (noArgsConstructor != null && !noArgsConstructor.isPublic()
+					&& type.getQualifiedSourceName().startsWith("java")) {
+				noArgsConstructor = null;
+			}
+			if (noArgsConstructor instanceof AccessibleConstructor) {
+				((AccessibleConstructor) noArgsConstructor).makeAccessible();
+			}
 		}
 		Arrays.stream(type.getAnnotations())
 				.filter(a -> reflectionVisibility
@@ -258,7 +270,7 @@ public class ClassReflection extends ReflectionElement {
 		/*
 		 * The result of the loop is that fields are ordered (superclass before
 		 * subclass)(then field order in class)
-		 * 
+		 *
 		 */
 		while (cursor.getSuperclass() != null) {
 			JField[] fields = cursor.getFields();
@@ -380,6 +392,10 @@ public class ClassReflection extends ReflectionElement {
 		}
 		// not a property method
 		return null;
+	}
+
+	public interface AccessibleConstructor {
+		void makeAccessible();
 	}
 
 	public interface JdkTypeModelMapper {

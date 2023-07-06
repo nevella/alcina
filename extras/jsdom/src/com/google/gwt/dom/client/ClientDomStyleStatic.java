@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-import static com.google.gwt.dom.client.ClientDomStyleConstants.*;
+import static com.google.gwt.dom.client.DomStyleConstants.*;
 
 import java.util.Arrays;
 

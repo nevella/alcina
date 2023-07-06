@@ -575,7 +575,16 @@ public class DomDocument extends DomNode {
 
 		Location asLocation(DomNode domNode) {
 			ensureLookups();
-			return byNode.get(domNode);
+			Location location = byNode.get(domNode);
+			if (location == null) {
+				// FIXME - measure
+				Ax.err("Missing domNode/location: %s", domNode);
+				invalidateLookups();
+				ensureLookups();
+				location = byNode.get(domNode);
+				Preconditions.checkNotNull(location);
+			}
+			return location;
 		}
 
 		Location.Range asRange(DomNode domNode) {

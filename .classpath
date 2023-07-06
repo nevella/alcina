@@ -6,6 +6,7 @@
 	<classpathentry kind="src" path="extras/jsdom/src-regex"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/bin" path="framework/clientreflectorjvm/src"/>
 	<classpathentry kind="src" output="framework/jvmclient/bin" path="framework/jvmclient/src"/>
+	<classpathentry kind="src" output="framework/meta/bin" path="framework/meta/src"/>
 	<classpathentry kind="src" path="extras/collections/src"/>
 	<classpathentry excluding="org/json/|registry.properties" kind="src" path="framework/entity/src"/>
 	<classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>

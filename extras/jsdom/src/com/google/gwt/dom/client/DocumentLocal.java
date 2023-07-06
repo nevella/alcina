@@ -697,6 +697,11 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 	}
 
 	@Override
+	public boolean hasFocus() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void importNode(Node node, boolean deep) {
 		throw new UnsupportedOperationException();
 	}

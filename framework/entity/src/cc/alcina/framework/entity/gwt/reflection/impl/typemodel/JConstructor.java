@@ -19,12 +19,14 @@ import java.lang.reflect.Constructor;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.AccessibleConstructor;
 
 /**
  * Represents a constructor declaration.
  */
 public class JConstructor extends JAbstractMethod
-		implements com.google.gwt.core.ext.typeinfo.JConstructor, Supplier {
+		implements com.google.gwt.core.ext.typeinfo.JConstructor, Supplier,
+		AccessibleConstructor {
 	Constructor constructor;
 
 	public JConstructor(TypeOracle typeOracle, Constructor constructor) {
@@ -39,5 +41,10 @@ public class JConstructor extends JAbstractMethod
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
 		}
+	}
+
+	@Override
+	public void makeAccessible() {
+		constructor.setAccessible(true);
 	}
 }

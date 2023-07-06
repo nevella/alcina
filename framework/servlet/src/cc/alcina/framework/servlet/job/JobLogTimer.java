@@ -58,7 +58,7 @@ public class JobLogTimer implements DomainTransformPersistenceListener {
 						.filter(QueryResult::hasNoDeleteTransform).findFirst();
 				firstEntity.ifPresent(qr -> {
 					Job job = qr.getEntity();
-					timer.triggerEventOccurred(job);
+					timer.eventOccurred(job);
 				});
 			}
 		}

@@ -182,7 +182,7 @@ public class XmlUtils {
 	public static void cleanNamespacedAttributes(Document doc) {
 		DomDocument.from(doc).descendants()
 				.filter(DomNode::isElement).forEach(n -> {
-					if (n.domElement().hasAttributes()) {
+					if (n.w3cElement().hasAttributes()) {
 						n.attributes().keySet().stream()
 								.collect(Collectors.toList())
 								.forEach(attrName -> {
@@ -570,7 +570,7 @@ public class XmlUtils {
 		DomDocument xmlDoc = DomDocument.from(node.getOwnerDocument());
 		DomNode prev = xmlDoc.nodeFor(node);
 		DomNode next = prev;
-		SurroundingBlockTuple tuple = new SurroundingBlockTuple(prev.domNode());
+		SurroundingBlockTuple tuple = new SurroundingBlockTuple(prev.w3cNode());
 		DomNode cursor = prev;
 		if (!hasLegalRootContainer(node)) {
 			throw new RuntimeException("Node has no legal root container");
@@ -586,10 +586,10 @@ public class XmlUtils {
 			if (cursor.style().isOrContainsBlock(blockResolver)
 					|| blockResolver.getContainingBlock(cursor)
 							.orElse(null) != currentBlockAncestor) {
-				tuple.prevBlock = cursor.domNode();
+				tuple.prevBlock = cursor.w3cNode();
 				break;
 			} else {
-				if (hasLegalRootContainer(cursor.domNode())) {
+				if (hasLegalRootContainer(cursor.w3cNode())) {
 					prev = cursor;
 				}
 			}
@@ -606,16 +606,16 @@ public class XmlUtils {
 			if (cursor.style().isOrContainsBlock(blockResolver)
 					|| blockResolver.getContainingBlock(cursor)
 							.orElse(null) != currentBlockAncestor) {
-				tuple.nextBlock = cursor.domNode();
+				tuple.nextBlock = cursor.w3cNode();
 				break;
 			} else {
-				if (hasLegalRootContainer(cursor.domNode())) {
+				if (hasLegalRootContainer(cursor.w3cNode())) {
 					next = cursor;
 				}
 			}
 		}
-		tuple.firstNode = prev.domNode();
-		tuple.lastNode = next.domNode();
+		tuple.firstNode = prev.w3cNode();
+		tuple.lastNode = next.w3cNode();
 		return tuple;
 	}
 
@@ -1579,7 +1579,7 @@ public class XmlUtils {
 			DomNode last = DomNode.from(lastNode);
 			for (DomNode cursor : list) {
 				if (cursor.isAncestorOf(last)) {
-					return cursor.domNode();
+					return cursor.w3cNode();
 				}
 			}
 			return null;
@@ -1593,7 +1593,7 @@ public class XmlUtils {
 				if (currentNode.isText()) {
 					builder.append(currentNode.textContent());
 				}
-				if (currentNode.domNode() == lastNode) {
+				if (currentNode.w3cNode() == lastNode) {
 					break;
 				}
 				tree.nextLogicalNode();

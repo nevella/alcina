@@ -3,14 +3,18 @@ package cc.alcina.framework.common.client.meta;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /*
  * Project planning/structure - expressed in code
  *
  */
+@Registration(Feature.class)
 public interface Feature {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
@@ -51,12 +55,32 @@ public interface Feature {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Documented
-	@Target({ ElementType.TYPE })
+	@Target({ ElementType.METHOD, ElementType.TYPE })
+	@Repeatable(Refs.class)
 	@interface Ref {
 		Class<? extends Feature>[] value();
 	}
 
-	public interface ReleaseVersion {
+	/**
+	 * Container for multiple {@link Ref} annotations
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.TYPE })
+	@interface Refs {
+		Ref[] value();
+	}
+
+	public interface ReleaseVersion extends Comparable<ReleaseVersion> {
+		@Override
+		default int compareTo(ReleaseVersion o) {
+			return toString().compareTo(o.toString());
+		}
+
 		@Retention(RetentionPolicy.RUNTIME)
 		@Inherited
 		@Documented
@@ -80,6 +104,14 @@ public interface Feature {
 		@interface Ref {
 			Class<? extends Feature.Status> value();
 		}
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@Documented
+	@Target({ ElementType.TYPE })
+	@interface Track {
+		Class<? extends Feature> value();
 	}
 
 	public interface Type{

@@ -36,7 +36,7 @@ public class DomTokenStream implements Iterator<DomNode> {
 	public DomTokenStream(DomNode node) {
 		this.doc = node.document;
 		this.tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(
-				node.domNode(), NodeFilter.SHOW_ALL, null, true);
+				node.w3cNode(), NodeFilter.SHOW_ALL, null, true);
 	}
 
 	public void afterModification() {
@@ -90,18 +90,18 @@ public class DomTokenStream implements Iterator<DomNode> {
 	}
 
 	public void skip(DomNode node) {
-		node.stream().map(DomNode::domNode).forEach(skip::add);
+		node.stream().map(DomNode::w3cNode).forEach(skip::add);
 	}
 
 	public void skipChildren() {
 		DomNode currentDomNode = doc.nodeFor(tw.getCurrentNode());
-		currentDomNode.descendants().map(DomNode::domNode)
+		currentDomNode.descendants().map(DomNode::w3cNode)
 				.forEach(skip::add);
 	}
 
 	public void skipChildren(Predicate<DomNode> predicate) {
 		DomNode currentDomNode = doc.nodeFor(tw.getCurrentNode());
-		currentDomNode.descendants().filter(predicate).map(DomNode::domNode)
+		currentDomNode.descendants().filter(predicate).map(DomNode::w3cNode)
 				.forEach(skip::add);
 	}
 

@@ -1,10 +1,12 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.BeforeInput;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
@@ -13,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
 
 /**
  * <p>
@@ -46,10 +49,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 				type = Type.PROPERTY,
 				literal = "true",
 				to = "contenteditable") },
-	receives = { DomEvents.Input.class, DomEvents.Focusout.class },
+	receives = { DomEvents.Input.class, DomEvents.BeforeInput.class,
+			DomEvents.Focusout.class },
 	emits = { ModelEvents.Input.class })
-public class EditArea extends Model
-		implements FocusOnBind, HasTag, DomEvents.Input.Handler,
+public class EditArea extends Model implements FocusOnBind, HasTag,
+		DomEvents.Input.Handler, DomEvents.BeforeInput.Handler,
 		LayoutEvents.BeforeRender.Handler, DomEvents.Focusout.Handler {
 	private String value;
 
@@ -62,6 +66,8 @@ public class EditArea extends Model
 	private String tag = "edit";
 
 	private boolean selectAllOnBind;
+
+	boolean stripFontTagsOnInput = false;
 
 	public EditArea() {
 	}
@@ -98,6 +104,13 @@ public class EditArea extends Model
 		return this.selectAllOnBind;
 	}
 
+	// @Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
+	@Override
+	public void onBeforeInput(BeforeInput event) {
+		stripFontTagsOnInput = provideElement().asDomNode().children
+				.noElements();
+	}
+
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
@@ -108,12 +121,19 @@ public class EditArea extends Model
 
 	@Override
 	public void onFocusout(Focusout event) {
-		setValue(elementValue());
+		String elementValue = elementValue();
+		if (Ax.ntrim(elementValue).isEmpty()) {
+			elementValue = "";
+		}
+		setValue(elementValue);
 	}
 
 	@Override
 	public void onInput(Input event) {
 		currentValue = elementValue();
+		if (stripFontTagsOnInput) {
+			new RelativeInputModel().strip(provideElement(), "font");
+		}
 		event.reemitAs(this, ModelEvents.Input.class);
 	}
 
