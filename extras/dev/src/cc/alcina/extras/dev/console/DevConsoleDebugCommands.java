@@ -1011,6 +1011,8 @@ public class DevConsoleDebugCommands {
 				argv = filterArgvParam.argv;
 				String limitClause = filterArgvParam.value == null ? ""
 						: Ax.format(" limit %s", filterArgvParam.value);
+				String limitDisplayClause = filterArgvParam.value == null ? ""
+						: Ax.format(" %s of ", filterArgvParam.value);
 				String sqlFromEtc = String.format(
 						"from logging l inner join users u on l.user_id=u.id "
 								+ "where  l.created_on>? %s %s and "
@@ -1033,7 +1035,8 @@ public class DevConsoleDebugCommands {
 					}
 					ps.close();
 				}
-				Ax.out("Retrieving %s log records...", size);
+				Ax.out("Retrieving %s%s log records...", limitDisplayClause,
+						size);
 				{
 					String sql = "select l.*,u.username " + sqlFromEtc;
 					PreparedStatement ps = conn.prepareStatement(sql);
@@ -1045,7 +1048,8 @@ public class DevConsoleDebugCommands {
 					ps.close();
 				}
 				console.serializeState();
-				return String.format("retrieved %s log records", size);
+				return String.format("retrieved %s log records",
+						console.state.logRecords.size());
 			} finally {
 				console.props.connection_useProduction = saveUseProd;
 			}

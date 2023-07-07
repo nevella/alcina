@@ -712,7 +712,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 			throws DomainTransformException, IntrospectionException {
 		if (!checkPropertyAccess(entity, propertyName, true)) {
 			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : write - object/property " + evt));
+					"Permission denied : read - object/property " + evt));
 		}
 	}
 
