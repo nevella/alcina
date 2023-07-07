@@ -1084,9 +1084,13 @@ public class LocalDom implements ContextFrame {
 
 	void handleReportedException(Exception exception) {
 		String message = null;
-		if (loggingConfiguration.logHistoryOnEception
-				&& remoteMutations != null) {
-			message = remoteMutations.serializeHistory();
+		if (loggingConfiguration.logHistoryOnEception) {
+			try {
+				message = remoteMutations.serializeHistory();
+			} catch (Exception serializeException) {
+				message = CommonUtils
+						.toSimpleExceptionMessage(serializeException);
+			}
 		}
 		log(Level.WARNING, "local dom :: %s",
 				CommonUtils.toSimpleExceptionMessage(exception));

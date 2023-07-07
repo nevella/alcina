@@ -131,18 +131,19 @@ public abstract class AlcinaServlet extends HttpServlet {
 				response.sendRedirect(externalAuthorizationUrl);
 			}
 		} catch (Throwable t) {
-			topicApplicationThrowables().publish(t);
 			logger.warn("Alcina servlet request issue - user {} - url {}",
 					PermissionsManager.get().getUser().toIdNameString(),
 					request.getRequestURI());
-			logger.warn("Exception detail:", t);
-			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, t);
 			// If the connection has been reset, we can't print anything to the
 			// response
 			if (t instanceof IOException
 					&& t.getMessage().equals("Connection reset by peer")) {
+				logger.warn("Connection reset by peer");
 				return;
 			}
+			topicApplicationThrowables().publish(t); 
+			logger.warn("Exception detail:", t);
+			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, t);
 			try {
 				response.setStatus(500);
 				writeTextResponse(response,
