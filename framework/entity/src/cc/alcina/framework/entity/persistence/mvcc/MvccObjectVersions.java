@@ -151,11 +151,14 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * (so no sync needed), or accessed via a block synced on 't'
 	 */
 	MvccObjectVersions(T t, Transaction initialTransaction,
-			boolean initialObjectIsWriteable) {
+			boolean initialObjectIsWriteable,
+			// used to pass additional info before subclass constructor is
+			// called
+			Object context) {
 		ObjectVersion<T> version = new ObjectVersion<>();
 		version.transaction = initialTransaction;
 		domainIdentity = t;
-		setVisibleAllTransactions(initialAllTransactionsValueFor(t,
+		setVisibleAllTransactions(initialAllTransactionsValueFor(t, context,
 				initialTransaction.isBaseTransaction()));
 		initialTransactionId = initialTransaction.getId();
 		if (initialObjectIsWriteable) {
@@ -325,7 +328,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		return this.size.get();
 	}
 
-	protected T initialAllTransactionsValueFor(T t, boolean baseTransaction) {
+	protected T initialAllTransactionsValueFor(T t, Object context,
+			boolean baseTransaction) {
 		return null;
 	}
 
@@ -706,7 +710,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 		MvccObjectVersionsMvccObject(T t, Transaction initialTransaction,
 				boolean initialObjectIsWriteable) {
-			super(t, initialTransaction, initialObjectIsWriteable);
+			super(t, initialTransaction, initialObjectIsWriteable, null);
 			if (!initialObjectIsWriteable) {
 				// creating a versions object from a committed domainIdentity
 				// object.
