@@ -53,6 +53,9 @@ import cc.alcina.framework.common.client.util.TextUtils;
  * All HTML element interfaces derive from this class.
  *
  * Note that the event-related code in Widget has been moved here
+ *
+ * TODO - eventListener + uiObject are legacy (widget) system compatiblity refs,
+ * if widget was removed, they would be too
  */
 public class Element extends Node implements ClientDomElement,
 		org.w3c.dom.Element, EventListener, HasHandlers {
@@ -661,7 +664,8 @@ public class Element extends Node implements ClientDomElement,
 	public void onBrowserEvent(Event event) {
 		switch (DOM.eventGetType(event)) {
 		case Event.ONMOUSEOVER:
-			// Only fire the mouse over event if it's coming from outside this
+			// Only fire the mouse over event if it's coming from outside
+			// this
 			// widget.
 		case Event.ONMOUSEOUT:
 			// Only fire the mouse out event if it's leaving this
@@ -1161,7 +1165,10 @@ public class Element extends Node implements ClientDomElement,
 	 */
 	protected void onAttach() {
 		// Event hookup code
-		DOM.setEventListener(this, this);
+		this.eventListener = uiObject instanceof EventListener
+				? (EventListener) uiObject
+				: this;
+		DOM.setEventListener(this, eventListener);
 		List<String> localBitlessEventsSunk = localBitlessEventsSunk();
 		if (localBitlessEventsSunk != null) {
 			localBitlessEventsSunk.forEach(eventTypeName -> {
@@ -1260,6 +1267,11 @@ public class Element extends Node implements ClientDomElement,
 	 * @return the handler manager
 	 */
 	HandlerManager ensureHandlers() {
+		/*
+		 * *Either* the widget or the element is a handler/event hookup, not
+		 * both
+		 */
+		Preconditions.checkState(!(uiObject instanceof EventListener));
 		return handlerManager == null
 				? handlerManager = new HandlerManager(this)
 				: handlerManager;
