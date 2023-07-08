@@ -993,6 +993,7 @@ public abstract class UIObject implements HasVisibility {
 		assert (element == null || PotentialElement
 				.isPotential(element)) : SETELEMENT_TWICE_ERROR;
 		this.element = elem;
+		this.element.uiObject = this;
 	}
 
 	/**

@@ -139,6 +139,11 @@ public class Element extends Node implements ClientDomElement,
 
 	public EventListener eventListener;
 
+	/*
+	 * For compatibility with widget events
+	 */
+	public Object uiObject;
+
 	private boolean pendingSync;
 
 	boolean attached;
@@ -280,6 +285,8 @@ public class Element extends Node implements ClientDomElement,
 	public void fireEvent(GwtEvent<?> event) {
 		if (handlerManager != null) {
 			handlerManager.fireEvent(event);
+		} else if (uiObject != null && uiObject instanceof HasHandlers) {
+			((HasHandlers) uiObject).fireEvent(event);
 		}
 	}
 
@@ -422,6 +429,11 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public Element getFirstChildElement() {
 		return local().getFirstChildElement();
+	}
+
+	// public to allow legacy (widget) access only
+	public HandlerManager getHandlerManager() {
+		return this.handlerManager;
 	}
 
 	@Override

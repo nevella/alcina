@@ -285,11 +285,17 @@ public final class Impl {
 		boolean initialEntry = enter();
 		try {
 			if (initialEntry) {
-				if (GWT.isScript() && firstTimeClient) {
-					LocalDom.initalize();
+				boolean stopObserving = true;
+				if (firstTimeClient) {
+					if (GWT.isScript()) {
+						LocalDom.initalize();
+						stopObserving = false;
+					}
 					firstTimeClient = false;
-				} else {
-					LocalDom.getRemoteMutations().syncMutationsAndStopObserving();
+				}
+				if (stopObserving) {
+					LocalDom.getRemoteMutations()
+							.syncMutationsAndStopObserving();
 				}
 			}
 			/*
