@@ -6,6 +6,7 @@ import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.Spliterators;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +50,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  */
 public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		implements TransactionalCollection, UnboxedLongMap<V> {
-	private static transient final Object NULL_KEY_MARKER = new Object();
+	private static transient final NullKeyMarker NULL_KEY_MARKER = new NullKeyMarker();
 
-	private static transient final Object REMOVED_VALUE_MARKER = new Object();
+	private static transient final RemovedValueMarker REMOVED_VALUE_MARKER = new RemovedValueMarker();
 
 	static Logger logger = LoggerFactory.getLogger(TransactionalTreeMap.class);
 
@@ -274,8 +276,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			// true and transactionalValue.remove() false - this handles the
 			// case where the key only exists in nonConcurrent prior to this
 			// call
-			if (transactionalValue.remove()
-					|| createdTransactionalValue.get().booleanValue()) {
+			boolean removed = transactionalValue.remove()
+					|| createdTransactionalValue.get().booleanValue();
+			if (removed) {
 				int size = sizeMetadata.delta(-1);
 			}
 		}
@@ -464,6 +467,12 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		public Spliterator<K> spliterator() {
 			return createSpliterator(iterator(), size());
 		}
+	}
+
+	private static class NullKeyMarker {
+	}
+
+	private static class RemovedValueMarker {
 	}
 
 	private class ValuesCollection extends AbstractCollection<V> {
@@ -671,9 +680,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
+	/*
+	 * From memory. access to version.value is tx-safe (so we could use an
+	 * integer, not atomicinteger), but atomicinteger is a convenient container
+	 * for a mutable int
+	 */
 	class SizeMetadata extends MvccObjectVersions<AtomicInteger> {
 		SizeMetadata(AtomicInteger t, Transaction initialTransaction) {
-			super(t, initialTransaction, pureTransactional);
+			super(t, initialTransaction, pureTransactional, null);
 		}
 
 		public int delta(int delta) {
@@ -693,7 +707,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		protected AtomicInteger initialAllTransactionsValueFor(AtomicInteger t,
-				boolean baseTransaction) {
+				Object context, boolean baseTransaction) {
 			/*
 			 * All txs begin with the size of the nonconcurrent map
 			 */
@@ -712,7 +726,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		TransactionalValue(K key, ObjectWrapper t,
 				Transaction initialTransaction) {
-			super(t, initialTransaction, false);
+			super(t, initialTransaction, false, key);
 			this.key = key;
 		}
 
@@ -789,16 +803,24 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		protected ObjectWrapper initialAllTransactionsValueFor(ObjectWrapper t,
-				boolean baseTransaction) {
+				Object context, boolean baseTransaction) {
 			// (if in baseTransaction/pureTransaction mode)
 			if (baseTransaction) {
 				return domainIdentity;
 			} else {
 				/*
-				 * because possibly visible before version creation, the base
-				 * must be marked as 'removed'
+				 * because possibly visible before version creation, the
+				 * all-visible value must be either 'removed' (if non-existent
+				 * in the base tx), or the base tx value
 				 */
-				return ObjectWrapper.of(REMOVED_VALUE_MARKER);
+				// called before this.key is populated
+				K key = (K) context;
+				if (nonConcurrent.containsKey(key)) {
+					V nonTransactionalValue = nonConcurrent.get(key);
+					return ObjectWrapper.of(nonTransactionalValue);
+				} else {
+					return ObjectWrapper.of(REMOVED_VALUE_MARKER);
+				}
 			}
 		}
 
