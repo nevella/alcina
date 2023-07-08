@@ -2,10 +2,10 @@
  * Remote Dom allows the dom backing state (typically dirndl + environment) to
  * be maintained server-side, with just a thin shim supporting client
  * interaction
- * 
+ *
  * The goal is: to support a dynamic UI in the browser with no browser/js
  * recompilation necessary for UI model changes
- * 
+ *
  * <h3>The dom handshake</h3>
  * <ol>
  * <li>All packets contain environment uid, environment auth, client uid
@@ -16,5 +16,37 @@
  * registrations (DomEvent)
  * <li>The server treats the client as synchronous (by blocking until ACK)
  * </ol>
+ * <h3>Romcom handshake v2 (WIP)</h3>
+ *
+ * <pre>
+ * ### romcom handshake
+
+  - client: /feature-tree
+  - server: authenticate (optional) (alcina-servlet or querystring auth)
+  - server: serve bootstrap html
+  	- create environment
+  	  - if ui is 'single instance only', invalidate others
+  	- inject initial rpc connection parameters
+  	  - component
+  	  - environment id (rename any use of 'session' to 'environment')
+  	  - environment auth
+  	  - retry behaviour
+  - client:
+  	- post bootstrap packet to server
+  - server:
+  	- environment enters state 'connected' (but this may already be handled)(throw if already bootstrapped)
+  - client:
+  	- send heartbeat/observe mutation packet (with backoff on unreachable/404)
+  	  - component
+  	  - env id
+  - server: (backoff)
+  	- if env does not exist, if:
+  	  - reply with 'refresh'
+  	- else if:
+  	  - single instance:
+      	- reply with 'expired' (message includes 'will invalidate any other tabs viewing this component')
+  	  - else:
+      	- reply with 'refresh'
+ * </pre>
  */
 package cc.alcina.framework.servlet.dom;

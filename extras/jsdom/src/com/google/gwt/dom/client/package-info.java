@@ -102,6 +102,26 @@
  * call to setParent will check the attached state of the parent and propagate
  * if there's a delta
  * <h5>local --&gt; remote flush</h5>
+ * <ul>
+ * <li>When an element is attached to DOM, if the parent has an existing remote
+ * mapping, the child is marked as 'requiring flush' and a finally task is
+ * scheduled to 'flush' the element.
+ * <li>This means that (in general) only one element requires remote writes -
+ * the initial attach and the setInnerHtml performed by the flush task, which
+ * writes the subtree html to the remote node
+ * <li>(TODO) - pathref vs jso
+ * <li>(TODO) - model more formally (as an algorithm sketch)
+ * </ul>
+ * <h4>Widget -&gt; Element migration</h4>
+ * <p>
+ * In GWT, the Widget system is the point at which client code registers DOM
+ * event listeners. Because Dirndl eschews widgest (as unnecessary),
+ * {@link Element} now also contains a listener registration point
+ * ({@link HandlerManager} and implements the same interfaces
+ * ({@link HasHandlers}, {@link EventListener}) as Widget to allow _either_
+ * system to be used. Note that for a given element, only one registration
+ * system (Widget or Elemnent) can be used. It ain't pretty, but it's required
+ * until Widget is removed from the codebase
  *
  *
  *
