@@ -536,9 +536,6 @@ public abstract class DevHelper {
 
 	protected abstract String getConfigFilePath();
 
-	// FIXME - ru - delete
-	protected abstract String getJbossConfigPrompt(String path);
-
 	protected String getNonVcsJavaDevmodeProcessObserverFilePath() {
 		return null;
 	}

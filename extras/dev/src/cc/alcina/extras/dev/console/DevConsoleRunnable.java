@@ -71,7 +71,7 @@ public abstract class DevConsoleRunnable extends PerformerTask {
 
 	protected String writeTempFile(Class clazz, String extension,
 			String content) throws IOException {
-		File dir = console.devHelper.getDevFolder();
+		File dir = console.getDevHelper().getDevFolder();
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
 		Io.write().string(content).toFile(new File(outPath));
@@ -83,7 +83,7 @@ public abstract class DevConsoleRunnable extends PerformerTask {
 		if (!Base64Utils.isBase64(content)) {
 			return writeTempFile(clazz, extension, content);
 		}
-		File dir = console.devHelper.getDevFolder();
+		File dir = console.getDevHelper().getDevFolder();
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
 		Io.Streams.copy(
@@ -94,7 +94,7 @@ public abstract class DevConsoleRunnable extends PerformerTask {
 
 	protected String writeTempFileFs(Class clazz, String extension,
 			File content) throws IOException {
-		File dir = console.devHelper.getDevFolder();
+		File dir = console.getDevHelper().getDevFolder();
 		String outPath = String.format("%s/%s.%s", dir.getPath(),
 				clazz.getSimpleName(), extension);
 		;

@@ -104,7 +104,7 @@ public class DevConsoleDebugCommands {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			List<ILogRecord> logRecords = console.state.logRecords.stream()
+			List<ILogRecord> logRecords = console.getState().logRecords.stream()
 					.collect(Collectors.toList());
 			StringMap excludePatterns = IgnoreExceptionPatternProvider.get()
 					.getIgnoreExceptionPatterns();
@@ -128,7 +128,7 @@ public class DevConsoleDebugCommands {
 			}
 			if (CommonUtils.isNullOrEmpty(logRecords)) {
 				runSubcommand(new CmdGetExceptionLogs(), null);
-				logRecords = console.state.logRecords;
+				logRecords = console.getState().logRecords;
 			}
 			Set<String> affectedUserNames = new LinkedHashSet<String>();
 			Pattern clientP = Pattern.compile(
@@ -280,7 +280,7 @@ public class DevConsoleDebugCommands {
 						Set<String> userNames = new LinkedHashSet<String>();
 						for (Long id : ids) {
 							ILogRecord record = idLkp.get(id);
-							userNames.add(console.state
+							userNames.add(console.getState()
 									.getUser(record.getUserId()).getUserName());
 						}
 						o += String.format("%-20s%s\n%-20s%s\n%-20s%s\n",
@@ -295,9 +295,9 @@ public class DevConsoleDebugCommands {
 								o += String.format(
 										"%-20s %-20s  %-20s  %-20s\n",
 										intersection.iterator().next(), id,
-										record.getUserId(), console.state
+										record.getUserId(), console.getState()
 												.getUser(record.getUserId()));
-								affectedUserNames.add(console.state
+								affectedUserNames.add(console.getState()
 										.getUser(record.getUserId())
 										.getUserName());
 							}
@@ -673,8 +673,8 @@ public class DevConsoleDebugCommands {
 
 		private boolean ensureModuleAndSymbolMap(String moduleStrongName)
 				throws Exception {
-			DevConsoleDebugPaths paths = getPeer().getPaths(console.props);
-			File devFolder = console.devHelper.getDevFolder();
+			DevConsoleDebugPaths paths = getPeer().getPaths(console.getProps());
+			File devFolder = console.getDevHelper().getDevFolder();
 			File gwtSymbols = SEUtilities.getChildFile(devFolder,
 					"gwt-symbols");
 			gwtSymbols.mkdir();
@@ -777,7 +777,7 @@ public class DevConsoleDebugCommands {
 			long recId = 0;
 			if (id.matches("\\d+")) {
 				recId = Long.parseLong(argv[0]);
-				record = console.state.logRecordById(recId);
+				record = console.getState().logRecordById(recId);
 				if (record == null) {
 					if (lastRecord != null && lastRecord.getId() == recId) {
 						record = lastRecord;
@@ -833,7 +833,7 @@ public class DevConsoleDebugCommands {
 			}
 			System.out.format(
 					"-------\nId:\t%s\nUser:\t%s (%s)\nCmp:\t%s\nDate:\t%s\nHost:\t%s\nText:\t%s\n",
-					record.getId(), console.state.getUser(record.getUserId()),
+					record.getId(), console.getState().getUser(record.getUserId()),
 					record.getUserId(), record.getComponentKey(),
 					record.getCreatedOn(), record.getHost(),
 					replay ? "" : text);
@@ -917,7 +917,7 @@ public class DevConsoleDebugCommands {
 			Optional<Pattern> ignorePattern = Optional.ofNullable(
 					regexFilter != null ? Pattern.compile(regexFilter) : null);
 			while (rs.next()) {
-				IUser u = console.state.ensureUser(rs.getLong("user_id"),
+				IUser u = console.getState().ensureUser(rs.getLong("user_id"),
 						rs.getString("username"));
 				IL l = (IL) Registry.impl(ILogRecord.class);
 				l.setId(rs.getLong("id"));
@@ -958,9 +958,9 @@ public class DevConsoleDebugCommands {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			boolean saveUseProd = console.props.connection_useProduction;
+			boolean saveUseProd = console.getProps().connection_useProduction;
 			try {
-				console.props.connection_useProduction = true;
+				console.getProps().connection_useProduction = true;
 				Connection conn = getConn();
 				int days = getIntArg(argv, 0,
 						DEFAULT_GET_EXCEPTIONS_IN_LAST_X_DAYS);
@@ -1042,16 +1042,16 @@ public class DevConsoleDebugCommands {
 					PreparedStatement ps = conn.prepareStatement(sql);
 					ps.setDate(1, cutoffSqlDate);
 					ResultSet rs = ps.executeQuery();
-					console.state.logRecords = new ArrayList<ILogRecord>();
-					List<IL> logRecords = (List<IL>) (List<?>) console.state.logRecords;
+					console.getState().logRecords = new ArrayList<ILogRecord>();
+					List<IL> logRecords = (List<IL>) (List<?>) console.getState().logRecords;
 					addLogRecords(rs, logRecords);
 					ps.close();
 				}
 				console.serializeState();
 				return String.format("retrieved %s log records",
-						console.state.logRecords.size());
+						console.getState().logRecords.size());
 			} finally {
-				console.props.connection_useProduction = saveUseProd;
+				console.getProps().connection_useProduction = saveUseProd;
 			}
 		}
 

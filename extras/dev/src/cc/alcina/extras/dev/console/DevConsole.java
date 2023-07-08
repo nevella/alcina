@@ -11,12 +11,12 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.ByteArrayOutputStream;
 import java.io.Console;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -55,7 +55,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.console.ArgParser;
 import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
@@ -73,7 +72,6 @@ import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRun
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
-import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
@@ -102,8 +100,7 @@ FIXME - console - search for "FIXME - console" in markdown files
 
  */
 @Registration.Singleton
-public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
-		implements ClipboardOwner {
+public abstract class DevConsole implements ClipboardOwner {
 	private static BiPrintStream out;
 
 	private static BiPrintStream err;
@@ -161,11 +158,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	private boolean initialised;
 
-	public D devHelper;
+	protected DevHelper devHelper;
 
 	Map<String, DevConsoleCommand> commandsById = new HashMap<String, DevConsoleCommand>();
 
-	public P props;
+	protected DevConsoleProperties props;
 
 	public DevConsoleHistory history;
 
@@ -175,7 +172,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	boolean secondHelperInitted = false;
 
-	public S state;
+	protected DevConsoleState state;
 
 	File consolePropertiesFile;
 
@@ -383,7 +380,22 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public File getDevFile(String path) {
-		return new File(String.format("%s/%s", devFolder.getPath(), path));
+		File xmlFile = new File(
+				Ax.format("%s/%s.xml", devFolder.getPath(), path));
+		File jsonFile = new File(
+				Ax.format("%s/%s.json", devFolder.getPath(), path));
+		if (xmlFile.exists()) {
+			if (jsonFile.exists()) {
+				xmlFile.delete();
+			} else {
+				xmlFile.renameTo(jsonFile);
+			}
+		}
+		return jsonFile;
+	}
+
+	public DevHelper getDevHelper() {
+		return devHelper;
 	}
 
 	public String getMultilineInput(String prompt) {
@@ -392,6 +404,14 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public String getMultilineInput(String prompt, int rows, int cols) {
 		return getClipboardContents();
+	}
+
+	public DevConsoleProperties getProps() {
+		return props;
+	}
+
+	public DevConsoleState getState() {
+		return state;
 	}
 
 	public DevConsoleStyle getStyle() {
@@ -429,23 +449,37 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public void loadConfig() throws Exception {
-		// eclipse may be caching - read directly
 		if (consolePropertiesFile.exists()) {
-			props = (P) deserializeProperties(newConsoleProperties().getClass(),
-					consolePropertiesFile);
-		} else {
+			try {
+				props = deserializeProperties(newConsoleProperties(),
+						consolePropertiesFile);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
+		}
+		if (props == null) {
 			props = newConsoleProperties();
 		}
 		if (consoleHistoryFile.exists()) {
-			history = deserializeProperties(DevConsoleHistory.class,
-					consoleHistoryFile);
-		} else {
+			try {
+				history = deserializeProperties(new DevConsoleHistory(),
+						consoleHistoryFile);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
+		}
+		if (history == null) {
 			history = new DevConsoleHistory();
 		}
 		if (consoleStringsFile.exists()) {
-			strings = deserializeProperties(DevConsoleStrings.class,
-					consoleStringsFile);
-		} else {
+			try {
+				strings = deserializeProperties(new DevConsoleStrings(),
+						consoleStringsFile);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
+		}
+		if (strings == null) {
 			strings = new DevConsoleStrings();
 		}
 		saveConfig();
@@ -739,20 +773,17 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	private <T> T deserializeProperties(Class<T> clazz, File file)
+	private <T> T deserializeProperties(T newInstance, File file)
 			throws Exception {
-		try {
-			return new ObjectMapper().enableDefaultTyping().readValue(file,
-					clazz);
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (file.exists()) {
+			try {
+				return (T) new ObjectMapper().enableDefaultTyping()
+						.readValue(file, newInstance.getClass());
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
 		}
-		try {
-			return KryoUtils.deserializeFromFile(file, clazz);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return JaxbUtils.xmlDeserialize(clazz, Io.read().file(file).asString());
+		return newInstance;
 	}
 
 	private boolean isOsX() {
@@ -821,11 +852,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		return true;
 	}
 
-	protected List<Class> getInitClasses() {
-		return new ArrayList<>(Arrays.asList(DevConsoleProperties.class,
-				DevConsoleStrings.class, DevConsoleHistory.class));
-	}
-
 	protected void init() throws Exception {
 		instance = this;
 		Registry.Internals
@@ -854,11 +880,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				"true");
 		// need to be before ui init, cos window height is a preference
 		initFiles();
-		LooseContext.runWithKeyValue(JaxbUtils.CONTEXT_CLASSES,
-				getInitClasses(), () -> {
-					loadConfig();
-					return null;
-				});
+		loadConfig();
 		// initJaxb();
 		// triggered by first publication
 		long statEndInitJaxbServices = System.currentTimeMillis();
@@ -909,13 +931,28 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	protected abstract void initState();
+	protected final void initState() {
+		state = new DevConsoleState();
+		try {
+			state = getDevHelper().readObject(getState());
+		} catch (Exception e) {
+			DevConsole.stdSysOut();
+			FileNotFoundException fnfe = CommonUtils.extractCauseOfClass(e,
+					FileNotFoundException.class);
+			if (fnfe == null) {
+				e.printStackTrace();
+			}
+			serializeState();
+		}
+	}
 
 	protected boolean isConsoleInstanceCommand(DevConsoleCommand c) {
 		return false;
 	}
 
-	protected abstract P newConsoleProperties();
+	protected DevConsoleProperties newConsoleProperties() {
+		return new DevConsoleProperties();
+	}
 
 	protected void onAddDomainStore() {
 		// EntityLayerLogging.setLevel(
@@ -991,9 +1028,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		setsFolder.mkdirs();
 		profileFolder = getDevFile("profiles");
 		profileFolder.mkdir();
-		consolePropertiesFile = getDevFile("console-properties.xml");
-		consoleHistoryFile = getDevFile("console-history.xml");
-		consoleStringsFile = getDevFile("console-strings.xml");
+		consolePropertiesFile = getDevFile("console-properties");
+		consoleHistoryFile = getDevFile("console-history");
+		consoleStringsFile = getDevFile("console-strings");
 	}
 
 	public enum DevConsoleStyle {

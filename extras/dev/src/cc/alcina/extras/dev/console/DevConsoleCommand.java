@@ -133,7 +133,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public Connection getConn(boolean forceNewLocal, boolean forceRemote)
 			throws Exception {
 		boolean remote = forceRemote
-				|| (console.props.connection_useProduction && !forceNewLocal);
+				|| (console.getProps().connection_useProduction && !forceNewLocal);
 		if (forceNewLocal) {
 			connLocal = null;
 		}
@@ -146,17 +146,17 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						getClass().getSimpleName()));
 			}
 			Class.forName("org.postgresql.Driver");
-			String connStr = remote ? console.props.connection_production
-					: console.props.connection_local;
+			String connStr = remote ? console.getProps().connection_production
+					: console.getProps().connection_local;
 			String[] parts = connStr.split(",");
 			try {
 				conn = DriverManager.getConnection(parts[0], parts[1],
 						parts.length == 2 ? "" : parts[2]);
 			} catch (Exception e) {
-				if (remote && !console.props.connectionProductionTunnelCmd
+				if (remote && !console.getProps().connectionProductionTunnelCmd
 						.isEmpty()) {
 					new Shell().launchBashScript(
-							console.props.connectionProductionTunnelCmd);
+							console.getProps().connectionProductionTunnelCmd);
 					for (int i = 1; i < 15; i++) {
 						try {
 							System.out.format("opening tunnel ... %s ...\n", i);
@@ -337,7 +337,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			console.devHelper.deleteClasspathCacheFiles();
+			console.getDevHelper().deleteClasspathCacheFiles();
 			return "files deleted";
 		}
 	}
@@ -370,7 +370,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			File profile = SEUtilities.getChildFile(console.profileFolder,
 					name);
 			File profileSer = SEUtilities.getChildFile(profile, "ser");
-			File testFolder = console.devHelper.getTestFolder();
+			File testFolder = console.getDevHelper().getTestFolder();
 			if (load) {
 				if (!profile.exists()) {
 					System.err.format("Profile '%s' does not exist\n", name);
@@ -1047,7 +1047,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					"delete  from wrappedobject where id in (%s);\n", idStr);
 			System.out.format("Local delete:\n========\n%s\n\n", localDelete);
 			Connection localConn = getConn(true);
-			if (!console.props.connection_useProduction) {
+			if (!console.getProps().connection_useProduction) {
 				System.err.println("must use production conn");
 				return "";
 			}
@@ -1132,14 +1132,14 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					? System.getenv("USERPROFILE")
 					: System.getProperty("user.home");
 			String localPath = CommonUtils.combinePaths(homeDir + "/", argv[1]);
-			String remotePath = String.format("%s:%s", console.props.remoteSsh,
+			String remotePath = String.format("%s:%s", console.getProps().remoteSsh,
 					(argv[2].startsWith("'") ? argv[2]
 							: (CommonUtils.combinePaths(
-									console.props.remoteHomeDir + "/",
+									console.getProps().remoteHomeDir + "/",
 									argv[2]))));
 			String remotePortStr = String.format(
 					"/usr/bin/ssh -o StrictHostKeychecking=no -p %s",
-					console.props.remoteSshPort);
+					console.getProps().remoteSshPort);
 			boolean put = argv[0].equals("put");
 			String f1 = put ? localPath : remotePath;
 			String f2 = put ? remotePath : localPath;
@@ -1237,9 +1237,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			console.props.idOrSet = argv[0];
+			console.getProps().idOrSet = argv[0];
 			console.saveConfig();
-			return String.format("set id to '%s'", console.props.idOrSet);
+			return String.format("set id to '%s'", console.getProps().idOrSet);
 		}
 	}
 
@@ -1262,15 +1262,15 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		@Override
 		public String run(String[] argv) throws Exception {
 			if (argv[0].equals("d")) {
-				console.props.logLevel = "DEBUG";
+				console.getProps().logLevel = "DEBUG";
 			} else if (argv[0].equals("i")) {
-				console.props.logLevel = "INFO";
+				console.getProps().logLevel = "INFO";
 			} else {
 				System.err.println("values: i=INFO, d=DEBUG");
 				return "";
 			}
 			console.saveConfig();
-			return String.format("log level set to %s", console.props.logLevel);
+			return String.format("log level set to %s", console.getProps().logLevel);
 		}
 	}
 
@@ -1300,7 +1300,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				return null;
 			};
 			Map<String, Field> map = Arrays
-					.stream(console.props.getClass().getFields())
+					.stream(console.getProps().getClass().getFields())
 					.filter(field -> getKey.apply(field) != null)
 					.collect(AlcinaCollectors.toKeyMap(getKey));
 			Map<String, Field> fieldsByAnnName = new TreeMap<>(map);
@@ -1312,11 +1312,11 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				SetPropInfo ann = field.getAnnotation(SetPropInfo.class);
 				Class<?> type = field.getType();
 				if (type == Boolean.class || type == boolean.class) {
-					field.set(console.props, Boolean.valueOf(argv[1]));
+					field.set(console.getProps(), Boolean.valueOf(argv[1]));
 				} else if (type == Integer.class || type == int.class) {
-					field.set(console.props, Integer.parseInt(argv[1]));
+					field.set(console.getProps(), Integer.parseInt(argv[1]));
 				} else if (type == String.class) {
-					field.set(console.props, argv.length == 1 ? null : argv[1]);
+					field.set(console.getProps(), argv.length == 1 ? null : argv[1]);
 				}
 				console.saveConfig();
 				return String.format("set %s to '%s'", argv[0],
@@ -1340,7 +1340,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				String desc = ann.description();
 				desc = desc.replace("\n", descPad);
 				System.out.format("%-30s%-50s%s\n", ann.key(),
-						field.get(console.props), desc);
+						field.get(console.getProps()), desc);
 			}
 		}
 	}

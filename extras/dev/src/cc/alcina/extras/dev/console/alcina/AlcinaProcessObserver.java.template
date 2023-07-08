@@ -1,0 +1,17 @@
+package cc.alcina.extras.dev.console.alcina;
+
+import java.util.List;
+
+import cc.alcina.framework.common.client.process.ProcessObserver;
+import cc.alcina.framework.common.client.process.ProcessObservers;
+
+public class AlcinaProcessObserver extends ProcessObserver.AppDebug {
+	public AlcinaProcessObserver() {
+		ProcessObservers.observe(this);
+	}
+
+	@Override
+	public List<ProcessObserver> getObservers() {
+		return List.of();
+	}
+}
