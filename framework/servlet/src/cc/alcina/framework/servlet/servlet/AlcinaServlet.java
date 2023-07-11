@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.servlet;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletException;
@@ -35,7 +37,7 @@ public abstract class AlcinaServlet extends HttpServlet {
 		return topicApplicationThrowables;
 	}
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	private AtomicInteger callCounter = new AtomicInteger(0);
 
