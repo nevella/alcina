@@ -31,6 +31,9 @@ import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public abstract class AlcinaServlet extends HttpServlet {
+	private static final List<String> IGNORABLE_IO_EXCEPTIONS = Arrays.asList(
+			"Connection reset by peer", "Connection timed out", "Broken pipe");
+
 	private static Topic<Throwable> topicApplicationThrowables = Topic.create();
 
 	public static final Topic<Throwable> topicApplicationThrowables() {
@@ -139,11 +142,11 @@ public abstract class AlcinaServlet extends HttpServlet {
 			// If the connection has been reset, we can't print anything to the
 			// response
 			if (t instanceof IOException
-					&& t.getMessage().equals("Connection reset by peer")) {
-				logger.warn("Connection reset by peer");
+					&& IGNORABLE_IO_EXCEPTIONS.contains(t.getMessage())) {
+				logger.warn("IOException: {}", t.getMessage());
 				return;
 			}
-			topicApplicationThrowables().publish(t); 
+			topicApplicationThrowables().publish(t);
 			logger.warn("Exception detail:", t);
 			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, t);
 			try {
