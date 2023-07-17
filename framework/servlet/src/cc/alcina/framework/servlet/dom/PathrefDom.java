@@ -13,16 +13,17 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest.Session;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 
 /*
  * PathrefDom DOM(s) are a server-side dom pair (local, pathref) coupled to an
  * in-browser dom pair (local, remote) via rpc calls - the relationship is:
- * 
+ *
  * Server.NodeLocal <--> Server.NodePathRef <==> Client.NodeLocal <-->
  * Client.NodeJso (Client.NodeJso being the 'real' browser dom)
- * 
+ *
  * 'PathRef' because the server has no object refs to client nodes, instead
  * using node (x.y.z) paths to transmit references
  */
@@ -46,8 +47,8 @@ public class PathrefDom {
 				true);
 	}
 
-	public Environment getEnvironment(Session session) {
-		Environment environment = environments.get(session.environmentId);
+	public Environment getEnvironment(RemoteComponentProtocol.Session session) {
+		Environment environment = environments.get(session.id);
 		if (environment == null && Ax.isTest()) {
 			try {
 				Thread.sleep(1000);
@@ -57,10 +58,6 @@ public class PathrefDom {
 			}
 		}
 		return environment;
-	}
-
-	public Environment register(RemoteUi ui) {
-		return register(ui, Credentials.createUnique());
 	}
 
 	public Environment register(RemoteUi ui, Credentials credentials) {
@@ -76,7 +73,9 @@ public class PathrefDom {
 
 	public static class Credentials {
 		public static Credentials createUnique() {
-			return new Credentials(SEUtilities.generatePrettyUuid(),
+			return new Credentials(
+					Ax.format("%s-%s", EntityLayerUtils.getLocalHostName(),
+							SEUtilities.generatePrettyUuid()),
 					SEUtilities.generatePrettyUuid());
 		}
 
@@ -84,7 +83,7 @@ public class PathrefDom {
 
 		public final String auth;
 
-		public Credentials(String id, String auth) {
+		Credentials(String id, String auth) {
 			this.id = id;
 			this.auth = auth;
 		}

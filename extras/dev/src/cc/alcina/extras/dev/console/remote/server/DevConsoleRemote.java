@@ -13,6 +13,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -27,12 +29,19 @@ import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.jscodeserver.JsCodeServerServlet;
-import cc.alcina.framework.servlet.component.romcom.server.ProtocolRequestHandler;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer;
+import cc.alcina.framework.servlet.dom.Environment;
+import cc.alcina.framework.servlet.dom.PathrefDom;
+import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
+import cc.alcina.framework.servlet.dom.RemoteUi;
 
 @Registration.Singleton(DevConsoleRemote.class)
 public class DevConsoleRemote {
@@ -62,6 +71,8 @@ public class DevConsoleRemote {
 	Map<String, Integer> perClientInstanceRecordOffsets = new LinkedHashMap<>();
 
 	private Integer overridePort;
+
+	HandlerCollection handlers;
 
 	public void addClearEvent() {
 		ConsoleRecord record = new ConsoleRecord();
@@ -158,7 +169,7 @@ public class DevConsoleRemote {
 		// Resolve file to directory
 		URI consoleWebRootUri = consoleGwtHtmlFile.toURI().resolve("./")
 				.normalize();
-		HandlerCollection handlers = new HandlerCollection();
+		handlers = new HandlerCollection();
 		{
 			ContextHandler protocolHandler = new ContextHandler(handlers,
 					"/remote-console.do");
@@ -185,12 +196,7 @@ public class DevConsoleRemote {
 					new ServletHolder(new JsCodeServerServlet()), "/*");
 			jsCodeServerHandler.setAllowNullPathInfo(true);
 		}
-		{
-			ContextHandler protocolHandler = new ContextHandler(handlers,
-					"/remote");
-			protocolHandler.setAllowNullPathInfo(true);
-			protocolHandler.setHandler(new ProtocolRequestHandler());
-		}
+		registerRemoteComponents(handlers);
 		addSubclassHandlers(handlers);
 		{
 			ServletContextHandler resourceHandler = new ServletContextHandler(
@@ -227,6 +233,11 @@ public class DevConsoleRemote {
 	protected void addSubclassHandlers(HandlerCollection handlers) {
 	}
 
+	protected void registerRemoteComponents(HandlerCollection handlers) {
+		Registry.query(DevConsoleRemoteComponent.class).implementations()
+				.forEach(this::registerRemoteComponent);
+	}
+
 	synchronized void addRecord(ConsoleRecord record) {
 		records.add(record);
 		if (notifyTask != null) {
@@ -241,6 +252,19 @@ public class DevConsoleRemote {
 			}
 		};
 		timer.scheduleAtFixedRate(notifyTask, 50, 50);
+	}
+
+	/*
+	 * FIXME - romcom - add + implement eviction policy
+	 */
+	void registerRemoteComponent(DevConsoleRemoteComponent component) {
+		{
+			ContextHandler protocolHandler = new ContextHandler(handlers,
+					component.getPath());
+			protocolHandler.setAllowNullPathInfo(true);
+			protocolHandler.setHandler(
+					new RemoteComponentProtocolServer.ServerHandler(component));
+		}
 	}
 
 	synchronized List<ConsoleRecord> takeRecords(String clientInstanceUid) {
@@ -271,6 +295,25 @@ public class DevConsoleRemote {
 				.filter(record -> record.matchesCaller(clientInstanceUid))
 				.collect(Collectors.toList());
 		return returnRecords;
+	}
+
+	public interface DevConsoleRemoteComponent {
+		default RemoteComponentProtocol.Session createEnvironment(HttpServletRequest request) {
+			Credentials credentials = Credentials.createUnique();
+			RemoteUi ui = Reflections.newInstance(getUiType());
+			Environment environment = PathrefDom.get().register(ui,
+					credentials);
+			RemoteComponentProtocol.Session session = new RemoteComponentProtocol.Session();
+			session.id = credentials.id;
+			session.auth = credentials.auth;
+			session.url = request.getRequestURL().toString();
+			session.componentClassName = ui.getClass().getName();
+			return session;
+		}
+
+		String getPath();
+
+		Class<? extends RemoteUi> getUiType();
 	}
 
 	class ConsoleRecord {

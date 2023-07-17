@@ -140,6 +140,15 @@ public class Element extends Node implements ClientDomElement,
 
 	private Style style;
 
+	/*
+	 * FIXME - romcom - all event dispatch code should not directly reference
+	 * this.
+	 *
+	 * Every element is 'attached' - so this is only for dispatch to (widget;
+	 * pathref) listeers
+	 *
+	 * Current hacky approach works - prettier is easy
+	 */
 	public EventListener eventListener;
 
 	/*
@@ -662,6 +671,10 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void onBrowserEvent(Event event) {
+		if (eventListener != this) {
+			eventListener.onBrowserEvent(event);
+			return;
+		}
 		switch (DOM.eventGetType(event)) {
 		case Event.ONMOUSEOVER:
 			// Only fire the mouse over event if it's coming from outside
@@ -1165,9 +1178,13 @@ public class Element extends Node implements ClientDomElement,
 	 */
 	protected void onAttach() {
 		// Event hookup code
-		this.eventListener = uiObject instanceof EventListener
-				? (EventListener) uiObject
-				: this;
+		if (this.eventListener == null) {
+			this.eventListener = uiObject instanceof EventListener
+					? (EventListener) uiObject
+					: this;
+		} else {
+			int debug = 3;
+		}
 		DOM.setEventListener(this, eventListener);
 		List<String> localBitlessEventsSunk = localBitlessEventsSunk();
 		if (localBitlessEventsSunk != null) {

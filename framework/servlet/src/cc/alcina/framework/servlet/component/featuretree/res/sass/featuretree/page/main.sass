@@ -1,0 +1,34 @@
+body > page
+  display: grid
+  grid-template-areas: "header main"
+  height: 100vh
+  width: 100vw
+
+  > header
+    display: block
+    background-color: pink
+    height: 50px
+    text-align: center
+    color: black
+
+  > main
+    display: grid
+    grid-template-areas: "tree history" "tree properties"
+
+    > selection-tree
+      grid-area: tree
+      background-color: blue
+
+    > history
+      grid-area: history
+      background-color: green
+
+    > properties
+      grid-area: properties
+      background-color: purple
+
+
+
+
+
+

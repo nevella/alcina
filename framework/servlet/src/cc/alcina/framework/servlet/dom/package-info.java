@@ -25,14 +25,15 @@
   - server: authenticate (optional) (alcina-servlet or querystring auth)
   - server: serve bootstrap html
   	- create environment
-  	  - if ui is 'single instance only', invalidate others
-  	- inject initial rpc connection parameters
-  	  - component
+  	  - if ui is 'single instance only', invalidate other environments with same component class
+  	- inject initial rpc connection parameters [session]
+  	  - component (remoteui classname)
+  	  - initial url
   	  - environment id (rename any use of 'session' to 'environment')
   	  - environment auth
-  	  - retry behaviour
   - client:
   	- post bootstrap packet to server
+  	[yep - now fix Element/EventListener]
   - server:
   	- environment enters state 'connected' (but this may already be handled)(throw if already bootstrapped)
   - client:
@@ -48,5 +49,7 @@
   	  - else:
       	- reply with 'refresh'
  * </pre>
+ *
+ * (implementation - see FIXME romcom)
  */
 package cc.alcina.framework.servlet.dom;

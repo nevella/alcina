@@ -1274,6 +1274,10 @@ public class LocalDom implements ContextFrame {
 				elem.implAccess().pathrefRemote().setPropertyString("value",
 						eventData.value);
 			}
+			// FIXME - romcom - attach probably not being called
+			if (elem.eventListener == null) {
+				elem.eventListener = elem;
+			}
 			// um, is it that easy?
 			DOM.dispatchEvent(eventData.event, elem, elem.eventListener);
 		}

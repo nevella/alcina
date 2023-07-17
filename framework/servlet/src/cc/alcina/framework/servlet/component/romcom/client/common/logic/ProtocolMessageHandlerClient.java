@@ -15,32 +15,33 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
-import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage;
+import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.MutationsHandler.DispatchListener;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvalidClientUidException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
-import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage.DomEventMessage;
-import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage.InvalidClientUidException;
 
 /*
  * FIXME - beans1x5 - package protected
  */
 @Registration.NonGenericSubtypes(ProtocolMessageHandlerClient.class)
-public abstract class ProtocolMessageHandlerClient<PM extends ProtocolMessage> {
+public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 	public abstract void handle(RemoteComponentResponse response, PM message);
 
 	public static class BeginAwaitLoopHandler extends
-			ProtocolMessageHandlerClient<ProtocolMessage.BeginAwaitLoop> {
+			ProtocolMessageHandlerClient<Message.BeginAwaitLoop> {
 		@Override
 		public void handle(RemoteComponentResponse response,
-				ProtocolMessage.BeginAwaitLoop message) {
-			ClientRpc.send(new ProtocolMessage.AwaitRemote());
+				Message.BeginAwaitLoop message) {
+			ClientRpc.send(new Message.AwaitRemote());
 		}
 	}
 
 	public static class MutationsHandler
-			extends ProtocolMessageHandlerClient<ProtocolMessage.Mutations> {
+			extends ProtocolMessageHandlerClient<Message.Mutations> {
 		@Override
 		public void handle(RemoteComponentResponse response,
-				ProtocolMessage.Mutations message) {
+				Message.Mutations message) {
 			LocalDom.pathRefRepresentations()
 					.applyMutations(message.domMutations, true);
 			message.eventMutations.forEach(m -> {
@@ -68,7 +69,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends ProtocolMessage> {
 			public void onBrowserEvent(Event event) {
 				// just send the lowest event receiver - things will bubble from
 				// here
-				DomEventMessage message = new ProtocolMessage.DomEventMessage();
+				DomEventMessage message = new Message.DomEventMessage();
 				message.data = new DomEventData();
 				message.data.event = event.serializableForm();
 				message.data.firstReceiver = Pathref.forNode(elem);
@@ -105,10 +106,10 @@ public abstract class ProtocolMessageHandlerClient<PM extends ProtocolMessage> {
 	}
 
 	public static class ProcessingExceptionHandler extends
-			ProtocolMessageHandlerClient<ProtocolMessage.ProcessingException> {
+			ProtocolMessageHandlerClient<Message.ProcessingException> {
 		@Override
 		public void handle(RemoteComponentResponse response,
-				ProtocolMessage.ProcessingException message) {
+				Message.ProcessingException message) {
 			RemoteObjectModelComponentState.get().finished = true;
 			String clientMessage = Ax.format(
 					"Exception occurred - ui stopped: %s",

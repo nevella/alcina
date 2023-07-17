@@ -13,15 +13,20 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
-import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
-import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage.AwaitRemote;
 
 /*
  * Nice thing about statics is they *ensure* statelessness
  */
 public class ClientRpc {
+	static RemoteComponentProtocol.Session session;
+
+	private transient static int clientMessageId;
+
 	public static void runAsync(Class clazz, Runnable runnable) {
 		GWT.runAsync(clazz, new RunAsyncCallback() {
 			@Override
@@ -67,8 +72,8 @@ public class ClientRpc {
 				RemoteComponentResponse response = text.isEmpty() ? null
 						: ReflectiveSerializer.deserialize(text);
 				if (response != null) {
-					ProtocolMessage message = response.protocolMessage;
-					Class<? extends ProtocolMessage> messageClass = request.protocolMessage
+					Message message = response.protocolMessage;
+					Class<? extends Message> messageClass = request.protocolMessage
 							.getClass();
 					if (message != null) {
 						ProtocolMessageHandlerClient handler = Registry.impl(
@@ -94,10 +99,17 @@ public class ClientRpc {
 	}
 
 	private static void sendAwaitRemoteMessage() {
-		send(new ProtocolMessage.AwaitRemote());
+		send(new Message.AwaitRemote());
 	}
 
-	static void send(ProtocolMessage message) {
+	static RemoteComponentRequest createRequest() {
+		RemoteComponentRequest request = new RemoteComponentRequest();
+		request.session = session;
+		request.requestId = ++clientMessageId;
+		return request;
+	}
+
+	static void send(Message message) {
 		send(message, false);
 	}
 
@@ -108,8 +120,8 @@ public class ClientRpc {
 	 *            clients, blocking makes sense - for truly remote (inet),
 	 *            probably not
 	 */
-	static void send(ProtocolMessage message, boolean block) {
-		RemoteComponentRequest request = RemoteComponentRequest.create();
+	static void send(Message message, boolean block) {
+		RemoteComponentRequest request = createRequest();
 		request.protocolMessage = message;
 		submitRequest(request);
 	}

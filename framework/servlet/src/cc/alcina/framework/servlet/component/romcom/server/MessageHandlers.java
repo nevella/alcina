@@ -6,41 +6,21 @@ import java.util.function.Consumer;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
-import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage.AwaitRemote;
 import cc.alcina.framework.servlet.dom.Environment;
 
-/*
- * FIXME - beans1x5 - package protected
- */
-@Registration.NonGenericSubtypes(ProtocolMessageHandlerServer.class)
-public abstract class ProtocolMessageHandlerServer<PM extends ProtocolMessage> {
-	public abstract void handle(RemoteComponentRequest request,
-			RemoteComponentResponse response, Environment env, PM message);
-
-	public boolean isValidateClientInstanceUid() {
-		return true;
-	}
-
-	/*
-	 * Most handlers block on the environment - AwaitRemoteHandler is one that
-	 * has more complex sync logic
-	 */
-	Object provideMonitor(Environment env) {
-		return env;
-	}
-
-	public static class AwaitRemoteHandler
-			extends ProtocolMessageHandlerServer<ProtocolMessage.AwaitRemote> {
+public class MessageHandlers {
+	public static class AwaitRemoteHandler extends
+			RemoteComponentProtocolServer.MessageHandlerServer<Message.AwaitRemote> {
 		private CountDownLatch latch;
 
 		private Environment env;
 
-		public ProtocolMessage message;
+		public Message message;
 
 		@Override
 		public void handle(RemoteComponentRequest request,
@@ -62,12 +42,12 @@ public abstract class ProtocolMessageHandlerServer<PM extends ProtocolMessage> {
 			return this;
 		}
 
-		class MessageConsumer implements Consumer<ProtocolMessage> {
+		class MessageConsumer implements Consumer<Message> {
 			// will be called on a different thread to the parent instance
 			// handle
 			// method (the calling frame owns the env monitor)
 			@Override
-			public void accept(ProtocolMessage message) {
+			public void accept(Message message) {
 				AwaitRemoteHandler.this.message = message;
 				env.registerRemoteMessageConsumer(null);
 				latch.countDown();
@@ -76,33 +56,33 @@ public abstract class ProtocolMessageHandlerServer<PM extends ProtocolMessage> {
 	}
 
 	public static class DomEventMessageHandler extends
-			ProtocolMessageHandlerServer<ProtocolMessage.DomEventMessage> {
+			RemoteComponentProtocolServer.MessageHandlerServer<Message.DomEventMessage> {
 		@Override
 		public void handle(RemoteComponentRequest request,
 				RemoteComponentResponse response, Environment env,
-				ProtocolMessage.DomEventMessage message) {
+				Message.DomEventMessage message) {
 			env.applyEvent(message.data);
 		}
 	}
 
-	public static class MutationsHandler
-			extends ProtocolMessageHandlerServer<ProtocolMessage.Mutations> {
+	public static class MutationsHandler extends
+			RemoteComponentProtocolServer.MessageHandlerServer<Message.Mutations> {
 		@Override
 		public void handle(RemoteComponentRequest request,
 				RemoteComponentResponse response, Environment env,
-				ProtocolMessage.Mutations message) {
+				Message.Mutations message) {
 			Preconditions.checkState(message.domMutations.isEmpty());
 			Preconditions.checkState(message.eventMutations.isEmpty());
 			env.applyLocationMutation(message.locationMutation, false);
 		}
 	}
 
-	public static class StartupHandler
-			extends ProtocolMessageHandlerServer<ProtocolMessage.Startup> {
+	public static class StartupHandler extends
+			RemoteComponentProtocolServer.MessageHandlerServer<Message.Startup> {
 		@Override
 		public void handle(RemoteComponentRequest request,
 				RemoteComponentResponse response, Environment env,
-				ProtocolMessage.Startup message) {
+				Message.Startup message) {
 			env.initialiseClient(request.session);
 			env.applyMutations(message.domMutations);
 			env.applyLocationMutation(message.locationMutation, true);
@@ -110,7 +90,7 @@ public abstract class ProtocolMessageHandlerServer<PM extends ProtocolMessage> {
 			 * will enqueue a mutations event in the to-client queue
 			 */
 			env.renderInitialUi();
-			response.protocolMessage = new ProtocolMessage.BeginAwaitLoop();
+			response.protocolMessage = new Message.BeginAwaitLoop();
 			Ax.out("startup");
 		}
 

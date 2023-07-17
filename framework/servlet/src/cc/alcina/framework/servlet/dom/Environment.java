@@ -29,16 +29,15 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
-import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage;
-import cc.alcina.framework.servlet.component.romcom.protocol.ProtocolMessage.InvalidClientUidException;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest.Session;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
 
 /*
  * Sync note - most methods will be called already synced on the environment
  * (since called downstream from a servlet call which looks up the environment
  * and syncs)
- * 
+ *
  * An exception is the eventCollator action - it occurs on a timer thread so is
  * responsible for its own sync
  */
@@ -69,7 +68,7 @@ public class Environment {
 
 	MutationProxyImpl mutationProxy = new MutationProxyImpl();
 
-	ProtocolMessage.Mutations mutations = null;
+	Message.Mutations mutations = null;
 
 	EventCollator<Object> eventCollator;
 
@@ -121,11 +120,10 @@ public class Environment {
 		runInClientFrame(runnable);
 	}
 
-	public void initialiseClient(Session session) {
+	public void initialiseClient(RemoteComponentProtocol.Session session) {
 		if (queue == null) {
 			startQueue();
 		}
-		connectedClientUid = session.clientInstanceUid;
 		try {
 			LooseContext.push();
 			LooseContext.set(CONTEXT_ENVIRONMENT, this);
@@ -151,7 +149,7 @@ public class Environment {
 	}
 
 	public synchronized void
-			registerRemoteMessageConsumer(Consumer<ProtocolMessage> consumer) {
+			registerRemoteMessageConsumer(Consumer<Message> consumer) {
 		queue.registerConsumer(consumer);
 	}
 
@@ -165,24 +163,25 @@ public class Environment {
 				credentials.auth);
 	}
 
-	public void validateSession(Session session,
+	public void validateSession(RemoteComponentProtocol.Session session,
 			boolean validateClientInstanceUid) throws Exception {
 		Preconditions.checkArgument(
-				Objects.equals(session.environmentAuth, credentials.auth),
-				"Invalid auth");
+				Objects.equals(session.auth, credentials.auth), "Invalid auth");
 		if (validateClientInstanceUid) {
-			if (!Objects.equals(session.clientInstanceUid,
-					connectedClientUid)) {
-				if (connectedClientUid == null) {
-					logger.warn(
-							"Call against new (dev) server with no connected client : {}",
-							session.clientInstanceUid);
-				} else {
-					logger.warn("Expired client (tab) : {}",
-							session.clientInstanceUid);
-				}
-				throw new InvalidClientUidException();
-			}
+			// FIXME - romcom - throw various exceptions if expired etc - see
+			// package javadoc
+			// if (!Objects.equals(session.clientInstanceUid,
+			// connectedClientUid)) {
+			// if (connectedClientUid == null) {
+			// logger.warn(
+			// "Call against new (dev) server with no connected client : {}",
+			// session.clientInstanceUid);
+			// } else {
+			// logger.warn("Expired client (tab) : {}",
+			// session.clientInstanceUid);
+			// }
+			// throw new InvalidClientUidException();
+			// }
 		}
 	}
 
@@ -223,17 +222,17 @@ public class Environment {
 
 	void onHistoryChange(ValueChangeEvent<String> event) {
 		mutationProxy.onLocationMutation(
-				ProtocolMessage.Mutations.ofLocation().locationMutation);
+				Message.Mutations.ofLocation().locationMutation);
 	}
 
 	class ClientProtocolMessageQueue implements Runnable {
-		BlockingQueue<ProtocolMessage> queue = new LinkedBlockingQueue<>();
+		BlockingQueue<Message> queue = new LinkedBlockingQueue<>();
 
 		boolean finished = false;
 
-		Consumer<ProtocolMessage> consumer = null;
+		Consumer<Message> consumer = null;
 
-		public void registerConsumer(Consumer<ProtocolMessage> consumer) {
+		public void registerConsumer(Consumer<Message> consumer) {
 			this.consumer = consumer;
 			if (consumer != null) {
 				synchronized (this) {
@@ -255,7 +254,7 @@ public class Environment {
 					}
 				}
 				try {
-					ProtocolMessage message = queue.take();
+					Message message = queue.take();
 					consumer.accept(message);
 				} catch (Throwable e) {
 					logger.warn("Queue handler issue");
@@ -267,12 +266,12 @@ public class Environment {
 		/*
 		 * Does not await receipt
 		 */
-		public void send(ProtocolMessage message) {
+		public void send(Message message) {
 			queue.add(message);
 		}
 
-		public <R extends ProtocolMessage> R
-				sendAndReceive(ProtocolMessage message) {
+		public <R extends Message> R
+				sendAndReceive(Message message) {
 			throw new UnsupportedOperationException();
 		}
 	}
@@ -304,7 +303,7 @@ public class Environment {
 		// run the runnable in a mutation-processing context
 		void runWithMutations(Runnable runnable) {
 			if (mutations == null) {
-				mutations = new ProtocolMessage.Mutations();
+				mutations = new Message.Mutations();
 			}
 			runnable.run();
 			eventCollator.eventOccurred();

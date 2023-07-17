@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.job.RootTask;
-import cc.alcina.framework.common.client.serializer.PropertySerialization;
 
 /**
  * Analyse source, look for entrypoint accesses from accessing code (either

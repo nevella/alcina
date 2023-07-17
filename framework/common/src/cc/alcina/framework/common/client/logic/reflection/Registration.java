@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
@@ -34,7 +33,6 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

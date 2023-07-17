@@ -1,0 +1,199 @@
+package cc.alcina.framework.servlet.component.romcom.server;
+
+import java.io.IOException;
+import java.net.URL;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringEscapeUtils;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+
+import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote.DevConsoleRemoteComponent;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
+import cc.alcina.framework.servlet.dom.Environment;
+import cc.alcina.framework.servlet.dom.PathrefDom;
+
+public class RemoteComponentProtocolServer {
+	public static final transient String ROMCOM_SERIALIZED_SESSION_KEY = "__alc_romcom_session";
+
+	@Registration.NonGenericSubtypes(MessageHandlerServer.class)
+	public static abstract class MessageHandlerServer<PM extends Message> {
+		public abstract void handle(RemoteComponentRequest request,
+				RemoteComponentResponse response, Environment env, PM message);
+
+		public boolean isValidateClientInstanceUid() {
+			return true;
+		}
+
+		/*
+		 * Most handlers block on the environment - AwaitRemoteHandler is one
+		 * that has more complex sync logic
+		 */
+		Object provideMonitor(Environment env) {
+			return env;
+		}
+	}
+
+	public static class ServerHandler extends AbstractHandler {
+		DevConsoleRemoteComponent component;
+
+		public ServerHandler(DevConsoleRemoteComponent component) {
+			this.component = component;
+			URL url = getResourceUrl("/rc.html");
+			if (url == null) {
+				throw new RuntimeException("Unable to find resource directory");
+			}
+		}
+
+		@Override
+		public void handle(String target, Request baseRequest,
+				HttpServletRequest request, HttpServletResponse response)
+				throws IOException, ServletException {
+			String method = request.getMethod();
+			switch (method) {
+			case "GET":
+				serveFile(baseRequest, request, response);
+				break;
+			case "POST":
+				serveProtocol(baseRequest, request, response);
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		URL getResourceUrl(String warRelativePart) {
+			ClassLoader cl = RemoteComponentProtocolServer.ServerHandler.class
+					.getClassLoader();
+			return cl.getResource(Ax.format(
+					"cc/alcina/framework/servlet/component/romcom/war%s",
+					warRelativePart));
+		}
+
+		void serveFile(Request baseRequest, HttpServletRequest request,
+				HttpServletResponse response) throws IOException {
+			String path = request.getPathInfo();
+			boolean injectSession = false;
+			if (path == null) {
+				path = "/rc.html";
+				injectSession = true;
+			}
+			URL url = getResourceUrl(path);
+			if (url == null) {
+				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				return;
+			}
+			response.addHeader("Cross-Origin-Opener-Policy", "same-origin");
+			response.addHeader("Cross-Origin-Embedder-Policy", "require-corp");
+			String suffix = path.replaceFirst(".+\\.(.+)", "$1");
+			switch (suffix) {
+			case "html":
+				response.setContentType("text/html");
+				break;
+			case "json":
+				response.setContentType("application/json");
+				break;
+			case "js":
+				response.setContentType("text/javascript");
+				break;
+			case "gif":
+				response.setContentType("image/gif");
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+			if (injectSession) {
+				String bootstrapHtml = Io.read().fromStream(url.openStream())
+						.asString();
+				RemoteComponentProtocol.Session session = component
+						.createEnvironment(request);
+				String sessionJson = StringEscapeUtils.escapeJavaScript(
+						ReflectiveSerializer.serialize(session));
+				URL nocacheJsUrl = getResourceUrl(
+						"/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.nocache.js");
+				String nocacheJs = Io.read()
+						.fromStream(nocacheJsUrl.openStream()).asString();
+				String featurePath = component.getPath();
+				String websocketTransportClientPrefix = featurePath
+						.substring(1);
+				bootstrapHtml = bootstrapHtml.replace("%%SESSION_JSON%%",
+						sessionJson);
+				bootstrapHtml = bootstrapHtml.replace("%%NOCACHE_JS%%",
+						nocacheJs);
+				bootstrapHtml = bootstrapHtml.replace("%%FEATURE_PATH%%",
+						featurePath);
+				bootstrapHtml = bootstrapHtml.replace(
+						"%%WEBSOCKET_TRANSPORT_CLIENT_PREFIX%%",
+						websocketTransportClientPrefix);
+				Io.write().string(bootstrapHtml)
+						.toStream(response.getOutputStream());
+			} else {
+				Io.read().fromStream(url.openStream()).write()
+						.toStream(response.getOutputStream());
+			}
+			response.setStatus(HttpServletResponse.SC_OK);
+			baseRequest.setHandled(true);
+		}
+
+		void serveProtocol(Request baseRequest,
+				HttpServletRequest servletRequest,
+				HttpServletResponse servletResponse) throws IOException {
+			try {
+				LooseContext.push();
+				servletResponse.setContentType("application/json");
+				String requestJson = Io.read()
+						.fromStream(servletRequest.getInputStream()).asString();
+				if (requestJson.length() > 0) {
+					RemoteComponentRequest request = ReflectiveSerializer
+							.deserialize(requestJson);
+					MessageHandlerServer messageHandler = Registry.impl(
+							MessageHandlerServer.class,
+							request.protocolMessage.getClass());
+					RemoteComponentResponse response = new RemoteComponentResponse();
+					response.requestId = request.requestId;
+					response.session = request.session;
+					Environment env = PathrefDom.get()
+							.getEnvironment(request.session);
+					try {
+						env.validateSession(request.session,
+								messageHandler.isValidateClientInstanceUid());
+					} catch (Exception e) {
+						e.printStackTrace();
+						Message.ProcessingException processingException = new Message.ProcessingException();
+						processingException.exceptionClassName = e.getClass()
+								.getName();
+						processingException.exceptionMessage = CommonUtils
+								.toSimpleExceptionMessage(e);
+						response.protocolMessage = processingException;
+					}
+					// FIXME - remcon - handle missed, out-of-order messages
+					synchronized (messageHandler.provideMonitor(env)) {
+						messageHandler.handle(request, response, env,
+								request.protocolMessage);
+					}
+					servletResponse.getWriter()
+							.write(ReflectiveSerializer.serialize(response));
+				}
+				servletResponse.setStatus(HttpServletResponse.SC_OK);
+				baseRequest.setHandled(true);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			} finally {
+				LooseContext.pop();
+			}
+		}
+	}
+}

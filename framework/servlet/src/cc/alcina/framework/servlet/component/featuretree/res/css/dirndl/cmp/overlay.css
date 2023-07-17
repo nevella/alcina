@@ -1,0 +1,44 @@
+body > .overlay-container {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  display: inline-block;
+}
+body > .overlay-container > overlay {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+body > .overlay-container > overlay > actions {
+  display: flex;
+  justify-content: center;
+}
+body > .overlay-container > overlay > actions:not(:empty) {
+  margin-bottom: 1rem;
+}
+body > .overlay-container > overlay > actions > a {
+  cursor: pointer;
+  color: #333;
+}
+body > .overlay-container > overlay > actions > a:hover {
+  color: #777;
+}
+
+body > overlay-container-modal {
+  display: block;
+  bottom: 0;
+  right: 0;
+}
+body > overlay-container-modal:last-of-type {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+body > overlay-container-modal.viewport-centered > * {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+body > overlay-container-modal > overlay {
+  background-color: white;
+}

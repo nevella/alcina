@@ -28,8 +28,8 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
-import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
+import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.gwt.client.util.Lzw;
 
 /**

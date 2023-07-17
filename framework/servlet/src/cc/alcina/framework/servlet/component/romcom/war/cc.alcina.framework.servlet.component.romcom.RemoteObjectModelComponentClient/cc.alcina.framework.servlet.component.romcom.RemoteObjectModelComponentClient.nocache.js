@@ -334,7 +334,7 @@ function cc_alcina_framework_servlet_component_romcom_RemoteObjectModelComponent
     }
     var strongName;
     try {
-      strongName = 'ABC9915D3E0A1B13C01B1112F160B4E6';
+      strongName = 'ECEE5707C6D84A536EB47126121C0E35';
       var idx = strongName.indexOf(':');
       if (idx != -1) {
         softPermutationId = parseInt(strongName.substring(idx + 1), 10);

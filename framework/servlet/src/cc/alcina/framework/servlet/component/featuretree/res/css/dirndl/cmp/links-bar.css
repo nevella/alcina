@@ -1,0 +1,21 @@
+.ol-links-bar > ul {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.ol-link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ol-link-list > li {
+  display: block;
+  line-height: 1.5rem;
+}
+
+.ol-horizontal-list > li {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 0 1rem;
+}

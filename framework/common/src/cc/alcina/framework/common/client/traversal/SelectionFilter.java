@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gwt.regexp.shared.RegExp;
 
-import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
