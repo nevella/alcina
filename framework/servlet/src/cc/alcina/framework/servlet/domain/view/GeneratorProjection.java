@@ -9,7 +9,6 @@ import java.util.stream.IntStream;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreatorStd;
@@ -17,6 +16,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.entity.persistence.mvcc.BaseProjectionSupportMvcc.Object2ObjectHashMapCreator;
 import cc.alcina.framework.entity.persistence.mvcc.BaseProjectionSupportMvcc.TreeMapCreatorNonTransactional;
+import cc.alcina.framework.gwt.client.dirndl.model.TreePath;
 import cc.alcina.framework.servlet.domain.view.LiveTree.GeneratorContext;
 import cc.alcina.framework.servlet.domain.view.LiveTree.LiveNode;
 

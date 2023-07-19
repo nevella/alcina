@@ -15,10 +15,9 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
-import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.MutationsHandler.DispatchListener;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvalidClientUidException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
 /*
@@ -28,12 +27,12 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
 public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 	public abstract void handle(RemoteComponentResponse response, PM message);
 
-	public static class BeginAwaitLoopHandler extends
-			ProtocolMessageHandlerClient<Message.BeginAwaitLoop> {
+	public static class BeginAwaitLoopHandler
+			extends ProtocolMessageHandlerClient<Message.BeginAwaitLoop> {
 		@Override
 		public void handle(RemoteComponentResponse response,
 				Message.BeginAwaitLoop message) {
-			ClientRpc.send(new Message.AwaitRemote());
+			ClientRpc.sendAwaitRemoteMessage();
 		}
 	}
 
@@ -105,18 +104,23 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		}
 	}
 
-	public static class ProcessingExceptionHandler extends
-			ProtocolMessageHandlerClient<Message.ProcessingException> {
+	public static class ProcessingExceptionHandler
+			extends ProtocolMessageHandlerClient<Message.ProcessingException> {
 		@Override
 		public void handle(RemoteComponentResponse response,
 				Message.ProcessingException message) {
 			RemoteObjectModelComponentState.get().finished = true;
+			Exception protocolException = message.protocolException;
 			String clientMessage = Ax.format(
 					"Exception occurred - ui stopped: %s",
 					message.exceptionMessage);
-			if (message.exceptionClass() == InvalidClientUidException.class) {
-				clientMessage = "This component client (tab) has ben superseded "
-						+ "by a newer access to this component url. \n\nPlease use the newer tab";
+			if (protocolException instanceof InvalidClientException) {
+				InvalidClientException invalidClientException = (InvalidClientException) protocolException;
+				switch (invalidClientException.action) {
+				case REFRESH:
+					Window.Location.reload();
+					return;
+				}
 			}
 			// FIXME - remcon - prettier?
 			Window.alert(clientMessage);

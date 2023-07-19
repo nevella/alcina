@@ -121,6 +121,13 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 			}
 			result.add(impl);
 		}
+		if (result.isEmpty() && reflector instanceof Property) {
+			Class declaringType = ((Property) reflector).getDeclaringType();
+			if (Reflections.at(declaringType)
+					.has(Directed.AllProperties.class)) {
+				result.add(new Directed.Impl());
+			}
+		}
 		return result;
 	}
 

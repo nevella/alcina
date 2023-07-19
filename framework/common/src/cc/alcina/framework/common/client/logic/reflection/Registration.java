@@ -85,6 +85,16 @@ public @interface Registration {
 	Class[] value();
 
 	/**
+	 * A marker interface, all subtypes should be registered irrespective of
+	 * public/abstract/interface rules
+	 *
+	 */
+	public interface AllSubtypes {
+		public interface Client extends AllSubtypes {
+		}
+	}
+
+	/**
 	 * Register in the first client module that this registry node is visible,
 	 * including when equal priority types exist at the registry node
 	 */
@@ -406,11 +416,11 @@ public @interface Registration {
 	 * {@code ZHandler extends/implements Handler<Z>} (where Z is a concrete
 	 * subtype of T)) to be registered purely via the generic supertype
 	 * ({@code Z}} bounds
-	 * 
+	 *
 	 * <p>
 	 * If anyone can think of a better name than 'NonGenericSubtypes'...please
 	 * holler. 'ReifiedSubtypes' would be wrong but sounds cool...
-	 * 
+	 *
 	 * <p>
 	 * <b>Note</b> - this annotation is *not* applied if the applicable type has
 	 * any other Registration annotation
@@ -457,7 +467,6 @@ public @interface Registration {
 	 * Sugar for @Registration(implementation=Implementation.SINGLETON)
 	 * </p>
 	 *
-	 * @author Nick Reddel
 	 *
 	 *
 	 */

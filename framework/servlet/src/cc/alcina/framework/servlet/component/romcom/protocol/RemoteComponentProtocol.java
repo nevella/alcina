@@ -8,12 +8,49 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 public class RemoteComponentProtocol {
+	@Bean
+	public static class InvalidAuthenticationException extends Exception
+			implements ProtocolException {
+		@AlcinaTransient
+		@Override
+		public StackTraceElement[] getStackTrace() {
+			return super.getStackTrace();
+		}
+	}
+
+	@Bean(PropertySource.FIELDS)
+	public static class InvalidClientException extends Exception
+			implements ProtocolException {
+		public Action action;
+
+		public InvalidClientException() {
+		}
+
+		public InvalidClientException(String message, Action action) {
+			super(message);
+			this.action = action;
+		}
+
+		@AlcinaTransient
+		@Override
+		public StackTraceElement[] getStackTrace() {
+			return super.getStackTrace();
+		}
+
+		@Reflected
+		public enum Action {
+			REFRESH, EXPIRED
+		}
+	}
+
 	@Bean(PropertySource.FIELDS)
 	public abstract static class Message {
 		/*
@@ -53,9 +90,6 @@ public class RemoteComponentProtocol {
 			}
 		}
 
-		public static class InvalidClientUidException extends Exception {
-		}
-
 		/*
 		 * An album by Beck. Amazing.
 		 */
@@ -77,9 +111,11 @@ public class RemoteComponentProtocol {
 		 * Models an exception during message processing;
 		 */
 		public static class ProcessingException extends Message {
-			public String exceptionMessage;
+			public Exception protocolException;
 
 			public String exceptionClassName;
+
+			public String exceptionMessage;
 
 			public Class<? extends Exception> exceptionClass() {
 				try {
@@ -122,14 +158,23 @@ public class RemoteComponentProtocol {
 		}
 	}
 
+	/**
+	 * Marker, the exception is safe to send as the payload of a
+	 * ProcessingException message
+	 *
+	 *
+	 */
+	public interface ProtocolException {
+	}
+
 	@Bean(PropertySource.FIELDS)
 	public static class Session {
 		public String id;
-	
+
 		public String auth;
-	
+
 		public String url;
-	
+
 		public String componentClassName;
 	}
 }

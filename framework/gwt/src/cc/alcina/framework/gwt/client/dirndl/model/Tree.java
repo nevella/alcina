@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
-import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;

@@ -6,7 +6,6 @@ import java.util.function.Consumer;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
@@ -91,7 +90,6 @@ public class MessageHandlers {
 			 */
 			env.renderInitialUi();
 			response.protocolMessage = new Message.BeginAwaitLoop();
-			Ax.out("startup");
 		}
 
 		// rather than throwing if different to current (like other packets), a

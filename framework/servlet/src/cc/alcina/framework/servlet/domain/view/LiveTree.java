@@ -40,9 +40,6 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Re
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Transform;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.csobjects.view.HasFilteredSelfAndDescendantCount;
-import cc.alcina.framework.common.client.csobjects.view.TreePath;
-import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
-import cc.alcina.framework.common.client.csobjects.view.TreePath.Walker;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
@@ -64,6 +61,9 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.util.ProcessLogger;
+import cc.alcina.framework.gwt.client.dirndl.model.TreePath;
+import cc.alcina.framework.gwt.client.dirndl.model.TreePath.Operation;
+import cc.alcina.framework.gwt.client.dirndl.model.TreePath.Walker;
 import cc.alcina.framework.servlet.domain.view.DomainViews.Key;
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
 

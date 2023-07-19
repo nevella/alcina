@@ -41,13 +41,13 @@
   	  - component
   	  - env id
   - server: (backoff)
-  	- if env does not exist, if:
-  	  - reply with 'refresh'
-  	- else if:
-  	  - single instance:
+  	- if env does not exist or is invalidated:
+  	  - if single instance and another instance of the same type exists:
       	- reply with 'expired' (message includes 'will invalidate any other tabs viewing this component')
   	  - else:
-      	- reply with 'refresh'
+  	    - reply with 'refresh'
+  	- else:
+  	  - await, reply with server event
  * </pre>
  *
  * (implementation - see FIXME romcom)

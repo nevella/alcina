@@ -7,12 +7,13 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
@@ -48,16 +49,12 @@ public class PathrefDom {
 	}
 
 	public Environment getEnvironment(RemoteComponentProtocol.Session session) {
-		Environment environment = environments.get(session.id);
-		if (environment == null && Ax.isTest()) {
-			try {
-				Thread.sleep(1000);
-				return getEnvironment(session);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		return environment;
+		return environments.get(session.id);
+	}
+
+	public boolean hasEnvironment(Class<? extends RemoteUi> uiType) {
+		return environments.values().stream()
+				.anyMatch(env -> env.ui.getClass() == uiType);
 	}
 
 	public Environment register(RemoteUi ui, Credentials credentials) {
@@ -73,8 +70,12 @@ public class PathrefDom {
 
 	public static class Credentials {
 		public static Credentials createUnique() {
+			ClientInstance serverAsClientInstance = EntityLayerObjects.get()
+					.getServerAsClientInstance();
 			return new Credentials(
-					Ax.format("%s-%s", EntityLayerUtils.getLocalHostName(),
+					Ax.format("%s-%s-%s", EntityLayerUtils.getLocalHostName(),
+							serverAsClientInstance == null ? 0
+									: serverAsClientInstance.getId(),
 							SEUtilities.generatePrettyUuid()),
 					SEUtilities.generatePrettyUuid());
 		}

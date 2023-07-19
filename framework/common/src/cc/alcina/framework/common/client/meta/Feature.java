@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
  *
  */
 @Registration(Feature.class)
-public interface Feature {
+public interface Feature extends Registration.AllSubtypes {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Documented
@@ -95,6 +95,13 @@ public interface Feature {
 	 */
 	public interface Status{
 		public interface Complete extends Status{}
+		@Retention(RetentionPolicy.RUNTIME)
+		@Inherited
+		@Documented
+		@Target({ ElementType.TYPE })
+		@interface FollowUp {
+			Class<? extends Feature.Status> value();
+		}
 		public interface In_Progress extends Status{}
 		public interface Open extends Status{}
 		@Retention(RetentionPolicy.RUNTIME)

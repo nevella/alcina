@@ -195,6 +195,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	public Object[] firePropertyChangeMethodJTypes;
 
+	JClassType registrationAllSubtypesClient;
+
 	@Override
 	public RebindResult generateIncrementally(TreeLogger logger,
 			GeneratorContext context, String typeName)
@@ -355,6 +357,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		reflectUnknownInInitialModule = !context.isProdMode()
 				|| Boolean.getBoolean("reachability.production");
 		voidJType = JPrimitiveType.VOID;
+		registrationAllSubtypesClient = getType(
+				Registration.AllSubtypes.Client.class);
 		firePropertyChangeMethodJTypes = new JType[] { getType(String.class),
 				getType(Object.class), getType(Object.class) };
 	}
@@ -1232,8 +1236,22 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			return Arrays.stream(context.getTypeOracle().getTypes())
 					.filter(t -> has(t, Registration.class))
 					.map(ClassReflection::erase).distinct()
-					// only interested in instantiable types
-					.filter(t -> t.isPublic() && !t.isAbstract())
+					/*
+					 *  see RegistryScanner.process
+					 */
+
+					.filter(t -> {
+						boolean registrable = t.isPublic()
+								&& !t.isAbstract()
+								&&t.isInterface()==null;
+						/*
+						 * note use of AllSubtypes.Client, not AllSubtypes
+						 */
+						registrable |=
+								t.isAssignableFrom(registrationAllSubtypesClient);
+
+						return registrable;
+					})
 					.collect(Collectors.toList());
 		}
 

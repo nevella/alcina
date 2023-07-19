@@ -96,6 +96,22 @@ public @interface Directed {
 	public String tag() default "";
 
 	/**
+	 * All properties are rendered by the DirectedLayout algorithm (receive
+	 * an @Directed annotation if they have none)
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.TYPE)
+	@ClientVisible
+	public static @interface AllProperties {
+	}
+	//
+	//
+
+	/**
 	 * Sugar for @Directed(renderer=DirectedRenderer.Delegating.class)
 	 *
 	 * @author nick@alcina.cc
@@ -336,8 +352,6 @@ public @interface Directed {
 	public static @interface Property {
 		String name();
 	}
-	//
-	//
 
 	/**
 	 * <p>

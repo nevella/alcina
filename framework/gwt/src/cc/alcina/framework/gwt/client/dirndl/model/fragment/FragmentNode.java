@@ -29,7 +29,7 @@ public interface FragmentNode {
 		return transformer;
 	}
 
-	@Transformer(NodeTransformer.Directed.class)
+	@Transformer(NodeTransformer.DirectedTransformer.class)
 	@Directed(renderer = AbstractNode.Renderer.class)
 	public static abstract class AbstractNode extends Model
 			implements FragmentNode {

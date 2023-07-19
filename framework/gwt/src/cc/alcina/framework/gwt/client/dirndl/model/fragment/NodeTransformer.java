@@ -87,7 +87,7 @@ public interface NodeTransformer {
 	/**
 	 * Use directed annotations to reverse transform
 	 */
-	public static class Directed extends AbstractNodeTransformer {
+	public static class DirectedTransformer extends AbstractNodeTransformer {
 		@Override
 		public boolean appliesTo(org.w3c.dom.Node w3cNode) {
 			cc.alcina.framework.gwt.client.dirndl.annotation.Directed directed = getDirected();
@@ -115,7 +115,7 @@ public interface NodeTransformer {
 	/**
 	 * The root of a FragmentModel (Node is already determined)
 	 */
-	public static class FragmentRoot extends Directed {
+	public static class FragmentRoot extends DirectedTransformer {
 		public FragmentRoot(DirectedLayout.Node layoutNode) {
 			super();
 			init(layoutNode.getRendered().getNode());

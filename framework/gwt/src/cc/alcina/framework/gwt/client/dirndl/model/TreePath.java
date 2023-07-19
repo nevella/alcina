@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.csobjects.view;
+package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.csobjects.view.HasFilteredSelfAndDescendantCount;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -30,7 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /*
  * This could be implemented with each treepath having a Map<String,Child> - but

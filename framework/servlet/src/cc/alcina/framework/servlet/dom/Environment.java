@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
@@ -45,6 +44,10 @@ public class Environment {
 	private static final transient String CONTEXT_ENVIRONMENT = Environment.class
 			.getName() + ".CONTEXT_ENVIRONMENT";
 
+	public static Environment get() {
+		return LooseContext.get(CONTEXT_ENVIRONMENT);
+	}
+
 	/*
 	 * Sent by the client to mark which environment it's communicating with.
 	 * This allows the client to switch environments after say a dev rebuild
@@ -52,7 +55,7 @@ public class Environment {
 	 */
 	public final String uid;
 
-	RemoteUi ui;
+	public final RemoteUi ui;
 
 	ClientProtocolMessageQueue queue;
 
@@ -165,8 +168,9 @@ public class Environment {
 
 	public void validateSession(RemoteComponentProtocol.Session session,
 			boolean validateClientInstanceUid) throws Exception {
-		Preconditions.checkArgument(
-				Objects.equals(session.auth, credentials.auth), "Invalid auth");
+		if (!Objects.equals(session.auth, credentials.auth)) {
+			throw new RemoteComponentProtocol.InvalidAuthenticationException();
+		}
 		if (validateClientInstanceUid) {
 			// FIXME - romcom - throw various exceptions if expired etc - see
 			// package javadoc
@@ -270,8 +274,7 @@ public class Environment {
 			queue.add(message);
 		}
 
-		public <R extends Message> R
-				sendAndReceive(Message message) {
+		public <R extends Message> R sendAndReceive(Message message) {
 			throw new UnsupportedOperationException();
 		}
 	}

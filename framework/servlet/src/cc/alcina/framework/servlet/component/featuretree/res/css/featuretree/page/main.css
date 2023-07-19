@@ -1,29 +1,132 @@
+/* - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves
+ * - implemented as a mixin so it can be scoped (if there are other/non-dirndl tree elements in the document)
+ * */
+/* just a top-level include of the _tree_cmp mixin
+ * */
+.tree,
+.flat-tree {
+  font-size: 15px;
+  line-height: 23px;
+  padding: 0.5rem;
+}
+
+.tree.root-hidden > .node > label {
+  display: none;
+}
+.tree.root-hidden > .node > nodes {
+  padding-left: 0;
+}
+.tree .node > label {
+  position: relative;
+  display: block;
+  margin-bottom: 5px;
+}
+.tree .node > label > span:first-child {
+  display: inline-block;
+  width: 12px;
+  border: solid 1px #ccc;
+  text-align: center;
+  font-size: 10px;
+  border-radius: 6px;
+  color: #777;
+  height: 12px;
+  box-sizing: border-box;
+  vertical-align: top;
+  margin-top: 5px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+.tree .node > label > label {
+  display: inline-block;
+  cursor: pointer;
+}
+.tree .node:not(.open) > label > span:before {
+  content: " ";
+  position: absolute;
+  border-radius: 3px;
+  color: #bbb;
+  background-color: #bbb;
+  width: 6px;
+  height: 6px;
+  left: 3px;
+  top: 7.5px;
+}
+.tree .node.leaf > label > span {
+  visibility: hidden;
+}
+.tree .node.selected > label {
+  background-color: #E6E6E6;
+}
+.tree .node > nodes {
+  padding-left: 20px;
+  display: none;
+}
+.tree .node.open > nodes {
+  display: block;
+}
+
+.flat-tree > paginator {
+  display: block;
+  padding: 1em;
+  text-align: center;
+  color: #bbb;
+}
+
+body {
+  margin: 0;
+  font-family: Arial;
+}
+
 body > page {
   display: grid;
-  grid-template-areas: "header main";
+  grid-template-areas: "header" "main";
+  grid-template-rows: 50px 1fr;
   height: 100vh;
   width: 100vw;
 }
 body > page > header {
-  display: block;
-  background-color: pink;
-  height: 50px;
-  text-align: center;
-  color: black;
+  display: flex;
+  background-color: #ff8fa2;
+  color: white;
+  align-items: center;
+  justify-content: center;
+  line-height: 100%;
+  font-size: 120%;
 }
 body > page > main {
   display: grid;
-  grid-template-areas: "tree history" "tree properties";
+  grid-template-areas: "table properties" "table documentation";
+  grid-template-columns: 2fr 1fr;
+  gap: 1px;
+  background-color: #777;
 }
-body > page > main > selection-tree {
-  grid-area: tree;
-  background-color: blue;
-}
-body > page > main > history {
-  grid-area: history;
-  background-color: green;
+body > page > main > feature-table {
+  grid-area: table;
 }
 body > page > main > properties {
   grid-area: properties;
-  background-color: purple;
+}
+body > page > main > properties > header {
+  display: flex;
+  background-color: #eee;
+  color: #333;
+  align-items: center;
+  justify-content: center;
+  line-height: 100%;
+  height: 28px;
+}
+body > page > main > documentation {
+  grid-area: documentation;
+}
+body > page > main > documentation > header {
+  display: flex;
+  background-color: #eee;
+  color: #333;
+  align-items: center;
+  justify-content: center;
+  line-height: 100%;
+  height: 28px;
+}
+body > page > main > * {
+  background-color: white;
 }

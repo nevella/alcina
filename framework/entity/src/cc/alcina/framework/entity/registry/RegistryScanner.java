@@ -113,16 +113,17 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 		 * No need for abstract classes/interfaces because, although
 		 * Registration annotations on those are definitely valid, they're
 		 * supplied to client code via resolution of concrete classes.
-		 * 
+		 *
 		 * Non-public ... tricky choice with beans 1x5 (and movement away from
 		 * 'public') . But given any registered classes must have accessible
 		 * public methods - except in the rare case that everything registered
 		 * (and the consumer) is in the package - sticking with public
 		 */
-		if (!Modifier.isPublic(clazz.getModifiers())
-				|| Modifier.isAbstract(clazz.getModifiers())
-				|| clazz.isInterface()) {
-		} else {
+		boolean registrable = Modifier.isPublic(clazz.getModifiers())
+				&& !Modifier.isAbstract(clazz.getModifiers())
+				&& !clazz.isInterface();
+		registrable |= Registration.AllSubtypes.class.isAssignableFrom(clazz);
+		if (registrable) {
 			List<Registration> registrations = Annotations
 					.resolveMultiple(clazz, Registration.class);
 			for (Registration registration : registrations) {

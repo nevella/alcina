@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.csobjects.view;
+package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.Collection;
 import java.util.Comparator;

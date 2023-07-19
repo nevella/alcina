@@ -26,8 +26,6 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
  * Needless set of optimisations, since handled by localdom batching anyway
  */
 public class StyleInjector {
-	private static HeadElement head;
-
 	private static List<String> pending = new ArrayList<>();
 
 	private static ScheduledCommand flusher = new ScheduledCommand() {
@@ -54,6 +52,11 @@ public class StyleInjector {
 		schedule();
 	}
 
+	public static void injectNow(String contents) {
+		pending.add(contents);
+		flush();
+	}
+
 	public static void setContents(StyleElement style, String contents) {
 		style.setInnerText(contents);
 	}
@@ -66,14 +69,11 @@ public class StyleInjector {
 	}
 
 	private static HeadElement getHead() {
-		if (head == null) {
-			Element elt = (Element) Document.get().getDocumentElement()
-					.asDomNode().children.byTag("head").get(0).w3cElement();
-			assert elt != null : "The host HTML page does not have a <head> element"
-					+ " which is required by StyleInjector";
-			head = HeadElement.as(elt);
-		}
-		return head;
+		Element elt = (Element) Document.get().getDocumentElement()
+				.asDomNode().children.byTag("head").get(0).w3cElement();
+		assert elt != null : "The host HTML page does not have a <head> element"
+				+ " which is required by StyleInjector";
+		return HeadElement.as(elt);
 	}
 
 	private static void schedule() {
@@ -82,4 +82,6 @@ public class StyleInjector {
 			Scheduler.get().scheduleFinally(flusher);
 		}
 	}
+
+	private HeadElement head;
 }

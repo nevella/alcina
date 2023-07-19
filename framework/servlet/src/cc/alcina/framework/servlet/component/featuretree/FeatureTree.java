@@ -3,7 +3,6 @@ package cc.alcina.framework.servlet.component.featuretree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote.DevConsoleRemoteComponent;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -15,6 +14,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginPlace;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
+import cc.alcina.framework.servlet.dom.Environment;
 import cc.alcina.framework.servlet.dom.RemoteUi;
 
 /**
@@ -27,9 +28,8 @@ import cc.alcina.framework.servlet.dom.RemoteUi;
 public class FeatureTree {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	@Registration(DevConsoleRemoteComponent.class)
-	public static class DevConsoleRemoteComponentImpl
-			implements DevConsoleRemoteComponent {
+	@Registration(RemoteComponent.class)
+	public static class Component implements RemoteComponent {
 		@Override
 		public String getPath() {
 			return "/feature-tree";
@@ -42,13 +42,22 @@ public class FeatureTree {
 	}
 
 	public static class Ui implements RemoteUi {
+		public static Ui get() {
+			return (Ui) Environment.get().ui;
+		}
+
+		public String getMainCaption() {
+			return "feature tree";
+		}
+
 		@Override
 		public void init() {
 		}
 
 		@Override
 		public void render() {
-			new DirectedLayout().render(new Mock()).appendToRoot();
+			injectCss("res/css/styles.css");
+			new DirectedLayout().render(new Page()).appendToRoot();
 		}
 	}
 

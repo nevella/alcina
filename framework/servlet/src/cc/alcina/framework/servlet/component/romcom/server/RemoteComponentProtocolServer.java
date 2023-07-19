@@ -11,20 +11,24 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote.DevConsoleRemoteComponent;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.ProtocolException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 import cc.alcina.framework.servlet.dom.Environment;
 import cc.alcina.framework.servlet.dom.PathrefDom;
+import cc.alcina.framework.servlet.dom.RemoteUi;
 
 public class RemoteComponentProtocolServer {
 	public static final transient String ROMCOM_SERIALIZED_SESSION_KEY = "__alc_romcom_session";
@@ -48,9 +52,9 @@ public class RemoteComponentProtocolServer {
 	}
 
 	public static class ServerHandler extends AbstractHandler {
-		DevConsoleRemoteComponent component;
+		RemoteComponent component;
 
-		public ServerHandler(DevConsoleRemoteComponent component) {
+		public ServerHandler(RemoteComponent component) {
 			this.component = component;
 			URL url = getResourceUrl("/rc.html");
 			if (url == null) {
@@ -73,6 +77,25 @@ public class RemoteComponentProtocolServer {
 			default:
 				throw new UnsupportedOperationException();
 			}
+		}
+
+		private InvalidClientException
+				buildInvalidClientException(String componentClassName) {
+			Class<? extends RemoteUi> uiType = Reflections
+					.forName(componentClassName);
+			boolean singleInstance = RemoteUi.SingleInstance.class
+					.isAssignableFrom(uiType);
+			boolean existingInstance = singleInstance
+					&& PathrefDom.get().hasEnvironment(uiType);
+			String message = null;
+			InvalidClientException.Action action = Action.REFRESH;
+			if (existingInstance) {
+				action = Action.EXPIRED;
+				message = "This component client (tab) has ben superseded "
+						+ "by a newer access to this component. \n\nPlease use the newer client, "
+						+ "or refresh to switch rendering to this client";
+			}
+			return new InvalidClientException(message, action);
 		}
 
 		URL getResourceUrl(String warRelativePart) {
@@ -165,24 +188,35 @@ public class RemoteComponentProtocolServer {
 					RemoteComponentResponse response = new RemoteComponentResponse();
 					response.requestId = request.requestId;
 					response.session = request.session;
-					Environment env = PathrefDom.get()
-							.getEnvironment(request.session);
 					try {
+						Environment env = PathrefDom.get()
+								.getEnvironment(request.session);
+						if (env == null) {
+							throw buildInvalidClientException(
+									request.session.componentClassName);
+						}
 						env.validateSession(request.session,
 								messageHandler.isValidateClientInstanceUid());
+						// FIXME - romcom - handle missed, out-of-order messages
+						synchronized (messageHandler.provideMonitor(env)) {
+							messageHandler.handle(request, response, env,
+									request.protocolMessage);
+						}
 					} catch (Exception e) {
-						e.printStackTrace();
+						if (e instanceof ProtocolException) {
+							Ax.simpleExceptionOut(e);
+						} else {
+							e.printStackTrace();
+						}
 						Message.ProcessingException processingException = new Message.ProcessingException();
 						processingException.exceptionClassName = e.getClass()
 								.getName();
 						processingException.exceptionMessage = CommonUtils
 								.toSimpleExceptionMessage(e);
+						if (e instanceof ProtocolException) {
+							processingException.protocolException = e;
+						}
 						response.protocolMessage = processingException;
-					}
-					// FIXME - remcon - handle missed, out-of-order messages
-					synchronized (messageHandler.provideMonitor(env)) {
-						messageHandler.handle(request, response, env,
-								request.protocolMessage);
 					}
 					servletResponse.getWriter()
 							.write(ReflectiveSerializer.serialize(response));

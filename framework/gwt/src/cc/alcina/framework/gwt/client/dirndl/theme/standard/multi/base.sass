@@ -24,7 +24,15 @@ $reset-font-tags: 'body, button, td'
   
   a:hover 
     color: theme.$grey-link-hover-color
-  
+
+@mixin panel-header($bkg-color: #eee)
+  display: flex
+  background-color: $bkg-color
+  color: #333
+  align-items: center
+  justify-content: center
+  line-height: 100%
+  height: 28px
 
 @mixin standard-elements()   
   body 
