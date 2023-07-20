@@ -17,10 +17,15 @@ class Page extends Model.Fields {
 
 	@Directed.AllProperties
 	static class Main extends Model.Fields {
-		FeatureTable featureTable = new FeatureTable();
+		FeatureTable featureTable;
 
-		Properties properties = new Properties();
+		Properties properties;
 
 		Documentation documentation = new Documentation();
+
+		Main() {
+			featureTable = new FeatureTable();
+			properties = new Properties(featureTable.features);
+		}
 	}
 }

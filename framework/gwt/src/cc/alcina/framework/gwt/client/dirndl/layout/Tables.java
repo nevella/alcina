@@ -188,7 +188,7 @@ public class Tables {
 			}
 
 			@Directed(tag = "tr")
-			public static class Row extends Model {
+			public static class Row extends Model.Fields {
 				private String key;
 
 				private Object value;

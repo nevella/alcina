@@ -7,13 +7,14 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.meta.Feature.ReleaseVersion.Ref;
+import cc.alcina.framework.common.client.meta.Feature.Status;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.Tree;
-import cc.alcina.framework.gwt.client.dirndl.model.TreePath.Walker;
-import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features.Entry;
 
 class FeatureTable extends Model.Fields {
 	static String treeName(Class<? extends Feature> clazz) {
@@ -26,35 +27,33 @@ class FeatureTable extends Model.Fields {
 	}
 
 	@Directed
-	FeatureTreeModel tree = new FeatureTreeModel();
+	Table table;
 
-	static class FeatureNode extends Tree.AbstractPathNode<FeatureNode> {
-		Class<? extends Feature> feature;
+	Features features;
 
-		Entry entry;
-
-		FeatureNode(FeatureNode parent, Features.Entry entry) {
-			super(parent, entry == null ? "0"
-					: parent.treePath + "." + treeName(entry.feature));
-			if (entry != null) {
-				this.feature = entry.feature;
-				this.entry = entry;
-				entry.children.stream().sorted().forEach(e -> {
-					new FeatureNode(this, e);
-				});
-				getLabel().setLabel(treeName(feature));
-			}
-		}
+	FeatureTable() {
+		features = new Features();
+		features.generate();
+		table = new Table(features.entries);
 	}
 
 	static class Features {
 		Map<Class<? extends Feature>, Entry> entriesByFeature;
+
+		List<Entry> entries = new ArrayList<>();
 
 		void generate() {
 			entriesByFeature = Registry.query(Feature.class).registrations()
 					.filter(c -> c != Feature.class).map(Entry::new)
 					.collect(AlcinaCollectors.toKeyMap(e -> e.feature));
 			entriesByFeature.values().forEach(Entry::addToParent);
+			List<Entry> roots = entriesByFeature.values().stream()
+					.filter(e -> e.parent == null).sorted()
+					.collect(Collectors.toList());
+			for (Entry entry : roots) {
+				new DepthFirstTraversal<>(entry, Entry::sortedChildren, false)
+						.stream().forEach(entries::add);
+			}
 		}
 
 		class Entry implements Comparable<Entry> {
@@ -70,7 +69,7 @@ class FeatureTable extends Model.Fields {
 
 			@Override
 			public int compareTo(Entry o) {
-				return treeName(this.feature).compareTo(treeName(o.feature));
+				return treeName().compareTo(o.treeName());
 			}
 
 			void addToParent() {
@@ -83,32 +82,59 @@ class FeatureTable extends Model.Fields {
 				}
 			}
 
+			int depth() {
+				int depth = 0;
+				Entry cursor = this;
+				while (cursor.parent != null) {
+					depth++;
+					cursor = cursor.parent;
+				}
+				return depth;
+			}
+
+			String displayName() {
+				String name = treeName();
+				if (parent != null) {
+					String parentName = FeatureTable.treeName(parent.feature);
+					if (name.startsWith(parentName)) {
+						name = name.substring(parentName.length());
+					}
+				}
+				name = name.replaceFirst("^_", "");
+				String[] parts = name.split("_");
+				if (parts.length > 2) {
+					name = parts[0] + "..." + parts[parts.length - 1];
+				}
+				name = name.replace("_", "");
+				name = CommonUtils.deInfix(name);
+				return name;
+			}
+
 			Class<? extends Feature> parentClass() {
 				Feature.Parent ann = Reflections.at(feature)
 						.annotation(Feature.Parent.class);
 				return ann == null ? null : ann.value();
 			}
-		}
-	}
 
-	static class FeatureTreeModel extends Tree<FeatureNode> {
-		FeatureTreeModel() {
-			FeatureNode root = new FeatureNode(null, null);
-			setRoot(root);
-			setRootHidden(true);
-			generate();
-		}
+			Class<? extends Feature.ReleaseVersion> releaseVersion() {
+				Ref ref = Reflections.at(feature)
+						.annotation(Feature.ReleaseVersion.Ref.class);
+				return ref == null ? null : ref.value();
+			}
 
-		void generate() {
-			Features features = new Features();
-			features.generate();
-			List<Entry> roots = features.entriesByFeature.values().stream()
-					.filter(e -> e.parent == null).sorted()
-					.collect(Collectors.toList());
-			roots.forEach(e -> new FeatureNode(getRoot(), e));
-			Walker<? extends Tree.AbstractPathNode> walker = getRoot()
-					.getTreePath().walker();
-			walker.stream().forEach(n -> n.setOpen(true));
+			List<Entry> sortedChildren() {
+				return children.stream().collect(Collectors.toList());
+			}
+
+			Class<? extends Status> status() {
+				Feature.Status.Ref ann = Reflections.at(feature)
+						.annotation(Feature.Status.Ref.class);
+				return ann == null ? null : ann.value();
+			}
+
+			String treeName() {
+				return FeatureTable.treeName(feature);
+			}
 		}
 	}
 }

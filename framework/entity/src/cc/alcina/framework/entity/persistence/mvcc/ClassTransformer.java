@@ -260,64 +260,6 @@ class ClassTransformer {
 		public URL transformPath(URL path);
 	}
 
-	private static class SourceFinderFs implements SourceFinder {
-		@Override
-		public String findSource(Class clazz) {
-			try {
-				CodeSource codeSource = clazz.getProtectionDomain()
-						.getCodeSource();
-				URL classFileLocation = codeSource.getLocation();
-				URL sourceFileLocation = new URL(
-						Ax.format("%s%s.java", classFileLocation.toString(),
-								clazz.getName().replace(".", "/")));
-				if (new File(toPath(sourceFileLocation)).exists()
-						&& !sourceFileLocation.toString().contains("/build/")) {
-					return Io.read().url(sourceFileLocation.toString())
-							.asString();
-				}
-				sourceFileLocation = new URL(sourceFileLocation.toString()
-						.replace("/alcina/bin/",
-								"/alcina/framework/entity/src/")
-						.replace("/bin/", "/src/")
-						.replace("/build/classes/", "/src/"));
-				if (sourceFileLocation.toString().contains("/build/")
-						&& !sourceFileLocation.toString().contains("/src/")) {
-					sourceFileLocation = new URL(sourceFileLocation.toString()
-							.replace("/build/", "/src/"));
-				}
-				if (new File(toPath(sourceFileLocation)).exists()) {
-					return Io.read().url(sourceFileLocation.toString())
-							.asString();
-				}
-				sourceFileLocation = new URL(sourceFileLocation.toString()
-						.replace("/alcina/framework/entity/src/",
-								"/alcina/framework/common/src/"));
-				if (new File(toPath(sourceFileLocation)).exists()) {
-					return Io.read().url(sourceFileLocation.toString())
-							.asString();
-				}
-				Optional<SourceFinderFsHelper> helper = Registry
-						.optional(SourceFinderFsHelper.class);
-				if (helper.isPresent()) {
-					sourceFileLocation = new URL(sourceFileLocation.toString()
-							.replace("/alcina/framework/entity/src/",
-									"/alcina/framework/common/src/"));
-					if (new File(toPath(sourceFileLocation)).exists()) {
-						return Io.read().url(sourceFileLocation.toString())
-								.asString();
-					}
-				}
-				return null;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		private String toPath(URL sourceFileLocation) {
-			return sourceFileLocation.toString().replaceFirst("^file:/*/", "/");
-		}
-	}
-
 	static class ClassTransform<H extends Entity> {
 		private static final transient int VERSION = 18;
 
@@ -423,14 +365,7 @@ class ClassTransformer {
 		}
 
 		private String findSource(Class clazz) throws Exception {
-			for (SourceFinder finder : SourceFinder.sourceFinders) {
-				String source = finder.findSource(clazz);
-				if (source != null) {
-					return source;
-				}
-			}
-			Ax.err("Warn - cannot find source:\n\t%s", clazz.getName());
-			return null;
+			return SourceFinder.locateSource(clazz);
 		}
 
 		private boolean isSameSourceAsLastRun() {
@@ -1401,6 +1336,64 @@ class ClassTransformer {
 					return method.getName().hashCode();
 				}
 			}
+		}
+	}
+
+	static class SourceFinderFs implements SourceFinder {
+		@Override
+		public String findSource(Class clazz) {
+			try {
+				CodeSource codeSource = clazz.getProtectionDomain()
+						.getCodeSource();
+				URL classFileLocation = codeSource.getLocation();
+				URL sourceFileLocation = new URL(
+						Ax.format("%s%s.java", classFileLocation.toString(),
+								clazz.getName().replace(".", "/")));
+				if (new File(toPath(sourceFileLocation)).exists()
+						&& !sourceFileLocation.toString().contains("/build/")) {
+					return Io.read().url(sourceFileLocation.toString())
+							.asString();
+				}
+				sourceFileLocation = new URL(sourceFileLocation.toString()
+						.replace("/alcina/bin/",
+								"/alcina/framework/entity/src/")
+						.replace("/bin/", "/src/")
+						.replace("/build/classes/", "/src/"));
+				if (sourceFileLocation.toString().contains("/build/")
+						&& !sourceFileLocation.toString().contains("/src/")) {
+					sourceFileLocation = new URL(sourceFileLocation.toString()
+							.replace("/build/", "/src/"));
+				}
+				if (new File(toPath(sourceFileLocation)).exists()) {
+					return Io.read().url(sourceFileLocation.toString())
+							.asString();
+				}
+				sourceFileLocation = new URL(sourceFileLocation.toString()
+						.replace("/alcina/framework/entity/src/",
+								"/alcina/framework/common/src/"));
+				if (new File(toPath(sourceFileLocation)).exists()) {
+					return Io.read().url(sourceFileLocation.toString())
+							.asString();
+				}
+				Optional<SourceFinderFsHelper> helper = Registry
+						.optional(SourceFinderFsHelper.class);
+				if (helper.isPresent()) {
+					sourceFileLocation = new URL(sourceFileLocation.toString()
+							.replace("/alcina/framework/entity/src/",
+									"/alcina/framework/common/src/"));
+					if (new File(toPath(sourceFileLocation)).exists()) {
+						return Io.read().url(sourceFileLocation.toString())
+								.asString();
+					}
+				}
+				return null;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		private String toPath(URL sourceFileLocation) {
+			return sourceFileLocation.toString().replaceFirst("^file:/*/", "/");
 		}
 	}
 }

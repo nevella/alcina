@@ -1,80 +1,7 @@
-/* - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves
- * - implemented as a mixin so it can be scoped (if there are other/non-dirndl tree elements in the document)
- * */
-/* just a top-level include of the _tree_cmp mixin
- * */
-.tree,
-.flat-tree {
-  font-size: 15px;
-  line-height: 23px;
-  padding: 0.5rem;
-}
-
-.tree.root-hidden > .node > label {
-  display: none;
-}
-.tree.root-hidden > .node > nodes {
-  padding-left: 0;
-}
-.tree .node > label {
-  position: relative;
-  display: block;
-  margin-bottom: 5px;
-}
-.tree .node > label > span:first-child {
-  display: inline-block;
-  width: 12px;
-  border: solid 1px #ccc;
-  text-align: center;
-  font-size: 10px;
-  border-radius: 6px;
-  color: #777;
-  height: 12px;
-  box-sizing: border-box;
-  vertical-align: top;
-  margin-top: 5px;
-  margin-right: 8px;
-  cursor: pointer;
-}
-.tree .node > label > label {
-  display: inline-block;
-  cursor: pointer;
-}
-.tree .node:not(.open) > label > span:before {
-  content: " ";
-  position: absolute;
-  border-radius: 3px;
-  color: #bbb;
-  background-color: #bbb;
-  width: 6px;
-  height: 6px;
-  left: 3px;
-  top: 7.5px;
-}
-.tree .node.leaf > label > span {
-  visibility: hidden;
-}
-.tree .node.selected > label {
-  background-color: #E6E6E6;
-}
-.tree .node > nodes {
-  padding-left: 20px;
-  display: none;
-}
-.tree .node.open > nodes {
-  display: block;
-}
-
-.flat-tree > paginator {
-  display: block;
-  padding: 1em;
-  text-align: center;
-  color: #bbb;
-}
-
 body {
   margin: 0;
-  font-family: Arial;
+  font-family: "Helvetica Neue", Arial;
+  font-size: 14px;
 }
 
 body > page {
@@ -83,6 +10,9 @@ body > page {
   grid-template-rows: 50px 1fr;
   height: 100vh;
   width: 100vw;
+}
+body > page > * {
+  min-height: 0;
 }
 body > page > header {
   display: flex;
@@ -102,6 +32,50 @@ body > page > main {
 }
 body > page > main > feature-table {
   grid-area: table;
+  display: block;
+}
+body > page > main > feature-table > table {
+  border: solid 1px #ddd;
+  border-collapse: collapse;
+  /* align-self: start
+  * unused - but good to know - this is how to stop auto-stretch of tables
+  * */
+  width: 100%;
+}
+body > page > main > feature-table > table tr.selected {
+  background-color: #f0f0fa;
+}
+body > page > main > feature-table > table th {
+  min-width: 7em;
+}
+body > page > main > feature-table > table td.in-progress {
+  background-color: #99cc66;
+}
+body > page > main > feature-table > table td.complete {
+  background-color: #99cccc;
+}
+body > page > main > feature-table > table td.open {
+  background-color: #ffff66;
+}
+body > page > main > feature-table > table td, body > page > main > feature-table > table th {
+  border: solid 1px #ddd;
+  font-weight: normal;
+  padding: 4px 2px;
+}
+body > page > main > feature-table > table td > *, body > page > main > feature-table > table th > * {
+  line-height: 18px;
+  height: 20px;
+  display: block;
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+body > page > main > feature-table > table td > version-name, body > page > main > feature-table > table th > version-name {
+  color: #777;
+}
+body > page > main > feature-table > table td > feature-name, body > page > main > feature-table > table th > feature-name {
+  max-width: 250px;
+  padding-left: 5px;
 }
 body > page > main > properties {
   grid-area: properties;
@@ -115,6 +89,13 @@ body > page > main > properties > header {
   line-height: 100%;
   height: 28px;
 }
+body > page > main > properties > table {
+  padding: 0.5rem;
+}
+body > page > main > properties > table th, body > page > main > properties > table td {
+  text-align: left;
+  padding-left: 0.5rem;
+}
 body > page > main > documentation {
   grid-area: documentation;
 }
@@ -127,6 +108,14 @@ body > page > main > documentation > header {
   line-height: 100%;
   height: 28px;
 }
+body > page > main > documentation > content {
+  display: block;
+  padding: 0.5em;
+  font-size: 16px;
+}
 body > page > main > * {
   background-color: white;
+  min-height: 0;
+  min-width: 0;
+  overflow: scroll;
 }

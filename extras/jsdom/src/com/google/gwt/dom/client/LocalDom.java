@@ -799,7 +799,11 @@ public class LocalDom implements ContextFrame {
 			 * Call mutations.verifyDomEquivalence(); if debugging needed
 			 */
 			Ax.err(">> Reparsing from remote - will remove event handlers");
-			// mutations.verifyDomEquivalence();
+			// FIXME - romcom - should throw (emit a topic message, handled by
+			// client)
+			if (!GWT.isScript()) {
+				remoteMutations.verifyDomEquivalence();
+			}
 			reparseFromRemote(hasNodeJso, hasNode, remoteIndex);
 			return nodeFor0(remote, true);
 		}

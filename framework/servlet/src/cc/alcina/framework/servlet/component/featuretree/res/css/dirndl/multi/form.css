@@ -58,7 +58,7 @@ ol-editor.wide form textarea {
   padding-top: 4px;
   border: solid 1px #ddd;
   font-size: 15px;
-  font-family: Arial;
+  font-family: "Helvetica Neue", Arial;
 }
 ol-editor.wide form input:focus,
 ol-editor.wide form select:focus,
@@ -147,7 +147,7 @@ ol-editor.over-only form textarea {
   padding-top: 4px;
   border: solid 1px #ddd;
   font-size: 15px;
-  font-family: Arial;
+  font-family: "Helvetica Neue", Arial;
 }
 ol-editor.over-only form input:focus,
 ol-editor.over-only form select:focus,

@@ -35,7 +35,7 @@ import elemental.json.JsonValue;
 public class MutationRecord {
 	/**
 	 * Creates a list of mutations which would recreate the (shallow) node
-	 * 
+	 *
 	 * This includes creating an insert mutation IFF the node has a parent
 	 * element
 	 */
@@ -84,7 +84,7 @@ public class MutationRecord {
 
 	/**
 	 * Generates a remove mutation for the oldChild node
-	 * 
+	 *
 	 * @return
 	 */
 	public static MutationRecord generateRemoveMutation(Node parent,
@@ -246,10 +246,21 @@ public class MutationRecord {
 			String characterData = applyDirection == ApplyDirection.history
 					? newValue
 					: oldValue;
-			String previousValue = target.putAttributeData(applyTo,
-					attributeName, characterData);
-			if (applyDirection == ApplyDirection.history_reversed) {
-				newValue = previousValue;
+			if (characterData == null) {
+				/*
+				 * not DomMutations - I think. So no previousData
+				 */
+				String previousValue = target.removeAttribute(applyTo,
+						attributeName);
+				if (applyDirection == ApplyDirection.history_reversed) {
+					newValue = previousValue;
+				}
+			} else {
+				String previousValue = target.putAttributeData(applyTo,
+						attributeName, characterData);
+				if (applyDirection == ApplyDirection.history_reversed) {
+					newValue = previousValue;
+				}
 			}
 			break;
 		}

@@ -5,12 +5,17 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.mutations.MutationNode;
+import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import com.google.gwt.safehtml.shared.SafeHtml;
+
+import cc.alcina.framework.common.client.util.Ax;
 
 /*
  * Currently an outlier in this is support for the 'value' property - which
  * provides a lot of basic editing support with little kit.
- * 
+ *
  * That support could be generalised.
  */
 public class ElementPathref extends NodePathref implements ClientDomElement {
@@ -22,6 +27,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public final boolean addClassName(String className) {
+		mirrorClassName();
 		return false;
 	}
 
@@ -42,7 +48,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public Element elementFor() {
-		throw new UnsupportedOperationException();
+		return (Element) node();
 	}
 
 	public void emitSinkBitlessEvent(String eventTypeName) {
@@ -87,7 +93,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public String getAttribute(String name) {
-		throw new UnsupportedOperationException();
+		return elementFor().getAttribute(name);
 	}
 
 	@Override
@@ -97,7 +103,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public String getClassName() {
-		throw new UnsupportedOperationException();
+		return elementFor().getClassName();
 	}
 
 	@Override
@@ -315,18 +321,19 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public void removeAttribute(String name) {
-		throw new UnsupportedOperationException();
+		setAttribute(name, null);
 	}
 
 	@Override
 	public final boolean removeClassName(String className) {
-		throw new UnsupportedOperationException();
+		mirrorClassName();
+		return false;
 	}
 
 	@Override
 	public final void replaceClassName(String oldClassName,
 			String newClassName) {
-		throw new UnsupportedOperationException();
+		mirrorClassName();
 	}
 
 	@Override
@@ -336,12 +343,21 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public void setAttribute(String name, String value) {
-		throw new UnsupportedOperationException();
+		MutationRecord record = new MutationRecord();
+		record.type = Type.attributes;
+		record.target = MutationNode.pathref(elementFor());
+		record.attributeName = name;
+		record.newValue = value;
+		emitMutation(record);
 	}
 
 	@Override
 	public void setClassName(String className) {
-		throw new UnsupportedOperationException();
+		if (Ax.isBlank(className)) {
+			removeAttribute("class");
+		} else {
+			setAttribute("class", className);
+		}
 	}
 
 	@Override
@@ -453,6 +469,13 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	@Override
 	public String toString() {
 		return super.toString() + "\n\t" + getTagName();
+	}
+
+	void mirrorClassName() {
+		/*
+		 * mirror from local, since there's no other copy of the remote value
+		 */
+		setClassName(getClassName());
 	}
 
 	int orSunkEventsOfAllChildren(int sunk) {

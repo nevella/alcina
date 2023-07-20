@@ -52,7 +52,7 @@ public final class MutationNode {
 		return result;
 	}
 
-	static MutationNode pathref(Node node) {
+	public static MutationNode pathref(Node node) {
 		if (node == null) {
 			return null;
 		}
@@ -267,6 +267,25 @@ public final class MutationNode {
 			sync.mutationsAccess.removeFromRemoteLookup(delta);
 			break;
 		}
+		}
+	}
+
+	public String removeAttribute(ApplyTo applyTo, String attributeName) {
+		switch (applyTo) {
+		case mutations_reversed: {
+			String currentValue = attributes.get(attributeName);
+			attributes.remove(attributeName);
+			return currentValue;
+		}
+		case local: {
+			Node target = node();
+			String currentValue = ((Element) target)
+					.getAttribute(attributeName);
+			((Element) target).removeAttribute(attributeName);
+			return currentValue;
+		}
+		default:
+			throw new UnsupportedOperationException();
 		}
 	}
 

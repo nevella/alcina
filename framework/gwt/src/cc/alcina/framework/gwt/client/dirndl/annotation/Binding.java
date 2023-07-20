@@ -212,9 +212,9 @@ public @interface Binding {
 	}
 
 	@Reflected
-	public static class UnitRem implements ToStringFunction<Integer> {
+	public static class UnitRem implements ToStringFunction<Number> {
 		@Override
-		public String apply(Integer rem) {
+		public String apply(Number rem) {
 			return rem + "rem";
 		}
 	}

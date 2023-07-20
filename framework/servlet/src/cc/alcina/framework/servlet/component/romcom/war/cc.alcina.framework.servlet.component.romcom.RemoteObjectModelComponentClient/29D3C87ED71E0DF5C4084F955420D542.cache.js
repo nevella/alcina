@@ -3,7 +3,7 @@ var __gwtModuleFunction = $wnd.cc_alcina_framework_servlet_component_romcom_Remo
 var $sendStats = __gwtModuleFunction.__sendStats;
 $sendStats('moduleStartup', 'moduleEvalStart');
 var $gwt_version = "0.0.0";
-var $strongName = '82F15CA211845E3B576EB066A0EE438E';
+var $strongName = '29D3C87ED71E0DF5C4084F955420D542';
 var $gwt = {};
 var $doc = $wnd.document;
 var $moduleName, $moduleBase;
@@ -22,7 +22,7 @@ var $stats = $wnd.__gwtStatsEvent ? function(a) {
 return $wnd.__gwtStatsEvent && $wnd.__gwtStatsEvent(a);
 } : null;
 var $sessionId = $wnd.__gwtStatsSessionId ? $wnd.__gwtStatsSessionId : null;
-var $intern_0 = {4:1, 7:1, 170:1}, $intern_1 = 2147483647, $intern_2 = -17592186044416, $intern_3 = 17592186044416, $intern_4 = 4194304, $intern_5 = 1048575, $intern_6 = {4:1, 7:1}, $intern_7 = {4:1, 27:1, 20:1}, $intern_8 = {4:1, 27:1, 21:1, 20:1}, $intern_9 = 65536, $intern_10 = 1023, $intern_11 = 65535, $intern_12 = {50:1}, $intern_13 = 1841, $intern_14 = {42:1, 51:1}, $intern_15 = {42:1, 29:1}, $intern_16 = {39:1}, $intern_17 = {4:1, 42:1, 29:1}, $intern_18 = {4:1, 50:1}, $intern_19 = {4:1, 42:1, 51:1}, $intern_20 = 16384, $intern_21 = {4:1, 17:1, 7:1}, $intern_22 = {14:1}, $intern_23 = {11:1}, $intern_24 = {4:1, 15:1, 7:1}, $intern_25 = {6:1}, $intern_26 = {6:1, 14:1}, $intern_27 = {5:1}, $intern_28 = {84:1, 4:1}, $intern_29 = {135:1, 4:1, 17:1, 7:1}, $intern_30 = {196:1}, $intern_31 = {94:1}, $intern_32 = {74:1}, $intern_33 = {63:1}, $intern_34 = {88:1, 4:1}, $intern_35 = {100:1, 103:1, 4:1}, $intern_36 = {4:1}, $intern_37 = {99:1, 4:1}, $intern_38 = {49:1}, $intern_39 = {169:1, 4:1, 7:1}, $intern_40 = {60:1}, $intern_41 = {216:1}, $intern_42 = {209:1}, $intern_43 = {33:1, 32:1, 24:1, 19:1, 23:1, 36:1, 34:1}, $intern_44 = {24:1, 168:1, 56:1}, $intern_45 = 1048576, $intern_46 = {256:1, 4:1}, $intern_47 = {218:1, 4:1, 27:1, 21:1, 20:1}, $intern_48 = 4194303, $intern_49 = 524288, $intern_50 = 2097152, $intern_51 = 16777216, $intern_52 = 33554432, $intern_53 = 67108864, $intern_54 = {4:1, 136:1, 20:1}, $intern_55 = {4:1, 1816:1}, $intern_56 = {l:4194303, m:4194303, h:524287}, $intern_57 = {28:1, 139:1}, $intern_58 = {4:1, 42:1, 72:1, 51:1}, $intern_59 = {4:1, 28:1, 26:1, 114:1}, $intern_60 = {4:1, 7:1, 467:1};
+var $intern_0 = {4:1, 7:1, 170:1}, $intern_1 = 2147483647, $intern_2 = -17592186044416, $intern_3 = 17592186044416, $intern_4 = 4194304, $intern_5 = 1048575, $intern_6 = {4:1, 7:1}, $intern_7 = {4:1, 27:1, 20:1}, $intern_8 = {4:1, 27:1, 21:1, 20:1}, $intern_9 = 65536, $intern_10 = 1023, $intern_11 = 65535, $intern_12 = {50:1}, $intern_13 = 1841, $intern_14 = {42:1, 51:1}, $intern_15 = {42:1, 29:1}, $intern_16 = {39:1}, $intern_17 = {4:1, 42:1, 29:1}, $intern_18 = {4:1, 50:1}, $intern_19 = {4:1, 42:1, 51:1}, $intern_20 = 16384, $intern_21 = {4:1, 16:1, 7:1}, $intern_22 = {14:1}, $intern_23 = {11:1}, $intern_24 = {4:1, 15:1, 7:1}, $intern_25 = {6:1}, $intern_26 = {6:1, 14:1}, $intern_27 = {5:1}, $intern_28 = {84:1, 4:1}, $intern_29 = {135:1, 4:1, 16:1, 7:1}, $intern_30 = {196:1}, $intern_31 = {94:1}, $intern_32 = {74:1}, $intern_33 = {63:1}, $intern_34 = {88:1, 4:1}, $intern_35 = {100:1, 103:1, 4:1}, $intern_36 = {4:1}, $intern_37 = {99:1, 4:1}, $intern_38 = {49:1}, $intern_39 = {169:1, 4:1, 7:1}, $intern_40 = {60:1}, $intern_41 = {216:1}, $intern_42 = {209:1}, $intern_43 = {33:1, 32:1, 24:1, 19:1, 23:1, 36:1, 34:1}, $intern_44 = {24:1, 168:1, 57:1}, $intern_45 = 1048576, $intern_46 = {256:1, 4:1}, $intern_47 = {218:1, 4:1, 27:1, 21:1, 20:1}, $intern_48 = 4194303, $intern_49 = 524288, $intern_50 = 2097152, $intern_51 = 16777216, $intern_52 = 33554432, $intern_53 = 67108864, $intern_54 = {4:1, 136:1, 20:1}, $intern_55 = {4:1, 1816:1}, $intern_56 = {l:4194303, m:4194303, h:524287}, $intern_57 = {28:1, 139:1}, $intern_58 = {4:1, 42:1, 72:1, 51:1}, $intern_59 = {4:1, 28:1, 26:1, 114:1}, $intern_60 = {4:1, 7:1, 467:1};
 var _, prototypesByTypeId_0, initFnList_0, permutationId = -1;
 function setGwtProperty(propertyName, propertyValue){
   typeof window === 'object' && typeof window['$gwt'] === 'object' && (window['$gwt'][propertyName] = propertyValue);
@@ -1641,7 +1641,7 @@ function UnsupportedOperationException_0(message){
   RuntimeException_0.call(this, message);
 }
 
-defineClass(16, 21, $intern_8, UnsupportedOperationException, UnsupportedOperationException_0);
+defineClass(17, 21, $intern_8, UnsupportedOperationException, UnsupportedOperationException_0);
 function $addAll(this$static, c){
   var changed, e, e$iterator;
   $clinit_InternalPreconditions();
@@ -4271,7 +4271,7 @@ var Ljava_lang_CharSequence_2_classLit = createForInterface('java.lang', 'CharSe
 var Ljava_lang_String_2_classLit = createForClass('java.lang', 'String', 2, Ljava_lang_Object_2_classLit);
 var Ljava_lang_StringIndexOutOfBoundsException_2_classLit = createForClass('java.lang', 'StringIndexOutOfBoundsException', 306, Ljava_lang_IndexOutOfBoundsException_2_classLit);
 var Ljava_lang_Throwable$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 478);
-var Ljava_lang_UnsupportedOperationException_2_classLit = createForClass('java.lang', 'UnsupportedOperationException', 16, Ljava_lang_RuntimeException_2_classLit);
+var Ljava_lang_UnsupportedOperationException_2_classLit = createForClass('java.lang', 'UnsupportedOperationException', 17, Ljava_lang_RuntimeException_2_classLit);
 var Ljava_util_Collection_2_classLit = createForInterface('java.util', 'Collection');
 var Ljava_util_AbstractCollection_2_classLit = createForClass('java.util', 'AbstractCollection', 1840, Ljava_lang_Object_2_classLit);
 var Ljava_util_Map_2_classLit = createForInterface('java.util', 'Map');
@@ -4446,7 +4446,7 @@ function lambda$0(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(892, 6, $intern_26, IdentityArrayList___refImpl);
+defineClass(894, 6, $intern_26, IdentityArrayList___refImpl);
 _.get_1 = function get_1(){
   return new IdentityArrayList;
 }
@@ -4465,27 +4465,27 @@ _.init0 = function init0_0(){
   $init(this, Lcc_alcina_framework_common_client_collections_IdentityArrayList_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_collections_IdentityArrayList_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.collections', 'IdentityArrayList___refImpl', 892, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_collections_IdentityArrayList_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.collections', 'IdentityArrayList___refImpl', 894, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function IdentityArrayList___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(893, 1, $intern_23, IdentityArrayList___refImpl$lambda$0$Type);
+defineClass(895, 1, $intern_23, IdentityArrayList___refImpl$lambda$0$Type);
 _.accept = function accept(arg0){
   lambda$0(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_collections_IdentityArrayList_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 893);
+var Lcc_alcina_framework_common_client_collections_IdentityArrayList_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 895);
 var Ljava_util_function_Predicate_2_classLit = createForInterface('java.util.function', 'Predicate');
 function IdentityArrayList___refImpl$lambda$1$Type(){
 }
 
-defineClass(894, 1, {}, IdentityArrayList___refImpl$lambda$1$Type);
+defineClass(896, 1, {}, IdentityArrayList___refImpl$lambda$1$Type);
 _.test_0 = function test_1(arg0){
   return $clinit_IdentityArrayList___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_collections_IdentityArrayList_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_collections_IdentityArrayList_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 894);
+var Lcc_alcina_framework_common_client_collections_IdentityArrayList_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 896);
 var Lcc_alcina_framework_common_client_collections_PublicCloneable_2_classLit = createForInterface('cc.alcina.framework.common.client.collections', 'PublicCloneable');
 function $clinit_PublicCloneable___refImpl(){
   $clinit_PublicCloneable___refImpl = emptyMethod;
@@ -4502,7 +4502,7 @@ function lambda$0_0(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1231, 6, $intern_25, PublicCloneable___refImpl);
+defineClass(1233, 6, $intern_25, PublicCloneable___refImpl);
 _.init0 = function init0_1(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -4516,26 +4516,26 @@ _.init0 = function init0_1(){
   $init(this, Lcc_alcina_framework_common_client_collections_PublicCloneable_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_collections_PublicCloneable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.collections', 'PublicCloneable___refImpl', 1231, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_collections_PublicCloneable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.collections', 'PublicCloneable___refImpl', 1233, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function PublicCloneable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1232, 1, $intern_23, PublicCloneable___refImpl$lambda$0$Type);
+defineClass(1234, 1, $intern_23, PublicCloneable___refImpl$lambda$0$Type);
 _.accept = function accept_0(arg0){
   lambda$0_0(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_collections_PublicCloneable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1232);
+var Lcc_alcina_framework_common_client_collections_PublicCloneable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1234);
 function PublicCloneable___refImpl$lambda$1$Type(){
 }
 
-defineClass(1233, 1, {}, PublicCloneable___refImpl$lambda$1$Type);
+defineClass(1235, 1, {}, PublicCloneable___refImpl$lambda$1$Type);
 _.test_0 = function test_2(arg0){
   return $clinit_PublicCloneable___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_collections_PublicCloneable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_collections_PublicCloneable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1233);
+var Lcc_alcina_framework_common_client_collections_PublicCloneable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1235);
 var Lcc_alcina_framework_common_client_context_ContextFrame_2_classLit = createForInterface('cc.alcina.framework.common.client.context', 'ContextFrame');
 function $clinit_ContextFrame___refImpl(){
   $clinit_ContextFrame___refImpl = emptyMethod;
@@ -4552,7 +4552,7 @@ function lambda$0_1(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1237, 6, $intern_25, ContextFrame___refImpl);
+defineClass(1239, 6, $intern_25, ContextFrame___refImpl);
 _.init0 = function init0_2(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -4566,26 +4566,26 @@ _.init0 = function init0_2(){
   $init(this, Lcc_alcina_framework_common_client_context_ContextFrame_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_context_ContextFrame_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.context', 'ContextFrame___refImpl', 1237, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_context_ContextFrame_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.context', 'ContextFrame___refImpl', 1239, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ContextFrame___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1238, 1, $intern_23, ContextFrame___refImpl$lambda$0$Type);
+defineClass(1240, 1, $intern_23, ContextFrame___refImpl$lambda$0$Type);
 _.accept = function accept_1(arg0){
   lambda$0_1(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_context_ContextFrame_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1238);
+var Lcc_alcina_framework_common_client_context_ContextFrame_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1240);
 function ContextFrame___refImpl$lambda$1$Type(){
 }
 
-defineClass(1239, 1, {}, ContextFrame___refImpl$lambda$1$Type);
+defineClass(1241, 1, {}, ContextFrame___refImpl$lambda$1$Type);
 _.test_0 = function test_3(arg0){
   return $clinit_ContextFrame___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_context_ContextFrame_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_context_ContextFrame_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1239);
+var Lcc_alcina_framework_common_client_context_ContextFrame_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1241);
 function createProvider(frameConstructor, onPostRegisterCreated, type_0){
   return new ContextProvider$Single(frameConstructor, null, onPostRegisterCreated);
 }
@@ -4643,7 +4643,7 @@ function lambda$0_2(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(886, 6, $intern_26, BaseSourcesPropertyChangeEvents___refImpl);
+defineClass(888, 6, $intern_26, BaseSourcesPropertyChangeEvents___refImpl);
 _.get_1 = function get_2(){
   return new BaseSourcesPropertyChangeEvents;
 }
@@ -4663,26 +4663,26 @@ _.init0 = function init0_3(){
   $init(this, Lcc_alcina_framework_common_client_csobjects_BaseSourcesPropertyChangeEvents_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_csobjects_BaseSourcesPropertyChangeEvents_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.csobjects', 'BaseSourcesPropertyChangeEvents___refImpl', 886, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_csobjects_BaseSourcesPropertyChangeEvents_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.csobjects', 'BaseSourcesPropertyChangeEvents___refImpl', 888, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function BaseSourcesPropertyChangeEvents___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(887, 1, $intern_23, BaseSourcesPropertyChangeEvents___refImpl$lambda$0$Type);
+defineClass(889, 1, $intern_23, BaseSourcesPropertyChangeEvents___refImpl$lambda$0$Type);
 _.accept = function accept_2(arg0){
   lambda$0_2(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_csobjects_BaseSourcesPropertyChangeEvents_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 887);
+var Lcc_alcina_framework_common_client_csobjects_BaseSourcesPropertyChangeEvents_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 889);
 function BaseSourcesPropertyChangeEvents___refImpl$lambda$1$Type(){
 }
 
-defineClass(888, 1, {}, BaseSourcesPropertyChangeEvents___refImpl$lambda$1$Type);
+defineClass(890, 1, {}, BaseSourcesPropertyChangeEvents___refImpl$lambda$1$Type);
 _.test_0 = function test_4(arg0){
   return $clinit_BaseSourcesPropertyChangeEvents___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_csobjects_BaseSourcesPropertyChangeEvents_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_csobjects_BaseSourcesPropertyChangeEvents_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 888);
+var Lcc_alcina_framework_common_client_csobjects_BaseSourcesPropertyChangeEvents_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 890);
 var Lcc_alcina_framework_common_client_csobjects_IsBindable_2_classLit = createForInterface('cc.alcina.framework.common.client.csobjects', 'IsBindable');
 function Bindable(){
 }
@@ -4704,7 +4704,7 @@ function lambda$0_3(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(880, 6, $intern_26, Bindable___refImpl);
+defineClass(882, 6, $intern_26, Bindable___refImpl);
 _.get_1 = function get_3(){
   return new Bindable;
 }
@@ -4727,26 +4727,26 @@ _.init0 = function init0_4(){
   $init(this, Lcc_alcina_framework_common_client_csobjects_Bindable_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_csobjects_Bindable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.csobjects', 'Bindable___refImpl', 880, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_csobjects_Bindable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.csobjects', 'Bindable___refImpl', 882, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Bindable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(881, 1, $intern_23, Bindable___refImpl$lambda$0$Type);
+defineClass(883, 1, $intern_23, Bindable___refImpl$lambda$0$Type);
 _.accept = function accept_3(arg0){
   lambda$0_3(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_csobjects_Bindable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 881);
+var Lcc_alcina_framework_common_client_csobjects_Bindable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 883);
 function Bindable___refImpl$lambda$1$Type(){
 }
 
-defineClass(882, 1, {}, Bindable___refImpl$lambda$1$Type);
+defineClass(884, 1, {}, Bindable___refImpl$lambda$1$Type);
 _.test_0 = function test_5(arg0){
   return $clinit_Bindable___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_csobjects_Bindable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_csobjects_Bindable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 882);
+var Lcc_alcina_framework_common_client_csobjects_Bindable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 884);
 function $clinit_IsBindable___refImpl(){
   $clinit_IsBindable___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -4762,7 +4762,7 @@ function lambda$0_4(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(883, 6, $intern_25, IsBindable___refImpl);
+defineClass(885, 6, $intern_25, IsBindable___refImpl);
 _.init0 = function init0_5(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -4776,26 +4776,26 @@ _.init0 = function init0_5(){
   $init(this, Lcc_alcina_framework_common_client_csobjects_IsBindable_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_csobjects_IsBindable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.csobjects', 'IsBindable___refImpl', 883, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_csobjects_IsBindable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.csobjects', 'IsBindable___refImpl', 885, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function IsBindable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(884, 1, $intern_23, IsBindable___refImpl$lambda$0$Type);
+defineClass(886, 1, $intern_23, IsBindable___refImpl$lambda$0$Type);
 _.accept = function accept_4(arg0){
   lambda$0_4(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_csobjects_IsBindable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 884);
+var Lcc_alcina_framework_common_client_csobjects_IsBindable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 886);
 function IsBindable___refImpl$lambda$1$Type(){
 }
 
-defineClass(885, 1, {}, IsBindable___refImpl$lambda$1$Type);
+defineClass(887, 1, {}, IsBindable___refImpl$lambda$1$Type);
 _.test_0 = function test_6(arg0){
   return $clinit_IsBindable___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_csobjects_IsBindable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_csobjects_IsBindable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 885);
+var Lcc_alcina_framework_common_client_csobjects_IsBindable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 887);
 function $clinit_DomNode(){
   $clinit_DomNode = emptyMethod;
   $ensureNamesAreInitialized(Lcc_alcina_framework_common_client_dom_DomNode_2_classLit);
@@ -4924,7 +4924,7 @@ function lambda$0_6(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1411, 6, $intern_25, DomEnvironment___refImpl);
+defineClass(1413, 6, $intern_25, DomEnvironment___refImpl);
 _.init0 = function init0_7(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -4938,26 +4938,26 @@ _.init0 = function init0_7(){
   $init(this, Lcc_alcina_framework_common_client_dom_DomEnvironment_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_dom_DomEnvironment_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.dom', 'DomEnvironment___refImpl', 1411, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_dom_DomEnvironment_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.dom', 'DomEnvironment___refImpl', 1413, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DomEnvironment___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1412, 1, $intern_23, DomEnvironment___refImpl$lambda$0$Type);
+defineClass(1414, 1, $intern_23, DomEnvironment___refImpl$lambda$0$Type);
 _.accept = function accept_6(arg0){
   lambda$0_6(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_dom_DomEnvironment_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1412);
+var Lcc_alcina_framework_common_client_dom_DomEnvironment_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1414);
 function DomEnvironment___refImpl$lambda$1$Type(){
 }
 
-defineClass(1413, 1, {}, DomEnvironment___refImpl$lambda$1$Type);
+defineClass(1415, 1, {}, DomEnvironment___refImpl$lambda$1$Type);
 _.test_0 = function test_8(arg0){
   return $clinit_DomEnvironment___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_dom_DomEnvironment_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_dom_DomEnvironment_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1413);
+var Lcc_alcina_framework_common_client_dom_DomEnvironment_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1415);
 function $get_0(this$static, tags){
   var cursor, tagList;
   tagList = new Arrays$ArrayList(tags);
@@ -5039,7 +5039,7 @@ function lambda$0_7(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(952, 6, $intern_26, DomainCollections___refImpl);
+defineClass(954, 6, $intern_26, DomainCollections___refImpl);
 _.get_1 = function get_4(){
   return new DomainCollections;
 }
@@ -5058,26 +5058,26 @@ _.init0 = function init0_8(){
   $init(this, Lcc_alcina_framework_common_client_domain_DomainCollections_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_domain_DomainCollections_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.domain', 'DomainCollections___refImpl', 952, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_domain_DomainCollections_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.domain', 'DomainCollections___refImpl', 954, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DomainCollections___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(953, 1, $intern_23, DomainCollections___refImpl$lambda$0$Type);
+defineClass(955, 1, $intern_23, DomainCollections___refImpl$lambda$0$Type);
 _.accept = function accept_7(arg0){
   lambda$0_7(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_domain_DomainCollections_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 953);
+var Lcc_alcina_framework_common_client_domain_DomainCollections_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 955);
 function DomainCollections___refImpl$lambda$1$Type(){
 }
 
-defineClass(954, 1, {}, DomainCollections___refImpl$lambda$1$Type);
+defineClass(956, 1, {}, DomainCollections___refImpl$lambda$1$Type);
 _.test_0 = function test_10(arg0){
   return $clinit_DomainCollections___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_domain_DomainCollections_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_domain_DomainCollections_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 954);
+var Lcc_alcina_framework_common_client_domain_DomainCollections_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 956);
 function $clinit_Domain___refImpl(){
   $clinit_Domain___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -5093,7 +5093,7 @@ function lambda$0_8(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(949, 6, $intern_26, Domain___refImpl);
+defineClass(951, 6, $intern_26, Domain___refImpl);
 _.get_1 = function get_5(){
   return new Domain;
 }
@@ -5112,26 +5112,26 @@ _.init0 = function init0_9(){
   $init(this, Lcc_alcina_framework_common_client_domain_Domain_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_domain_Domain_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.domain', 'Domain___refImpl', 949, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_domain_Domain_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.domain', 'Domain___refImpl', 951, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Domain___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(950, 1, $intern_23, Domain___refImpl$lambda$0$Type);
+defineClass(952, 1, $intern_23, Domain___refImpl$lambda$0$Type);
 _.accept = function accept_8(arg0){
   lambda$0_8(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_domain_Domain_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 950);
+var Lcc_alcina_framework_common_client_domain_Domain_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 952);
 function Domain___refImpl$lambda$1$Type(){
 }
 
-defineClass(951, 1, {}, Domain___refImpl$lambda$1$Type);
+defineClass(953, 1, {}, Domain___refImpl$lambda$1$Type);
 _.test_0 = function test_11(arg0){
   return $clinit_Domain___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_domain_Domain_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_domain_Domain_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 951);
+var Lcc_alcina_framework_common_client_domain_Domain_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 953);
 function $clinit_ExtensibleEnum(){
   $clinit_ExtensibleEnum = emptyMethod;
   new Multimap;
@@ -5164,7 +5164,7 @@ function lambda$0_9(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(934, 6, $intern_25, Entity___refImpl);
+defineClass(936, 6, $intern_25, Entity___refImpl);
 _.init0 = function init0_10(){
   var annotation, assignableTo, bounds, bounds0, byName, getter, interfaces, properties, property, provider, provider0, setter, typeBounds, typeBounds0;
   properties = new ArrayList;
@@ -5212,7 +5212,7 @@ _.init0 = function init0_10(){
   $init(this, Lcc_alcina_framework_common_client_logic_domain_Entity_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domain', 'Entity___refImpl', 934, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domain', 'Entity___refImpl', 936, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function $annotation_0(this$static, annotationClass){
   return this$static.annotationResolver.getAnnotation(annotationClass);
 }
@@ -5255,7 +5255,7 @@ function Entity___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, 
   Property.call(this, 'id', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(935, 5, $intern_27, Entity___refImpl$1);
+defineClass(937, 5, $intern_27, Entity___refImpl$1);
 _.get_2 = function get_7(bean){
   return valueOf_5(throwClassCastExceptionUnlessNull(bean).$_nullMethod());
 }
@@ -5264,12 +5264,12 @@ _.set_1 = function set_3(bean, value_0){
   throwClassCastExceptionUnlessNull(bean).$_nullMethod(castTo(value_0, 110).value_0);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 935);
+var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 937);
 function Entity___refImpl$2($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'versionNumber', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(936, 5, $intern_27, Entity___refImpl$2);
+defineClass(938, 5, $intern_27, Entity___refImpl$2);
 _.get_2 = function get_8(bean){
   return valueOf_4(throwClassCastExceptionUnlessNull(bean).$_nullMethod());
 }
@@ -5278,12 +5278,12 @@ _.set_1 = function set_4(bean, value_0){
   throwClassCastExceptionUnlessNull(bean).$_nullMethod(castTo(value_0, 43).value_0);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 936);
+var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 938);
 function Entity___refImpl$3($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'localId', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(937, 5, $intern_27, Entity___refImpl$3);
+defineClass(939, 5, $intern_27, Entity___refImpl$3);
 _.get_2 = function get_9(bean){
   return valueOf_5(throwClassCastExceptionUnlessNull(bean).$_nullMethod());
 }
@@ -5292,26 +5292,26 @@ _.set_1 = function set_5(bean, value_0){
   throwClassCastExceptionUnlessNull(bean).$_nullMethod(castTo(value_0, 110).value_0);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 937);
+var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 939);
 function Entity___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(938, 1, $intern_23, Entity___refImpl$lambda$0$Type);
+defineClass(940, 1, $intern_23, Entity___refImpl$lambda$0$Type);
 _.accept = function accept_9(arg0){
   lambda$0_9(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 938);
+var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 940);
 function Entity___refImpl$lambda$1$Type(){
 }
 
-defineClass(939, 1, {}, Entity___refImpl$lambda$1$Type);
+defineClass(941, 1, {}, Entity___refImpl$lambda$1$Type);
 _.test_0 = function test_12(arg0){
   return $clinit_Entity___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_domain_Entity_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 939);
+var Lcc_alcina_framework_common_client_logic_domain_Entity_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 941);
 function $clinit_HasEntity___refImpl(){
   $clinit_HasEntity___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -5327,7 +5327,7 @@ function lambda$0_10(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(943, 6, $intern_25, HasEntity___refImpl);
+defineClass(945, 6, $intern_25, HasEntity___refImpl);
 _.init0 = function init0_11(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -5342,26 +5342,26 @@ _.init0 = function init0_11(){
   $init(this, Lcc_alcina_framework_common_client_logic_domain_HasEntity_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_HasEntity_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domain', 'HasEntity___refImpl', 943, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_domain_HasEntity_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domain', 'HasEntity___refImpl', 945, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function HasEntity___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(944, 1, $intern_23, HasEntity___refImpl$lambda$0$Type);
+defineClass(946, 1, $intern_23, HasEntity___refImpl$lambda$0$Type);
 _.accept = function accept_10(arg0){
   lambda$0_10(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_HasEntity_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 944);
+var Lcc_alcina_framework_common_client_logic_domain_HasEntity_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 946);
 function HasEntity___refImpl$lambda$1$Type(){
 }
 
-defineClass(945, 1, {}, HasEntity___refImpl$lambda$1$Type);
+defineClass(947, 1, {}, HasEntity___refImpl$lambda$1$Type);
 _.test_0 = function test_13(arg0){
   return $clinit_HasEntity___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_domain_HasEntity_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_HasEntity_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 945);
+var Lcc_alcina_framework_common_client_logic_domain_HasEntity_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 947);
 function $clinit_HasId___refImpl(){
   $clinit_HasId___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -5377,7 +5377,7 @@ function lambda$0_11(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(931, 6, $intern_25, HasId___refImpl);
+defineClass(933, 6, $intern_25, HasId___refImpl);
 _.init0 = function init0_12(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -5392,26 +5392,26 @@ _.init0 = function init0_12(){
   $init(this, Lcc_alcina_framework_common_client_logic_domain_HasId_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_HasId_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domain', 'HasId___refImpl', 931, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_domain_HasId_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domain', 'HasId___refImpl', 933, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function HasId___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(932, 1, $intern_23, HasId___refImpl$lambda$0$Type);
+defineClass(934, 1, $intern_23, HasId___refImpl$lambda$0$Type);
 _.accept = function accept_11(arg0){
   lambda$0_11(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_HasId_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 932);
+var Lcc_alcina_framework_common_client_logic_domain_HasId_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 934);
 function HasId___refImpl$lambda$1$Type(){
 }
 
-defineClass(933, 1, {}, HasId___refImpl$lambda$1$Type);
+defineClass(935, 1, {}, HasId___refImpl$lambda$1$Type);
 _.test_0 = function test_14(arg0){
   return $clinit_HasId___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_domain_HasId_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_HasId_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 933);
+var Lcc_alcina_framework_common_client_logic_domain_HasId_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 935);
 function $clinit_HasVersionNumber___refImpl(){
   $clinit_HasVersionNumber___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -5427,7 +5427,7 @@ function lambda$0_12(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(940, 6, $intern_25, HasVersionNumber___refImpl);
+defineClass(942, 6, $intern_25, HasVersionNumber___refImpl);
 _.init0 = function init0_13(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -5441,26 +5441,26 @@ _.init0 = function init0_13(){
   $init(this, Lcc_alcina_framework_common_client_logic_domain_HasVersionNumber_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_HasVersionNumber_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domain', 'HasVersionNumber___refImpl', 940, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_domain_HasVersionNumber_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domain', 'HasVersionNumber___refImpl', 942, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function HasVersionNumber___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(941, 1, $intern_23, HasVersionNumber___refImpl$lambda$0$Type);
+defineClass(943, 1, $intern_23, HasVersionNumber___refImpl$lambda$0$Type);
 _.accept = function accept_12(arg0){
   lambda$0_12(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_HasVersionNumber_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 941);
+var Lcc_alcina_framework_common_client_logic_domain_HasVersionNumber_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 943);
 function HasVersionNumber___refImpl$lambda$1$Type(){
 }
 
-defineClass(942, 1, {}, HasVersionNumber___refImpl$lambda$1$Type);
+defineClass(944, 1, {}, HasVersionNumber___refImpl$lambda$1$Type);
 _.test_0 = function test_15(arg0){
   return $clinit_HasVersionNumber___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_domain_HasVersionNumber_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domain_HasVersionNumber_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 942);
+var Lcc_alcina_framework_common_client_logic_domain_HasVersionNumber_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 944);
 function $peek(this$static){
   if (this$static.finished) {
     throw toJs(new NoSuchElementException);
@@ -6078,7 +6078,7 @@ function lambda$0_14(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(973, 6, $intern_26, LiSet___refImpl);
+defineClass(975, 6, $intern_26, LiSet___refImpl);
 _.get_1 = function get_12(){
   return new LiSet;
 }
@@ -6099,26 +6099,26 @@ _.init0 = function init0_14(){
   $init(this, Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LiSet_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LiSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domaintransform.lookup', 'LiSet___refImpl', 973, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LiSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domaintransform.lookup', 'LiSet___refImpl', 975, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LiSet___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(974, 1, $intern_23, LiSet___refImpl$lambda$0$Type);
+defineClass(976, 1, $intern_23, LiSet___refImpl$lambda$0$Type);
 _.accept = function accept_14(arg0){
   lambda$0_14(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LiSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 974);
+var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LiSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 976);
 function LiSet___refImpl$lambda$1$Type(){
 }
 
-defineClass(975, 1, {}, LiSet___refImpl$lambda$1$Type);
+defineClass(977, 1, {}, LiSet___refImpl$lambda$1$Type);
 _.test_0 = function test_17(arg0){
   return $clinit_LiSet___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LiSet_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LiSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 975);
+var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LiSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 977);
 function $clone(this$static){
   var clone;
   clone = new LightMap;
@@ -6457,7 +6457,7 @@ function lambda$0_15(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(982, 6, $intern_26, LightMap___refImpl);
+defineClass(984, 6, $intern_26, LightMap___refImpl);
 _.get_1 = function get_14(){
   return new LightMap;
 }
@@ -6479,26 +6479,26 @@ _.init0 = function init0_15(){
   $init(this, Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domaintransform.lookup', 'LightMap___refImpl', 982, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domaintransform.lookup', 'LightMap___refImpl', 984, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LightMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(983, 1, $intern_23, LightMap___refImpl$lambda$0$Type);
+defineClass(985, 1, $intern_23, LightMap___refImpl$lambda$0$Type);
 _.accept = function accept_15(arg0){
   lambda$0_15(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 983);
+var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 985);
 function LightMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(984, 1, {}, LightMap___refImpl$lambda$1$Type);
+defineClass(986, 1, {}, LightMap___refImpl$lambda$1$Type);
 _.test_0 = function test_18(arg0){
   return $clinit_LightMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 984);
+var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 986);
 function $indexOf_1(this$static, e){
   var f, idx, test_0;
   test_0 = e != null?hashCode__I__devirtual$(e):0;
@@ -6673,7 +6673,7 @@ function lambda$0_16(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(988, 6, $intern_26, LightSet___refImpl);
+defineClass(990, 6, $intern_26, LightSet___refImpl);
 _.get_1 = function get_15(){
   return new LightSet;
 }
@@ -6694,26 +6694,26 @@ _.init0 = function init0_16(){
   $init(this, Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightSet_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domaintransform.lookup', 'LightSet___refImpl', 988, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.domaintransform.lookup', 'LightSet___refImpl', 990, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LightSet___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(989, 1, $intern_23, LightSet___refImpl$lambda$0$Type);
+defineClass(991, 1, $intern_23, LightSet___refImpl$lambda$0$Type);
 _.accept = function accept_16(arg0){
   lambda$0_16(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 989);
+var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 991);
 function LightSet___refImpl$lambda$1$Type(){
 }
 
-defineClass(990, 1, {}, LightSet___refImpl$lambda$1$Type);
+defineClass(992, 1, {}, LightSet___refImpl$lambda$1$Type);
 _.test_0 = function test_19(arg0){
   return $clinit_LightSet___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightSet_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 990);
+var Lcc_alcina_framework_common_client_logic_domaintransform_lookup_LightSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 992);
 function MappingIterator(source, mapping){
   this.source = source;
   this.mapping = mapping;
@@ -6909,7 +6909,7 @@ function lambda$0_17(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(994, 6, $intern_25, AlcinaTransient___refImpl);
+defineClass(996, 6, $intern_25, AlcinaTransient___refImpl);
 _.init0 = function init0_17(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -6924,26 +6924,26 @@ _.init0 = function init0_17(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_AlcinaTransient_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_AlcinaTransient_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'AlcinaTransient___refImpl', 994, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_AlcinaTransient_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'AlcinaTransient___refImpl', 996, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AlcinaTransient___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(995, 1, $intern_23, AlcinaTransient___refImpl$lambda$0$Type);
+defineClass(997, 1, $intern_23, AlcinaTransient___refImpl$lambda$0$Type);
 _.accept = function accept_17(arg0){
   lambda$0_17(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_AlcinaTransient_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 995);
+var Lcc_alcina_framework_common_client_logic_reflection_AlcinaTransient_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 997);
 function AlcinaTransient___refImpl$lambda$1$Type(){
 }
 
-defineClass(996, 1, {}, AlcinaTransient___refImpl$lambda$1$Type);
+defineClass(998, 1, {}, AlcinaTransient___refImpl$lambda$1$Type);
 _.test_0 = function test_22(arg0){
   return $clinit_AlcinaTransient___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_AlcinaTransient_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_AlcinaTransient_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 996);
+var Lcc_alcina_framework_common_client_logic_reflection_AlcinaTransient_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 998);
 function $resolveAnnotation(this$static, annotationClass, location_0){
   return castTo(first_0(castTo(this$static.resolvedCache.ensure(new AnnotationLocation$Resolver$lambda$0$Type(this$static, annotationClass, location_0), stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, [location_0, annotationClass])), 29)), 94);
 }
@@ -6992,7 +6992,7 @@ function lambda$0_18(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(955, 6, $intern_26, DefaultAnnotationResolver___refImpl);
+defineClass(957, 6, $intern_26, DefaultAnnotationResolver___refImpl);
 _.get_1 = function get_16(){
   return new DefaultAnnotationResolver;
 }
@@ -7011,26 +7011,26 @@ _.init0 = function init0_18(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_DefaultAnnotationResolver_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_DefaultAnnotationResolver_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'DefaultAnnotationResolver___refImpl', 955, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_DefaultAnnotationResolver_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'DefaultAnnotationResolver___refImpl', 957, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DefaultAnnotationResolver___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(956, 1, $intern_23, DefaultAnnotationResolver___refImpl$lambda$0$Type);
+defineClass(958, 1, $intern_23, DefaultAnnotationResolver___refImpl$lambda$0$Type);
 _.accept = function accept_18(arg0){
   lambda$0_18(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_DefaultAnnotationResolver_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 956);
+var Lcc_alcina_framework_common_client_logic_reflection_DefaultAnnotationResolver_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 958);
 function DefaultAnnotationResolver___refImpl$lambda$1$Type(){
 }
 
-defineClass(957, 1, {}, DefaultAnnotationResolver___refImpl$lambda$1$Type);
+defineClass(959, 1, {}, DefaultAnnotationResolver___refImpl$lambda$1$Type);
 _.test_0 = function test_23(arg0){
   return $clinit_DefaultAnnotationResolver___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_DefaultAnnotationResolver_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_DefaultAnnotationResolver_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 957);
+var Lcc_alcina_framework_common_client_logic_reflection_DefaultAnnotationResolver_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 959);
 var Lcc_alcina_framework_common_client_logic_reflection_Display_2_classLit = createForInterface('cc.alcina.framework.common.client.logic.reflection', 'Display');
 function mergeValues(lessSpecific, moreSpecific, defaultsInstance, mapping){
   var defaultValue, lessSpecificArray, lessSpecificEqualsDefault, lessSpecificValue, moreSpecificArray, moreSpecificEqualsDefault, moreSpecificValue, result_0;
@@ -7165,7 +7165,7 @@ function lambda$0_19(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1012, 6, $intern_26, Display_MergeStrategy___refImpl);
+defineClass(1014, 6, $intern_26, Display_MergeStrategy___refImpl);
 _.get_1 = function get_17(){
   return new Display$MergeStrategy;
 }
@@ -7185,26 +7185,26 @@ _.init0 = function init0_19(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_Display$MergeStrategy_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Display_1MergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'Display_MergeStrategy___refImpl', 1012, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_Display_1MergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'Display_MergeStrategy___refImpl', 1014, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Display_MergeStrategy___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1013, 1, $intern_23, Display_MergeStrategy___refImpl$lambda$0$Type);
+defineClass(1015, 1, $intern_23, Display_MergeStrategy___refImpl$lambda$0$Type);
 _.accept = function accept_19(arg0){
   lambda$0_19(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Display_1MergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1013);
+var Lcc_alcina_framework_common_client_logic_reflection_Display_1MergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1015);
 function Display_MergeStrategy___refImpl$lambda$1$Type(){
 }
 
-defineClass(1014, 1, {}, Display_MergeStrategy___refImpl$lambda$1$Type);
+defineClass(1016, 1, {}, Display_MergeStrategy___refImpl$lambda$1$Type);
 _.test_0 = function test_24(arg0){
   return $clinit_Display_MergeStrategy___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_Display$MergeStrategy_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Display_1MergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1014);
+var Lcc_alcina_framework_common_client_logic_reflection_Display_1MergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1016);
 function $__stringValue_0(this$static, o){
   if (instanceOf(o, 8)) {
     return $getSimpleName(castTo(o, 8)) + '.class';
@@ -7311,7 +7311,7 @@ function lambda$0_20(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1009, 6, $intern_25, Display___refImpl);
+defineClass(1011, 6, $intern_25, Display___refImpl);
 _.init0 = function init0_20(){
   var annotation, assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -7328,26 +7328,26 @@ _.init0 = function init0_20(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_Display_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Display_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'Display___refImpl', 1009, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_Display_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'Display___refImpl', 1011, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Display___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1010, 1, $intern_23, Display___refImpl$lambda$0$Type);
+defineClass(1012, 1, $intern_23, Display___refImpl$lambda$0$Type);
 _.accept = function accept_20(arg0){
   lambda$0_20(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Display_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1010);
+var Lcc_alcina_framework_common_client_logic_reflection_Display_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1012);
 function Display___refImpl$lambda$1$Type(){
 }
 
-defineClass(1011, 1, {}, Display___refImpl$lambda$1$Type);
+defineClass(1013, 1, {}, Display___refImpl$lambda$1$Type);
 _.test_0 = function test_25(arg0){
   return $clinit_Display___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_Display_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Display_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1011);
+var Lcc_alcina_framework_common_client_logic_reflection_Display_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1013);
 var Lcc_alcina_framework_common_client_logic_reflection_Permission_2_classLit = createForInterface('cc.alcina.framework.common.client.logic.reflection', 'Permission');
 function $__stringValue_1(this$static, o){
   if (instanceOf(o, 8)) {
@@ -7417,7 +7417,7 @@ function lambda$0_21(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1015, 6, $intern_25, Permission___refImpl);
+defineClass(1017, 6, $intern_25, Permission___refImpl);
 _.init0 = function init0_21(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -7432,26 +7432,26 @@ _.init0 = function init0_21(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_Permission_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Permission_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'Permission___refImpl', 1015, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_Permission_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'Permission___refImpl', 1017, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Permission___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1016, 1, $intern_23, Permission___refImpl$lambda$0$Type);
+defineClass(1018, 1, $intern_23, Permission___refImpl$lambda$0$Type);
 _.accept = function accept_21(arg0){
   lambda$0_21(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Permission_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1016);
+var Lcc_alcina_framework_common_client_logic_reflection_Permission_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1018);
 function Permission___refImpl$lambda$1$Type(){
 }
 
-defineClass(1017, 1, {}, Permission___refImpl$lambda$1$Type);
+defineClass(1019, 1, {}, Permission___refImpl$lambda$1$Type);
 _.test_0 = function test_26(arg0){
   return $clinit_Permission___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_Permission_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Permission_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1017);
+var Lcc_alcina_framework_common_client_logic_reflection_Permission_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1019);
 var Lcc_alcina_framework_common_client_logic_reflection_PropertyPermissions_2_classLit = createForInterface('cc.alcina.framework.common.client.logic.reflection', 'PropertyPermissions');
 function $__stringValue_2(this$static, o){
   if (instanceOf(o, 8)) {
@@ -7526,7 +7526,7 @@ function lambda$0_22(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1018, 6, $intern_25, PropertyPermissions___refImpl);
+defineClass(1020, 6, $intern_25, PropertyPermissions___refImpl);
 _.init0 = function init0_22(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -7541,26 +7541,26 @@ _.init0 = function init0_22(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_PropertyPermissions_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_PropertyPermissions_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'PropertyPermissions___refImpl', 1018, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_PropertyPermissions_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'PropertyPermissions___refImpl', 1020, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function PropertyPermissions___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1019, 1, $intern_23, PropertyPermissions___refImpl$lambda$0$Type);
+defineClass(1021, 1, $intern_23, PropertyPermissions___refImpl$lambda$0$Type);
 _.accept = function accept_22(arg0){
   lambda$0_22(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_PropertyPermissions_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1019);
+var Lcc_alcina_framework_common_client_logic_reflection_PropertyPermissions_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1021);
 function PropertyPermissions___refImpl$lambda$1$Type(){
 }
 
-defineClass(1020, 1, {}, PropertyPermissions___refImpl$lambda$1$Type);
+defineClass(1022, 1, {}, PropertyPermissions___refImpl$lambda$1$Type);
 _.test_0 = function test_27(arg0){
   return $clinit_PropertyPermissions___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_PropertyPermissions_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_PropertyPermissions_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1020);
+var Lcc_alcina_framework_common_client_logic_reflection_PropertyPermissions_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1022);
 var Lcc_alcina_framework_common_client_logic_reflection_Registration_2_classLit = createForInterface('cc.alcina.framework.common.client.logic.reflection', 'Registration');
 var Lcc_alcina_framework_common_client_logic_reflection_Registration$Ensure_2_classLit = createForInterface('cc.alcina.framework.common.client.logic.reflection', 'Registration/Ensure');
 function $clinit_Registration$Implementation(){
@@ -7620,7 +7620,7 @@ function lambda$0_23(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(991, 6, $intern_25, Registration_Ensure___refImpl);
+defineClass(993, 6, $intern_25, Registration_Ensure___refImpl);
 _.init0 = function init0_23(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -7634,26 +7634,26 @@ _.init0 = function init0_23(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_Registration$Ensure_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Registration_1Ensure_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'Registration_Ensure___refImpl', 991, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_Registration_1Ensure_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection', 'Registration_Ensure___refImpl', 993, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Registration_Ensure___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(992, 1, $intern_23, Registration_Ensure___refImpl$lambda$0$Type);
+defineClass(994, 1, $intern_23, Registration_Ensure___refImpl$lambda$0$Type);
 _.accept = function accept_23(arg0){
   lambda$0_23(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Registration_1Ensure_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 992);
+var Lcc_alcina_framework_common_client_logic_reflection_Registration_1Ensure_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 994);
 function Registration_Ensure___refImpl$lambda$1$Type(){
 }
 
-defineClass(993, 1, {}, Registration_Ensure___refImpl$lambda$1$Type);
+defineClass(995, 1, {}, Registration_Ensure___refImpl$lambda$1$Type);
 _.test_0 = function test_28(arg0){
   return $clinit_Registration_Ensure___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_Registration$Ensure_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_Registration_1Ensure_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 993);
+var Lcc_alcina_framework_common_client_logic_reflection_Registration_1Ensure_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 995);
 function $__stringValue_3(this$static, o){
   if (instanceOf(o, 8)) {
     return $getSimpleName(castTo(o, 8)) + '.class';
@@ -7764,7 +7764,7 @@ function lambda$0_24(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1024, 6, $intern_25, Bean_PropertySource___refImpl);
+defineClass(1026, 6, $intern_25, Bean_PropertySource___refImpl);
 _.init0 = function init0_24(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -7779,26 +7779,26 @@ _.init0 = function init0_24(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean$PropertySource_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, false, true);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1PropertySource_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.reachability', 'Bean_PropertySource___refImpl', 1024, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1PropertySource_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.reachability', 'Bean_PropertySource___refImpl', 1026, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Bean_PropertySource___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1025, 1, $intern_23, Bean_PropertySource___refImpl$lambda$0$Type);
+defineClass(1027, 1, $intern_23, Bean_PropertySource___refImpl$lambda$0$Type);
 _.accept = function accept_24(arg0){
   lambda$0_24(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1PropertySource_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1025);
+var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1PropertySource_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1027);
 function Bean_PropertySource___refImpl$lambda$1$Type(){
 }
 
-defineClass(1026, 1, {}, Bean_PropertySource___refImpl$lambda$1$Type);
+defineClass(1028, 1, {}, Bean_PropertySource___refImpl$lambda$1$Type);
 _.test_0 = function test_29(arg0){
   return $clinit_Bean_PropertySource___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean$PropertySource_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1PropertySource_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1026);
+var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1PropertySource_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1028);
 function $__stringValue_4(this$static, o){
   if (instanceOf(o, 8)) {
     return $getSimpleName(castTo(o, 8)) + '.class';
@@ -7862,7 +7862,7 @@ function lambda$0_25(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1021, 6, $intern_25, Bean___refImpl);
+defineClass($intern_10, 6, $intern_25, Bean___refImpl);
 _.init0 = function init0_25(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -7877,26 +7877,26 @@ _.init0 = function init0_25(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.reachability', 'Bean___refImpl', 1021, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.reachability', 'Bean___refImpl', $intern_10, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Bean___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1022, 1, $intern_23, Bean___refImpl$lambda$0$Type);
+defineClass(1024, 1, $intern_23, Bean___refImpl$lambda$0$Type);
 _.accept = function accept_25(arg0){
   lambda$0_25(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1022);
+var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1024);
 function Bean___refImpl$lambda$1$Type(){
 }
 
-defineClass($intern_10, 1, {}, Bean___refImpl$lambda$1$Type);
+defineClass(1025, 1, {}, Bean___refImpl$lambda$1$Type);
 _.test_0 = function test_30(arg0){
   return $clinit_Bean___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, $intern_10);
+var Lcc_alcina_framework_common_client_logic_reflection_reachability_Bean_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1025);
 function $clinit_Registry(){
   $clinit_Registry = emptyMethod;
   provider_0 = new Registry$BasicRegistryProvider;
@@ -8441,7 +8441,7 @@ function lambda$0_26(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1030, 6, $intern_26, Registry_BasicRegistryProvider___refImpl);
+defineClass(1032, 6, $intern_26, Registry_BasicRegistryProvider___refImpl);
 _.get_1 = function get_18(){
   return new Registry$BasicRegistryProvider;
 }
@@ -8461,26 +8461,26 @@ _.init0 = function init0_26(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_registry_Registry$BasicRegistryProvider_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1BasicRegistryProvider_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.registry', 'Registry_BasicRegistryProvider___refImpl', 1030, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1BasicRegistryProvider_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.registry', 'Registry_BasicRegistryProvider___refImpl', 1032, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Registry_BasicRegistryProvider___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1031, 1, $intern_23, Registry_BasicRegistryProvider___refImpl$lambda$0$Type);
+defineClass(1033, 1, $intern_23, Registry_BasicRegistryProvider___refImpl$lambda$0$Type);
 _.accept = function accept_26(arg0){
   lambda$0_26(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1BasicRegistryProvider_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1031);
+var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1BasicRegistryProvider_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1033);
 function Registry_BasicRegistryProvider___refImpl$lambda$1$Type(){
 }
 
-defineClass(1032, 1, {}, Registry_BasicRegistryProvider___refImpl$lambda$1$Type);
+defineClass(1034, 1, {}, Registry_BasicRegistryProvider___refImpl$lambda$1$Type);
 _.test_0 = function test_31(arg0){
   return $clinit_Registry_BasicRegistryProvider___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_registry_Registry$BasicRegistryProvider_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1BasicRegistryProvider_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1032);
+var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1BasicRegistryProvider_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1034);
 function $clinit_Registry_RegistryProvider___refImpl(){
   $clinit_Registry_RegistryProvider___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -8496,7 +8496,7 @@ function lambda$0_27(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1033, 6, $intern_25, Registry_RegistryProvider___refImpl);
+defineClass(1035, 6, $intern_25, Registry_RegistryProvider___refImpl);
 _.init0 = function init0_27(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -8510,26 +8510,26 @@ _.init0 = function init0_27(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_registry_Registry$RegistryProvider_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1RegistryProvider_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.registry', 'Registry_RegistryProvider___refImpl', 1033, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1RegistryProvider_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.registry', 'Registry_RegistryProvider___refImpl', 1035, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Registry_RegistryProvider___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1034, 1, $intern_23, Registry_RegistryProvider___refImpl$lambda$0$Type);
+defineClass(1036, 1, $intern_23, Registry_RegistryProvider___refImpl$lambda$0$Type);
 _.accept = function accept_27(arg0){
   lambda$0_27(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1RegistryProvider_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1034);
+var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1RegistryProvider_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1036);
 function Registry_RegistryProvider___refImpl$lambda$1$Type(){
 }
 
-defineClass(1035, 1, {}, Registry_RegistryProvider___refImpl$lambda$1$Type);
+defineClass(1037, 1, {}, Registry_RegistryProvider___refImpl$lambda$1$Type);
 _.test_0 = function test_32(arg0){
   return $clinit_Registry_RegistryProvider___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_registry_Registry$RegistryProvider_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1RegistryProvider_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1035);
+var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1RegistryProvider_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1037);
 function $clinit_Registry___refImpl(){
   $clinit_Registry___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -8545,7 +8545,7 @@ function lambda$0_28(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1027, 6, $intern_26, Registry___refImpl);
+defineClass(1029, 6, $intern_26, Registry___refImpl);
 _.get_1 = function get_19(){
   return new Registry;
 }
@@ -8564,26 +8564,26 @@ _.init0 = function init0_28(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.registry', 'Registry___refImpl', 1027, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.registry', 'Registry___refImpl', 1029, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Registry___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1028, 1, $intern_23, Registry___refImpl$lambda$0$Type);
+defineClass(1030, 1, $intern_23, Registry___refImpl$lambda$0$Type);
 _.accept = function accept_28(arg0){
   lambda$0_28(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1028);
+var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1030);
 function Registry___refImpl$lambda$1$Type(){
 }
 
-defineClass(1029, 1, {}, Registry___refImpl$lambda$1$Type);
+defineClass(1031, 1, {}, Registry___refImpl$lambda$1$Type);
 _.test_0 = function test_33(arg0){
   return $clinit_Registry___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1029);
+var Lcc_alcina_framework_common_client_logic_reflection_registry_Registry_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1031);
 function AbstractMergeStrategy$0methodref$permitPackages$Type($$outer_0){
   this.$$outer_0 = $$outer_0;
 }
@@ -8643,7 +8643,7 @@ function lambda$0_29(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(997, 6, $intern_25, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl);
+defineClass(999, 6, $intern_25, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl);
 _.init0 = function init0_29(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -8657,26 +8657,26 @@ _.init0 = function init0_29(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy$SingleResultMergeStrategy$PropertyOnly_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOnly_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl', 997, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOnly_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl', 999, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(998, 1, $intern_23, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl$lambda$0$Type);
+defineClass(1000, 1, $intern_23, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl$lambda$0$Type);
 _.accept = function accept_30(arg0){
   lambda$0_29(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOnly_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 998);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOnly_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1000);
 function AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl$lambda$1$Type(){
 }
 
-defineClass(999, 1, {}, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl$lambda$1$Type);
+defineClass(1001, 1, {}, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl$lambda$1$Type);
 _.test_0 = function test_36(arg0){
   return $clinit_AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOnly___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy$SingleResultMergeStrategy$PropertyOnly_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOnly_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 999);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOnly_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1001);
 function $clinit_AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl(){
   $clinit_AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -8692,7 +8692,7 @@ function lambda$0_30(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1036, 6, $intern_25, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl);
+defineClass(1038, 6, $intern_25, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl);
 _.init0 = function init0_30(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -8706,26 +8706,26 @@ _.init0 = function init0_30(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy$SingleResultMergeStrategy$PropertyOrClass_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOrClass_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl', 1036, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOrClass_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl', 1038, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1037, 1, $intern_23, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl$lambda$0$Type);
+defineClass(1039, 1, $intern_23, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl$lambda$0$Type);
 _.accept = function accept_31(arg0){
   lambda$0_30(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOrClass_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1037);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOrClass_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1039);
 function AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl$lambda$1$Type(){
 }
 
-defineClass(1038, 1, {}, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl$lambda$1$Type);
+defineClass(1040, 1, {}, AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl$lambda$1$Type);
 _.test_0 = function test_37(arg0){
   return $clinit_AbstractMergeStrategy_SingleResultMergeStrategy_PropertyOrClass___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy$SingleResultMergeStrategy$PropertyOrClass_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOrClass_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1038);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1PropertyOrClass_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1040);
 function $clinit_AbstractMergeStrategy_SingleResultMergeStrategy___refImpl(){
   $clinit_AbstractMergeStrategy_SingleResultMergeStrategy___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -8741,7 +8741,7 @@ function lambda$0_31(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1000, 6, $intern_25, AbstractMergeStrategy_SingleResultMergeStrategy___refImpl);
+defineClass(1002, 6, $intern_25, AbstractMergeStrategy_SingleResultMergeStrategy___refImpl);
 _.init0 = function init0_31(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -8755,26 +8755,26 @@ _.init0 = function init0_31(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy$SingleResultMergeStrategy_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AbstractMergeStrategy_SingleResultMergeStrategy___refImpl', 1000, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AbstractMergeStrategy_SingleResultMergeStrategy___refImpl', 1002, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AbstractMergeStrategy_SingleResultMergeStrategy___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1001, 1, $intern_23, AbstractMergeStrategy_SingleResultMergeStrategy___refImpl$lambda$0$Type);
+defineClass(1003, 1, $intern_23, AbstractMergeStrategy_SingleResultMergeStrategy___refImpl$lambda$0$Type);
 _.accept = function accept_32(arg0){
   lambda$0_31(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1001);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1003);
 function AbstractMergeStrategy_SingleResultMergeStrategy___refImpl$lambda$1$Type(){
 }
 
-defineClass(1002, 1, {}, AbstractMergeStrategy_SingleResultMergeStrategy___refImpl$lambda$1$Type);
+defineClass(1004, 1, {}, AbstractMergeStrategy_SingleResultMergeStrategy___refImpl$lambda$1$Type);
 _.test_0 = function test_38(arg0){
   return $clinit_AbstractMergeStrategy_SingleResultMergeStrategy___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy$SingleResultMergeStrategy_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1002);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1SingleResultMergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1004);
 function $clinit_AbstractMergeStrategy___refImpl(){
   $clinit_AbstractMergeStrategy___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -8790,7 +8790,7 @@ function lambda$0_32(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1003, 6, $intern_25, AbstractMergeStrategy___refImpl);
+defineClass(1005, 6, $intern_25, AbstractMergeStrategy___refImpl);
 _.init0 = function init0_32(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -8805,26 +8805,26 @@ _.init0 = function init0_32(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AbstractMergeStrategy___refImpl', 1003, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AbstractMergeStrategy___refImpl', 1005, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AbstractMergeStrategy___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1004, 1, $intern_23, AbstractMergeStrategy___refImpl$lambda$0$Type);
+defineClass(1006, 1, $intern_23, AbstractMergeStrategy___refImpl$lambda$0$Type);
 _.accept = function accept_33(arg0){
   lambda$0_32(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1004);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1006);
 function AbstractMergeStrategy___refImpl$lambda$1$Type(){
 }
 
-defineClass(1005, 1, {}, AbstractMergeStrategy___refImpl$lambda$1$Type);
+defineClass(1007, 1, {}, AbstractMergeStrategy___refImpl$lambda$1$Type);
 _.test_0 = function test_39(arg0){
   return $clinit_AbstractMergeStrategy___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1005);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AbstractMergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1007);
 function $getAnnotation(this$static, annotationClass){
   var resolvedAnnotation;
   resolvedAnnotation = $resolveAnnotation(this$static.resolver, annotationClass, this$static);
@@ -8938,7 +8938,7 @@ function lambda$0_33(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(958, 6, $intern_25, AnnotationLocation_Resolver___refImpl);
+defineClass(960, 6, $intern_25, AnnotationLocation_Resolver___refImpl);
 _.init0 = function init0_33(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -8952,26 +8952,26 @@ _.init0 = function init0_33(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_resolution_AnnotationLocation$Resolver_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AnnotationLocation_1Resolver_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AnnotationLocation_Resolver___refImpl', 958, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AnnotationLocation_1Resolver_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'AnnotationLocation_Resolver___refImpl', 960, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AnnotationLocation_Resolver___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(959, 1, $intern_23, AnnotationLocation_Resolver___refImpl$lambda$0$Type);
+defineClass(961, 1, $intern_23, AnnotationLocation_Resolver___refImpl$lambda$0$Type);
 _.accept = function accept_34(arg0){
   lambda$0_33(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AnnotationLocation_1Resolver_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 959);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AnnotationLocation_1Resolver_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 961);
 function AnnotationLocation_Resolver___refImpl$lambda$1$Type(){
 }
 
-defineClass(960, 1, {}, AnnotationLocation_Resolver___refImpl$lambda$1$Type);
+defineClass(962, 1, {}, AnnotationLocation_Resolver___refImpl$lambda$1$Type);
 _.test_0 = function test_40(arg0){
   return $clinit_AnnotationLocation_Resolver___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_resolution_AnnotationLocation$Resolver_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_AnnotationLocation_1Resolver_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 960);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_AnnotationLocation_1Resolver_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 962);
 function resolve(clazz, propertyName, annotationClass){
   return $getAnnotation(new AnnotationLocation(clazz, propertyName == null?null:$property(castTo(theInstance.reflectors.computeIfAbsent(clazz, new Reflections$lambda$0$Type(clazz)), 6), propertyName)), annotationClass);
 }
@@ -9012,7 +9012,7 @@ function lambda$0_34(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1006, 6, $intern_25, Resolution_MergeStrategy___refImpl);
+defineClass(1008, 6, $intern_25, Resolution_MergeStrategy___refImpl);
 _.init0 = function init0_34(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -9026,26 +9026,26 @@ _.init0 = function init0_34(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution$MergeStrategy_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1MergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'Resolution_MergeStrategy___refImpl', 1006, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1MergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'Resolution_MergeStrategy___refImpl', 1008, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Resolution_MergeStrategy___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1007, 1, $intern_23, Resolution_MergeStrategy___refImpl$lambda$0$Type);
+defineClass(1009, 1, $intern_23, Resolution_MergeStrategy___refImpl$lambda$0$Type);
 _.accept = function accept_35(arg0){
   lambda$0_34(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1MergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1007);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1MergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1009);
 function Resolution_MergeStrategy___refImpl$lambda$1$Type(){
 }
 
-defineClass(1008, 1, {}, Resolution_MergeStrategy___refImpl$lambda$1$Type);
+defineClass(1010, 1, {}, Resolution_MergeStrategy___refImpl$lambda$1$Type);
 _.test_0 = function test_41(arg0){
   return $clinit_Resolution_MergeStrategy___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution$MergeStrategy_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1MergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1008);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1MergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1010);
 function $__stringValue_5(this$static, o){
   if (instanceOf(o, 8)) {
     return $getSimpleName(castTo(o, 8)) + '.class';
@@ -9127,7 +9127,7 @@ function lambda$0_35(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1039, 6, $intern_25, Resolution___refImpl);
+defineClass(1041, 6, $intern_25, Resolution___refImpl);
 _.init0 = function init0_35(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -9142,26 +9142,26 @@ _.init0 = function init0_35(){
   $init(this, Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'Resolution___refImpl', 1039, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.logic.reflection.resolution', 'Resolution___refImpl', 1041, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Resolution___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1040, 1, $intern_23, Resolution___refImpl$lambda$0$Type);
+defineClass(1042, 1, $intern_23, Resolution___refImpl$lambda$0$Type);
 _.accept = function accept_36(arg0){
   lambda$0_35(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1040);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1042);
 function Resolution___refImpl$lambda$1$Type(){
 }
 
-defineClass(1041, 1, {}, Resolution___refImpl$lambda$1$Type);
+defineClass(1043, 1, {}, Resolution___refImpl$lambda$1$Type);
 _.test_0 = function test_42(arg0){
   return $clinit_Resolution___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1041);
+var Lcc_alcina_framework_common_client_logic_reflection_resolution_Resolution_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1043);
 var Lcc_alcina_framework_common_client_process_ProcessObservable_2_classLit = createForInterface('cc.alcina.framework.common.client.process', 'ProcessObservable');
 function $clinit_ProcessObservable___refImpl(){
   $clinit_ProcessObservable___refImpl = emptyMethod;
@@ -9178,7 +9178,7 @@ function lambda$0_36(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1378, 6, $intern_25, ProcessObservable___refImpl);
+defineClass(1380, 6, $intern_25, ProcessObservable___refImpl);
 _.init0 = function init0_36(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -9192,26 +9192,26 @@ _.init0 = function init0_36(){
   $init(this, Lcc_alcina_framework_common_client_process_ProcessObservable_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObservable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.process', 'ProcessObservable___refImpl', 1378, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_process_ProcessObservable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.process', 'ProcessObservable___refImpl', 1380, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ProcessObservable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1379, 1, $intern_23, ProcessObservable___refImpl$lambda$0$Type);
+defineClass(1381, 1, $intern_23, ProcessObservable___refImpl$lambda$0$Type);
 _.accept = function accept_37(arg0){
   lambda$0_36(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObservable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1379);
+var Lcc_alcina_framework_common_client_process_ProcessObservable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1381);
 function ProcessObservable___refImpl$lambda$1$Type(){
 }
 
-defineClass(1380, 1, {}, ProcessObservable___refImpl$lambda$1$Type);
+defineClass(1382, 1, {}, ProcessObservable___refImpl$lambda$1$Type);
 _.test_0 = function test_43(arg0){
   return $clinit_ProcessObservable___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_process_ProcessObservable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObservable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1380);
+var Lcc_alcina_framework_common_client_process_ProcessObservable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1382);
 var Lcc_alcina_framework_common_client_util_TopicListener_2_classLit = createForInterface('cc.alcina.framework.common.client.util', 'TopicListener');
 var Lcc_alcina_framework_common_client_process_ProcessObserver_2_classLit = createForInterface('cc.alcina.framework.common.client.process', 'ProcessObserver');
 function $clinit_ProcessObserver_AppDebug___refImpl(){
@@ -9229,7 +9229,7 @@ function lambda$0_37(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1042, 6, $intern_25, ProcessObserver_AppDebug___refImpl);
+defineClass(1044, 6, $intern_25, ProcessObserver_AppDebug___refImpl);
 _.init0 = function init0_37(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -9244,26 +9244,26 @@ _.init0 = function init0_37(){
   $init(this, Lcc_alcina_framework_common_client_process_ProcessObserver$AppDebug_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObserver_1AppDebug_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.process', 'ProcessObserver_AppDebug___refImpl', 1042, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_process_ProcessObserver_1AppDebug_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.process', 'ProcessObserver_AppDebug___refImpl', 1044, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ProcessObserver_AppDebug___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1043, 1, $intern_23, ProcessObserver_AppDebug___refImpl$lambda$0$Type);
+defineClass(1045, 1, $intern_23, ProcessObserver_AppDebug___refImpl$lambda$0$Type);
 _.accept = function accept_38(arg0){
   lambda$0_37(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObserver_1AppDebug_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1043);
+var Lcc_alcina_framework_common_client_process_ProcessObserver_1AppDebug_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1045);
 function ProcessObserver_AppDebug___refImpl$lambda$1$Type(){
 }
 
-defineClass(1044, 1, {}, ProcessObserver_AppDebug___refImpl$lambda$1$Type);
+defineClass(1046, 1, {}, ProcessObserver_AppDebug___refImpl$lambda$1$Type);
 _.test_0 = function test_44(arg0){
   return $clinit_ProcessObserver_AppDebug___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_process_ProcessObserver$AppDebug_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObserver_1AppDebug_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1044);
+var Lcc_alcina_framework_common_client_process_ProcessObserver_1AppDebug_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1046);
 function $clinit_ProcessObserver_HasObservers___refImpl(){
   $clinit_ProcessObserver_HasObservers___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -9279,7 +9279,7 @@ function lambda$0_38(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1045, 6, $intern_25, ProcessObserver_HasObservers___refImpl);
+defineClass(1047, 6, $intern_25, ProcessObserver_HasObservers___refImpl);
 _.init0 = function init0_38(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -9293,26 +9293,26 @@ _.init0 = function init0_38(){
   $init(this, Lcc_alcina_framework_common_client_process_ProcessObserver$HasObservers_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObserver_1HasObservers_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.process', 'ProcessObserver_HasObservers___refImpl', 1045, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_process_ProcessObserver_1HasObservers_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.process', 'ProcessObserver_HasObservers___refImpl', 1047, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ProcessObserver_HasObservers___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1046, 1, $intern_23, ProcessObserver_HasObservers___refImpl$lambda$0$Type);
+defineClass(1048, 1, $intern_23, ProcessObserver_HasObservers___refImpl$lambda$0$Type);
 _.accept = function accept_39(arg0){
   lambda$0_38(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObserver_1HasObservers_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1046);
+var Lcc_alcina_framework_common_client_process_ProcessObserver_1HasObservers_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1048);
 function ProcessObserver_HasObservers___refImpl$lambda$1$Type(){
 }
 
-defineClass(1047, 1, {}, ProcessObserver_HasObservers___refImpl$lambda$1$Type);
+defineClass(1049, 1, {}, ProcessObserver_HasObservers___refImpl$lambda$1$Type);
 _.test_0 = function test_45(arg0){
   return $clinit_ProcessObserver_HasObservers___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_process_ProcessObserver$HasObservers_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObserver_1HasObservers_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1047);
+var Lcc_alcina_framework_common_client_process_ProcessObserver_1HasObservers_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1049);
 function $clinit_ProcessObserver___refImpl(){
   $clinit_ProcessObserver___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -9328,7 +9328,7 @@ function lambda$0_39(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1381, 6, $intern_25, ProcessObserver___refImpl);
+defineClass(1383, 6, $intern_25, ProcessObserver___refImpl);
 _.init0 = function init0_39(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -9343,26 +9343,26 @@ _.init0 = function init0_39(){
   $init(this, Lcc_alcina_framework_common_client_process_ProcessObserver_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObserver_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.process', 'ProcessObserver___refImpl', 1381, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_process_ProcessObserver_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.process', 'ProcessObserver___refImpl', 1383, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ProcessObserver___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1382, 1, $intern_23, ProcessObserver___refImpl$lambda$0$Type);
+defineClass(1384, 1, $intern_23, ProcessObserver___refImpl$lambda$0$Type);
 _.accept = function accept_40(arg0){
   lambda$0_39(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObserver_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1382);
+var Lcc_alcina_framework_common_client_process_ProcessObserver_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1384);
 function ProcessObserver___refImpl$lambda$1$Type(){
 }
 
-defineClass(1383, 1, {}, ProcessObserver___refImpl$lambda$1$Type);
+defineClass(1385, 1, {}, ProcessObserver___refImpl$lambda$1$Type);
 _.test_0 = function test_46(arg0){
   return $clinit_ProcessObserver___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_process_ProcessObserver_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_process_ProcessObserver_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1383);
+var Lcc_alcina_framework_common_client_process_ProcessObserver_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1385);
 function $clinit_ProcessObservers(){
   $clinit_ProcessObservers = emptyMethod;
   instance_0 = new ProcessObservers;
@@ -10727,7 +10727,7 @@ function lambda$0_41(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1048, 6, $intern_26, Reflections___refImpl);
+defineClass(1050, 6, $intern_26, Reflections___refImpl);
 _.get_1 = function get_21(){
   return new Reflections;
 }
@@ -10746,26 +10746,26 @@ _.init0 = function init0_40(){
   $init(this, Lcc_alcina_framework_common_client_reflection_Reflections_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_reflection_Reflections_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.reflection', 'Reflections___refImpl', 1048, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_reflection_Reflections_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.reflection', 'Reflections___refImpl', 1050, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Reflections___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1049, 1, $intern_23, Reflections___refImpl$lambda$0$Type);
+defineClass(1051, 1, $intern_23, Reflections___refImpl$lambda$0$Type);
 _.accept = function accept_41(arg0){
   lambda$0_41(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_reflection_Reflections_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1049);
+var Lcc_alcina_framework_common_client_reflection_Reflections_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1051);
 function Reflections___refImpl$lambda$1$Type(){
 }
 
-defineClass(1050, 1, {}, Reflections___refImpl$lambda$1$Type);
+defineClass(1052, 1, {}, Reflections___refImpl$lambda$1$Type);
 _.test_0 = function test_50(arg0){
   return $clinit_Reflections___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_reflection_Reflections_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_reflection_Reflections_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1050);
+var Lcc_alcina_framework_common_client_reflection_Reflections_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1052);
 function TypeBounds(bounds){
   this.bounds = bounds;
 }
@@ -10785,7 +10785,7 @@ function PropertySerialization$Impl(){
   this.types = ($clinit_CommonUtils() , EMPTY_CLASS_ARRAY);
 }
 
-defineClass(1175, 1, {1817:1, 94:1}, PropertySerialization$Impl);
+defineClass(1177, 1, {1817:1, 94:1}, PropertySerialization$Impl);
 _.equals_0 = function equals_17(other){
   return maskUndefined(this) === maskUndefined(other);
 }
@@ -10812,7 +10812,7 @@ _.types_0 = function types_0(){
 }
 ;
 _.name_0 = '';
-var Lcc_alcina_framework_common_client_serializer_PropertySerialization$Impl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'PropertySerialization/Impl', 1175, Ljava_lang_Object_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_PropertySerialization$Impl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'PropertySerialization/Impl', 1177, Ljava_lang_Object_2_classLit);
 function $clinit_PropertySerialization___refImpl(){
   $clinit_PropertySerialization___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -10828,7 +10828,7 @@ function lambda$0_42(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1057, 6, $intern_25, PropertySerialization___refImpl);
+defineClass(1059, 6, $intern_25, PropertySerialization___refImpl);
 _.init0 = function init0_41(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -10843,26 +10843,26 @@ _.init0 = function init0_41(){
   $init(this, Lcc_alcina_framework_common_client_serializer_PropertySerialization_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_PropertySerialization_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'PropertySerialization___refImpl', 1057, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_PropertySerialization_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'PropertySerialization___refImpl', 1059, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function PropertySerialization___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1058, 1, $intern_23, PropertySerialization___refImpl$lambda$0$Type);
+defineClass(1060, 1, $intern_23, PropertySerialization___refImpl$lambda$0$Type);
 _.accept = function accept_42(arg0){
   lambda$0_42(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_PropertySerialization_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1058);
+var Lcc_alcina_framework_common_client_serializer_PropertySerialization_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1060);
 function PropertySerialization___refImpl$lambda$1$Type(){
 }
 
-defineClass(1059, 1, {}, PropertySerialization___refImpl$lambda$1$Type);
+defineClass(1061, 1, {}, PropertySerialization___refImpl$lambda$1$Type);
 _.test_0 = function test_51(arg0){
   return $clinit_PropertySerialization___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_PropertySerialization_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_PropertySerialization_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1059);
+var Lcc_alcina_framework_common_client_serializer_PropertySerialization_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1061);
 function $clinit_ReflectiveSerializer(){
   $clinit_ReflectiveSerializer = emptyMethod;
   typeSerializers = (castTo(impl_0(Lcc_alcina_framework_common_client_util_CollectionCreators$ConcurrentMapCreator_2_classLit), 125) , new LinkedHashMap);
@@ -11674,7 +11674,7 @@ function lambda$0_46(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1060, 6, $intern_26, ReflectiveSerializer_ReflectiveTypeSerializer___refImpl);
+defineClass(1062, 6, $intern_26, ReflectiveSerializer_ReflectiveTypeSerializer___refImpl);
 _.get_1 = function get_22(){
   return new ReflectiveSerializer$ReflectiveTypeSerializer;
 }
@@ -11693,26 +11693,26 @@ _.init0 = function init0_42(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer$ReflectiveTypeSerializer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ReflectiveTypeSerializer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializer_ReflectiveTypeSerializer___refImpl', 1060, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ReflectiveTypeSerializer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializer_ReflectiveTypeSerializer___refImpl', 1062, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializer_ReflectiveTypeSerializer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1061, 1, $intern_23, ReflectiveSerializer_ReflectiveTypeSerializer___refImpl$lambda$0$Type);
+defineClass(1063, 1, $intern_23, ReflectiveSerializer_ReflectiveTypeSerializer___refImpl$lambda$0$Type);
 _.accept = function accept_49(arg0){
   lambda$0_46(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ReflectiveTypeSerializer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1061);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ReflectiveTypeSerializer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1063);
 function ReflectiveSerializer_ReflectiveTypeSerializer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1062, 1, {}, ReflectiveSerializer_ReflectiveTypeSerializer___refImpl$lambda$1$Type);
+defineClass(1064, 1, {}, ReflectiveSerializer_ReflectiveTypeSerializer___refImpl$lambda$1$Type);
 _.test_0 = function test_54(arg0){
   return $clinit_ReflectiveSerializer_ReflectiveTypeSerializer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer$ReflectiveTypeSerializer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ReflectiveTypeSerializer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1062);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ReflectiveTypeSerializer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1064);
 function $clinit_ReflectiveSerializer_TypeSerializer___refImpl(){
   $clinit_ReflectiveSerializer_TypeSerializer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -11728,7 +11728,7 @@ function lambda$0_47(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1063, 6, $intern_25, ReflectiveSerializer_TypeSerializer___refImpl);
+defineClass(1065, 6, $intern_25, ReflectiveSerializer_TypeSerializer___refImpl);
 _.init0 = function init0_43(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -11743,26 +11743,26 @@ _.init0 = function init0_43(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer$TypeSerializer_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1TypeSerializer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializer_TypeSerializer___refImpl', 1063, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1TypeSerializer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializer_TypeSerializer___refImpl', 1065, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializer_TypeSerializer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1064, 1, $intern_23, ReflectiveSerializer_TypeSerializer___refImpl$lambda$0$Type);
+defineClass(1066, 1, $intern_23, ReflectiveSerializer_TypeSerializer___refImpl$lambda$0$Type);
 _.accept = function accept_50(arg0){
   lambda$0_47(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1TypeSerializer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1064);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1TypeSerializer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1066);
 function ReflectiveSerializer_TypeSerializer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1065, 1, {}, ReflectiveSerializer_TypeSerializer___refImpl$lambda$1$Type);
+defineClass(1067, 1, {}, ReflectiveSerializer_TypeSerializer___refImpl$lambda$1$Type);
 _.test_0 = function test_55(arg0){
   return $clinit_ReflectiveSerializer_TypeSerializer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer$TypeSerializer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1TypeSerializer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1065);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1TypeSerializer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1067);
 function $clinit_ReflectiveSerializer_ValueSerializer___refImpl(){
   $clinit_ReflectiveSerializer_ValueSerializer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -11778,7 +11778,7 @@ function lambda$0_48(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1066, 6, $intern_25, ReflectiveSerializer_ValueSerializer___refImpl);
+defineClass(1068, 6, $intern_25, ReflectiveSerializer_ValueSerializer___refImpl);
 _.init0 = function init0_44(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -11793,26 +11793,26 @@ _.init0 = function init0_44(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer$ValueSerializer_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ValueSerializer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializer_ValueSerializer___refImpl', 1066, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ValueSerializer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializer_ValueSerializer___refImpl', 1068, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializer_ValueSerializer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1067, 1, $intern_23, ReflectiveSerializer_ValueSerializer___refImpl$lambda$0$Type);
+defineClass(1069, 1, $intern_23, ReflectiveSerializer_ValueSerializer___refImpl$lambda$0$Type);
 _.accept = function accept_51(arg0){
   lambda$0_48(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ValueSerializer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1067);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ValueSerializer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1069);
 function ReflectiveSerializer_ValueSerializer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1068, 1, {}, ReflectiveSerializer_ValueSerializer___refImpl$lambda$1$Type);
+defineClass(1070, 1, {}, ReflectiveSerializer_ValueSerializer___refImpl$lambda$1$Type);
 _.test_0 = function test_56(arg0){
   return $clinit_ReflectiveSerializer_ValueSerializer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer$ValueSerializer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ValueSerializer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1068);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializer_1ValueSerializer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1070);
 function $hasNext_0(this$static){
   if (this$static.consumed) {
     if (this$static.idx < this$static.source.serialNode.length_0() - 1) {
@@ -12638,7 +12638,7 @@ function lambda$0_50(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1069, 6, $intern_26, ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl);
+defineClass(1071, 6, $intern_26, ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl);
 _.get_1 = function get_23(){
   return new ReflectiveSerializers$ReflectiveTypeSerializer_Entity;
 }
@@ -12657,26 +12657,26 @@ _.init0 = function init0_45(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ReflectiveTypeSerializer_1Entity_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ReflectiveTypeSerializer_1Entity_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl', 1069, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ReflectiveTypeSerializer_1Entity_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl', 1071, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1070, 1, $intern_23, ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl$lambda$0$Type);
+defineClass(1072, 1, $intern_23, ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl$lambda$0$Type);
 _.accept = function accept_54(arg0){
   lambda$0_50(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ReflectiveTypeSerializer_1Entity_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1070);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ReflectiveTypeSerializer_1Entity_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1072);
 function ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl$lambda$1$Type(){
 }
 
-defineClass(1071, 1, {}, ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl$lambda$1$Type);
+defineClass(1073, 1, {}, ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl$lambda$1$Type);
 _.test_0 = function test_57(arg0){
   return $clinit_ReflectiveSerializers_ReflectiveTypeSerializer_Entity___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ReflectiveTypeSerializer_1Entity_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ReflectiveTypeSerializer_1Entity_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1071);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ReflectiveTypeSerializer_1Entity_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1073);
 function $clinit_ReflectiveSerializers_TypeSerializer_Collection___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_Collection___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -12692,7 +12692,7 @@ function lambda$0_51(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1072, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Collection___refImpl);
+defineClass(1074, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Collection___refImpl);
 _.get_1 = function get_24(){
   return new ReflectiveSerializers$TypeSerializer_Collection;
 }
@@ -12711,26 +12711,26 @@ _.init0 = function init0_46(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Collection_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Collection_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Collection___refImpl', 1072, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Collection_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Collection___refImpl', 1074, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_Collection___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1073, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Collection___refImpl$lambda$0$Type);
+defineClass(1075, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Collection___refImpl$lambda$0$Type);
 _.accept = function accept_55(arg0){
   lambda$0_51(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Collection_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1073);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Collection_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1075);
 function ReflectiveSerializers_TypeSerializer_Collection___refImpl$lambda$1$Type(){
 }
 
-defineClass(1074, 1, {}, ReflectiveSerializers_TypeSerializer_Collection___refImpl$lambda$1$Type);
+defineClass(1076, 1, {}, ReflectiveSerializers_TypeSerializer_Collection___refImpl$lambda$1$Type);
 _.test_0 = function test_58(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_Collection___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Collection_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Collection_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1074);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Collection_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1076);
 function $clinit_ReflectiveSerializers_TypeSerializer_CountingMap___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_CountingMap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -12746,7 +12746,7 @@ function lambda$0_52(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1075, 6, $intern_26, ReflectiveSerializers_TypeSerializer_CountingMap___refImpl);
+defineClass(1077, 6, $intern_26, ReflectiveSerializers_TypeSerializer_CountingMap___refImpl);
 _.get_1 = function get_25(){
   return new ReflectiveSerializers$TypeSerializer_CountingMap;
 }
@@ -12765,26 +12765,26 @@ _.init0 = function init0_47(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1CountingMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1CountingMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_CountingMap___refImpl', 1075, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1CountingMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_CountingMap___refImpl', 1077, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_CountingMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1076, 1, $intern_23, ReflectiveSerializers_TypeSerializer_CountingMap___refImpl$lambda$0$Type);
+defineClass(1078, 1, $intern_23, ReflectiveSerializers_TypeSerializer_CountingMap___refImpl$lambda$0$Type);
 _.accept = function accept_56(arg0){
   lambda$0_52(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1CountingMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1076);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1CountingMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1078);
 function ReflectiveSerializers_TypeSerializer_CountingMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1077, 1, {}, ReflectiveSerializers_TypeSerializer_CountingMap___refImpl$lambda$1$Type);
+defineClass(1079, 1, {}, ReflectiveSerializers_TypeSerializer_CountingMap___refImpl$lambda$1$Type);
 _.test_0 = function test_59(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_CountingMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1CountingMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1CountingMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1077);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1CountingMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1079);
 function $clinit_ReflectiveSerializers_TypeSerializer_LiSet___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_LiSet___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -12800,7 +12800,7 @@ function lambda$0_53(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1081, 6, $intern_26, ReflectiveSerializers_TypeSerializer_LiSet___refImpl);
+defineClass(1083, 6, $intern_26, ReflectiveSerializers_TypeSerializer_LiSet___refImpl);
 _.get_1 = function get_26(){
   return new ReflectiveSerializers$TypeSerializer_LiSet;
 }
@@ -12819,26 +12819,26 @@ _.init0 = function init0_48(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1LiSet_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LiSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_LiSet___refImpl', 1081, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LiSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_LiSet___refImpl', 1083, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_LiSet___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1082, 1, $intern_23, ReflectiveSerializers_TypeSerializer_LiSet___refImpl$lambda$0$Type);
+defineClass(1084, 1, $intern_23, ReflectiveSerializers_TypeSerializer_LiSet___refImpl$lambda$0$Type);
 _.accept = function accept_57(arg0){
   lambda$0_53(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LiSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1082);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LiSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1084);
 function ReflectiveSerializers_TypeSerializer_LiSet___refImpl$lambda$1$Type(){
 }
 
-defineClass(1083, 1, {}, ReflectiveSerializers_TypeSerializer_LiSet___refImpl$lambda$1$Type);
+defineClass(1085, 1, {}, ReflectiveSerializers_TypeSerializer_LiSet___refImpl$lambda$1$Type);
 _.test_0 = function test_60(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_LiSet___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1LiSet_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LiSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1083);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LiSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1085);
 function $clinit_ReflectiveSerializers_TypeSerializer_LightMap___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_LightMap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -12854,7 +12854,7 @@ function lambda$0_54(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1084, 6, $intern_26, ReflectiveSerializers_TypeSerializer_LightMap___refImpl);
+defineClass(1086, 6, $intern_26, ReflectiveSerializers_TypeSerializer_LightMap___refImpl);
 _.get_1 = function get_27(){
   return new ReflectiveSerializers$TypeSerializer_LightMap;
 }
@@ -12873,26 +12873,26 @@ _.init0 = function init0_49(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1LightMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_LightMap___refImpl', 1084, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_LightMap___refImpl', 1086, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_LightMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1085, 1, $intern_23, ReflectiveSerializers_TypeSerializer_LightMap___refImpl$lambda$0$Type);
+defineClass(1087, 1, $intern_23, ReflectiveSerializers_TypeSerializer_LightMap___refImpl$lambda$0$Type);
 _.accept = function accept_58(arg0){
   lambda$0_54(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1085);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1087);
 function ReflectiveSerializers_TypeSerializer_LightMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1086, 1, {}, ReflectiveSerializers_TypeSerializer_LightMap___refImpl$lambda$1$Type);
+defineClass(1088, 1, {}, ReflectiveSerializers_TypeSerializer_LightMap___refImpl$lambda$1$Type);
 _.test_0 = function test_61(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_LightMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1LightMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1086);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1088);
 function $clinit_ReflectiveSerializers_TypeSerializer_LightSet___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_LightSet___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -12908,7 +12908,7 @@ function lambda$0_55(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1087, 6, $intern_26, ReflectiveSerializers_TypeSerializer_LightSet___refImpl);
+defineClass(1089, 6, $intern_26, ReflectiveSerializers_TypeSerializer_LightSet___refImpl);
 _.get_1 = function get_28(){
   return new ReflectiveSerializers$TypeSerializer_LightSet;
 }
@@ -12927,26 +12927,26 @@ _.init0 = function init0_50(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1LightSet_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_LightSet___refImpl', 1087, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_LightSet___refImpl', 1089, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_LightSet___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1088, 1, $intern_23, ReflectiveSerializers_TypeSerializer_LightSet___refImpl$lambda$0$Type);
+defineClass(1090, 1, $intern_23, ReflectiveSerializers_TypeSerializer_LightSet___refImpl$lambda$0$Type);
 _.accept = function accept_59(arg0){
   lambda$0_55(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1088);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1090);
 function ReflectiveSerializers_TypeSerializer_LightSet___refImpl$lambda$1$Type(){
 }
 
-defineClass(1089, 1, {}, ReflectiveSerializers_TypeSerializer_LightSet___refImpl$lambda$1$Type);
+defineClass(1091, 1, {}, ReflectiveSerializers_TypeSerializer_LightSet___refImpl$lambda$1$Type);
 _.test_0 = function test_62(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_LightSet___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1LightSet_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1089);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LightSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1091);
 function $clinit_ReflectiveSerializers_TypeSerializer_LinkedList___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_LinkedList___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -12962,7 +12962,7 @@ function lambda$0_56(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1090, 6, $intern_26, ReflectiveSerializers_TypeSerializer_LinkedList___refImpl);
+defineClass(1092, 6, $intern_26, ReflectiveSerializers_TypeSerializer_LinkedList___refImpl);
 _.get_1 = function get_29(){
   return new ReflectiveSerializers$TypeSerializer_LinkedList;
 }
@@ -12981,26 +12981,26 @@ _.init0 = function init0_51(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1LinkedList_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LinkedList_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_LinkedList___refImpl', 1090, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LinkedList_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_LinkedList___refImpl', 1092, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_LinkedList___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1091, 1, $intern_23, ReflectiveSerializers_TypeSerializer_LinkedList___refImpl$lambda$0$Type);
+defineClass(1093, 1, $intern_23, ReflectiveSerializers_TypeSerializer_LinkedList___refImpl$lambda$0$Type);
 _.accept = function accept_60(arg0){
   lambda$0_56(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LinkedList_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1091);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LinkedList_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1093);
 function ReflectiveSerializers_TypeSerializer_LinkedList___refImpl$lambda$1$Type(){
 }
 
-defineClass(1092, 1, {}, ReflectiveSerializers_TypeSerializer_LinkedList___refImpl$lambda$1$Type);
+defineClass(1094, 1, {}, ReflectiveSerializers_TypeSerializer_LinkedList___refImpl$lambda$1$Type);
 _.test_0 = function test_63(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_LinkedList___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1LinkedList_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LinkedList_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1092);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1LinkedList_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1094);
 function $clinit_ReflectiveSerializers_TypeSerializer_List___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_List___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13016,7 +13016,7 @@ function lambda$0_57(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1093, 6, $intern_26, ReflectiveSerializers_TypeSerializer_List___refImpl);
+defineClass(1095, 6, $intern_26, ReflectiveSerializers_TypeSerializer_List___refImpl);
 _.get_1 = function get_30(){
   return new ReflectiveSerializers$TypeSerializer_List;
 }
@@ -13035,26 +13035,26 @@ _.init0 = function init0_52(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1List_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1List_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_List___refImpl', 1093, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1List_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_List___refImpl', 1095, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_List___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1094, 1, $intern_23, ReflectiveSerializers_TypeSerializer_List___refImpl$lambda$0$Type);
+defineClass(1096, 1, $intern_23, ReflectiveSerializers_TypeSerializer_List___refImpl$lambda$0$Type);
 _.accept = function accept_61(arg0){
   lambda$0_57(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1List_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1094);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1List_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1096);
 function ReflectiveSerializers_TypeSerializer_List___refImpl$lambda$1$Type(){
 }
 
-defineClass(1095, 1, {}, ReflectiveSerializers_TypeSerializer_List___refImpl$lambda$1$Type);
+defineClass(1097, 1, {}, ReflectiveSerializers_TypeSerializer_List___refImpl$lambda$1$Type);
 _.test_0 = function test_64(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_List___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1List_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1List_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1095);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1List_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1097);
 function $clinit_ReflectiveSerializers_TypeSerializer_Map___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_Map___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13070,7 +13070,7 @@ function lambda$0_58(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1078, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Map___refImpl);
+defineClass(1080, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Map___refImpl);
 _.get_1 = function get_31(){
   return new ReflectiveSerializers$TypeSerializer_Map;
 }
@@ -13089,26 +13089,26 @@ _.init0 = function init0_53(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Map_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Map_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Map___refImpl', 1078, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Map_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Map___refImpl', 1080, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_Map___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1079, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Map___refImpl$lambda$0$Type);
+defineClass(1081, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Map___refImpl$lambda$0$Type);
 _.accept = function accept_62(arg0){
   lambda$0_58(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Map_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1079);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Map_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1081);
 function ReflectiveSerializers_TypeSerializer_Map___refImpl$lambda$1$Type(){
 }
 
-defineClass(1080, 1, {}, ReflectiveSerializers_TypeSerializer_Map___refImpl$lambda$1$Type);
+defineClass(1082, 1, {}, ReflectiveSerializers_TypeSerializer_Map___refImpl$lambda$1$Type);
 _.test_0 = function test_65(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_Map___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Map_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Map_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1080);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Map_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1082);
 function $clinit_ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13124,7 +13124,7 @@ function lambda$0_59(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1096, 6, $intern_26, ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl);
+defineClass(1098, 6, $intern_26, ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl);
 _.get_1 = function get_32(){
   return new ReflectiveSerializers$TypeSerializer_MultikeyMap;
 }
@@ -13143,26 +13143,26 @@ _.init0 = function init0_54(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1MultikeyMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1MultikeyMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl', 1096, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1MultikeyMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl', 1098, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1097, 1, $intern_23, ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl$lambda$0$Type);
+defineClass(1099, 1, $intern_23, ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl$lambda$0$Type);
 _.accept = function accept_63(arg0){
   lambda$0_59(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1MultikeyMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1097);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1MultikeyMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1099);
 function ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1098, 1, {}, ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl$lambda$1$Type);
+defineClass(1100, 1, {}, ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl$lambda$1$Type);
 _.test_0 = function test_66(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_MultikeyMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1MultikeyMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1MultikeyMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1098);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1MultikeyMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1100);
 function $clinit_ReflectiveSerializers_TypeSerializer_Multimap___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_Multimap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13178,7 +13178,7 @@ function lambda$0_60(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1099, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Multimap___refImpl);
+defineClass(1101, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Multimap___refImpl);
 _.get_1 = function get_33(){
   return new ReflectiveSerializers$TypeSerializer_Multimap;
 }
@@ -13197,26 +13197,26 @@ _.init0 = function init0_55(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Multimap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Multimap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Multimap___refImpl', 1099, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Multimap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Multimap___refImpl', 1101, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_Multimap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1100, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Multimap___refImpl$lambda$0$Type);
+defineClass(1102, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Multimap___refImpl$lambda$0$Type);
 _.accept = function accept_64(arg0){
   lambda$0_60(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Multimap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1100);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Multimap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1102);
 function ReflectiveSerializers_TypeSerializer_Multimap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1101, 1, {}, ReflectiveSerializers_TypeSerializer_Multimap___refImpl$lambda$1$Type);
+defineClass(1103, 1, {}, ReflectiveSerializers_TypeSerializer_Multimap___refImpl$lambda$1$Type);
 _.test_0 = function test_67(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_Multimap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Multimap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Multimap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1101);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Multimap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1103);
 function $clinit_ReflectiveSerializers_TypeSerializer_Set___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_Set___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13232,7 +13232,7 @@ function lambda$0_61(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1102, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Set___refImpl);
+defineClass(1104, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Set___refImpl);
 _.get_1 = function get_34(){
   return new ReflectiveSerializers$TypeSerializer_Set;
 }
@@ -13251,26 +13251,26 @@ _.init0 = function init0_56(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Set_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Set_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Set___refImpl', 1102, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Set_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Set___refImpl', 1104, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_Set___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1103, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Set___refImpl$lambda$0$Type);
+defineClass(1105, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Set___refImpl$lambda$0$Type);
 _.accept = function accept_65(arg0){
   lambda$0_61(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Set_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1103);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Set_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1105);
 function ReflectiveSerializers_TypeSerializer_Set___refImpl$lambda$1$Type(){
 }
 
-defineClass(1104, 1, {}, ReflectiveSerializers_TypeSerializer_Set___refImpl$lambda$1$Type);
+defineClass(1106, 1, {}, ReflectiveSerializers_TypeSerializer_Set___refImpl$lambda$1$Type);
 _.test_0 = function test_68(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_Set___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Set_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Set_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1104);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Set_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1106);
 function $clinit_ReflectiveSerializers_TypeSerializer_SortedMap___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_SortedMap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13286,7 +13286,7 @@ function lambda$0_62(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1105, 6, $intern_26, ReflectiveSerializers_TypeSerializer_SortedMap___refImpl);
+defineClass(1107, 6, $intern_26, ReflectiveSerializers_TypeSerializer_SortedMap___refImpl);
 _.get_1 = function get_35(){
   return new ReflectiveSerializers$TypeSerializer_SortedMap;
 }
@@ -13305,26 +13305,26 @@ _.init0 = function init0_57(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1SortedMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_SortedMap___refImpl', 1105, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_SortedMap___refImpl', 1107, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_SortedMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1106, 1, $intern_23, ReflectiveSerializers_TypeSerializer_SortedMap___refImpl$lambda$0$Type);
+defineClass(1108, 1, $intern_23, ReflectiveSerializers_TypeSerializer_SortedMap___refImpl$lambda$0$Type);
 _.accept = function accept_66(arg0){
   lambda$0_62(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1106);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1108);
 function ReflectiveSerializers_TypeSerializer_SortedMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1107, 1, {}, ReflectiveSerializers_TypeSerializer_SortedMap___refImpl$lambda$1$Type);
+defineClass(1109, 1, {}, ReflectiveSerializers_TypeSerializer_SortedMap___refImpl$lambda$1$Type);
 _.test_0 = function test_69(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_SortedMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1SortedMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1107);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1109);
 function $clinit_ReflectiveSerializers_TypeSerializer_SortedSet___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_SortedSet___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13340,7 +13340,7 @@ function lambda$0_63(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1108, 6, $intern_26, ReflectiveSerializers_TypeSerializer_SortedSet___refImpl);
+defineClass(1110, 6, $intern_26, ReflectiveSerializers_TypeSerializer_SortedSet___refImpl);
 _.get_1 = function get_36(){
   return new ReflectiveSerializers$TypeSerializer_SortedSet;
 }
@@ -13359,26 +13359,26 @@ _.init0 = function init0_58(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1SortedSet_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_SortedSet___refImpl', 1108, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_SortedSet___refImpl', 1110, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_SortedSet___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1109, 1, $intern_23, ReflectiveSerializers_TypeSerializer_SortedSet___refImpl$lambda$0$Type);
+defineClass(1111, 1, $intern_23, ReflectiveSerializers_TypeSerializer_SortedSet___refImpl$lambda$0$Type);
 _.accept = function accept_67(arg0){
   lambda$0_63(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1109);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1111);
 function ReflectiveSerializers_TypeSerializer_SortedSet___refImpl$lambda$1$Type(){
 }
 
-defineClass(1110, 1, {}, ReflectiveSerializers_TypeSerializer_SortedSet___refImpl$lambda$1$Type);
+defineClass(1112, 1, {}, ReflectiveSerializers_TypeSerializer_SortedSet___refImpl$lambda$1$Type);
 _.test_0 = function test_70(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_SortedSet___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1SortedSet_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1110);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1SortedSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1112);
 function $clinit_ReflectiveSerializers_TypeSerializer_Value___refImpl(){
   $clinit_ReflectiveSerializers_TypeSerializer_Value___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13394,7 +13394,7 @@ function lambda$0_64(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1111, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Value___refImpl);
+defineClass(1113, 6, $intern_26, ReflectiveSerializers_TypeSerializer_Value___refImpl);
 _.get_1 = function get_37(){
   return new ReflectiveSerializers$TypeSerializer_Value;
 }
@@ -13413,26 +13413,26 @@ _.init0 = function init0_59(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Value_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Value_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Value___refImpl', 1111, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Value_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_TypeSerializer_Value___refImpl', 1113, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_TypeSerializer_Value___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1112, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Value___refImpl$lambda$0$Type);
+defineClass(1114, 1, $intern_23, ReflectiveSerializers_TypeSerializer_Value___refImpl$lambda$0$Type);
 _.accept = function accept_68(arg0){
   lambda$0_64(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Value_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1112);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Value_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1114);
 function ReflectiveSerializers_TypeSerializer_Value___refImpl$lambda$1$Type(){
 }
 
-defineClass(1113, 1, {}, ReflectiveSerializers_TypeSerializer_Value___refImpl$lambda$1$Type);
+defineClass(1115, 1, {}, ReflectiveSerializers_TypeSerializer_Value___refImpl$lambda$1$Type);
 _.test_0 = function test_71(arg0){
   return $clinit_ReflectiveSerializers_TypeSerializer_Value___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$TypeSerializer_1Value_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Value_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1113);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1TypeSerializer_1Value_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1115);
 function $clinit_ReflectiveSerializers_ValueSerializerBasePlace___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerBasePlace___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13448,7 +13448,7 @@ function lambda$0_65(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1114, 6, $intern_26, ReflectiveSerializers_ValueSerializerBasePlace___refImpl);
+defineClass(1116, 6, $intern_26, ReflectiveSerializers_ValueSerializerBasePlace___refImpl);
 _.get_1 = function get_38(){
   return new ReflectiveSerializers$ValueSerializerBasePlace;
 }
@@ -13468,26 +13468,26 @@ _.init0 = function init0_60(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerBasePlace_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBasePlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerBasePlace___refImpl', 1114, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBasePlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerBasePlace___refImpl', 1116, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerBasePlace___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1115, 1, $intern_23, ReflectiveSerializers_ValueSerializerBasePlace___refImpl$lambda$0$Type);
+defineClass(1117, 1, $intern_23, ReflectiveSerializers_ValueSerializerBasePlace___refImpl$lambda$0$Type);
 _.accept = function accept_69(arg0){
   lambda$0_65(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBasePlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1115);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBasePlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1117);
 function ReflectiveSerializers_ValueSerializerBasePlace___refImpl$lambda$1$Type(){
 }
 
-defineClass(1116, 1, {}, ReflectiveSerializers_ValueSerializerBasePlace___refImpl$lambda$1$Type);
+defineClass(1118, 1, {}, ReflectiveSerializers_ValueSerializerBasePlace___refImpl$lambda$1$Type);
 _.test_0 = function test_72(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerBasePlace___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerBasePlace_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBasePlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1116);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBasePlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1118);
 function $clinit_ReflectiveSerializers_ValueSerializerBoolean___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerBoolean___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13503,7 +13503,7 @@ function lambda$0_66(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1117, 6, $intern_26, ReflectiveSerializers_ValueSerializerBoolean___refImpl);
+defineClass(1119, 6, $intern_26, ReflectiveSerializers_ValueSerializerBoolean___refImpl);
 _.get_1 = function get_39(){
   return new ReflectiveSerializers$ValueSerializerBoolean;
 }
@@ -13523,26 +13523,26 @@ _.init0 = function init0_61(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerBoolean_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBoolean_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerBoolean___refImpl', 1117, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBoolean_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerBoolean___refImpl', 1119, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerBoolean___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1118, 1, $intern_23, ReflectiveSerializers_ValueSerializerBoolean___refImpl$lambda$0$Type);
+defineClass(1120, 1, $intern_23, ReflectiveSerializers_ValueSerializerBoolean___refImpl$lambda$0$Type);
 _.accept = function accept_70(arg0){
   lambda$0_66(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBoolean_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1118);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBoolean_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1120);
 function ReflectiveSerializers_ValueSerializerBoolean___refImpl$lambda$1$Type(){
 }
 
-defineClass(1119, 1, {}, ReflectiveSerializers_ValueSerializerBoolean___refImpl$lambda$1$Type);
+defineClass(1121, 1, {}, ReflectiveSerializers_ValueSerializerBoolean___refImpl$lambda$1$Type);
 _.test_0 = function test_73(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerBoolean___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerBoolean_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBoolean_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1119);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerBoolean_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1121);
 function $clinit_ReflectiveSerializers_ValueSerializerByteArray___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerByteArray___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13558,7 +13558,7 @@ function lambda$0_67(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1123, 6, $intern_26, ReflectiveSerializers_ValueSerializerByteArray___refImpl);
+defineClass(1125, 6, $intern_26, ReflectiveSerializers_ValueSerializerByteArray___refImpl);
 _.get_1 = function get_40(){
   return new ReflectiveSerializers$ValueSerializerByteArray;
 }
@@ -13578,26 +13578,26 @@ _.init0 = function init0_62(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerByteArray_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByteArray_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerByteArray___refImpl', 1123, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByteArray_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerByteArray___refImpl', 1125, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerByteArray___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1124, 1, $intern_23, ReflectiveSerializers_ValueSerializerByteArray___refImpl$lambda$0$Type);
+defineClass(1126, 1, $intern_23, ReflectiveSerializers_ValueSerializerByteArray___refImpl$lambda$0$Type);
 _.accept = function accept_71(arg0){
   lambda$0_67(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByteArray_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1124);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByteArray_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1126);
 function ReflectiveSerializers_ValueSerializerByteArray___refImpl$lambda$1$Type(){
 }
 
-defineClass(1125, 1, {}, ReflectiveSerializers_ValueSerializerByteArray___refImpl$lambda$1$Type);
+defineClass(1127, 1, {}, ReflectiveSerializers_ValueSerializerByteArray___refImpl$lambda$1$Type);
 _.test_0 = function test_74(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerByteArray___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerByteArray_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByteArray_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1125);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByteArray_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1127);
 function $clinit_ReflectiveSerializers_ValueSerializerByte___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerByte___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13613,7 +13613,7 @@ function lambda$0_68(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1120, 6, $intern_26, ReflectiveSerializers_ValueSerializerByte___refImpl);
+defineClass(1122, 6, $intern_26, ReflectiveSerializers_ValueSerializerByte___refImpl);
 _.get_1 = function get_41(){
   return new ReflectiveSerializers$ValueSerializerByte;
 }
@@ -13633,26 +13633,26 @@ _.init0 = function init0_63(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerByte_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByte_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerByte___refImpl', 1120, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByte_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerByte___refImpl', 1122, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerByte___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1121, 1, $intern_23, ReflectiveSerializers_ValueSerializerByte___refImpl$lambda$0$Type);
+defineClass(1123, 1, $intern_23, ReflectiveSerializers_ValueSerializerByte___refImpl$lambda$0$Type);
 _.accept = function accept_72(arg0){
   lambda$0_68(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByte_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1121);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByte_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1123);
 function ReflectiveSerializers_ValueSerializerByte___refImpl$lambda$1$Type(){
 }
 
-defineClass(1122, 1, {}, ReflectiveSerializers_ValueSerializerByte___refImpl$lambda$1$Type);
+defineClass(1124, 1, {}, ReflectiveSerializers_ValueSerializerByte___refImpl$lambda$1$Type);
 _.test_0 = function test_75(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerByte___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerByte_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByte_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1122);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerByte_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1124);
 function $clinit_ReflectiveSerializers_ValueSerializerClass___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerClass___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13668,7 +13668,7 @@ function lambda$0_69(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1126, 6, $intern_26, ReflectiveSerializers_ValueSerializerClass___refImpl);
+defineClass(1128, 6, $intern_26, ReflectiveSerializers_ValueSerializerClass___refImpl);
 _.get_1 = function get_42(){
   return new ReflectiveSerializers$ValueSerializerClass;
 }
@@ -13688,26 +13688,26 @@ _.init0 = function init0_64(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerClass_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerClass_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerClass___refImpl', 1126, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerClass_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerClass___refImpl', 1128, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerClass___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1127, 1, $intern_23, ReflectiveSerializers_ValueSerializerClass___refImpl$lambda$0$Type);
+defineClass(1129, 1, $intern_23, ReflectiveSerializers_ValueSerializerClass___refImpl$lambda$0$Type);
 _.accept = function accept_73(arg0){
   lambda$0_69(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerClass_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1127);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerClass_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1129);
 function ReflectiveSerializers_ValueSerializerClass___refImpl$lambda$1$Type(){
 }
 
-defineClass(1128, 1, {}, ReflectiveSerializers_ValueSerializerClass___refImpl$lambda$1$Type);
+defineClass(1130, 1, {}, ReflectiveSerializers_ValueSerializerClass___refImpl$lambda$1$Type);
 _.test_0 = function test_76(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerClass___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerClass_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerClass_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1128);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerClass_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1130);
 function $clinit_ReflectiveSerializers_ValueSerializerDate___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerDate___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13723,7 +13723,7 @@ function lambda$0_70(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1129, 6, $intern_26, ReflectiveSerializers_ValueSerializerDate___refImpl);
+defineClass(1131, 6, $intern_26, ReflectiveSerializers_ValueSerializerDate___refImpl);
 _.get_1 = function get_43(){
   return new ReflectiveSerializers$ValueSerializerDate;
 }
@@ -13743,26 +13743,26 @@ _.init0 = function init0_65(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerDate_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDate_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerDate___refImpl', 1129, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDate_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerDate___refImpl', 1131, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerDate___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1130, 1, $intern_23, ReflectiveSerializers_ValueSerializerDate___refImpl$lambda$0$Type);
+defineClass(1132, 1, $intern_23, ReflectiveSerializers_ValueSerializerDate___refImpl$lambda$0$Type);
 _.accept = function accept_74(arg0){
   lambda$0_70(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDate_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1130);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDate_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1132);
 function ReflectiveSerializers_ValueSerializerDate___refImpl$lambda$1$Type(){
 }
 
-defineClass(1131, 1, {}, ReflectiveSerializers_ValueSerializerDate___refImpl$lambda$1$Type);
+defineClass(1133, 1, {}, ReflectiveSerializers_ValueSerializerDate___refImpl$lambda$1$Type);
 _.test_0 = function test_77(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerDate___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerDate_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDate_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1131);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDate_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1133);
 function $clinit_ReflectiveSerializers_ValueSerializerDouble___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerDouble___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13778,7 +13778,7 @@ function lambda$0_71(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1132, 6, $intern_26, ReflectiveSerializers_ValueSerializerDouble___refImpl);
+defineClass(1134, 6, $intern_26, ReflectiveSerializers_ValueSerializerDouble___refImpl);
 _.get_1 = function get_44(){
   return new ReflectiveSerializers$ValueSerializerDouble;
 }
@@ -13798,26 +13798,26 @@ _.init0 = function init0_66(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerDouble_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDouble_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerDouble___refImpl', 1132, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDouble_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerDouble___refImpl', 1134, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerDouble___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1133, 1, $intern_23, ReflectiveSerializers_ValueSerializerDouble___refImpl$lambda$0$Type);
+defineClass(1135, 1, $intern_23, ReflectiveSerializers_ValueSerializerDouble___refImpl$lambda$0$Type);
 _.accept = function accept_75(arg0){
   lambda$0_71(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDouble_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1133);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDouble_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1135);
 function ReflectiveSerializers_ValueSerializerDouble___refImpl$lambda$1$Type(){
 }
 
-defineClass(1134, 1, {}, ReflectiveSerializers_ValueSerializerDouble___refImpl$lambda$1$Type);
+defineClass(1136, 1, {}, ReflectiveSerializers_ValueSerializerDouble___refImpl$lambda$1$Type);
 _.test_0 = function test_78(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerDouble___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerDouble_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDouble_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1134);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerDouble_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1136);
 function $clinit_ReflectiveSerializers_ValueSerializerEnum___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerEnum___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13833,7 +13833,7 @@ function lambda$0_72(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1135, 6, $intern_26, ReflectiveSerializers_ValueSerializerEnum___refImpl);
+defineClass(1137, 6, $intern_26, ReflectiveSerializers_ValueSerializerEnum___refImpl);
 _.get_1 = function get_45(){
   return new ReflectiveSerializers$ValueSerializerEnum;
 }
@@ -13853,26 +13853,26 @@ _.init0 = function init0_67(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerEnum_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerEnum_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerEnum___refImpl', 1135, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerEnum_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerEnum___refImpl', 1137, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerEnum___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1136, 1, $intern_23, ReflectiveSerializers_ValueSerializerEnum___refImpl$lambda$0$Type);
+defineClass(1138, 1, $intern_23, ReflectiveSerializers_ValueSerializerEnum___refImpl$lambda$0$Type);
 _.accept = function accept_76(arg0){
   lambda$0_72(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerEnum_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1136);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerEnum_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1138);
 function ReflectiveSerializers_ValueSerializerEnum___refImpl$lambda$1$Type(){
 }
 
-defineClass(1137, 1, {}, ReflectiveSerializers_ValueSerializerEnum___refImpl$lambda$1$Type);
+defineClass(1139, 1, {}, ReflectiveSerializers_ValueSerializerEnum___refImpl$lambda$1$Type);
 _.test_0 = function test_79(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerEnum___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerEnum_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerEnum_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1137);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerEnum_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1139);
 function $clinit_ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13888,7 +13888,7 @@ function lambda$0_73(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1138, 6, $intern_26, ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl);
+defineClass(1140, 6, $intern_26, ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl);
 _.get_1 = function get_46(){
   return new ReflectiveSerializers$ValueSerializerExtensibleEnum;
 }
@@ -13908,26 +13908,26 @@ _.init0 = function init0_68(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerExtensibleEnum_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerExtensibleEnum_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl', 1138, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerExtensibleEnum_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl', 1140, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1139, 1, $intern_23, ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl$lambda$0$Type);
+defineClass(1141, 1, $intern_23, ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl$lambda$0$Type);
 _.accept = function accept_77(arg0){
   lambda$0_73(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerExtensibleEnum_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1139);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerExtensibleEnum_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1141);
 function ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl$lambda$1$Type(){
 }
 
-defineClass(1140, 1, {}, ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl$lambda$1$Type);
+defineClass(1142, 1, {}, ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl$lambda$1$Type);
 _.test_0 = function test_80(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerExtensibleEnum___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerExtensibleEnum_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerExtensibleEnum_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1140);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerExtensibleEnum_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1142);
 function $clinit_ReflectiveSerializers_ValueSerializerFloat___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerFloat___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13943,7 +13943,7 @@ function lambda$0_74(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1141, 6, $intern_26, ReflectiveSerializers_ValueSerializerFloat___refImpl);
+defineClass(1143, 6, $intern_26, ReflectiveSerializers_ValueSerializerFloat___refImpl);
 _.get_1 = function get_47(){
   return new ReflectiveSerializers$ValueSerializerFloat;
 }
@@ -13963,26 +13963,26 @@ _.init0 = function init0_69(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerFloat_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerFloat_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerFloat___refImpl', 1141, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerFloat_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerFloat___refImpl', 1143, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerFloat___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1142, 1, $intern_23, ReflectiveSerializers_ValueSerializerFloat___refImpl$lambda$0$Type);
+defineClass(1144, 1, $intern_23, ReflectiveSerializers_ValueSerializerFloat___refImpl$lambda$0$Type);
 _.accept = function accept_78(arg0){
   lambda$0_74(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerFloat_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1142);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerFloat_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1144);
 function ReflectiveSerializers_ValueSerializerFloat___refImpl$lambda$1$Type(){
 }
 
-defineClass(1143, 1, {}, ReflectiveSerializers_ValueSerializerFloat___refImpl$lambda$1$Type);
+defineClass(1145, 1, {}, ReflectiveSerializers_ValueSerializerFloat___refImpl$lambda$1$Type);
 _.test_0 = function test_81(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerFloat___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerFloat_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerFloat_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1143);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerFloat_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1145);
 function $clinit_ReflectiveSerializers_ValueSerializerInteger___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerInteger___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -13998,7 +13998,7 @@ function lambda$0_75(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1144, 6, $intern_26, ReflectiveSerializers_ValueSerializerInteger___refImpl);
+defineClass(1146, 6, $intern_26, ReflectiveSerializers_ValueSerializerInteger___refImpl);
 _.get_1 = function get_48(){
   return new ReflectiveSerializers$ValueSerializerInteger;
 }
@@ -14018,26 +14018,26 @@ _.init0 = function init0_70(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerInteger_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerInteger_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerInteger___refImpl', 1144, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerInteger_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerInteger___refImpl', 1146, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerInteger___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1145, 1, $intern_23, ReflectiveSerializers_ValueSerializerInteger___refImpl$lambda$0$Type);
+defineClass(1147, 1, $intern_23, ReflectiveSerializers_ValueSerializerInteger___refImpl$lambda$0$Type);
 _.accept = function accept_79(arg0){
   lambda$0_75(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerInteger_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1145);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerInteger_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1147);
 function ReflectiveSerializers_ValueSerializerInteger___refImpl$lambda$1$Type(){
 }
 
-defineClass(1146, 1, {}, ReflectiveSerializers_ValueSerializerInteger___refImpl$lambda$1$Type);
+defineClass(1148, 1, {}, ReflectiveSerializers_ValueSerializerInteger___refImpl$lambda$1$Type);
 _.test_0 = function test_82(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerInteger___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerInteger_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerInteger_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1146);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerInteger_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1148);
 function $clinit_ReflectiveSerializers_ValueSerializerLong___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerLong___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -14053,7 +14053,7 @@ function lambda$0_76(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1147, 6, $intern_26, ReflectiveSerializers_ValueSerializerLong___refImpl);
+defineClass(1149, 6, $intern_26, ReflectiveSerializers_ValueSerializerLong___refImpl);
 _.get_1 = function get_49(){
   return new ReflectiveSerializers$ValueSerializerLong;
 }
@@ -14073,26 +14073,26 @@ _.init0 = function init0_71(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerLong_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerLong_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerLong___refImpl', 1147, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerLong_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerLong___refImpl', 1149, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerLong___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1148, 1, $intern_23, ReflectiveSerializers_ValueSerializerLong___refImpl$lambda$0$Type);
+defineClass(1150, 1, $intern_23, ReflectiveSerializers_ValueSerializerLong___refImpl$lambda$0$Type);
 _.accept = function accept_80(arg0){
   lambda$0_76(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerLong_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1148);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerLong_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1150);
 function ReflectiveSerializers_ValueSerializerLong___refImpl$lambda$1$Type(){
 }
 
-defineClass(1149, 1, {}, ReflectiveSerializers_ValueSerializerLong___refImpl$lambda$1$Type);
+defineClass(1151, 1, {}, ReflectiveSerializers_ValueSerializerLong___refImpl$lambda$1$Type);
 _.test_0 = function test_83(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerLong___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerLong_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerLong_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1149);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerLong_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1151);
 function $clinit_ReflectiveSerializers_ValueSerializerShort___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerShort___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -14108,7 +14108,7 @@ function lambda$0_77(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1150, 6, $intern_26, ReflectiveSerializers_ValueSerializerShort___refImpl);
+defineClass(1152, 6, $intern_26, ReflectiveSerializers_ValueSerializerShort___refImpl);
 _.get_1 = function get_50(){
   return new ReflectiveSerializers$ValueSerializerShort;
 }
@@ -14128,26 +14128,26 @@ _.init0 = function init0_72(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerShort_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerShort_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerShort___refImpl', 1150, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerShort_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerShort___refImpl', 1152, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerShort___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1151, 1, $intern_23, ReflectiveSerializers_ValueSerializerShort___refImpl$lambda$0$Type);
+defineClass(1153, 1, $intern_23, ReflectiveSerializers_ValueSerializerShort___refImpl$lambda$0$Type);
 _.accept = function accept_81(arg0){
   lambda$0_77(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerShort_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1151);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerShort_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1153);
 function ReflectiveSerializers_ValueSerializerShort___refImpl$lambda$1$Type(){
 }
 
-defineClass(1152, 1, {}, ReflectiveSerializers_ValueSerializerShort___refImpl$lambda$1$Type);
+defineClass(1154, 1, {}, ReflectiveSerializers_ValueSerializerShort___refImpl$lambda$1$Type);
 _.test_0 = function test_84(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerShort___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerShort_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerShort_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1152);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerShort_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1154);
 function $clinit_ReflectiveSerializers_ValueSerializerString___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerString___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -14163,7 +14163,7 @@ function lambda$0_78(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1153, 6, $intern_26, ReflectiveSerializers_ValueSerializerString___refImpl);
+defineClass(1155, 6, $intern_26, ReflectiveSerializers_ValueSerializerString___refImpl);
 _.get_1 = function get_51(){
   return new ReflectiveSerializers$ValueSerializerString;
 }
@@ -14183,26 +14183,26 @@ _.init0 = function init0_73(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerString_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerString_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerString___refImpl', 1153, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerString_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerString___refImpl', 1155, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerString___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1154, 1, $intern_23, ReflectiveSerializers_ValueSerializerString___refImpl$lambda$0$Type);
+defineClass(1156, 1, $intern_23, ReflectiveSerializers_ValueSerializerString___refImpl$lambda$0$Type);
 _.accept = function accept_82(arg0){
   lambda$0_78(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerString_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1154);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerString_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1156);
 function ReflectiveSerializers_ValueSerializerString___refImpl$lambda$1$Type(){
 }
 
-defineClass(1155, 1, {}, ReflectiveSerializers_ValueSerializerString___refImpl$lambda$1$Type);
+defineClass(1157, 1, {}, ReflectiveSerializers_ValueSerializerString___refImpl$lambda$1$Type);
 _.test_0 = function test_85(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerString___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerString_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerString_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1155);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerString_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1157);
 function $clinit_ReflectiveSerializers_ValueSerializerTimestamp___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerTimestamp___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -14218,7 +14218,7 @@ function lambda$0_79(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1156, 6, $intern_26, ReflectiveSerializers_ValueSerializerTimestamp___refImpl);
+defineClass(1158, 6, $intern_26, ReflectiveSerializers_ValueSerializerTimestamp___refImpl);
 _.get_1 = function get_52(){
   return new ReflectiveSerializers$ValueSerializerTimestamp;
 }
@@ -14238,26 +14238,26 @@ _.init0 = function init0_74(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerTimestamp_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerTimestamp_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerTimestamp___refImpl', 1156, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerTimestamp_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerTimestamp___refImpl', 1158, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerTimestamp___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1157, 1, $intern_23, ReflectiveSerializers_ValueSerializerTimestamp___refImpl$lambda$0$Type);
+defineClass(1159, 1, $intern_23, ReflectiveSerializers_ValueSerializerTimestamp___refImpl$lambda$0$Type);
 _.accept = function accept_83(arg0){
   lambda$0_79(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerTimestamp_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1157);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerTimestamp_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1159);
 function ReflectiveSerializers_ValueSerializerTimestamp___refImpl$lambda$1$Type(){
 }
 
-defineClass(1158, 1, {}, ReflectiveSerializers_ValueSerializerTimestamp___refImpl$lambda$1$Type);
+defineClass(1160, 1, {}, ReflectiveSerializers_ValueSerializerTimestamp___refImpl$lambda$1$Type);
 _.test_0 = function test_86(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerTimestamp___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerTimestamp_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerTimestamp_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1158);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerTimestamp_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1160);
 function $clinit_ReflectiveSerializers_ValueSerializerUUID___refImpl(){
   $clinit_ReflectiveSerializers_ValueSerializerUUID___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -14273,7 +14273,7 @@ function lambda$0_80(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1159, 6, $intern_26, ReflectiveSerializers_ValueSerializerUUID___refImpl);
+defineClass(1161, 6, $intern_26, ReflectiveSerializers_ValueSerializerUUID___refImpl);
 _.get_1 = function get_53(){
   return new ReflectiveSerializers$ValueSerializerUUID;
 }
@@ -14293,26 +14293,26 @@ _.init0 = function init0_75(){
   $init(this, Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerUUID_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerUUID_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerUUID___refImpl', 1159, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerUUID_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'ReflectiveSerializers_ValueSerializerUUID___refImpl', 1161, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ReflectiveSerializers_ValueSerializerUUID___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1160, 1, $intern_23, ReflectiveSerializers_ValueSerializerUUID___refImpl$lambda$0$Type);
+defineClass(1162, 1, $intern_23, ReflectiveSerializers_ValueSerializerUUID___refImpl$lambda$0$Type);
 _.accept = function accept_84(arg0){
   lambda$0_80(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerUUID_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1160);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerUUID_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1162);
 function ReflectiveSerializers_ValueSerializerUUID___refImpl$lambda$1$Type(){
 }
 
-defineClass(1161, 1, {}, ReflectiveSerializers_ValueSerializerUUID___refImpl$lambda$1$Type);
+defineClass(1163, 1, {}, ReflectiveSerializers_ValueSerializerUUID___refImpl$lambda$1$Type);
 _.test_0 = function test_87(arg0){
   return $clinit_ReflectiveSerializers_ValueSerializerUUID___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers$ValueSerializerUUID_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerUUID_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1161);
+var Lcc_alcina_framework_common_client_serializer_ReflectiveSerializers_1ValueSerializerUUID_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1163);
 function $clinit_SerializationSupport(){
   $clinit_SerializationSupport = emptyMethod;
   solePossibleImplementation = (castTo(impl_0(Lcc_alcina_framework_common_client_util_CollectionCreators$ConcurrentMapCreator_2_classLit), 125) , new LinkedHashMap);
@@ -14486,7 +14486,7 @@ function lambda$0_82(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(874, 6, $intern_25, TreeSerializable___refImpl);
+defineClass(876, 6, $intern_25, TreeSerializable___refImpl);
 _.init0 = function init0_76(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -14501,26 +14501,26 @@ _.init0 = function init0_76(){
   $init(this, Lcc_alcina_framework_common_client_serializer_TreeSerializable_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_TreeSerializable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'TreeSerializable___refImpl', 874, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_TreeSerializable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'TreeSerializable___refImpl', 876, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function TreeSerializable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(875, 1, $intern_23, TreeSerializable___refImpl$lambda$0$Type);
+defineClass(877, 1, $intern_23, TreeSerializable___refImpl$lambda$0$Type);
 _.accept = function accept_85(arg0){
   lambda$0_82(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_TreeSerializable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 875);
+var Lcc_alcina_framework_common_client_serializer_TreeSerializable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 877);
 function TreeSerializable___refImpl$lambda$1$Type(){
 }
 
-defineClass(876, 1, {}, TreeSerializable___refImpl$lambda$1$Type);
+defineClass(878, 1, {}, TreeSerializable___refImpl$lambda$1$Type);
 _.test_0 = function test_89(arg0){
   return $clinit_TreeSerializable___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_TreeSerializable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_TreeSerializable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 876);
+var Lcc_alcina_framework_common_client_serializer_TreeSerializable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 878);
 var Lcc_alcina_framework_common_client_serializer_TypeSerialization_2_classLit = createForInterface('cc.alcina.framework.common.client.serializer', 'TypeSerialization');
 function $clinit_TypeSerialization$PropertyOrder(){
   $clinit_TypeSerialization$PropertyOrder = emptyMethod;
@@ -14555,7 +14555,7 @@ function lambda$0_83(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1165, 6, $intern_25, TypeSerialization_PropertyOrder___refImpl);
+defineClass(1167, 6, $intern_25, TypeSerialization_PropertyOrder___refImpl);
 _.init0 = function init0_77(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -14570,26 +14570,26 @@ _.init0 = function init0_77(){
   $init(this, Lcc_alcina_framework_common_client_serializer_TypeSerialization$PropertyOrder_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, false, true);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1PropertyOrder_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'TypeSerialization_PropertyOrder___refImpl', 1165, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1PropertyOrder_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'TypeSerialization_PropertyOrder___refImpl', 1167, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function TypeSerialization_PropertyOrder___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1166, 1, $intern_23, TypeSerialization_PropertyOrder___refImpl$lambda$0$Type);
+defineClass(1168, 1, $intern_23, TypeSerialization_PropertyOrder___refImpl$lambda$0$Type);
 _.accept = function accept_86(arg0){
   lambda$0_83(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1PropertyOrder_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1166);
+var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1PropertyOrder_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1168);
 function TypeSerialization_PropertyOrder___refImpl$lambda$1$Type(){
 }
 
-defineClass(1167, 1, {}, TypeSerialization_PropertyOrder___refImpl$lambda$1$Type);
+defineClass(1169, 1, {}, TypeSerialization_PropertyOrder___refImpl$lambda$1$Type);
 _.test_0 = function test_90(arg0){
   return $clinit_TypeSerialization_PropertyOrder___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_TypeSerialization$PropertyOrder_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1PropertyOrder_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1167);
+var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1PropertyOrder_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1169);
 function $__stringValue_6(this$static, o){
   if (instanceOf(o, 8)) {
     return $getSimpleName(castTo(o, 8)) + '.class';
@@ -14696,7 +14696,7 @@ function lambda$0_84(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1162, 6, $intern_25, TypeSerialization___refImpl);
+defineClass(1164, 6, $intern_25, TypeSerialization___refImpl);
 _.init0 = function init0_78(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -14711,26 +14711,26 @@ _.init0 = function init0_78(){
   $init(this, Lcc_alcina_framework_common_client_serializer_TypeSerialization_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'TypeSerialization___refImpl', 1162, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.serializer', 'TypeSerialization___refImpl', 1164, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function TypeSerialization___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1163, 1, $intern_23, TypeSerialization___refImpl$lambda$0$Type);
+defineClass(1165, 1, $intern_23, TypeSerialization___refImpl$lambda$0$Type);
 _.accept = function accept_87(arg0){
   lambda$0_84(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1163);
+var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1165);
 function TypeSerialization___refImpl$lambda$1$Type(){
 }
 
-defineClass(1164, 1, {}, TypeSerialization___refImpl$lambda$1$Type);
+defineClass(1166, 1, {}, TypeSerialization___refImpl$lambda$1$Type);
 _.test_0 = function test_91(arg0){
   return $clinit_TypeSerialization___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_serializer_TypeSerialization_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1164);
+var Lcc_alcina_framework_common_client_serializer_TypeSerialization_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1166);
 function AlcinaCollectors$3methodref$ctor$Type(){
 }
 
@@ -15051,7 +15051,7 @@ function lambda$0_85(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1168, 6, $intern_26, CollectionCreators_ConcurrentMapCreator___refImpl);
+defineClass(1170, 6, $intern_26, CollectionCreators_ConcurrentMapCreator___refImpl);
 _.get_1 = function get_55(){
   return new CollectionCreators$ConcurrentMapCreator;
 }
@@ -15070,26 +15070,26 @@ _.init0 = function init0_79(){
   $init(this, Lcc_alcina_framework_common_client_util_CollectionCreators$ConcurrentMapCreator_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1ConcurrentMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_ConcurrentMapCreator___refImpl', 1168, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1ConcurrentMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_ConcurrentMapCreator___refImpl', 1170, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function CollectionCreators_ConcurrentMapCreator___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1169, 1, $intern_23, CollectionCreators_ConcurrentMapCreator___refImpl$lambda$0$Type);
+defineClass(1171, 1, $intern_23, CollectionCreators_ConcurrentMapCreator___refImpl$lambda$0$Type);
 _.accept = function accept_89(arg0){
   lambda$0_85(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1ConcurrentMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1169);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1ConcurrentMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1171);
 function CollectionCreators_ConcurrentMapCreator___refImpl$lambda$1$Type(){
 }
 
-defineClass(1170, 1, {}, CollectionCreators_ConcurrentMapCreator___refImpl$lambda$1$Type);
+defineClass(1172, 1, {}, CollectionCreators_ConcurrentMapCreator___refImpl$lambda$1$Type);
 _.test_0 = function test_92(arg0){
   return $clinit_CollectionCreators_ConcurrentMapCreator___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_CollectionCreators$ConcurrentMapCreator_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1ConcurrentMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1170);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1ConcurrentMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1172);
 function $clinit_CollectionCreators_DelegateMapCreator___refImpl(){
   $clinit_CollectionCreators_DelegateMapCreator___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -15105,7 +15105,7 @@ function lambda$0_86(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1189, 6, $intern_25, CollectionCreators_DelegateMapCreator___refImpl);
+defineClass(1191, 6, $intern_25, CollectionCreators_DelegateMapCreator___refImpl);
 _.init0 = function init0_80(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -15119,26 +15119,26 @@ _.init0 = function init0_80(){
   $init(this, Lcc_alcina_framework_common_client_util_CollectionCreators$DelegateMapCreator_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1DelegateMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_DelegateMapCreator___refImpl', 1189, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1DelegateMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_DelegateMapCreator___refImpl', 1191, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function CollectionCreators_DelegateMapCreator___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1190, 1, $intern_23, CollectionCreators_DelegateMapCreator___refImpl$lambda$0$Type);
+defineClass(1192, 1, $intern_23, CollectionCreators_DelegateMapCreator___refImpl$lambda$0$Type);
 _.accept = function accept_90(arg0){
   lambda$0_86(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1DelegateMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1190);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1DelegateMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1192);
 function CollectionCreators_DelegateMapCreator___refImpl$lambda$1$Type(){
 }
 
-defineClass(1191, 1, {}, CollectionCreators_DelegateMapCreator___refImpl$lambda$1$Type);
+defineClass(1193, 1, {}, CollectionCreators_DelegateMapCreator___refImpl$lambda$1$Type);
 _.test_0 = function test_93(arg0){
   return $clinit_CollectionCreators_DelegateMapCreator___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_CollectionCreators$DelegateMapCreator_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1DelegateMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1191);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1DelegateMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1193);
 function $clinit_CollectionCreators_HashMapCreator___refImpl(){
   $clinit_CollectionCreators_HashMapCreator___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -15154,7 +15154,7 @@ function lambda$0_87(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1171, 6, $intern_26, CollectionCreators_HashMapCreator___refImpl);
+defineClass(1173, 6, $intern_26, CollectionCreators_HashMapCreator___refImpl);
 _.get_1 = function get_56(){
   return new CollectionCreators$HashMapCreator;
 }
@@ -15173,26 +15173,26 @@ _.init0 = function init0_81(){
   $init(this, Lcc_alcina_framework_common_client_util_CollectionCreators$HashMapCreator_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1HashMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_HashMapCreator___refImpl', 1171, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1HashMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_HashMapCreator___refImpl', 1173, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function CollectionCreators_HashMapCreator___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1172, 1, $intern_23, CollectionCreators_HashMapCreator___refImpl$lambda$0$Type);
+defineClass(1174, 1, $intern_23, CollectionCreators_HashMapCreator___refImpl$lambda$0$Type);
 _.accept = function accept_91(arg0){
   lambda$0_87(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1HashMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1172);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1HashMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1174);
 function CollectionCreators_HashMapCreator___refImpl$lambda$1$Type(){
 }
 
-defineClass(1173, 1, {}, CollectionCreators_HashMapCreator___refImpl$lambda$1$Type);
+defineClass(1175, 1, {}, CollectionCreators_HashMapCreator___refImpl$lambda$1$Type);
 _.test_0 = function test_94(arg0){
   return $clinit_CollectionCreators_HashMapCreator___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_CollectionCreators$HashMapCreator_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1HashMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1173);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1HashMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1175);
 function $clinit_CollectionCreators_UnsortedMapCreator___refImpl(){
   $clinit_CollectionCreators_UnsortedMapCreator___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -15208,7 +15208,7 @@ function lambda$0_88(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1186, 6, $intern_26, CollectionCreators_UnsortedMapCreator___refImpl);
+defineClass(1188, 6, $intern_26, CollectionCreators_UnsortedMapCreator___refImpl);
 _.get_1 = function get_57(){
   return new CollectionCreators$UnsortedMapCreator;
 }
@@ -15228,26 +15228,26 @@ _.init0 = function init0_82(){
   $init(this, Lcc_alcina_framework_common_client_util_CollectionCreators$UnsortedMapCreator_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1UnsortedMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_UnsortedMapCreator___refImpl', 1186, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1UnsortedMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_UnsortedMapCreator___refImpl', 1188, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function CollectionCreators_UnsortedMapCreator___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1187, 1, $intern_23, CollectionCreators_UnsortedMapCreator___refImpl$lambda$0$Type);
+defineClass(1189, 1, $intern_23, CollectionCreators_UnsortedMapCreator___refImpl$lambda$0$Type);
 _.accept = function accept_92(arg0){
   lambda$0_88(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1UnsortedMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1187);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1UnsortedMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1189);
 function CollectionCreators_UnsortedMapCreator___refImpl$lambda$1$Type(){
 }
 
-defineClass(1188, 1, {}, CollectionCreators_UnsortedMapCreator___refImpl$lambda$1$Type);
+defineClass(1190, 1, {}, CollectionCreators_UnsortedMapCreator___refImpl$lambda$1$Type);
 _.test_0 = function test_95(arg0){
   return $clinit_CollectionCreators_UnsortedMapCreator___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_CollectionCreators$UnsortedMapCreator_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1UnsortedMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1188);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1UnsortedMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1190);
 function $clinit_CollectionCreators_WeakMapCreator___refImpl(){
   $clinit_CollectionCreators_WeakMapCreator___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -15263,7 +15263,7 @@ function lambda$0_89(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1192, 6, $intern_26, CollectionCreators_WeakMapCreator___refImpl);
+defineClass(1194, 6, $intern_26, CollectionCreators_WeakMapCreator___refImpl);
 _.get_1 = function get_58(){
   return new CollectionCreators$WeakMapCreator;
 }
@@ -15282,26 +15282,26 @@ _.init0 = function init0_83(){
   $init(this, Lcc_alcina_framework_common_client_util_CollectionCreators$WeakMapCreator_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1WeakMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_WeakMapCreator___refImpl', 1192, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1WeakMapCreator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CollectionCreators_WeakMapCreator___refImpl', 1194, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function CollectionCreators_WeakMapCreator___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1193, 1, $intern_23, CollectionCreators_WeakMapCreator___refImpl$lambda$0$Type);
+defineClass(1195, 1, $intern_23, CollectionCreators_WeakMapCreator___refImpl$lambda$0$Type);
 _.accept = function accept_93(arg0){
   lambda$0_89(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1WeakMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1193);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1WeakMapCreator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1195);
 function CollectionCreators_WeakMapCreator___refImpl$lambda$1$Type(){
 }
 
-defineClass(1194, 1, {}, CollectionCreators_WeakMapCreator___refImpl$lambda$1$Type);
+defineClass(1196, 1, {}, CollectionCreators_WeakMapCreator___refImpl$lambda$1$Type);
 _.test_0 = function test_96(arg0){
   return $clinit_CollectionCreators_WeakMapCreator___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_CollectionCreators$WeakMapCreator_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CollectionCreators_1WeakMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1194);
+var Lcc_alcina_framework_common_client_util_CollectionCreators_1WeakMapCreator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1196);
 function $clinit_CommonUtils(){
   $clinit_CommonUtils = emptyMethod;
   initUnidimensionalArray(Ljava_lang_Object_2_classLit, $intern_6, 1, 0, 5, 1);
@@ -15388,7 +15388,7 @@ function getEnumValueOrNull(enumClass, value_0, withFriendlyNames, defaultValue)
   var ev, ev$array, ev$index, ev$max, m, result_0;
   m = castTo($getWithKeys(enumValueLookup, false, 0, stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, [enumClass, ($clinit_Boolean() , withFriendlyNames?true:false)])), 100);
   if (!m) {
-    for (ev$array = castTo(enumClass.enumConstantsFunc && enumClass.enumConstantsFunc(), 17) , ev$index = 0 , ev$max = ev$array.length; ev$index < ev$max; ++ev$index) {
+    for (ev$array = castTo(enumClass.enumConstantsFunc && enumClass.enumConstantsFunc(), 16) , ev$index = 0 , ev$max = ev$array.length; ev$index < ev$max; ++ev$index) {
       ev = ev$array[ev$index];
       $put_6(enumValueLookup, stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, [enumClass, withFriendlyNames?true:false, ev.name_0 != null?ev.name_0:'' + ev.ordinal, ev]));
       $put_6(enumValueLookup, stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, [enumClass, withFriendlyNames?true:false, (ev.name_0 != null?ev.name_0:'' + ev.ordinal).toLowerCase(), ev]));
@@ -15546,7 +15546,7 @@ function lambda$0_90(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1195, 6, $intern_26, CommonUtils___refImpl);
+defineClass(1197, 6, $intern_26, CommonUtils___refImpl);
 _.get_1 = function get_60(){
   return new CommonUtils;
 }
@@ -15565,26 +15565,26 @@ _.init0 = function init0_84(){
   $init(this, Lcc_alcina_framework_common_client_util_CommonUtils_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CommonUtils_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CommonUtils___refImpl', 1195, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_CommonUtils_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CommonUtils___refImpl', 1197, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function CommonUtils___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1196, 1, $intern_23, CommonUtils___refImpl$lambda$0$Type);
+defineClass(1198, 1, $intern_23, CommonUtils___refImpl$lambda$0$Type);
 _.accept = function accept_94(arg0){
   lambda$0_90(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_CommonUtils_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1196);
+var Lcc_alcina_framework_common_client_util_CommonUtils_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1198);
 function CommonUtils___refImpl$lambda$1$Type(){
 }
 
-defineClass(1197, 1, {}, CommonUtils___refImpl$lambda$1$Type);
+defineClass(1199, 1, {}, CommonUtils___refImpl$lambda$1$Type);
 _.test_0 = function test_97(arg0){
   return $clinit_CommonUtils___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_CommonUtils_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CommonUtils_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1197);
+var Lcc_alcina_framework_common_client_util_CommonUtils_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1199);
 function CountingMap(){
   LinkedHashMap.call(this);
 }
@@ -15610,7 +15610,7 @@ function lambda$0_91(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1198, 6, $intern_26, CountingMap___refImpl);
+defineClass(1200, 6, $intern_26, CountingMap___refImpl);
 _.get_1 = function get_63(){
   return new CountingMap;
 }
@@ -15629,26 +15629,26 @@ _.init0 = function init0_85(){
   $init(this, Lcc_alcina_framework_common_client_util_CountingMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CountingMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CountingMap___refImpl', 1198, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_CountingMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'CountingMap___refImpl', 1200, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function CountingMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1199, 1, $intern_23, CountingMap___refImpl$lambda$0$Type);
+defineClass(1201, 1, $intern_23, CountingMap___refImpl$lambda$0$Type);
 _.accept = function accept_95(arg0){
   lambda$0_91(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_CountingMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1199);
+var Lcc_alcina_framework_common_client_util_CountingMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1201);
 function CountingMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1200, 1, {}, CountingMap___refImpl$lambda$1$Type);
+defineClass(1202, 1, {}, CountingMap___refImpl$lambda$1$Type);
 _.test_0 = function test_98(arg0){
   return $clinit_CountingMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_CountingMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_CountingMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1200);
+var Lcc_alcina_framework_common_client_util_CountingMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1202);
 function $append(this$static, object){
   $format(this$static, ($clinit_CommonUtils() , object == null?null:toString_64(object)), stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, []));
   return this$static;
@@ -15818,7 +15818,7 @@ function lambda$0_92(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1240, 6, $intern_26, LooseContextInstance___refImpl);
+defineClass(1242, 6, $intern_26, LooseContextInstance___refImpl);
 _.get_1 = function get_65(){
   return new LooseContextInstance;
 }
@@ -15837,26 +15837,26 @@ _.init0 = function init0_86(){
   $init(this, Lcc_alcina_framework_common_client_util_LooseContextInstance_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_LooseContextInstance_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'LooseContextInstance___refImpl', 1240, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_LooseContextInstance_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'LooseContextInstance___refImpl', 1242, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LooseContextInstance___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1241, 1, $intern_23, LooseContextInstance___refImpl$lambda$0$Type);
+defineClass(1243, 1, $intern_23, LooseContextInstance___refImpl$lambda$0$Type);
 _.accept = function accept_96(arg0){
   lambda$0_92(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_LooseContextInstance_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1241);
+var Lcc_alcina_framework_common_client_util_LooseContextInstance_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1243);
 function LooseContextInstance___refImpl$lambda$1$Type(){
 }
 
-defineClass(1242, 1, {}, LooseContextInstance___refImpl$lambda$1$Type);
+defineClass(1244, 1, {}, LooseContextInstance___refImpl$lambda$1$Type);
 _.test_0 = function test_99(arg0){
   return $clinit_LooseContextInstance___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_LooseContextInstance_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_LooseContextInstance_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1242);
+var Lcc_alcina_framework_common_client_util_LooseContextInstance_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1244);
 var Lcc_alcina_framework_common_client_util_MultikeyMap_2_classLit = createForInterface('cc.alcina.framework.common.client.util', 'MultikeyMap');
 function $asTuples(this$static, maxDepth){
   var depth, k2, k2$iterator, kArr, kArr2, key, key$iterator, keys_0, m, m0, mkm, next, nextK, result_0;
@@ -16013,7 +16013,7 @@ function lambda$0_93(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1225, 6, $intern_25, MultikeyMapBase___refImpl);
+defineClass(1227, 6, $intern_25, MultikeyMapBase___refImpl);
 _.init0 = function init0_87(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -16029,26 +16029,26 @@ _.init0 = function init0_87(){
   $init(this, Lcc_alcina_framework_common_client_util_MultikeyMapBase_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_MultikeyMapBase_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'MultikeyMapBase___refImpl', 1225, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_MultikeyMapBase_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'MultikeyMapBase___refImpl', 1227, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function MultikeyMapBase___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1226, 1, $intern_23, MultikeyMapBase___refImpl$lambda$0$Type);
+defineClass(1228, 1, $intern_23, MultikeyMapBase___refImpl$lambda$0$Type);
 _.accept = function accept_97(arg0){
   lambda$0_93(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_MultikeyMapBase_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1226);
+var Lcc_alcina_framework_common_client_util_MultikeyMapBase_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1228);
 function MultikeyMapBase___refImpl$lambda$1$Type(){
 }
 
-defineClass(1227, 1, {}, MultikeyMapBase___refImpl$lambda$1$Type);
+defineClass(1229, 1, {}, MultikeyMapBase___refImpl$lambda$1$Type);
 _.test_0 = function test_100(arg0){
   return $clinit_MultikeyMapBase___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_MultikeyMapBase_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_MultikeyMapBase_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1227);
+var Lcc_alcina_framework_common_client_util_MultikeyMapBase_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1229);
 function $clinit_MultikeyMap___refImpl(){
   $clinit_MultikeyMap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -16064,7 +16064,7 @@ function lambda$0_94(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1210, 6, $intern_25, MultikeyMap___refImpl);
+defineClass(1212, 6, $intern_25, MultikeyMap___refImpl);
 _.init0 = function init0_88(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -16078,26 +16078,26 @@ _.init0 = function init0_88(){
   $init(this, Lcc_alcina_framework_common_client_util_MultikeyMap_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_MultikeyMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'MultikeyMap___refImpl', 1210, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_MultikeyMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'MultikeyMap___refImpl', 1212, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function MultikeyMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1211, 1, $intern_23, MultikeyMap___refImpl$lambda$0$Type);
+defineClass(1213, 1, $intern_23, MultikeyMap___refImpl$lambda$0$Type);
 _.accept = function accept_98(arg0){
   lambda$0_94(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_MultikeyMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1211);
+var Lcc_alcina_framework_common_client_util_MultikeyMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1213);
 function MultikeyMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1212, 1, {}, MultikeyMap___refImpl$lambda$1$Type);
+defineClass(1214, 1, {}, MultikeyMap___refImpl$lambda$1$Type);
 _.test_0 = function test_101(arg0){
   return $clinit_MultikeyMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_MultikeyMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_MultikeyMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1212);
+var Lcc_alcina_framework_common_client_util_MultikeyMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1214);
 function $add_6(this$static, key, item_0){
   this$static.map_0.containsKey_0(key) || $put_7(this$static, key, new ArrayList);
   castTo(this$static.map_0.get_2(key), 29).add_0(item_0);
@@ -16202,7 +16202,7 @@ function lambda$0_95(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1213, 6, $intern_26, Multimap___refImpl);
+defineClass(1215, 6, $intern_26, Multimap___refImpl);
 _.get_1 = function get_67(){
   return new Multimap;
 }
@@ -16224,26 +16224,26 @@ _.init0 = function init0_89(){
   $init(this, Lcc_alcina_framework_common_client_util_Multimap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_Multimap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'Multimap___refImpl', 1213, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_Multimap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'Multimap___refImpl', 1215, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Multimap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1214, 1, $intern_23, Multimap___refImpl$lambda$0$Type);
+defineClass(1216, 1, $intern_23, Multimap___refImpl$lambda$0$Type);
 _.accept = function accept_99(arg0){
   lambda$0_95(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_Multimap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1214);
+var Lcc_alcina_framework_common_client_util_Multimap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1216);
 function Multimap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1215, 1, {}, Multimap___refImpl$lambda$1$Type);
+defineClass(1217, 1, {}, Multimap___refImpl$lambda$1$Type);
 _.test_0 = function test_102(arg0){
   return $clinit_Multimap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_Multimap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_Multimap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1215);
+var Lcc_alcina_framework_common_client_util_Multimap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1217);
 function Multiset(){
   this.map_0 = (castTo(impl_0(Lcc_alcina_framework_common_client_domain_DomainCollections_2_classLit), 130) , new LinkedHashMap);
 }
@@ -16269,7 +16269,7 @@ function lambda$0_96(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1216, 6, $intern_26, Multiset___refImpl);
+defineClass(1218, 6, $intern_26, Multiset___refImpl);
 _.get_1 = function get_68(){
   return new Multiset;
 }
@@ -16289,26 +16289,26 @@ _.init0 = function init0_90(){
   $init(this, Lcc_alcina_framework_common_client_util_Multiset_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_Multiset_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'Multiset___refImpl', 1216, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_Multiset_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'Multiset___refImpl', 1218, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Multiset___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1217, 1, $intern_23, Multiset___refImpl$lambda$0$Type);
+defineClass(1219, 1, $intern_23, Multiset___refImpl$lambda$0$Type);
 _.accept = function accept_100(arg0){
   lambda$0_96(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_Multiset_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1217);
+var Lcc_alcina_framework_common_client_util_Multiset_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1219);
 function Multiset___refImpl$lambda$1$Type(){
 }
 
-defineClass(1218, 1, {}, Multiset___refImpl$lambda$1$Type);
+defineClass(1220, 1, {}, Multiset___refImpl$lambda$1$Type);
 _.test_0 = function test_103(arg0){
   return $clinit_Multiset___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_Multiset_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_Multiset_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1218);
+var Lcc_alcina_framework_common_client_util_Multiset_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1220);
 function $getNestedSimpleName(clazz){
   var idx, name_0;
   name_0 = ($ensureNamesAreInitialized(clazz) , clazz.typeName);
@@ -16336,7 +16336,7 @@ function lambda$0_97(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1219, 6, $intern_26, NestedNameProvider___refImpl);
+defineClass(1221, 6, $intern_26, NestedNameProvider___refImpl);
 _.get_1 = function get_69(){
   return new NestedNameProvider;
 }
@@ -16355,26 +16355,26 @@ _.init0 = function init0_91(){
   $init(this, Lcc_alcina_framework_common_client_util_NestedNameProvider_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_NestedNameProvider_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'NestedNameProvider___refImpl', 1219, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_NestedNameProvider_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'NestedNameProvider___refImpl', 1221, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function NestedNameProvider___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1220, 1, $intern_23, NestedNameProvider___refImpl$lambda$0$Type);
+defineClass(1222, 1, $intern_23, NestedNameProvider___refImpl$lambda$0$Type);
 _.accept = function accept_101(arg0){
   lambda$0_97(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_NestedNameProvider_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1220);
+var Lcc_alcina_framework_common_client_util_NestedNameProvider_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1222);
 function NestedNameProvider___refImpl$lambda$1$Type(){
 }
 
-defineClass(1221, 1, {}, NestedNameProvider___refImpl$lambda$1$Type);
+defineClass(1223, 1, {}, NestedNameProvider___refImpl$lambda$1$Type);
 _.test_0 = function test_104(arg0){
   return $clinit_NestedNameProvider___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_NestedNameProvider_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_NestedNameProvider_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1221);
+var Lcc_alcina_framework_common_client_util_NestedNameProvider_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1223);
 function NullFriendlyComparatorWrapper(){
   NullFriendlyComparatorWrapper_0.call(this, ($clinit_Comparators() , $clinit_Comparators() , NATURAL_ORDER));
 }
@@ -16445,7 +16445,7 @@ function lambda$0_98(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1222, 6, $intern_26, SortedMultikeyMap___refImpl);
+defineClass(1224, 6, $intern_26, SortedMultikeyMap___refImpl);
 _.get_1 = function get_70(){
   return new SortedMultikeyMap;
 }
@@ -16464,26 +16464,26 @@ _.init0 = function init0_92(){
   $init(this, Lcc_alcina_framework_common_client_util_SortedMultikeyMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_SortedMultikeyMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'SortedMultikeyMap___refImpl', 1222, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_SortedMultikeyMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'SortedMultikeyMap___refImpl', 1224, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function SortedMultikeyMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1223, 1, $intern_23, SortedMultikeyMap___refImpl$lambda$0$Type);
+defineClass(1225, 1, $intern_23, SortedMultikeyMap___refImpl$lambda$0$Type);
 _.accept = function accept_102(arg0){
   lambda$0_98(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_SortedMultikeyMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1223);
+var Lcc_alcina_framework_common_client_util_SortedMultikeyMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1225);
 function SortedMultikeyMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1224, 1, {}, SortedMultikeyMap___refImpl$lambda$1$Type);
+defineClass(1226, 1, {}, SortedMultikeyMap___refImpl$lambda$1$Type);
 _.test_0 = function test_105(arg0){
   return $clinit_SortedMultikeyMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_SortedMultikeyMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_SortedMultikeyMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1224);
+var Lcc_alcina_framework_common_client_util_SortedMultikeyMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1226);
 function StackDebug(){
   new CachingMap(new StackDebug$lambda$0$Type);
 }
@@ -16680,7 +16680,7 @@ function lambda$0_99(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1372, 6, $intern_25, TopicListener___refImpl);
+defineClass(1374, 6, $intern_25, TopicListener___refImpl);
 _.init0 = function init0_93(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -16694,26 +16694,26 @@ _.init0 = function init0_93(){
   $init(this, Lcc_alcina_framework_common_client_util_TopicListener_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_TopicListener_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'TopicListener___refImpl', 1372, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_TopicListener_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'TopicListener___refImpl', 1374, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function TopicListener___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1373, 1, $intern_23, TopicListener___refImpl$lambda$0$Type);
+defineClass(1375, 1, $intern_23, TopicListener___refImpl$lambda$0$Type);
 _.accept = function accept_103(arg0){
   lambda$0_99(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_TopicListener_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1373);
+var Lcc_alcina_framework_common_client_util_TopicListener_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1375);
 function TopicListener___refImpl$lambda$1$Type(){
 }
 
-defineClass(1374, 1, {}, TopicListener___refImpl$lambda$1$Type);
+defineClass(1376, 1, {}, TopicListener___refImpl$lambda$1$Type);
 _.test_0 = function test_106(arg0){
   return $clinit_TopicListener___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_TopicListener_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_TopicListener_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1374);
+var Lcc_alcina_framework_common_client_util_TopicListener_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1376);
 function UnsortedMultikeyMap(){
   UnsortedMultikeyMap_0.call(this, 2);
 }
@@ -16752,7 +16752,7 @@ function lambda$0_100(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1228, 6, $intern_26, UnsortedMultikeyMap___refImpl);
+defineClass(1230, 6, $intern_26, UnsortedMultikeyMap___refImpl);
 _.get_1 = function get_71(){
   return new UnsortedMultikeyMap;
 }
@@ -16772,26 +16772,26 @@ _.init0 = function init0_94(){
   $init(this, Lcc_alcina_framework_common_client_util_UnsortedMultikeyMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_UnsortedMultikeyMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'UnsortedMultikeyMap___refImpl', 1228, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_UnsortedMultikeyMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'UnsortedMultikeyMap___refImpl', 1230, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function UnsortedMultikeyMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1229, 1, $intern_23, UnsortedMultikeyMap___refImpl$lambda$0$Type);
+defineClass(1231, 1, $intern_23, UnsortedMultikeyMap___refImpl$lambda$0$Type);
 _.accept = function accept_104(arg0){
   lambda$0_100(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_UnsortedMultikeyMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1229);
+var Lcc_alcina_framework_common_client_util_UnsortedMultikeyMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1231);
 function UnsortedMultikeyMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1230, 1, {}, UnsortedMultikeyMap___refImpl$lambda$1$Type);
+defineClass(1232, 1, {}, UnsortedMultikeyMap___refImpl$lambda$1$Type);
 _.test_0 = function test_107(arg0){
   return $clinit_UnsortedMultikeyMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_UnsortedMultikeyMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_UnsortedMultikeyMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1230);
+var Lcc_alcina_framework_common_client_util_UnsortedMultikeyMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1232);
 var Lcc_alcina_framework_common_client_util_UrlComponentEncoder_2_classLit = createForInterface('cc.alcina.framework.common.client.util', 'UrlComponentEncoder');
 function $clinit_UrlComponentEncoder___refImpl(){
   $clinit_UrlComponentEncoder___refImpl = emptyMethod;
@@ -16808,7 +16808,7 @@ function lambda$0_101(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1405, 6, $intern_25, UrlComponentEncoder___refImpl);
+defineClass(1407, 6, $intern_25, UrlComponentEncoder___refImpl);
 _.init0 = function init0_95(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -16822,26 +16822,26 @@ _.init0 = function init0_95(){
   $init(this, Lcc_alcina_framework_common_client_util_UrlComponentEncoder_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_common_client_util_UrlComponentEncoder_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'UrlComponentEncoder___refImpl', 1405, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_common_client_util_UrlComponentEncoder_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.common.client.util', 'UrlComponentEncoder___refImpl', 1407, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function UrlComponentEncoder___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1406, 1, $intern_23, UrlComponentEncoder___refImpl$lambda$0$Type);
+defineClass(1408, 1, $intern_23, UrlComponentEncoder___refImpl$lambda$0$Type);
 _.accept = function accept_105(arg0){
   lambda$0_101(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_common_client_util_UrlComponentEncoder_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1406);
+var Lcc_alcina_framework_common_client_util_UrlComponentEncoder_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1408);
 function UrlComponentEncoder___refImpl$lambda$1$Type(){
 }
 
-defineClass(1407, 1, {}, UrlComponentEncoder___refImpl$lambda$1$Type);
+defineClass(1409, 1, {}, UrlComponentEncoder___refImpl$lambda$1$Type);
 _.test_0 = function test_108(arg0){
   return $clinit_UrlComponentEncoder___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_common_client_util_UrlComponentEncoder_2_classLit);
 }
 ;
-var Lcc_alcina_framework_common_client_util_UrlComponentEncoder_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1407);
+var Lcc_alcina_framework_common_client_util_UrlComponentEncoder_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1409);
 function DepthFirstTraversal(root, childrenSupplier){
   this.topicNodeExit = new Topic;
   this.lastFirst = false;
@@ -16954,7 +16954,7 @@ function lambda$0_102(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(877, 6, $intern_25, Serializable___refImpl);
+defineClass(879, 6, $intern_25, Serializable___refImpl);
 _.init0 = function init0_96(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -16968,26 +16968,26 @@ _.init0 = function init0_96(){
   $init(this, Ljava_io_Serializable_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1io_Serializable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_io', 'Serializable___refImpl', 877, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1io_Serializable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_io', 'Serializable___refImpl', 879, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Serializable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(878, 1, $intern_23, Serializable___refImpl$lambda$0$Type);
+defineClass(880, 1, $intern_23, Serializable___refImpl$lambda$0$Type);
 _.accept = function accept_107(arg0){
   lambda$0_102(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1io_Serializable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 878);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1io_Serializable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 880);
 function Serializable___refImpl$lambda$1$Type(){
 }
 
-defineClass(879, 1, {}, Serializable___refImpl$lambda$1$Type);
+defineClass(881, 1, {}, Serializable___refImpl$lambda$1$Type);
 _.test_0 = function test_109(arg0){
   return $clinit_Serializable___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_io_Serializable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1io_Serializable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 879);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1io_Serializable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 881);
 function $clinit_Boolean___refImpl(){
   $clinit_Boolean___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -17254,7 +17254,7 @@ function lambda$0_108(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(907, 6, $intern_25, Cloneable___refImpl);
+defineClass(909, 6, $intern_25, Cloneable___refImpl);
 _.init0 = function init0_102(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -17268,26 +17268,26 @@ _.init0 = function init0_102(){
   $init(this, Ljava_lang_Cloneable_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Cloneable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Cloneable___refImpl', 907, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Cloneable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Cloneable___refImpl', 909, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Cloneable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(908, 1, $intern_23, Cloneable___refImpl$lambda$0$Type);
+defineClass(910, 1, $intern_23, Cloneable___refImpl$lambda$0$Type);
 _.accept = function accept_113(arg0){
   lambda$0_108(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Cloneable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 908);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Cloneable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 910);
 function Cloneable___refImpl$lambda$1$Type(){
 }
 
-defineClass(909, 1, {}, Cloneable___refImpl$lambda$1$Type);
+defineClass(911, 1, {}, Cloneable___refImpl$lambda$1$Type);
 _.test_0 = function test_115(arg0){
   return $clinit_Cloneable___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_lang_Cloneable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Cloneable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 909);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Cloneable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 911);
 function $clinit_Comparable___refImpl(){
   $clinit_Comparable___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -17303,7 +17303,7 @@ function lambda$0_109(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(922, 6, $intern_25, Comparable___refImpl);
+defineClass(924, 6, $intern_25, Comparable___refImpl);
 _.init0 = function init0_103(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -17317,26 +17317,26 @@ _.init0 = function init0_103(){
   $init(this, Ljava_lang_Comparable_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Comparable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Comparable___refImpl', 922, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Comparable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Comparable___refImpl', 924, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Comparable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(923, 1, $intern_23, Comparable___refImpl$lambda$0$Type);
+defineClass(925, 1, $intern_23, Comparable___refImpl$lambda$0$Type);
 _.accept = function accept_114(arg0){
   lambda$0_109(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Comparable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 923);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Comparable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 925);
 function Comparable___refImpl$lambda$1$Type(){
 }
 
-defineClass(924, 1, {}, Comparable___refImpl$lambda$1$Type);
+defineClass(926, 1, {}, Comparable___refImpl$lambda$1$Type);
 _.test_0 = function test_116(arg0){
   return $clinit_Comparable___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_lang_Comparable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Comparable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 924);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Comparable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 926);
 function $clinit_Double___refImpl(){
   $clinit_Double___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -17402,7 +17402,7 @@ function lambda$0_111(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(919, 6, $intern_25, Enum___refImpl);
+defineClass(921, 6, $intern_25, Enum___refImpl);
 _.init0 = function init0_105(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -17418,26 +17418,26 @@ _.init0 = function init0_105(){
   $init(this, Ljava_lang_Enum_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Enum_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Enum___refImpl', 919, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Enum_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Enum___refImpl', 921, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Enum___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(920, 1, $intern_23, Enum___refImpl$lambda$0$Type);
+defineClass(922, 1, $intern_23, Enum___refImpl$lambda$0$Type);
 _.accept = function accept_116(arg0){
   lambda$0_111(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Enum_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 920);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Enum_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 922);
 function Enum___refImpl$lambda$1$Type(){
 }
 
-defineClass(921, 1, {}, Enum___refImpl$lambda$1$Type);
+defineClass(923, 1, {}, Enum___refImpl$lambda$1$Type);
 _.test_0 = function test_118(arg0){
   return $clinit_Enum___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_lang_Enum_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Enum_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 921);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Enum_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 923);
 function $clinit_Exception___refImpl(){
   $clinit_Exception___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -17453,7 +17453,7 @@ function lambda$0_112(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(967, 6, $intern_26, Exception___refImpl);
+defineClass(969, 6, $intern_26, Exception___refImpl);
 _.get_1 = function get_72(){
   return new Exception;
 }
@@ -17472,26 +17472,26 @@ _.init0 = function init0_106(){
   $init(this, Ljava_lang_Exception_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Exception_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Exception___refImpl', 967, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Exception_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Exception___refImpl', 969, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Exception___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(968, 1, $intern_23, Exception___refImpl$lambda$0$Type);
+defineClass(970, 1, $intern_23, Exception___refImpl$lambda$0$Type);
 _.accept = function accept_117(arg0){
   lambda$0_112(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Exception_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 968);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Exception_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 970);
 function Exception___refImpl$lambda$1$Type(){
 }
 
-defineClass(969, 1, {}, Exception___refImpl$lambda$1$Type);
+defineClass(971, 1, {}, Exception___refImpl$lambda$1$Type);
 _.test_0 = function test_119(arg0){
   return $clinit_Exception___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_lang_Exception_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Exception_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 969);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Exception_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 971);
 function $clinit_Float___refImpl(){
   $clinit_Float___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -17607,7 +17607,7 @@ function lambda$0_115(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(904, 6, $intern_25, Iterable___refImpl);
+defineClass(906, 6, $intern_25, Iterable___refImpl);
 _.init0 = function init0_109(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -17621,26 +17621,26 @@ _.init0 = function init0_109(){
   $init(this, Ljava_lang_Iterable_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Iterable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Iterable___refImpl', 904, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Iterable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Iterable___refImpl', 906, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Iterable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(905, 1, $intern_23, Iterable___refImpl$lambda$0$Type);
+defineClass(907, 1, $intern_23, Iterable___refImpl$lambda$0$Type);
 _.accept = function accept_120(arg0){
   lambda$0_115(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Iterable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 905);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Iterable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 907);
 function Iterable___refImpl$lambda$1$Type(){
 }
 
-defineClass(906, 1, {}, Iterable___refImpl$lambda$1$Type);
+defineClass(908, 1, {}, Iterable___refImpl$lambda$1$Type);
 _.test_0 = function test_122(arg0){
   return $clinit_Iterable___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_lang_Iterable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Iterable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 906);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Iterable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 908);
 function $clinit_Long___refImpl(){
   $clinit_Long___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -17756,7 +17756,7 @@ function lambda$0_118(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(889, 6, $intern_26, Object___refImpl);
+defineClass(891, 6, $intern_26, Object___refImpl);
 _.get_1 = function get_73(){
   return new Object_0;
 }
@@ -17775,26 +17775,26 @@ _.init0 = function init0_112(){
   $init(this, Ljava_lang_Object_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Object_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Object___refImpl', 889, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Object_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Object___refImpl', 891, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Object___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(890, 1, $intern_23, Object___refImpl$lambda$0$Type);
+defineClass(892, 1, $intern_23, Object___refImpl$lambda$0$Type);
 _.accept = function accept_123(arg0){
   lambda$0_118(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Object_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 890);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Object_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 892);
 function Object___refImpl$lambda$1$Type(){
 }
 
-defineClass(891, 1, {}, Object___refImpl$lambda$1$Type);
+defineClass(893, 1, {}, Object___refImpl$lambda$1$Type);
 _.test_0 = function test_125(arg0){
   return $clinit_Object___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_lang_Object_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Object_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 891);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Object_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 893);
 function $clinit_Runnable___refImpl(){
   $clinit_Runnable___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -17810,7 +17810,7 @@ function lambda$0_119(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1375, 6, $intern_25, Runnable___refImpl);
+defineClass(1377, 6, $intern_25, Runnable___refImpl);
 _.init0 = function init0_113(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -17824,26 +17824,26 @@ _.init0 = function init0_113(){
   $init(this, Ljava_lang_Runnable_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Runnable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Runnable___refImpl', 1375, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Runnable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Runnable___refImpl', 1377, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Runnable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1376, 1, $intern_23, Runnable___refImpl$lambda$0$Type);
+defineClass(1378, 1, $intern_23, Runnable___refImpl$lambda$0$Type);
 _.accept = function accept_124(arg0){
   lambda$0_119(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Runnable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1376);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Runnable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1378);
 function Runnable___refImpl$lambda$1$Type(){
 }
 
-defineClass(1377, 1, {}, Runnable___refImpl$lambda$1$Type);
+defineClass(1379, 1, {}, Runnable___refImpl$lambda$1$Type);
 _.test_0 = function test_126(arg0){
   return $clinit_Runnable___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_lang_Runnable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Runnable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1377);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Runnable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1379);
 function $clinit_Short___refImpl(){
   $clinit_Short___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -17966,7 +17966,7 @@ function lambda$0_122(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(970, 6, $intern_26, Throwable___refImpl);
+defineClass(972, 6, $intern_26, Throwable___refImpl);
 _.get_1 = function get_75(){
   return new Throwable;
 }
@@ -17986,26 +17986,26 @@ _.init0 = function init0_116(){
   $init(this, Ljava_lang_Throwable_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Throwable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Throwable___refImpl', 970, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Throwable_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang', 'Throwable___refImpl', 972, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Throwable___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(971, 1, $intern_23, Throwable___refImpl$lambda$0$Type);
+defineClass(973, 1, $intern_23, Throwable___refImpl$lambda$0$Type);
 _.accept = function accept_127(arg0){
   lambda$0_122(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Throwable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 971);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Throwable_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 973);
 function Throwable___refImpl$lambda$1$Type(){
 }
 
-defineClass(972, 1, {}, Throwable___refImpl$lambda$1$Type);
+defineClass(974, 1, {}, Throwable___refImpl$lambda$1$Type);
 _.test_0 = function test_129(arg0){
   return $clinit_Throwable___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_lang_Throwable_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Throwable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 972);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_Throwable_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 974);
 function $clinit_Void___refImpl(){
   $clinit_Void___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18070,7 +18070,7 @@ function lambda$0_124(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(928, 6, $intern_25, Annotation___refImpl);
+defineClass(930, 6, $intern_25, Annotation___refImpl);
 _.init0 = function init0_118(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -18084,26 +18084,26 @@ _.init0 = function init0_118(){
   $init(this, Ljava_lang_annotation_Annotation_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_1annotation_Annotation_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang_annotation', 'Annotation___refImpl', 928, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_1annotation_Annotation_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_lang_annotation', 'Annotation___refImpl', 930, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Annotation___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(929, 1, $intern_23, Annotation___refImpl$lambda$0$Type);
+defineClass(931, 1, $intern_23, Annotation___refImpl$lambda$0$Type);
 _.accept = function accept_129(arg0){
   lambda$0_124(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_1annotation_Annotation_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 929);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_1annotation_Annotation_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 931);
 function Annotation___refImpl$lambda$1$Type(){
 }
 
-defineClass(930, 1, {}, Annotation___refImpl$lambda$1$Type);
+defineClass(932, 1, {}, Annotation___refImpl$lambda$1$Type);
 _.test_0 = function test_131(arg0){
   return $clinit_Annotation___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_lang_annotation_Annotation_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_1annotation_Annotation_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 930);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1lang_1annotation_Annotation_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 932);
 function $clinit_Type___refImpl(){
   $clinit_Type___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18217,7 +18217,7 @@ function lambda$0_127(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(916, 6, $intern_25, AbstractCollection___refImpl);
+defineClass(918, 6, $intern_25, AbstractCollection___refImpl);
 _.init0 = function init0_121(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -18232,26 +18232,26 @@ _.init0 = function init0_121(){
   $init(this, Ljava_util_AbstractCollection_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractCollection_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'AbstractCollection___refImpl', 916, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractCollection_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'AbstractCollection___refImpl', 918, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AbstractCollection___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(917, 1, $intern_23, AbstractCollection___refImpl$lambda$0$Type);
+defineClass(919, 1, $intern_23, AbstractCollection___refImpl$lambda$0$Type);
 _.accept = function accept_132(arg0){
   lambda$0_127(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractCollection_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 917);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractCollection_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 919);
 function AbstractCollection___refImpl$lambda$1$Type(){
 }
 
-defineClass(918, 1, {}, AbstractCollection___refImpl$lambda$1$Type);
+defineClass(920, 1, {}, AbstractCollection___refImpl$lambda$1$Type);
 _.test_0 = function test_134(arg0){
   return $clinit_AbstractCollection___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_AbstractCollection_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractCollection_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 918);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractCollection_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 920);
 function $clinit_AbstractList___refImpl(){
   $clinit_AbstractList___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18267,7 +18267,7 @@ function lambda$0_128(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(913, 6, $intern_25, AbstractList___refImpl);
+defineClass(915, 6, $intern_25, AbstractList___refImpl);
 _.init0 = function init0_122(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -18282,26 +18282,26 @@ _.init0 = function init0_122(){
   $init(this, Ljava_util_AbstractList_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractList_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'AbstractList___refImpl', 913, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractList_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'AbstractList___refImpl', 915, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AbstractList___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(914, 1, $intern_23, AbstractList___refImpl$lambda$0$Type);
+defineClass(916, 1, $intern_23, AbstractList___refImpl$lambda$0$Type);
 _.accept = function accept_133(arg0){
   lambda$0_128(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractList_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 914);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractList_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 916);
 function AbstractList___refImpl$lambda$1$Type(){
 }
 
-defineClass(915, 1, {}, AbstractList___refImpl$lambda$1$Type);
+defineClass(917, 1, {}, AbstractList___refImpl$lambda$1$Type);
 _.test_0 = function test_135(arg0){
   return $clinit_AbstractList___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_AbstractList_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractList_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 915);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractList_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 917);
 function $clinit_AbstractMap___refImpl(){
   $clinit_AbstractMap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18317,7 +18317,7 @@ function lambda$0_129(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1207, 6, $intern_25, AbstractMap___refImpl);
+defineClass(1209, 6, $intern_25, AbstractMap___refImpl);
 _.init0 = function init0_123(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -18332,26 +18332,26 @@ _.init0 = function init0_123(){
   $init(this, Ljava_util_AbstractMap_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'AbstractMap___refImpl', 1207, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'AbstractMap___refImpl', 1209, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AbstractMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1208, 1, $intern_23, AbstractMap___refImpl$lambda$0$Type);
+defineClass(1210, 1, $intern_23, AbstractMap___refImpl$lambda$0$Type);
 _.accept = function accept_134(arg0){
   lambda$0_129(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1208);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1210);
 function AbstractMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1209, 1, {}, AbstractMap___refImpl$lambda$1$Type);
+defineClass(1211, 1, {}, AbstractMap___refImpl$lambda$1$Type);
 _.test_0 = function test_136(arg0){
   return $clinit_AbstractMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_AbstractMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1209);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1211);
 function $clinit_AbstractSequentialList___refImpl(){
   $clinit_AbstractSequentialList___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18416,7 +18416,7 @@ function lambda$0_131(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(976, 6, $intern_25, AbstractSet___refImpl);
+defineClass(978, 6, $intern_25, AbstractSet___refImpl);
 _.init0 = function init0_125(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -18431,26 +18431,26 @@ _.init0 = function init0_125(){
   $init(this, Ljava_util_AbstractSet_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'AbstractSet___refImpl', 976, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractSet_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'AbstractSet___refImpl', 978, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function AbstractSet___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(977, 1, $intern_23, AbstractSet___refImpl$lambda$0$Type);
+defineClass(979, 1, $intern_23, AbstractSet___refImpl$lambda$0$Type);
 _.accept = function accept_136(arg0){
   lambda$0_131(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 977);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractSet_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 979);
 function AbstractSet___refImpl$lambda$1$Type(){
 }
 
-defineClass(978, 1, {}, AbstractSet___refImpl$lambda$1$Type);
+defineClass(980, 1, {}, AbstractSet___refImpl$lambda$1$Type);
 _.test_0 = function test_138(arg0){
   return $clinit_AbstractSet___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_AbstractSet_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 978);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_AbstractSet_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 980);
 function $clinit_ArrayList___refImpl(){
   $clinit_ArrayList___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18466,7 +18466,7 @@ function lambda$0_132(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(895, 6, $intern_26, ArrayList___refImpl);
+defineClass(897, 6, $intern_26, ArrayList___refImpl);
 _.get_1 = function get_76(){
   return new ArrayList;
 }
@@ -18489,26 +18489,26 @@ _.init0 = function init0_126(){
   $init(this, Ljava_util_ArrayList_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_ArrayList_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'ArrayList___refImpl', 895, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_ArrayList_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'ArrayList___refImpl', 897, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ArrayList___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(896, 1, $intern_23, ArrayList___refImpl$lambda$0$Type);
+defineClass(898, 1, $intern_23, ArrayList___refImpl$lambda$0$Type);
 _.accept = function accept_137(arg0){
   lambda$0_132(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_ArrayList_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 896);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_ArrayList_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 898);
 function ArrayList___refImpl$lambda$1$Type(){
 }
 
-defineClass(897, 1, {}, ArrayList___refImpl$lambda$1$Type);
+defineClass(899, 1, {}, ArrayList___refImpl$lambda$1$Type);
 _.test_0 = function test_139(arg0){
   return $clinit_ArrayList___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_ArrayList_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_ArrayList_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 897);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_ArrayList_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 899);
 function $clinit_Collection___refImpl(){
   $clinit_Collection___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18524,7 +18524,7 @@ function lambda$0_133(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(901, 6, $intern_25, Collection___refImpl);
+defineClass(903, 6, $intern_25, Collection___refImpl);
 _.init0 = function init0_127(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -18539,26 +18539,26 @@ _.init0 = function init0_127(){
   $init(this, Ljava_util_Collection_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Collection_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'Collection___refImpl', 901, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Collection_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'Collection___refImpl', 903, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Collection___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(902, 1, $intern_23, Collection___refImpl$lambda$0$Type);
+defineClass(904, 1, $intern_23, Collection___refImpl$lambda$0$Type);
 _.accept = function accept_138(arg0){
   lambda$0_133(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Collection_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 902);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Collection_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 904);
 function Collection___refImpl$lambda$1$Type(){
 }
 
-defineClass(903, 1, {}, Collection___refImpl$lambda$1$Type);
+defineClass(905, 1, {}, Collection___refImpl$lambda$1$Type);
 _.test_0 = function test_140(arg0){
   return $clinit_Collection___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_Collection_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Collection_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 903);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Collection_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 905);
 function $clinit_Comparator___refImpl(){
   $clinit_Comparator___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18574,7 +18574,7 @@ function lambda$0_134(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(964, 6, $intern_25, Comparator___refImpl);
+defineClass(966, 6, $intern_25, Comparator___refImpl);
 _.init0 = function init0_128(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -18588,26 +18588,26 @@ _.init0 = function init0_128(){
   $init(this, Ljava_util_Comparator_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Comparator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'Comparator___refImpl', 964, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Comparator_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'Comparator___refImpl', 966, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Comparator___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(965, 1, $intern_23, Comparator___refImpl$lambda$0$Type);
+defineClass(967, 1, $intern_23, Comparator___refImpl$lambda$0$Type);
 _.accept = function accept_139(arg0){
   lambda$0_134(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Comparator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 965);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Comparator_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 967);
 function Comparator___refImpl$lambda$1$Type(){
 }
 
-defineClass(966, 1, {}, Comparator___refImpl$lambda$1$Type);
+defineClass(968, 1, {}, Comparator___refImpl$lambda$1$Type);
 _.test_0 = function test_141(arg0){
   return $clinit_Comparator___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_Comparator_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Comparator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 966);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Comparator_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 968);
 function $clinit_Date___refImpl(){
   $clinit_Date___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18730,7 +18730,7 @@ function lambda$0_137(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1204, 6, $intern_26, HashMap___refImpl);
+defineClass(1206, 6, $intern_26, HashMap___refImpl);
 _.get_1 = function get_78(){
   return new HashMap;
 }
@@ -18751,26 +18751,26 @@ _.init0 = function init0_131(){
   $init(this, Ljava_util_HashMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_HashMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'HashMap___refImpl', 1204, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_HashMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'HashMap___refImpl', 1206, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function HashMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1205, 1, $intern_23, HashMap___refImpl$lambda$0$Type);
+defineClass(1207, 1, $intern_23, HashMap___refImpl$lambda$0$Type);
 _.accept = function accept_142(arg0){
   lambda$0_137(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_HashMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1205);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_HashMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1207);
 function HashMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1206, 1, {}, HashMap___refImpl$lambda$1$Type);
+defineClass(1208, 1, {}, HashMap___refImpl$lambda$1$Type);
 _.test_0 = function test_144(arg0){
   return $clinit_HashMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_HashMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_HashMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1206);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_HashMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1208);
 function $clinit_HashSet___refImpl(){
   $clinit_HashSet___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -18843,7 +18843,7 @@ function lambda$0_139(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1201, 6, $intern_26, LinkedHashMap___refImpl);
+defineClass(1203, 6, $intern_26, LinkedHashMap___refImpl);
 _.get_1 = function get_80(){
   return new LinkedHashMap;
 }
@@ -18863,26 +18863,26 @@ _.init0 = function init0_133(){
   $init(this, Ljava_util_LinkedHashMap_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_LinkedHashMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'LinkedHashMap___refImpl', 1201, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_LinkedHashMap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'LinkedHashMap___refImpl', 1203, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LinkedHashMap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1202, 1, $intern_23, LinkedHashMap___refImpl$lambda$0$Type);
+defineClass(1204, 1, $intern_23, LinkedHashMap___refImpl$lambda$0$Type);
 _.accept = function accept_144(arg0){
   lambda$0_139(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_LinkedHashMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1202);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_LinkedHashMap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1204);
 function LinkedHashMap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1203, 1, {}, LinkedHashMap___refImpl$lambda$1$Type);
+defineClass(1205, 1, {}, LinkedHashMap___refImpl$lambda$1$Type);
 _.test_0 = function test_146(arg0){
   return $clinit_LinkedHashMap___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_LinkedHashMap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_LinkedHashMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1203);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_LinkedHashMap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1205);
 function $clinit_LinkedHashSet___refImpl(){
   $clinit_LinkedHashSet___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -19012,7 +19012,7 @@ function lambda$0_142(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(898, 6, $intern_25, List___refImpl);
+defineClass(900, 6, $intern_25, List___refImpl);
 _.init0 = function init0_136(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -19027,26 +19027,26 @@ _.init0 = function init0_136(){
   $init(this, Ljava_util_List_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_List_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'List___refImpl', 898, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_List_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'List___refImpl', 900, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function List___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(899, 1, $intern_23, List___refImpl$lambda$0$Type);
+defineClass(901, 1, $intern_23, List___refImpl$lambda$0$Type);
 _.accept = function accept_147(arg0){
   lambda$0_142(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_List_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 899);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_List_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 901);
 function List___refImpl$lambda$1$Type(){
 }
 
-defineClass(900, 1, {}, List___refImpl$lambda$1$Type);
+defineClass(902, 1, {}, List___refImpl$lambda$1$Type);
 _.test_0 = function test_149(arg0){
   return $clinit_List___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_List_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_List_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 900);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_List_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 902);
 function $clinit_Map___refImpl(){
   $clinit_Map___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -19062,7 +19062,7 @@ function lambda$0_143(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(985, 6, $intern_25, Map___refImpl);
+defineClass(987, 6, $intern_25, Map___refImpl);
 _.init0 = function init0_137(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -19076,26 +19076,26 @@ _.init0 = function init0_137(){
   $init(this, Ljava_util_Map_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Map_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'Map___refImpl', 985, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Map_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'Map___refImpl', 987, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Map___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(986, 1, $intern_23, Map___refImpl$lambda$0$Type);
+defineClass(988, 1, $intern_23, Map___refImpl$lambda$0$Type);
 _.accept = function accept_148(arg0){
   lambda$0_143(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Map_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 986);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Map_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 988);
 function Map___refImpl$lambda$1$Type(){
 }
 
-defineClass(987, 1, {}, Map___refImpl$lambda$1$Type);
+defineClass(989, 1, {}, Map___refImpl$lambda$1$Type);
 _.test_0 = function test_150(arg0){
   return $clinit_Map___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_Map_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Map_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 987);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Map_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 989);
 function $clinit_NavigableMap___refImpl(){
   $clinit_NavigableMap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -19261,7 +19261,7 @@ function lambda$0_147(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(910, 6, $intern_25, RandomAccess___refImpl);
+defineClass(912, 6, $intern_25, RandomAccess___refImpl);
 _.init0 = function init0_141(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -19275,26 +19275,26 @@ _.init0 = function init0_141(){
   $init(this, Ljava_util_RandomAccess_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_RandomAccess_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'RandomAccess___refImpl', 910, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_RandomAccess_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'RandomAccess___refImpl', 912, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RandomAccess___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(911, 1, $intern_23, RandomAccess___refImpl$lambda$0$Type);
+defineClass(913, 1, $intern_23, RandomAccess___refImpl$lambda$0$Type);
 _.accept = function accept_152(arg0){
   lambda$0_147(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_RandomAccess_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 911);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_RandomAccess_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 913);
 function RandomAccess___refImpl$lambda$1$Type(){
 }
 
-defineClass(912, 1, {}, RandomAccess___refImpl$lambda$1$Type);
+defineClass(914, 1, {}, RandomAccess___refImpl$lambda$1$Type);
 _.test_0 = function test_154(arg0){
   return $clinit_RandomAccess___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_RandomAccess_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_RandomAccess_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 912);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_RandomAccess_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 914);
 function $clinit_Set___refImpl(){
   $clinit_Set___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -19310,7 +19310,7 @@ function lambda$0_148(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(979, 6, $intern_25, Set___refImpl);
+defineClass(981, 6, $intern_25, Set___refImpl);
 _.init0 = function init0_142(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -19325,26 +19325,26 @@ _.init0 = function init0_142(){
   $init(this, Ljava_util_Set_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Set_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'Set___refImpl', 979, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Set_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util', 'Set___refImpl', 981, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Set___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(980, 1, $intern_23, Set___refImpl$lambda$0$Type);
+defineClass(982, 1, $intern_23, Set___refImpl$lambda$0$Type);
 _.accept = function accept_153(arg0){
   lambda$0_148(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Set_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 980);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Set_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 982);
 function Set___refImpl$lambda$1$Type(){
 }
 
-defineClass(981, 1, {}, Set___refImpl$lambda$1$Type);
+defineClass(983, 1, {}, Set___refImpl$lambda$1$Type);
 _.test_0 = function test_155(arg0){
   return $clinit_Set___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_Set_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Set_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 981);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_Set_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 983);
 function $clinit_SortedMap___refImpl(){
   $clinit_SortedMap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -19571,7 +19571,7 @@ function lambda$0_153(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(961, 6, $intern_25, Function___refImpl);
+defineClass(963, 6, $intern_25, Function___refImpl);
 _.init0 = function init0_147(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -19585,26 +19585,26 @@ _.init0 = function init0_147(){
   $init(this, Ljava_util_function_Function_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Function_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util_function', 'Function___refImpl', 961, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Function_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util_function', 'Function___refImpl', 963, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Function___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(962, 1, $intern_23, Function___refImpl$lambda$0$Type);
+defineClass(964, 1, $intern_23, Function___refImpl$lambda$0$Type);
 _.accept = function accept_158(arg0){
   lambda$0_153(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Function_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 962);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Function_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 964);
 function Function___refImpl$lambda$1$Type(){
 }
 
-defineClass(963, 1, {}, Function___refImpl$lambda$1$Type);
+defineClass(965, 1, {}, Function___refImpl$lambda$1$Type);
 _.test_0 = function test_160(arg0){
   return $clinit_Function___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_function_Function_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Function_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 963);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Function_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 965);
 function $clinit_Predicate___refImpl(){
   $clinit_Predicate___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -19620,7 +19620,7 @@ function lambda$0_154(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(946, 6, $intern_25, Predicate___refImpl);
+defineClass(948, 6, $intern_25, Predicate___refImpl);
 _.init0 = function init0_148(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -19634,26 +19634,26 @@ _.init0 = function init0_148(){
   $init(this, Ljava_util_function_Predicate_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Predicate_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util_function', 'Predicate___refImpl', 946, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Predicate_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util_function', 'Predicate___refImpl', 948, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Predicate___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(947, 1, $intern_23, Predicate___refImpl$lambda$0$Type);
+defineClass(949, 1, $intern_23, Predicate___refImpl$lambda$0$Type);
 _.accept = function accept_159(arg0){
   lambda$0_154(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Predicate_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 947);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Predicate_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 949);
 function Predicate___refImpl$lambda$1$Type(){
 }
 
-defineClass(948, 1, {}, Predicate___refImpl$lambda$1$Type);
+defineClass(950, 1, {}, Predicate___refImpl$lambda$1$Type);
 _.test_0 = function test_161(arg0){
   return $clinit_Predicate___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_function_Predicate_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Predicate_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 948);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Predicate_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 950);
 function $clinit_Supplier___refImpl(){
   $clinit_Supplier___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -19669,7 +19669,7 @@ function lambda$0_155(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1183, 6, $intern_25, Supplier___refImpl);
+defineClass(1185, 6, $intern_25, Supplier___refImpl);
 _.init0 = function init0_149(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -19683,26 +19683,26 @@ _.init0 = function init0_149(){
   $init(this, Ljava_util_function_Supplier_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Supplier_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util_function', 'Supplier___refImpl', 1183, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Supplier_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.entity.gwt.reflection.java_util_function', 'Supplier___refImpl', 1185, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Supplier___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1184, 1, $intern_23, Supplier___refImpl$lambda$0$Type);
+defineClass(1186, 1, $intern_23, Supplier___refImpl$lambda$0$Type);
 _.accept = function accept_160(arg0){
   lambda$0_155(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Supplier_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1184);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Supplier_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1186);
 function Supplier___refImpl$lambda$1$Type(){
 }
 
-defineClass(1185, 1, {}, Supplier___refImpl$lambda$1$Type);
+defineClass(1187, 1, {}, Supplier___refImpl$lambda$1$Type);
 _.test_0 = function test_162(arg0){
   return $clinit_Supplier___refImpl() , isAssignableFrom(castTo(arg0, 8), Ljava_util_function_Supplier_2_classLit);
 }
 ;
-var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Supplier_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1185);
+var Lcc_alcina_framework_entity_gwt_reflection_java_1util_1function_Supplier_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1187);
 function Client$Init$0methodref$attach$Type(){
 }
 
@@ -19773,7 +19773,7 @@ function lambda$0_156(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1234, 6, $intern_25, Client___refImpl);
+defineClass(1236, 6, $intern_25, Client___refImpl);
 _.init0 = function init0_150(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -19788,26 +19788,26 @@ _.init0 = function init0_150(){
   $init(this, Lcc_alcina_framework_gwt_client_Client_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_Client_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client', 'Client___refImpl', 1234, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_Client_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client', 'Client___refImpl', 1236, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Client___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1235, 1, $intern_23, Client___refImpl$lambda$0$Type);
+defineClass(1237, 1, $intern_23, Client___refImpl$lambda$0$Type);
 _.accept = function accept_162(arg0){
   lambda$0_156(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_Client_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1235);
+var Lcc_alcina_framework_gwt_client_Client_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1237);
 function Client___refImpl$lambda$1$Type(){
 }
 
-defineClass(1236, 1, {}, Client___refImpl$lambda$1$Type);
+defineClass(1238, 1, {}, Client___refImpl$lambda$1$Type);
 _.test_0 = function test_163(arg0){
   return $clinit_Client___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_Client_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_Client_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1236);
+var Lcc_alcina_framework_gwt_client_Client_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1238);
 var userAgent = null;
 var CHROME_IOS_USER_AGENT = 'CriOS/';
 function $clinit_Binding___refImpl(){
@@ -19825,7 +19825,7 @@ function lambda$0_157(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1243, 6, $intern_25, Binding___refImpl);
+defineClass(1245, 6, $intern_25, Binding___refImpl);
 _.init0 = function init0_151(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -19840,26 +19840,26 @@ _.init0 = function init0_151(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_annotation_Binding_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Binding_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Binding___refImpl', 1243, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Binding_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Binding___refImpl', 1245, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Binding___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1244, 1, $intern_23, Binding___refImpl$lambda$0$Type);
+defineClass(1246, 1, $intern_23, Binding___refImpl$lambda$0$Type);
 _.accept = function accept_163(arg0){
   lambda$0_157(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Binding_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1244);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Binding_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1246);
 function Binding___refImpl$lambda$1$Type(){
 }
 
-defineClass(1245, 1, {}, Binding___refImpl$lambda$1$Type);
+defineClass(1247, 1, {}, Binding___refImpl$lambda$1$Type);
 _.test_0 = function test_164(arg0){
   return $clinit_Binding___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_annotation_Binding_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Binding_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1245);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Binding_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1247);
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_2_classLit = createForInterface('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed');
 function $clinit_Directed$Impl(){
   $clinit_Directed$Impl = emptyMethod;
@@ -19936,7 +19936,7 @@ function Directed$Impl_0(directed){
   this.renderer = directed.renderer_0();
 }
 
-defineClass(98, 1, {57:1, 98:1, 94:1}, Directed$Impl, Directed$Impl_0);
+defineClass(98, 1, {58:1, 98:1, 94:1}, Directed$Impl, Directed$Impl_0);
 _.equals_0 = function equals_23(other){
   return maskUndefined(this) === maskUndefined(other);
 }
@@ -19992,7 +19992,7 @@ function Directed$Impl$0methodref$bindings$Type(){
 
 defineClass(1528, 1, {}, Directed$Impl$0methodref$bindings$Type);
 _.apply_0 = function apply_36(arg0){
-  return castTo(arg0, 57).bindings_0();
+  return castTo(arg0, 58).bindings_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$0methodref$bindings$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1528);
@@ -20001,7 +20001,7 @@ function Directed$Impl$10methodref$cssClass$Type(){
 
 defineClass(1538, 1, {}, Directed$Impl$10methodref$cssClass$Type);
 _.apply_0 = function apply_37(arg0){
-  return castTo(arg0, 57).cssClass_0();
+  return castTo(arg0, 58).cssClass_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$10methodref$cssClass$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1538);
@@ -20010,7 +20010,7 @@ function Directed$Impl$11methodref$bindings$Type(){
 
 defineClass(1539, 1, {}, Directed$Impl$11methodref$bindings$Type);
 _.apply_0 = function apply_38(arg0){
-  return castTo(arg0, 57).bindings_0();
+  return castTo(arg0, 58).bindings_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$11methodref$bindings$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1539);
@@ -20019,7 +20019,7 @@ function Directed$Impl$12methodref$emits$Type(){
 
 defineClass(1540, 1, {}, Directed$Impl$12methodref$emits$Type);
 _.apply_0 = function apply_39(arg0){
-  return castTo(arg0, 57).emits_0();
+  return castTo(arg0, 58).emits_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$12methodref$emits$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1540);
@@ -20028,7 +20028,7 @@ function Directed$Impl$13methodref$receives$Type(){
 
 defineClass(1541, 1, {}, Directed$Impl$13methodref$receives$Type);
 _.apply_0 = function apply_40(arg0){
-  return castTo(arg0, 57).receives_0();
+  return castTo(arg0, 58).receives_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$13methodref$receives$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1541);
@@ -20037,7 +20037,7 @@ function Directed$Impl$14methodref$reemits$Type(){
 
 defineClass(1542, 1, {}, Directed$Impl$14methodref$reemits$Type);
 _.apply_0 = function apply_41(arg0){
-  return castTo(arg0, 57).reemits_0();
+  return castTo(arg0, 58).reemits_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$14methodref$reemits$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1542);
@@ -20046,7 +20046,7 @@ function Directed$Impl$15methodref$renderer$Type(){
 
 defineClass(1543, 1, {}, Directed$Impl$15methodref$renderer$Type);
 _.apply_0 = function apply_42(arg0){
-  return castTo(arg0, 57).renderer_0();
+  return castTo(arg0, 58).renderer_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$15methodref$renderer$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1543);
@@ -20055,7 +20055,7 @@ function Directed$Impl$16methodref$merge$Type(){
 
 defineClass(1544, 1, {}, Directed$Impl$16methodref$merge$Type);
 _.apply_0 = function apply_43(arg0){
-  return $clinit_Boolean() , castTo(arg0, 57).merge_1()?true:false;
+  return $clinit_Boolean() , castTo(arg0, 58).merge_1()?true:false;
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$16methodref$merge$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1544);
@@ -20064,7 +20064,7 @@ function Directed$Impl$1methodref$cssClass$Type(){
 
 defineClass(1529, 1, {}, Directed$Impl$1methodref$cssClass$Type);
 _.apply_0 = function apply_44(arg0){
-  return castTo(arg0, 57).cssClass_0();
+  return castTo(arg0, 58).cssClass_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$1methodref$cssClass$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1529);
@@ -20073,7 +20073,7 @@ function Directed$Impl$2methodref$emits$Type(){
 
 defineClass(1530, 1, {}, Directed$Impl$2methodref$emits$Type);
 _.apply_0 = function apply_45(arg0){
-  return castTo(arg0, 57).emits_0();
+  return castTo(arg0, 58).emits_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$2methodref$emits$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1530);
@@ -20082,7 +20082,7 @@ function Directed$Impl$3methodref$merge$Type(){
 
 defineClass(1531, 1, {}, Directed$Impl$3methodref$merge$Type);
 _.apply_0 = function apply_46(arg0){
-  return $clinit_Boolean() , castTo(arg0, 57).merge_1()?true:false;
+  return $clinit_Boolean() , castTo(arg0, 58).merge_1()?true:false;
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$3methodref$merge$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1531);
@@ -20091,7 +20091,7 @@ function Directed$Impl$4methodref$receives$Type(){
 
 defineClass(1532, 1, {}, Directed$Impl$4methodref$receives$Type);
 _.apply_0 = function apply_47(arg0){
-  return castTo(arg0, 57).receives_0();
+  return castTo(arg0, 58).receives_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$4methodref$receives$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1532);
@@ -20100,7 +20100,7 @@ function Directed$Impl$5methodref$reemits$Type(){
 
 defineClass(1533, 1, {}, Directed$Impl$5methodref$reemits$Type);
 _.apply_0 = function apply_48(arg0){
-  return castTo(arg0, 57).reemits_0();
+  return castTo(arg0, 58).reemits_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$5methodref$reemits$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1533);
@@ -20109,7 +20109,7 @@ function Directed$Impl$6methodref$renderer$Type(){
 
 defineClass(1534, 1, {}, Directed$Impl$6methodref$renderer$Type);
 _.apply_0 = function apply_49(arg0){
-  return castTo(arg0, 57).renderer_0();
+  return castTo(arg0, 58).renderer_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$6methodref$renderer$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1534);
@@ -20118,7 +20118,7 @@ function Directed$Impl$7methodref$tag$Type(){
 
 defineClass(1535, 1, {}, Directed$Impl$7methodref$tag$Type);
 _.apply_0 = function apply_50(arg0){
-  return castTo(arg0, 57).tag_0();
+  return castTo(arg0, 58).tag_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$7methodref$tag$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1535);
@@ -20137,7 +20137,7 @@ function Directed$Impl$9methodref$tag$Type(){
 
 defineClass(1537, 1, {}, Directed$Impl$9methodref$tag$Type);
 _.apply_0 = function apply_52(arg0){
-  return castTo(arg0, 57).tag_0();
+  return castTo(arg0, 58).tag_0();
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Impl$9methodref$tag$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1537);
@@ -20149,7 +20149,7 @@ var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Transform$MergeSt
 function $atHasAnnotations(reflector){
   var declaringType, directed, result_0;
   result_0 = new ArrayList;
-  directed = castTo(reflector.annotation(Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_2_classLit), 57);
+  directed = castTo(reflector.annotation(Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_2_classLit), 58);
   throwClassCastExceptionUnlessNull(reflector.annotation(Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Multiple_2_classLit));
   throwClassCastExceptionUnlessNull(reflector.annotation(Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Wrap_2_classLit));
   throwClassCastExceptionUnlessNull(reflector.annotation(Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Delegating_2_classLit));
@@ -20185,7 +20185,7 @@ _.merge_0 = function merge_1(lessSpecific, moreSpecific){
   if (!lessSpecific || lessSpecific.isEmpty()) {
     return moreSpecific;
   }
-  mostSpecific = castTo(last_0(moreSpecific), 57);
+  mostSpecific = castTo(last_0(moreSpecific), 58);
   if (!mostSpecific.merge_1()) {
     return moreSpecific;
   }
@@ -20193,7 +20193,7 @@ _.merge_0 = function merge_1(lessSpecific, moreSpecific){
   lowestImpl = ($clinit_Directed$Impl() , instanceOf(mostSpecific, 98)?castTo(mostSpecific, 98):new Directed$Impl_0(mostSpecific));
   result_0 = new ArrayList;
   moreSpecific.stream().limit_0(moreSpecific.size_1() - 1).forEach_0(new DirectedMergeStrategy$0methodref$add$Type(result_0));
-  merged = $mergeParent(lowestImpl, castTo(lessSpecific.get_0(0), 57));
+  merged = $mergeParent(lowestImpl, castTo(lessSpecific.get_0(0), 58));
   result_0.add_0(merged);
   lessSpecific.stream().skip_0(1).forEach_0(new DirectedMergeStrategy$1methodref$add$Type(result_0));
   return result_0;
@@ -20206,7 +20206,7 @@ function DirectedMergeStrategy$0methodref$add$Type($$outer_0){
 
 defineClass(1545, 1, $intern_23, DirectedMergeStrategy$0methodref$add$Type);
 _.accept = function accept_164(arg0){
-  this.$$outer_0.add_0(castTo(arg0, 57));
+  this.$$outer_0.add_0(castTo(arg0, 58));
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy$0methodref$add$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1545);
@@ -20216,7 +20216,7 @@ function DirectedMergeStrategy$1methodref$add$Type($$outer_0){
 
 defineClass(1546, 1, $intern_23, DirectedMergeStrategy$1methodref$add$Type);
 _.accept = function accept_165(arg0){
-  this.$$outer_0.add_0(castTo(arg0, 57));
+  this.$$outer_0.add_0(castTo(arg0, 58));
 }
 ;
 var Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy$1methodref$add$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1546);
@@ -20235,7 +20235,7 @@ function lambda$0_158(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1267, 6, $intern_26, DirectedMergeStrategy___refImpl);
+defineClass(1269, 6, $intern_26, DirectedMergeStrategy___refImpl);
 _.get_1 = function get_86(){
   return new DirectedMergeStrategy;
 }
@@ -20255,26 +20255,26 @@ _.init0 = function init0_152(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'DirectedMergeStrategy___refImpl', 1267, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'DirectedMergeStrategy___refImpl', 1269, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DirectedMergeStrategy___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1268, 1, $intern_23, DirectedMergeStrategy___refImpl$lambda$0$Type);
+defineClass(1270, 1, $intern_23, DirectedMergeStrategy___refImpl$lambda$0$Type);
 _.accept = function accept_166(arg0){
   lambda$0_158(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1268);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1270);
 function DirectedMergeStrategy___refImpl$lambda$1$Type(){
 }
 
-defineClass(1269, 1, {}, DirectedMergeStrategy___refImpl$lambda$1$Type);
+defineClass(1271, 1, {}, DirectedMergeStrategy___refImpl$lambda$1$Type);
 _.test_0 = function test_165(arg0){
   return $clinit_DirectedMergeStrategy___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1269);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_DirectedMergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1271);
 function $clinit_Directed_AllProperties___refImpl(){
   $clinit_Directed_AllProperties___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -20290,7 +20290,7 @@ function lambda$0_159(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1249, 6, $intern_25, Directed_AllProperties___refImpl);
+defineClass(1251, 6, $intern_25, Directed_AllProperties___refImpl);
 _.init0 = function init0_153(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -20305,26 +20305,26 @@ _.init0 = function init0_153(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$AllProperties_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1AllProperties_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_AllProperties___refImpl', 1249, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1AllProperties_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_AllProperties___refImpl', 1251, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Directed_AllProperties___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1250, 1, $intern_23, Directed_AllProperties___refImpl$lambda$0$Type);
+defineClass(1252, 1, $intern_23, Directed_AllProperties___refImpl$lambda$0$Type);
 _.accept = function accept_167(arg0){
   lambda$0_159(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1AllProperties_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1250);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1AllProperties_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1252);
 function Directed_AllProperties___refImpl$lambda$1$Type(){
 }
 
-defineClass(1251, 1, {}, Directed_AllProperties___refImpl$lambda$1$Type);
+defineClass(1253, 1, {}, Directed_AllProperties___refImpl$lambda$1$Type);
 _.test_0 = function test_166(arg0){
   return $clinit_Directed_AllProperties___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$AllProperties_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1AllProperties_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1251);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1AllProperties_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1253);
 function $clinit_Directed_Delegating___refImpl(){
   $clinit_Directed_Delegating___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -20340,7 +20340,7 @@ function lambda$0_160(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1252, 6, $intern_25, Directed_Delegating___refImpl);
+defineClass(1254, 6, $intern_25, Directed_Delegating___refImpl);
 _.init0 = function init0_154(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -20355,26 +20355,26 @@ _.init0 = function init0_154(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Delegating_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Delegating_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Delegating___refImpl', 1252, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Delegating_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Delegating___refImpl', 1254, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Directed_Delegating___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1253, 1, $intern_23, Directed_Delegating___refImpl$lambda$0$Type);
+defineClass(1255, 1, $intern_23, Directed_Delegating___refImpl$lambda$0$Type);
 _.accept = function accept_168(arg0){
   lambda$0_160(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Delegating_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1253);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Delegating_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1255);
 function Directed_Delegating___refImpl$lambda$1$Type(){
 }
 
-defineClass(1254, 1, {}, Directed_Delegating___refImpl$lambda$1$Type);
+defineClass(1256, 1, {}, Directed_Delegating___refImpl$lambda$1$Type);
 _.test_0 = function test_167(arg0){
   return $clinit_Directed_Delegating___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Delegating_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Delegating_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1254);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Delegating_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1256);
 function $clinit_Directed_Multiple___refImpl(){
   $clinit_Directed_Multiple___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -20390,7 +20390,7 @@ function lambda$0_161(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1255, 6, $intern_25, Directed_Multiple___refImpl);
+defineClass(1257, 6, $intern_25, Directed_Multiple___refImpl);
 _.init0 = function init0_155(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -20405,26 +20405,26 @@ _.init0 = function init0_155(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Multiple_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Multiple_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Multiple___refImpl', 1255, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Multiple_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Multiple___refImpl', 1257, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Directed_Multiple___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1256, 1, $intern_23, Directed_Multiple___refImpl$lambda$0$Type);
+defineClass(1258, 1, $intern_23, Directed_Multiple___refImpl$lambda$0$Type);
 _.accept = function accept_169(arg0){
   lambda$0_161(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Multiple_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1256);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Multiple_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1258);
 function Directed_Multiple___refImpl$lambda$1$Type(){
 }
 
-defineClass(1257, 1, {}, Directed_Multiple___refImpl$lambda$1$Type);
+defineClass(1259, 1, {}, Directed_Multiple___refImpl$lambda$1$Type);
 _.test_0 = function test_168(arg0){
   return $clinit_Directed_Multiple___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Multiple_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Multiple_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1257);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Multiple_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1259);
 function $clinit_Directed_Transform_MergeStrategy___refImpl(){
   $clinit_Directed_Transform_MergeStrategy___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -20440,7 +20440,7 @@ function lambda$0_162(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1261, 6, $intern_26, Directed_Transform_MergeStrategy___refImpl);
+defineClass(1263, 6, $intern_26, Directed_Transform_MergeStrategy___refImpl);
 _.get_1 = function get_87(){
   return new Directed$Transform$MergeStrategy;
 }
@@ -20460,26 +20460,26 @@ _.init0 = function init0_156(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Transform$MergeStrategy_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1MergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Transform_MergeStrategy___refImpl', 1261, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1MergeStrategy_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Transform_MergeStrategy___refImpl', 1263, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Directed_Transform_MergeStrategy___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1262, 1, $intern_23, Directed_Transform_MergeStrategy___refImpl$lambda$0$Type);
+defineClass(1264, 1, $intern_23, Directed_Transform_MergeStrategy___refImpl$lambda$0$Type);
 _.accept = function accept_170(arg0){
   lambda$0_162(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1MergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1262);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1MergeStrategy_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1264);
 function Directed_Transform_MergeStrategy___refImpl$lambda$1$Type(){
 }
 
-defineClass(1263, 1, {}, Directed_Transform_MergeStrategy___refImpl$lambda$1$Type);
+defineClass(1265, 1, {}, Directed_Transform_MergeStrategy___refImpl$lambda$1$Type);
 _.test_0 = function test_169(arg0){
   return $clinit_Directed_Transform_MergeStrategy___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Transform$MergeStrategy_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1MergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1263);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1MergeStrategy_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1265);
 function $clinit_Directed_Transform___refImpl(){
   $clinit_Directed_Transform___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -20495,7 +20495,7 @@ function lambda$0_163(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1258, 6, $intern_25, Directed_Transform___refImpl);
+defineClass(1260, 6, $intern_25, Directed_Transform___refImpl);
 _.init0 = function init0_157(){
   var annotation, assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -20512,26 +20512,26 @@ _.init0 = function init0_157(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Transform_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Transform___refImpl', 1258, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Transform___refImpl', 1260, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Directed_Transform___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1259, 1, $intern_23, Directed_Transform___refImpl$lambda$0$Type);
+defineClass(1261, 1, $intern_23, Directed_Transform___refImpl$lambda$0$Type);
 _.accept = function accept_171(arg0){
   lambda$0_163(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1259);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1261);
 function Directed_Transform___refImpl$lambda$1$Type(){
 }
 
-defineClass(1260, 1, {}, Directed_Transform___refImpl$lambda$1$Type);
+defineClass(1262, 1, {}, Directed_Transform___refImpl$lambda$1$Type);
 _.test_0 = function test_170(arg0){
   return $clinit_Directed_Transform___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Transform_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1260);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Transform_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1262);
 function $clinit_Directed_Wrap___refImpl(){
   $clinit_Directed_Wrap___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -20547,7 +20547,7 @@ function lambda$0_164(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1264, 6, $intern_25, Directed_Wrap___refImpl);
+defineClass(1266, 6, $intern_25, Directed_Wrap___refImpl);
 _.init0 = function init0_158(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -20562,26 +20562,26 @@ _.init0 = function init0_158(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Wrap_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Wrap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Wrap___refImpl', 1264, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Wrap_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed_Wrap___refImpl', 1266, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Directed_Wrap___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1265, 1, $intern_23, Directed_Wrap___refImpl$lambda$0$Type);
+defineClass(1267, 1, $intern_23, Directed_Wrap___refImpl$lambda$0$Type);
 _.accept = function accept_172(arg0){
   lambda$0_164(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Wrap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1265);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Wrap_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1267);
 function Directed_Wrap___refImpl$lambda$1$Type(){
 }
 
-defineClass(1266, 1, {}, Directed_Wrap___refImpl$lambda$1$Type);
+defineClass(1268, 1, {}, Directed_Wrap___refImpl$lambda$1$Type);
 _.test_0 = function test_171(arg0){
   return $clinit_Directed_Wrap___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed$Wrap_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Wrap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1266);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1Wrap_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1268);
 function $__stringValue_8(this$static, o){
   if (instanceOf(o, 8)) {
     return $getSimpleName(castTo(o, 8)) + '.class';
@@ -20619,7 +20619,7 @@ function Directed___annImpl(){
   this.reemits = stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Class_2_classLit, 1), $intern_24, 8, 0, []);
 }
 
-defineClass(253, 1, {57:1, 94:1}, Directed___annImpl);
+defineClass(253, 1, {58:1, 94:1}, Directed___annImpl);
 _.equals_0 = function equals_24(other){
   return maskUndefined(this) === maskUndefined(other);
 }
@@ -20726,7 +20726,7 @@ function lambda$0_165(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1246, 6, $intern_25, Directed___refImpl);
+defineClass(1248, 6, $intern_25, Directed___refImpl);
 _.init0 = function init0_159(){
   var annotation, assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -20743,26 +20743,26 @@ _.init0 = function init0_159(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed___refImpl', 1246, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.annotation', 'Directed___refImpl', 1248, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Directed___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1247, 1, $intern_23, Directed___refImpl$lambda$0$Type);
+defineClass(1249, 1, $intern_23, Directed___refImpl$lambda$0$Type);
 _.accept = function accept_173(arg0){
   lambda$0_165(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1247);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1249);
 function Directed___refImpl$lambda$1$Type(){
 }
 
-defineClass(1248, 1, {}, Directed___refImpl$lambda$1$Type);
+defineClass(1250, 1, {}, Directed___refImpl$lambda$1$Type);
 _.test_0 = function test_172(arg0){
   return $clinit_Directed___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1248);
+var Lcc_alcina_framework_gwt_client_dirndl_annotation_Directed_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1250);
 defineClass(1862, 1, {});
 var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer', 1862, Ljava_lang_Object_2_classLit);
 var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$GeneratesPropertyInputs_2_classLit = createForInterface('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer/GeneratesPropertyInputs');
@@ -20797,7 +20797,7 @@ function lambda$0_166(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1279, 6, $intern_26, DirectedRenderer_BindableRenderer___refImpl);
+defineClass(1281, 6, $intern_26, DirectedRenderer_BindableRenderer___refImpl);
 _.get_1 = function get_88(){
   return new DirectedRenderer$BindableRenderer;
 }
@@ -20817,26 +20817,26 @@ _.init0 = function init0_160(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$BindableRenderer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1BindableRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_BindableRenderer___refImpl', 1279, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1BindableRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_BindableRenderer___refImpl', 1281, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DirectedRenderer_BindableRenderer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1280, 1, $intern_23, DirectedRenderer_BindableRenderer___refImpl$lambda$0$Type);
+defineClass(1282, 1, $intern_23, DirectedRenderer_BindableRenderer___refImpl$lambda$0$Type);
 _.accept = function accept_174(arg0){
   lambda$0_166(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1BindableRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1280);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1BindableRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1282);
 function DirectedRenderer_BindableRenderer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1281, 1, {}, DirectedRenderer_BindableRenderer___refImpl$lambda$1$Type);
+defineClass(1283, 1, {}, DirectedRenderer_BindableRenderer___refImpl$lambda$1$Type);
 _.test_0 = function test_173(arg0){
   return $clinit_DirectedRenderer_BindableRenderer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$BindableRenderer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1BindableRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1281);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1BindableRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1283);
 function $clinit_DirectedRenderer_Collection___refImpl(){
   $clinit_DirectedRenderer_Collection___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -20852,7 +20852,7 @@ function lambda$0_167(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1285, 6, $intern_26, DirectedRenderer_Collection___refImpl);
+defineClass(1287, 6, $intern_26, DirectedRenderer_Collection___refImpl);
 _.get_1 = function get_89(){
   return new DirectedRenderer$Collection;
 }
@@ -20872,26 +20872,26 @@ _.init0 = function init0_161(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$Collection_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1Collection_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_Collection___refImpl', 1285, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1Collection_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_Collection___refImpl', 1287, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DirectedRenderer_Collection___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1286, 1, $intern_23, DirectedRenderer_Collection___refImpl$lambda$0$Type);
+defineClass(1288, 1, $intern_23, DirectedRenderer_Collection___refImpl$lambda$0$Type);
 _.accept = function accept_175(arg0){
   lambda$0_167(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1Collection_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1286);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1Collection_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1288);
 function DirectedRenderer_Collection___refImpl$lambda$1$Type(){
 }
 
-defineClass(1287, 1, {}, DirectedRenderer_Collection___refImpl$lambda$1$Type);
+defineClass(1289, 1, {}, DirectedRenderer_Collection___refImpl$lambda$1$Type);
 _.test_0 = function test_174(arg0){
   return $clinit_DirectedRenderer_Collection___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$Collection_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1Collection_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1287);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1Collection_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1289);
 function $clinit_DirectedRenderer_GeneratesPropertyInputs___refImpl(){
   $clinit_DirectedRenderer_GeneratesPropertyInputs___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -20907,7 +20907,7 @@ function lambda$0_168(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1282, 6, $intern_25, DirectedRenderer_GeneratesPropertyInputs___refImpl);
+defineClass(1284, 6, $intern_25, DirectedRenderer_GeneratesPropertyInputs___refImpl);
 _.init0 = function init0_162(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -20921,26 +20921,26 @@ _.init0 = function init0_162(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$GeneratesPropertyInputs_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesPropertyInputs_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_GeneratesPropertyInputs___refImpl', 1282, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesPropertyInputs_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_GeneratesPropertyInputs___refImpl', 1284, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DirectedRenderer_GeneratesPropertyInputs___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1283, 1, $intern_23, DirectedRenderer_GeneratesPropertyInputs___refImpl$lambda$0$Type);
+defineClass(1285, 1, $intern_23, DirectedRenderer_GeneratesPropertyInputs___refImpl$lambda$0$Type);
 _.accept = function accept_176(arg0){
   lambda$0_168(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesPropertyInputs_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1283);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesPropertyInputs_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1285);
 function DirectedRenderer_GeneratesPropertyInputs___refImpl$lambda$1$Type(){
 }
 
-defineClass(1284, 1, {}, DirectedRenderer_GeneratesPropertyInputs___refImpl$lambda$1$Type);
+defineClass(1286, 1, {}, DirectedRenderer_GeneratesPropertyInputs___refImpl$lambda$1$Type);
 _.test_0 = function test_175(arg0){
   return $clinit_DirectedRenderer_GeneratesPropertyInputs___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$GeneratesPropertyInputs_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesPropertyInputs_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1284);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesPropertyInputs_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1286);
 function $clinit_DirectedRenderer_GeneratesTransformModel___refImpl(){
   $clinit_DirectedRenderer_GeneratesTransformModel___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -20956,7 +20956,7 @@ function lambda$0_169(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1288, 6, $intern_25, DirectedRenderer_GeneratesTransformModel___refImpl);
+defineClass(1290, 6, $intern_25, DirectedRenderer_GeneratesTransformModel___refImpl);
 _.init0 = function init0_163(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -20970,26 +20970,26 @@ _.init0 = function init0_163(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$GeneratesTransformModel_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesTransformModel_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_GeneratesTransformModel___refImpl', 1288, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesTransformModel_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_GeneratesTransformModel___refImpl', 1290, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DirectedRenderer_GeneratesTransformModel___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1289, 1, $intern_23, DirectedRenderer_GeneratesTransformModel___refImpl$lambda$0$Type);
+defineClass(1291, 1, $intern_23, DirectedRenderer_GeneratesTransformModel___refImpl$lambda$0$Type);
 _.accept = function accept_177(arg0){
   lambda$0_169(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesTransformModel_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1289);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesTransformModel_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1291);
 function DirectedRenderer_GeneratesTransformModel___refImpl$lambda$1$Type(){
 }
 
-defineClass(1290, 1, {}, DirectedRenderer_GeneratesTransformModel___refImpl$lambda$1$Type);
+defineClass(1292, 1, {}, DirectedRenderer_GeneratesTransformModel___refImpl$lambda$1$Type);
 _.test_0 = function test_176(arg0){
   return $clinit_DirectedRenderer_GeneratesTransformModel___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$GeneratesTransformModel_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesTransformModel_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1290);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1GeneratesTransformModel_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1292);
 function $clinit_DirectedRenderer_ModelClass___refImpl(){
   $clinit_DirectedRenderer_ModelClass___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21005,7 +21005,7 @@ function lambda$0_170(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1291, 6, $intern_26, DirectedRenderer_ModelClass___refImpl);
+defineClass(1293, 6, $intern_26, DirectedRenderer_ModelClass___refImpl);
 _.get_1 = function get_90(){
   return new DirectedRenderer$ModelClass;
 }
@@ -21024,26 +21024,26 @@ _.init0 = function init0_164(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$ModelClass_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1ModelClass_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_ModelClass___refImpl', 1291, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1ModelClass_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer_ModelClass___refImpl', 1293, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DirectedRenderer_ModelClass___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1292, 1, $intern_23, DirectedRenderer_ModelClass___refImpl$lambda$0$Type);
+defineClass(1294, 1, $intern_23, DirectedRenderer_ModelClass___refImpl$lambda$0$Type);
 _.accept = function accept_178(arg0){
   lambda$0_170(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1ModelClass_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1292);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1ModelClass_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1294);
 function DirectedRenderer_ModelClass___refImpl$lambda$1$Type(){
 }
 
-defineClass(1293, 1, {}, DirectedRenderer_ModelClass___refImpl$lambda$1$Type);
+defineClass(1295, 1, {}, DirectedRenderer_ModelClass___refImpl$lambda$1$Type);
 _.test_0 = function test_177(arg0){
   return $clinit_DirectedRenderer_ModelClass___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer$ModelClass_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1ModelClass_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1293);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1ModelClass_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1295);
 function $clinit_DirectedRenderer___refImpl(){
   $clinit_DirectedRenderer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21059,7 +21059,7 @@ function lambda$0_171(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1276, 6, $intern_25, DirectedRenderer___refImpl);
+defineClass(1278, 6, $intern_25, DirectedRenderer___refImpl);
 _.init0 = function init0_165(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -21073,26 +21073,26 @@ _.init0 = function init0_165(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer___refImpl', 1276, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'DirectedRenderer___refImpl', 1278, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DirectedRenderer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1277, 1, $intern_23, DirectedRenderer___refImpl$lambda$0$Type);
+defineClass(1279, 1, $intern_23, DirectedRenderer___refImpl$lambda$0$Type);
 _.accept = function accept_179(arg0){
   lambda$0_171(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1277);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1279);
 function DirectedRenderer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1278, 1, {}, DirectedRenderer___refImpl$lambda$1$Type);
+defineClass(1280, 1, {}, DirectedRenderer___refImpl$lambda$1$Type);
 _.test_0 = function test_178(arg0){
   return $clinit_DirectedRenderer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1278);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1280);
 defineClass(1863, 1862, {});
 var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer', 1863, Lcc_alcina_framework_gwt_client_dirndl_layout_DirectedRenderer_2_classLit);
 function LeafRenderer$Text(){
@@ -21150,7 +21150,7 @@ function lambda$0_172(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1297, 6, $intern_26, LeafRenderer_BooleanRenderer___refImpl);
+defineClass(1299, 6, $intern_26, LeafRenderer_BooleanRenderer___refImpl);
 _.get_1 = function get_91(){
   return new LeafRenderer$BooleanRenderer;
 }
@@ -21169,26 +21169,26 @@ _.init0 = function init0_166(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$BooleanRenderer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1BooleanRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_BooleanRenderer___refImpl', 1297, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1BooleanRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_BooleanRenderer___refImpl', 1299, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LeafRenderer_BooleanRenderer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1298, 1, $intern_23, LeafRenderer_BooleanRenderer___refImpl$lambda$0$Type);
+defineClass(1300, 1, $intern_23, LeafRenderer_BooleanRenderer___refImpl$lambda$0$Type);
 _.accept = function accept_180(arg0){
   lambda$0_172(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1BooleanRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1298);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1BooleanRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1300);
 function LeafRenderer_BooleanRenderer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1299, 1, {}, LeafRenderer_BooleanRenderer___refImpl$lambda$1$Type);
+defineClass(1301, 1, {}, LeafRenderer_BooleanRenderer___refImpl$lambda$1$Type);
 _.test_0 = function test_179(arg0){
   return $clinit_LeafRenderer_BooleanRenderer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$BooleanRenderer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1BooleanRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1299);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1BooleanRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1301);
 function $clinit_LeafRenderer_DateRenderer___refImpl(){
   $clinit_LeafRenderer_DateRenderer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21204,7 +21204,7 @@ function lambda$0_173(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1303, 6, $intern_26, LeafRenderer_DateRenderer___refImpl);
+defineClass(1305, 6, $intern_26, LeafRenderer_DateRenderer___refImpl);
 _.get_1 = function get_92(){
   return new LeafRenderer$DateRenderer;
 }
@@ -21223,26 +21223,26 @@ _.init0 = function init0_167(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$DateRenderer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1DateRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_DateRenderer___refImpl', 1303, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1DateRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_DateRenderer___refImpl', 1305, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LeafRenderer_DateRenderer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1304, 1, $intern_23, LeafRenderer_DateRenderer___refImpl$lambda$0$Type);
+defineClass(1306, 1, $intern_23, LeafRenderer_DateRenderer___refImpl$lambda$0$Type);
 _.accept = function accept_181(arg0){
   lambda$0_173(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1DateRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1304);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1DateRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1306);
 function LeafRenderer_DateRenderer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1305, 1, {}, LeafRenderer_DateRenderer___refImpl$lambda$1$Type);
+defineClass(1307, 1, {}, LeafRenderer_DateRenderer___refImpl$lambda$1$Type);
 _.test_0 = function test_180(arg0){
   return $clinit_LeafRenderer_DateRenderer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$DateRenderer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1DateRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1305);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1DateRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1307);
 function $clinit_LeafRenderer_EntityRenderer___refImpl(){
   $clinit_LeafRenderer_EntityRenderer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21258,7 +21258,7 @@ function lambda$0_174(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1306, 6, $intern_26, LeafRenderer_EntityRenderer___refImpl);
+defineClass(1308, 6, $intern_26, LeafRenderer_EntityRenderer___refImpl);
 _.get_1 = function get_93(){
   return new LeafRenderer$EntityRenderer;
 }
@@ -21277,26 +21277,26 @@ _.init0 = function init0_168(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$EntityRenderer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EntityRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_EntityRenderer___refImpl', 1306, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EntityRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_EntityRenderer___refImpl', 1308, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LeafRenderer_EntityRenderer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1307, 1, $intern_23, LeafRenderer_EntityRenderer___refImpl$lambda$0$Type);
+defineClass(1309, 1, $intern_23, LeafRenderer_EntityRenderer___refImpl$lambda$0$Type);
 _.accept = function accept_182(arg0){
   lambda$0_174(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EntityRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1307);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EntityRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1309);
 function LeafRenderer_EntityRenderer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1308, 1, {}, LeafRenderer_EntityRenderer___refImpl$lambda$1$Type);
+defineClass(1310, 1, {}, LeafRenderer_EntityRenderer___refImpl$lambda$1$Type);
 _.test_0 = function test_181(arg0){
   return $clinit_LeafRenderer_EntityRenderer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$EntityRenderer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EntityRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1308);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EntityRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1310);
 function $clinit_LeafRenderer_EnumRenderer___refImpl(){
   $clinit_LeafRenderer_EnumRenderer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21312,7 +21312,7 @@ function lambda$0_175(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1309, 6, $intern_26, LeafRenderer_EnumRenderer___refImpl);
+defineClass(1311, 6, $intern_26, LeafRenderer_EnumRenderer___refImpl);
 _.get_1 = function get_94(){
   return new LeafRenderer$EnumRenderer;
 }
@@ -21331,26 +21331,26 @@ _.init0 = function init0_169(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$EnumRenderer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EnumRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_EnumRenderer___refImpl', 1309, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EnumRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_EnumRenderer___refImpl', 1311, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LeafRenderer_EnumRenderer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1310, 1, $intern_23, LeafRenderer_EnumRenderer___refImpl$lambda$0$Type);
+defineClass(1312, 1, $intern_23, LeafRenderer_EnumRenderer___refImpl$lambda$0$Type);
 _.accept = function accept_183(arg0){
   lambda$0_175(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EnumRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1310);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EnumRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1312);
 function LeafRenderer_EnumRenderer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1311, 1, {}, LeafRenderer_EnumRenderer___refImpl$lambda$1$Type);
+defineClass(1313, 1, {}, LeafRenderer_EnumRenderer___refImpl$lambda$1$Type);
 _.test_0 = function test_182(arg0){
   return $clinit_LeafRenderer_EnumRenderer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$EnumRenderer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EnumRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1311);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1EnumRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1313);
 function $clinit_LeafRenderer_HasDisplayNameRenderer___refImpl(){
   $clinit_LeafRenderer_HasDisplayNameRenderer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21366,7 +21366,7 @@ function lambda$0_176(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1312, 6, $intern_26, LeafRenderer_HasDisplayNameRenderer___refImpl);
+defineClass(1314, 6, $intern_26, LeafRenderer_HasDisplayNameRenderer___refImpl);
 _.get_1 = function get_95(){
   return new LeafRenderer$HasDisplayNameRenderer;
 }
@@ -21385,26 +21385,26 @@ _.init0 = function init0_170(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$HasDisplayNameRenderer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1HasDisplayNameRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_HasDisplayNameRenderer___refImpl', 1312, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1HasDisplayNameRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_HasDisplayNameRenderer___refImpl', 1314, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LeafRenderer_HasDisplayNameRenderer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1313, 1, $intern_23, LeafRenderer_HasDisplayNameRenderer___refImpl$lambda$0$Type);
+defineClass(1315, 1, $intern_23, LeafRenderer_HasDisplayNameRenderer___refImpl$lambda$0$Type);
 _.accept = function accept_184(arg0){
   lambda$0_176(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1HasDisplayNameRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1313);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1HasDisplayNameRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1315);
 function LeafRenderer_HasDisplayNameRenderer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1314, 1, {}, LeafRenderer_HasDisplayNameRenderer___refImpl$lambda$1$Type);
+defineClass(1316, 1, {}, LeafRenderer_HasDisplayNameRenderer___refImpl$lambda$1$Type);
 _.test_0 = function test_183(arg0){
   return $clinit_LeafRenderer_HasDisplayNameRenderer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$HasDisplayNameRenderer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1HasDisplayNameRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1314);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1HasDisplayNameRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1316);
 function $clinit_LeafRenderer_NumberNode___refImpl(){
   $clinit_LeafRenderer_NumberNode___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21420,7 +21420,7 @@ function lambda$0_177(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1315, 6, $intern_26, LeafRenderer_NumberNode___refImpl);
+defineClass(1317, 6, $intern_26, LeafRenderer_NumberNode___refImpl);
 _.get_1 = function get_96(){
   return new LeafRenderer$NumberNode;
 }
@@ -21439,26 +21439,26 @@ _.init0 = function init0_171(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$NumberNode_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1NumberNode_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_NumberNode___refImpl', 1315, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1NumberNode_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_NumberNode___refImpl', 1317, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LeafRenderer_NumberNode___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1316, 1, $intern_23, LeafRenderer_NumberNode___refImpl$lambda$0$Type);
+defineClass(1318, 1, $intern_23, LeafRenderer_NumberNode___refImpl$lambda$0$Type);
 _.accept = function accept_185(arg0){
   lambda$0_177(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1NumberNode_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1316);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1NumberNode_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1318);
 function LeafRenderer_NumberNode___refImpl$lambda$1$Type(){
 }
 
-defineClass(1317, 1, {}, LeafRenderer_NumberNode___refImpl$lambda$1$Type);
+defineClass(1319, 1, {}, LeafRenderer_NumberNode___refImpl$lambda$1$Type);
 _.test_0 = function test_184(arg0){
   return $clinit_LeafRenderer_NumberNode___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$NumberNode_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1NumberNode_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1317);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1NumberNode_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1319);
 function $clinit_LeafRenderer_StringNode___refImpl(){
   $clinit_LeafRenderer_StringNode___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21474,7 +21474,7 @@ function lambda$0_178(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1318, 6, $intern_26, LeafRenderer_StringNode___refImpl);
+defineClass(1320, 6, $intern_26, LeafRenderer_StringNode___refImpl);
 _.get_1 = function get_97(){
   return new LeafRenderer$StringNode;
 }
@@ -21493,26 +21493,26 @@ _.init0 = function init0_172(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$StringNode_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1StringNode_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_StringNode___refImpl', 1318, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1StringNode_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_StringNode___refImpl', 1320, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LeafRenderer_StringNode___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1319, 1, $intern_23, LeafRenderer_StringNode___refImpl$lambda$0$Type);
+defineClass(1321, 1, $intern_23, LeafRenderer_StringNode___refImpl$lambda$0$Type);
 _.accept = function accept_186(arg0){
   lambda$0_178(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1StringNode_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1319);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1StringNode_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1321);
 function LeafRenderer_StringNode___refImpl$lambda$1$Type(){
 }
 
-defineClass(1320, 1, {}, LeafRenderer_StringNode___refImpl$lambda$1$Type);
+defineClass(1322, 1, {}, LeafRenderer_StringNode___refImpl$lambda$1$Type);
 _.test_0 = function test_185(arg0){
   return $clinit_LeafRenderer_StringNode___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$StringNode_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1StringNode_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1320);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1StringNode_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1322);
 function $clinit_LeafRenderer_Text___refImpl(){
   $clinit_LeafRenderer_Text___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21528,7 +21528,7 @@ function lambda$0_179(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1300, 6, $intern_26, LeafRenderer_Text___refImpl);
+defineClass(1302, 6, $intern_26, LeafRenderer_Text___refImpl);
 _.get_1 = function get_98(){
   return new LeafRenderer$Text;
 }
@@ -21547,26 +21547,26 @@ _.init0 = function init0_173(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$Text_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1Text_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_Text___refImpl', 1300, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1Text_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer_Text___refImpl', 1302, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LeafRenderer_Text___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1301, 1, $intern_23, LeafRenderer_Text___refImpl$lambda$0$Type);
+defineClass(1303, 1, $intern_23, LeafRenderer_Text___refImpl$lambda$0$Type);
 _.accept = function accept_187(arg0){
   lambda$0_179(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1Text_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1301);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1Text_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1303);
 function LeafRenderer_Text___refImpl$lambda$1$Type(){
 }
 
-defineClass(1302, 1, {}, LeafRenderer_Text___refImpl$lambda$1$Type);
+defineClass(1304, 1, {}, LeafRenderer_Text___refImpl$lambda$1$Type);
 _.test_0 = function test_186(arg0){
   return $clinit_LeafRenderer_Text___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer$Text_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1Text_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1302);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1Text_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1304);
 function $clinit_LeafRenderer___refImpl(){
   $clinit_LeafRenderer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21582,7 +21582,7 @@ function lambda$0_180(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1294, 6, $intern_25, LeafRenderer___refImpl);
+defineClass(1296, 6, $intern_25, LeafRenderer___refImpl);
 _.init0 = function init0_174(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -21596,26 +21596,26 @@ _.init0 = function init0_174(){
   $init(this, Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer___refImpl', 1294, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.dirndl.layout', 'LeafRenderer___refImpl', 1296, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LeafRenderer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1295, 1, $intern_23, LeafRenderer___refImpl$lambda$0$Type);
+defineClass(1297, 1, $intern_23, LeafRenderer___refImpl$lambda$0$Type);
 _.accept = function accept_188(arg0){
   lambda$0_180(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1295);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1297);
 function LeafRenderer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1296, 1, {}, LeafRenderer___refImpl$lambda$1$Type);
+defineClass(1298, 1, {}, LeafRenderer___refImpl$lambda$1$Type);
 _.test_0 = function test_187(arg0){
   return $clinit_LeafRenderer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1296);
+var Lcc_alcina_framework_gwt_client_dirndl_layout_LeafRenderer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1298);
 function $clinit_GeneralProperties(){
   $clinit_GeneralProperties = emptyMethod;
   $clinit_TreeSerializable();
@@ -21641,7 +21641,7 @@ function lambda$0_181(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1324, 6, $intern_26, GeneralProperties_Holder___refImpl);
+defineClass(1326, 6, $intern_26, GeneralProperties_Holder___refImpl);
 _.get_1 = function get_99(){
   return new GeneralProperties$Holder;
 }
@@ -21660,26 +21660,26 @@ _.init0 = function init0_175(){
   $init(this, Lcc_alcina_framework_gwt_client_entity_GeneralProperties$Holder_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_GeneralProperties_1Holder_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity', 'GeneralProperties_Holder___refImpl', 1324, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_entity_GeneralProperties_1Holder_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity', 'GeneralProperties_Holder___refImpl', 1326, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function GeneralProperties_Holder___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1325, 1, $intern_23, GeneralProperties_Holder___refImpl$lambda$0$Type);
+defineClass(1327, 1, $intern_23, GeneralProperties_Holder___refImpl$lambda$0$Type);
 _.accept = function accept_189(arg0){
   lambda$0_181(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_GeneralProperties_1Holder_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1325);
+var Lcc_alcina_framework_gwt_client_entity_GeneralProperties_1Holder_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1327);
 function GeneralProperties_Holder___refImpl$lambda$1$Type(){
 }
 
-defineClass(1326, 1, {}, GeneralProperties_Holder___refImpl$lambda$1$Type);
+defineClass(1328, 1, {}, GeneralProperties_Holder___refImpl$lambda$1$Type);
 _.test_0 = function test_188(arg0){
   return $clinit_GeneralProperties_Holder___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_entity_GeneralProperties$Holder_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_GeneralProperties_1Holder_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1326);
+var Lcc_alcina_framework_gwt_client_entity_GeneralProperties_1Holder_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1328);
 var Lcom_google_gwt_place_shared_PlaceTokenizer_2_classLit = createForInterface('com.google.gwt.place.shared', 'PlaceTokenizer');
 function $addTokenPart(this$static, part){
   if (!part) {
@@ -21883,7 +21883,7 @@ function lambda$0_182(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1336, 6, $intern_26, ActionPlace_Tokenizer___refImpl);
+defineClass(1338, 6, $intern_26, ActionPlace_Tokenizer___refImpl);
 _.get_1 = function get_100(){
   return new ActionPlace$Tokenizer;
 }
@@ -21903,26 +21903,26 @@ _.init0 = function init0_176(){
   $init(this, Lcc_alcina_framework_gwt_client_entity_place_ActionPlace$Tokenizer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1Tokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'ActionPlace_Tokenizer___refImpl', 1336, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1Tokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'ActionPlace_Tokenizer___refImpl', 1338, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ActionPlace_Tokenizer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1337, 1, $intern_23, ActionPlace_Tokenizer___refImpl$lambda$0$Type);
+defineClass(1339, 1, $intern_23, ActionPlace_Tokenizer___refImpl$lambda$0$Type);
 _.accept = function accept_191(arg0){
   lambda$0_182(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1Tokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1337);
+var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1Tokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1339);
 function ActionPlace_Tokenizer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1338, 1, {}, ActionPlace_Tokenizer___refImpl$lambda$1$Type);
+defineClass(1340, 1, {}, ActionPlace_Tokenizer___refImpl$lambda$1$Type);
 _.test_0 = function test_189(arg0){
   return $clinit_ActionPlace_Tokenizer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_entity_place_ActionPlace$Tokenizer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1Tokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1338);
+var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1Tokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1340);
 function $clinit_ActionPlace___refImpl(){
   $clinit_ActionPlace___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -21938,7 +21938,7 @@ function lambda$0_183(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1327, 6, $intern_25, ActionPlace___refImpl);
+defineClass(1329, 6, $intern_25, ActionPlace___refImpl);
 _.init0 = function init0_177(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -21952,26 +21952,26 @@ _.init0 = function init0_177(){
   $init(this, Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'ActionPlace___refImpl', 1327, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'ActionPlace___refImpl', 1329, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ActionPlace___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1328, 1, $intern_23, ActionPlace___refImpl$lambda$0$Type);
+defineClass(1330, 1, $intern_23, ActionPlace___refImpl$lambda$0$Type);
 _.accept = function accept_192(arg0){
   lambda$0_183(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1328);
+var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1330);
 function ActionPlace___refImpl$lambda$1$Type(){
 }
 
-defineClass(1329, 1, {}, ActionPlace___refImpl$lambda$1$Type);
+defineClass(1331, 1, {}, ActionPlace___refImpl$lambda$1$Type);
 _.test_0 = function test_190(arg0){
   return $clinit_ActionPlace___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1329);
+var Lcc_alcina_framework_gwt_client_entity_place_ActionPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1331);
 function $clinit_Place(){
   $clinit_Place = emptyMethod;
   NOWHERE = new Place$1;
@@ -22063,7 +22063,7 @@ function lambda$0_184(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1351, 6, $intern_26, KnownPlace_KnownPlaceTokenizer___refImpl);
+defineClass(1353, 6, $intern_26, KnownPlace_KnownPlaceTokenizer___refImpl);
 _.get_1 = function get_101(){
   return new KnownPlace$KnownPlaceTokenizer;
 }
@@ -22083,26 +22083,26 @@ _.init0 = function init0_178(){
   $init(this, Lcc_alcina_framework_gwt_client_entity_place_KnownPlace$KnownPlaceTokenizer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1KnownPlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'KnownPlace_KnownPlaceTokenizer___refImpl', 1351, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1KnownPlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'KnownPlace_KnownPlaceTokenizer___refImpl', 1353, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function KnownPlace_KnownPlaceTokenizer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1352, 1, $intern_23, KnownPlace_KnownPlaceTokenizer___refImpl$lambda$0$Type);
+defineClass(1354, 1, $intern_23, KnownPlace_KnownPlaceTokenizer___refImpl$lambda$0$Type);
 _.accept = function accept_193(arg0){
   lambda$0_184(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1KnownPlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1352);
+var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1KnownPlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1354);
 function KnownPlace_KnownPlaceTokenizer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1353, 1, {}, KnownPlace_KnownPlaceTokenizer___refImpl$lambda$1$Type);
+defineClass(1355, 1, {}, KnownPlace_KnownPlaceTokenizer___refImpl$lambda$1$Type);
 _.test_0 = function test_191(arg0){
   return $clinit_KnownPlace_KnownPlaceTokenizer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_entity_place_KnownPlace$KnownPlaceTokenizer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1KnownPlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1353);
+var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1KnownPlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1355);
 function $clinit_KnownPlace___refImpl(){
   $clinit_KnownPlace___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -22118,7 +22118,7 @@ function lambda$0_185(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1345, 6, $intern_26, KnownPlace___refImpl);
+defineClass(1347, 6, $intern_26, KnownPlace___refImpl);
 _.get_1 = function get_102(){
   return new KnownPlace;
 }
@@ -22138,26 +22138,26 @@ _.init0 = function init0_179(){
   $init(this, Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'KnownPlace___refImpl', 1345, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'KnownPlace___refImpl', 1347, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function KnownPlace___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1346, 1, $intern_23, KnownPlace___refImpl$lambda$0$Type);
+defineClass(1348, 1, $intern_23, KnownPlace___refImpl$lambda$0$Type);
 _.accept = function accept_194(arg0){
   lambda$0_185(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1346);
+var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1348);
 function KnownPlace___refImpl$lambda$1$Type(){
 }
 
-defineClass(1347, 1, {}, KnownPlace___refImpl$lambda$1$Type);
+defineClass(1349, 1, {}, KnownPlace___refImpl$lambda$1$Type);
 _.test_0 = function test_192(arg0){
   return $clinit_KnownPlace___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1347);
+var Lcc_alcina_framework_gwt_client_entity_place_KnownPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1349);
 function $ensureLookup_0(this$static){
   var byName;
   if (!this$static.byName) {
@@ -22265,7 +22265,7 @@ function lambda$0_186(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1357, 6, $intern_26, NamedPlace_Tokenizer___refImpl);
+defineClass(1359, 6, $intern_26, NamedPlace_Tokenizer___refImpl);
 _.get_1 = function get_103(){
   return new NamedPlace$Tokenizer;
 }
@@ -22285,26 +22285,26 @@ _.init0 = function init0_180(){
   $init(this, Lcc_alcina_framework_gwt_client_entity_place_NamedPlace$Tokenizer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1Tokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'NamedPlace_Tokenizer___refImpl', 1357, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1Tokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'NamedPlace_Tokenizer___refImpl', 1359, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function NamedPlace_Tokenizer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1358, 1, $intern_23, NamedPlace_Tokenizer___refImpl$lambda$0$Type);
+defineClass(1360, 1, $intern_23, NamedPlace_Tokenizer___refImpl$lambda$0$Type);
 _.accept = function accept_196(arg0){
   lambda$0_186(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1Tokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1358);
+var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1Tokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1360);
 function NamedPlace_Tokenizer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1359, 1, {}, NamedPlace_Tokenizer___refImpl$lambda$1$Type);
+defineClass(1361, 1, {}, NamedPlace_Tokenizer___refImpl$lambda$1$Type);
 _.test_0 = function test_193(arg0){
   return $clinit_NamedPlace_Tokenizer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_entity_place_NamedPlace$Tokenizer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1Tokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1359);
+var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1Tokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1361);
 function $clinit_NamedPlace___refImpl(){
   $clinit_NamedPlace___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -22320,7 +22320,7 @@ function lambda$0_187(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1354, 6, $intern_25, NamedPlace___refImpl);
+defineClass(1356, 6, $intern_25, NamedPlace___refImpl);
 _.init0 = function init0_181(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -22334,26 +22334,26 @@ _.init0 = function init0_181(){
   $init(this, Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'NamedPlace___refImpl', 1354, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'NamedPlace___refImpl', 1356, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function NamedPlace___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1355, 1, $intern_23, NamedPlace___refImpl$lambda$0$Type);
+defineClass(1357, 1, $intern_23, NamedPlace___refImpl$lambda$0$Type);
 _.accept = function accept_197(arg0){
   lambda$0_187(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1355);
+var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1357);
 function NamedPlace___refImpl$lambda$1$Type(){
 }
 
-defineClass(1356, 1, {}, NamedPlace___refImpl$lambda$1$Type);
+defineClass(1358, 1, {}, NamedPlace___refImpl$lambda$1$Type);
 _.test_0 = function test_194(arg0){
   return $clinit_NamedPlace___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1356);
+var Lcc_alcina_framework_gwt_client_entity_place_NamedPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1358);
 function PublicationPlace(){
   $clinit_Place();
 }
@@ -22400,7 +22400,7 @@ function lambda$0_188(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1363, 6, $intern_26, PublicationPlace_PublicationPlaceTokenizer___refImpl);
+defineClass(1365, 6, $intern_26, PublicationPlace_PublicationPlaceTokenizer___refImpl);
 _.get_1 = function get_104(){
   return new PublicationPlace$PublicationPlaceTokenizer;
 }
@@ -22420,26 +22420,26 @@ _.init0 = function init0_182(){
   $init(this, Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace$PublicationPlaceTokenizer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1PublicationPlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'PublicationPlace_PublicationPlaceTokenizer___refImpl', 1363, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1PublicationPlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'PublicationPlace_PublicationPlaceTokenizer___refImpl', 1365, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function PublicationPlace_PublicationPlaceTokenizer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1364, 1, $intern_23, PublicationPlace_PublicationPlaceTokenizer___refImpl$lambda$0$Type);
+defineClass(1366, 1, $intern_23, PublicationPlace_PublicationPlaceTokenizer___refImpl$lambda$0$Type);
 _.accept = function accept_198(arg0){
   lambda$0_188(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1PublicationPlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1364);
+var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1PublicationPlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1366);
 function PublicationPlace_PublicationPlaceTokenizer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1365, 1, {}, PublicationPlace_PublicationPlaceTokenizer___refImpl$lambda$1$Type);
+defineClass(1367, 1, {}, PublicationPlace_PublicationPlaceTokenizer___refImpl$lambda$1$Type);
 _.test_0 = function test_195(arg0){
   return $clinit_PublicationPlace_PublicationPlaceTokenizer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace$PublicationPlaceTokenizer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1PublicationPlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1365);
+var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1PublicationPlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1367);
 function $clinit_PublicationPlace___refImpl(){
   $clinit_PublicationPlace___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -22455,7 +22455,7 @@ function lambda$0_189(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1360, 6, $intern_26, PublicationPlace___refImpl);
+defineClass(1362, 6, $intern_26, PublicationPlace___refImpl);
 _.get_1 = function get_105(){
   return new PublicationPlace;
 }
@@ -22474,26 +22474,26 @@ _.init0 = function init0_183(){
   $init(this, Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'PublicationPlace___refImpl', 1360, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.entity.place', 'PublicationPlace___refImpl', 1362, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function PublicationPlace___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1361, 1, $intern_23, PublicationPlace___refImpl$lambda$0$Type);
+defineClass(1363, 1, $intern_23, PublicationPlace___refImpl$lambda$0$Type);
 _.accept = function accept_199(arg0){
   lambda$0_189(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1361);
+var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1363);
 function PublicationPlace___refImpl$lambda$1$Type(){
 }
 
-defineClass(1362, 1, {}, PublicationPlace___refImpl$lambda$1$Type);
+defineClass(1364, 1, {}, PublicationPlace___refImpl$lambda$1$Type);
 _.test_0 = function test_196(arg0){
   return $clinit_PublicationPlace___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1362);
+var Lcc_alcina_framework_gwt_client_entity_place_PublicationPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1364);
 function encodeValue(string){
   var encoded;
   !encoder_0 && (encoder_0 = castTo(impl_0(Lcc_alcina_framework_common_client_util_UrlComponentEncoder_2_classLit), 222));
@@ -22575,7 +22575,7 @@ function lambda$0_190(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1369, 6, $intern_26, ClientProperties___refImpl);
+defineClass(1371, 6, $intern_26, ClientProperties___refImpl);
 _.get_1 = function get_106(){
   return new ClientProperties;
 }
@@ -22594,26 +22594,26 @@ _.init0 = function init0_184(){
   $init(this, Lcc_alcina_framework_gwt_client_logic_ClientProperties_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_logic_ClientProperties_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.logic', 'ClientProperties___refImpl', 1369, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_logic_ClientProperties_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.logic', 'ClientProperties___refImpl', 1371, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ClientProperties___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1370, 1, $intern_23, ClientProperties___refImpl$lambda$0$Type);
+defineClass(1372, 1, $intern_23, ClientProperties___refImpl$lambda$0$Type);
 _.accept = function accept_200(arg0){
   lambda$0_190(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_logic_ClientProperties_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1370);
+var Lcc_alcina_framework_gwt_client_logic_ClientProperties_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1372);
 function ClientProperties___refImpl$lambda$1$Type(){
 }
 
-defineClass(1371, 1, {}, ClientProperties___refImpl$lambda$1$Type);
+defineClass(1373, 1, {}, ClientProperties___refImpl$lambda$1$Type);
 _.test_0 = function test_197(arg0){
   return $clinit_ClientProperties___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_logic_ClientProperties_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_logic_ClientProperties_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1371);
+var Lcc_alcina_framework_gwt_client_logic_ClientProperties_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1373);
 function ForgotPasswordPlace(){
   $clinit_Place();
 }
@@ -22650,7 +22650,7 @@ function lambda$0_191(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1387, 6, $intern_26, ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl);
+defineClass(1389, 6, $intern_26, ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl);
 _.get_1 = function get_107(){
   return new ForgotPasswordPlace$ForgotPasswordPlaceTokenizer;
 }
@@ -22670,26 +22670,26 @@ _.init0 = function init0_185(){
   $init(this, Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace$ForgotPasswordPlaceTokenizer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1ForgotPasswordPlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.module.support.login.pub', 'ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl', 1387, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1ForgotPasswordPlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.module.support.login.pub', 'ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl', 1389, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1388, 1, $intern_23, ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl$lambda$0$Type);
+defineClass(1390, 1, $intern_23, ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl$lambda$0$Type);
 _.accept = function accept_201(arg0){
   lambda$0_191(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1ForgotPasswordPlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1388);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1ForgotPasswordPlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1390);
 function ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1389, 1, {}, ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl$lambda$1$Type);
+defineClass(1391, 1, {}, ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl$lambda$1$Type);
 _.test_0 = function test_198(arg0){
   return $clinit_ForgotPasswordPlace_ForgotPasswordPlaceTokenizer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace$ForgotPasswordPlaceTokenizer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1ForgotPasswordPlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1389);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1ForgotPasswordPlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1391);
 function $clinit_ForgotPasswordPlace___refImpl(){
   $clinit_ForgotPasswordPlace___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -22705,7 +22705,7 @@ function lambda$0_192(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1384, 6, $intern_26, ForgotPasswordPlace___refImpl);
+defineClass(1386, 6, $intern_26, ForgotPasswordPlace___refImpl);
 _.get_1 = function get_108(){
   return new ForgotPasswordPlace;
 }
@@ -22724,26 +22724,26 @@ _.init0 = function init0_186(){
   $init(this, Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.module.support.login.pub', 'ForgotPasswordPlace___refImpl', 1384, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.module.support.login.pub', 'ForgotPasswordPlace___refImpl', 1386, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ForgotPasswordPlace___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1385, 1, $intern_23, ForgotPasswordPlace___refImpl$lambda$0$Type);
+defineClass(1387, 1, $intern_23, ForgotPasswordPlace___refImpl$lambda$0$Type);
 _.accept = function accept_202(arg0){
   lambda$0_192(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1385);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1387);
 function ForgotPasswordPlace___refImpl$lambda$1$Type(){
 }
 
-defineClass(1386, 1, {}, ForgotPasswordPlace___refImpl$lambda$1$Type);
+defineClass(1388, 1, {}, ForgotPasswordPlace___refImpl$lambda$1$Type);
 _.test_0 = function test_199(arg0){
   return $clinit_ForgotPasswordPlace___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1386);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_ForgotPasswordPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1388);
 function LoginPlace(){
   $clinit_Place();
 }
@@ -22780,7 +22780,7 @@ function lambda$0_193(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1393, 6, $intern_26, LoginPlace_LoginPlaceTokenizer___refImpl);
+defineClass(1395, 6, $intern_26, LoginPlace_LoginPlaceTokenizer___refImpl);
 _.get_1 = function get_109(){
   return new LoginPlace$LoginPlaceTokenizer;
 }
@@ -22800,26 +22800,26 @@ _.init0 = function init0_187(){
   $init(this, Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace$LoginPlaceTokenizer_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1LoginPlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.module.support.login.pub', 'LoginPlace_LoginPlaceTokenizer___refImpl', 1393, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1LoginPlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.module.support.login.pub', 'LoginPlace_LoginPlaceTokenizer___refImpl', 1395, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LoginPlace_LoginPlaceTokenizer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1394, 1, $intern_23, LoginPlace_LoginPlaceTokenizer___refImpl$lambda$0$Type);
+defineClass(1396, 1, $intern_23, LoginPlace_LoginPlaceTokenizer___refImpl$lambda$0$Type);
 _.accept = function accept_203(arg0){
   lambda$0_193(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1LoginPlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1394);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1LoginPlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1396);
 function LoginPlace_LoginPlaceTokenizer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1395, 1, {}, LoginPlace_LoginPlaceTokenizer___refImpl$lambda$1$Type);
+defineClass(1397, 1, {}, LoginPlace_LoginPlaceTokenizer___refImpl$lambda$1$Type);
 _.test_0 = function test_200(arg0){
   return $clinit_LoginPlace_LoginPlaceTokenizer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace$LoginPlaceTokenizer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1LoginPlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1395);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1LoginPlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1397);
 function $clinit_LoginPlace___refImpl(){
   $clinit_LoginPlace___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -22835,7 +22835,7 @@ function lambda$0_194(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1390, 6, $intern_26, LoginPlace___refImpl);
+defineClass(1392, 6, $intern_26, LoginPlace___refImpl);
 _.get_1 = function get_110(){
   return new LoginPlace;
 }
@@ -22854,26 +22854,26 @@ _.init0 = function init0_188(){
   $init(this, Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.module.support.login.pub', 'LoginPlace___refImpl', 1390, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.module.support.login.pub', 'LoginPlace___refImpl', 1392, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function LoginPlace___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1391, 1, $intern_23, LoginPlace___refImpl$lambda$0$Type);
+defineClass(1393, 1, $intern_23, LoginPlace___refImpl$lambda$0$Type);
 _.accept = function accept_204(arg0){
   lambda$0_194(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1391);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1393);
 function LoginPlace___refImpl$lambda$1$Type(){
 }
 
-defineClass(1392, 1, {}, LoginPlace___refImpl$lambda$1$Type);
+defineClass(1394, 1, {}, LoginPlace___refImpl$lambda$1$Type);
 _.test_0 = function test_201(arg0){
   return $clinit_LoginPlace___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1392);
+var Lcc_alcina_framework_gwt_client_module_support_login_pub_LoginPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1394);
 function $clinit_BasePlaceTokenizer___refImpl(){
   $clinit_BasePlaceTokenizer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -22889,7 +22889,7 @@ function lambda$0_195(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1339, 6, $intern_25, BasePlaceTokenizer___refImpl);
+defineClass(1341, 6, $intern_25, BasePlaceTokenizer___refImpl);
 _.init0 = function init0_189(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -22905,26 +22905,26 @@ _.init0 = function init0_189(){
   $init(this, Lcc_alcina_framework_gwt_client_place_BasePlaceTokenizer_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_BasePlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.place', 'BasePlaceTokenizer___refImpl', 1339, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_place_BasePlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.place', 'BasePlaceTokenizer___refImpl', 1341, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function BasePlaceTokenizer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1340, 1, $intern_23, BasePlaceTokenizer___refImpl$lambda$0$Type);
+defineClass(1342, 1, $intern_23, BasePlaceTokenizer___refImpl$lambda$0$Type);
 _.accept = function accept_205(arg0){
   lambda$0_195(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_BasePlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1340);
+var Lcc_alcina_framework_gwt_client_place_BasePlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1342);
 function BasePlaceTokenizer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1341, 1, {}, BasePlaceTokenizer___refImpl$lambda$1$Type);
+defineClass(1343, 1, {}, BasePlaceTokenizer___refImpl$lambda$1$Type);
 _.test_0 = function test_202(arg0){
   return $clinit_BasePlaceTokenizer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_place_BasePlaceTokenizer_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_BasePlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1341);
+var Lcc_alcina_framework_gwt_client_place_BasePlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1343);
 function $clinit_BasePlace___refImpl(){
   $clinit_BasePlace___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -22940,7 +22940,7 @@ function lambda$0_196(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1330, 6, $intern_25, BasePlace___refImpl);
+defineClass(1332, 6, $intern_25, BasePlace___refImpl);
 _.init0 = function init0_190(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -22956,26 +22956,26 @@ _.init0 = function init0_190(){
   $init(this, Lcc_alcina_framework_gwt_client_place_BasePlace_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_BasePlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.place', 'BasePlace___refImpl', 1330, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_place_BasePlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.place', 'BasePlace___refImpl', 1332, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function BasePlace___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1331, 1, $intern_23, BasePlace___refImpl$lambda$0$Type);
+defineClass(1333, 1, $intern_23, BasePlace___refImpl$lambda$0$Type);
 _.accept = function accept_206(arg0){
   lambda$0_196(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_BasePlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1331);
+var Lcc_alcina_framework_gwt_client_place_BasePlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1333);
 function BasePlace___refImpl$lambda$1$Type(){
 }
 
-defineClass(1332, 1, {}, BasePlace___refImpl$lambda$1$Type);
+defineClass(1334, 1, {}, BasePlace___refImpl$lambda$1$Type);
 _.test_0 = function test_203(arg0){
   return $clinit_BasePlace___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_place_BasePlace_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_BasePlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1332);
+var Lcc_alcina_framework_gwt_client_place_BasePlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1334);
 function $clinit_OmniPlace___refImpl(){
   $clinit_OmniPlace___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -22991,7 +22991,7 @@ function lambda$0_197(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1348, 6, $intern_25, OmniPlace___refImpl);
+defineClass(1350, 6, $intern_25, OmniPlace___refImpl);
 _.init0 = function init0_191(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -23005,26 +23005,26 @@ _.init0 = function init0_191(){
   $init(this, Lcc_alcina_framework_gwt_client_place_OmniPlace_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_OmniPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.place', 'OmniPlace___refImpl', 1348, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_place_OmniPlace_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.place', 'OmniPlace___refImpl', 1350, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function OmniPlace___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1349, 1, $intern_23, OmniPlace___refImpl$lambda$0$Type);
+defineClass(1351, 1, $intern_23, OmniPlace___refImpl$lambda$0$Type);
 _.accept = function accept_207(arg0){
   lambda$0_197(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_OmniPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1349);
+var Lcc_alcina_framework_gwt_client_place_OmniPlace_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1351);
 function OmniPlace___refImpl$lambda$1$Type(){
 }
 
-defineClass(1350, 1, {}, OmniPlace___refImpl$lambda$1$Type);
+defineClass(1352, 1, {}, OmniPlace___refImpl$lambda$1$Type);
 _.test_0 = function test_204(arg0){
   return $clinit_OmniPlace___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_place_OmniPlace_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_OmniPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1350);
+var Lcc_alcina_framework_gwt_client_place_OmniPlace_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1352);
 var Lcom_google_gwt_place_shared_PlaceHistoryMapper_2_classLit = createForInterface('com.google.gwt.place.shared', 'PlaceHistoryMapper');
 function $cleanGwtCodesvr(token){
   return $replaceFirst(token, '[?&]gwt.codesvr=127.0.0.1:\\d+$', '');
@@ -23213,7 +23213,7 @@ function lambda$0_198(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1396, 6, $intern_26, RegistryHistoryMapper___refImpl);
+defineClass(1398, 6, $intern_26, RegistryHistoryMapper___refImpl);
 _.get_1 = function get_111(){
   return new RegistryHistoryMapper;
 }
@@ -23233,26 +23233,26 @@ _.init0 = function init0_192(){
   $init(this, Lcc_alcina_framework_gwt_client_place_RegistryHistoryMapper_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_RegistryHistoryMapper_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.place', 'RegistryHistoryMapper___refImpl', 1396, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_place_RegistryHistoryMapper_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.place', 'RegistryHistoryMapper___refImpl', 1398, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RegistryHistoryMapper___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1397, 1, $intern_23, RegistryHistoryMapper___refImpl$lambda$0$Type);
+defineClass(1399, 1, $intern_23, RegistryHistoryMapper___refImpl$lambda$0$Type);
 _.accept = function accept_210(arg0){
   lambda$0_198(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_RegistryHistoryMapper_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1397);
+var Lcc_alcina_framework_gwt_client_place_RegistryHistoryMapper_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1399);
 function RegistryHistoryMapper___refImpl$lambda$1$Type(){
 }
 
-defineClass(1398, 1, {}, RegistryHistoryMapper___refImpl$lambda$1$Type);
+defineClass(1400, 1, {}, RegistryHistoryMapper___refImpl$lambda$1$Type);
 _.test_0 = function test_209(arg0){
   return $clinit_RegistryHistoryMapper___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_place_RegistryHistoryMapper_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_place_RegistryHistoryMapper_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1398);
+var Lcc_alcina_framework_gwt_client_place_RegistryHistoryMapper_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1400);
 function UnparseablePlaceException(token){
   Exception_0.call(this, token);
 }
@@ -23289,7 +23289,7 @@ function lambda$0_199(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1402, 6, $intern_26, ClientURLComponentEncoder___refImpl);
+defineClass(1404, 6, $intern_26, ClientURLComponentEncoder___refImpl);
 _.get_1 = function get_112(){
   return new ClientURLComponentEncoder;
 }
@@ -23309,26 +23309,26 @@ _.init0 = function init0_193(){
   $init(this, Lcc_alcina_framework_gwt_client_provider_ClientURLComponentEncoder_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_provider_ClientURLComponentEncoder_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.provider', 'ClientURLComponentEncoder___refImpl', 1402, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_provider_ClientURLComponentEncoder_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.provider', 'ClientURLComponentEncoder___refImpl', 1404, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ClientURLComponentEncoder___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1403, 1, $intern_23, ClientURLComponentEncoder___refImpl$lambda$0$Type);
+defineClass(1405, 1, $intern_23, ClientURLComponentEncoder___refImpl$lambda$0$Type);
 _.accept = function accept_211(arg0){
   lambda$0_199(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_provider_ClientURLComponentEncoder_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1403);
+var Lcc_alcina_framework_gwt_client_provider_ClientURLComponentEncoder_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1405);
 function ClientURLComponentEncoder___refImpl$lambda$1$Type(){
 }
 
-defineClass(1404, 1, {}, ClientURLComponentEncoder___refImpl$lambda$1$Type);
+defineClass(1406, 1, {}, ClientURLComponentEncoder___refImpl$lambda$1$Type);
 _.test_0 = function test_210(arg0){
   return $clinit_ClientURLComponentEncoder___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_provider_ClientURLComponentEncoder_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_provider_ClientURLComponentEncoder_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1404);
+var Lcc_alcina_framework_gwt_client_provider_ClientURLComponentEncoder_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1406);
 function jsArrayToTypedArray(typedArray){
   var i, result_0;
   result_0 = new ArrayList;
@@ -23412,7 +23412,7 @@ function lambda$0_200(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1408, 6, $intern_26, DomEnvironmentClientImpl___refImpl);
+defineClass(1410, 6, $intern_26, DomEnvironmentClientImpl___refImpl);
 _.get_1 = function get_113(){
   return new DomEnvironmentClientImpl;
 }
@@ -23432,26 +23432,26 @@ _.init0 = function init0_194(){
   $init(this, Lcc_alcina_framework_gwt_client_xml_DomEnvironmentClientImpl_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_gwt_client_xml_DomEnvironmentClientImpl_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.xml', 'DomEnvironmentClientImpl___refImpl', 1408, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_gwt_client_xml_DomEnvironmentClientImpl_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.gwt.client.xml', 'DomEnvironmentClientImpl___refImpl', 1410, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function DomEnvironmentClientImpl___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1409, 1, $intern_23, DomEnvironmentClientImpl___refImpl$lambda$0$Type);
+defineClass(1411, 1, $intern_23, DomEnvironmentClientImpl___refImpl$lambda$0$Type);
 _.accept = function accept_212(arg0){
   lambda$0_200(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_gwt_client_xml_DomEnvironmentClientImpl_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1409);
+var Lcc_alcina_framework_gwt_client_xml_DomEnvironmentClientImpl_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1411);
 function DomEnvironmentClientImpl___refImpl$lambda$1$Type(){
 }
 
-defineClass(1410, 1, {}, DomEnvironmentClientImpl___refImpl$lambda$1$Type);
+defineClass(1412, 1, {}, DomEnvironmentClientImpl___refImpl$lambda$1$Type);
 _.test_0 = function test_211(arg0){
   return $clinit_DomEnvironmentClientImpl___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_gwt_client_xml_DomEnvironmentClientImpl_2_classLit);
 }
 ;
-var Lcc_alcina_framework_gwt_client_xml_DomEnvironmentClientImpl_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1410);
+var Lcc_alcina_framework_gwt_client_xml_DomEnvironmentClientImpl_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1412);
 function RemoteObjectModelComponentClient(){
 }
 
@@ -23533,7 +23533,7 @@ function lambda$0_201(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1414, 6, $intern_26, RemoteObjectModelComponentState___refImpl);
+defineClass(1416, 6, $intern_26, RemoteObjectModelComponentState___refImpl);
 _.get_1 = function get_114(){
   return new RemoteObjectModelComponentState;
 }
@@ -23552,26 +23552,26 @@ _.init0 = function init0_195(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_client_RemoteObjectModelComponentState_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_RemoteObjectModelComponentState_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client', 'RemoteObjectModelComponentState___refImpl', 1414, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_client_RemoteObjectModelComponentState_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client', 'RemoteObjectModelComponentState___refImpl', 1416, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteObjectModelComponentState___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1415, 1, $intern_23, RemoteObjectModelComponentState___refImpl$lambda$0$Type);
+defineClass(1417, 1, $intern_23, RemoteObjectModelComponentState___refImpl$lambda$0$Type);
 _.accept = function accept_213(arg0){
   lambda$0_201(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_RemoteObjectModelComponentState_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1415);
+var Lcc_alcina_framework_servlet_component_romcom_client_RemoteObjectModelComponentState_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1417);
 function RemoteObjectModelComponentState___refImpl$lambda$1$Type(){
 }
 
-defineClass(1416, 1, {}, RemoteObjectModelComponentState___refImpl$lambda$1$Type);
+defineClass(1418, 1, {}, RemoteObjectModelComponentState___refImpl$lambda$1$Type);
 _.test_0 = function test_212(arg0){
   return $clinit_RemoteObjectModelComponentState___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_client_RemoteObjectModelComponentState_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_RemoteObjectModelComponentState_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1416);
+var Lcc_alcina_framework_servlet_component_romcom_client_RemoteObjectModelComponentState_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1418);
 function send(message){
   var request, request_0;
   request = (request_0 = new RemoteComponentRequest , request_0.session = session , request_0.requestId = ++clientMessageId , request_0);
@@ -23582,7 +23582,7 @@ function send(message){
 function submitRequest(request){
   var builder, callback, e, path, payload;
   payload = ($clinit_ReflectiveSerializer() , serialize(request, $withElideDefaults(new ReflectiveSerializer$SerializerOptions, true)));
-  path = (castTo(contextProvider_1.contextFrame(), 58).impl , $wnd.location.pathname);
+  path = (castTo(contextProvider_1.contextFrame(), 59).impl , $wnd.location.pathname);
   builder = new RequestBuilder(($clinit_RequestBuilder() , POST), path);
   callback = new ClientRpc$3(request);
   try {
@@ -23835,7 +23835,7 @@ function $handle_0(message){
     invalidClientException = castTo(protocolException, 144);
     switch (invalidClientException.action.ordinal) {
       case 0:
-        castTo(contextProvider_1.contextFrame(), 58).impl;
+        castTo(contextProvider_1.contextFrame(), 59).impl;
         $wnd.location.reload();
         return;
     }
@@ -23868,7 +23868,7 @@ function lambda$0_203(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1417, 6, $intern_26, ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl);
+defineClass(1419, 6, $intern_26, ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl);
 _.get_1 = function get_115(){
   return new ProtocolMessageHandlerClient$BeginAwaitLoopHandler;
 }
@@ -23888,26 +23888,26 @@ _.init0 = function init0_196(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient$BeginAwaitLoopHandler_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1BeginAwaitLoopHandler_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client.common.logic', 'ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl', 1417, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1BeginAwaitLoopHandler_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client.common.logic', 'ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl', 1419, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1418, 1, $intern_23, ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl$lambda$0$Type);
+defineClass(1420, 1, $intern_23, ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl$lambda$0$Type);
 _.accept = function accept_216(arg0){
   lambda$0_203(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1BeginAwaitLoopHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1418);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1BeginAwaitLoopHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1420);
 function ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl$lambda$1$Type(){
 }
 
-defineClass(1419, 1, {}, ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl$lambda$1$Type);
+defineClass(1421, 1, {}, ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl$lambda$1$Type);
 _.test_0 = function test_213(arg0){
   return $clinit_ProtocolMessageHandlerClient_BeginAwaitLoopHandler___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient$BeginAwaitLoopHandler_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1BeginAwaitLoopHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1419);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1BeginAwaitLoopHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1421);
 function $clinit_ProtocolMessageHandlerClient_MutationsHandler___refImpl(){
   $clinit_ProtocolMessageHandlerClient_MutationsHandler___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -23923,7 +23923,7 @@ function lambda$0_204(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1423, 6, $intern_26, ProtocolMessageHandlerClient_MutationsHandler___refImpl);
+defineClass(1425, 6, $intern_26, ProtocolMessageHandlerClient_MutationsHandler___refImpl);
 _.get_1 = function get_116(){
   return new ProtocolMessageHandlerClient$MutationsHandler;
 }
@@ -23943,26 +23943,26 @@ _.init0 = function init0_197(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient$MutationsHandler_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1MutationsHandler_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client.common.logic', 'ProtocolMessageHandlerClient_MutationsHandler___refImpl', 1423, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1MutationsHandler_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client.common.logic', 'ProtocolMessageHandlerClient_MutationsHandler___refImpl', 1425, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ProtocolMessageHandlerClient_MutationsHandler___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1424, 1, $intern_23, ProtocolMessageHandlerClient_MutationsHandler___refImpl$lambda$0$Type);
+defineClass(1426, 1, $intern_23, ProtocolMessageHandlerClient_MutationsHandler___refImpl$lambda$0$Type);
 _.accept = function accept_217(arg0){
   lambda$0_204(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1MutationsHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1424);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1MutationsHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1426);
 function ProtocolMessageHandlerClient_MutationsHandler___refImpl$lambda$1$Type(){
 }
 
-defineClass(1425, 1, {}, ProtocolMessageHandlerClient_MutationsHandler___refImpl$lambda$1$Type);
+defineClass(1427, 1, {}, ProtocolMessageHandlerClient_MutationsHandler___refImpl$lambda$1$Type);
 _.test_0 = function test_214(arg0){
   return $clinit_ProtocolMessageHandlerClient_MutationsHandler___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient$MutationsHandler_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1MutationsHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1425);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1MutationsHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1427);
 function $clinit_ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl(){
   $clinit_ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -23978,7 +23978,7 @@ function lambda$0_205(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1426, 6, $intern_26, ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl);
+defineClass(1428, 6, $intern_26, ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl);
 _.get_1 = function get_117(){
   return new ProtocolMessageHandlerClient$ProcessingExceptionHandler;
 }
@@ -23998,26 +23998,26 @@ _.init0 = function init0_198(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient$ProcessingExceptionHandler_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1ProcessingExceptionHandler_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client.common.logic', 'ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl', 1426, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1ProcessingExceptionHandler_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client.common.logic', 'ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl', 1428, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1427, 1, $intern_23, ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl$lambda$0$Type);
+defineClass(1429, 1, $intern_23, ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl$lambda$0$Type);
 _.accept = function accept_218(arg0){
   lambda$0_205(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1ProcessingExceptionHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1427);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1ProcessingExceptionHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1429);
 function ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl$lambda$1$Type(){
 }
 
-defineClass(1428, 1, {}, ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl$lambda$1$Type);
+defineClass(1430, 1, {}, ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl$lambda$1$Type);
 _.test_0 = function test_215(arg0){
   return $clinit_ProtocolMessageHandlerClient_ProcessingExceptionHandler___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient$ProcessingExceptionHandler_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1ProcessingExceptionHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1428);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1ProcessingExceptionHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1430);
 function $clinit_ProtocolMessageHandlerClient___refImpl(){
   $clinit_ProtocolMessageHandlerClient___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -24033,7 +24033,7 @@ function lambda$0_206(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1420, 6, $intern_25, ProtocolMessageHandlerClient___refImpl);
+defineClass(1422, 6, $intern_25, ProtocolMessageHandlerClient___refImpl);
 _.init0 = function init0_199(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -24047,26 +24047,26 @@ _.init0 = function init0_199(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client.common.logic', 'ProtocolMessageHandlerClient___refImpl', 1420, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client.common.logic', 'ProtocolMessageHandlerClient___refImpl', 1422, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ProtocolMessageHandlerClient___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1421, 1, $intern_23, ProtocolMessageHandlerClient___refImpl$lambda$0$Type);
+defineClass(1423, 1, $intern_23, ProtocolMessageHandlerClient___refImpl$lambda$0$Type);
 _.accept = function accept_219(arg0){
   lambda$0_206(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1421);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1423);
 function ProtocolMessageHandlerClient___refImpl$lambda$1$Type(){
 }
 
-defineClass(1422, 1, {}, ProtocolMessageHandlerClient___refImpl$lambda$1$Type);
+defineClass(1424, 1, {}, ProtocolMessageHandlerClient___refImpl$lambda$1$Type);
 _.test_0 = function test_216(arg0){
   return $clinit_ProtocolMessageHandlerClient___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1422);
+var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_ProtocolMessageHandlerClient_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1424);
 defineClass(259, 1, {});
 var Lcc_alcina_framework_servlet_component_romcom_client_common_logic_RemoteComponentInit_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.client.common.logic', 'RemoteComponentInit', 259, Ljava_lang_Object_2_classLit);
 var Lcom_google_gwt_event_shared_EventHandler_2_classLit = createForInterface('com.google.gwt.event.shared', 'EventHandler');
@@ -24102,7 +24102,7 @@ function lambda$0_207(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1429, 6, $intern_26, EventSystemMutation___refImpl);
+defineClass(1431, 6, $intern_26, EventSystemMutation___refImpl);
 _.get_1 = function get_118(){
   return new EventSystemMutation;
 }
@@ -24144,12 +24144,12 @@ _.init0 = function init0_200(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'EventSystemMutation___refImpl', 1429, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'EventSystemMutation___refImpl', 1431, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function EventSystemMutation___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'path', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1430, 5, $intern_27, EventSystemMutation___refImpl$1);
+defineClass(1432, 5, $intern_27, EventSystemMutation___refImpl$1);
 _.get_2 = function get_119(bean){
   return castTo(bean, 117).path;
 }
@@ -24158,12 +24158,12 @@ _.set_1 = function set_6(bean, value_0){
   castTo(bean, 117).path = castTo(value_0, 93);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1430);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1432);
 function EventSystemMutation___refImpl$2($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'eventBits', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1431, 5, $intern_27, EventSystemMutation___refImpl$2);
+defineClass(1433, 5, $intern_27, EventSystemMutation___refImpl$2);
 _.get_2 = function get_120(bean){
   return valueOf_4(castTo(bean, 117).eventBits);
 }
@@ -24172,12 +24172,12 @@ _.set_1 = function set_7(bean, value_0){
   castTo(bean, 117).eventBits = castTo(value_0, 43).value_0;
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1431);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1433);
 function EventSystemMutation___refImpl$3($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'eventTypeName', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1432, 5, $intern_27, EventSystemMutation___refImpl$3);
+defineClass(1434, 5, $intern_27, EventSystemMutation___refImpl$3);
 _.get_2 = function get_121(bean){
   return castTo(bean, 117).eventTypeName;
 }
@@ -24186,26 +24186,26 @@ _.set_1 = function set_8(bean, value_0){
   castTo(bean, 117).eventTypeName = castToString(value_0);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1432);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1434);
 function EventSystemMutation___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1433, 1, $intern_23, EventSystemMutation___refImpl$lambda$0$Type);
+defineClass(1435, 1, $intern_23, EventSystemMutation___refImpl$lambda$0$Type);
 _.accept = function accept_220(arg0){
   lambda$0_207(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1433);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1435);
 function EventSystemMutation___refImpl$lambda$1$Type(){
 }
 
-defineClass(1434, 1, {}, EventSystemMutation___refImpl$lambda$1$Type);
+defineClass(1436, 1, {}, EventSystemMutation___refImpl$lambda$1$Type);
 _.test_0 = function test_217(arg0){
   return $clinit_EventSystemMutation___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1434);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_EventSystemMutation_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1436);
 function $setClearOutput(this$static, clearOutput){
   this$static.clearOutput = clearOutput;
 }
@@ -24239,7 +24239,7 @@ function lambda$0_208(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1435, 6, $intern_26, RemoteComponentConsoleChanges___refImpl);
+defineClass(1437, 6, $intern_26, RemoteComponentConsoleChanges___refImpl);
 _.get_1 = function get_122(){
   return new RemoteComponentConsoleChanges;
 }
@@ -24281,12 +24281,12 @@ _.init0 = function init0_201(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentConsoleChanges___refImpl', 1435, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentConsoleChanges___refImpl', 1437, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentConsoleChanges___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'clearOutput', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1436, 5, $intern_27, RemoteComponentConsoleChanges___refImpl$1);
+defineClass(1438, 5, $intern_27, RemoteComponentConsoleChanges___refImpl$1);
 _.get_2 = function get_123(bean){
   return $clinit_Boolean() , castTo(bean, 134).clearOutput?true:false;
 }
@@ -24295,12 +24295,12 @@ _.set_1 = function set_9(bean, value_0){
   $setClearOutput(castTo(bean, 134), $booleanValue(castToBoolean(value_0)));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1436);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1438);
 function RemoteComponentConsoleChanges___refImpl$2($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'outputHtml', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1437, 5, $intern_27, RemoteComponentConsoleChanges___refImpl$2);
+defineClass(1439, 5, $intern_27, RemoteComponentConsoleChanges___refImpl$2);
 _.get_2 = function get_124(bean){
   return castTo(bean, 134).outputHtml;
 }
@@ -24309,12 +24309,12 @@ _.set_1 = function set_10(bean, value_0){
   $setOutputHtml(castTo(bean, 134), castToString(value_0));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1437);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1439);
 function RemoteComponentConsoleChanges___refImpl$3($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'commandLine', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1438, 5, $intern_27, RemoteComponentConsoleChanges___refImpl$3);
+defineClass(1440, 5, $intern_27, RemoteComponentConsoleChanges___refImpl$3);
 _.get_2 = function get_125(bean){
   return castTo(bean, 134).commandLine;
 }
@@ -24323,26 +24323,26 @@ _.set_1 = function set_11(bean, value_0){
   $setCommandLine(castTo(bean, 134), castToString(value_0));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1438);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1440);
 function RemoteComponentConsoleChanges___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1439, 1, $intern_23, RemoteComponentConsoleChanges___refImpl$lambda$0$Type);
+defineClass(1441, 1, $intern_23, RemoteComponentConsoleChanges___refImpl$lambda$0$Type);
 _.accept = function accept_221(arg0){
   lambda$0_208(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1439);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1441);
 function RemoteComponentConsoleChanges___refImpl$lambda$1$Type(){
 }
 
-defineClass(1440, 1, {}, RemoteComponentConsoleChanges___refImpl$lambda$1$Type);
+defineClass(1442, 1, {}, RemoteComponentConsoleChanges___refImpl$lambda$1$Type);
 _.test_0 = function test_218(arg0){
   return $clinit_RemoteComponentConsoleChanges___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1440);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentConsoleChanges_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1442);
 var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$ProtocolException_2_classLit = createForInterface('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol/ProtocolException');
 function $getStackTrace(this$static){
   return this$static.stackTrace == null && (this$static.stackTrace = $constructJavaStackTrace(this$static)) , this$static.stackTrace;
@@ -24462,7 +24462,7 @@ function lambda$0_209(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1441, 6, $intern_26, RemoteComponentProtocol_InvalidAuthenticationException___refImpl);
+defineClass(1443, 6, $intern_26, RemoteComponentProtocol_InvalidAuthenticationException___refImpl);
 _.get_1 = function get_126(){
   return new RemoteComponentProtocol$InvalidAuthenticationException;
 }
@@ -24525,52 +24525,52 @@ _.init0 = function init0_202(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$InvalidAuthenticationException_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_InvalidAuthenticationException___refImpl', 1441, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_InvalidAuthenticationException___refImpl', 1443, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_InvalidAuthenticationException___refImpl$1($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'localizedMessage', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1442, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$1);
+defineClass(1444, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$1);
 _.get_2 = function get_127(bean){
   return castTo(bean, 20).getMessage();
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1442);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1444);
 function RemoteComponentProtocol_InvalidAuthenticationException___refImpl$2($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'message', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1443, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$2);
+defineClass(1445, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$2);
 _.get_2 = function get_128(bean){
   return castTo(bean, 20).getMessage();
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1443);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1445);
 function RemoteComponentProtocol_InvalidAuthenticationException___refImpl$3($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'suppressed', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1444, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$3);
+defineClass(1446, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$3);
 _.get_2 = function get_129(bean){
   return $getSuppressed(castTo(bean, 20));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1444);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1446);
 function RemoteComponentProtocol_InvalidAuthenticationException___refImpl$4($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'cause', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1445, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$4);
+defineClass(1447, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$4);
 _.get_2 = function get_130(bean){
   return castTo(bean, 20).cause;
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$4_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1445);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$4_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1447);
 function RemoteComponentProtocol_InvalidAuthenticationException___refImpl$5($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'stackTrace', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1446, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$5);
+defineClass(1448, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$5);
 _.get_2 = function get_131(bean){
   return $getStackTrace(castTo(bean, 241));
 }
@@ -24579,36 +24579,36 @@ _.set_1 = function set_12(bean, value_0){
   $setStackTrace(castTo(bean, 20), castTo(value_0, 170));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$5_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1446);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$5_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1448);
 function RemoteComponentProtocol_InvalidAuthenticationException___refImpl$6($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'backingJsObject', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1447, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$6);
+defineClass(1449, 5, $intern_27, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$6);
 _.get_2 = function get_132(bean){
   return castTo(bean, 20).backingJsObject;
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$6_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1447);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$6_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1449);
 function RemoteComponentProtocol_InvalidAuthenticationException___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1448, 1, $intern_23, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$lambda$0$Type);
+defineClass(1450, 1, $intern_23, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$lambda$0$Type);
 _.accept = function accept_222(arg0){
   lambda$0_209(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1448);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1450);
 function RemoteComponentProtocol_InvalidAuthenticationException___refImpl$lambda$1$Type(){
 }
 
-defineClass(1449, 1, {}, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$lambda$1$Type);
+defineClass(1451, 1, {}, RemoteComponentProtocol_InvalidAuthenticationException___refImpl$lambda$1$Type);
 _.test_0 = function test_219(arg0){
   return $clinit_RemoteComponentProtocol_InvalidAuthenticationException___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$InvalidAuthenticationException_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1449);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidAuthenticationException_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1451);
 function $clinit_RemoteComponentProtocol_InvalidClientException_Action___refImpl(){
   $clinit_RemoteComponentProtocol_InvalidClientException_Action___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -24624,7 +24624,7 @@ function lambda$0_210(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1463, 6, $intern_25, RemoteComponentProtocol_InvalidClientException_Action___refImpl);
+defineClass(1465, 6, $intern_25, RemoteComponentProtocol_InvalidClientException_Action___refImpl);
 _.init0 = function init0_203(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -24639,26 +24639,26 @@ _.init0 = function init0_203(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$InvalidClientException$Action_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, false, true);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1Action_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_InvalidClientException_Action___refImpl', 1463, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1Action_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_InvalidClientException_Action___refImpl', 1465, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_InvalidClientException_Action___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1464, 1, $intern_23, RemoteComponentProtocol_InvalidClientException_Action___refImpl$lambda$0$Type);
+defineClass(1466, 1, $intern_23, RemoteComponentProtocol_InvalidClientException_Action___refImpl$lambda$0$Type);
 _.accept = function accept_223(arg0){
   lambda$0_210(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1Action_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1464);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1Action_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1466);
 function RemoteComponentProtocol_InvalidClientException_Action___refImpl$lambda$1$Type(){
 }
 
-defineClass(1465, 1, {}, RemoteComponentProtocol_InvalidClientException_Action___refImpl$lambda$1$Type);
+defineClass(1467, 1, {}, RemoteComponentProtocol_InvalidClientException_Action___refImpl$lambda$1$Type);
 _.test_0 = function test_220(arg0){
   return $clinit_RemoteComponentProtocol_InvalidClientException_Action___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$InvalidClientException$Action_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1Action_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1465);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1Action_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1467);
 function $clinit_RemoteComponentProtocol_InvalidClientException___refImpl(){
   $clinit_RemoteComponentProtocol_InvalidClientException___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -24674,7 +24674,7 @@ function lambda$0_211(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1453, 6, $intern_26, RemoteComponentProtocol_InvalidClientException___refImpl);
+defineClass(1455, 6, $intern_26, RemoteComponentProtocol_InvalidClientException___refImpl);
 _.get_1 = function get_133(){
   return new RemoteComponentProtocol$InvalidClientException;
 }
@@ -24745,52 +24745,52 @@ _.init0 = function init0_204(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$InvalidClientException_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_InvalidClientException___refImpl', 1453, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_InvalidClientException___refImpl', 1455, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_InvalidClientException___refImpl$1($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'localizedMessage', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1454, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$1);
+defineClass(1456, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$1);
 _.get_2 = function get_134(bean){
   return castTo(bean, 20).getMessage();
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1454);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1456);
 function RemoteComponentProtocol_InvalidClientException___refImpl$2($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'message', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1455, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$2);
+defineClass(1457, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$2);
 _.get_2 = function get_135(bean){
   return castTo(bean, 20).getMessage();
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1455);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1457);
 function RemoteComponentProtocol_InvalidClientException___refImpl$3($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'suppressed', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1456, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$3);
+defineClass(1458, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$3);
 _.get_2 = function get_136(bean){
   return $getSuppressed(castTo(bean, 20));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1456);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1458);
 function RemoteComponentProtocol_InvalidClientException___refImpl$4($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'cause', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1457, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$4);
+defineClass(1459, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$4);
 _.get_2 = function get_137(bean){
   return castTo(bean, 20).cause;
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$4_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1457);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$4_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1459);
 function RemoteComponentProtocol_InvalidClientException___refImpl$5($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'stackTrace', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1458, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$5);
+defineClass(1460, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$5);
 _.get_2 = function get_138(bean){
   return $getStackTrace_0(castTo(bean, 144));
 }
@@ -24799,22 +24799,22 @@ _.set_1 = function set_13(bean, value_0){
   $setStackTrace(castTo(bean, 20), castTo(value_0, 170));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$5_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1458);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$5_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1460);
 function RemoteComponentProtocol_InvalidClientException___refImpl$6($anonymous1, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'backingJsObject', $anonymous1, null, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1459, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$6);
+defineClass(1461, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$6);
 _.get_2 = function get_139(bean){
   return castTo(bean, 20).backingJsObject;
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$6_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1459);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$6_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1461);
 function RemoteComponentProtocol_InvalidClientException___refImpl$7($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'action', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1460, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$7);
+defineClass(1462, 5, $intern_27, RemoteComponentProtocol_InvalidClientException___refImpl$7);
 _.get_2 = function get_140(bean){
   return castTo(bean, 144).action;
 }
@@ -24823,26 +24823,26 @@ _.set_1 = function set_14(bean, value_0){
   castTo(bean, 144).action = castTo(value_0, 190);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$7_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1460);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$7_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1462);
 function RemoteComponentProtocol_InvalidClientException___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1461, 1, $intern_23, RemoteComponentProtocol_InvalidClientException___refImpl$lambda$0$Type);
+defineClass(1463, 1, $intern_23, RemoteComponentProtocol_InvalidClientException___refImpl$lambda$0$Type);
 _.accept = function accept_224(arg0){
   lambda$0_211(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1461);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1463);
 function RemoteComponentProtocol_InvalidClientException___refImpl$lambda$1$Type(){
 }
 
-defineClass(1462, 1, {}, RemoteComponentProtocol_InvalidClientException___refImpl$lambda$1$Type);
+defineClass(1464, 1, {}, RemoteComponentProtocol_InvalidClientException___refImpl$lambda$1$Type);
 _.test_0 = function test_221(arg0){
   return $clinit_RemoteComponentProtocol_InvalidClientException___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$InvalidClientException_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1462);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1InvalidClientException_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1464);
 function $clinit_RemoteComponentProtocol_Message_AwaitRemote___refImpl(){
   $clinit_RemoteComponentProtocol_Message_AwaitRemote___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -24858,7 +24858,7 @@ function lambda$0_212(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1469, 6, $intern_26, RemoteComponentProtocol_Message_AwaitRemote___refImpl);
+defineClass(1471, 6, $intern_26, RemoteComponentProtocol_Message_AwaitRemote___refImpl);
 _.get_1 = function get_141(){
   return new RemoteComponentProtocol$Message$AwaitRemote;
 }
@@ -24879,26 +24879,26 @@ _.init0 = function init0_205(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$AwaitRemote_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1AwaitRemote_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_AwaitRemote___refImpl', 1469, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1AwaitRemote_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_AwaitRemote___refImpl', 1471, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Message_AwaitRemote___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1470, 1, $intern_23, RemoteComponentProtocol_Message_AwaitRemote___refImpl$lambda$0$Type);
+defineClass(1472, 1, $intern_23, RemoteComponentProtocol_Message_AwaitRemote___refImpl$lambda$0$Type);
 _.accept = function accept_225(arg0){
   lambda$0_212(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1AwaitRemote_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1470);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1AwaitRemote_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1472);
 function RemoteComponentProtocol_Message_AwaitRemote___refImpl$lambda$1$Type(){
 }
 
-defineClass(1471, 1, {}, RemoteComponentProtocol_Message_AwaitRemote___refImpl$lambda$1$Type);
+defineClass(1473, 1, {}, RemoteComponentProtocol_Message_AwaitRemote___refImpl$lambda$1$Type);
 _.test_0 = function test_222(arg0){
   return $clinit_RemoteComponentProtocol_Message_AwaitRemote___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$AwaitRemote_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1AwaitRemote_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1471);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1AwaitRemote_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1473);
 function $clinit_RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl(){
   $clinit_RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -24914,7 +24914,7 @@ function lambda$0_213(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1472, 6, $intern_26, RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl);
+defineClass(1474, 6, $intern_26, RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl);
 _.get_1 = function get_142(){
   return new RemoteComponentProtocol$Message$BeginAwaitLoop;
 }
@@ -24935,26 +24935,26 @@ _.init0 = function init0_206(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$BeginAwaitLoop_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1BeginAwaitLoop_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl', 1472, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1BeginAwaitLoop_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl', 1474, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1473, 1, $intern_23, RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl$lambda$0$Type);
+defineClass(1475, 1, $intern_23, RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl$lambda$0$Type);
 _.accept = function accept_226(arg0){
   lambda$0_213(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1BeginAwaitLoop_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1473);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1BeginAwaitLoop_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1475);
 function RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl$lambda$1$Type(){
 }
 
-defineClass(1474, 1, {}, RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl$lambda$1$Type);
+defineClass(1476, 1, {}, RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl$lambda$1$Type);
 _.test_0 = function test_223(arg0){
   return $clinit_RemoteComponentProtocol_Message_BeginAwaitLoop___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$BeginAwaitLoop_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1BeginAwaitLoop_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1474);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1BeginAwaitLoop_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1476);
 function $clinit_RemoteComponentProtocol_Message_DomEventMessage___refImpl(){
   $clinit_RemoteComponentProtocol_Message_DomEventMessage___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -24970,7 +24970,7 @@ function lambda$0_214(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1475, 6, $intern_26, RemoteComponentProtocol_Message_DomEventMessage___refImpl);
+defineClass(1477, 6, $intern_26, RemoteComponentProtocol_Message_DomEventMessage___refImpl);
 _.get_1 = function get_143(){
   return new RemoteComponentProtocol$Message$DomEventMessage;
 }
@@ -24998,12 +24998,12 @@ _.init0 = function init0_207(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$DomEventMessage_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1DomEventMessage_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_DomEventMessage___refImpl', 1475, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1DomEventMessage_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_DomEventMessage___refImpl', 1477, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Message_DomEventMessage___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'data', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1476, 5, $intern_27, RemoteComponentProtocol_Message_DomEventMessage___refImpl$1);
+defineClass(1478, 5, $intern_27, RemoteComponentProtocol_Message_DomEventMessage___refImpl$1);
 _.get_2 = function get_144(bean){
   return castTo(bean, 191).data_0;
 }
@@ -25012,26 +25012,26 @@ _.set_1 = function set_15(bean, value_0){
   castTo(bean, 191).data_0 = castTo(value_0, 108);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1DomEventMessage_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1476);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1DomEventMessage_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1478);
 function RemoteComponentProtocol_Message_DomEventMessage___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1477, 1, $intern_23, RemoteComponentProtocol_Message_DomEventMessage___refImpl$lambda$0$Type);
+defineClass(1479, 1, $intern_23, RemoteComponentProtocol_Message_DomEventMessage___refImpl$lambda$0$Type);
 _.accept = function accept_227(arg0){
   lambda$0_214(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1DomEventMessage_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1477);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1DomEventMessage_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1479);
 function RemoteComponentProtocol_Message_DomEventMessage___refImpl$lambda$1$Type(){
 }
 
-defineClass(1478, 1, {}, RemoteComponentProtocol_Message_DomEventMessage___refImpl$lambda$1$Type);
+defineClass(1480, 1, {}, RemoteComponentProtocol_Message_DomEventMessage___refImpl$lambda$1$Type);
 _.test_0 = function test_224(arg0){
   return $clinit_RemoteComponentProtocol_Message_DomEventMessage___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$DomEventMessage_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1DomEventMessage_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1478);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1DomEventMessage_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1480);
 function $clinit_RemoteComponentProtocol_Message_HelloBeans1x0___refImpl(){
   $clinit_RemoteComponentProtocol_Message_HelloBeans1x0___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -25047,7 +25047,7 @@ function lambda$0_215(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1479, 6, $intern_26, RemoteComponentProtocol_Message_HelloBeans1x0___refImpl);
+defineClass(1481, 6, $intern_26, RemoteComponentProtocol_Message_HelloBeans1x0___refImpl);
 _.get_1 = function get_145(){
   return new RemoteComponentProtocol$Message$HelloBeans1x0;
 }
@@ -25079,12 +25079,12 @@ _.init0 = function init0_208(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$HelloBeans1x0_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x0_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_HelloBeans1x0___refImpl', 1479, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x0_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_HelloBeans1x0___refImpl', 1481, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Message_HelloBeans1x0___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'world', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1480, 5, $intern_27, RemoteComponentProtocol_Message_HelloBeans1x0___refImpl$1);
+defineClass(1482, 5, $intern_27, RemoteComponentProtocol_Message_HelloBeans1x0___refImpl$1);
 _.get_2 = function get_146(bean){
   return castTo(bean, 214).world;
 }
@@ -25093,26 +25093,26 @@ _.set_1 = function set_16(bean, value_0){
   $setWorld(castTo(bean, 214), castToString(value_0));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x0_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1480);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x0_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1482);
 function RemoteComponentProtocol_Message_HelloBeans1x0___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1481, 1, $intern_23, RemoteComponentProtocol_Message_HelloBeans1x0___refImpl$lambda$0$Type);
+defineClass(1483, 1, $intern_23, RemoteComponentProtocol_Message_HelloBeans1x0___refImpl$lambda$0$Type);
 _.accept = function accept_228(arg0){
   lambda$0_215(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x0_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1481);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x0_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1483);
 function RemoteComponentProtocol_Message_HelloBeans1x0___refImpl$lambda$1$Type(){
 }
 
-defineClass(1482, 1, {}, RemoteComponentProtocol_Message_HelloBeans1x0___refImpl$lambda$1$Type);
+defineClass(1484, 1, {}, RemoteComponentProtocol_Message_HelloBeans1x0___refImpl$lambda$1$Type);
 _.test_0 = function test_225(arg0){
   return $clinit_RemoteComponentProtocol_Message_HelloBeans1x0___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$HelloBeans1x0_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x0_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1482);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x0_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1484);
 function $clinit_RemoteComponentProtocol_Message_HelloBeans1x5___refImpl(){
   $clinit_RemoteComponentProtocol_Message_HelloBeans1x5___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -25128,7 +25128,7 @@ function lambda$0_216(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1483, 6, $intern_26, RemoteComponentProtocol_Message_HelloBeans1x5___refImpl);
+defineClass(1485, 6, $intern_26, RemoteComponentProtocol_Message_HelloBeans1x5___refImpl);
 _.get_1 = function get_147(){
   return new RemoteComponentProtocol$Message$HelloBeans1x5;
 }
@@ -25160,12 +25160,12 @@ _.init0 = function init0_209(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$HelloBeans1x5_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x5_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_HelloBeans1x5___refImpl', 1483, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x5_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_HelloBeans1x5___refImpl', 1485, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Message_HelloBeans1x5___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'world', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1484, 5, $intern_27, RemoteComponentProtocol_Message_HelloBeans1x5___refImpl$1);
+defineClass(1486, 5, $intern_27, RemoteComponentProtocol_Message_HelloBeans1x5___refImpl$1);
 _.get_2 = function get_148(bean){
   return castTo(bean, 215).world;
 }
@@ -25174,26 +25174,26 @@ _.set_1 = function set_17(bean, value_0){
   castTo(bean, 215).world = castToString(value_0);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x5_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1484);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x5_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1486);
 function RemoteComponentProtocol_Message_HelloBeans1x5___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1485, 1, $intern_23, RemoteComponentProtocol_Message_HelloBeans1x5___refImpl$lambda$0$Type);
+defineClass(1487, 1, $intern_23, RemoteComponentProtocol_Message_HelloBeans1x5___refImpl$lambda$0$Type);
 _.accept = function accept_229(arg0){
   lambda$0_216(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x5_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1485);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x5_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1487);
 function RemoteComponentProtocol_Message_HelloBeans1x5___refImpl$lambda$1$Type(){
 }
 
-defineClass(1486, 1, {}, RemoteComponentProtocol_Message_HelloBeans1x5___refImpl$lambda$1$Type);
+defineClass(1488, 1, {}, RemoteComponentProtocol_Message_HelloBeans1x5___refImpl$lambda$1$Type);
 _.test_0 = function test_226(arg0){
   return $clinit_RemoteComponentProtocol_Message_HelloBeans1x5___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$HelloBeans1x5_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x5_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1486);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1HelloBeans1x5_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1488);
 function $clinit_RemoteComponentProtocol_Message_Mutations___refImpl(){
   $clinit_RemoteComponentProtocol_Message_Mutations___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -25209,7 +25209,7 @@ function lambda$0_217(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1487, 6, $intern_26, RemoteComponentProtocol_Message_Mutations___refImpl);
+defineClass(1489, 6, $intern_26, RemoteComponentProtocol_Message_Mutations___refImpl);
 _.get_1 = function get_149(){
   return new RemoteComponentProtocol$Message$Mutations;
 }
@@ -25253,12 +25253,12 @@ _.init0 = function init0_210(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$Mutations_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_Mutations___refImpl', 1487, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_Mutations___refImpl', 1489, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Message_Mutations___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'domMutations', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1488, 5, $intern_27, RemoteComponentProtocol_Message_Mutations___refImpl$1);
+defineClass(1490, 5, $intern_27, RemoteComponentProtocol_Message_Mutations___refImpl$1);
 _.get_2 = function get_150(bean){
   return castTo(bean, 105).domMutations;
 }
@@ -25267,12 +25267,12 @@ _.set_1 = function set_18(bean, value_0){
   castTo(bean, 105).domMutations = castTo(value_0, 29);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1488);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1490);
 function RemoteComponentProtocol_Message_Mutations___refImpl$2($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'eventMutations', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1489, 5, $intern_27, RemoteComponentProtocol_Message_Mutations___refImpl$2);
+defineClass(1491, 5, $intern_27, RemoteComponentProtocol_Message_Mutations___refImpl$2);
 _.get_2 = function get_151(bean){
   return castTo(bean, 105).eventMutations;
 }
@@ -25281,12 +25281,12 @@ _.set_1 = function set_19(bean, value_0){
   castTo(bean, 105).eventMutations = castTo(value_0, 29);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1489);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1491);
 function RemoteComponentProtocol_Message_Mutations___refImpl$3($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'locationMutation', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1490, 5, $intern_27, RemoteComponentProtocol_Message_Mutations___refImpl$3);
+defineClass(1492, 5, $intern_27, RemoteComponentProtocol_Message_Mutations___refImpl$3);
 _.get_2 = function get_152(bean){
   return castTo(bean, 105).locationMutation;
 }
@@ -25295,26 +25295,26 @@ _.set_1 = function set_20(bean, value_0){
   castTo(bean, 105).locationMutation = castTo(value_0, 75);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1490);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1492);
 function RemoteComponentProtocol_Message_Mutations___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1491, 1, $intern_23, RemoteComponentProtocol_Message_Mutations___refImpl$lambda$0$Type);
+defineClass(1493, 1, $intern_23, RemoteComponentProtocol_Message_Mutations___refImpl$lambda$0$Type);
 _.accept = function accept_230(arg0){
   lambda$0_217(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1491);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1493);
 function RemoteComponentProtocol_Message_Mutations___refImpl$lambda$1$Type(){
 }
 
-defineClass(1492, 1, {}, RemoteComponentProtocol_Message_Mutations___refImpl$lambda$1$Type);
+defineClass(1494, 1, {}, RemoteComponentProtocol_Message_Mutations___refImpl$lambda$1$Type);
 _.test_0 = function test_227(arg0){
   return $clinit_RemoteComponentProtocol_Message_Mutations___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$Mutations_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1492);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Mutations_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1494);
 function $clinit_RemoteComponentProtocol_Message_ProcessingException___refImpl(){
   $clinit_RemoteComponentProtocol_Message_ProcessingException___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -25330,7 +25330,7 @@ function lambda$0_218(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1493, 6, $intern_26, RemoteComponentProtocol_Message_ProcessingException___refImpl);
+defineClass(1495, 6, $intern_26, RemoteComponentProtocol_Message_ProcessingException___refImpl);
 _.get_1 = function get_153(){
   return new RemoteComponentProtocol$Message$ProcessingException;
 }
@@ -25372,12 +25372,12 @@ _.init0 = function init0_211(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$ProcessingException_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_ProcessingException___refImpl', 1493, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_ProcessingException___refImpl', 1495, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Message_ProcessingException___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'protocolException', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1494, 5, $intern_27, RemoteComponentProtocol_Message_ProcessingException___refImpl$1);
+defineClass(1496, 5, $intern_27, RemoteComponentProtocol_Message_ProcessingException___refImpl$1);
 _.get_2 = function get_154(bean){
   return castTo(bean, 115).protocolException;
 }
@@ -25386,12 +25386,12 @@ _.set_1 = function set_21(bean, value_0){
   castTo(bean, 115).protocolException = castTo(value_0, 27);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1494);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1496);
 function RemoteComponentProtocol_Message_ProcessingException___refImpl$2($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'exceptionClassName', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1495, 5, $intern_27, RemoteComponentProtocol_Message_ProcessingException___refImpl$2);
+defineClass(1497, 5, $intern_27, RemoteComponentProtocol_Message_ProcessingException___refImpl$2);
 _.get_2 = function get_155(bean){
   return castTo(bean, 115).exceptionClassName;
 }
@@ -25400,12 +25400,12 @@ _.set_1 = function set_22(bean, value_0){
   castTo(bean, 115).exceptionClassName = castToString(value_0);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1495);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1497);
 function RemoteComponentProtocol_Message_ProcessingException___refImpl$3($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'exceptionMessage', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1496, 5, $intern_27, RemoteComponentProtocol_Message_ProcessingException___refImpl$3);
+defineClass(1498, 5, $intern_27, RemoteComponentProtocol_Message_ProcessingException___refImpl$3);
 _.get_2 = function get_156(bean){
   return castTo(bean, 115).exceptionMessage;
 }
@@ -25414,26 +25414,26 @@ _.set_1 = function set_23(bean, value_0){
   castTo(bean, 115).exceptionMessage = castToString(value_0);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1496);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1498);
 function RemoteComponentProtocol_Message_ProcessingException___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1497, 1, $intern_23, RemoteComponentProtocol_Message_ProcessingException___refImpl$lambda$0$Type);
+defineClass(1499, 1, $intern_23, RemoteComponentProtocol_Message_ProcessingException___refImpl$lambda$0$Type);
 _.accept = function accept_231(arg0){
   lambda$0_218(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1497);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1499);
 function RemoteComponentProtocol_Message_ProcessingException___refImpl$lambda$1$Type(){
 }
 
-defineClass(1498, 1, {}, RemoteComponentProtocol_Message_ProcessingException___refImpl$lambda$1$Type);
+defineClass(1500, 1, {}, RemoteComponentProtocol_Message_ProcessingException___refImpl$lambda$1$Type);
 _.test_0 = function test_228(arg0){
   return $clinit_RemoteComponentProtocol_Message_ProcessingException___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$ProcessingException_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1498);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1ProcessingException_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1500);
 function $clinit_RemoteComponentProtocol_Message_Startup___refImpl(){
   $clinit_RemoteComponentProtocol_Message_Startup___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -25449,7 +25449,7 @@ function lambda$0_219(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1499, 6, $intern_26, RemoteComponentProtocol_Message_Startup___refImpl);
+defineClass(1501, 6, $intern_26, RemoteComponentProtocol_Message_Startup___refImpl);
 _.get_1 = function get_157(){
   return new RemoteComponentProtocol$Message$Startup;
 }
@@ -25492,12 +25492,12 @@ _.init0 = function init0_212(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$Startup_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_Startup___refImpl', 1499, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message_Startup___refImpl', 1501, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Message_Startup___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'locationMutation', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1500, 5, $intern_27, RemoteComponentProtocol_Message_Startup___refImpl$1);
+defineClass(1502, 5, $intern_27, RemoteComponentProtocol_Message_Startup___refImpl$1);
 _.get_2 = function get_158(bean){
   return castTo(bean, 116).locationMutation;
 }
@@ -25506,12 +25506,12 @@ _.set_1 = function set_24(bean, value_0){
   castTo(bean, 116).locationMutation = castTo(value_0, 75);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1500);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1502);
 function RemoteComponentProtocol_Message_Startup___refImpl$2($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'domMutations', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1501, 5, $intern_27, RemoteComponentProtocol_Message_Startup___refImpl$2);
+defineClass(1503, 5, $intern_27, RemoteComponentProtocol_Message_Startup___refImpl$2);
 _.get_2 = function get_159(bean){
   return castTo(bean, 116).domMutations;
 }
@@ -25520,12 +25520,12 @@ _.set_1 = function set_25(bean, value_0){
   castTo(bean, 116).domMutations = castTo(value_0, 29);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1501);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1503);
 function RemoteComponentProtocol_Message_Startup___refImpl$3($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'maxCharsPerTextNode', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1502, 5, $intern_27, RemoteComponentProtocol_Message_Startup___refImpl$3);
+defineClass(1504, 5, $intern_27, RemoteComponentProtocol_Message_Startup___refImpl$3);
 _.get_2 = function get_160(bean){
   return valueOf_4(castTo(bean, 116).maxCharsPerTextNode);
 }
@@ -25534,26 +25534,26 @@ _.set_1 = function set_26(bean, value_0){
   castTo(bean, 116).maxCharsPerTextNode = castTo(value_0, 43).value_0;
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1502);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1504);
 function RemoteComponentProtocol_Message_Startup___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1503, 1, $intern_23, RemoteComponentProtocol_Message_Startup___refImpl$lambda$0$Type);
+defineClass(1505, 1, $intern_23, RemoteComponentProtocol_Message_Startup___refImpl$lambda$0$Type);
 _.accept = function accept_232(arg0){
   lambda$0_219(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1503);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1505);
 function RemoteComponentProtocol_Message_Startup___refImpl$lambda$1$Type(){
 }
 
-defineClass(1504, 1, {}, RemoteComponentProtocol_Message_Startup___refImpl$lambda$1$Type);
+defineClass(1506, 1, {}, RemoteComponentProtocol_Message_Startup___refImpl$lambda$1$Type);
 _.test_0 = function test_229(arg0){
   return $clinit_RemoteComponentProtocol_Message_Startup___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message$Startup_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1504);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1Startup_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1506);
 function $clinit_RemoteComponentProtocol_Message___refImpl(){
   $clinit_RemoteComponentProtocol_Message___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -25569,7 +25569,7 @@ function lambda$0_220(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1466, 6, $intern_25, RemoteComponentProtocol_Message___refImpl);
+defineClass(1468, 6, $intern_25, RemoteComponentProtocol_Message___refImpl);
 _.init0 = function init0_213(){
   var annotation, assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -25585,26 +25585,26 @@ _.init0 = function init0_213(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message___refImpl', 1466, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Message___refImpl', 1468, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Message___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1467, 1, $intern_23, RemoteComponentProtocol_Message___refImpl$lambda$0$Type);
+defineClass(1469, 1, $intern_23, RemoteComponentProtocol_Message___refImpl$lambda$0$Type);
 _.accept = function accept_233(arg0){
   lambda$0_220(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1467);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1469);
 function RemoteComponentProtocol_Message___refImpl$lambda$1$Type(){
 }
 
-defineClass(1468, 1, {}, RemoteComponentProtocol_Message___refImpl$lambda$1$Type);
+defineClass(1470, 1, {}, RemoteComponentProtocol_Message___refImpl$lambda$1$Type);
 _.test_0 = function test_230(arg0){
   return $clinit_RemoteComponentProtocol_Message___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Message_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1468);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Message_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1470);
 function $clinit_RemoteComponentProtocol_ProtocolException___refImpl(){
   $clinit_RemoteComponentProtocol_ProtocolException___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -25620,7 +25620,7 @@ function lambda$0_221(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1450, 6, $intern_25, RemoteComponentProtocol_ProtocolException___refImpl);
+defineClass(1452, 6, $intern_25, RemoteComponentProtocol_ProtocolException___refImpl);
 _.init0 = function init0_214(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -25634,26 +25634,26 @@ _.init0 = function init0_214(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$ProtocolException_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1ProtocolException_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_ProtocolException___refImpl', 1450, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1ProtocolException_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_ProtocolException___refImpl', 1452, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_ProtocolException___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1451, 1, $intern_23, RemoteComponentProtocol_ProtocolException___refImpl$lambda$0$Type);
+defineClass(1453, 1, $intern_23, RemoteComponentProtocol_ProtocolException___refImpl$lambda$0$Type);
 _.accept = function accept_234(arg0){
   lambda$0_221(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1ProtocolException_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1451);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1ProtocolException_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1453);
 function RemoteComponentProtocol_ProtocolException___refImpl$lambda$1$Type(){
 }
 
-defineClass(1452, 1, {}, RemoteComponentProtocol_ProtocolException___refImpl$lambda$1$Type);
+defineClass(1454, 1, {}, RemoteComponentProtocol_ProtocolException___refImpl$lambda$1$Type);
 _.test_0 = function test_231(arg0){
   return $clinit_RemoteComponentProtocol_ProtocolException___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$ProtocolException_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1ProtocolException_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1452);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1ProtocolException_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1454);
 function $clinit_RemoteComponentProtocol_Session___refImpl(){
   $clinit_RemoteComponentProtocol_Session___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -25669,7 +25669,7 @@ function lambda$0_222(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1505, 6, $intern_26, RemoteComponentProtocol_Session___refImpl);
+defineClass(1507, 6, $intern_26, RemoteComponentProtocol_Session___refImpl);
 _.get_1 = function get_161(){
   return new RemoteComponentProtocol$Session;
 }
@@ -25718,12 +25718,12 @@ _.init0 = function init0_215(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Session_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Session___refImpl', 1505, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentProtocol_Session___refImpl', 1507, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentProtocol_Session___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'id', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1506, 5, $intern_27, RemoteComponentProtocol_Session___refImpl$1);
+defineClass(1508, 5, $intern_27, RemoteComponentProtocol_Session___refImpl$1);
 _.get_2 = function get_162(bean){
   return castTo(bean, 87).id_0;
 }
@@ -25732,12 +25732,12 @@ _.set_1 = function set_27(bean, value_0){
   castTo(bean, 87).id_0 = castToString(value_0);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1506);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1508);
 function RemoteComponentProtocol_Session___refImpl$2($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'auth', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1507, 5, $intern_27, RemoteComponentProtocol_Session___refImpl$2);
+defineClass(1509, 5, $intern_27, RemoteComponentProtocol_Session___refImpl$2);
 _.get_2 = function get_163(bean){
   return castTo(bean, 87).auth;
 }
@@ -25746,12 +25746,12 @@ _.set_1 = function set_28(bean, value_0){
   castTo(bean, 87).auth = castToString(value_0);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1507);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1509);
 function RemoteComponentProtocol_Session___refImpl$3($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'url', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1508, 5, $intern_27, RemoteComponentProtocol_Session___refImpl$3);
+defineClass(1510, 5, $intern_27, RemoteComponentProtocol_Session___refImpl$3);
 _.get_2 = function get_164(bean){
   return castTo(bean, 87).url_0;
 }
@@ -25760,12 +25760,12 @@ _.set_1 = function set_29(bean, value_0){
   castTo(bean, 87).url_0 = castToString(value_0);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1508);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1510);
 function RemoteComponentProtocol_Session___refImpl$4($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'componentClassName', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1509, 5, $intern_27, RemoteComponentProtocol_Session___refImpl$4);
+defineClass(1511, 5, $intern_27, RemoteComponentProtocol_Session___refImpl$4);
 _.get_2 = function get_165(bean){
   return castTo(bean, 87).componentClassName;
 }
@@ -25774,26 +25774,26 @@ _.set_1 = function set_30(bean, value_0){
   castTo(bean, 87).componentClassName = castToString(value_0);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$4_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1509);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$4_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1511);
 function RemoteComponentProtocol_Session___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1510, 1, $intern_23, RemoteComponentProtocol_Session___refImpl$lambda$0$Type);
+defineClass(1512, 1, $intern_23, RemoteComponentProtocol_Session___refImpl$lambda$0$Type);
 _.accept = function accept_235(arg0){
   lambda$0_222(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1510);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1512);
 function RemoteComponentProtocol_Session___refImpl$lambda$1$Type(){
 }
 
-defineClass(1511, 1, {}, RemoteComponentProtocol_Session___refImpl$lambda$1$Type);
+defineClass(1513, 1, {}, RemoteComponentProtocol_Session___refImpl$lambda$1$Type);
 _.test_0 = function test_232(arg0){
   return $clinit_RemoteComponentProtocol_Session___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol$Session_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1511);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentProtocol_1Session_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1513);
 function RemoteComponentRequest(){
 }
 
@@ -25815,7 +25815,7 @@ function lambda$0_223(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1512, 6, $intern_26, RemoteComponentRequest___refImpl);
+defineClass(1514, 6, $intern_26, RemoteComponentRequest___refImpl);
 _.get_1 = function get_166(){
   return new RemoteComponentRequest;
 }
@@ -25857,12 +25857,12 @@ _.init0 = function init0_216(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentRequest___refImpl', 1512, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentRequest___refImpl', 1514, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentRequest___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'session', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1513, 5, $intern_27, RemoteComponentRequest___refImpl$1);
+defineClass(1515, 5, $intern_27, RemoteComponentRequest___refImpl$1);
 _.get_2 = function get_167(bean){
   return castTo(bean, 107).session;
 }
@@ -25871,12 +25871,12 @@ _.set_1 = function set_31(bean, value_0){
   castTo(bean, 107).session = castTo(value_0, 87);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1513);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1515);
 function RemoteComponentRequest___refImpl$2($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'requestId', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1514, 5, $intern_27, RemoteComponentRequest___refImpl$2);
+defineClass(1516, 5, $intern_27, RemoteComponentRequest___refImpl$2);
 _.get_2 = function get_168(bean){
   return valueOf_4(castTo(bean, 107).requestId);
 }
@@ -25885,12 +25885,12 @@ _.set_1 = function set_32(bean, value_0){
   castTo(bean, 107).requestId = castTo(value_0, 43).value_0;
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1514);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1516);
 function RemoteComponentRequest___refImpl$3($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'protocolMessage', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1515, 5, $intern_27, RemoteComponentRequest___refImpl$3);
+defineClass(1517, 5, $intern_27, RemoteComponentRequest___refImpl$3);
 _.get_2 = function get_169(bean){
   return castTo(bean, 107).protocolMessage;
 }
@@ -25899,26 +25899,26 @@ _.set_1 = function set_33(bean, value_0){
   castTo(bean, 107).protocolMessage = castTo(value_0, 131);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1515);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1517);
 function RemoteComponentRequest___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1516, 1, $intern_23, RemoteComponentRequest___refImpl$lambda$0$Type);
+defineClass(1518, 1, $intern_23, RemoteComponentRequest___refImpl$lambda$0$Type);
 _.accept = function accept_236(arg0){
   lambda$0_223(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1516);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1518);
 function RemoteComponentRequest___refImpl$lambda$1$Type(){
 }
 
-defineClass(1517, 1, {}, RemoteComponentRequest___refImpl$lambda$1$Type);
+defineClass(1519, 1, {}, RemoteComponentRequest___refImpl$lambda$1$Type);
 _.test_0 = function test_233(arg0){
   return $clinit_RemoteComponentRequest___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1517);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentRequest_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1519);
 function RemoteComponentResponse(){
 }
 
@@ -25940,7 +25940,7 @@ function lambda$0_224(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1518, 6, $intern_26, RemoteComponentResponse___refImpl);
+defineClass(1520, 6, $intern_26, RemoteComponentResponse___refImpl);
 _.get_1 = function get_170(){
   return new RemoteComponentResponse;
 }
@@ -25982,12 +25982,12 @@ _.init0 = function init0_217(){
   $init(this, Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_2_classLit, properties, byName, provider, supplier, assignableTo, interfaces, typeBounds, false, false);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentResponse___refImpl', 1518, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl_2_classLit = createForClass('cc.alcina.framework.servlet.component.romcom.protocol', 'RemoteComponentResponse___refImpl', 1520, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function RemoteComponentResponse___refImpl$1($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'session', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1519, 5, $intern_27, RemoteComponentResponse___refImpl$1);
+defineClass(1521, 5, $intern_27, RemoteComponentResponse___refImpl$1);
 _.get_2 = function get_171(bean){
   return castTo(bean, 118).session;
 }
@@ -25996,12 +25996,12 @@ _.set_1 = function set_34(bean, value_0){
   castTo(bean, 118).session = castTo(value_0, 87);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1519);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1521);
 function RemoteComponentResponse___refImpl$2($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'requestId', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1520, 5, $intern_27, RemoteComponentResponse___refImpl$2);
+defineClass(1522, 5, $intern_27, RemoteComponentResponse___refImpl$2);
 _.get_2 = function get_172(bean){
   return valueOf_4(castTo(bean, 118).requestId);
 }
@@ -26010,12 +26010,12 @@ _.set_1 = function set_35(bean, value_0){
   castTo(bean, 118).requestId = castTo(value_0, 43).value_0;
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1520);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1522);
 function RemoteComponentResponse___refImpl$3($anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7){
   Property.call(this, 'protocolMessage', $anonymous1, $anonymous2, $anonymous3, $anonymous4, $anonymous5, $anonymous6, $anonymous7);
 }
 
-defineClass(1521, 5, $intern_27, RemoteComponentResponse___refImpl$3);
+defineClass(1523, 5, $intern_27, RemoteComponentResponse___refImpl$3);
 _.get_2 = function get_173(bean){
   return castTo(bean, 118).protocolMessage;
 }
@@ -26024,26 +26024,26 @@ _.set_1 = function set_36(bean, value_0){
   castTo(bean, 118).protocolMessage = castTo(value_0, 131);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1521);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1523);
 function RemoteComponentResponse___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1522, 1, $intern_23, RemoteComponentResponse___refImpl$lambda$0$Type);
+defineClass(1524, 1, $intern_23, RemoteComponentResponse___refImpl$lambda$0$Type);
 _.accept = function accept_237(arg0){
   lambda$0_224(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1522);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1524);
 function RemoteComponentResponse___refImpl$lambda$1$Type(){
 }
 
-defineClass(1523, 1, {}, RemoteComponentResponse___refImpl$lambda$1$Type);
+defineClass(1525, 1, {}, RemoteComponentResponse___refImpl$lambda$1$Type);
 _.test_0 = function test_234(arg0){
   return $clinit_RemoteComponentResponse___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_2_classLit);
 }
 ;
-var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1523);
+var Lcc_alcina_framework_servlet_component_romcom_protocol_RemoteComponentResponse_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1525);
 function $setAppName(this$static, appName){
   this$static.appName = appName;
 }
@@ -26865,6 +26865,12 @@ function $getChildIndexLocal(this$static, child){
   return $indexInParentChildren(child.local_0());
 }
 
+function $getClassName(this$static){
+  var value_0;
+  castTo(contextProvider.contextFrame(), 18);
+  return value_0 = castToString($get_3(this$static.local.attributes_0, 'class')) , value_0 != null?value_0:'';
+}
+
 function $getStyle(this$static){
   !this$static.style_0 && (this$static.style_0 = new Style(this$static));
   return this$static.style_0;
@@ -27101,8 +27107,7 @@ _.getChild_1 = function getChild_2(index_0){
 }
 ;
 _.getClassName = function getClassName(){
-  var value_0;
-  return castTo(contextProvider.contextFrame(), 18) , value_0 = castToString($get_3(this.local.attributes_0, 'class')) , value_0 != null?value_0:'';
+  return $getClassName(this);
 }
 ;
 _.getInnerHTML = function getInnerHTML(){
@@ -27233,7 +27238,7 @@ _.toString_0 = function toString_37(){
     $format(fb, '\n\t', stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, []));
     cursor = this.local;
     while ($getChildCount(cursor) > 0) {
-      cursor = castTo((!cursor.children && (cursor.children = new ArrayList) , cursor.children).get_0(0), 56);
+      cursor = castTo((!cursor.children && (cursor.children = new ArrayList) , cursor.children).get_0(0), 57);
       $format(fb, '%s ', stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, [cursor.getNodeName()]));
     }
   }
@@ -27346,7 +27351,7 @@ function $getChildren(this$static){
 }
 
 function $getFirstChild(this$static){
-  return nodeFor(castTo(first_1((!this$static.children && (this$static.children = new ArrayList) , this$static.children)), 56));
+  return nodeFor(castTo(first_1((!this$static.children && (this$static.children = new ArrayList) , this$static.children)), 57));
 }
 
 function $getNextSibling(this$static){
@@ -27354,7 +27359,7 @@ function $getNextSibling(this$static){
   if (!this$static.parentNode_0) {
     return null;
   }
-  nextLocal = castTo(indexedOrNullWithDelta($getChildren(this$static.parentNode_0), this$static, 1), 56);
+  nextLocal = castTo(indexedOrNullWithDelta($getChildren(this$static.parentNode_0), this$static, 1), 57);
   if (nextLocal == this$static) {
     return null;
   }
@@ -27366,7 +27371,7 @@ function $getParentElement(this$static){
 }
 
 function $getPreviousSibling(this$static){
-  return nodeFor(castTo(indexedOrNullWithDelta($getChildren(this$static.parentNode_0), this$static, -1), 56));
+  return nodeFor(castTo(indexedOrNullWithDelta($getChildren(this$static.parentNode_0), this$static, -1), 57));
 }
 
 function $indexInParentChildren(this$static){
@@ -27423,7 +27428,7 @@ function $provideLocalDomTree0(this$static, buf, depth){
   if (node.getNodeType() == 1) {
     idx = 0;
     for (; idx < (!this$static.children && (this$static.children = new ArrayList) , this$static.children).size_1(); idx++) {
-      child = castTo((!this$static.children && (this$static.children = new ArrayList) , this$static.children).get_0(idx), 56);
+      child = castTo((!this$static.children && (this$static.children = new ArrayList) , this$static.children).get_0(idx), 57);
       $provideLocalDomTree0(child, buf, depth + 1);
     }
   }
@@ -27440,7 +27445,7 @@ function $walk(this$static, consumer){
   var idx;
   consumer.accept(this$static);
   for (idx = 0; idx < (!this$static.children && (this$static.children = new ArrayList) , this$static.children).size_1(); idx++) {
-    $walk(castTo((!this$static.children && (this$static.children = new ArrayList) , this$static.children).get_0(idx), 56), consumer);
+    $walk(castTo((!this$static.children && (this$static.children = new ArrayList) , this$static.children).get_0(idx), 57), consumer);
   }
 }
 
@@ -27448,7 +27453,7 @@ function nodeFor(nodeLocal){
   return !nodeLocal?null:nodeLocal.node_2();
 }
 
-defineClass(56, 1, $intern_44);
+defineClass(57, 1, $intern_44);
 _.appendChild_0 = function appendChild_0(newChild){
   return $appendChild(this, newChild);
 }
@@ -27493,13 +27498,13 @@ _.setParentNode = function setParentNode(local){
   this.parentNode_0 = local;
 }
 ;
-var Lcom_google_gwt_dom_client_NodeLocal_2_classLit = createForClass('com.google.gwt.dom.client', 'NodeLocal', 56, Ljava_lang_Object_2_classLit);
+var Lcom_google_gwt_dom_client_NodeLocal_2_classLit = createForClass('com.google.gwt.dom.client', 'NodeLocal', 57, Ljava_lang_Object_2_classLit);
 function CDATASectionLocal(documentLocal, text_0){
   this.ownerDocument = documentLocal;
   this.text_0 = text_0;
 }
 
-defineClass(869, 56, {302:1, 24:1, 168:1, 56:1}, CDATASectionLocal);
+defineClass(869, 57, {302:1, 24:1, 168:1, 57:1}, CDATASectionLocal);
 _.appendOuterHtml = function appendOuterHtml(builder){
   $appendEscapedNoQuotes(builder, this.text_0);
 }
@@ -27585,7 +27590,7 @@ function $clinit_CDATASectionNull(){
 function CDATASectionNull(){
 }
 
-defineClass(1181, 165, {302:1, 24:1, 165:1}, CDATASectionNull);
+defineClass(1183, 165, {302:1, 24:1, 165:1}, CDATASectionNull);
 _.getNodeName = function getNodeName_2(){
   throw toJs(new UnsupportedOperationException);
 }
@@ -27602,7 +27607,7 @@ _.setNodeValue = function setNodeValue_2(nodeValue){
 }
 ;
 var INSTANCE_2;
-var Lcom_google_gwt_dom_client_CDATASectionNull_2_classLit = createForClass('com.google.gwt.dom.client', 'CDATASectionNull', 1181, Lcom_google_gwt_dom_client_NodeLocalNull_2_classLit);
+var Lcom_google_gwt_dom_client_CDATASectionNull_2_classLit = createForClass('com.google.gwt.dom.client', 'CDATASectionNull', 1183, Lcom_google_gwt_dom_client_NodeLocalNull_2_classLit);
 function addClassName_0(domElement, className){
   var idx, oldClassName;
   className = trimClassName(className);
@@ -27730,7 +27735,7 @@ function CommentLocal(documentLocal, text_0){
   this.text_0 = text_0;
 }
 
-defineClass(864, 56, {224:1, 24:1, 168:1, 56:1}, CommentLocal);
+defineClass(864, 57, {224:1, 24:1, 168:1, 57:1}, CommentLocal);
 _.appendOuterHtml = function appendOuterHtml_0(builder){
   $appendEscapedNoQuotes(builder, this.text_0);
 }
@@ -27771,7 +27776,7 @@ function $clinit_CommentNull(){
 function CommentNull(){
 }
 
-defineClass(1180, 165, {224:1, 24:1, 165:1}, CommentNull);
+defineClass(1182, 165, {224:1, 24:1, 165:1}, CommentNull);
 _.getNodeName = function getNodeName_4(){
   throw toJs(new UnsupportedOperationException);
 }
@@ -27788,7 +27793,7 @@ _.setNodeValue = function setNodeValue_4(nodeValue){
 }
 ;
 var INSTANCE_3;
-var Lcom_google_gwt_dom_client_CommentNull_2_classLit = createForClass('com.google.gwt.dom.client', 'CommentNull', 1180, Lcom_google_gwt_dom_client_NodeLocalNull_2_classLit);
+var Lcom_google_gwt_dom_client_CommentNull_2_classLit = createForClass('com.google.gwt.dom.client', 'CommentNull', 1182, Lcom_google_gwt_dom_client_NodeLocalNull_2_classLit);
 function NodePathref(node){
   this.node = node;
 }
@@ -27876,7 +27881,7 @@ function CommentPathref(node){
   NodePathref.call(this, node);
 }
 
-defineClass(1179, 188, {224:1, 24:1}, CommentPathref);
+defineClass(1181, 188, {224:1, 24:1}, CommentPathref);
 _.getNodeName = function getNodeName_5(){
   throw toJs(new UnsupportedOperationException);
 }
@@ -27892,7 +27897,7 @@ _.getNodeValue = function getNodeValue_6(){
 _.setNodeValue = function setNodeValue_5(nodeValue){
 }
 ;
-var Lcom_google_gwt_dom_client_CommentPathref_2_classLit = createForClass('com.google.gwt.dom.client', 'CommentPathref', 1179, Lcom_google_gwt_dom_client_NodePathref_2_classLit);
+var Lcom_google_gwt_dom_client_CommentPathref_2_classLit = createForClass('com.google.gwt.dom.client', 'CommentPathref', 1181, Lcom_google_gwt_dom_client_NodePathref_2_classLit);
 function DListElement(){
 }
 
@@ -28428,7 +28433,7 @@ function $getNodeValue(){
 function DocumentLocal(){
 }
 
-defineClass(723, 56, $intern_44, DocumentLocal);
+defineClass(723, 57, $intern_44, DocumentLocal);
 _.node_2 = function node_10(){
   return this.document_0;
 }
@@ -28716,7 +28721,7 @@ function DomDispatch$RemoteOnlyException(){
   UnsupportedOperationException.call(this);
 }
 
-defineClass(288, 16, $intern_8, DomDispatch$RemoteOnlyException);
+defineClass(288, 17, $intern_8, DomDispatch$RemoteOnlyException);
 var Lcom_google_gwt_dom_client_DomDispatch$RemoteOnlyException_2_classLit = createForClass('com.google.gwt.dom.client', 'DomDispatch/RemoteOnlyException', 288, Ljava_lang_UnsupportedOperationException_2_classLit);
 function $createElement_2(this$static, tagName){
   return $createElement(castToJso(castTo(contextProvider.contextFrame(), 18).remote), tagName);
@@ -29675,7 +29680,7 @@ function $lambda$7_0(this$static, n_0){
 function $orSunkEventsOfAllChildren(this$static, sunk){
   var child, child$iterator;
   for (child$iterator = (!this$static.children && (this$static.children = new ArrayList) , this$static.children).iterator_0(); child$iterator.hasNext_0();) {
-    child = castTo(child$iterator.next_1(), 56);
+    child = castTo(child$iterator.next_1(), 57);
     instanceOf(child, 146) && (sunk = $orSunkEventsOfAllChildren(castTo(child, 146), sunk));
   }
   sunk |= this$static.eventBits;
@@ -29787,7 +29792,7 @@ function lambda$9_0(applyStyleAttribute_0, builder_1, e_2){
   $append_8(builder_1.sb, '"');
 }
 
-defineClass(146, 56, {32:1, 24:1, 146:1, 168:1, 56:1}, ElementLocal);
+defineClass(146, 57, {32:1, 24:1, 146:1, 168:1, 57:1}, ElementLocal);
 _.getAttributeMap = function getAttributeMap_0(){
   return this.attributes_0;
 }
@@ -29915,7 +29920,7 @@ function ElementLocal$lambda$11$Type(builder_0){
 
 defineClass(450, 1, $intern_23, ElementLocal$lambda$11$Type);
 _.accept = function accept_246(arg0){
-  lambda$11(this.builder_0, castTo(arg0, 56));
+  lambda$11(this.builder_0, castTo(arg0, 57));
 }
 ;
 var Lcom_google_gwt_dom_client_ElementLocal$lambda$11$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 450);
@@ -29935,7 +29940,7 @@ function ElementLocal$lambda$4$Type(builder_0){
 
 defineClass(801, 1, $intern_23, ElementLocal$lambda$4$Type);
 _.accept = function accept_248(arg0){
-  lambda$4_0(this.builder_0, castTo(arg0, 56));
+  lambda$4_0(this.builder_0, castTo(arg0, 57));
 }
 ;
 var Lcom_google_gwt_dom_client_ElementLocal$lambda$4$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 801);
@@ -29945,7 +29950,7 @@ function ElementLocal$lambda$5$Type(builder_0){
 
 defineClass(802, 1, $intern_23, ElementLocal$lambda$5$Type);
 _.accept = function accept_249(arg0){
-  lambda$5(this.builder_0, castTo(arg0, 56));
+  lambda$5(this.builder_0, castTo(arg0, 57));
 }
 ;
 var Lcom_google_gwt_dom_client_ElementLocal$lambda$5$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 802);
@@ -29954,7 +29959,7 @@ function ElementLocal$lambda$6$Type(){
 
 defineClass(803, 1, {}, ElementLocal$lambda$6$Type);
 _.test_0 = function test_241(arg0){
-  return $clinit_ElementLocal() , castTo(arg0, 56).getNodeValue().length > maxCharsPerTextNode;
+  return $clinit_ElementLocal() , castTo(arg0, 57).getNodeValue().length > maxCharsPerTextNode;
 }
 ;
 var Lcom_google_gwt_dom_client_ElementLocal$lambda$6$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 803);
@@ -29964,7 +29969,7 @@ function ElementLocal$lambda$7$Type($$outer_0){
 
 defineClass(804, 1, $intern_23, ElementLocal$lambda$7$Type);
 _.accept = function accept_250(arg0){
-  $lambda$7_0(this.$$outer_0, castTo(arg0, 56));
+  $lambda$7_0(this.$$outer_0, castTo(arg0, 57));
 }
 ;
 var Lcom_google_gwt_dom_client_ElementLocal$lambda$7$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 804);
@@ -29977,7 +29982,7 @@ _.negate = function negate(){
 }
 ;
 _.test_0 = function test_242(arg0){
-  return $clinit_ElementLocal() , castTo(arg0, 56).getNodeType() == 3;
+  return $clinit_ElementLocal() , castTo(arg0, 57).getNodeType() == 3;
 }
 ;
 var Lcom_google_gwt_dom_client_ElementLocal$lambda$8$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 805);
@@ -30085,17 +30090,33 @@ function $getTagName_1(){
   throw toJs(new UnsupportedOperationException);
 }
 
+function $setAttribute_2(this$static, name_0, value_0){
+  var record;
+  record = new MutationRecord_0;
+  record.type_0 = ($clinit_MutationRecord$Type() , attributes_0);
+  record.target_0 = pathref(castTo(this$static.node, 19));
+  record.attributeName_0 = name_0;
+  record.newValue = value_0;
+  this$static.emitMutation(record);
+}
+
+function $setClassName_0(this$static, className){
+  $clinit_CommonUtils();
+  className == null || className.length == 0?$setAttribute_2(this$static, 'class', null):$setAttribute_2(this$static, 'class', className);
+}
+
 function ElementPathref(node){
   NodePathref.call(this, node);
 }
 
-defineClass(1177, 188, {32:1, 24:1, 188:1}, ElementPathref);
+defineClass(1179, 188, {32:1, 24:1, 188:1}, ElementPathref);
 _.addClassName = function addClassName_3(className){
+  $setClassName_0(this, $getClassName(castTo(this.node, 19)));
   return false;
 }
 ;
 _.getAttribute = function getAttribute_2(name_0){
-  throw toJs(new UnsupportedOperationException);
+  return $getAttribute(castTo(this.node, 19), name_0);
 }
 ;
 _.getAttributeMap = function getAttributeMap_2(){
@@ -30103,7 +30124,7 @@ _.getAttributeMap = function getAttributeMap_2(){
 }
 ;
 _.getClassName = function getClassName_2(){
-  throw toJs(new UnsupportedOperationException);
+  return $getClassName(castTo(this.node, 19));
 }
 ;
 _.getInnerHTML = function getInnerHTML_2(){
@@ -30140,19 +30161,20 @@ _.getTagName = function getTagName_2(){
 }
 ;
 _.removeAttribute_0 = function removeAttribute_2(name_0){
-  throw toJs(new UnsupportedOperationException);
+  $setAttribute_2(this, name_0, null);
 }
 ;
 _.removeClassName = function removeClassName_3(className){
-  throw toJs(new UnsupportedOperationException);
+  $setClassName_0(this, $getClassName(castTo(this.node, 19)));
+  return false;
 }
 ;
 _.setAttribute_0 = function setAttribute_2(name_0, value_0){
-  throw toJs(new UnsupportedOperationException);
+  $setAttribute_2(this, name_0, value_0);
 }
 ;
 _.setClassName = function setClassName_2(className){
-  throw toJs(new UnsupportedOperationException);
+  $setClassName_0(this, className);
 }
 ;
 _.setNodeValue = function setNodeValue_11(nodeValue){
@@ -30176,7 +30198,7 @@ _.toString_0 = function toString_46(){
   return format_1('%s: null::remote-placeholder', stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, [$getSimpleName(this.___clazz)])) + '\n\t' + $getTagName_1();
 }
 ;
-var Lcom_google_gwt_dom_client_ElementPathref_2_classLit = createForClass('com.google.gwt.dom.client', 'ElementPathref', 1177, Lcom_google_gwt_dom_client_NodePathref_2_classLit);
+var Lcom_google_gwt_dom_client_ElementPathref_2_classLit = createForClass('com.google.gwt.dom.client', 'ElementPathref', 1179, Lcom_google_gwt_dom_client_NodePathref_2_classLit);
 function $clinit_EntityDecoder(){
   $clinit_EntityDecoder = emptyMethod;
   var a, c, i;
@@ -30417,7 +30439,7 @@ function FixmeUnsupportedOperationException(){
   UnsupportedOperationException.call(this);
 }
 
-defineClass(1796, 16, $intern_8, FixmeUnsupportedOperationException);
+defineClass(1796, 17, $intern_8, FixmeUnsupportedOperationException);
 var Lcom_google_gwt_dom_client_FixmeUnsupportedOperationException_2_classLit = createForClass('com.google.gwt.dom.client', 'FixmeUnsupportedOperationException', 1796, Ljava_lang_UnsupportedOperationException_2_classLit);
 function FormElement(){
 }
@@ -31252,6 +31274,7 @@ function $nodeFor1(this$static, remote, postReparse){
   }
   if (castTo(contextProvider.contextFrame(), 18).localDom.applyToRemote && $shouldTryReparseFromRemote(hasNode, remoteIndex) && !postReparse) {
     $clinit_System();
+    $clinit_GWT();
     $reparseFromRemote(this$static, hasNodeJso, hasNode, remoteIndex);
     return $nodeFor0(this$static, remote, true);
   }
@@ -32332,7 +32355,7 @@ function LocalDom$lambda$68$Type($$outer_0){
 
 defineClass(265, 1, $intern_23, LocalDom$lambda$68$Type);
 _.accept = function accept_260(arg0){
-  $lambda$68(this.$$outer_0, castTo(arg0, 56));
+  $lambda$68(this.$$outer_0, castTo(arg0, 57));
 }
 ;
 var Lcom_google_gwt_dom_client_LocalDom$lambda$68$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 265);
@@ -32410,7 +32433,7 @@ function $log(channel, message, args){
   }
   args.length > 0 && (message = format_1(message, args));
   out_0('%s: %s', stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, [channel, message]));
-  channel == ($clinit_LocalDomDebug() , DEBUG_ISSUE) && (castTo(contextProvider_1.contextFrame(), 58).impl , $wnd.location.port).indexOf('8080') != -1 && ($clinit_GWT() , new RuntimeException);
+  channel == ($clinit_LocalDomDebug() , DEBUG_ISSUE) && (castTo(contextProvider_1.contextFrame(), 59).impl , $wnd.location.port).indexOf('8080') != -1 && ($clinit_GWT() , new RuntimeException);
 }
 
 function LocalDomDebugImpl(){
@@ -33800,7 +33823,7 @@ function NodeListLocal(nodes){
 
 defineClass(827, 1, {}, NodeListLocal);
 _.getItem = function getItem_0(index_0){
-  return index_0 < 0 || index_0 >= this.nodes.size_1()?null:castTo(this.nodes.get_0(index_0), 56).node_2();
+  return index_0 < 0 || index_0 >= this.nodes.size_1()?null:castTo(this.nodes.get_0(index_0), 57).node_2();
 }
 ;
 _.getLength = function getLength_0(){
@@ -33922,21 +33945,21 @@ var Lcom_google_gwt_dom_client_Pathref_2_classLit = createForClass('com.google.g
 function Pathref$0methodref$valueOf$Type(){
 }
 
-defineClass(1524, 1, {}, Pathref$0methodref$valueOf$Type);
+defineClass(871, 1, {}, Pathref$0methodref$valueOf$Type);
 _.apply_0 = function apply_61(arg0){
   return arg0 == null?'null':toString_64(arg0);
 }
 ;
-var Lcom_google_gwt_dom_client_Pathref$0methodref$valueOf$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1524);
+var Lcom_google_gwt_dom_client_Pathref$0methodref$valueOf$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 871);
 function Pathref$1methodref$parseInt$Type(){
 }
 
-defineClass(1525, 1, {}, Pathref$1methodref$parseInt$Type);
+defineClass(872, 1, {}, Pathref$1methodref$parseInt$Type);
 _.apply_0 = function apply_62(arg0){
   return valueOf_4(__parseAndValidateInt(castToString(arg0), 10));
 }
 ;
-var Lcom_google_gwt_dom_client_Pathref$1methodref$parseInt$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1525);
+var Lcom_google_gwt_dom_client_Pathref$1methodref$parseInt$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 872);
 function $clinit_Pathref___refImpl(){
   $clinit_Pathref___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -34069,7 +34092,7 @@ function ProcessingInstructionLocal(documentLocal, target, data_0){
   this.data_0 = data_0;
 }
 
-defineClass(870, 56, {24:1, 303:1, 168:1, 56:1}, ProcessingInstructionLocal);
+defineClass(870, 57, {24:1, 303:1, 168:1, 57:1}, ProcessingInstructionLocal);
 _.appendOuterHtml = function appendOuterHtml_3(builder){
   $appendEscapedNoQuotes(builder, this.data_0);
 }
@@ -34111,7 +34134,7 @@ function $clinit_ProcessingInstructionNull(){
 function ProcessingInstructionNull(){
 }
 
-defineClass(1182, 165, {24:1, 303:1, 165:1}, ProcessingInstructionNull);
+defineClass(1184, 165, {24:1, 303:1, 165:1}, ProcessingInstructionNull);
 _.getNodeName = function getNodeName_13(){
   throw toJs(new UnsupportedOperationException);
 }
@@ -34128,7 +34151,7 @@ _.setNodeValue = function setNodeValue_13(nodeValue){
 }
 ;
 var INSTANCE_5;
-var Lcom_google_gwt_dom_client_ProcessingInstructionNull_2_classLit = createForClass('com.google.gwt.dom.client', 'ProcessingInstructionNull', 1182, Lcom_google_gwt_dom_client_NodeLocalNull_2_classLit);
+var Lcom_google_gwt_dom_client_ProcessingInstructionNull_2_classLit = createForClass('com.google.gwt.dom.client', 'ProcessingInstructionNull', 1184, Lcom_google_gwt_dom_client_NodeLocalNull_2_classLit);
 function QuoteElement(){
 }
 
@@ -34299,7 +34322,7 @@ function TextLocal(documentLocal, text_0){
   this.text_0 = text_0;
 }
 
-defineClass(292, 56, {24:1, 227:1, 168:1, 56:1, 292:1}, TextLocal);
+defineClass(292, 57, {24:1, 227:1, 168:1, 57:1, 292:1}, TextLocal);
 _.appendOuterHtml = function appendOuterHtml_4(builder){
   $appendEscapedNoQuotes(builder, this.text_0);
 }
@@ -34341,7 +34364,7 @@ function $clinit_TextNull(){
 function TextNull(){
 }
 
-defineClass(1174, 165, {24:1, 227:1, 165:1}, TextNull);
+defineClass(1176, 165, {24:1, 227:1, 165:1}, TextNull);
 _.getNodeName = function getNodeName_15(){
   throw toJs(new UnsupportedOperationException);
 }
@@ -34358,12 +34381,12 @@ _.setNodeValue = function setNodeValue_15(nodeValue){
 }
 ;
 var INSTANCE_7;
-var Lcom_google_gwt_dom_client_TextNull_2_classLit = createForClass('com.google.gwt.dom.client', 'TextNull', 1174, Lcom_google_gwt_dom_client_NodeLocalNull_2_classLit);
+var Lcom_google_gwt_dom_client_TextNull_2_classLit = createForClass('com.google.gwt.dom.client', 'TextNull', 1176, Lcom_google_gwt_dom_client_NodeLocalNull_2_classLit);
 function TextPathref(node){
   NodePathref.call(this, node);
 }
 
-defineClass(1178, 188, {24:1, 227:1}, TextPathref);
+defineClass(1180, 188, {24:1, 227:1}, TextPathref);
 _.getNodeName = function getNodeName_16(){
   throw toJs(new UnsupportedOperationException);
 }
@@ -34379,7 +34402,7 @@ _.getNodeValue = function getNodeValue_17(){
 _.setNodeValue = function setNodeValue_16(nodeValue){
 }
 ;
-var Lcom_google_gwt_dom_client_TextPathref_2_classLit = createForClass('com.google.gwt.dom.client', 'TextPathref', 1178, Lcom_google_gwt_dom_client_NodePathref_2_classLit);
+var Lcom_google_gwt_dom_client_TextPathref_2_classLit = createForClass('com.google.gwt.dom.client', 'TextPathref', 1180, Lcom_google_gwt_dom_client_NodePathref_2_classLit);
 function TitleElement(){
 }
 
@@ -34526,12 +34549,12 @@ function LocationMutation(){
 function ofWindow(){
   var result_0;
   result_0 = new LocationMutation;
-  result_0.path = (castTo(contextProvider_1.contextFrame(), 58).impl , $wnd.location.pathname);
-  result_0.queryString = (castTo(contextProvider_1.contextFrame(), 58) , $clinit_Window() , impl_6 , $wnd.location.search);
-  result_0.hash_0 = (castTo(contextProvider_1.contextFrame(), 58) , impl_6 , $wnd.location.hash);
-  result_0.host_0 = (castTo(contextProvider_1.contextFrame(), 58).impl , $wnd.location.host);
-  result_0.port_0 = (castTo(contextProvider_1.contextFrame(), 58).impl , $wnd.location.port);
-  result_0.protocol_0 = (castTo(contextProvider_1.contextFrame(), 58).impl , $wnd.location.protocol);
+  result_0.path = (castTo(contextProvider_1.contextFrame(), 59).impl , $wnd.location.pathname);
+  result_0.queryString = (castTo(contextProvider_1.contextFrame(), 59) , $clinit_Window() , impl_6 , $wnd.location.search);
+  result_0.hash_0 = (castTo(contextProvider_1.contextFrame(), 59) , impl_6 , $wnd.location.hash);
+  result_0.host_0 = (castTo(contextProvider_1.contextFrame(), 59).impl , $wnd.location.host);
+  result_0.port_0 = (castTo(contextProvider_1.contextFrame(), 59).impl , $wnd.location.port);
+  result_0.protocol_0 = (castTo(contextProvider_1.contextFrame(), 59).impl , $wnd.location.protocol);
   return result_0;
 }
 
@@ -34780,12 +34803,12 @@ function $topicPublished(this$static, event_0){
   this$static.mutations.loggingConfiguration.logEvents && log_1(($clinit_Level() , INFO), 'mutation event %s - %s - received - %s mutations', stampJavaTypeInfo(getClassLiteralForArray(Ljava_lang_Object_2_classLit, 1), $intern_6, 1, 5, [valueOf_4(this$static.events.size_1()), event_0.type_0, valueOf_4(event_0.records.size_1())]));
   this$static.events.add_0(event_0);
   if (this$static.mutations.loggingConfiguration.logDoms && !this$static.events.stream().anyMatch(new MutationHistory$0methodref$isEquivalenceTestFailed$Type)) {
-    this$static.events.size_1() > 3 && $clearDoms(castTo(this$static.events.get_0(this$static.events.size_1() - 3), 59));
+    this$static.events.size_1() > 3 && $clearDoms(castTo(this$static.events.get_0(this$static.events.size_1() - 3), 56));
     $testEquivalence(this$static, event_0);
   }
   this$static.totalRecordCount += event_0.records.size_1();
   while (this$static.totalRecordCount > 30000) {
-    cursor = castTo(this$static.events.get_0(++this$static.clearedEventsIdx), 59);
+    cursor = castTo(this$static.events.get_0(++this$static.clearedEventsIdx), 56);
     this$static.totalRecordCount -= cursor.records.size_1();
     cursor.records.clear_0();
   }
@@ -34807,7 +34830,7 @@ function lambda$1_3(record_0){
 
 defineClass(159, 1, {1814:1, 159:1}, MutationHistory, MutationHistory_0);
 _.topicPublished = function topicPublished_0(event_0){
-  $topicPublished(this, castTo(event_0, 59));
+  $topicPublished(this, castTo(event_0, 56));
 }
 ;
 _.getObservableClass = function getObservableClass(){
@@ -34822,7 +34845,7 @@ function MutationHistory$0methodref$isEquivalenceTestFailed$Type(){
 
 defineClass(330, 1, {}, MutationHistory$0methodref$isEquivalenceTestFailed$Type);
 _.test_0 = function test_249(arg0){
-  return castTo(arg0, 59).equivalenceTestFailed;
+  return castTo(arg0, 56).equivalenceTestFailed;
 }
 ;
 var Lcom_google_gwt_dom_client_mutations_MutationHistory$0methodref$isEquivalenceTestFailed$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 330);
@@ -34869,9 +34892,9 @@ function publish(type_0, records){
   new MutationHistory$Event$lambda$0$Type(type_0, records);
 }
 
-defineClass(59, 1, {59:1}, MutationHistory$Event, MutationHistory$Event_0);
+defineClass(56, 1, {56:1}, MutationHistory$Event, MutationHistory$Event_0);
 _.equivalenceTestFailed = false;
-var Lcom_google_gwt_dom_client_mutations_MutationHistory$Event_2_classLit = createForClass('com.google.gwt.dom.client.mutations', 'MutationHistory/Event', 59, Ljava_lang_Object_2_classLit);
+var Lcom_google_gwt_dom_client_mutations_MutationHistory$Event_2_classLit = createForClass('com.google.gwt.dom.client.mutations', 'MutationHistory/Event', 56, Ljava_lang_Object_2_classLit);
 function $clinit_MutationHistory$Event$Type(){
   $clinit_MutationHistory$Event$Type = emptyMethod;
   INIT = new MutationHistory$Event$Type('INIT', 0);
@@ -35068,11 +35091,11 @@ function MutationHistory_Event___refImpl$1($anonymous1, $anonymous2, $anonymous3
 
 defineClass(1640, 5, $intern_27, MutationHistory_Event___refImpl$1);
 _.get_2 = function get_301(bean){
-  return $clinit_Boolean() , castTo(bean, 59).equivalenceTestFailed?true:false;
+  return $clinit_Boolean() , castTo(bean, 56).equivalenceTestFailed?true:false;
 }
 ;
 _.set_1 = function set_69(bean, value_0){
-  $setEquivalenceTestFailed(castTo(bean, 59), $booleanValue(castToBoolean(value_0)));
+  $setEquivalenceTestFailed(castTo(bean, 56), $booleanValue(castToBoolean(value_0)));
 }
 ;
 var Lcom_google_gwt_dom_client_mutations_MutationHistory_1Event_1_1_1refImpl$1_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1640);
@@ -35082,11 +35105,11 @@ function MutationHistory_Event___refImpl$2($anonymous1, $anonymous2, $anonymous3
 
 defineClass(1641, 5, $intern_27, MutationHistory_Event___refImpl$2);
 _.get_2 = function get_302(bean){
-  return castTo(bean, 59).type_0;
+  return castTo(bean, 56).type_0;
 }
 ;
 _.set_1 = function set_70(bean, value_0){
-  $setType(castTo(bean, 59), castTo(value_0, 160));
+  $setType(castTo(bean, 56), castTo(value_0, 160));
 }
 ;
 var Lcom_google_gwt_dom_client_mutations_MutationHistory_1Event_1_1_1refImpl$2_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1641);
@@ -35096,11 +35119,11 @@ function MutationHistory_Event___refImpl$3($anonymous1, $anonymous2, $anonymous3
 
 defineClass(1642, 5, $intern_27, MutationHistory_Event___refImpl$3);
 _.get_2 = function get_303(bean){
-  return castTo(bean, 59).records;
+  return castTo(bean, 56).records;
 }
 ;
 _.set_1 = function set_71(bean, value_0){
-  $setRecords(castTo(bean, 59), castTo(value_0, 29));
+  $setRecords(castTo(bean, 56), castTo(value_0, 29));
 }
 ;
 var Lcom_google_gwt_dom_client_mutations_MutationHistory_1Event_1_1_1refImpl$3_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1642);
@@ -35110,11 +35133,11 @@ function MutationHistory_Event___refImpl$4($anonymous1, $anonymous2, $anonymous3
 
 defineClass(1643, 5, $intern_27, MutationHistory_Event___refImpl$4);
 _.get_2 = function get_304(bean){
-  return castTo(bean, 59).equivalenceTest;
+  return castTo(bean, 56).equivalenceTest;
 }
 ;
 _.set_1 = function set_72(bean, value_0){
-  $setEquivalenceTest(castTo(bean, 59), castToString(value_0));
+  $setEquivalenceTest(castTo(bean, 56), castToString(value_0));
 }
 ;
 var Lcom_google_gwt_dom_client_mutations_MutationHistory_1Event_1_1_1refImpl$4_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1643);
@@ -35124,11 +35147,11 @@ function MutationHistory_Event___refImpl$5($anonymous1, $anonymous2, $anonymous3
 
 defineClass(1644, 5, $intern_27, MutationHistory_Event___refImpl$5);
 _.get_2 = function get_305(bean){
-  return castTo(bean, 59).localDom;
+  return castTo(bean, 56).localDom;
 }
 ;
 _.set_1 = function set_73(bean, value_0){
-  $setLocalDom(castTo(bean, 59), castTo(value_0, 35));
+  $setLocalDom(castTo(bean, 56), castTo(value_0, 35));
 }
 ;
 var Lcom_google_gwt_dom_client_mutations_MutationHistory_1Event_1_1_1refImpl$5_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1644);
@@ -35138,11 +35161,11 @@ function MutationHistory_Event___refImpl$6($anonymous1, $anonymous2, $anonymous3
 
 defineClass(1645, 5, $intern_27, MutationHistory_Event___refImpl$6);
 _.get_2 = function get_306(bean){
-  return castTo(bean, 59).remoteDom;
+  return castTo(bean, 56).remoteDom;
 }
 ;
 _.set_1 = function set_74(bean, value_0){
-  $setRemoteDom(castTo(bean, 59), castTo(value_0, 35));
+  $setRemoteDom(castTo(bean, 56), castTo(value_0, 35));
 }
 ;
 var Lcom_google_gwt_dom_client_mutations_MutationHistory_1Event_1_1_1refImpl$6_2_classLit = createForAnonymousClass(Lcc_alcina_framework_common_client_reflection_Property_2_classLit, 1645);
@@ -35391,6 +35414,28 @@ function $remove_9(this$static, remove, applyTo){
         break;
       }
 
+  }
+}
+
+function $removeAttribute_1(this$static, applyTo, attributeName){
+  var currentValue, target;
+  switch (applyTo.ordinal) {
+    case 1:
+      {
+        currentValue = castToString(this$static.attributes_0.get_2(attributeName));
+        this$static.attributes_0.remove_3(attributeName);
+        return currentValue;
+      }
+
+    case 0:
+      {
+        target = this$static.node?this$static.node:$node(this$static.remoteNode);
+        currentValue = $getAttribute(castTo(target, 19), attributeName);
+        $removeAttribute(castTo(target, 19), attributeName);
+        return currentValue;
+      }
+
+    default:throw toJs(new UnsupportedOperationException);
   }
 }
 
@@ -35891,8 +35936,14 @@ function $apply_0(this$static, applyTo){
     case 0:
       {
         characterData = applyDirection == 0?this$static.newValue:this$static.oldValue_0;
-        previousValue = $putAttributeData(this$static.target_0, applyTo, this$static.attributeName_0, characterData);
-        applyDirection == 1 && (this$static.newValue = previousValue);
+        if (characterData == null) {
+          previousValue = $removeAttribute_1(this$static.target_0, applyTo, this$static.attributeName_0);
+          applyDirection == 1 && (this$static.newValue = previousValue);
+        }
+         else {
+          previousValue = $putAttributeData(this$static.target_0, applyTo, this$static.attributeName_0, characterData);
+          applyDirection == 1 && (this$static.newValue = previousValue);
+        }
         break;
       }
 
@@ -37099,7 +37150,7 @@ function lambda$0_241(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1051, 6, $intern_25, HasValueChangeHandlers___refImpl);
+defineClass(1053, 6, $intern_25, HasValueChangeHandlers___refImpl);
 _.init0 = function init0_233(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -37114,26 +37165,26 @@ _.init0 = function init0_233(){
   $init(this, Lcom_google_gwt_event_logical_shared_HasValueChangeHandlers_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_gwt_event_logical_shared_HasValueChangeHandlers_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.logical.shared', 'HasValueChangeHandlers___refImpl', 1051, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_gwt_event_logical_shared_HasValueChangeHandlers_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.logical.shared', 'HasValueChangeHandlers___refImpl', 1053, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function HasValueChangeHandlers___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1052, 1, $intern_23, HasValueChangeHandlers___refImpl$lambda$0$Type);
+defineClass(1054, 1, $intern_23, HasValueChangeHandlers___refImpl$lambda$0$Type);
 _.accept = function accept_290(arg0){
   lambda$0_241(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_gwt_event_logical_shared_HasValueChangeHandlers_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1052);
+var Lcom_google_gwt_event_logical_shared_HasValueChangeHandlers_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1054);
 function HasValueChangeHandlers___refImpl$lambda$1$Type(){
 }
 
-defineClass(1053, 1, {}, HasValueChangeHandlers___refImpl$lambda$1$Type);
+defineClass(1055, 1, {}, HasValueChangeHandlers___refImpl$lambda$1$Type);
 _.test_0 = function test_263(arg0){
   return $clinit_HasValueChangeHandlers___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_google_gwt_event_logical_shared_HasValueChangeHandlers_2_classLit);
 }
 ;
-var Lcom_google_gwt_event_logical_shared_HasValueChangeHandlers_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1053);
+var Lcom_google_gwt_event_logical_shared_HasValueChangeHandlers_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1055);
 function ValueChangeEvent(){
 }
 
@@ -37175,7 +37226,7 @@ function lambda$0_242(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1366, 6, $intern_25, ValueChangeHandler___refImpl);
+defineClass(1368, 6, $intern_25, ValueChangeHandler___refImpl);
 _.init0 = function init0_234(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -37190,26 +37241,26 @@ _.init0 = function init0_234(){
   $init(this, Lcom_google_gwt_event_logical_shared_ValueChangeHandler_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_gwt_event_logical_shared_ValueChangeHandler_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.logical.shared', 'ValueChangeHandler___refImpl', 1366, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_gwt_event_logical_shared_ValueChangeHandler_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.logical.shared', 'ValueChangeHandler___refImpl', 1368, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function ValueChangeHandler___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1367, 1, $intern_23, ValueChangeHandler___refImpl$lambda$0$Type);
+defineClass(1369, 1, $intern_23, ValueChangeHandler___refImpl$lambda$0$Type);
 _.accept = function accept_291(arg0){
   lambda$0_242(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_gwt_event_logical_shared_ValueChangeHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1367);
+var Lcom_google_gwt_event_logical_shared_ValueChangeHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1369);
 function ValueChangeHandler___refImpl$lambda$1$Type(){
 }
 
-defineClass(1368, 1, {}, ValueChangeHandler___refImpl$lambda$1$Type);
+defineClass(1370, 1, {}, ValueChangeHandler___refImpl$lambda$1$Type);
 _.test_0 = function test_264(arg0){
   return $clinit_ValueChangeHandler___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_google_gwt_event_logical_shared_ValueChangeHandler_2_classLit);
 }
 ;
-var Lcom_google_gwt_event_logical_shared_ValueChangeHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1368);
+var Lcom_google_gwt_event_logical_shared_ValueChangeHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1370);
 function $clinit_EventHandler___refImpl(){
   $clinit_EventHandler___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -37225,7 +37276,7 @@ function lambda$0_243(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(925, 6, $intern_25, EventHandler___refImpl);
+defineClass(927, 6, $intern_25, EventHandler___refImpl);
 _.init0 = function init0_235(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -37239,26 +37290,26 @@ _.init0 = function init0_235(){
   $init(this, Lcom_google_gwt_event_shared_EventHandler_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_gwt_event_shared_EventHandler_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.shared', 'EventHandler___refImpl', 925, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_gwt_event_shared_EventHandler_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.shared', 'EventHandler___refImpl', 927, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function EventHandler___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(926, 1, $intern_23, EventHandler___refImpl$lambda$0$Type);
+defineClass(928, 1, $intern_23, EventHandler___refImpl$lambda$0$Type);
 _.accept = function accept_292(arg0){
   lambda$0_243(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_gwt_event_shared_EventHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 926);
+var Lcom_google_gwt_event_shared_EventHandler_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 928);
 function EventHandler___refImpl$lambda$1$Type(){
 }
 
-defineClass(927, 1, {}, EventHandler___refImpl$lambda$1$Type);
+defineClass(929, 1, {}, EventHandler___refImpl$lambda$1$Type);
 _.test_0 = function test_265(arg0){
   return $clinit_EventHandler___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_google_gwt_event_shared_EventHandler_2_classLit);
 }
 ;
-var Lcom_google_gwt_event_shared_EventHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 927);
+var Lcom_google_gwt_event_shared_EventHandler_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 929);
 defineClass(627, 1, {});
 _.hashCode_0 = function hashCode_25(){
   return this.index_0;
@@ -37292,7 +37343,7 @@ function lambda$0_244(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1270, 6, $intern_25, GwtEvent___refImpl);
+defineClass(1272, 6, $intern_25, GwtEvent___refImpl);
 _.init0 = function init0_236(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -37306,26 +37357,26 @@ _.init0 = function init0_236(){
   $init(this, Lcom_google_gwt_event_shared_GwtEvent_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_gwt_event_shared_GwtEvent_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.shared', 'GwtEvent___refImpl', 1270, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_gwt_event_shared_GwtEvent_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.shared', 'GwtEvent___refImpl', 1272, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function GwtEvent___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1271, 1, $intern_23, GwtEvent___refImpl$lambda$0$Type);
+defineClass(1273, 1, $intern_23, GwtEvent___refImpl$lambda$0$Type);
 _.accept = function accept_293(arg0){
   lambda$0_244(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_gwt_event_shared_GwtEvent_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1271);
+var Lcom_google_gwt_event_shared_GwtEvent_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1273);
 function GwtEvent___refImpl$lambda$1$Type(){
 }
 
-defineClass(1272, 1, {}, GwtEvent___refImpl$lambda$1$Type);
+defineClass(1274, 1, {}, GwtEvent___refImpl$lambda$1$Type);
 _.test_0 = function test_266(arg0){
   return $clinit_GwtEvent___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_google_gwt_event_shared_GwtEvent_2_classLit);
 }
 ;
-var Lcom_google_gwt_event_shared_GwtEvent_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1272);
+var Lcom_google_gwt_event_shared_GwtEvent_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1274);
 function $addHandler(this$static, type_0, handler){
   return $doAdd(this$static.eventBus, type_0, null, handler) , new LegacyHandlerWrapper;
 }
@@ -37493,7 +37544,7 @@ function lambda$0_245(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1054, 6, $intern_25, HasHandlers___refImpl);
+defineClass(1056, 6, $intern_25, HasHandlers___refImpl);
 _.init0 = function init0_237(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -37507,26 +37558,26 @@ _.init0 = function init0_237(){
   $init(this, Lcom_google_gwt_event_shared_HasHandlers_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_gwt_event_shared_HasHandlers_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.shared', 'HasHandlers___refImpl', 1054, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_gwt_event_shared_HasHandlers_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.event.shared', 'HasHandlers___refImpl', 1056, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function HasHandlers___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1055, 1, $intern_23, HasHandlers___refImpl$lambda$0$Type);
+defineClass(1057, 1, $intern_23, HasHandlers___refImpl$lambda$0$Type);
 _.accept = function accept_294(arg0){
   lambda$0_245(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_gwt_event_shared_HasHandlers_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1055);
+var Lcom_google_gwt_event_shared_HasHandlers_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1057);
 function HasHandlers___refImpl$lambda$1$Type(){
 }
 
-defineClass(1056, 1, {}, HasHandlers___refImpl$lambda$1$Type);
+defineClass(1058, 1, {}, HasHandlers___refImpl$lambda$1$Type);
 _.test_0 = function test_267(arg0){
   return $clinit_HasHandlers___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_google_gwt_event_shared_HasHandlers_2_classLit);
 }
 ;
-var Lcom_google_gwt_event_shared_HasHandlers_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1056);
+var Lcom_google_gwt_event_shared_HasHandlers_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1058);
 function LegacyHandlerWrapper(){
 }
 
@@ -37744,8 +37795,8 @@ function RequestPermissionException(url_0){
   RequestException.call(this, 'The URL ' + url_0 + ' is invalid or violates the same-origin security restriction');
 }
 
-defineClass(1176, 252, $intern_7, RequestPermissionException);
-var Lcom_google_gwt_http_client_RequestPermissionException_2_classLit = createForClass('com.google.gwt.http.client', 'RequestPermissionException', 1176, Lcom_google_gwt_http_client_RequestException_2_classLit);
+defineClass(1178, 252, $intern_7, RequestPermissionException);
+var Lcom_google_gwt_http_client_RequestPermissionException_2_classLit = createForClass('com.google.gwt.http.client', 'RequestPermissionException', 1178, Lcom_google_gwt_http_client_RequestException_2_classLit);
 function RequestTimeoutException(timeoutMillis){
   RequestException.call(this, 'A request timeout has expired after ' + timeoutMillis + ' ms');
 }
@@ -38323,7 +38374,7 @@ function lambda$0_246(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1399, 6, $intern_25, PlaceHistoryMapper___refImpl);
+defineClass(1401, 6, $intern_25, PlaceHistoryMapper___refImpl);
 _.init0 = function init0_238(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -38337,26 +38388,26 @@ _.init0 = function init0_238(){
   $init(this, Lcom_google_gwt_place_shared_PlaceHistoryMapper_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_gwt_place_shared_PlaceHistoryMapper_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.place.shared', 'PlaceHistoryMapper___refImpl', 1399, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_gwt_place_shared_PlaceHistoryMapper_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.place.shared', 'PlaceHistoryMapper___refImpl', 1401, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function PlaceHistoryMapper___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1400, 1, $intern_23, PlaceHistoryMapper___refImpl$lambda$0$Type);
+defineClass(1402, 1, $intern_23, PlaceHistoryMapper___refImpl$lambda$0$Type);
 _.accept = function accept_295(arg0){
   lambda$0_246(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_gwt_place_shared_PlaceHistoryMapper_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1400);
+var Lcom_google_gwt_place_shared_PlaceHistoryMapper_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1402);
 function PlaceHistoryMapper___refImpl$lambda$1$Type(){
 }
 
-defineClass(1401, 1, {}, PlaceHistoryMapper___refImpl$lambda$1$Type);
+defineClass(1403, 1, {}, PlaceHistoryMapper___refImpl$lambda$1$Type);
 _.test_0 = function test_268(arg0){
   return $clinit_PlaceHistoryMapper___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_google_gwt_place_shared_PlaceHistoryMapper_2_classLit);
 }
 ;
-var Lcom_google_gwt_place_shared_PlaceHistoryMapper_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1401);
+var Lcom_google_gwt_place_shared_PlaceHistoryMapper_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1403);
 function $clinit_PlaceTokenizer___refImpl(){
   $clinit_PlaceTokenizer___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -38372,7 +38423,7 @@ function lambda$0_247(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1342, 6, $intern_25, PlaceTokenizer___refImpl);
+defineClass(1344, 6, $intern_25, PlaceTokenizer___refImpl);
 _.init0 = function init0_239(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -38386,26 +38437,26 @@ _.init0 = function init0_239(){
   $init(this, Lcom_google_gwt_place_shared_PlaceTokenizer_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_gwt_place_shared_PlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.place.shared', 'PlaceTokenizer___refImpl', 1342, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_gwt_place_shared_PlaceTokenizer_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.place.shared', 'PlaceTokenizer___refImpl', 1344, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function PlaceTokenizer___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1343, 1, $intern_23, PlaceTokenizer___refImpl$lambda$0$Type);
+defineClass(1345, 1, $intern_23, PlaceTokenizer___refImpl$lambda$0$Type);
 _.accept = function accept_296(arg0){
   lambda$0_247(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_gwt_place_shared_PlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1343);
+var Lcom_google_gwt_place_shared_PlaceTokenizer_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1345);
 function PlaceTokenizer___refImpl$lambda$1$Type(){
 }
 
-defineClass(1344, 1, {}, PlaceTokenizer___refImpl$lambda$1$Type);
+defineClass(1346, 1, {}, PlaceTokenizer___refImpl$lambda$1$Type);
 _.test_0 = function test_269(arg0){
   return $clinit_PlaceTokenizer___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_google_gwt_place_shared_PlaceTokenizer_2_classLit);
 }
 ;
-var Lcom_google_gwt_place_shared_PlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1344);
+var Lcom_google_gwt_place_shared_PlaceTokenizer_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1346);
 function $clinit_Place___refImpl(){
   $clinit_Place___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -38421,7 +38472,7 @@ function lambda$0_248(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1333, 6, $intern_25, Place___refImpl);
+defineClass(1335, 6, $intern_25, Place___refImpl);
 _.init0 = function init0_240(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -38435,26 +38486,26 @@ _.init0 = function init0_240(){
   $init(this, Lcom_google_gwt_place_shared_Place_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_gwt_place_shared_Place_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.place.shared', 'Place___refImpl', 1333, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_gwt_place_shared_Place_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.place.shared', 'Place___refImpl', 1335, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Place___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1334, 1, $intern_23, Place___refImpl$lambda$0$Type);
+defineClass(1336, 1, $intern_23, Place___refImpl$lambda$0$Type);
 _.accept = function accept_297(arg0){
   lambda$0_248(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_gwt_place_shared_Place_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1334);
+var Lcom_google_gwt_place_shared_Place_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1336);
 function Place___refImpl$lambda$1$Type(){
 }
 
-defineClass(1335, 1, {}, Place___refImpl$lambda$1$Type);
+defineClass(1337, 1, {}, Place___refImpl$lambda$1$Type);
 _.test_0 = function test_270(arg0){
   return $clinit_Place___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_google_gwt_place_shared_Place_2_classLit);
 }
 ;
-var Lcom_google_gwt_place_shared_Place_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1335);
+var Lcom_google_gwt_place_shared_Place_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1337);
 function $exec(this$static, input_0){
   return this$static.exec(input_0);
 }
@@ -38814,7 +38865,7 @@ function lambda$0_250(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1321, 6, $intern_25, EventListener___refImpl);
+defineClass(1323, 6, $intern_25, EventListener___refImpl);
 _.init0 = function init0_241(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -38828,26 +38879,26 @@ _.init0 = function init0_241(){
   $init(this, Lcom_google_gwt_user_client_EventListener_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_gwt_user_client_EventListener_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.user.client', 'EventListener___refImpl', 1321, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_gwt_user_client_EventListener_1_1_1refImpl_2_classLit = createForClass('com.google.gwt.user.client', 'EventListener___refImpl', 1323, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function EventListener___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1322, 1, $intern_23, EventListener___refImpl$lambda$0$Type);
+defineClass(1324, 1, $intern_23, EventListener___refImpl$lambda$0$Type);
 _.accept = function accept_298(arg0){
   lambda$0_250(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_gwt_user_client_EventListener_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1322);
+var Lcom_google_gwt_user_client_EventListener_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1324);
 function EventListener___refImpl$lambda$1$Type(){
 }
 
-defineClass(1323, 1, {}, EventListener___refImpl$lambda$1$Type);
+defineClass(1325, 1, {}, EventListener___refImpl$lambda$1$Type);
 _.test_0 = function test_272(arg0){
   return $clinit_EventListener___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_google_gwt_user_client_EventListener_2_classLit);
 }
 ;
-var Lcom_google_gwt_user_client_EventListener_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1323);
+var Lcom_google_gwt_user_client_EventListener_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1325);
 function $clinit_Event___refImpl(){
   $clinit_Event___refImpl = emptyMethod;
   $clinit_ClassReflector();
@@ -39426,7 +39477,7 @@ _.test_0 = function test_273(arg0){
 var Lcom_google_gwt_user_client_Event_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1711);
 function $getDecodedHash(this$static){
   var hashToken;
-  hashToken = (castTo(contextProvider_1.contextFrame(), 58) , $clinit_Window() , impl_6 , $wnd.location.hash);
+  hashToken = (castTo(contextProvider_1.contextFrame(), 59) , $clinit_Window() , impl_6 , $wnd.location.hash);
   if (hashToken == null || hashToken.length == 0) {
     return '';
   }
@@ -39649,9 +39700,9 @@ function Window$Location(){
   this.impl = new Window$LocationImpl;
 }
 
-defineClass(58, 1, {255:1, 58:1}, Window$Location);
+defineClass(59, 1, {255:1, 59:1}, Window$Location);
 var contextProvider_1;
-var Lcom_google_gwt_user_client_Window$Location_2_classLit = createForClass('com.google.gwt.user.client', 'Window/Location', 58, Ljava_lang_Object_2_classLit);
+var Lcom_google_gwt_user_client_Window$Location_2_classLit = createForClass('com.google.gwt.user.client', 'Window/Location', 59, Ljava_lang_Object_2_classLit);
 function Window$LocationImpl(){
 }
 
@@ -40101,7 +40152,7 @@ function lambda$0_252(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(1273, 6, $intern_25, Event___refImpl_0);
+defineClass(1275, 6, $intern_25, Event___refImpl_0);
 _.init0 = function init0_243(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -40115,26 +40166,26 @@ _.init0 = function init0_243(){
   $init(this, Lcom_google_web_bindery_event_shared_Event_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_google_web_bindery_event_shared_Event_1_1_1refImpl_2_classLit = createForClass('com.google.web.bindery.event.shared', 'Event___refImpl', 1273, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_google_web_bindery_event_shared_Event_1_1_1refImpl_2_classLit = createForClass('com.google.web.bindery.event.shared', 'Event___refImpl', 1275, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function Event___refImpl$lambda$0$Type_0(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(1274, 1, $intern_23, Event___refImpl$lambda$0$Type_0);
+defineClass(1276, 1, $intern_23, Event___refImpl$lambda$0$Type_0);
 _.accept = function accept_300(arg0){
   lambda$0_252(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_google_web_bindery_event_shared_Event_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1274);
+var Lcom_google_web_bindery_event_shared_Event_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1276);
 function Event___refImpl$lambda$1$Type_0(){
 }
 
-defineClass(1275, 1, {}, Event___refImpl$lambda$1$Type_0);
+defineClass(1277, 1, {}, Event___refImpl$lambda$1$Type_0);
 _.test_0 = function test_274(arg0){
   return $clinit_Event___refImpl_0() , isAssignableFrom(castTo(arg0, 8), Lcom_google_web_bindery_event_shared_Event_2_classLit);
 }
 ;
-var Lcom_google_web_bindery_event_shared_Event_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1275);
+var Lcom_google_web_bindery_event_shared_Event_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1277);
 function SimpleEventBus$1(){
 }
 
@@ -40168,7 +40219,7 @@ function lambda$0_253(byName_0, p_1){
   return byName_0.put_0(p_1.name_0, p_1);
 }
 
-defineClass(871, 6, $intern_25, SourcesPropertyChangeEvents___refImpl);
+defineClass(873, 6, $intern_25, SourcesPropertyChangeEvents___refImpl);
 _.init0 = function init0_244(){
   var assignableTo, bounds, byName, interfaces, properties, provider, typeBounds;
   properties = new ArrayList;
@@ -40182,26 +40233,26 @@ _.init0 = function init0_244(){
   $init(this, Lcom_totsp_gwittir_client_beans_SourcesPropertyChangeEvents_2_classLit, properties, byName, provider, null, assignableTo, interfaces, typeBounds, true, false);
 }
 ;
-var Lcom_totsp_gwittir_client_beans_SourcesPropertyChangeEvents_1_1_1refImpl_2_classLit = createForClass('com.totsp.gwittir.client.beans', 'SourcesPropertyChangeEvents___refImpl', 871, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
+var Lcom_totsp_gwittir_client_beans_SourcesPropertyChangeEvents_1_1_1refImpl_2_classLit = createForClass('com.totsp.gwittir.client.beans', 'SourcesPropertyChangeEvents___refImpl', 873, Lcc_alcina_framework_common_client_reflection_ClassReflector_2_classLit);
 function SourcesPropertyChangeEvents___refImpl$lambda$0$Type(byName_0){
   this.byName_0 = byName_0;
 }
 
-defineClass(872, 1, $intern_23, SourcesPropertyChangeEvents___refImpl$lambda$0$Type);
+defineClass(874, 1, $intern_23, SourcesPropertyChangeEvents___refImpl$lambda$0$Type);
 _.accept = function accept_301(arg0){
   lambda$0_253(this.byName_0, castTo(arg0, 5));
 }
 ;
-var Lcom_totsp_gwittir_client_beans_SourcesPropertyChangeEvents_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 872);
+var Lcom_totsp_gwittir_client_beans_SourcesPropertyChangeEvents_1_1_1refImpl$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 874);
 function SourcesPropertyChangeEvents___refImpl$lambda$1$Type(){
 }
 
-defineClass(873, 1, {}, SourcesPropertyChangeEvents___refImpl$lambda$1$Type);
+defineClass(875, 1, {}, SourcesPropertyChangeEvents___refImpl$lambda$1$Type);
 _.test_0 = function test_275(arg0){
   return $clinit_SourcesPropertyChangeEvents___refImpl() , isAssignableFrom(castTo(arg0, 8), Lcom_totsp_gwittir_client_beans_SourcesPropertyChangeEvents_2_classLit);
 }
 ;
-var Lcom_totsp_gwittir_client_beans_SourcesPropertyChangeEvents_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 873);
+var Lcom_totsp_gwittir_client_beans_SourcesPropertyChangeEvents_1_1_1refImpl$lambda$1$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 875);
 defineClass(1866, 1, $intern_55);
 _.toString_0 = function toString_66(){
   return $getName(this.___clazz) + '(' + this.getName() + ')';

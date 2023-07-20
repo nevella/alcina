@@ -7,6 +7,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Comparator;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
@@ -75,10 +76,20 @@ public interface Feature extends Registration.AllSubtypes {
 		Ref[] value();
 	}
 
-	public interface ReleaseVersion extends Comparable<ReleaseVersion> {
-		@Override
-		default int compareTo(ReleaseVersion o) {
-			return toString().compareTo(o.toString());
+	public interface ReleaseVersion {
+		public static class Cmp
+				implements Comparator<Class<? extends ReleaseVersion>> {
+			@Override
+			public int compare(Class<? extends ReleaseVersion> o1,
+					Class<? extends ReleaseVersion> o2) {
+				if (o1 == null) {
+					return o2 == null ? 0 : -1;
+				}
+				if (o2 == null) {
+					return 1;
+				}
+				return o1.getSimpleName().compareTo(o2.getSimpleName());
+			}
 		}
 
 		@Retention(RetentionPolicy.RUNTIME)

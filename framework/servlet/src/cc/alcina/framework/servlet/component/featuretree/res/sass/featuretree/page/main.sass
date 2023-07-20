@@ -1,10 +1,11 @@
 @use '../../theme/theme'
 @use '../../dirndl/multi/base'
-@use '../../dirndl/cmp/tree'
+@use '../cmp/feature-table'
 
 body
   margin: 0
   font-family: theme.$font-stack
+  font-size: 14px
 
 body > page
   display: grid
@@ -12,6 +13,9 @@ body > page
   grid-template-rows: 50px 1fr
   height: 100vh
   width: 100vw
+
+  > *
+    min-height: 0
 
   > header
     display: flex
@@ -30,7 +34,7 @@ body > page
     background-color: #777
 
     > feature-table
-      grid-area: table
+      @include feature-table.feature-table
 
     > properties
       grid-area: properties
@@ -38,14 +42,29 @@ body > page
       > header
         @include base.panel-header
 
+      > table
+        padding: 0.5rem
+
+        th, td
+          text-align: left
+          padding-left: 0.5rem
+
     > documentation
       grid-area: documentation
 
       > header
         @include base.panel-header
 
+      > content
+        display: block
+        padding: 0.5em
+        font-size: 16px
+
     > *
       background-color: white
+      min-height: 0
+      min-width: 0
+      overflow: scroll
 
 
 

@@ -43,6 +43,20 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
+/**
+ * <p>
+ * This class, and nested classes, are intended to be accompanied by a context
+ * resolver which adds tag data to the models (header, row, cell, table), and
+ * are intended for use as transformations of CRUD entity/category activities
+ * rather than more general 'arbitrary collection to table' transforms.
+ *
+ * <p>
+ * The arbitrary case doesn't really need a supporting model - see (FIXME -
+ * dirndl - doc) this example of using transforms
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class TableModel extends Model {
 	protected TableHeader header = new TableHeader();
 

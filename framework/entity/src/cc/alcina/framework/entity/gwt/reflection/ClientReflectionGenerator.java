@@ -358,7 +358,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				|| Boolean.getBoolean("reachability.production");
 		voidJType = JPrimitiveType.VOID;
 		registrationAllSubtypesClient = getType(
-				Registration.AllSubtypes.Client.class);
+				Registration.AllSubtypesClient.class);
 		firePropertyChangeMethodJTypes = new JType[] { getType(String.class),
 				getType(Object.class), getType(Object.class) };
 	}
