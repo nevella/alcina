@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
+import com.google.gwt.core.client.GWT;
+
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
@@ -55,6 +58,12 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 			overlay.close(event.getContext().getOriginatingGwtEvent(), false);
 			break;
 		default:
+			if (choices == null) {
+				if (!GWT.isScript()) {
+					Ax.err("warn - commit before choices");
+					return;
+				}
+			}
 			choices.onNavigation(event);
 			break;
 		}
