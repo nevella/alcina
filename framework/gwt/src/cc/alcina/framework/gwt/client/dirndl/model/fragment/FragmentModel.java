@@ -187,6 +187,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	void removeDescent(Node node) {
 		W3cNode traversal = new DepthFirstTraversal.W3cNode(node);
 		NodeTransformer topTransformer = domNodeTransformer.get(node);
+		// FIXME - fm - should this ever be null? can reproduce by deleting
+		// from a structured contenteditor
+		if (topTransformer == null) {
+			return;
+		}
 		traversal.forEach(n -> {
 			NodeTransformer transformer = domNodeTransformer.remove(n);
 			currentModelMutation.addEntry(
