@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 public class RemoteComponentProtocol {
@@ -109,7 +110,13 @@ public class RemoteComponentProtocol {
 
 		/*
 		 * Models an exception during message processing;
+		 *
+		 * Ignores reflective checks because serialization the field
+		 * protocolException would normally fail in the general case (here we
+		 * guarantee imperatively that the field instance is a subtype of
+		 * ProtocolException, anfd thus will succeed)
 		 */
+		@ReflectiveSerializer.Checks(ignore = true)
 		public static class ProcessingException extends Message {
 			public Exception protocolException;
 
