@@ -79,6 +79,13 @@ public interface IUser
 		return false;
 	}
 
+	/**
+	 * Provide if this user is the current user
+	 */
+	default boolean provideIsCurrent() {
+		return this.equals(PermissionsManager.get().getUser());
+	}
+
 	@Override
 	default void putDisplayName(String name) {
 		setUserName(name);
