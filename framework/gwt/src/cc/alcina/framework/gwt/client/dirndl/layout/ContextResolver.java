@@ -90,11 +90,14 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 
 	protected Property resolveDirectedProperty0(Property property) {
-		return property.has(Directed.class)
-				|| property.has(Directed.Multiple.class)
-				|| property.has(Directed.Wrap.class)
-				|| property.has(Directed.Delegating.class)
-				|| property.has(Directed.Transform.class) ? property : null;
+		AnnotationLocation location = new AnnotationLocation(null, property,
+				annotationResolver);
+		return location.hasAnnotation(Directed.class)
+				|| location.hasAnnotation(Directed.Multiple.class)
+				|| location.hasAnnotation(Directed.Wrap.class)
+				|| location.hasAnnotation(Directed.Delegating.class)
+				|| location.hasAnnotation(Directed.Transform.class) ? property
+						: null;
 	}
 
 	/**
