@@ -33,7 +33,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 */
 	@Feature.Status.Ref(Feature.Status.In_Progress.class)
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
-	@Feature.Type.Ref(Feature.Type.Ui_support.class)
+	@Feature.Type.Ref(Feature.Type.Ui_constraint.class)
 	public interface Constraint_NonSuggesting_DecoratorTag_EndOfDecoratorCursor
 			extends Feature {
 	}
@@ -63,7 +63,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 */
 	@Feature.Status.Ref(Feature.Status.In_Progress.class)
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
-	@Feature.Type.Ref(Feature.Type.Ui_support.class)
+	@Feature.Type.Ref(Feature.Type.Ui_constraint.class)
 	public interface Constraint_NonSuggesting_DecoratorTag_Selection
 			extends Feature {
 	}
@@ -76,7 +76,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
-	@Feature.Type.Ref(Feature.Type.Ui_support.class)
+	@Feature.Type.Ref(Feature.Type.Ui_constraint.class)
 	public interface Constraint_NonSuggesting_DecoratorTag_TriggerDeletion
 			extends Feature {
 	}
@@ -96,7 +96,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
-	@Feature.Type.Ref(Feature.Type.Ui_support.class)
+	@Feature.Type.Ref(Feature.Type.Ui_implementation.class)
 	public interface ContentEditableSync extends Feature {
 	}
 

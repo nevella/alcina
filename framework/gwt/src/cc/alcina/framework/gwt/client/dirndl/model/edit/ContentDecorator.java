@@ -30,16 +30,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
 
-/*
- * Note that BeforeInput support is relatively recent (2021 for FF)
- *
- * FIXME - SelectionDecorator - must avoid input triggering in any
- * SelectionDecorator associated with the contenteditable
- *
- * TODO - general name is 'contentdecorator' - tag abstraction is 'Decorator'
- *
- * overlay hide triggers: trigger tag exit
- */
 /**
  * <p>
  * This class supports decoration of a document 'measure' (range). The first
@@ -52,8 +42,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  * check (query - can we just check the input data?)(answer - beforeinput is
  * easier, since it tells us about the delta)
  * <li>Input event interception checks if the state is valid for content
- * decoration (particularly that the cursor (DOM selection) is collapsed) and,
- * if checks pass:
+ * decoration (particularly that the cursor (DOM selection) is collapsed) - see
+ * {@link #onInput(Input)} for details - and, if checks pass:
  * <ul>
  * <li>modifies the dom
  * <li>splits the text node if necessary
@@ -93,12 +83,17 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  * initiates the decorator event routing)
  * </ul>
  *
- * FIXME - DCA_1x1_Fancy - use DOM selectionchange instead of Click/Keyup
  *
- * @author nreddel@barnet.com.au
+ */
+/*
+ * Note that BeforeInput support is relatively recent (2021 for FF)
  *
+ * FIXME - SelectionDecorator - must avoid input triggering in any
+ * SelectionDecorator associated with the contenteditable
  *
+ * TODO - general name is 'contentdecorator' - tag abstraction is 'Decorator'
  *
+ * overlay hide triggers: trigger tag exit
  */
 @Feature.Ref(Feature_Dirndl_ContentDecorator.class)
 public class ContentDecorator<T>
@@ -121,7 +116,7 @@ public class ContentDecorator<T>
 
 	Topic<Input> topicInput = Topic.create();
 
-	DecoratorNode decorator;
+	DecoratorNodeOld decorator;
 
 	DecoratorChooser chooser;
 
@@ -136,6 +131,7 @@ public class ContentDecorator<T>
 		this.tag = builder.tag;
 		this.chooserProvider = builder.chooserProvider;
 		this.triggerSequence = builder.triggerSequence;
+		Preconditions.checkState(triggerSequence.length() == 1);
 		this.itemRenderer = builder.itemRenderer;
 		this.decoratorParent = builder.decoratorParent;
 	}
@@ -146,10 +142,6 @@ public class ContentDecorator<T>
 	@Override
 	public boolean hasDecorator(DomNode node) {
 		return decoratorParent.hasDecorator(node);
-	}
-
-	public boolean hasDecoratorSelf(DomNode node) {
-		return node.ancestors().has(tag);
 	}
 
 	@Override
@@ -166,38 +158,29 @@ public class ContentDecorator<T>
 		}
 	}
 
+	/**
+	 * <p>
+	 * Check if the selection context is valid for decorator creation, and if
+	 * so, perform the decorator creation sequence. The checks are:
+	 * <ul>
+	 * <li>Check if the text content is valid. Either the trigger sequence
+	 * begins a text node, or is preceded by one of {' ', '(', '['}
+	 * <li>Check if any ancestor cannot contain a decorator. Invalid ancestors
+	 * include at least other decorators and {@code <a>} tags [WIP - use the
+	 * fragment model for this]
+	 *
+	 * </ul>
+	 */
 	@Override
 	public void onInput(Input event) {
 		if (checkNextInput) {
 			checkNextInput = false;
 			RelativeInputModel relativeInput = new RelativeInputModel();
-			boolean trigger = false;
 			if (relativeInput.isTriggerable()) {
-				// FIXME - SelectionDecorator - check ignore due to tag
-				// containment by any mention tag, plus <a>...any others...?
-				if (relativeInput.hasAncestorFocusTag(tag)) {
-				} else {
-					String relativeString = relativeInput.relativeString(-1, 0);
-					if (Objects.equals(relativeString, triggerSequence)) {
-						String relativeContextLeftString = relativeInput
-								.relativeString(-2, -1);
-						// if null, we're at a dom boundary (start of
-						// contenteditable, format tag) - so trigger
-						if (relativeContextLeftString == null
-								|| isPunctuationOrLeftBracketish(
-										relativeContextLeftString)) {
-							trigger = true;
-						}
-					}
-				}
-				// if triggerable, wrap in the decorator tag (possiby splitting
-				// the source text node) and connect the suggestor overlay
-				// split
-				if (trigger) {
-					decorator = new DecoratorNode(this, relativeInput);
-					decorator.splitAndWrap();
-					showOverlay(decorator.node);
-				}
+				/*
+				 * requires mutations to be processed, so schedule
+				 */
+				Scheduler.get().scheduleFinally(() -> onInput0(relativeInput));
 			}
 		}
 		topicInput.publish(event);
@@ -229,11 +212,62 @@ public class ContentDecorator<T>
 		}
 	}
 
-	private boolean isPunctuationOrLeftBracketish(String characterString) {
+	/*
+	 * This isn't ideal - but input beahviour is so complex, it's easier to do a
+	 * cleanup of all rather than try and monitor active decorators
+	 */
+	void cleanupInvalidDecorators() {
+		DomNode.from(logicalParent.provideElement()).stream()
+				.filter(n -> n.tagIs(tag))
+				.map(n -> new DecoratorNodeOld(this, n))
+				.collect(Collectors.toList())
+				.forEach(DecoratorNodeOld::stripIfInvalid);
+	}
+
+	boolean isSpaceOrLeftBracketish(String characterString) {
 		return characterString != null && characterString.matches("[ ({\\[]");
 	}
 
-	private void showOverlay(DomNode decorator) {
+	Function<?, String> itemRenderer() {
+		return itemRenderer;
+	}
+
+	void onInput0(RelativeInputModel relativeInput) {
+		boolean trigger = false;
+		if (relativeInput.focusNode().ancestors().has("a")) {
+		} else if (hasDecorator(relativeInput.focusNode())) {
+		} else {
+			String relativeString = relativeInput.relativeString(-1, 0);
+			if (Objects.equals(relativeString, triggerSequence)) {
+				boolean startOfTextNode = relativeInput.getFocusOffset() == 1;
+				String relativeContextLeftString = relativeInput
+						.relativeString(-2, -1);
+				// relativeContextLeftString null check is probably
+				// redundant (since startOfTextNode check will be true
+				// in that case)
+				// but left for clarity - true means cursor is at [start
+				// of contenteditable+1])
+				/*
+				 * this checks that the surrounding text of the entered trigger
+				 * sequence permit decorator insert
+				 */
+				if (relativeContextLeftString == null || startOfTextNode
+						|| isSpaceOrLeftBracketish(relativeContextLeftString)) {
+					trigger = true;
+				}
+			}
+		}
+		// if triggerable, wrap in the decorator tag (possiby splitting
+		// the source text node) and connect the suggestor overlay
+		// split
+		if (trigger) {
+			decorator = new DecoratorNodeOld(this, relativeInput);
+			decorator.splitAndWrap();
+			showOverlay(decorator.node);
+		}
+	}
+
+	void showOverlay(DomNode decorator) {
 		LocalDom.flush();
 		DomNode parent = decorator.parent();
 		if (parent.tagIs("font")) {
@@ -250,21 +284,6 @@ public class ContentDecorator<T>
 		overlay.open();
 	}
 
-	/*
-	 * This isn't ideal - but input beahviour is so complex, it's easier to do a
-	 * cleanup of all rather than try and monitor active decorators
-	 */
-	void cleanupInvalidDecorators() {
-		DomNode.from(logicalParent.provideElement()).stream()
-				.filter(n -> n.tagIs(tag)).map(n -> new DecoratorNode(this, n))
-				.collect(Collectors.toList())
-				.forEach(DecoratorNode::stripIfInvalid);
-	}
-
-	Function<?, String> itemRenderer() {
-		return itemRenderer;
-	}
-
 	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
 	void validateSelection() {
 		if (chooser == null) {
@@ -275,7 +294,8 @@ public class ContentDecorator<T>
 			Scheduler.get().scheduleDeferred(() -> {
 				if (chooser == null) {
 					RelativeInputModel relativeInput = new RelativeInputModel();
-					new DecoratorNode(this, relativeInput).validateSelection();
+					new DecoratorNodeOld(this, relativeInput)
+							.validateSelection();
 				}
 			});
 		}

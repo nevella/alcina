@@ -6,15 +6,28 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.HasParentNodeAccess;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode.Transformer;
 
-public interface FragmentNode {
+@Transformer(NodeTransformer.DirectedTransformer.class)
+@Directed(renderer = FragmentNode.Renderer.class)
+public abstract class FragmentNode extends Model
+		implements HasParentNodeAccess {
 	static boolean provideIsModelFor(org.w3c.dom.Node w3cNode,
 			Class<? extends FragmentNode> fragmentNodeType) {
 		return provideTransformerFor(fragmentNodeType).appliesTo(w3cNode);
@@ -29,15 +42,99 @@ public interface FragmentNode {
 		return transformer;
 	}
 
-	@Transformer(NodeTransformer.DirectedTransformer.class)
-	@Directed(renderer = AbstractNode.Renderer.class)
-	public static abstract class AbstractNode extends Model
-			implements FragmentNode {
-		public static class Renderer extends DirectedRenderer {
+	protected FragmentModel fragmentModel;
+
+	public Ancestors ancestors() {
+		return new Ancestors();
+	}
+
+	public FragmentModel fragmentModel() {
+		if (fragmentModel == null) {
+			FragmentNode parent = getParent();
+			if (parent == null) {
+				Node parentNode = provideParentNode();
+				if (parentNode == null) {
+				} else {
+					Object parentModel = parentNode.getModel();
+					if (parentModel instanceof FragmentModel.Has) {
+						fragmentModel = ((FragmentModel.Has) parentModel)
+								.provideFragmentModel();
+					}
+				}
+			} else {
+				fragmentModel = parent.fragmentModel();
+			}
+		}
+		return fragmentModel;
+	}
+
+	public FragmentNode getParent() {
+		Node parentNode = provideParentNode();
+		if (parentNode == null) {
+			return null;
+		}
+		Object parentModel = parentNode.getModel();
+		if (parentModel instanceof FragmentNode) {
+			return (FragmentNode) parentModel;
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public String toString() {
+		FormatBuilder format = new FormatBuilder().separator(" - ");
+		format.append(getClass().getSimpleName());
+		format.append(provideNode().getRendered().asDomNode());
+		return format.toString();
+	}
+
+	/**
+	 * Includes self by default
+	 *
+	 *
+	 */
+	public class Ancestors {
+		boolean excludeSelf;
+
+		public Ancestors excludeSelf() {
+			this.excludeSelf = true;
+			return this;
+		}
+
+		public boolean has(Class<? extends FragmentNode> test) {
+			return stream().anyMatch(
+					n -> Reflections.isAssignableFrom(test, n.getClass()));
+		}
+
+		public Stream<FragmentNode> stream() {
+			return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+					new Itr(), Spliterator.ORDERED), false);
+		}
+
+		class Itr implements Iterator<FragmentNode> {
+			FragmentNode cursor;
+
+			Itr() {
+				cursor = FragmentNode.this;
+				if (excludeSelf) {
+					cursor = cursor.getParent();
+				}
+			}
+
 			@Override
-			protected void render(RendererInput input) {
-				throw new UnsupportedOperationException(
-						"Not (currently) intended for rendering, rather for reverse (doc -> model) transformation/parsing");
+			public boolean hasNext() {
+				return cursor != null;
+			}
+
+			@Override
+			public FragmentNode next() {
+				if (cursor == null) {
+					throw new NoSuchElementException();
+				}
+				FragmentNode result = cursor;
+				cursor = cursor.getParent();
+				return result;
 			}
 		}
 	}
@@ -46,14 +143,22 @@ public interface FragmentNode {
 	 * Reverse transformation falls back on this model if no other matches exist
 	 */
 	@Transformer(NodeTransformer.Generic.class)
-	public static class Generic extends AbstractNode {
+	public static class Generic extends FragmentNode {
+	}
+
+	public static class Renderer extends DirectedRenderer {
+		@Override
+		protected void render(RendererInput input) {
+			throw new UnsupportedOperationException(
+					"Not (currently) intended for rendering, rather for reverse (doc -> model) transformation/parsing");
+		}
 	}
 
 	/*
 	 * Models a w3c Text node
 	 */
 	@Transformer(NodeTransformer.Text.class)
-	public static class Text extends AbstractNode {
+	public static class Text extends FragmentNode {
 	}
 
 	@ClientVisible

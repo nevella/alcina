@@ -28,6 +28,8 @@ public class RelativeInputModel {
 
 	Location.Range range;
 
+	Node focusDomNode;
+
 	/*
 	 * Note
 	 *
@@ -42,7 +44,7 @@ public class RelativeInputModel {
 		selection = Document.get().jsoRemote().getSelection();
 		collapsed = selection.isCollapsed();
 		{
-			Node focusDomNode = selection.getFocusNode().node();
+			focusDomNode = selection.getFocusNode().node();
 			if (focusDomNode != null) {
 				focusOffset = selection.getFocusOffset();
 				focusLocation = focusDomNode.asDomNode().asLocation()
@@ -64,8 +66,7 @@ public class RelativeInputModel {
 	}
 
 	public boolean containsPartialAncestorFocusTag(String tag) {
-		DomNode focussedTag = focusLocation.containingNode().ancestors()
-				.get(tag);
+		DomNode focussedTag = focusNode().ancestors().get(tag);
 		if (focussedTag == null) {
 			return false;
 		}
@@ -76,8 +77,16 @@ public class RelativeInputModel {
 		return !range.contains(tagRange);
 	}
 
+	public DomNode focusNode() {
+		return focusDomNode.asDomNode();
+	}
+
+	public int getFocusOffset() {
+		return this.focusOffset;
+	}
+
 	public boolean hasAncestorFocusTag(String tag) {
-		return focusLocation.containingNode().ancestors().get(tag) != null;
+		return focusNode().ancestors().get(tag) != null;
 	}
 
 	public boolean isTriggerable() {
@@ -92,8 +101,7 @@ public class RelativeInputModel {
 	// decorator (e.g. char 0, decorator starts contenteditable), insert a blank
 	// text node + move caret
 	public void selectWholeAncestorFocusTag(String tag) {
-		DomNode focussedTag = focusLocation.containingNode().ancestors()
-				.get(tag);
+		DomNode focussedTag = focusNode().ancestors().get(tag);
 		String text = ((Element) focussedTag.gwtNode()).getInnerText();
 		Location.Range tagRange = focussedTag.asRange();
 		boolean anchorBeforeFocus = anchorLocation
@@ -140,8 +148,7 @@ public class RelativeInputModel {
 	}
 
 	public SplitResult splitAt(int from, int to) {
-		return focusLocation.containingNode().text().split(from + focusOffset,
-				to + focusOffset);
+		return focusNode().text().split(from + focusOffset, to + focusOffset);
 	}
 
 	/*

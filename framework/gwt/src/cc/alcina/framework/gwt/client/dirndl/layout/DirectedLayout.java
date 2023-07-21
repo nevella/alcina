@@ -28,6 +28,7 @@ import com.google.web.bindery.event.shared.SimpleEventBus;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -1417,6 +1418,10 @@ public class DirectedLayout implements AlcinaProcess {
 		void appendToRoot();
 
 		<T> T as(Class<T> class1);
+
+		default DomNode asDomNode() {
+			return DomNode.from(getNode());
+		}
 
 		Element asElement();
 

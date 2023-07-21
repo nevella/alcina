@@ -142,9 +142,17 @@ public interface Feature extends Registration.AllSubtypes {
 			Class<? extends Feature.Type> value();
 		}
 		/*
-		 * tourable - others not
+		 * A restriction on a ui feature implementation, worth tracking (and/or testing) separately
+		 */
+		public interface Ui_constraint extends Type{}
+		/*
+		 * Ui_feature is tourable - others not
 		 */
 		public interface Ui_feature extends Type{}
+		/*
+		 * A detail of a ui feature implementation, worth tracking (and/or testing) separately
+		 */
+		public interface Ui_implementation extends Type{}
 		public interface Ui_support extends Type{}
 	}
 }

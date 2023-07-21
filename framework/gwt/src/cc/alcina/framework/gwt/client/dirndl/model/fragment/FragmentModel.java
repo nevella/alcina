@@ -115,6 +115,12 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		return transformer;
 	}
 
+	public FragmentNode getFragmentNode(Node node) {
+		NodeTransformer transformer = domNodeTransformer.get(node);
+		return transformer == null ? null
+				: (FragmentNode) transformer.getModel();
+	}
+
 	@Override
 	public void onBind(Bind event) {
 		/*
