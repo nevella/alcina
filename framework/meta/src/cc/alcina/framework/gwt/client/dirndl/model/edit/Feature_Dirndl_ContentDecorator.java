@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.common.client.meta.Feature.Type.Ui_support;
 import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
 
 /**
@@ -34,7 +33,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 */
 	@Feature.Status.Ref(Feature.Status.In_Progress.class)
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
-	@Feature.Type.Ref(Ui_support.class)
+	@Feature.Type.Ref(Feature.Type.Ui_support.class)
 	public interface Constraint_NonSuggesting_DecoratorTag_EndOfDecoratorCursor
 			extends Feature {
 	}
@@ -64,7 +63,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 */
 	@Feature.Status.Ref(Feature.Status.In_Progress.class)
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
-	@Feature.Type.Ref(Ui_support.class)
+	@Feature.Type.Ref(Feature.Type.Ui_support.class)
 	public interface Constraint_NonSuggesting_DecoratorTag_Selection
 			extends Feature {
 	}
@@ -77,7 +76,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
-	@Feature.Type.Ref(Ui_support.class)
+	@Feature.Type.Ref(Feature.Type.Ui_support.class)
 	public interface Constraint_NonSuggesting_DecoratorTag_TriggerDeletion
 			extends Feature {
 	}
@@ -97,7 +96,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
-	@Feature.Type.Ref(Ui_support.class)
+	@Feature.Type.Ref(Feature.Type.Ui_support.class)
 	public interface ContentEditableSync extends Feature {
 	}
 
@@ -112,7 +111,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)
 	@Feature.Parent(Feature_Dirndl_ContentDecorator.class)
-	@Feature.Type.Ref(Ui_support.class)
+	@Feature.Type.Ref(Feature.Type.Ui_support.class)
 	public interface Resizing extends Feature {
 	}
 }

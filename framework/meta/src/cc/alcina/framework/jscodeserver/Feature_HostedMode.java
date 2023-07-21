@@ -1,6 +1,7 @@
 package cc.alcina.framework.jscodeserver;
 
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.meta.Feature_Ui_support;
 
 /**
  *
@@ -16,5 +17,6 @@ import cc.alcina.framework.common.client.meta.Feature;
  * @formatter:on
  */
 @Feature.Status.Ref(Feature.Status.In_Progress.class)
+@Feature.Parent(Feature_Ui_support.class)
 public interface Feature_HostedMode extends Feature {
 }

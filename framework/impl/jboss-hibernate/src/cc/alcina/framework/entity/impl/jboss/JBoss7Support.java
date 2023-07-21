@@ -123,7 +123,7 @@ public class JBoss7Support {
 
 	static class SourceFinderVfs implements SourceFinder {
 		@Override
-		public String findSource(Class clazz) {
+		public String findSource0(Class clazz) {
 			try {
 				CodeSource codeSource = clazz.getProtectionDomain()
 						.getCodeSource();

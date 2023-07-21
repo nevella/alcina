@@ -82,6 +82,4 @@ public class StyleInjector {
 			Scheduler.get().scheduleFinally(flusher);
 		}
 	}
-
-	private HeadElement head;
 }

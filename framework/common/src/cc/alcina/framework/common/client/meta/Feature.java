@@ -147,7 +147,4 @@ public interface Feature extends Registration.AllSubtypes {
 		public interface Ui_feature extends Type{}
 		public interface Ui_support extends Type{}
 	}
-	/*
-	 * @formatter:on
-	 */
 }

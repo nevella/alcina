@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.overlay;
 
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.meta.Feature_Ui_support;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 
 /**
@@ -20,5 +21,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
  * @formatter:on
  */
 @Feature.Status.Ref(Feature.Status.Open.class)
+@Feature.Parent(Feature_Ui_support.class)
 public interface Feature_Overlay extends Feature {
 }

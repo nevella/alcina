@@ -9,8 +9,6 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -70,7 +68,6 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.GraphProjectionTransient;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -80,7 +77,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
@@ -109,10 +105,6 @@ import javassist.bytecode.MethodInfo;
  *
  */
 class ClassTransformer {
-	static {
-		SourceFinder.sourceFinders.add(new SourceFinderFs());
-	}
-
 	private Mvcc mvcc;
 
 	private Map<Class, ClassTransform> classTransforms;
@@ -256,10 +248,6 @@ class ClassTransformer {
 		return logBuilder.toString();
 	}
 
-	public static interface SourceFinderFsHelper {
-		public URL transformPath(URL path);
-	}
-
 	static class ClassTransform<H extends Entity> {
 		private static final transient int VERSION = 18;
 
@@ -365,7 +353,7 @@ class ClassTransformer {
 		}
 
 		private String findSource(Class clazz) throws Exception {
-			return SourceFinder.locateSource(clazz);
+			return SourceFinder.findSource(clazz);
 		}
 
 		private boolean isSameSourceAsLastRun() {
@@ -1336,64 +1324,6 @@ class ClassTransformer {
 					return method.getName().hashCode();
 				}
 			}
-		}
-	}
-
-	static class SourceFinderFs implements SourceFinder {
-		@Override
-		public String findSource(Class clazz) {
-			try {
-				CodeSource codeSource = clazz.getProtectionDomain()
-						.getCodeSource();
-				URL classFileLocation = codeSource.getLocation();
-				URL sourceFileLocation = new URL(
-						Ax.format("%s%s.java", classFileLocation.toString(),
-								clazz.getName().replace(".", "/")));
-				if (new File(toPath(sourceFileLocation)).exists()
-						&& !sourceFileLocation.toString().contains("/build/")) {
-					return Io.read().url(sourceFileLocation.toString())
-							.asString();
-				}
-				sourceFileLocation = new URL(sourceFileLocation.toString()
-						.replace("/alcina/bin/",
-								"/alcina/framework/entity/src/")
-						.replace("/bin/", "/src/")
-						.replace("/build/classes/", "/src/"));
-				if (sourceFileLocation.toString().contains("/build/")
-						&& !sourceFileLocation.toString().contains("/src/")) {
-					sourceFileLocation = new URL(sourceFileLocation.toString()
-							.replace("/build/", "/src/"));
-				}
-				if (new File(toPath(sourceFileLocation)).exists()) {
-					return Io.read().url(sourceFileLocation.toString())
-							.asString();
-				}
-				sourceFileLocation = new URL(sourceFileLocation.toString()
-						.replace("/alcina/framework/entity/src/",
-								"/alcina/framework/common/src/"));
-				if (new File(toPath(sourceFileLocation)).exists()) {
-					return Io.read().url(sourceFileLocation.toString())
-							.asString();
-				}
-				Optional<SourceFinderFsHelper> helper = Registry
-						.optional(SourceFinderFsHelper.class);
-				if (helper.isPresent()) {
-					sourceFileLocation = new URL(sourceFileLocation.toString()
-							.replace("/alcina/framework/entity/src/",
-									"/alcina/framework/common/src/"));
-					if (new File(toPath(sourceFileLocation)).exists()) {
-						return Io.read().url(sourceFileLocation.toString())
-								.asString();
-					}
-				}
-				return null;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		private String toPath(URL sourceFileLocation) {
-			return sourceFileLocation.toString().replaceFirst("^file:/*/", "/");
 		}
 	}
 }

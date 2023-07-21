@@ -53,6 +53,8 @@ class Properties extends Model.Fields {
 
 		String name;
 
+		String internalName;
+
 		String status;
 
 		String depends;
@@ -61,9 +63,14 @@ class Properties extends Model.Fields {
 			Entry entry = features.entriesByFeature.get(feature);
 			parent = entry.parent == null ? null : entry.parent.displayName();
 			name = entry.displayName();
+			internalName = entry.feature.getSimpleName();
 			status = entry.status() == null ? ""
 					: entry.status().getSimpleName().toLowerCase().replace("_",
 							" ");
+			// TODO - add type - type inherits from parent, overridden by @type
+			// at any point
+			//
+			// report redundant in console
 		}
 	}
 }
