@@ -47,7 +47,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 
 	transient List<Configuration.ConfigurationFile> classpathConfigurationFiles = new ArrayList<>();
 
-	private PropertyTree tree;
+	public transient PropertyTree tree;
 
 	private boolean refresh;
 

@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -98,8 +97,23 @@ public class DevConsoleDebugCommands {
 
 		@Override
 		public String getUsage() {
-			return "dxc  {-c key} {-u userid} {-d days} {--no-exclusions}"
+			return "dxc  {-c key} {-u userid} {-d days} {--no-exclusions} {-cu count by user} "
 					+ " {-i min-id} {-r regex} {-rn not-regex} {-fu id - list(client)users with similar exceptions to id}";
+		}
+
+		public String getUsername(ILogRecord record) {
+			String userName = console.state.getUser(record.getUserId())
+					.getUserName();
+			if (userName == null) {
+				userName = "anonymous";
+				Matcher matcher = Pattern
+						.compile("User name/id/cli: \\[(.+?)/(.+?)/(.+?)\\]")
+						.matcher(record.getText());
+				if (matcher.find()) {
+					userName = matcher.group(1);
+				}
+			}
+			return userName;
 		}
 
 		@Override
@@ -130,7 +144,7 @@ public class DevConsoleDebugCommands {
 				runSubcommand(new CmdGetExceptionLogs(), null);
 				logRecords = console.getState().logRecords;
 			}
-			Set<String> affectedUserNames = new LinkedHashSet<String>();
+			CountingMap<String> affectedUserNames = new CountingMap<String>();
 			Pattern clientP = Pattern.compile(
 					"(?:cc\\.alcina\\.framework\\.common\\.client\\.csobjects\\.WebException:|RPC exception:)(.+)",
 					Pattern.MULTILINE | Pattern.DOTALL);
@@ -182,6 +196,9 @@ public class DevConsoleDebugCommands {
 				logRecords = logRecords.stream().filter(containsTextFilter)
 						.collect(Collectors.toList());
 			}
+			filterArgvResult = new FilterArgvParam(argv, "-cu");
+			argv = filterArgvResult.argv;
+			boolean showByUserCount = filterArgvResult.value != null;
 			filterArgvResult = new FilterArgvParam(argv, "-rn");
 			argv = filterArgvResult.argv;
 			if (filterArgvResult.value != null) {
@@ -277,15 +294,26 @@ public class DevConsoleDebugCommands {
 							: String.format("[%s]",
 									CommonUtils.join(ids, ", "));
 					if (similarToIds.isEmpty()) {
-						Set<String> userNames = new LinkedHashSet<String>();
+						CountingMap<String> userNames = new CountingMap<String>();
 						for (Long id : ids) {
 							ILogRecord record = idLkp.get(id);
+<<<<<<< HEAD
 							userNames.add(console.getState()
 									.getUser(record.getUserId()).getUserName());
+=======
+							userNames.add(getUsername(record));
+>>>>>>> dev
 						}
 						o += String.format("%-20s%s\n%-20s%s\n%-20s%s\n",
-								CommonUtils.last(ids), v, "", userNames, "",
-								allIds);
+								CommonUtils.last(ids), v, "",
+								userNames.keySet(), "", allIds);
+						if (showByUserCount) {
+							o += "\n"
+									+ userNames.toLinkedHashMap(true).entrySet()
+											.stream().map(Objects::toString)
+											.collect(Collectors.joining("\n"))
+									+ "\n\n";
+						}
 					} else {
 						Set intersection = CommonUtils.intersection(ids,
 								similarToIds);
@@ -297,9 +325,13 @@ public class DevConsoleDebugCommands {
 										intersection.iterator().next(), id,
 										record.getUserId(), console.getState()
 												.getUser(record.getUserId()));
+<<<<<<< HEAD
 								affectedUserNames.add(console.getState()
 										.getUser(record.getUserId())
 										.getUserName());
+=======
+								affectedUserNames.add(getUsername(record));
+>>>>>>> dev
 							}
 						}
 					}
@@ -308,8 +340,12 @@ public class DevConsoleDebugCommands {
 						String.format("Count: %s\n%s\n", entry.getKey(), o));
 			}
 			if (affectedUserNames.size() > 0) {
-				System.out.format("\n\n%s\n\n",
-						CommonUtils.join(affectedUserNames, ", "));
+				System.out.format("\n\n%s\n\n", affectedUserNames.keySet()
+						.stream().collect(Collectors.joining(", ")));
+				if (showByUserCount) {
+					affectedUserNames.toLinkedHashMap(true).entrySet()
+							.forEach(Ax::out);
+				}
 			}
 			Ax.out("Record count: %s", logRecords.size());
 			if (byType.size() > 1) {
@@ -1011,22 +1047,25 @@ public class DevConsoleDebugCommands {
 				argv = filterArgvParam.argv;
 				String limitClause = filterArgvParam.value == null ? ""
 						: Ax.format(" limit %s", filterArgvParam.value);
+				String orderClause = limitClause.isEmpty() ? "random()"
+						: "l.id desc";
 				String limitDisplayClause = filterArgvParam.value == null ? ""
 						: Ax.format(" %s of ", filterArgvParam.value);
 				String sqlFromEtc = String.format(
 						"from logging l inner join users u on l.user_id=u.id "
 								+ "where  l.created_on>? %s %s and "
 								+ " not (l.component_key in %s) and length(l.text)<%s"
-								+ " order by random() %s",
+								+ " order by %s %s",
 						exceptionFilter, gtOnlyFilter, ckFilter,
-						maxRecordLength, limitClause);
+						maxRecordLength, orderClause, limitClause);
 				int size = 0;
 				Calendar c = Calendar.getInstance();
 				c.add(Calendar.DATE, -days);
 				Date d = c.getTime();
 				java.sql.Date cutoffSqlDate = new java.sql.Date(d.getTime());
 				{
-					String sql = "select count(l.id) " + sqlFromEtc;
+					String sql = "select count(l.id) "
+							+ sqlFromEtc.replaceFirst("(.+) order .+", "$1");
 					PreparedStatement ps = conn.prepareStatement(sql);
 					ps.setDate(1, cutoffSqlDate);
 					ResultSet rs = ps.executeQuery();

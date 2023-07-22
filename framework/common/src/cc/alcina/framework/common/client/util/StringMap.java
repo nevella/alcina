@@ -10,6 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -312,6 +315,45 @@ public class StringMap extends LinkedHashMap<String, String> {
 		char[] from = { '\n', '\r', '\\' };
 		String[] to = { "\\n", "\\r", "\\\\" };
 		return new Escaper().escape(string, from, to);
+	}
+
+	/**
+	 * Comparison of two stringmaps
+	 *
+	 */
+	public static class Comparison {
+		StringMap m1;
+
+		StringMap m2;
+
+		public List<KeyResult> results;
+
+		public Comparison(StringMap m1, StringMap m2) {
+			this.m1 = m1;
+			this.m2 = m2;
+			Set<String> unionKeys = new TreeSet<>();
+			m1.keySet().forEach(unionKeys::add);
+			m2.keySet().forEach(unionKeys::add);
+			results = unionKeys.stream().map(KeyResult::new)
+					.collect(Collectors.toList());
+		}
+
+		public class KeyResult {
+			public boolean identical;
+
+			public String left;
+
+			public String right;
+
+			public String key;
+
+			public KeyResult(String key) {
+				this.key = key;
+				left = m1.get(key);
+				right = m2.get(key);
+				identical = Objects.equals(left, right);
+			}
+		}
 	}
 
 	public static class Escaper {

@@ -863,6 +863,16 @@ public class Configuration {
 			return cols.toCsv();
 		}
 
+		public StringMap asMap() {
+			List<PropertyNode> nodes = getRoot().depthFirst();
+			nodes.stream().collect(Collectors.toList())
+					.forEach(PropertyNode::sortChildren);
+			StringMap result = new StringMap();
+			nodes.stream().filter(n -> Ax.notBlank(n.key))
+					.forEach(n -> result.put(n.key, n.lastValue()));
+			return result;
+		}
+
 		public void removeKeys(Set<String> remove) {
 			List<PropertyNode> nodes = getRoot().depthFirst();
 			nodes.forEach(n -> n.removeKeys(remove));
@@ -1000,6 +1010,10 @@ public class Configuration {
 				return getChildren().stream().map(n -> (PropertyNode) n)
 						.filter(c -> Objects.equals(c.packageSegment, segment))
 						.findFirst().orElse(null);
+			}
+
+			String lastValue() {
+				return Ax.last(values).value;
 			}
 
 			void removeFromParent() {
