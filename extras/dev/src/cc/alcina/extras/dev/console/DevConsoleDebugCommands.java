@@ -297,12 +297,7 @@ public class DevConsoleDebugCommands {
 						CountingMap<String> userNames = new CountingMap<String>();
 						for (Long id : ids) {
 							ILogRecord record = idLkp.get(id);
-<<<<<<< HEAD
-							userNames.add(console.getState()
-									.getUser(record.getUserId()).getUserName());
-=======
 							userNames.add(getUsername(record));
->>>>>>> dev
 						}
 						o += String.format("%-20s%s\n%-20s%s\n%-20s%s\n",
 								CommonUtils.last(ids), v, "",
@@ -325,13 +320,7 @@ public class DevConsoleDebugCommands {
 										intersection.iterator().next(), id,
 										record.getUserId(), console.getState()
 												.getUser(record.getUserId()));
-<<<<<<< HEAD
-								affectedUserNames.add(console.getState()
-										.getUser(record.getUserId())
-										.getUserName());
-=======
 								affectedUserNames.add(getUsername(record));
->>>>>>> dev
 							}
 						}
 					}
@@ -869,7 +858,8 @@ public class DevConsoleDebugCommands {
 			}
 			System.out.format(
 					"-------\nId:\t%s\nUser:\t%s (%s)\nCmp:\t%s\nDate:\t%s\nHost:\t%s\nText:\t%s\n",
-					record.getId(), console.getState().getUser(record.getUserId()),
+					record.getId(),
+					console.getState().getUser(record.getUserId()),
 					record.getUserId(), record.getComponentKey(),
 					record.getCreatedOn(), record.getHost(),
 					replay ? "" : text);
@@ -1082,7 +1072,8 @@ public class DevConsoleDebugCommands {
 					ps.setDate(1, cutoffSqlDate);
 					ResultSet rs = ps.executeQuery();
 					console.getState().logRecords = new ArrayList<ILogRecord>();
-					List<IL> logRecords = (List<IL>) (List<?>) console.getState().logRecords;
+					List<IL> logRecords = (List<IL>) (List<?>) console
+							.getState().logRecords;
 					addLogRecords(rs, logRecords);
 					ps.close();
 				}
