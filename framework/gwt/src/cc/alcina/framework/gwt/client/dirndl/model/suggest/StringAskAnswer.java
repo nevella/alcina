@@ -24,7 +24,7 @@ public class StringAskAnswer<T> {
 			String string = stringRepresentation.apply(model);
 			MarkupMatch match = new MarkupMatch(string, ask.getValue());
 			if (match.hasMatches()) {
-				Suggestion.Default suggestion = new Suggestion.Default();
+				Suggestion.Markup suggestion = new Suggestion.Markup();
 				suggestion.setMarkup(match.toMarkup());
 				suggestion.setMatch(true);
 				suggestion.setModel(model);

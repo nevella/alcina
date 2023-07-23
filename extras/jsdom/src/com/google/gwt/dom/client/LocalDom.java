@@ -802,7 +802,7 @@ public class LocalDom implements ContextFrame {
 			// FIXME - romcom - should throw (emit a topic message, handled by
 			// client)
 			if (!GWT.isScript()) {
-				remoteMutations.verifyDomEquivalence();
+				// remoteMutations.verifyDomEquivalence();
 			}
 			reparseFromRemote(hasNodeJso, hasNode, remoteIndex);
 			return nodeFor0(remote, true);

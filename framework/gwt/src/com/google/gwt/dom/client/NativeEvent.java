@@ -53,8 +53,6 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 */
 	public Data data = new Data();
 
-	private boolean altKey;
-
 	public NativeEvent() {
 	}
 
@@ -183,6 +181,19 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 			data.eventTarget = DOMImpl.impl.eventGetTarget(jso);
 		}
 		return data.eventTarget;
+	}
+
+	/**
+	 * Gets the key (code associated with the keyevent key) associated with this
+	 * event.
+	 *
+	 * @return the key
+	 */
+	public final String getKey() {
+		if (data.key == null) {
+			data.key = jso.getKey();
+		}
+		return data.key;
 	}
 
 	/**
@@ -452,6 +463,8 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		Integer button;
 
 		Boolean altKey;
+
+		String key;
 
 		@Override
 		public String toString() {

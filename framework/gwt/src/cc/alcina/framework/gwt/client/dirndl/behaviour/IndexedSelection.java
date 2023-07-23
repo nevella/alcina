@@ -8,36 +8,19 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Naviga
 public class IndexedSelection implements KeyboardNavigation.Navigation.Handler {
 	private Host host;
 
-	int indexSelected=-1;
-
-	public int getIndexSelected() {
-		return this.indexSelected;
-	}
-
-
-	public void setIndexSelected(int indexSelected) {
-		this.indexSelected = indexSelected;
-	}
+	int indexSelected = -1;
 
 	public Topic<Change> topicIndexChanged = Topic.create();
-
-	public static class Change {
-		public final int oldIndexSelected;
-
-		public final int newIndexSelected;
-
-		Change(int oldIndexSelected, int newIndexSelected) {
-			this.oldIndexSelected = oldIndexSelected;
-			this.newIndexSelected = newIndexSelected;
-		}
-	}
 
 	public IndexedSelection(IndexedSelection.Host host) {
 		this.host = host;
 		indexSelected = host.getInitialSelectedIndex();
 		wrapIndex();
 	}
-	
+
+	public int getIndexSelected() {
+		return this.indexSelected;
+	}
 
 	@Override
 	public void onNavigation(Navigation event) {
@@ -49,11 +32,18 @@ public class IndexedSelection implements KeyboardNavigation.Navigation.Handler {
 		case DOWN:
 			indexSelected++;
 			break;
+		case FIRST:
+			indexSelected = 0;
+			break;
 		}
 		wrapIndex();
 		if (entryIndex != indexSelected) {
 			topicIndexChanged.publish(new Change(entryIndex, indexSelected));
 		}
+	}
+
+	public void setIndexSelected(int indexSelected) {
+		this.indexSelected = indexSelected;
 	}
 
 	private void wrapIndex() {
@@ -67,6 +57,17 @@ public class IndexedSelection implements KeyboardNavigation.Navigation.Handler {
 			if (indexSelected >= size) {
 				indexSelected = 0;
 			}
+		}
+	}
+
+	public static class Change {
+		public final int oldIndexSelected;
+
+		public final int newIndexSelected;
+
+		Change(int oldIndexSelected, int newIndexSelected) {
+			this.oldIndexSelected = oldIndexSelected;
+			this.newIndexSelected = newIndexSelected;
 		}
 	}
 

@@ -57,6 +57,8 @@ public class KeyboardNavigation implements DomEvents.KeyDown.Handler {
 		}
 		if (emitType != null) {
 			event.reemitAs(model, Navigation.class, emitType);
+			domEvent.preventDefault();
+			domEvent.stopPropagation();
 		}
 	}
 
@@ -94,7 +96,7 @@ public class KeyboardNavigation implements DomEvents.KeyDown.Handler {
 		}
 
 		public enum Type {
-			UP, DOWN, COMMIT, CANCEL, LEFT, RIGHT
+			UP, DOWN, COMMIT, CANCEL, LEFT, RIGHT, FIRST
 		}
 	}
 }

@@ -48,10 +48,14 @@ public class NativeEventJso extends JavaScriptObject {
 
 	/**
 	 * Get the {@link DataTransfer} associated with the current drag event.
-	 * 
+	 *
 	 * @return the {@link DataTransfer} object, or null if not a drag event
 	 */
 	public final native DataTransfer getDataTransfer() /*-{
     return this.dataTransfer || null;
+	}-*/;
+
+	public final native String getKey() /*-{
+    return this.key;
 	}-*/;
 }

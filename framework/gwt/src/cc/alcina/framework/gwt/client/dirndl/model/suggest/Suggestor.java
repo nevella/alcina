@@ -19,6 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.HasSelectedValue;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -44,11 +45,14 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  */
 @Directed(
 	receives = { SuggestorEvents.EditorAsk.class,
-			ModelEvents.SelectionChanged.class },
+			ModelEvents.SelectionChanged.class,
+			// suggestion overlay close
+			ModelEvents.Closed.class },
 	emits = ModelEvents.SelectionChanged.class)
-public class Suggestor extends Model implements
-		SuggestorEvents.EditorAsk.Handler, ModelEvents.SelectionChanged.Handler,
-		HasSelectedValue, KeyboardNavigation.Navigation.Handler {
+public class Suggestor extends Model
+		implements SuggestorEvents.EditorAsk.Handler,
+		ModelEvents.SelectionChanged.Handler, HasSelectedValue,
+		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler {
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -57,13 +61,29 @@ public class Suggestor extends Model implements
 
 	protected Suggestions suggestions;
 
-	protected Builder builder;
+	Builder builder;
 
 	private Object value;
 
 	private Suggestor(Builder builder) {
 		this.builder = builder;
 		initFields();
+	}
+
+	public void clear() {
+		editor.clear();
+	}
+
+	public void closeSuggestions() {
+		suggestions.close();
+	}
+
+	public void focus() {
+		editor.focus();
+	}
+
+	public Builder getBuilder() {
+		return this.builder;
 	}
 
 	@Directed(tag = "editor")
@@ -90,10 +110,18 @@ public class Suggestor extends Model implements
 			if (builder.isSuggestOnBind()) {
 				Client.eventBus().queued().lambda(() -> editor.emitAsk())
 						.dispatch();
-				;
 			}
 		}
 		super.onBind(event);
+	}
+
+	@Override
+	public void onClosed(Closed event) {
+		if (event.checkReemitted(this)) {
+			return;
+		}
+		suggestions.onClosed(event);
+		event.reemit();
 	}
 
 	@Override
@@ -133,7 +161,7 @@ public class Suggestor extends Model implements
 
 	protected void initFields() {
 		editor = builder.editorSupplier.get();
-		editor.withBuilder(builder);
+		editor.withSuggestor(this);
 		suggestions = new SuggestionChoices(this);
 	}
 
@@ -216,21 +244,23 @@ public class Suggestor extends Model implements
 	}
 
 	public static class Builder {
-		private String inputPrompt;
+		String inputPrompt;
 
 		List<Class<? extends Model>> logicalAncestors = List.of();
 
-		private boolean focusOnBind;
+		boolean focusOnBind;
 
-		private boolean selectAllOnBind;
+		boolean selectAllOnBind;
 
-		private Answer<?> answer;
+		Answer<?> answer;
 
-		private OverlayPosition.Position suggestionXAlign = Position.START;
+		OverlayPosition.Position suggestionXAlign = Position.START;
 
-		private boolean suggestOnBind;
+		boolean suggestOnBind;
 
-		private Supplier<? extends Editor> editorSupplier = InputEditor::new;
+		Supplier<? extends Editor> editorSupplier = InputEditor::new;
+
+		boolean inputEditorKeyboardNavigationEnabled = true;
 
 		public Suggestor build() {
 			return new Suggestor(this);
@@ -256,6 +286,10 @@ public class Suggestor extends Model implements
 			return this.focusOnBind;
 		}
 
+		public boolean isInputEditorKeyboardNavigationEnabled() {
+			return this.inputEditorKeyboardNavigationEnabled;
+		}
+
 		public boolean isSelectAllOnBind() {
 			return this.selectAllOnBind;
 		}
@@ -277,6 +311,12 @@ public class Suggestor extends Model implements
 
 		public Builder withFocusOnBind(boolean focusOnBind) {
 			this.focusOnBind = focusOnBind;
+			return this;
+		}
+
+		public Builder withInputEditorKeyboardNavigationEnabled(
+				boolean inputEditorKeyboardNavigationEnabled) {
+			this.inputEditorKeyboardNavigationEnabled = inputEditorKeyboardNavigationEnabled;
 			return this;
 		}
 
@@ -316,9 +356,13 @@ public class Suggestor extends Model implements
 	 */
 	@Directed(emits = EditorAsk.class)
 	public interface Editor {
+		void clear();
+
 		void emitAsk();
 
-		void withBuilder(Suggestor.Builder builder);
+		void focus();
+
+		void withSuggestor(Suggestor suggestor);
 	}
 
 	public enum Property implements PropertyEnum {
@@ -352,8 +396,6 @@ public class Suggestor extends Model implements
 	 * Marker for the payload of a Suggestion
 	 */
 	public interface Suggestion {
-		String getMarkup();
-
 		/*
 		 * Typed model (for rendering, either this or markup)
 		 *
@@ -376,14 +418,16 @@ public class Suggestor extends Model implements
 		@Directed(
 			tag = "suggestion",
 			bindings = @Binding(from = "markup", type = Type.INNER_HTML))
-		public static class Default extends Bindable implements Suggestion {
+		public static class Markup extends Bindable implements Suggestion {
 			private String markup;
 
 			private Object model;
 
 			private boolean match;
 
-			@Override
+			public Markup() {
+			}
+
 			public String getMarkup() {
 				return this.markup;
 			}
@@ -415,13 +459,39 @@ public class Suggestor extends Model implements
 				return FormatBuilder.keyValues("markup", markup);
 			}
 		}
+
+		@Directed(tag = "suggestion")
+		public static class ModelSuggestion extends Model.Fields
+				implements Suggestion {
+			public Model model;
+
+			public boolean match;
+
+			public ModelSuggestion(Model model) {
+				this.model = model;
+			}
+
+			@Override
+			@Directed
+			public Object getModel() {
+				return model;
+			}
+
+			@Override
+			public boolean isMatch() {
+				return match;
+			}
+		}
 	}
 
 	public interface SuggestionModel {
 	}
 
 	@Directed(emits = ModelEvents.SelectionChanged.class)
-	public interface Suggestions extends HasSelectedValue {
+	public interface Suggestions
+			extends HasSelectedValue, ModelEvents.Closed.Handler {
+		void close();
+
 		void onAnswers(Answers answers);
 
 		default void onAskException(Throwable throwsable) {

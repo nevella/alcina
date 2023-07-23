@@ -71,7 +71,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  *
  */
 @Directed(
-	emits = { ModelEvents.Closed.class, ModelEvents.Submit.class },
+	emits = { ModelEvents.Closed.class, ModelEvents.Submit.class,
+			ModelEvents.Opened.class },
 	receives = { ModelEvents.Close.class, InferredDomEvents.EscapePressed.class,
 			InferredDomEvents.CtrlEnterPressed.class,
 			InferredDomEvents.MouseDownOutside.class, ModelEvents.Closed.class,
@@ -212,6 +213,9 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 				}
 			}
 		}
+		if (event.isBound()) {
+			event.reemitAs(this, ModelEvents.Opened.class);
+		}
 	}
 
 	@Override
@@ -340,7 +344,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 				.map(Class::getSimpleName);
 		String cssClass = Stream
 				.concat(derivedClasses, Stream.of(cssClassParameter))
-				.map(Ax::cssify).collect(Collectors.joining(" "));
+				.filter(Objects::nonNull).map(Ax::cssify)
+				.collect(Collectors.joining(" "));
 		setCssClass(cssClass);
 	}
 

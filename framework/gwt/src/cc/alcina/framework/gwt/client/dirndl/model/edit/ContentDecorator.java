@@ -144,6 +144,10 @@ public class ContentDecorator<T>
 		return decoratorParent.hasDecorator(node);
 	}
 
+	public boolean isActive() {
+		return chooser != null;
+	}
+
 	@Override
 	public void onBeforeInput(BeforeInput event) {
 		NativeBeforeInputEvent nativeBefore = event.getNativeBeforeInputEvent();
@@ -155,6 +159,7 @@ public class ContentDecorator<T>
 	public void onClose(Close event) {
 		if (chooser != null) {
 			chooser.onClose(event);
+			chooser = null;
 		}
 	}
 

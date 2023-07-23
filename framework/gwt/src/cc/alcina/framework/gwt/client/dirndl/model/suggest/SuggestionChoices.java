@@ -7,6 +7,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation.Type;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
@@ -32,12 +34,26 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 	}
 
 	@Override
+	public void close() {
+		ensureOverlay(false);
+	}
+
+	@Override
 	public void onAnswers(Answers answers) {
 		if (overlay == null) {
 			return;
 		}
 		choices = new Choices.Single.Delegating<>(answers.getSuggestions());
 		contents.setModel(choices);
+		if (choices.getValues().size() > 0
+				&& suggestor.builder.isInputEditorKeyboardNavigationEnabled()) {
+			/*
+			 * keyboard-navigate to the first entry
+			 */
+			Navigation event = new Navigation();
+			event.setTypedModel(Type.FIRST);
+			onNavigation(event);
+		}
 	}
 
 	@Override
@@ -48,6 +64,14 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		// FIXME - design
 		contents.setModel(
 				new String(CommonUtils.toSimpleExceptionMessage(throwsable)));
+	}
+
+	/*
+	 * routed from parent suggestor (since this is a peer, not a node.model)
+	 */
+	@Override
+	public void onClosed(Closed event) {
+		overlay = null;
 	}
 
 	@Override

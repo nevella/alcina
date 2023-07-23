@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -83,6 +84,14 @@ public class StringInput extends Model
 
 	public StringInput(String value) {
 		setValue(value);
+	}
+
+	public void clear() {
+		setValue("");
+	}
+
+	public void focus() {
+		FocusImpl.getFocusImplForWidget().focus(provideElement());
 	}
 
 	public String getAutocomplete() {

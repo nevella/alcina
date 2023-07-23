@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import com.google.gwt.core.client.GWT;
@@ -26,6 +27,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
@@ -35,6 +37,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -1043,6 +1046,15 @@ public class WidgetUtils {
 		}
 	}
 
+	public static boolean wasReceivedByEditor(KeyDownEvent domEvent) {
+		EventTarget eventTarget = domEvent.getNativeEvent().getEventTarget();
+		if (Element.is(eventTarget)) {
+			Element element = Element.as(eventTarget);
+			return element.firstInAncestry(WidgetUtils::isEditable).isPresent();
+		}
+		return false;
+	}
+
 	public static FlowPanel wrapInDiv(Widget widget) {
 		FlowPanel fp = new FlowPanel();
 		fp.add(widget);
@@ -1190,6 +1202,12 @@ public class WidgetUtils {
       return true;
     }
 	}-*/;
+
+	static boolean isEditable(Element element) {
+		return element.hasTagName("input") || element.hasTagName("textarea")
+				|| Objects.equals(getComputedStyle(element, "contentEditable"),
+						"true");
+	}
 
 	// those values might be needed for non-webkit
 	@SuppressWarnings("unused")

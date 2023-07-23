@@ -367,6 +367,22 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Opened extends ModelEvent<Object, Opened.Handler> {
+		@Override
+		public void dispatch(Opened.Handler handler) {
+			handler.onOpened(this);
+		}
+
+		@Override
+		public Class<Opened.Handler> getHandlerClass() {
+			return Opened.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onOpened(Opened event);
+		}
+	}
+
 	public static class Options extends ModelEvent<Object, Options.Handler> {
 		@Override
 		public void dispatch(Options.Handler handler) {

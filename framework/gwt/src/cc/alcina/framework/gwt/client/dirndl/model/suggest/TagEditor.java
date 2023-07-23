@@ -14,7 +14,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Builder;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorExit;
@@ -33,9 +32,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.Edito
 @Directed(emits = { EditorAsk.class, EditorExit.class })
 public class TagEditor extends Model implements Suggestor.Editor,
 		DomEvents.Input.Handler, DomEvents.Focusout.Handler {
-	@SuppressWarnings("unused")
-	private Builder builder;
-
 	private Element inputContainer;
 
 	boolean attachComplete = false;
@@ -49,9 +45,19 @@ public class TagEditor extends Model implements Suggestor.Editor,
 	}
 
 	@Override
+	public void clear() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void emitAsk() {
 		NodeEvent.Context.fromNode(provideNode()).dispatch(EditorAsk.class,
 				computeAsk());
+	}
+
+	@Override
+	public void focus() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -77,8 +83,7 @@ public class TagEditor extends Model implements Suggestor.Editor,
 	}
 
 	@Override
-	public void withBuilder(Suggestor.Builder builder) {
-		this.builder = builder;
+	public void withSuggestor(Suggestor suggestor) {
 	}
 
 	private StringAsk computeAsk() {

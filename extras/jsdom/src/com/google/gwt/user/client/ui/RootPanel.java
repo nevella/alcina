@@ -32,6 +32,8 @@ import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * The panel to which all other widgets must ultimately be added. RootPanels are
  * never created directly. Rather, they are accessed via {@link RootPanel#get()}
@@ -61,10 +63,12 @@ public class RootPanel extends AbsolutePanel {
 
 	// FIXME - dirndl - support for external attach/detach
 	public static void attachNow(Widget widget) {
+		Ax.err("attachhnow: %s", widget);
 		assert !widgetsToDetach
 				.contains(widget) : "attachNow() called on a widget "
 						+ " currently in the detach list";
 		widget.onAttach();
+		widgetsToDetach.add(widget);
 	}
 
 	/**
@@ -89,6 +93,7 @@ public class RootPanel extends AbsolutePanel {
 	 * @see #detachOnWindowClose(Widget)
 	 */
 	public static void detachNow(Widget widget) {
+		Ax.err("detachnow: %s", widget);
 		assert widgetsToDetach
 				.contains(widget) : "detachNow() called on a widget "
 						+ "not currently in the detach list";
