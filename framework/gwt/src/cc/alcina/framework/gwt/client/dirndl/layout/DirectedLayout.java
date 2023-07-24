@@ -1342,6 +1342,9 @@ public class DirectedLayout implements AlcinaProcess {
 								: binding.literal();
 						element.setClassName(cssClass, present);
 					}
+					if (element.getClassName().isEmpty()) {
+						element.removeAttribute("class");
+					}
 				}
 					break;
 				case SWITCH_CSS_CLASS: {

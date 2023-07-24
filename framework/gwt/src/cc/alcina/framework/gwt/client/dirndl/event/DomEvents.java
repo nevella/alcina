@@ -18,6 +18,8 @@ import com.google.gwt.event.dom.client.InputEvent;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.MouseDownEvent;
+import com.google.gwt.event.dom.client.MouseOutEvent;
+import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -334,6 +336,54 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onMouseDown(MouseDown event);
+		}
+	}
+
+	public static class MouseOut extends NodeEvent<MouseOut.Handler> {
+		@Override
+		public void dispatch(MouseOut.Handler handler) {
+			handler.onMouseOut(this);
+		}
+
+		@Override
+		public Class<MouseOut.Handler> getHandlerClass() {
+			return MouseOut.Handler.class;
+		}
+
+		public static class BindingImpl extends DomBinding<MouseOut> {
+			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::fireEvent,
+						MouseOutEvent.getType());
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onMouseOut(MouseOut event);
+		}
+	}
+
+	public static class MouseOver extends NodeEvent<MouseOver.Handler> {
+		@Override
+		public void dispatch(MouseOver.Handler handler) {
+			handler.onMouseOver(this);
+		}
+
+		@Override
+		public Class<MouseOver.Handler> getHandlerClass() {
+			return MouseOver.Handler.class;
+		}
+
+		public static class BindingImpl extends DomBinding<MouseOver> {
+			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::fireEvent,
+						MouseOverEvent.getType());
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onMouseOver(MouseOver event);
 		}
 	}
 
