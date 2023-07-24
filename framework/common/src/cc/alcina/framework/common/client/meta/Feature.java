@@ -124,6 +124,33 @@ public interface Feature extends Registration.AllSubtypes {
 		}
 	}
 
+	public interface Tag{
+		/*
+		 * admin-only
+		 */
+		public interface Admin extends Type{}
+		/*
+		 * dev-only
+		 */
+		public interface Dev extends Type{}
+		@Retention(RetentionPolicy.RUNTIME)
+		@Inherited
+		@Documented
+		@Target({ ElementType.TYPE })
+		@Repeatable(Refs.class)
+		@interface Ref {
+			Class<? extends Feature.Tag> value();
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Inherited
+		@Documented
+		@Target({ ElementType.TYPE })
+		@interface Refs {
+			Tag.Ref[] value();
+		}
+	}
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Documented
@@ -131,9 +158,7 @@ public interface Feature extends Registration.AllSubtypes {
 	@interface Track {
 		Class<? extends Feature> value();
 	}
-
 	public interface Type{
-		public interface Logic_support extends Type{}
 		@Retention(RetentionPolicy.RUNTIME)
 		@Inherited
 		@Documented
