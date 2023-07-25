@@ -38,14 +38,6 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
-	public boolean isMutateOnlyViaAlcinaDom() {
-		// although this is possibly more nuanced, assume initially true (this
-		// enables DomNode.children.nodes caching, which could also be handled
-		// by invalidate-on-mutate)
-		return true;
-	}
-
-	@Override
 	public DomDocument loadFromUrl(String url) {
 		return Io.read().url(url).asDomDocument();
 	}

@@ -119,7 +119,6 @@ public class DomNodeBuilder {
 		DomNode node = build();
 		relativeTo.node.insertBefore(node.node,
 				relativeTo.node.getFirstChild());
-		relativeTo.children.invalidate();
 		return node;
 	}
 
@@ -179,7 +178,6 @@ public class DomNodeBuilder {
 		relativeTo.node.getParentNode().insertBefore(node.node,
 				relativeTo.node);
 		node.node.appendChild(relativeTo.node);
-		relativeTo.parent().invalidate();
 		return node;
 	}
 
@@ -193,7 +191,6 @@ public class DomNodeBuilder {
 	private DomNode appendTo(DomNode appendTo) {
 		DomNode node = build();
 		appendTo.node.appendChild(node.node);
-		appendTo.children.invalidate();
 		return node;
 	}
 
@@ -205,7 +202,6 @@ public class DomNodeBuilder {
 		DomNode node = build();
 		insertBefore.node.getParentNode().insertBefore(node.node,
 				insertBefore.node);
-		insertBefore.parent().invalidate();
 		return node;
 	}
 }

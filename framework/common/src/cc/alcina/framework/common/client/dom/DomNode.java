@@ -104,13 +104,9 @@ public class DomNode {
 
 	public DomNodeChildren children;
 
-	private String normalisedTextContent;
-
 	private StringMap attributes;
 
 	private DomNodeXpath xpath;
-
-	private DomNodeAncestors ancestors;
 
 	private transient DomNodeReadonlyLookup lookup;
 
@@ -139,10 +135,7 @@ public class DomNode {
 	}
 
 	public DomNodeAncestors ancestors() {
-		if (ancestors == null) {
-			ancestors = new DomNodeAncestors();
-		}
-		return ancestors;
+		return new DomNodeAncestors();
 	}
 
 	public void appendTo(DomNode newParent) {
@@ -306,11 +299,6 @@ public class DomNode {
 				: parent().children.elements().indexOf(this);
 	}
 
-	public void invalidate() {
-		children.nodes = null;
-		normalisedTextContent = null;
-	}
-
 	public boolean isAncestorOf(DomNode cursor) {
 		while (cursor != null) {
 			if (cursor.w3cNode() == this.w3cNode()) {
@@ -386,11 +374,7 @@ public class DomNode {
 	}
 
 	public String ntc() {
-		if (normalisedTextContent == null) {
-			normalisedTextContent = TextUtils
-					.normalizeWhitespaceAndTrim(textContent());
-		}
-		return normalisedTextContent;
+		return TextUtils.normalizeWhitespaceAndTrim(textContent());
 	}
 
 	public DomNode parent() {
@@ -414,7 +398,6 @@ public class DomNode {
 	}
 
 	public void removeFromParent() {
-		parent().invalidate();
 		node.getParentNode().removeChild(node);
 	}
 
@@ -457,7 +440,6 @@ public class DomNode {
 				throw new RuntimeException("node has child elements");
 			}
 		}
-		invalidate();
 	}
 
 	/*
@@ -743,8 +725,6 @@ public class DomNode {
 	}
 
 	public class DomNodeChildren {
-		private List<DomNode> nodes;
-
 		public void adoptFrom(DomNode n) {
 			n.children.nodes().forEach(this::append);
 		}
@@ -755,7 +735,6 @@ public class DomNode {
 
 		public void append(DomNode xmlNode) {
 			DomNode.this.node.appendChild(xmlNode.node);
-			invalidate();
 		}
 
 		public List<DomNode> byTag(String tag) {
@@ -835,12 +814,7 @@ public class DomNode {
 		}
 
 		public void insertAsFirstChild(DomNode newChild) {
-			invalidate();
 			node.insertBefore(newChild.node, node.getFirstChild());
-		}
-
-		public void invalidate() {
-			DomNode.this.invalidate();
 		}
 
 		public boolean isFirstChild(DomNode xmlNode) {
@@ -911,13 +885,8 @@ public class DomNode {
 		}
 
 		public List<DomNode> nodes() {
-			if (nodes == null
-					|| !DomEnvironment.get().isMutateOnlyViaAlcinaDom()) {
-				nodes = DomEnvironment.nodeListToList(node.getChildNodes())
-						.stream().map(document::nodeFor)
-						.collect(Collectors.toList());
-			}
-			return nodes;
+			return DomEnvironment.nodeListToList(node.getChildNodes()).stream()
+					.map(document::nodeFor).collect(Collectors.toList());
 		}
 
 		public boolean noElements() {
@@ -1039,7 +1008,6 @@ public class DomNode {
 		}
 
 		public void insertAfterThis(DomNode node) {
-			parent().invalidate();
 			parent().node.insertBefore(node.node,
 					DomNode.this.node.getNextSibling());
 		}
@@ -1049,7 +1017,6 @@ public class DomNode {
 		}
 
 		public void insertBeforeThis(DomNode node) {
-			parent().invalidate();
 			parent().node.insertBefore(node.node, DomNode.this.node);
 		}
 

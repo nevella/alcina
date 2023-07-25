@@ -60,11 +60,6 @@ public interface DomEnvironment {
 
 	public String toXml(Node node);
 
-	// FIXME - measure - hook up to mutations
-	default boolean isMutateOnlyViaAlcinaDom() {
-		return false;
-	}
-
 	public static class NamespaceResult {
 		public String firstTag;
 
