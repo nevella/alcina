@@ -481,6 +481,19 @@ public class DirectedLayout implements AlcinaProcess {
 			return annotationLocation.getAnnotation(clazz);
 		}
 
+		/**
+		 * Another bidi model/render (via dl.node) structure call, this calls an
+		 * immediate layout. model-model ownership is maintained by the
+		 * fragmentmodel rather than model fields
+		 */
+		public void appendFragmentChild(Model child) {
+			RendererInput input = getResolver().layout.enqueueInput(
+					getResolver(), child,
+					annotationLocation.copyWithClassLocationOf(child), null,
+					this);
+			getResolver().layout.layout();
+		}
+
 		public void applyReverseBindings() {
 			if (propertyBindings != null) {
 				propertyBindings.setLeft();
@@ -1284,7 +1297,14 @@ public class DirectedLayout implements AlcinaProcess {
 							.apply(value);
 				}
 				String stringValue = value == null ? "null" : value.toString();
-				Element element = verifySingleRendered().asElement();
+				Rendered rendered = verifySingleRendered();
+				Element element = rendered.isElement() ? rendered.asElement()
+						: null;
+				org.w3c.dom.Node node = rendered.getNode();
+				org.w3c.dom.Element domElement = node
+						.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+								? (org.w3c.dom.Element) node
+								: null;
 				switch (binding.type()) {
 				case INNER_HTML:
 					if (value != null) {
@@ -1293,7 +1313,11 @@ public class DirectedLayout implements AlcinaProcess {
 					break;
 				case INNER_TEXT:
 					if (value != null) {
-						element.setInnerText(stringValue);
+						if (element == null) {
+							node.setNodeValue(stringValue);
+						} else {
+							element.setInnerText(stringValue);
+						}
 					}
 					break;
 				case PROPERTY:
@@ -1309,10 +1333,10 @@ public class DirectedLayout implements AlcinaProcess {
 								&& Objects.equals(propertyName, "class")) {
 							// don't overwrite @Directed.cssClass
 						} else {
-							element.removeAttribute(propertyName);
+							domElement.removeAttribute(propertyName);
 						}
 					} else {
-						element.setAttribute(propertyName, stringValue);
+						domElement.setAttribute(propertyName, stringValue);
 						lastValue = stringValue;
 					}
 					break;
@@ -1435,6 +1459,8 @@ public class DirectedLayout implements AlcinaProcess {
 		org.w3c.dom.Node getNode();
 
 		void insertChild(Rendered rendered, int i);
+
+		boolean isElement();
 
 		void removeFromParent();
 	}

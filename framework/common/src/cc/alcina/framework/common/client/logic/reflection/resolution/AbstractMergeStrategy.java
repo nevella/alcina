@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -24,7 +25,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 		implements MergeStrategy<A> {
 	@Override
 	public List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
-			List<Inheritance> inheritance) {
+			List<Inheritance> inheritance, Resolver resolver) {
 		if (!inheritance.contains(Inheritance.CLASS) || clazz == null
 				|| clazz == void.class) {
 			return Collections.emptyList();
@@ -45,7 +46,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			visited.add(cursor);
 			ClassReflector<?> cursorReflector = Reflections.at(cursor);
 			List<A> atClass = atClass(annotationClass, cursorReflector,
-					resolvingReflector);
+					resolvingReflector, resolver);
 			result = merge(atClass, result);
 			if (inheritance.contains(Inheritance.INTERFACE)) {
 				cursorReflector.getInterfaces().stream()
@@ -61,7 +62,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	 * This resolves annotations on inherited interface methods, by design.
 	 */
 	public List<A> resolveProperty(Class<A> annotationClass, Property property,
-			List<Inheritance> inheritance) {
+			List<Inheritance> inheritance, Resolver resolver) {
 		if (!inheritance.contains(Inheritance.PROPERTY) || property == null) {
 			return Collections.emptyList();
 		}
@@ -84,7 +85,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 				}
 				if (cursorProperty != null) {
 					List<A> atProperty = atProperty(annotationClass,
-							cursorProperty);
+							cursorProperty, resolver);
 					result = merge(atProperty, result);
 				}
 			}
@@ -94,10 +95,11 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	}
 
 	protected abstract List<A> atClass(Class<A> annotationClass,
-			ClassReflector<?> reflector, ClassReflector<?> resolvingReflector);
+			ClassReflector<?> reflector, ClassReflector<?> resolvingReflector,
+			Resolver resolver);
 
 	protected abstract List<A> atProperty(Class<A> annotationClass,
-			Property property);
+			Property property, Resolver resolver);
 
 	boolean permitPackages(Class clazz) {
 		switch (Reflections.getPackageName(clazz)) {
@@ -143,7 +145,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			@Override
 			protected List<A> atClass(Class<A> annotationClass,
 					ClassReflector<?> reflector,
-					ClassReflector<?> resolvingReflector) {
+					ClassReflector<?> resolvingReflector, Resolver resolver) {
 				A annotation = reflector.annotation(annotationClass);
 				return annotation == null ? Collections.emptyList()
 						: Collections.singletonList(annotation);
@@ -151,7 +153,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 
 			@Override
 			protected List<A> atProperty(Class<A> annotationClass,
-					Property property) {
+					Property property, Resolver resolver) {
 				throw new UnsupportedOperationException();
 			}
 		}
@@ -161,13 +163,13 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			@Override
 			protected List<A> atClass(Class<A> annotationClass,
 					ClassReflector<?> reflector,
-					ClassReflector<?> resolvingReflector) {
+					ClassReflector<?> resolvingReflector, Resolver resolver) {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
 			protected List<A> atProperty(Class<A> annotationClass,
-					Property property) {
+					Property property, Resolver resolver) {
 				A annotation = property.annotation(annotationClass);
 				return annotation == null ? Collections.emptyList()
 						: Collections.singletonList(annotation);
@@ -179,7 +181,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			@Override
 			protected List<A> atClass(Class<A> annotationClass,
 					ClassReflector<?> reflector,
-					ClassReflector<?> resolvingReflector) {
+					ClassReflector<?> resolvingReflector, Resolver resolver) {
 				A annotation = reflector.annotation(annotationClass);
 				return annotation == null ? Collections.emptyList()
 						: Collections.singletonList(annotation);
@@ -187,7 +189,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 
 			@Override
 			protected List<A> atProperty(Class<A> annotationClass,
-					Property property) {
+					Property property, Resolver resolver) {
 				A annotation = property.annotation(annotationClass);
 				return annotation == null ? Collections.emptyList()
 						: Collections.singletonList(annotation);

@@ -16,16 +16,25 @@ import java.util.stream.StreamSupport;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasParentNodeAccess;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode.Transformer;
 
+/**
+ * <p>
+ * This class acts as the main base for bi-directional model-tree dom-tree
+ * transformations
+ *
+ *
+ *
+ */
 @Transformer(NodeTransformer.DirectedTransformer.class)
-@Directed(renderer = FragmentNode.Renderer.class)
+@Directed
 public abstract class FragmentNode extends Model
 		implements HasParentNodeAccess {
 	static boolean provideIsModelFor(org.w3c.dom.Node w3cNode,
@@ -46,6 +55,10 @@ public abstract class FragmentNode extends Model
 
 	public Ancestors ancestors() {
 		return new Ancestors();
+	}
+
+	public void append(FragmentNode child) {
+		provideNode().appendFragmentChild(child);
 	}
 
 	public FragmentModel fragmentModel() {
@@ -146,19 +159,29 @@ public abstract class FragmentNode extends Model
 	public static class Generic extends FragmentNode {
 	}
 
-	public static class Renderer extends DirectedRenderer {
-		@Override
-		protected void render(RendererInput input) {
-			throw new UnsupportedOperationException(
-					"Not (currently) intended for rendering, rather for reverse (doc -> model) transformation/parsing");
-		}
-	}
-
 	/*
 	 * Models a w3c Text node
 	 */
 	@Transformer(NodeTransformer.Text.class)
+	@Directed(renderer = LeafRenderer.TextNode.class)
 	public static class Text extends FragmentNode {
+		private String value;
+
+		public Text() {
+		}
+
+		public Text(String value) {
+			this.value = value;
+		}
+
+		@Binding(type = Type.INNER_TEXT)
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setValue(String value) {
+			set("value", this.value, value, () -> this.value = value);
+		}
 	}
 
 	@ClientVisible

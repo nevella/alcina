@@ -7,6 +7,7 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -54,20 +55,24 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 
 	@Override
 	protected List<Directed> atClass(Class<Directed> annotationClass,
-			ClassReflector<?> reflector, ClassReflector<?> resolvingReflector) {
-		return atHasAnnotations(reflector);
+			ClassReflector<?> reflector, ClassReflector<?> resolvingReflector,
+			Resolver resolver) {
+		return atHasAnnotations(reflector, resolver);
 	}
 
-	protected List<Directed> atHasAnnotations(HasAnnotations reflector) {
+	protected List<Directed> atHasAnnotations(HasAnnotations reflector,
+			Resolver resolver) {
 		List<Directed> result = new ArrayList<>();
-		Directed directed = reflector.annotation(Directed.class);
-		Directed.Multiple multiple = reflector
-				.annotation(Directed.Multiple.class);
-		Directed.Wrap wrap = reflector.annotation(Directed.Wrap.class);
-		Directed.Delegating delegating = reflector
-				.annotation(Directed.Delegating.class);
-		Directed.Transform transform = reflector
-				.annotation(Directed.Transform.class);
+		Directed directed = resolver.contextAnnotation(reflector,
+				Directed.class, Resolver.ResolutionContext.Strategy);
+		Directed.Multiple multiple = resolver.contextAnnotation(reflector,
+				Directed.Multiple.class, Resolver.ResolutionContext.Strategy);
+		Directed.Wrap wrap = resolver.contextAnnotation(reflector,
+				Directed.Wrap.class, Resolver.ResolutionContext.Strategy);
+		Directed.Delegating delegating = resolver.contextAnnotation(reflector,
+				Directed.Delegating.class, Resolver.ResolutionContext.Strategy);
+		Directed.Transform transform = resolver.contextAnnotation(reflector,
+				Directed.Transform.class, Resolver.ResolutionContext.Strategy);
 		if (directed != null) {
 			Preconditions.checkState(
 					wrap == null && multiple == null && delegating == null);
@@ -133,8 +138,8 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 
 	@Override
 	protected List<Directed> atProperty(Class<Directed> annotationClass,
-			Property property) {
-		return atHasAnnotations(property);
+			Property property, Resolver resolver) {
+		return atHasAnnotations(property, resolver);
 	}
 
 	public static class Delegating extends Directed.Impl {

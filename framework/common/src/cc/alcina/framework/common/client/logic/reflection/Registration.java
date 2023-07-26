@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -153,7 +154,7 @@ public @interface Registration {
 		protected List<Registration> atClass(
 				Class<Registration> annotationClass,
 				ClassReflector<?> reflector,
-				ClassReflector<?> resolvingReflector) {
+				ClassReflector<?> resolvingReflector, Resolver resolver) {
 			if (resolvingReflector.getReflectedClass().getName()
 					.contains("Adc1TestRegistrationAnnotations")) {
 				int debug = 3;
@@ -187,7 +188,7 @@ public @interface Registration {
 
 		@Override
 		protected List<Registration> atProperty(
-				Class<Registration> annotationClass, Property property) {
+				Class<Registration> annotationClass, Property property, Resolver resolver) {
 			throw new UnsupportedOperationException();
 		}
 

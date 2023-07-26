@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -298,7 +299,7 @@ public class AnnotationLocation {
 	/**
 	 * Resolves annotations (really, returns declarative information packaged in
 	 * annotation instances) at a class/property location
-	 * 
+	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
@@ -312,6 +313,17 @@ public class AnnotationLocation {
 
 		private MultikeyMap<List<? extends Annotation>> resolvedCache = new UnsortedMultikeyMap<>(
 				2);
+
+		/**
+		 * When a given annotationlocation can have multiple values (depending
+		 * on, say, document i/o type), override to return the appropriate
+		 * annotation
+		 */
+		public <A extends Annotation> A contextAnnotation(
+				HasAnnotations reflector, Class<A> clazz,
+				ResolutionContext resolContext) {
+			return reflector.annotation(clazz);
+		}
 
 		/**
 		 * Don't (can't) override this - override resolveAnnotations
@@ -336,6 +348,10 @@ public class AnnotationLocation {
 			A ensured = location.getAnnotation0(annotationClass);
 			return ensured == null ? Collections.emptyList()
 					: Collections.singletonList(ensured);
+		}
+
+		public enum ResolutionContext {
+			Strategy
 		}
 	}
 }

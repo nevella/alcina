@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.reflection.Property;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -130,9 +131,9 @@ public @interface Resolution {
 		List<A> merge(List<A> lessSpecific, List<A> moreSepcific);
 
 		List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
-				List<Inheritance> inheritance);
+				List<Inheritance> inheritance, Resolver resolver);
 
 		List<A> resolveProperty(Class<A> annotationClass, Property property,
-				List<Inheritance> inheritance);
+				List<Inheritance> inheritance, Resolver resolver);
 	}
 }

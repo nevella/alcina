@@ -77,6 +77,11 @@ class RenderedW3cNode implements Rendered {
 	}
 
 	@Override
+	public boolean isElement() {
+		return node instanceof Element;
+	}
+
+	@Override
 	public void removeFromParent() {
 		node.getParentNode().removeChild(node);
 	}

@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -23,6 +24,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 
 /**
@@ -85,22 +87,14 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		return (T) this.rootModel;
 	}
 
-	public void renderElement(DirectedLayout.Node layoutNode, String tagName) {
-		Element element = Document.get().createElement(tagName);
-		String cssClass = layoutNode.directed.cssClass();
-		if (cssClass.length() > 0) {
-			element.addStyleName(cssClass);
-		}
-		layoutNode.rendered = new RenderedW3cNode(element);
-	}
-
 	/**
 	 * Associate an arbitrary object with the renderer tree Node. Default
 	 * handles gwt widget
 	 *
 	 * FIXME - dirndl - remove post-widget-removal
 	 */
-	public void linkRenderedObject(DirectedLayout.Node layoutNode, Object model) {
+	public void linkRenderedObject(DirectedLayout.Node layoutNode,
+			Object model) {
 		if (model instanceof Widget) {
 			Widget widget = (Widget) model;
 			// before dom attach (breaks widget contract, alas)
@@ -110,6 +104,20 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		} else {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	public void renderElement(DirectedLayout.Node layoutNode, String tagName) {
+		Element element = Document.get().createElement(tagName);
+		String cssClass = layoutNode.directed.cssClass();
+		if (cssClass.length() > 0) {
+			element.addStyleName(cssClass);
+		}
+		layoutNode.rendered = new RenderedW3cNode(element);
+	}
+
+	public void renderText(Node layoutNode, String contents) {
+		Text text = Document.get().createTextNode(contents);
+		layoutNode.rendered = new RenderedW3cNode(text);
 	}
 
 	public void replaceRoot(Rendered rendered) {

@@ -141,4 +141,18 @@ public abstract class LeafRenderer extends DirectedRenderer {
 			node.rendered.asElement().setInnerText(getText(node));
 		}
 	}
+
+	/**
+	 * Renders the input model as a DOM text node. If the model is a string,
+	 * binds the node text
+	 */
+	public static class TextNode extends DirectedRenderer {
+		@Override
+		protected void render(RendererInput input) {
+			String contents = input.model instanceof String
+					? input.model.toString()
+					: "";
+			input.resolver.renderText(input.node, contents);
+		}
+	}
 }

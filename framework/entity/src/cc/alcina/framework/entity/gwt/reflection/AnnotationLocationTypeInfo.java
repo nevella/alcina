@@ -84,7 +84,8 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			implements MergeStrategyTypeinfo<A> {
 		@Override
 		public List<A> resolveType(Class<A> annotationClass, JClassType clazz,
-				List<Inheritance> inheritance) {
+				List<Inheritance> inheritance,
+				AnnotationLocation.Resolver resolver) {
 			List<A> result = new ArrayList<>();
 			Set<JClassType> stack = new LinkedHashSet<>();
 			Set<JClassType> visited = new LinkedHashSet<>();
@@ -100,7 +101,8 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 				JClassType cursor = itr.next();
 				itr.remove();
 				visited.add(cursor);
-				List<A> atClass = atClass(annotationClass, cursor, clazz);
+				List<A> atClass = atClass(annotationClass, cursor, clazz,
+						resolver);
 				result = merge(atClass, result);
 				if (inheritance.contains(Inheritance.INTERFACE)) {
 					Arrays.stream(cursor.getImplementedInterfaces())
@@ -112,7 +114,8 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		}
 
 		protected abstract List<A> atClass(Class<A> annotationClass,
-				JClassType clazz, JClassType resolvingClass);
+				JClassType clazz, JClassType resolvingClass,
+				AnnotationLocation.Resolver resolver);
 
 		boolean permitPackages(JClassType clazz) {
 			switch (clazz.getPackage().getName()) {
@@ -157,7 +160,8 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 					extends AbstractMergeStrategy.SingleResultMergeStrategy<A> {
 				@Override
 				protected List<A> atClass(Class<A> annotationClass,
-						JClassType clazz, JClassType resolvingClass) {
+						JClassType clazz, JClassType resolvingClass,
+						AnnotationLocation.Resolver resolver) {
 					A annotation = clazz.getAnnotation(annotationClass);
 					return annotation == null ? Collections.emptyList()
 							: Collections.singletonList(annotation);
@@ -212,7 +216,8 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		@Override
 		protected List<Registration> atClass(
 				Class<Registration> annotationClass, JClassType clazz,
-				JClassType resolvingClass) {
+				JClassType resolvingClass,
+				AnnotationLocation.Resolver resolver) {
 			List<Registration> result = new ArrayList<>();
 			Registration registration = clazz.getAnnotation(Registration.class);
 			Registrations registrations = clazz
@@ -305,7 +310,7 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			List<Inheritance> inheritance = Arrays
 					.asList(resolution.inheritance());
 			List<A> typeAnnotations = mergeStrategy.resolveType(annotationClass,
-					type, inheritance);
+					type, inheritance, null);
 			mergeStrategy.finish(typeAnnotations);
 			return typeAnnotations;
 		}
@@ -315,17 +320,20 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			extends MergeStrategy<A> {
 		@Override
 		default List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
-				List<Inheritance> inheritance) {
+				List<Inheritance> inheritance,
+				AnnotationLocation.Resolver resolver) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		default List<A> resolveProperty(Class<A> annotationClass,
-				Property property, List<Inheritance> inheritance) {
+				Property property, List<Inheritance> inheritance,
+				AnnotationLocation.Resolver resolver) {
 			throw new UnsupportedOperationException();
 		}
 
 		List<A> resolveType(Class<A> annotationClass, JClassType clazz,
-				List<Inheritance> inheritance);
+				List<Inheritance> inheritance,
+				AnnotationLocation.Resolver resolver);
 	}
 }

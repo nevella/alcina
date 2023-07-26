@@ -485,7 +485,7 @@ public abstract class Node
 	 * tracking state requires it
 	 */
 	protected final void notify(Runnable runnable) {
-		LocalDom.getLocalMutations().notify(runnable);
+		LocalDom.notifyLocalMutations(runnable);
 	}
 
 	protected Node provideRoot() {

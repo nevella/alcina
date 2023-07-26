@@ -178,6 +178,14 @@ public class LocalDom implements ContextFrame {
 		return (T) get().nodeFor0(remote);
 	}
 
+	public static void notifyLocalMutations(Runnable runnable) {
+		LocalMutations localMutations = get().localMutations;
+		if (localMutations == null) {
+			return;
+		}
+		localMutations.notify(runnable);
+	}
+
 	public static void onRelatedException(RuntimeException e) {
 		if (logParseAndMutationIssues) {
 			throw e;
