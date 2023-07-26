@@ -1,14 +1,19 @@
 package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Editor;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorAsk;
 
@@ -25,10 +30,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.Edito
  */
 @Directed(
 	receives = { ModelEvents.Input.class, DomEvents.KeyDown.class,
-			KeyboardNavigation.Navigation.class },
+			KeyboardNavigation.Navigation.class, DomEvents.Focusin.class },
 	emits = EditorAsk.class)
-public class InputEditor extends Model
-		implements Suggestor.Editor, ModelEvents.Input.Handler,
+public class InputEditor extends Model implements Suggestor.Editor,
+		ModelEvents.Input.Handler, DomEvents.Focusin.Handler,
 		// routes keydown events to the keyboardNavigation and
 		DomEvents.KeyDown.Handler,
 		// routes keyboardNavigation events to suggestor
@@ -45,6 +50,12 @@ public class InputEditor extends Model
 	}
 
 	@Override
+	public void copyInputFrom(Editor editor) {
+		input.copyStateFrom(((InputEditor) editor).input);
+		deferEmitAsk();
+	}
+
+	@Override
 	public void emitAsk() {
 		NodeEvent.Context.fromNode(provideNode()).dispatch(EditorAsk.class,
 				computeAsk());
@@ -58,6 +69,23 @@ public class InputEditor extends Model
 	@Directed
 	public StringInput getInput() {
 		return this.input;
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			if (Ax.notBlank(input.getValue())) {
+				deferEmitAsk();
+			}
+		}
+	}
+
+	@Override
+	public void onFocusin(Focusin event) {
+		if (Ax.notBlank(input.getValue())) {
+			deferEmitAsk();
+		}
 	}
 
 	@Override
@@ -82,7 +110,7 @@ public class InputEditor extends Model
 		Suggestor.Builder builder = suggestor.getBuilder();
 		input.setPlaceholder(builder.getInputPrompt());
 		input.setFocusOnBind(builder.isFocusOnBind());
-		input.setSelectAllOnBind(builder.isSelectAllOnBind());
+		input.setSelectAllOnFocus(builder.isSelectAllOnFocus());
 		if (builder.isInputEditorKeyboardNavigationEnabled()) {
 			keyboardNavigation = new KeyboardNavigation(this);
 		}
@@ -92,5 +120,9 @@ public class InputEditor extends Model
 		StringAsk ask = new StringAsk();
 		ask.setValue(input.getCurrentValue());
 		return ask;
+	}
+
+	void deferEmitAsk() {
+		Client.eventBus().queued().lambda(this::emitAsk).distinct().dispatch();
 	}
 }

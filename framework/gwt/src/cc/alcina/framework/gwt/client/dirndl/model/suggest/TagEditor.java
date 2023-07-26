@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Editor;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorExit;
@@ -46,6 +47,11 @@ public class TagEditor extends Model implements Suggestor.Editor,
 
 	@Override
 	public void clear() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void copyInputFrom(Editor editor) {
 		throw new UnsupportedOperationException();
 	}
 

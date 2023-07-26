@@ -1236,13 +1236,24 @@ public class DirectedLayout implements AlcinaProcess {
 					// FIXME - dirndl - requires bidi transform
 					throw new UnsupportedOperationException();
 				}
-				Element element = verifySingleRendered().asElement();
+				Rendered rendered = verifySingleRendered();
+				Element element = rendered.isElement() ? rendered.asElement()
+						: null;
+				org.w3c.dom.Node node = rendered.getNode();
+				org.w3c.dom.Element domElement = node
+						.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+								? (org.w3c.dom.Element) node
+								: null;
 				switch (binding.type()) {
 				case INNER_HTML:
 					stringValue = element.getInnerHTML();
 					break;
 				case INNER_TEXT:
-					stringValue = element.getInnerText();
+					if (element == null) {
+						stringValue = node.getNodeValue();
+					} else {
+						stringValue = element.getInnerText();
+					}
 					break;
 				case PROPERTY:
 				case CLASS_PROPERTY: {

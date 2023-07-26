@@ -61,6 +61,8 @@ public class Suggestor extends Model
 
 	protected Suggestions suggestions;
 
+	Object nonOverlaySuggestionResults;
+
 	Builder builder;
 
 	private Object value;
@@ -78,6 +80,10 @@ public class Suggestor extends Model
 		suggestions.close();
 	}
 
+	public void copyEditorInputFrom(Suggestor suggestor) {
+		editor.copyInputFrom(suggestor.editor);
+	}
+
 	public void focus() {
 		editor.focus();
 	}
@@ -89,6 +95,11 @@ public class Suggestor extends Model
 	@Directed(tag = "editor")
 	public Editor getEditor() {
 		return this.editor;
+	}
+
+	@Directed
+	public Object getNonOverlaySuggestionResults() {
+		return this.nonOverlaySuggestionResults;
 	}
 
 	public Suggestions getSuggestions() {
@@ -151,6 +162,13 @@ public class Suggestor extends Model
 	@Override
 	public Object provideSelectedValue() {
 		return getValue();
+	}
+
+	public void
+			setNonOverlaySuggestionResults(Object nonOverlaySuggestionResults) {
+		set("nonOverlaySuggestionResults", this.nonOverlaySuggestionResults,
+				nonOverlaySuggestionResults,
+				() -> this.nonOverlaySuggestionResults = nonOverlaySuggestionResults);
 	}
 
 	public void setValue(Object value) {
@@ -250,7 +268,7 @@ public class Suggestor extends Model
 
 		boolean focusOnBind;
 
-		boolean selectAllOnBind;
+		boolean selectAllOnFocus;
 
 		Answer<?> answer;
 
@@ -261,6 +279,8 @@ public class Suggestor extends Model
 		Supplier<? extends Editor> editorSupplier = InputEditor::new;
 
 		boolean inputEditorKeyboardNavigationEnabled = true;
+
+		boolean nonOverlaySuggestionResults;
 
 		public Suggestor build() {
 			return new Suggestor(this);
@@ -290,8 +310,12 @@ public class Suggestor extends Model
 			return this.inputEditorKeyboardNavigationEnabled;
 		}
 
-		public boolean isSelectAllOnBind() {
-			return this.selectAllOnBind;
+		public boolean isNonOverlaySuggestionResults() {
+			return this.nonOverlaySuggestionResults;
+		}
+
+		public boolean isSelectAllOnFocus() {
+			return this.selectAllOnFocus;
 		}
 
 		public boolean isSuggestOnBind() {
@@ -331,8 +355,14 @@ public class Suggestor extends Model
 			return this;
 		}
 
-		public Builder withSelectAllOnBind(boolean selectAllOnBind) {
-			this.selectAllOnBind = selectAllOnBind;
+		public Builder withNonOverlaySuggestionResults(
+				boolean nonOverlaySuggestionResults) {
+			this.nonOverlaySuggestionResults = nonOverlaySuggestionResults;
+			return this;
+		}
+
+		public Builder withSelectAllOnFocus(boolean selectAllOnFocus) {
+			this.selectAllOnFocus = selectAllOnFocus;
 			return this;
 		}
 
@@ -357,6 +387,8 @@ public class Suggestor extends Model
 	@Directed(emits = EditorAsk.class)
 	public interface Editor {
 		void clear();
+
+		void copyInputFrom(Editor editor);
 
 		void emitAsk();
 

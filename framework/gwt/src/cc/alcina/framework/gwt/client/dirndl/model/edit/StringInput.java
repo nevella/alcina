@@ -1,19 +1,22 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
@@ -53,11 +56,13 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			@Binding(type = Type.PROPERTY, from = "spellcheck"),
 			@Binding(type = Type.PROPERTY, from = "autocomplete"),
 			@Binding(type = Type.INNER_TEXT, from = "innerText") },
-	receives = { DomEvents.Change.class, DomEvents.Input.class },
+	receives = { DomEvents.Change.class, DomEvents.Input.class,
+			DomEvents.Focusin.class, DomEvents.Focusout.class },
 	emits = { ModelEvents.Change.class, ModelEvents.Input.class })
 public class StringInput extends Model
 		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
-		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler {
+		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
+		DomEvents.Focusin.Handler, DomEvents.Focusout.Handler {
 	private String value;
 
 	private String currentValue;
@@ -72,12 +77,16 @@ public class StringInput extends Model
 
 	private String tag = "input";
 
-	private boolean selectAllOnBind;
+	private boolean selectAllOnFocus;
 
 	private String spellcheck = "false";
 
 	// used for element population if element is a textarea (dom quirk, really)
 	private String innerText;
+
+	SelectionState selectOnFocus;
+
+	private boolean preserveSelectionOverFocusChange;
 
 	public StringInput() {
 	}
@@ -88,6 +97,11 @@ public class StringInput extends Model
 
 	public void clear() {
 		setValue("");
+	}
+
+	public void copyStateFrom(StringInput input) {
+		setValue(input.elementValue());
+		selectOnFocus = new SelectionState().snapshot(input.provideElement());
 	}
 
 	public void focus() {
@@ -134,8 +148,12 @@ public class StringInput extends Model
 		return focusOnBind;
 	}
 
-	public boolean isSelectAllOnBind() {
-		return this.selectAllOnBind;
+	public boolean isPreserveSelectionOverFocusChange() {
+		return this.preserveSelectionOverFocusChange;
+	}
+
+	public boolean isSelectAllOnFocus() {
+		return this.selectAllOnFocus;
 	}
 
 	@Override
@@ -146,9 +164,20 @@ public class StringInput extends Model
 	}
 
 	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (isSelectAllOnBind()) {
+	public void onChange(Change event) {
+		currentValue = elementValue();
+		setValue(currentValue);
+		event.reemitAs(this, ModelEvents.Change.class);
+	}
+
+	@Override
+	public void onFocusin(Focusin event) {
+		if (selectOnFocus != null) {
+			Scheduler.get().scheduleDeferred(() -> {
+				selectOnFocus.apply(provideElement());
+				selectOnFocus = null;
+			});
+		} else if (isSelectAllOnFocus()) {
 			Rendered rendered = event.getContext().node.getRendered();
 			Element elem = rendered.asElement();
 			TextBoxImpl.setTextBoxSelectionRange(elem, 0,
@@ -157,10 +186,12 @@ public class StringInput extends Model
 	}
 
 	@Override
-	public void onChange(Change event) {
-		currentValue = elementValue();
-		setValue(currentValue);
-		event.reemitAs(this, ModelEvents.Change.class);
+	public void onFocusout(Focusout event) {
+		if (preserveSelectionOverFocusChange && Ax.notBlank(value)) {
+			selectOnFocus = new SelectionState();
+			selectOnFocus.selectionStart = value.length();
+			selectOnFocus.selectionEnd = value.length();
+		}
 	}
 
 	@Override
@@ -187,8 +218,13 @@ public class StringInput extends Model
 		this.placeholder = placeholder;
 	}
 
-	public void setSelectAllOnBind(boolean selectAllOnBind) {
-		this.selectAllOnBind = selectAllOnBind;
+	public void setPreserveSelectionOverFocusChange(
+			boolean preserveSelectionOverFocusChange) {
+		this.preserveSelectionOverFocusChange = preserveSelectionOverFocusChange;
+	}
+
+	public void setSelectAllOnFocus(boolean selectAllOnBind) {
+		this.selectAllOnFocus = selectAllOnBind;
 	}
 
 	public void setSpellcheck(String spellcheck) {
@@ -213,5 +249,25 @@ public class StringInput extends Model
 
 	private String elementValue() {
 		return provideElement().getPropertyString("value");
+	}
+
+	static class SelectionState {
+		int selectionStart;
+
+		int selectionEnd;
+
+		SelectionState() {
+		}
+
+		void apply(Element element) {
+			TextBoxImpl.setTextBoxSelectionRange(element, selectionStart,
+					selectionEnd - selectionStart);
+		}
+
+		SelectionState snapshot(Element element) {
+			selectionStart = element.getPropertyInt("selectionStart");
+			selectionEnd = element.getPropertyInt("selectionEnd");
+			return this;
+		}
 	}
 }

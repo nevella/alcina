@@ -37,4 +37,21 @@ public class SuggestorEvents {
 			void onEditorExit(EditorExit event);
 		}
 	}
+
+	public static class SuggestionsVisible
+			extends ModelEvent<Boolean, SuggestionsVisible.Handler> {
+		@Override
+		public void dispatch(SuggestionsVisible.Handler handler) {
+			handler.onShowingSuggestions(this);
+		}
+
+		@Override
+		public Class<SuggestionsVisible.Handler> getHandlerClass() {
+			return SuggestionsVisible.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onShowingSuggestions(SuggestionsVisible event);
+		}
+	}
 }

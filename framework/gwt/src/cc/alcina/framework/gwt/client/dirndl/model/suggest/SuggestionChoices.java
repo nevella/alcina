@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -9,6 +10,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
@@ -23,7 +25,9 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		KeyboardNavigation.Navigation.Handler {
 	private Overlay overlay;
 
-	private final Contents contents = new Contents();
+	private boolean visible;
+
+	private final Results contents = new Results();
 
 	private Choices.Single<?> choices;
 
@@ -35,12 +39,12 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 
 	@Override
 	public void close() {
-		ensureOverlay(false);
+		ensureVisible(false);
 	}
 
 	@Override
 	public void onAnswers(Answers answers) {
-		if (overlay == null) {
+		if (!visible) {
 			return;
 		}
 		choices = new Choices.Single.Delegating<>(answers.getSuggestions());
@@ -58,7 +62,7 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 
 	@Override
 	public void onAskException(Throwable throwsable) {
-		if (overlay == null) {
+		if (!visible) {
 			return;
 		}
 		// FIXME - design
@@ -71,7 +75,7 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 	 */
 	@Override
 	public void onClosed(Closed event) {
-		overlay = null;
+		ensureVisible(false);
 	}
 
 	@Override
@@ -79,7 +83,7 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		switch (event.getModel()) {
 		case CANCEL:
 			event.consume();
-			overlay.close(event.getContext().getOriginatingGwtEvent(), false);
+			ensureVisible(false);
 			break;
 		default:
 			if (choices == null) {
@@ -102,10 +106,10 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 	public void toState(State state) {
 		switch (state) {
 		case UNBOUND:
-			ensureOverlay(false);
+			ensureVisible(false);
 			break;
 		case LOADING:
-			ensureOverlay(true);
+			ensureVisible(true);
 			break;
 		default:
 			// do not ensure overlay - if it's dismissed, something (user
@@ -119,9 +123,15 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		}
 	}
 
-	private void ensureOverlay(boolean ensure) {
+	void ensureVisible(boolean ensure) {
+		if (visible == ensure) {
+			return;
+		}
+		NodeEvent.Context.fromNode(suggestor.provideNode())
+				.dispatch(SuggestorEvents.SuggestionsVisible.class, ensure);
 		if (ensure) {
-			if (overlay == null) {
+			visible = true;
+			if (useOverlay()) {
 				Builder builder = Overlay.builder();
 				builder.dropdown(suggestor.builder.getSuggestionXAlign(),
 						suggestor.provideElement().getBoundingClientRect(),
@@ -129,17 +139,28 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 								suggestor.builder.getLogicalAncestors());
 				overlay = builder.build();
 				overlay.open();
+			} else {
+				suggestor.setNonOverlaySuggestionResults(contents);
 			}
 		} else {
-			if (overlay != null) {
-				overlay.close(null, false);
-				overlay = null;
-			}
+			Scheduler.get().scheduleDeferred(() -> {
+				if (useOverlay()) {
+					overlay.close(null, false);
+					overlay = null;
+				} else {
+					suggestor.setNonOverlaySuggestionResults(null);
+				}
+			});
+			visible = false;
 		}
 	}
 
-	@Directed.Delegating
-	public static class Contents extends Model {
+	boolean useOverlay() {
+		return !suggestor.builder.isNonOverlaySuggestionResults();
+	}
+
+	@Directed
+	public static class Results extends Model {
 		private Object model;
 
 		@Directed
