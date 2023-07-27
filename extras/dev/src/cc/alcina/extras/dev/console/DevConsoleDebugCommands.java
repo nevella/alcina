@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.entity.ReplayInstruction;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -172,6 +173,8 @@ public class DevConsoleDebugCommands {
 			};
 			logRecords = logRecords.stream().parallel().filter(customFilter)
 					.collect(Collectors.toList());
+			Collections.sort((List<? extends Entity>) logRecords,
+					EntityComparator.REVERSED_INSTANCE);
 			filterArgvResult = new FilterArgvParam(argv, "-u");
 			argv = filterArgvResult.argv;
 			if (filterArgvResult.value != null) {
@@ -194,6 +197,20 @@ public class DevConsoleDebugCommands {
 					}
 				};
 				logRecords = logRecords.stream().filter(containsTextFilter)
+						.collect(Collectors.toList());
+			}
+			filterArgvResult = new FilterArgvParam(argv, "-tzadj");
+			argv = filterArgvResult.argv;
+			long tzAdj = filterArgvResult.value != null
+					? Long.parseLong(filterArgvResult.value)
+					: 0;
+			filterArgvResult = new FilterArgvParam(argv, "-age");
+			argv = filterArgvResult.argv;
+			if (filterArgvResult.value != null) {
+				long ageMs = Long.parseLong(filterArgvResult.value);
+				logRecords = logRecords.stream()
+						.filter(l -> System.currentTimeMillis()
+								- (l.getCreatedOn().getTime() + tzAdj) < ageMs)
 						.collect(Collectors.toList());
 			}
 			filterArgvResult = new FilterArgvParam(argv, "-cu");

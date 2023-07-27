@@ -991,8 +991,8 @@ public abstract class DevConsole implements ClipboardOwner {
 				if (!Objects.equals(modCommand, props.lastCommand)) {
 					props.lastCommand = modCommand;
 					serializeObject(props, consolePropertiesFile);
-					serializeObject(history, consoleHistoryFile);
 				}
+				serializeObject(history, consoleHistoryFile);
 			}
 		} catch (Exception e) {
 			if (!(e instanceof CancelledException)) {
