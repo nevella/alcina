@@ -321,7 +321,7 @@ public class AnnotationLocation {
 		 */
 		public <A extends Annotation> A contextAnnotation(
 				HasAnnotations reflector, Class<A> clazz,
-				ResolutionContext resolContext) {
+				ResolutionContext resolutionContext) {
 			return reflector.annotation(clazz);
 		}
 

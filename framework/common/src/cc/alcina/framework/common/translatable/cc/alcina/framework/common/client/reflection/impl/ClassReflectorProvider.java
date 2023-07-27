@@ -25,12 +25,16 @@ import cc.alcina.framework.common.client.reflection.ReflectiveAccess.Access;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
-
-//to revert to jvm implementation in dev mode, add @GwtScriptOnly
+/*
+ * gwt client implementation
+ */
 public class ClassReflectorProvider {
 	public static ClassReflector getClassReflector(Class clazz) {
 		return ClientReflections.getClassReflector(clazz);
 	}
+	/*
+	 * copy of non-emul nested type
+	 */
 	@GwtScriptOnly
 	public static class ClassAnnotationProvider implements AnnotationProvider {
 		private Class clazz;
@@ -42,6 +46,11 @@ public class ClassReflectorProvider {
 		@Override
 		public <A extends Annotation> A
 				getAnnotation(Class<A> annotationClass) {
+			throw new UnsupportedOperationException();
+		}
+		@Override
+		public <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass) {
 			throw new UnsupportedOperationException();
 		}
 	}

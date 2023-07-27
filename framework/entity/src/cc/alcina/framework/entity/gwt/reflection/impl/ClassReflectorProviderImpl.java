@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.gwt.reflection.impl;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.BiFunction;
 
 import com.google.gwt.core.ext.typeinfo.JType;
@@ -63,10 +64,18 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 			this.clazz = clazz;
 		}
 
+		//
 		@Override
 		public <A extends Annotation> A
 				getAnnotation(Class<A> annotationClass) {
 			return (A) clazz.getAnnotation(annotationClass);
+		}
+
+		@Override
+		public <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass) {
+			return (List<A>) Arrays
+					.asList(clazz.getAnnotationsByType(annotationClass));
 		}
 	}
 
@@ -101,6 +110,14 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 				getAnnotation(Class<A> annotationClass) {
 			return readMethod == null ? null
 					: readMethod.getAnnotation(annotationClass);
+		}
+
+		@Override
+		public <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass) {
+			return readMethod == null ? null
+					: (List<A>) Arrays.asList(
+							readMethod.getAnnotationsByType(annotationClass));
 		}
 	}
 

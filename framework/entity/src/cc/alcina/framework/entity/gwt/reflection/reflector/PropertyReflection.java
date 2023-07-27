@@ -184,6 +184,9 @@ public class PropertyReflection extends ReflectionElement
 		protected abstract <A extends Annotation> A
 				getAnnotation(Class<A> annotationClass);
 
+		protected abstract <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass);
+
 		protected abstract boolean isOverriddenBy(PropertyAccessor getter2);
 
 		public static class Field extends PropertyAccessor {
@@ -230,6 +233,12 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected <A extends Annotation> List<A>
+					getAnnotations(Class<A> annotationClass) {
+				return field.getAnnotations(annotationClass);
+			}
+
+			@Override
 			protected boolean isOverriddenBy(PropertyAccessor test) {
 				return test != null;
 			}
@@ -240,9 +249,6 @@ public class PropertyReflection extends ReflectionElement
 
 			Method(String propertyName, boolean getter, JMethod method) {
 				super(propertyName, getter, false);
-				if (method.getName().equals("setClass0")) {
-					int debug = 3;
-				}
 				this.method = method;
 			}
 
@@ -285,6 +291,12 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected <A extends Annotation> List<A>
+					getAnnotations(Class<A> annotationClass) {
+				return method.getAnnotations(annotationClass);
+			}
+
+			@Override
 			protected boolean isOverriddenBy(PropertyAccessor test) {
 				return test != null && getEnclosingType()
 						.isAssignableFrom(test.getEnclosingType());
@@ -313,6 +325,13 @@ public class PropertyReflection extends ReflectionElement
 				getAnnotation(Class<A> annotationClass) {
 			return getter == null ? null
 					: getter.getAnnotation(annotationClass);
+		}
+
+		@Override
+		public <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass) {
+			return getter == null ? List.of()
+					: (List<A>) getter.getAnnotations(annotationClass);
 		}
 	}
 }

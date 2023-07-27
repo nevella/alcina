@@ -123,6 +123,12 @@ public class ClassReflector<T> implements HasAnnotations {
 		return annotationProvider.getAnnotation(annotationClass);
 	}
 
+	@Override
+	public <A extends Annotation> List<A>
+			annotations(Class<A> annotationClass) {
+		return annotationProvider.getAnnotations(annotationClass);
+	}
+
 	/**
 	 * This is the resolved bounds of this class - i.e
 	 * {@code A extends B<String> would have a genericBounds of [String.class] }.

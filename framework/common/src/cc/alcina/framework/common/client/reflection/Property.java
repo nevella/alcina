@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.reflection;
 
 import java.lang.annotation.Annotation;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -46,6 +47,12 @@ public class Property implements HasAnnotations {
 	@Override
 	public <A extends Annotation> A annotation(Class<A> annotationClass) {
 		return annotationResolver.getAnnotation(annotationClass);
+	}
+
+	@Override
+	public <A extends Annotation> List<A>
+			annotations(Class<A> annotationClass) {
+		return annotationResolver.getAnnotations(annotationClass);
 	}
 
 	public void copy(Object from, Object to) {

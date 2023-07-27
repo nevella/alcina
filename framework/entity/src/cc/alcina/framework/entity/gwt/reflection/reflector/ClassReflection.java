@@ -424,6 +424,12 @@ public class ClassReflection extends ReflectionElement {
 				getAnnotation(Class<A> annotationClass) {
 			return (A) type.getAnnotation(annotationClass);
 		}
+
+		@Override
+		public <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	/*
