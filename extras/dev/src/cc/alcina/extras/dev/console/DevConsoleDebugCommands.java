@@ -173,7 +173,7 @@ public class DevConsoleDebugCommands {
 			};
 			logRecords = logRecords.stream().parallel().filter(customFilter)
 					.collect(Collectors.toList());
-			Collections.sort((List<? extends Entity>) logRecords,
+			Collections.sort((List<? extends Entity>) (List) logRecords,
 					EntityComparator.REVERSED_INSTANCE);
 			filterArgvResult = new FilterArgvParam(argv, "-u");
 			argv = filterArgvResult.argv;
