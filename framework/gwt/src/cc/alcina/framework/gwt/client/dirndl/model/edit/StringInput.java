@@ -69,7 +69,7 @@ public class StringInput extends Model
 
 	private String placeholder;
 
-	private String autocomplete;
+	private String autocomplete = "off";
 
 	private String type = "text";
 

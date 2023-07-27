@@ -10,12 +10,15 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -61,9 +64,18 @@ public abstract class FragmentNode extends Model
 		provideNode().appendFragmentChild(child);
 	}
 
+	public Stream<? extends FragmentNode> children() {
+		return (Stream<FragmentNode>) (Stream<?>) provideChildNodes().stream()
+				.filter(n -> n.getModel() instanceof FragmentNode);
+	}
+
+	public DomNode domNode() {
+		return provideNode().getRendered().asDomNode();
+	}
+
 	public FragmentModel fragmentModel() {
 		if (fragmentModel == null) {
-			FragmentNode parent = getParent();
+			FragmentNode parent = parent();
 			if (parent == null) {
 				Node parentNode = provideParentNode();
 				if (parentNode == null) {
@@ -81,7 +93,7 @@ public abstract class FragmentNode extends Model
 		return fragmentModel;
 	}
 
-	public FragmentNode getParent() {
+	public FragmentNode parent() {
 		Node parentNode = provideParentNode();
 		if (parentNode == null) {
 			return null;
@@ -92,6 +104,12 @@ public abstract class FragmentNode extends Model
 		} else {
 			return null;
 		}
+	}
+
+	public Stream<? extends FragmentNode> stream() {
+		return new DepthFirstTraversal<FragmentNode>(this,
+				fn -> fn.children().collect(Collectors.toList()), false)
+						.stream();
 	}
 
 	@Override
@@ -131,7 +149,7 @@ public abstract class FragmentNode extends Model
 			Itr() {
 				cursor = FragmentNode.this;
 				if (excludeSelf) {
-					cursor = cursor.getParent();
+					cursor = cursor.parent();
 				}
 			}
 
@@ -146,7 +164,7 @@ public abstract class FragmentNode extends Model
 					throw new NoSuchElementException();
 				}
 				FragmentNode result = cursor;
-				cursor = cursor.getParent();
+				cursor = cursor.parent();
 				return result;
 			}
 		}

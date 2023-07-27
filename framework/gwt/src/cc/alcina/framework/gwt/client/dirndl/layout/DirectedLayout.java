@@ -451,7 +451,7 @@ public class DirectedLayout implements AlcinaProcess {
 		final Object model;
 
 		// many below may be null if a 'simple' node (particularly a leaf)
-		private List<Node> children;
+		List<Node> children;
 
 		Rendered rendered;
 
@@ -944,12 +944,16 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		/**
+		 * <p>
 		 * Replaces a child node following a property change
 		 *
+		 * <p>
 		 * Note that this is only added to the topmost Node corresponding to a
 		 * given source/property
 		 *
-		 * @author nick@alcina.cc
+		 * <p>
+		 * FIXME - dirndl - possibly enqueue changes rather than throwing if in
+		 * layout
 		 *
 		 */
 		private class ChildReplacer extends RemovablePropertyChangeListener {
