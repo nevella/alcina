@@ -63,7 +63,6 @@ public class RootPanel extends AbsolutePanel {
 
 	// FIXME - dirndl - support for external attach/detach
 	public static void attachNow(Widget widget) {
-		Ax.err("attachhnow: %s", widget);
 		assert !widgetsToDetach
 				.contains(widget) : "attachNow() called on a widget "
 						+ " currently in the detach list";
