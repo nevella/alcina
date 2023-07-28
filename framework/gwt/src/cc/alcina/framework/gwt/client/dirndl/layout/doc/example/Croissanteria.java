@@ -5,7 +5,7 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Add;
-import cc.alcina.framework.gwt.client.dirndl.layout.doc.example.CroissanteriaEvents.TrySample;
+import cc.alcina.framework.gwt.client.dirndl.layout.doc.example.CroissanteriaEvents.BiteSample;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -32,17 +32,17 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *
  */
 @Directed(
-	receives = { ModelEvents.Add.class, CroissanteriaEvents.TrySample.class })
+	receives = { ModelEvents.Add.class, CroissanteriaEvents.BiteSample.class })
 public class Croissanteria extends Model.Fields implements
-		CroissanteriaEvents.TrySample.Handler, ModelEvents.Add.Handler {
+		CroissanteriaEvents.BiteSample.Handler, ModelEvents.Add.Handler {
 	@Directed
 	String orderDemo = "Your order is 1 chocolate croissant and an espresso";
 
 	Link addAnotherCroissant = new Link().withText("Add another croissant")
 			.withModelEvent(ModelEvents.Add.class);
 
-	Link tryASample = new Link().withText("Try a free sample")
-			.withModelEvent(CroissanteriaEvents.TrySample.class);
+	Link biteASample = new Link().withText("Bite into a free sample")
+			.withModelEvent(CroissanteriaEvents.BiteSample.class);
 
 	@Override
 	public void onAdd(Add event) {
@@ -50,7 +50,7 @@ public class Croissanteria extends Model.Fields implements
 	}
 
 	@Override
-	public void onTrySample(TrySample event) {
+	public void onTrySample(BiteSample event) {
 		Window.alert("trying a free sample...");
 	}
 }

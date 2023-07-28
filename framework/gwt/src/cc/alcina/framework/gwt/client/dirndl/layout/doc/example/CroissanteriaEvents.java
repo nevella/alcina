@@ -9,19 +9,19 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
  *
  */
 public class CroissanteriaEvents {
-	public static class TrySample extends ModelEvent<Object, TrySample.Handler> {
+	public static class BiteSample extends ModelEvent<Object, BiteSample.Handler> {
 		@Override
-		public void dispatch(TrySample.Handler handler) {
+		public void dispatch(BiteSample.Handler handler) {
 			handler.onTrySample(this);
 		}
 		
 		@Override
-		public Class<TrySample.Handler> getHandlerClass() {
-			return TrySample.Handler.class;
+		public Class<BiteSample.Handler> getHandlerClass() {
+			return BiteSample.Handler.class;
 		}
 		
 		public interface Handler extends NodeEvent.Handler {
-			void onTrySample(TrySample event);
+			void onTrySample(BiteSample event);
 		}
 	}
 }
