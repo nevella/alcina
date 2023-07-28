@@ -123,6 +123,10 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public void setHandled(boolean handled) {
 		this.handled = handled;
 	}
+	
+	public void bubble(){
+		getContext().bubble();
+	}
 
 	// normally call checkreemitted, since there's not much else to do
 	public boolean wasReemitted(Node node) {
