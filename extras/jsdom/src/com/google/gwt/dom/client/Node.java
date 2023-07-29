@@ -560,7 +560,7 @@ public abstract class Node
 	 * where that's not the case, the methods should return null if the remote
 	 * is a NodePathref subtype
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public class ImplAccess {

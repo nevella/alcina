@@ -20,7 +20,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  *         In one thread, create 100 date entities [thread 1]
  *

@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
  * FIXME - TM - Probably switch to LocalDomainStore for almost all of this, and
  * have a client tm just be backed by a DetachedEntityCache (so can be removed)
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface ObjectStore {

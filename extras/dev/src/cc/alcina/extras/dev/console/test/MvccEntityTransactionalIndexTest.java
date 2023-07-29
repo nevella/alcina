@@ -14,7 +14,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG extends Entity & IGroup>

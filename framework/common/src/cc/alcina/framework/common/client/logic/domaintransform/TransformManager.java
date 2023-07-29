@@ -89,7 +89,7 @@ import cc.alcina.framework.common.client.util.SortedMultikeyMap;
  * FIXME - reflection - clean up all threadlocal instance access (correctly name
  * the singleton/provider, cleanup on alcinaparallel exit(
  *
- * @author nick@alcina.cc
+ * 
  */
 // unchecked because reflection is always going to involve a lot of
 // casting...alas

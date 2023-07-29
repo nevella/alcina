@@ -26,7 +26,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * TODO - Doc - an example or two. This is particularly useful with multiple
  * handlers (e.g. a context menu)
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */
@@ -50,11 +50,7 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 		return CommonUtils.deInfix(getClass().getSimpleName()).trim();
 	}
 
-	@Override
-	public Class<ActionEvent.Handler> getHandlerClass() {
-		return ActionEvent.Handler.class;
-	}
-
+	
 	@Override
 	public Class<? extends ModelEvent> getReceiverType() {
 		return ActionEvent.class;

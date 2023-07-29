@@ -104,7 +104,7 @@ import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
- * @author nick@alcina.cc
+ * 
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class SEUtilities {

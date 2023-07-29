@@ -70,7 +70,7 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
  * <li>User property
  * </ol>
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Reflected

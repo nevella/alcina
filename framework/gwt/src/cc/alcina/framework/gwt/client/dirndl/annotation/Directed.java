@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
  *
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 /*
@@ -99,7 +99,7 @@ public @interface Directed {
 	 * All properties are rendered by the DirectedLayout algorithm (receive
 	 * an @Directed annotation if they have none)
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
@@ -114,7 +114,7 @@ public @interface Directed {
 	/**
 	 * Sugar for @Directed(renderer=DirectedRenderer.Delegating.class)
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
@@ -334,7 +334,7 @@ public @interface Directed {
 	 * </ul>
 	 *
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
@@ -383,7 +383,7 @@ public @interface Directed {
 	 * Note that a Transform can be specified and applied only once per model
 	 * property
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@ClientVisible
@@ -446,7 +446,7 @@ public @interface Directed {
 	 *
 	 * Sugar for
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)

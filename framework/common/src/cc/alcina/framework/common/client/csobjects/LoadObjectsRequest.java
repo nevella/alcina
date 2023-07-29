@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * For very large object loads (to Africa), localdb-serializing on the client
  * and running transforms may be very nice
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 @Bean

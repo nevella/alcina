@@ -34,7 +34,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Reflected

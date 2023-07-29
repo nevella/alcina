@@ -56,7 +56,7 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
  * <li>ContentDelivery: deliver (email, download etc)
  * </ol>
  *
- * @author nick@alcina.cc
+ * 
  */
 public class Publisher {
 	public static final String CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT = Publisher.class

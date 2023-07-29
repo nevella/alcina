@@ -20,7 +20,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
 /**
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class RulesFilter extends ReachabilityLinkerPeer {
@@ -77,7 +77,7 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 	 * Annotations which are themselves on annotations, so not included in the
 	 * current reachability algorithm
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Condition(

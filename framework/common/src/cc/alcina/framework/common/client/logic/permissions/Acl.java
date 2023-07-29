@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
  * java.security.Acl - um, where is its replacement? java.security.Policy is so
  * abstract as to be ... very abstract.
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public abstract class Acl extends VersionableEntity<Acl> {

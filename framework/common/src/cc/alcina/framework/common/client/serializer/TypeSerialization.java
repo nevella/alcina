@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

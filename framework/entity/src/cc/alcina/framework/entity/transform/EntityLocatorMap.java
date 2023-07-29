@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  *
  * FIXME - mvcc.5 - document why read-only access is OK (say in post-process) -
  *
- * @author nick@alcina.cc
+ * 
  */
 public class EntityLocatorMap implements Serializable {
 	private Map<Long, EntityLocator> localToPersistent = Registry

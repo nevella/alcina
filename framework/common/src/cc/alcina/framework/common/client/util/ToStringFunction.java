@@ -26,7 +26,7 @@ public interface ToStringFunction<T> extends Function<T, String> {
 	 * Called this because ToStringFunction.Indentity is the default value (and
 	 * thus ignored)
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Reflected

@@ -71,7 +71,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	/**
 	 * Exit the suggestor if the trigger is deleted
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)
@@ -91,7 +91,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 * <li>Model comment, cdata, pi as special tags
 	 * </ul>
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)
@@ -106,7 +106,7 @@ public interface Feature_Dirndl_ContentDecorator extends Feature {
 	 * Constraint: no more than 50% screen height (unless full-height), and
 	 * customisable if non-editing
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)

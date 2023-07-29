@@ -35,7 +35,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 /**
  * Not thread-safe - but then again, should only be used by one thread
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class CloneHelper {

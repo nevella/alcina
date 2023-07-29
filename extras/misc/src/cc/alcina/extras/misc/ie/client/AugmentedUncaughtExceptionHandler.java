@@ -28,7 +28,7 @@ import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 /**
  * Better stacktrace etc support for IE
  * 
- * @author nick@alcina.cc
+ * 
  */
 public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 	private static UncaughtExceptionHandler handler;

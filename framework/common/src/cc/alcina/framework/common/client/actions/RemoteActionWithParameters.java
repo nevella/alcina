@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 /**
  * Marker subclass, to be run on the server
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public abstract class RemoteActionWithParameters<T extends RemoteParameters>

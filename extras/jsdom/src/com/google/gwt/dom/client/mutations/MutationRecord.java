@@ -26,7 +26,7 @@ import elemental.json.JsonValue;
  * Devmode-friendly (faster) representations of browser MutationRecordJso
  * objects
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Bean(PropertySource.FIELDS)

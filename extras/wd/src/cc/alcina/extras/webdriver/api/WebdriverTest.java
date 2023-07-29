@@ -37,7 +37,7 @@ import cc.alcina.framework.entity.MetricLogging;
  * Tests are evaluated as follows: [evaluate tests which fulfil
  * dependencies][evaluate children][evaluate self]
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Registration(WebdriverTest.class)

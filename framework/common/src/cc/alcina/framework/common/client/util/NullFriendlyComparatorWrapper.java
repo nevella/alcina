@@ -5,7 +5,7 @@ import java.util.Comparator;
 /**
  * Null comes first...
  * 
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */

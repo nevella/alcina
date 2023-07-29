@@ -1352,7 +1352,7 @@ public class Element extends Node implements ClientDomElement,
 	/**
 	 * Most of these methods assume the remote() is a NodeJso
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public class ElementImplAccess extends Node.ImplAccess {

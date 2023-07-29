@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @MappedSuperclass
 /**
- * @author nick@alcina.cc
+ * 
  */
 @DomainTransformPersistable
 @Registration({ PersistentImpl.class, PublicationCounter.class })

@@ -58,7 +58,7 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 /**
  * Hooks up the various navigation views and the editor widget
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class Workspace implements HasLayoutInfo, PermissibleActionListener,

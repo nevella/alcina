@@ -4,7 +4,7 @@ package cc.alcina.framework.common.client.consort;
  * Marker to signify has successive self-async calls - for visualisation of
  * consort, and to ease pre-loop initialisation for the player
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public interface LoopingPlayer {

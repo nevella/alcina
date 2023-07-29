@@ -8,7 +8,7 @@ import cc.alcina.framework.entity.Io;
 /**
  * Passthrough interface - does no work
  *
- * @author nick@alcina.cc
+ * 
  */
 public class HtmlFormatConversionTargetHtml
 		implements FormatConverter<FormatConversionTarget_HTML> {

@@ -16,7 +16,7 @@ import cc.alcina.framework.entity.Io;
 /**
  * Convert html to unicode entities for XHTML processing
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Registration.Singleton

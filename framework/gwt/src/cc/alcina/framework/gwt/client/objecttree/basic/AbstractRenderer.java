@@ -29,7 +29,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
- * @author nick@alcina.cc
+ * 
  * 
  */
 @Reflected

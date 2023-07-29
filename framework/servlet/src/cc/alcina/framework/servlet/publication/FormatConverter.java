@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 /**
  * Implemented by format converters
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Registration.NonGenericSubtypes(FormatConverter.class)

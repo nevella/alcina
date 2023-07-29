@@ -43,7 +43,7 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.Pr
  * Builds a class reflector (or data required for ClassReflector source
  * gneration)
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class ClassReflection extends ReflectionElement {
@@ -428,7 +428,7 @@ public class ClassReflection extends ReflectionElement {
 		@Override
 		public <A extends Annotation> List<A>
 				getAnnotations(Class<A> annotationClass) {
-			throw new UnsupportedOperationException();
+			return type.getAnnotations(annotationClass);
 		}
 	}
 

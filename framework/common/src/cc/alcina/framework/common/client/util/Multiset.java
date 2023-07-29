@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.domain.DomainCollections;
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <K>
  * @param <V>

@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * messages and message handling) or global - call methods on
  * {@code ProcessModel}
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class ProcessObservers {

@@ -19,7 +19,7 @@ import cc.alcina.framework.servlet.servlet.DownloadServlet.DownloadItem;
  * could extend xxxMimeType - but we'd need to expand the registry, with a
  * "no-inherit"..TODO??
  *
- * @author nick@alcina.cc
+ * 
  */
 @Registration({ ContentDeliveryType.class,
 		ContentDeliveryType_DOWNLOAD_ATTACHMENT.class })

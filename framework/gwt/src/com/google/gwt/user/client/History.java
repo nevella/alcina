@@ -68,7 +68,7 @@ import cc.alcina.framework.common.client.context.ContextProvider;
  * client/server (remotecomponent) support, this becomes a context frame. Some
  * methods are not supported server-side
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public class History implements ContextFrame {

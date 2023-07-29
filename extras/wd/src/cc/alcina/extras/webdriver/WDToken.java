@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.StringMap;
  * Test run and context state, passed through the whole test run
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class WDToken {

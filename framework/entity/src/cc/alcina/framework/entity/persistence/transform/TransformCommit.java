@@ -86,7 +86,7 @@ import cc.alcina.framework.entity.util.ProcessLogFolder;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 
 /**
- * @author nick@alcina.cc
+ * 
  */
 @Registration.Singleton
 public class TransformCommit {

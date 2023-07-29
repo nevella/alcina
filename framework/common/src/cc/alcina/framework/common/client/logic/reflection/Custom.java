@@ -29,7 +29,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 /**
  * To be applied at the class or field level
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

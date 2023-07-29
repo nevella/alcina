@@ -17,7 +17,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 /**
  * The default environment, backed by the mvcc writable DomainStore
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 class JobEnvironmentTx implements JobEnvironment {

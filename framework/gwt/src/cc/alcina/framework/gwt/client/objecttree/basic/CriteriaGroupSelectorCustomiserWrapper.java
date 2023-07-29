@@ -19,7 +19,7 @@ import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
 /**
  * We're not obeying all bound widget stuff here...
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup>

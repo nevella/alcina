@@ -16,7 +16,7 @@ package cc.alcina.framework.entity;
 import java.beans.PropertyChangeListener;
 
 /**
- * @author nick@alcina.cc
+ * 
  * 
  */
 public interface ListenableProperties {

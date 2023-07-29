@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.util.TextUtils;
 /**
  * All 'static' classes are a workaround for jsos not allowing default methods
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 class ClientDomNodeStatic {

@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
  * Support for simple serialization of class instances (not objects implementing
  * a class - that's TypeSerialization)
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

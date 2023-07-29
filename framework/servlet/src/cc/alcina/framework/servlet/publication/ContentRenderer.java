@@ -30,7 +30,7 @@ import cc.alcina.framework.entity.util.JaxbUtils;
  * Default implementation runs an xsl transform on incoming (xml-serializable)
  * object graph.
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <D>
  * @param <M>

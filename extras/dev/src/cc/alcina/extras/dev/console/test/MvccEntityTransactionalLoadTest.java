@@ -20,7 +20,7 @@ import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG extends Entity & IGroup>

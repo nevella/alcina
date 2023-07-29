@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * Important! Don't allow a signature part to contain a comma - that's the
  * delimiter character
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Bean

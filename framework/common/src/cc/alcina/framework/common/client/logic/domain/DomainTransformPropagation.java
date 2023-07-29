@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

@@ -10,7 +10,7 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
  * Has an eclipse dependency - but we use reflection to avoid adding for just
  * one method
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class RcpClasspathVisitor extends ClasspathVisitor {

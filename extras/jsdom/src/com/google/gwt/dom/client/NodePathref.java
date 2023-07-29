@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * 
  * </ul>
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public abstract class NodePathref implements ClientDomNode {

@@ -21,7 +21,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public class MvccEntitySortedIndexTest2<IU extends Entity & IUser, IG extends Entity & IGroup>

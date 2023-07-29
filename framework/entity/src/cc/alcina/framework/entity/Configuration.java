@@ -317,7 +317,7 @@ public class Configuration {
 	 * mutations to keyValues (and thus packageBundles) are synchronized on the
 	 * Properties instance
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class Properties {

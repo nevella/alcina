@@ -11,7 +11,7 @@ import cc.alcina.framework.entity.util.LengthConstrainedStringWriter.OverflowExc
 /**
  * StringBuilder is final (and in java.lang to boot), so no overriding there....
  *
- * @author nick@alcina.cc
+ * 
  *
  *         // FIXME - 2023 - remove check should be for mvcc (domaingraph) //
  *         objects, not length per se

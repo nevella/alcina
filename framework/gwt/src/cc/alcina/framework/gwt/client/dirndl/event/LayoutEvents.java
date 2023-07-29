@@ -18,7 +18,7 @@ public class LayoutEvents {
 	 * have some fields sent via RPC, others that are only populated (here)
 	 * client-side
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class BeforeRender extends LayoutEvent<BeforeRender.Handler> {
@@ -31,11 +31,7 @@ public class LayoutEvents {
 			handler.onBeforeRender(this);
 		}
 
-		@Override
-		public Class<BeforeRender.Handler> getHandlerClass() {
-			return BeforeRender.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onBeforeRender(BeforeRender event);
 		}
@@ -47,7 +43,7 @@ public class LayoutEvents {
 	 * this model. See {@link DirectedLayout.RendererInput#render} for details
 	 *
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class Bind extends LayoutEvent<Bind.Handler> {
@@ -63,11 +59,7 @@ public class LayoutEvents {
 			handler.onBind(this);
 		}
 
-		@Override
-		public Class<Bind.Handler> getHandlerClass() {
-			return Bind.Handler.class;
-		}
-
+		
 		public boolean isBound() {
 			return this.bound;
 		}
@@ -88,7 +80,7 @@ public class LayoutEvents {
 	 * directly during layout. Note that getContext() only provides the Node
 	 * corresponding to the model
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static abstract class LayoutEvent<H extends NodeEvent.Handler>

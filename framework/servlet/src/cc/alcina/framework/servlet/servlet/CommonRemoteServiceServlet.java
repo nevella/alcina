@@ -142,7 +142,7 @@ import cc.alcina.framework.servlet.task.TaskPublish;
  * layer so not needed here
  * </p>
  *
- * @author nick@alcina.cc
+ * 
  */
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		implements CommonRemoteService, SearchRemoteService,

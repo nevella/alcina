@@ -28,7 +28,7 @@ public interface RemoteUi {
 	 * Example usage is when component the UI of the 'server' jvm (e.g. an
 	 * android app)
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public interface SingleInstance {

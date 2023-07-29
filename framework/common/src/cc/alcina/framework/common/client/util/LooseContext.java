@@ -11,7 +11,7 @@ import java.util.function.Supplier;
  * FIXME - dirndl 1x5 - cleanup "LooseContext" vs "LooseContextInstance";
  * generalise stack-based contexts (this, permissions, etc)
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public abstract class LooseContext {

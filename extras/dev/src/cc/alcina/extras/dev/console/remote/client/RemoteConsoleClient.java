@@ -15,7 +15,7 @@ import cc.alcina.framework.gwt.client.Client;
  * autoshow on start?
  * navigation to eclipse file/line
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 // @formatter:on

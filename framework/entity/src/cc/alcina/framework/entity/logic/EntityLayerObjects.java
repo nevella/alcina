@@ -27,7 +27,7 @@ import cc.alcina.framework.entity.transform.EntityLocatorMap;
  * Also available to the server layer - although some methods should not be
  * called from there
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class EntityLayerObjects {

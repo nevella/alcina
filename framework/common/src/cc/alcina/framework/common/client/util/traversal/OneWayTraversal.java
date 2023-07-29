@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.traversal.OneWayTraversal.Traversa
  * TODO - there is no way to non-destructively walk (aka toString()) - possibly
  * should be
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */

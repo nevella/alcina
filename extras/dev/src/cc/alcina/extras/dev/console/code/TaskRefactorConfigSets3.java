@@ -22,7 +22,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
  * <p>
  * Used to compare old and new property/config implemementations
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)

@@ -135,7 +135,7 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
      *
      *  sort output
      *
-     *  @author nick@alcina.cc
+     *  
      *
      *  Memory stat impl 2 (not currently needed - current impl helped a bunch for debugging)
      *  @formatter:off

@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformCollatio
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  * 
  * @param <T>
  */

@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * marker interface - ignore introspection checks (server version of ok client
  * class)
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

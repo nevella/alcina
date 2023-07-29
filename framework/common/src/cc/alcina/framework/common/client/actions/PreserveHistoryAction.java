@@ -17,7 +17,7 @@ package cc.alcina.framework.common.client.actions;
  * Marker interface, asks the client to have log history be additive rather than
  * replaced
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface PreserveHistoryAction {

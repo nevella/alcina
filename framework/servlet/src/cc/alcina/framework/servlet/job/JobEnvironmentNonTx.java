@@ -11,7 +11,7 @@ import cc.alcina.framework.servlet.local.LocalDomainQueue;
 /**
  * A non-mvcc environment
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public class JobEnvironmentNonTx implements JobEnvironment {

@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 
 /**
- * @author nick@alcina.cc
+ * 
  */
 @Reflected
 @Registration.Singleton

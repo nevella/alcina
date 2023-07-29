@@ -144,7 +144,7 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
  * ConcurrentLinkedQueue??
  * </p>
  *
- * @author nick@alcina.cc
+ * 
  *
  *         FIXME - mvcc.5 - don't add listeners during postprocess
  *         (optimisation)

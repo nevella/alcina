@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  * 
  *         Uses ordering (by id or localid) to speed 'find' ops. This is
  *         *useful* even though 'index' is mostly used to improve performance in

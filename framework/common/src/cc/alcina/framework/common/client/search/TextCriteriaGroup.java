@@ -54,7 +54,7 @@ public class TextCriteriaGroup extends CriteriaGroup<TextCriterion> {
 	/**
 	 * for multiple tcgs, mapping to different properties
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class TextCriteriaGroup2 extends TextCriteriaGroup {

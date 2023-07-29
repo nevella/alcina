@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCrea
  * chains of lookups - depth does not include the looked-up object: e.g.
  * class/id/instance would be depth 2
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>

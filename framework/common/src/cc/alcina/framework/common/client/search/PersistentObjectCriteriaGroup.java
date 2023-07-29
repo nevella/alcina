@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
  * only object refs. More useful that way (since results are just the class, and
  * the value mods are *almost* always an association
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 @PermissibleChildClasses({ PersistentObjectCriterion.class })

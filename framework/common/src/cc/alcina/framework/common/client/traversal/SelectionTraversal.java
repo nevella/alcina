@@ -511,7 +511,7 @@ public class SelectionTraversal
 	 * Because the runnables will generally require Alcina contexts, use this
 	 * (custom) approach rather than java.util.concurrent.Executor
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public interface Executor {

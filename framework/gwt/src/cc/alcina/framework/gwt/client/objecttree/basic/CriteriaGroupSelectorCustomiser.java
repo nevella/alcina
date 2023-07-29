@@ -14,7 +14,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, SC extends SearchCriterion, O>

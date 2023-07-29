@@ -18,7 +18,7 @@ public class GwtEvents {
 	 * Note that there's no DomBindingImpl associated - so this event cannot be
 	 * bound to the DOM
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Deprecated
@@ -28,11 +28,7 @@ public class GwtEvents {
 			handler.onAttach(this);
 		}
 
-		@Override
-		public Class<Attach.Handler> getHandlerClass() {
-			return Attach.Handler.class;
-		}
-
+		
 		public boolean isAttached() {
 			return ((AttachEvent) getContext().getGwtEvent()).isAttached();
 		}
@@ -52,11 +48,7 @@ public class GwtEvents {
 			handler.onValueChange(this);
 		}
 
-		@Override
-		public Class<ValueChange.Handler> getHandlerClass() {
-			return ValueChange.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<ValueChange> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {

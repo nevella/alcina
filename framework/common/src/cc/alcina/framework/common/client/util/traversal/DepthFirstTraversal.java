@@ -10,9 +10,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -32,7 +29,7 @@ import cc.alcina.framework.common.client.util.Topic;
  * This does *not* throw ConcurrentModificationExceptions if traversing
  * forwards, but will if traversing lastFirst
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */
@@ -109,22 +106,6 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 
 	private void prepareNext() {
 		next = current.next();
-	}
-
-	public static class W3cNode extends DepthFirstTraversal<org.w3c.dom.Node> {
-		static List<Node> children(Node node) {
-			List<Node> result = new ArrayList<>();
-			NodeList childNodes = node.getChildNodes();
-			int length = childNodes.getLength();
-			for (int idx = 0; idx < length; idx++) {
-				result.add(childNodes.item(idx));
-			}
-			return result;
-		}
-
-		public W3cNode(Node root) {
-			super(root, W3cNode::children, false);
-		}
 	}
 
 	// so named because often T is named Node

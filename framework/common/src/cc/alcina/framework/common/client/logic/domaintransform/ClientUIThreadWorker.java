@@ -22,7 +22,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 /**
  * Scheduler.scheduleIncremental much better idea...although this did work fine
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public abstract class ClientUIThreadWorker {

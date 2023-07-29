@@ -22,7 +22,7 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
  * Rules are resolved in priority (high to low) then reverse creation order, the
  * first match 'winning'
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public abstract class AclEntry extends VersionableEntity<AclEntry> {

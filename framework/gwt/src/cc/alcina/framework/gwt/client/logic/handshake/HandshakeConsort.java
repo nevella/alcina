@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.util.Topic;
  * at some point after object unwrap/register
  * </ul>
  *
- * @author nick@alcina.cc
+ * 
  */
 @Reflected
 @Registration.Singleton

@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
  * /framework/emul/alcina/cc/alcina/framework
  * /common/client/logic/domaintransform/lookup/LiSet.java)
  * 
- * @author nick@alcina.cc
+ * 
  * 
  * @param <H>
  */

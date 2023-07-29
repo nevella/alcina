@@ -8,7 +8,7 @@ import java.util.Collection;
  * (which subclass arraylist) to our beautiful RPC lists - e.g.
  * ChangeListenerCollection etc etc
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public class GArrayList<E> extends ArrayList<E> {

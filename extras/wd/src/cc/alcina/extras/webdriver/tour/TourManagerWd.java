@@ -63,7 +63,7 @@ ProcessObservers.observe(new BeforeActionObserver());
  *
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class TourManagerWd extends TourManager {

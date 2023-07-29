@@ -74,7 +74,7 @@ import cc.alcina.framework.entity.util.JaxbUtils;
  *
  * </div>
  *
- * @author nick@alcina.cc
+ * 
  */
 public class Gallery {
 	public static final String DEVICE = "device";

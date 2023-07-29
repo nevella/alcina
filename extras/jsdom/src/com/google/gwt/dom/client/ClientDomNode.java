@@ -7,7 +7,7 @@ package com.google.gwt.dom.client;
  * more-used (particularly by external code)
  * cc.alcina.framework.common.client.dom.DomNode)
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface ClientDomNode {

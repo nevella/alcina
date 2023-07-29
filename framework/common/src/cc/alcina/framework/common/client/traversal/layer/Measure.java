@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * Measures form a tree structure, and are the model used for traversal and
  * modelling of documents.
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 /*
@@ -153,7 +153,7 @@ public class Measure extends Location.Range {
 	/**
 	 * The type of Measure
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public interface Token {

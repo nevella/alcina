@@ -28,7 +28,7 @@ import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
  * So, usage requires at least two mx instances in the cluster and open port
  * 8787 on each instance
  *
- * @author nick@alcina.cc
+ * 
  */
 public class RemoteDebugHandler
 		extends BaseRemoteActionPerformer<RemoteDebugAction> {

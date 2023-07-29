@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.Topic;
  * Models the stages, elements and status of an operation which can be modelled
  * as a tree structure. Particularly useful for progress logging
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class TreeProcess {

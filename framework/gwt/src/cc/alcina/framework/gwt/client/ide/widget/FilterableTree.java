@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.widget.VisualFilterable;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
 
 /**
- * @author nick@alcina.cc
+ * 
  * 
  */
 public class FilterableTree extends Tree

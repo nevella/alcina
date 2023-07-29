@@ -74,7 +74,7 @@ import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 /**
- * @author nick@alcina.cc
+ * 
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class TransformPersisterInPersistenceContext {

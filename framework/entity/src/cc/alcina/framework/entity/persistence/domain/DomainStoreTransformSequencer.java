@@ -39,7 +39,7 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
  * As it now is, COMMIT_ERRROR dtr events are fired (and ignored) on
  * non-originating servers - remove?
  *
- * @author nick@alcina.cc
+ * 
  */
 public class DomainStoreTransformSequencer
 		implements DomainTransformPersistenceQueue.Sequencer {

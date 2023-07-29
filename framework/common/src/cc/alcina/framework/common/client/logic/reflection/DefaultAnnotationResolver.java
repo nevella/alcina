@@ -23,12 +23,12 @@ public class DefaultAnnotationResolver extends Resolver {
 	@Override
 	public <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location) {
-		return resolveAnnotations0(annotationClass, location, null);
+		return resolveAnnotations0(annotationClass, location, null, this);
 	}
 
 	public <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location,
-			ClassResolver classResolver) {
+			ClassResolver classResolver, Resolver originatingResolver) {
 		Resolution resolution = Reflections.at(annotationClass)
 				.annotation(Resolution.class);
 		if (resolution == null) {
@@ -45,12 +45,12 @@ public class DefaultAnnotationResolver extends Resolver {
 						.filter(a -> a.annotationType() == annotationClass)
 						.collect(Collectors.toList())
 				: mergeStrategy.resolveProperty(annotationClass,
-						location.property, inheritance, this);
+						location.property, inheritance, originatingResolver);
 		Class resolvedLocationClass = classResolver != null
 				? resolvedLocationClass = classResolver.apply(location)
 				: location.classLocation;
 		List<A> classAnnotations = mergeStrategy.resolveClass(annotationClass,
-				resolvedLocationClass, inheritance, this);
+				resolvedLocationClass, inheritance, originatingResolver);
 		List<A> merged = mergeStrategy.merge(classAnnotations,
 				propertyAnnotations);
 		mergeStrategy.finish(merged);

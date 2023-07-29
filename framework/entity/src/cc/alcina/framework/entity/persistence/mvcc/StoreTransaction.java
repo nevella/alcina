@@ -6,7 +6,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
  *
  * committingSequenceId is key for ordering in-flight committed txs
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 class StoreTransaction {

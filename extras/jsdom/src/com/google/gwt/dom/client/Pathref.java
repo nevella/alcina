@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 /**
  * Models a reference to a DOM node (attached to root) via its path
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 @Bean(PropertySource.FIELDS)

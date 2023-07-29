@@ -31,7 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * changed') should be fired asynchronously since they're not a translation,
  * rather an effect.
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class VariableDispatchEventBus extends SimpleEventBus {

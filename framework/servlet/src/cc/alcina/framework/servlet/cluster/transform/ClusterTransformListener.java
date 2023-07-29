@@ -25,7 +25,7 @@ import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.Sta
 /**
  * Each server publishes the current max rq id to a node with its hostname
  *
- * @author nick@alcina.cc
+ * 
  *
  *
  * @see https://github.com/nevella/alcina/issues/13,

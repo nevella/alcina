@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.actions.SelfPerformer;
 /**
  * A base task which is its own performer
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public abstract class PerformerTask implements SelfPerformer {

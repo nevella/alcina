@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * implementation is accessed via HasNode.processNode (composition) rather than
  * inheritance
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */

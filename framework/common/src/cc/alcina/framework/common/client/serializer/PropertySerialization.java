@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

@@ -71,7 +71,7 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
  * <p>
  * This ensures that offline load is in the correct order
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public abstract class LocalTransformPersistence

@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 /**
  * implementing classes must be @Reflected
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface DTRProtocolHandler {

@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.objecttree;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface TreeRenderable extends SourcesPropertyChangeEvents {

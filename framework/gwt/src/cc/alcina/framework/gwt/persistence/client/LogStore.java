@@ -43,7 +43,7 @@ import cc.alcina.framework.gwt.client.util.Lzw;
  * This mechanism is app restart, offline and (almost) crash proof <br>
  * </p>
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Registration.Singleton

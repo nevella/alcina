@@ -46,7 +46,7 @@ public class UseMirroredClasses extends ClassVisitor {
 			 * ain't super critical. Commented out map population so this
 			 * visitor becomes a no-op
 			 * 
-			 * @author nick@alcina.cc
+			 * 
 			 *
 			 */
 			mirrorMap = new HashMap<String, HashMap<String, String>>();

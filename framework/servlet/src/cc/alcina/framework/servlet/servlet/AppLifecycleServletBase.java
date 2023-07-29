@@ -102,7 +102,7 @@ import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener
  * FIXME - ops - fix webapp (and dev mode?) retaining refs to prior
  * app/classloader
  *
- * @author nick@alcina.cc
+ * 
  */
 @SuppressWarnings("deprecation")
 @Registration.Singleton

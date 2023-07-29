@@ -56,7 +56,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
  * should be combined during traversal. Currently...dodgy
  * </p>
  *
- * @author nick@alcina.cc
+ * 
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomUtils implements NodeFromXpathProvider {
@@ -1181,7 +1181,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	 * Mostly the app is interested (post-wrap) in extracts - which just use
 	 * locations to find ranges. So mildly truncated text nodes will be ok.
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 */
 	class WrappingAwareNodeIterator {
 		private NodeWrapList nodes;

@@ -157,7 +157,7 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
  * non-transactional) environments exist, supporting use on non-db-backed
  * systems (e.g. Android)
  *
- * @author nick@alcina.cc
+ * 
  */
 @Registrations({
 		@Registration(

@@ -15,7 +15,7 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 /**
  * Persist delta model to the local graph/storage
  * 
- * @author nick@alcina.cc
+ * 
  *
  * @param <D>
  */

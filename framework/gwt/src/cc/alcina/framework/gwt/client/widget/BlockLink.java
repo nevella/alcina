@@ -19,7 +19,7 @@ import com.google.gwt.user.client.DOM;
 /**
  * 
  * 
- * @author nick@alcina.cc
+ * 
  * 
  * @param <T>
  *            - user object

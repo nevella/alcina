@@ -5,7 +5,7 @@ package cc.alcina.framework.common.client.traversal;
  * which encapsulates the initial selection to be traversed - that selection
  * might be a document or a logical entity such as 'website x'
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class RootSelection extends AbstractSelection<Void> {

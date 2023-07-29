@@ -67,7 +67,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * (although css classes, not containing tags). FIXME - doc - example
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Directed(

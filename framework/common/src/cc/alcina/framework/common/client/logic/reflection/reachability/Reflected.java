@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.
  * or @Registration annotations
  * 
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

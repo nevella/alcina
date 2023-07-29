@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.util.TopicListener;
 /**
  * Marker interface: observes AlcinaProcess observable topics
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface ProcessObserver<T extends ProcessObservable>
@@ -21,7 +21,7 @@ public interface ProcessObserver<T extends ProcessObservable>
 	 * intercepting failed test runs/steps in long test processes, or dirndl
 	 * debugging)
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Registration.Singleton

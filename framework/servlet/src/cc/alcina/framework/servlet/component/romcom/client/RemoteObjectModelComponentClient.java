@@ -13,7 +13,7 @@ import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteCo
  * Thin gwt app which manipulates dom, posts events via send/receive on the the
  * rc-rpc protocol channel
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class RemoteObjectModelComponentClient implements EntryPoint {

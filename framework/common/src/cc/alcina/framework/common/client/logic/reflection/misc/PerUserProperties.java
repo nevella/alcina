@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.logic.reflection.misc;
 /**
  * Marker for server-side preloading
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface PerUserProperties {

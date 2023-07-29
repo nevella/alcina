@@ -6,7 +6,7 @@ import cc.alcina.framework.servlet.job.JobRegistry;
 /**
  * Support for the jobs system outside mvcc
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public class LocalDomainJobs {

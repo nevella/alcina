@@ -24,7 +24,7 @@
 * getMessage("Value cannot be empty.",null),CNotNullValidator.class);
  * </pre>
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 package cc.alcina.framework.common.client.gwittir.validator;

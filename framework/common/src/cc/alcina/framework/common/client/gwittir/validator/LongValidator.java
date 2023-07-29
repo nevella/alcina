@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  */
 @Reflected
 public class LongValidator implements Validator {

@@ -31,7 +31,7 @@ public interface ContextProvider<C, F extends ContextFrame> {
 	 * Piggybacks off LooseContext - the frame instance is simply that
 	 * registered in the current LooseContext
 	 * 
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 * @param <F>
 	 */

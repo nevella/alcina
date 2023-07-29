@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * Interchangable because this (gwt-compat) version is weak compared to real,
  * calendar based implementations
  *
- * @author nick@alcina.cc
+ * 
  */
 @SuppressWarnings("deprecation")
 @Reflected

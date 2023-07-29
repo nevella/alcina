@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 /**
  * Marker subclass, to be run on the server
  *
- * @author nick@alcina.cc
+ * 
  */
 @WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
 @Bean

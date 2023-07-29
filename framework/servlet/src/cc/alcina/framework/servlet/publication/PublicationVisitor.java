@@ -8,7 +8,7 @@ import cc.alcina.framework.servlet.publication.ContentWrapper.WrapperModel;
 /**
  * To allow custom behaviour/composition in the publication pipeline
  *
- * @author nick@alcina.cc
+ * 
  *
  *         p.s. I almost named this 'PublicationAccompanist' - in keeping with
  *         other music-themed naming such as 'Consort' - it's not really a

@@ -162,7 +162,7 @@ public abstract class SearchCriterion extends Bindable
 	 * Can also apply to things like date criteria, not just order - so leave
 	 * here rather than in OrderCriterion
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 */
 	@Reflected
 	public enum Direction {

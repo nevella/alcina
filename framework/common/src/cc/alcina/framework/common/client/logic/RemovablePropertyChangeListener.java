@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class RemovablePropertyChangeListener

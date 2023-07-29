@@ -17,7 +17,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
  * localRequestId ditto committingRequest
  * </ul>
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public class ThreadedClientTransformManager

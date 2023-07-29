@@ -45,7 +45,7 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
  * calls the query executor {@link DomainSearcher}, projects the results and
  * calls any grouping handlers
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Registration.Singleton

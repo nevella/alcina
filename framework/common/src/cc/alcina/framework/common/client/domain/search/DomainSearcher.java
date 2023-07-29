@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  * tuples is that it improves code reuse, since SearchCriterion classes can be
  * used in multiple SearchDefinition types.
  * 
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  *            The entity type being searched

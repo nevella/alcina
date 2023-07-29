@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client;
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class WrappedRuntimeException extends RuntimeException {

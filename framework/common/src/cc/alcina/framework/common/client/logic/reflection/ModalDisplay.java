@@ -59,7 +59,7 @@ public @interface ModalDisplay {
 	 * Applies only to the children of the node on which this is set (Form,
 	 * Table)
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class ModalResolver extends ContextResolver

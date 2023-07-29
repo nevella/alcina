@@ -41,11 +41,7 @@ public class DomEvents {
 			handler.onBeforeInput(this);
 		}
 
-		@Override
-		public Class<BeforeInput.Handler> getHandlerClass() {
-			return BeforeInput.Handler.class;
-		}
-
+		
 		public NativeBeforeInputEvent getNativeBeforeInputEvent() {
 			return this.nativeBeforeInputEvent;
 		}
@@ -69,11 +65,7 @@ public class DomEvents {
 			handler.onBlur(this);
 		}
 
-		@Override
-		public Class<Blur.Handler> getHandlerClass() {
-			return Blur.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<Blur> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -91,7 +83,7 @@ public class DomEvents {
 	 * Don't use for handling form [enter] events - use
 	 * InferredDomEvents.InputEnterCommit
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class Change extends NodeEvent<Change.Handler> {
@@ -100,11 +92,7 @@ public class DomEvents {
 			handler.onChange(this);
 		}
 
-		@Override
-		public Class<Change.Handler> getHandlerClass() {
-			return Change.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<Change> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -122,7 +110,7 @@ public class DomEvents {
 	 * Note that this fires on any (not just left) click. For just leftclick,
 	 * use InferredDomEvents.LeftClick
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class Click extends NodeEvent<Click.Handler> {
@@ -131,11 +119,7 @@ public class DomEvents {
 			handler.onClick(this);
 		}
 
-		@Override
-		public Class<Click.Handler> getHandlerClass() {
-			return Click.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<Click> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -155,11 +139,7 @@ public class DomEvents {
 			handler.onFocus(this);
 		}
 
-		@Override
-		public Class<Focus.Handler> getHandlerClass() {
-			return Focus.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<Focus> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -179,11 +159,7 @@ public class DomEvents {
 			handler.onFocusin(this);
 		}
 
-		@Override
-		public Class<Focusin.Handler> getHandlerClass() {
-			return Focusin.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<Focusin> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -203,11 +179,7 @@ public class DomEvents {
 			handler.onFocusout(this);
 		}
 
-		@Override
-		public Class<Focusout.Handler> getHandlerClass() {
-			return Focusout.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<Focusout> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -245,11 +217,7 @@ public class DomEvents {
 			handler.onInput(this);
 		}
 
-		@Override
-		public Class<Input.Handler> getHandlerClass() {
-			return Input.Handler.class;
-		}
-
+		
 		public String getValue() {
 			return this.value;
 		}
@@ -273,11 +241,7 @@ public class DomEvents {
 			handler.onKeyDown(this);
 		}
 
-		@Override
-		public Class<KeyDown.Handler> getHandlerClass() {
-			return KeyDown.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<KeyDown> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -297,11 +261,7 @@ public class DomEvents {
 			handler.onKeyUp(this);
 		}
 
-		@Override
-		public Class<KeyUp.Handler> getHandlerClass() {
-			return KeyUp.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<KeyUp> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -321,11 +281,7 @@ public class DomEvents {
 			handler.onMouseDown(this);
 		}
 
-		@Override
-		public Class<MouseDown.Handler> getHandlerClass() {
-			return MouseDown.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<MouseDown> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -345,11 +301,7 @@ public class DomEvents {
 			handler.onMouseOut(this);
 		}
 
-		@Override
-		public Class<MouseOut.Handler> getHandlerClass() {
-			return MouseOut.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<MouseOut> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -369,11 +321,7 @@ public class DomEvents {
 			handler.onMouseOver(this);
 		}
 
-		@Override
-		public Class<MouseOver.Handler> getHandlerClass() {
-			return MouseOver.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<MouseOver> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -393,11 +341,7 @@ public class DomEvents {
 			handler.onMouseUp(this);
 		}
 
-		@Override
-		public Class<MouseUp.Handler> getHandlerClass() {
-			return MouseUp.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<MouseUp> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -417,11 +361,7 @@ public class DomEvents {
 			handler.onScroll(this);
 		}
 
-		@Override
-		public Class<Scroll.Handler> getHandlerClass() {
-			return Scroll.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<Scroll> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -446,11 +386,7 @@ public class DomEvents {
 			handler.onSubmit(this);
 		}
 
-		@Override
-		public Class<Submit.Handler> getHandlerClass() {
-			return Submit.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<Submit> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {

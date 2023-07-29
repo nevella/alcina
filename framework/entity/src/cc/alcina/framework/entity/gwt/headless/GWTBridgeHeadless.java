@@ -160,7 +160,7 @@ public class GWTBridgeHeadless extends GWTBridge {
 	 * with client-side calls (with non-trivial implementations), I feel this is
 	 * OK
 	 * 
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Registration(HistoryTokenEncoder.class)

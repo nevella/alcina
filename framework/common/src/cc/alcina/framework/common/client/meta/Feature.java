@@ -65,7 +65,7 @@ public interface Feature extends Registration.AllSubtypes {
 	/**
 	 * Container for multiple {@link Ref} annotations
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)

@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 /**
  * To allow subclassing
  * 
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */

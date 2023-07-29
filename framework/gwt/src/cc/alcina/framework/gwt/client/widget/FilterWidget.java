@@ -48,7 +48,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * TODO - the "wrappedenterhandler" ClickHandler should be changed to
  * SelectedValueHandler<String>
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public class FilterWidget extends Composite

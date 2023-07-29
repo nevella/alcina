@@ -45,9 +45,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
  * preferred are the fluent ones ({@code DirectedLayout.Node.dispatch_, {@code
  * NodeEvent.reemitAs})
  *
- * @author nick@alcina.cc
  *
  * @param <T>
+ *
  * @param <H>
  */
 @Registration(ClassSerialization.class)
@@ -104,6 +104,11 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		}
 	}
 
+	@Override
+	public Class<H> getHandlerClass() {
+		return Reflections.at(getClass()).getGenericBounds().bounds.get(1);
+	}
+
 	public <T0 extends T> T0 getModel() {
 		return (T0) this.model;
 	}
@@ -139,7 +144,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	 * few (Input, Change) - in almost all other cases a model event without a
 	 * handler is a dev issue.
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public interface NoHandlerRequired {
@@ -154,7 +159,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	 * links/actions where the context doesn't matter, such as 'logout' or
 	 * 'privacy')
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Registration.NonGenericSubtypes(TopLevelHandler.class)

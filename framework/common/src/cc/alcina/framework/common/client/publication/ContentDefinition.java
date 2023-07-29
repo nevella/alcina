@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 /**
  * Marker interface for publication content
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface ContentDefinition extends TreeSerializable {

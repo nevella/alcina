@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 /**
  * 'Location' being browser window.location
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 @Bean(PropertySource.FIELDS)

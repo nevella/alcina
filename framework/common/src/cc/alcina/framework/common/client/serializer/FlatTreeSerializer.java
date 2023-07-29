@@ -151,7 +151,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * </ul>
  *
  *
- * @author nick@alcina.cc
+ * 
  */
 public class FlatTreeSerializer {
 	private static final String CLASS = "class$";

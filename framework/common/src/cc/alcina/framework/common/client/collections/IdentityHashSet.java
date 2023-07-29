@@ -7,7 +7,7 @@ import java.util.HashSet;
  * Overrides Set.equals to force a property change (plus, set.equals is
  * expensive)
  * 
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */

@@ -300,7 +300,7 @@ public class AnnotationLocation {
 	 * Resolves annotations (really, returns declarative information packaged in
 	 * annotation instances) at a class/property location
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static abstract class Resolver {

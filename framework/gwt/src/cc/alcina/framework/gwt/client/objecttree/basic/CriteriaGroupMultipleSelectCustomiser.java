@@ -14,7 +14,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGroup, SC extends SearchCriterion, O>

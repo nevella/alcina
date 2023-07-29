@@ -54,7 +54,7 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
  *
  * how this interacts with ClusterTransformListener; how the threading works
  *
- * @author nick@alcina.cc
+ * 
  */
 public class DomainTransformPersistenceQueue {
 	public static final String CONTEXT_WAIT_TIMEOUT_MS = DomainTransformPersistenceQueue.class

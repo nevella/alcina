@@ -11,7 +11,7 @@ import java.util.Objects;
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  * 
  * @param <E>
  */

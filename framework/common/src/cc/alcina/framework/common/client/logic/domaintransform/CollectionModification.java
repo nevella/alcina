@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * Signals to listeners (collection nodes) that they should recalc their
  * collections
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public class CollectionModification {

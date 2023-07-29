@@ -9,7 +9,7 @@ import org.w3c.dom.ProcessingInstruction;
  * all methods should actually call through to domdocument_static ... when i get
  * the time
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface ClientDomDocument extends ClientDomNode {

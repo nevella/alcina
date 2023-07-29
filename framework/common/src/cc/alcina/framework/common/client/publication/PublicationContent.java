@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * Marker interface for second stage of the publication process
  * 
- * @author nick@alcina.cc
+ * 
  *
  *         Note - these will want to be xmlroot elt, jaxb registered, because
  *         they will be jaxb-serialised for transform

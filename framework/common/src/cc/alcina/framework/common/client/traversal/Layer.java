@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * FIXME - move 'tokens' to ParserLayer
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public abstract class Layer<S extends Selection> implements

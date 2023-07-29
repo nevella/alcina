@@ -8,7 +8,7 @@ public interface Feature_Dirndl_Documentation extends Feature {
 	/**
 	 * Comparison (implementation) with React, Flutter, Swift.UI
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)
@@ -22,7 +22,7 @@ public interface Feature_Dirndl_Documentation extends Feature {
 	 * see
 	 * alcina/framework/gwt/src/cc/alcina/framework/gwt/client/dirndl/layout/doc/cookbook.html
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Feature.Status.Ref(Feature.Status.In_Progress.class)
@@ -33,7 +33,7 @@ public interface Feature_Dirndl_Documentation extends Feature {
 	/**
 	 * A sandbox for toy Dirndl examples
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Feature.Status.Ref(Feature.Status.Open.class)

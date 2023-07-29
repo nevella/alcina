@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 /**
  * Support for localisations. Defaults to a simple provider
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class TextProvider {

@@ -25,6 +25,7 @@ import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
 import org.w3c.dom.ranges.DocumentRange;
@@ -45,6 +46,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * <p>
@@ -77,7 +79,7 @@ DomDocument.from(
  * DOM classes. There's also a fluent node builder - DomNode.builder() - and
  * other manipulation commands such as DomNode.strip()
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class DomNode {
@@ -1273,6 +1275,12 @@ public class DomNode {
 		}
 	}
 
+	public static class DomNodeTraversal extends DepthFirstTraversal<DomNode> {
+		public DomNodeTraversal(DomNode root) {
+			super(root, node -> node.children.nodes(), false);
+		}
+	}
+
 	public class DomNodeTree {
 		private TreeWalker tw;
 
@@ -1578,6 +1586,23 @@ public class DomNode {
 				range.setEndAfter(end == null ? node : end.node);
 			}
 			return range;
+		}
+	}
+
+	public static class W3cNodeTraversal
+			extends DepthFirstTraversal<org.w3c.dom.Node> {
+		static List<Node> children(Node node) {
+			List<Node> result = new ArrayList<>();
+			NodeList childNodes = node.getChildNodes();
+			int length = childNodes.getLength();
+			for (int idx = 0; idx < length; idx++) {
+				result.add(childNodes.item(idx));
+			}
+			return result;
+		}
+
+		public W3cNodeTraversal(Node root) {
+			super(root, W3cNodeTraversal::children, false);
 		}
 	}
 

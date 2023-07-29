@@ -95,7 +95,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * 
  * </div>
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public abstract class ExtensibleEnum {

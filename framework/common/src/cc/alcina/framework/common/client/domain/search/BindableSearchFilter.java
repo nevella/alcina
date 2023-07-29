@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  * Similar to DomainSearcher, but much simpler implementation (since just sed as
  * a filter)
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public class BindableSearchFilter {

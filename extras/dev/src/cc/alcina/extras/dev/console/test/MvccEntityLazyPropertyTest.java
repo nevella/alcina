@@ -20,7 +20,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor.TestS
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public class MvccEntityLazyPropertyTest<IU extends Entity & IUser, IG extends Entity & IGroup>

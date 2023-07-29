@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.util.StringMap;
  * Note that - as per {@link FlatTreeSerializer}, Collection properties cannot
  * contain nulls, and cannot *be* nulls.
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Registration(TreeSerializable.class)

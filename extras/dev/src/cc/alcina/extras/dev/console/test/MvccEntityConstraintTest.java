@@ -14,7 +14,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
  *
  * </ul>
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class MvccEntityConstraintTest extends PerformerTask {

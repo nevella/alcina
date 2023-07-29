@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
  * <p>
  * See {@link TransienceContext} for an explanation of serialization contexts.
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

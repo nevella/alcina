@@ -24,7 +24,7 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
  *
  * refactor-consort
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Registration.Singleton

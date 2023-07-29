@@ -1134,7 +1134,7 @@ public class LiveTree {
 	 *
 	 * Enable by setting LiveTree.processLoggerEnabled to true
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 */
 	public static class ProcessLoggerImpl extends ProcessLogger<LiveTree> {
 		public static ProcessLoggerImpl context() {

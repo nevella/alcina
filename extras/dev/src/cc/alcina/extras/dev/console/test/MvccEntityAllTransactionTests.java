@@ -5,7 +5,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class MvccEntityAllTransactionTests extends PerformerTask {

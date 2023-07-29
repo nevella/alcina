@@ -34,7 +34,7 @@ import cc.alcina.framework.servlet.dom.RemoteUi;
 /**
  * A remote component that models the jvm-visible feature tree
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Feature.Ref(Feature_FeatureTree.class)

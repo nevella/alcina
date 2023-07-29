@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  *
  * Disconnect after timeout
  *
- * @author nick@alcina.cc
+ * 
  */
 @Registration.Singleton
 public class XhrTcpBridge {

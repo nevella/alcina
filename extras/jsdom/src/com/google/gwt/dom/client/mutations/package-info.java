@@ -184,7 +184,7 @@ The rest is just induction
  * Endfile
  * </p>
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 package com.google.gwt.dom.client.mutations;

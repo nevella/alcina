@@ -116,7 +116,7 @@ import elemental.json.impl.JsonUtil;
  * <p>
  * FIXME - dirndl 1x1f - use a ringbuffer (and fix ringbuffer rotation)
  *
- * @author nick@alcina.cc
+ * 
  */
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
@@ -333,7 +333,7 @@ public class ReflectiveSerializer {
 	 *
 	 * Information for edge-case serialization checks
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)

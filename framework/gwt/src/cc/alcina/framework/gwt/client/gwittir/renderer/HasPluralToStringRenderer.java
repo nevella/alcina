@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.util.HasPluralToString;
 /**
  * To allow subclassing
  * 
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */

@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @MappedSuperclass
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)

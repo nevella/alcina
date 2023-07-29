@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 /**
  * Retrieve from db - custom handling of db column
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public @interface DomainStoreDbColumn {

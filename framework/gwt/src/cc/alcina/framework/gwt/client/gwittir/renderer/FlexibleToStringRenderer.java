@@ -18,7 +18,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 /**
  * To allow subclassing
  * 
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */

@@ -274,7 +274,7 @@ public class Knowns {
 	/**
 	 * For app-level overrides
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 */
 	@Registration.Singleton
 	public static class KnownNodeAppLogic {

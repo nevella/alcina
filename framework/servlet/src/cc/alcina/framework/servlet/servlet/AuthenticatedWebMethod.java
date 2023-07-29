@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 /**
  * Marker interface for registry
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class AuthenticatedWebMethod extends PermissibleAction {

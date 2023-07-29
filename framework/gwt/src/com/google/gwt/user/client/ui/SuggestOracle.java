@@ -176,6 +176,11 @@ public abstract class SuggestOracle {
 		public void setQuery(String query) {
 			this.query = query;
 		}
+
+		public <R extends Request> R withQuery(String query) {
+			setQuery(query);
+			return (R) this;
+		}
 	}
 
 	/**

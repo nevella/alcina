@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 /**
  * marker interface - essentially, gimme a classref
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

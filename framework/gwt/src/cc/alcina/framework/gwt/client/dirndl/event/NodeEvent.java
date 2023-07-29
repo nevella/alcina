@@ -43,7 +43,9 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		return this.context;
 	}
 
-	public abstract Class<H> getHandlerClass();
+	public Class<H> getHandlerClass() {
+		return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
+	}
 
 	// special case when re-emitting an event from its handler - marks the event
 	// as reemitted (from the node) so as to not loop

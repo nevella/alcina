@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.util.Lzw;
  * (committoremotetransform...) offline/online events - if we go online for some
  * reason, that's probably going to be logged and cause a push anyway
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class RemoteLogPersister {

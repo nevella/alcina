@@ -9,7 +9,7 @@ import java.util.List;
  * Overrides List.equals to force a property change (plus, list.equals is
  * expensive)
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */

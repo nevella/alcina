@@ -23,11 +23,7 @@ public class ModelEvents {
 			handler.onAdd(this);
 		}
 
-		@Override
-		public Class<Add.Handler> getHandlerClass() {
-			return Add.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onAdd(Add event);
 		}
@@ -39,11 +35,7 @@ public class ModelEvents {
 			handler.onBack(this);
 		}
 
-		@Override
-		public Class<Back.Handler> getHandlerClass() {
-			return Back.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onBack(Back event);
 		}
@@ -55,11 +47,7 @@ public class ModelEvents {
 			handler.onCancel(this);
 		}
 
-		@Override
-		public Class<Cancel.Handler> getHandlerClass() {
-			return Cancel.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onCancel(Cancel event);
 		}
@@ -72,11 +60,7 @@ public class ModelEvents {
 			handler.onChange(this);
 		}
 
-		@Override
-		public Class<Change.Handler> getHandlerClass() {
-			return Change.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onChange(Change event);
 		}
@@ -88,11 +72,7 @@ public class ModelEvents {
 			handler.onClear(this);
 		}
 
-		@Override
-		public Class<Clear.Handler> getHandlerClass() {
-			return Clear.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onClear(Clear event);
 		}
@@ -104,11 +84,7 @@ public class ModelEvents {
 			handler.onClose(this);
 		}
 
-		@Override
-		public Class<Close.Handler> getHandlerClass() {
-			return Close.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onClose(Close event);
 		}
@@ -120,11 +96,7 @@ public class ModelEvents {
 			handler.onClosed(this);
 		}
 
-		@Override
-		public Class<Closed.Handler> getHandlerClass() {
-			return Closed.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onClosed(Closed event);
 		}
@@ -136,11 +108,7 @@ public class ModelEvents {
 			handler.onCommit(this);
 		}
 
-		@Override
-		public Class<Commit.Handler> getHandlerClass() {
-			return Commit.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onCommit(Commit event);
 		}
@@ -152,11 +120,7 @@ public class ModelEvents {
 			handler.onCreate(this);
 		}
 
-		@Override
-		public Class<Create.Handler> getHandlerClass() {
-			return Create.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onCreate(Create event);
 		}
@@ -168,11 +132,7 @@ public class ModelEvents {
 			handler.onDelete(this);
 		}
 
-		@Override
-		public Class<Delete.Handler> getHandlerClass() {
-			return Delete.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onDelete(Delete event);
 		}
@@ -184,11 +144,7 @@ public class ModelEvents {
 			handler.onDownload(this);
 		}
 
-		@Override
-		public Class<Download.Handler> getHandlerClass() {
-			return Download.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onDownload(Download event);
 		}
@@ -200,11 +156,7 @@ public class ModelEvents {
 			handler.onEdit(this);
 		}
 
-		@Override
-		public Class<Edit.Handler> getHandlerClass() {
-			return Edit.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onEdit(Edit event);
 		}
@@ -216,11 +168,7 @@ public class ModelEvents {
 			handler.onExpand(this);
 		}
 
-		@Override
-		public Class<Expand.Handler> getHandlerClass() {
-			return Expand.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onExpand(Expand event);
 		}
@@ -232,11 +180,7 @@ public class ModelEvents {
 			handler.onFilter(this);
 		}
 
-		@Override
-		public Class<Filter.Handler> getHandlerClass() {
-			return Filter.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onFilter(Filter event);
 		}
@@ -248,11 +192,7 @@ public class ModelEvents {
 			handler.onFind(this);
 		}
 
-		@Override
-		public Class<Find.Handler> getHandlerClass() {
-			return Find.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onFind(Find event);
 		}
@@ -264,11 +204,7 @@ public class ModelEvents {
 			handler.onForward(this);
 		}
 
-		@Override
-		public Class<Forward.Handler> getHandlerClass() {
-			return Forward.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onForward(Forward event);
 		}
@@ -279,7 +215,7 @@ public class ModelEvents {
 	 * has not been 'committed') - see
 	 * https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class Input extends ModelEvent<String, Input.Handler>
@@ -293,11 +229,7 @@ public class ModelEvents {
 			return getModel();
 		}
 
-		@Override
-		public Class<Input.Handler> getHandlerClass() {
-			return Input.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onInput(Input event);
 		}
@@ -309,11 +241,7 @@ public class ModelEvents {
 			handler.onInsert(this);
 		}
 
-		@Override
-		public Class<Insert.Handler> getHandlerClass() {
-			return Insert.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onInsert(Insert event);
 		}
@@ -325,11 +253,7 @@ public class ModelEvents {
 			handler.onLogin(this);
 		}
 
-		@Override
-		public Class<Login.Handler> getHandlerClass() {
-			return Login.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onLogin(Login event);
 		}
@@ -341,11 +265,7 @@ public class ModelEvents {
 			handler.onLogout(this);
 		}
 
-		@Override
-		public Class<Logout.Handler> getHandlerClass() {
-			return Logout.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onLogout(Logout event);
 		}
@@ -357,11 +277,7 @@ public class ModelEvents {
 			handler.onNext(this);
 		}
 
-		@Override
-		public Class<Next.Handler> getHandlerClass() {
-			return Next.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onNext(Next event);
 		}
@@ -373,11 +289,7 @@ public class ModelEvents {
 			handler.onOpened(this);
 		}
 
-		@Override
-		public Class<Opened.Handler> getHandlerClass() {
-			return Opened.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onOpened(Opened event);
 		}
@@ -389,11 +301,7 @@ public class ModelEvents {
 			handler.onOptions(this);
 		}
 
-		@Override
-		public Class<Options.Handler> getHandlerClass() {
-			return Options.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onOptions(Options event);
 		}
@@ -405,11 +313,7 @@ public class ModelEvents {
 			handler.onRemove(this);
 		}
 
-		@Override
-		public Class<Remove.Handler> getHandlerClass() {
-			return Remove.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onRemove(Remove event);
 		}
@@ -421,11 +325,7 @@ public class ModelEvents {
 			handler.onSearch(this);
 		}
 
-		@Override
-		public Class<Search.Handler> getHandlerClass() {
-			return Search.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onSearch(Search event);
 		}
@@ -434,7 +334,7 @@ public class ModelEvents {
 	/**
 	 * Emitted by single-item selection sources, such as {@code Choices.Single}
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class Selected extends ModelEvent<Object, Selected.Handler> {
@@ -443,11 +343,7 @@ public class ModelEvents {
 			handler.onSelected(this);
 		}
 
-		@Override
-		public Class<Selected.Handler> getHandlerClass() {
-			return Selected.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onSelected(Selected event);
 		}
@@ -459,7 +355,7 @@ public class ModelEvents {
 	 *
 	 * Not to be confused with the selectionchange DOM event
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class SelectionChanged
@@ -469,11 +365,7 @@ public class ModelEvents {
 			handler.onSelectionChanged(this);
 		}
 
-		@Override
-		public Class<SelectionChanged.Handler> getHandlerClass() {
-			return SelectionChanged.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onSelectionChanged(SelectionChanged event);
 		}
@@ -485,11 +377,7 @@ public class ModelEvents {
 			handler.onShow(this);
 		}
 
-		@Override
-		public Class<Show.Handler> getHandlerClass() {
-			return Show.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onShow(Show event);
 		}
@@ -501,11 +389,7 @@ public class ModelEvents {
 			handler.onSubmit(this);
 		}
 
-		@Override
-		public Class<Submit.Handler> getHandlerClass() {
-			return Submit.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onSubmit(Submit event);
 		}
@@ -517,11 +401,7 @@ public class ModelEvents {
 			handler.onToggle(this);
 		}
 
-		@Override
-		public Class<Toggle.Handler> getHandlerClass() {
-			return Toggle.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onToggle(Toggle event);
 		}
@@ -546,11 +426,7 @@ public class ModelEvents {
 			handler.onTransformSourceModified(this);
 		}
 
-		@Override
-		public Class<TransformSourceModified.Handler> getHandlerClass() {
-			return TransformSourceModified.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onTransformSourceModified(TransformSourceModified event);
 		}
@@ -562,11 +438,7 @@ public class ModelEvents {
 			handler.onView(this);
 		}
 
-		@Override
-		public Class<View.Handler> getHandlerClass() {
-			return View.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onView(View event);
 		}

@@ -18,7 +18,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceList
  * caching prior to that transform id - or make sure per user class instances
  * are created via the transform manager
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public class TransformCache implements DomainTransformPersistenceListener {

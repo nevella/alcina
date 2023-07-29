@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
  * A persistent view of the domain (entity graph), characterised by its
  * basis/source (entityDefinition) and its transformation (entityTransformModel)
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <V>
  */

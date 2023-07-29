@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
  * constraint. Effectively like a graphics app, 'align start to end' etc - this
  * is a decent model for popup layout.
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class OverlayPosition {

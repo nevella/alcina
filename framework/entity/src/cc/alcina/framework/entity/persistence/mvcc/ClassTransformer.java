@@ -942,7 +942,7 @@ class ClassTransformer {
 		 * version of object
 		 * </ul>
 		 *
-		 * @author nick@alcina.cc
+		 * 
 		 */
 		class ClassWriter {
 			public void generateMvccClassTask() {

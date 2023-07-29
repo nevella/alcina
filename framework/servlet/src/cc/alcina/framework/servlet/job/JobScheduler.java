@@ -60,7 +60,7 @@ import cc.alcina.framework.entity.util.MethodContext;
  * <li>UI
  * <ul>
  *
- * @author nick@alcina.cc
+ * 
  */
 public class JobScheduler {
 	private JobRegistry jobRegistry;

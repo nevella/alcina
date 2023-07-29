@@ -20,7 +20,7 @@ import java.beans.PropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 
 /**
- * @author nick@alcina.cc
+ * 
  *
  */
 public class LazyPropertyChangeSupport {

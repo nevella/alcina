@@ -17,7 +17,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  * 
  *         Note that sorted projections are only post-tx
  *

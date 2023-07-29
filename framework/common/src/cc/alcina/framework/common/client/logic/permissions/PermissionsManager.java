@@ -936,7 +936,7 @@ public class PermissionsManager implements DomainTransformListener {
 	 * 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 	 * 		</code>
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 */
 	public static class RegistryPermissionsExtension
 			implements PermissionsExtension {

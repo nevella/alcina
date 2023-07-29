@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 /**
  * Subclass this if the app can function in a "never-connected-to-server" mode
  *
- * @author nick@alcina.cc
+ * 
  */
 @Reflected
 @Registration.Singleton

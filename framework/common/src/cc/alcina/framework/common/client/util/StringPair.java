@@ -14,7 +14,7 @@ import com.totsp.gwittir.client.beans.Converter;
 /**
  * A string tuple
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)

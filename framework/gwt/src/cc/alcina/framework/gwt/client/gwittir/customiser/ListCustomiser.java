@@ -28,7 +28,7 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 @Reflected

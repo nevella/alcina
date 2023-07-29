@@ -18,7 +18,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
  * project with such a map, delete first 5000 and repeat
  * 'projection.stream().findFirst() say 1000 times
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <K>
  * @param <V>

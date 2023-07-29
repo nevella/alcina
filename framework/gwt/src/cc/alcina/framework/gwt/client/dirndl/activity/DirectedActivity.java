@@ -31,7 +31,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * do), and interception/re-render (via property change) by the container or the
  * activity subclass itself
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <P>
  */

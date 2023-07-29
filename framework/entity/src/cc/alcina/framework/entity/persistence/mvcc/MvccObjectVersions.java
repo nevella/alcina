@@ -45,7 +45,7 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * lazy-load?), but read-only _access_ (to prior visible tx version) is
  * definitely not.
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */

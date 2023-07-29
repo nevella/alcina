@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 /**
  * maaarrrkkkerrrr
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface PersistentImpl {

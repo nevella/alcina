@@ -41,11 +41,7 @@ public class InferredDomEvents {
 			handler.onActionOutside(this);
 		}
 
-		@Override
-		public Class<ActionOutside.Handler> getHandlerClass() {
-			return ActionOutside.Handler.class;
-		}
-
+		
 		public static class BindingImpl
 				extends EventRelativeBinding<ActionOutside> {
 			@Override
@@ -66,11 +62,7 @@ public class InferredDomEvents {
 			handler.onClickOutside(this);
 		}
 
-		@Override
-		public Class<ClickOutside.Handler> getHandlerClass() {
-			return ClickOutside.Handler.class;
-		}
-
+		
 		public static class BindingImpl
 				extends EventRelativeBinding<ClickOutside> {
 			@Override
@@ -92,11 +84,7 @@ public class InferredDomEvents {
 			handler.onCtrlEnterPressed(this);
 		}
 
-		@Override
-		public Class<CtrlEnterPressed.Handler> getHandlerClass() {
-			return CtrlEnterPressed.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<CtrlEnterPressed>
 				implements KeyUpHandler {
 			@Override
@@ -127,11 +115,7 @@ public class InferredDomEvents {
 			handler.onEnterPressed(this);
 		}
 
-		@Override
-		public Class<EnterPressed.Handler> getHandlerClass() {
-			return EnterPressed.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<EnterPressed>
 				implements KeyUpHandler {
 			@Override
@@ -162,11 +146,7 @@ public class InferredDomEvents {
 			handler.onEscapePressed(this);
 		}
 
-		@Override
-		public Class<EscapePressed.Handler> getHandlerClass() {
-			return EscapePressed.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<EscapePressed>
 				implements KeyUpHandler {
 			@Override
@@ -202,11 +182,7 @@ public class InferredDomEvents {
 			handler.onInputEnterCommit(this);
 		}
 
-		@Override
-		public Class<InputEnterCommit.Handler> getHandlerClass() {
-			return InputEnterCommit.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<InputEnterCommit>
 				implements ChangeHandler, KeyUpHandler {
 			private boolean enterReceived = false;
@@ -371,11 +347,7 @@ public class InferredDomEvents {
 			handler.onLeftClick(this);
 		}
 
-		@Override
-		public Class<LeftClick.Handler> getHandlerClass() {
-			return LeftClick.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<LeftClick>
 				implements ClickHandler {
 			@Override
@@ -412,11 +384,7 @@ public class InferredDomEvents {
 			handler.onMouseDownOutside(this);
 		}
 
-		@Override
-		public Class<MouseDownOutside.Handler> getHandlerClass() {
-			return MouseDownOutside.Handler.class;
-		}
-
+		
 		public static class BindingImpl
 				extends EventRelativeBinding<MouseDownOutside> {
 			@Override
@@ -460,11 +428,7 @@ public class InferredDomEvents {
 			handler.onMutation(this);
 		}
 
-		@Override
-		public Class<Mutation.Handler> getHandlerClass() {
-			return Mutation.Handler.class;
-		}
-
+		
 		public static class BindingImpl extends DomBinding<Mutation> {
 			TopicListener<List<MutationRecord>> mutationListener = this::onMutations;
 
@@ -517,11 +481,7 @@ public class InferredDomEvents {
 			handler.onNativePreviewEventAsync(this);
 		}
 
-		@Override
-		public Class<NativePreviewEventAsync.Handler> getHandlerClass() {
-			return NativePreviewEventAsync.Handler.class;
-		}
-
+		
 		@Override
 		public NativeEvent getNativeEvent() {
 			return this.nativeEvent;
@@ -536,7 +496,7 @@ public class InferredDomEvents {
 	 * Unless it's guaranteed that the callback will be inexpensive, use the
 	 * RequestAnimation subclass, which ensures smoothness
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class ResizeObserved

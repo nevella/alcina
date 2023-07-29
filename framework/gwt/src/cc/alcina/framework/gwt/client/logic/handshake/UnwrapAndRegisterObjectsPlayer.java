@@ -30,7 +30,7 @@ import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDel
 
 /**
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class UnwrapAndRegisterObjectsPlayer

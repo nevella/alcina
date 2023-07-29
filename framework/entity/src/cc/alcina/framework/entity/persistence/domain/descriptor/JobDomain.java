@@ -1217,7 +1217,7 @@ public class JobDomain {
 		 * transactionalmap/iterator, mandate that the second map (in
 		 * createLookup) be a pure-concurrent map
 		 *
-		 * @author nick@alcina.cc
+		 * 
 		 *
 		 */
 		private class FutureConsistencyPriorityProjection

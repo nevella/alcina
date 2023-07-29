@@ -29,7 +29,7 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 /**
  * Can be plugged into TLTM to check for versioning conflicts
  *
- * @author nick@alcina.cc
+ * 
  */
 public class TransformConflicts {
 	private static final String CHECK_TRANSFORM_CONFLICTS_QUERY = "check transform conflicts query";

@@ -52,7 +52,7 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.Type;
  *
  * FIXME - livetree - make that a little prettier
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Registration.Singleton

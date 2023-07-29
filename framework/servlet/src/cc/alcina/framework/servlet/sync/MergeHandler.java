@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.Topic;
  * Handle merge - run the mergers (generally per-interchange-model member class)
  * persist the generated delta model
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <I>
  * @param <D>

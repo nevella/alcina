@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  * {@code ArchiveCriterionHandler extends DomainTransformEventInfoCriterionHandler<ArchiveCriterion>
 			implements BaseEnumCriterionHandler<DomainTransformEventInfo, BooleanEnum, ArchiveCriterion>}
  * 
- * @author nick@alcina.cc
+ * 
  *
  * @param <SC>
  */

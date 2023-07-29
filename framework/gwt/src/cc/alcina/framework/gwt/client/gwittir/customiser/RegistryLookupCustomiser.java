@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 /**
  * Lets you specify customiser in...for instance...the client package.
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Reflected

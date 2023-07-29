@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.domain.DomainCollections;
  * Currently don't optimise with a separate array for hashes - not sure how much
  * that would help js performance
  *
- * @author nick@alcina.cc
+ * 
  * @param <H>
  */
 public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {

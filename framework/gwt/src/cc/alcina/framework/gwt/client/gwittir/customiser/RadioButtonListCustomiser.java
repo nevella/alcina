@@ -29,7 +29,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 
 /**
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 @Reflected

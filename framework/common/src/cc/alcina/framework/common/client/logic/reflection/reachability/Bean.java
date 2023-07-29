@@ -46,7 +46,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
  * Currently an annotation rather than an interface (no-params annotations are
  * basically equivalent) to allow descendants to declare themselves 'not a bean'
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -65,7 +65,7 @@ public @interface Bean {
 	 * 
 	 * FIXME - beans1x5 - check transient attr on field is respected
 	 * 
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Reflected

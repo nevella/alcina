@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
  * references moved here
  * </p>
  * 
- * @author nick@alcina.cc
+ * 
  * 
  */
 public class AlcinaHistoryItemTm extends AlcinaHistoryItem {

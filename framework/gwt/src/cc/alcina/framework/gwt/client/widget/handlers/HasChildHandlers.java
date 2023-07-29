@@ -18,7 +18,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 /**
  * Convenience interface for long-running widgets which listen to their children
  * 
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface HasChildHandlers {

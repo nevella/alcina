@@ -50,7 +50,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
  * rationale
  * </ul>
  *
- * @author nick@alcina.cc
+ * 
  *
  *
  */

@@ -24,7 +24,7 @@ import cc.alcina.framework.gwt.client.logic.MessageManager;
  * These are enabled by default, disable by overriding with a higher-priority
  * registration
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class EntityActions {

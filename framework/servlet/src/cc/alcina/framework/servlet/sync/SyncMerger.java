@@ -37,7 +37,7 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
  * 
  * Note that left *must* have distinct keys (if using key matcher strategy)
  * 
- * @author nick@alcina.cc
+ * 
  * 
  *         In general, when adding a merge field, make sure that the object's
  *         equivalentTo checks the new field
