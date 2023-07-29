@@ -66,6 +66,11 @@ class RenderedW3cNode implements Rendered {
 	}
 
 	@Override
+	public void insertAsFirstChild(Rendered rendered) {
+		node.insertBefore(rendered.getNode(), node.getFirstChild());
+	}
+
+	@Override
 	public void insertChild(Rendered rendered, int idx) {
 		NodeList childNodes = node.getChildNodes();
 		if (idx == childNodes.getLength()) {

@@ -54,7 +54,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * The arbitrary case doesn't really need a supporting model - see (FIXME -
  * dirndl - doc) this example of using transforms
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public class TableModel extends Model {
@@ -306,11 +306,7 @@ public class TableModel extends Model {
 			handler.onTableColumnClicked(this);
 		}
 
-		@Override
-		public Class<TableColumnClicked.Handler> getHandlerClass() {
-			return TableColumnClicked.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onTableColumnClicked(TableColumnClicked TableColumnClicked);
 		}

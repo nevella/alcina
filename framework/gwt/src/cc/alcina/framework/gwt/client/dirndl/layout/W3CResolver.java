@@ -7,19 +7,20 @@ import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class W3CResolver extends ContextResolver {
-	DomDocument doc;
+	protected DomDocument document;
 
 	@Override
 	public void renderElement(Node layoutNode, String tagName) {
 		DomNode domNode = null;
-		if (doc == null) {
-			doc = DomDocument.from(Ax.format("<%s/>", tagName));
-			domNode = doc.getDocumentElementNode();
+		if (document == null) {
+			document = DomDocument.from(Ax.format("<%s/>", tagName));
+			domNode = document.getDocumentElementNode();
 		} else {
-			Element element = doc.domDoc().createElement(tagName);
-			domNode = doc.nodeFor(element);
+			Element element = document.domDoc().createElement(tagName);
+			domNode = document.nodeFor(element);
 		}
 		String cssClass = layoutNode.directed.cssClass();
 		if (cssClass.length() > 0) {
@@ -30,7 +31,24 @@ public class W3CResolver extends ContextResolver {
 
 	@Override
 	public void renderText(Node layoutNode, String contents) {
-		Text text = doc.domDoc().createTextNode(contents);
+		Text text = document.domDoc().createTextNode(contents);
 		layoutNode.rendered = new RenderedW3cNode(text);
+	}
+
+	public static class Linking extends W3CResolver {
+		protected Model linkModel;
+
+		protected DomNode linkNode;
+
+		@Override
+		public void renderElement(DirectedLayout.Node layoutNode,
+				String tagName) {
+			Object model = layoutNode.getModel();
+			if (model != null && model == linkModel) {
+				layoutNode.rendered = new RenderedW3cNode(linkNode.w3cNode());
+			} else {
+				super.renderElement(layoutNode, tagName);
+			}
+		}
 	}
 }

@@ -29,7 +29,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * logical application level - e.g. a dropdown shows a "color" action, the color
  * selector could be displayed as a pushed dropdown
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <D>
  */

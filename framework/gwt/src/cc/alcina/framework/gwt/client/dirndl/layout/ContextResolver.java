@@ -40,7 +40,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
  * process and all the not-necessarily-sad (not-sic) environmental factors which
  * modify expression of DNA.
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 /*
@@ -147,7 +147,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		// route via default (strategy-based) resolver, not superclass (which
 		// does not use merge strategies)
 		return annotationResolver.resolveAnnotations0(annotationClass, location,
-				this::resolveLocationClass);
+				this::resolveLocationClass, this);
 	}
 
 	protected Property resolveDirectedProperty0(Property property) {
@@ -204,7 +204,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	/**
 	 * Used for getting the default app top-level resolver
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Registration.Singleton

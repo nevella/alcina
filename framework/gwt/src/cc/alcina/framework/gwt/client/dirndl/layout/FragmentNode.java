@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.dirndl.model.fragment;
+package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -7,7 +7,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
@@ -23,38 +25,36 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.layout.HasParentNodeAccess;
-import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.Transformer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode.Transformer;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
 
 /**
  * <p>
  * This class acts as the main base for bi-directional model-tree dom-tree
- * transformations
+ * transformations. It is allowed more access to the inner workings of
+ * DirectedLayout.Node, since many of its mutation operations call through
+ * directly to DirectedLayout.Node mutations
  *
  *
  *
+ */
+/*
+ * FIXME - fm - *probably* want to rework mutations - better to change the dom
+ * (rendered) and immediately apply dom mutations. This will maintain
+ * modelmutation -> cache update (when that happens)
  */
 @Transformer(NodeTransformer.DirectedTransformer.class)
 @Directed
 public abstract class FragmentNode extends Model
 		implements HasParentNodeAccess {
-	static boolean provideIsModelFor(org.w3c.dom.Node w3cNode,
-			Class<? extends FragmentNode> fragmentNodeType) {
-		return provideTransformerFor(fragmentNodeType).appliesTo(w3cNode);
-	}
-
-	static NodeTransformer provideTransformerFor(
-			Class<? extends FragmentNode> fragmentNodeType) {
-		Class<? extends NodeTransformer> transformerClass = Reflections
-				.at(fragmentNodeType).annotation(Transformer.class).value();
-		NodeTransformer transformer = Reflections.newInstance(transformerClass);
-		transformer.setFragmentNodeType(fragmentNodeType);
-		return transformer;
-	}
-
 	protected FragmentModel fragmentModel;
+
+	public <N extends FragmentNode> Optional<N> ancestor(Class<N> clazz) {
+		return (Optional<N>) (Optional<?>) ancestors().stream()
+				.filter(n -> n.getClass() == clazz).findFirst();
+	}
 
 	public Ancestors ancestors() {
 		return new Ancestors();
@@ -64,9 +64,28 @@ public abstract class FragmentNode extends Model
 		provideNode().appendFragmentChild(child);
 	}
 
+	public <N extends FragmentNode> Stream<N> byType(Class<N> clazz) {
+		return (Stream<N>) stream().filter(n -> n.getClass() == clazz);
+	}
+
+	public <N extends FragmentNode> List<N> byTypeList(Class<N> clazz) {
+		return byType(clazz).collect(Collectors.toList());
+	}
+
+	public <N extends FragmentNode> N byTypeNode(Class<N> clazz) {
+		return byType(clazz).findFirst().orElse(null);
+	}
+
+	public <N extends FragmentNode> Optional<N> byTypeOptional(Class<N> clazz) {
+		return byType(clazz).findFirst();
+	}
+
 	public Stream<? extends FragmentNode> children() {
-		return (Stream<FragmentNode>) (Stream<?>) provideChildNodes().stream()
-				.filter(n -> n.getModel() instanceof FragmentNode);
+		List<Node> childNodes = provideChildNodes();
+		return childNodes == null ? Stream.empty()
+				: (Stream<FragmentNode>) (Stream<?>) childNodes.stream()
+						.filter(n -> n.getModel() instanceof FragmentNode)
+						.map(Node::getModel);
 	}
 
 	public DomNode domNode() {
@@ -93,6 +112,10 @@ public abstract class FragmentNode extends Model
 		return fragmentModel;
 	}
 
+	public void insertAsFirstChild(FragmentNode child) {
+		provideNode().insertAsFirstFragmentChild(child);
+	}
+
 	public FragmentNode parent() {
 		Node parentNode = provideParentNode();
 		if (parentNode == null) {
@@ -106,10 +129,21 @@ public abstract class FragmentNode extends Model
 		}
 	}
 
+	public void replaceWith(FragmentNode other) {
+		provideParentNode().replaceChild(this, other);
+	}
+
 	public Stream<? extends FragmentNode> stream() {
 		return new DepthFirstTraversal<FragmentNode>(this,
 				fn -> fn.children().collect(Collectors.toList()), false)
 						.stream();
+	}
+
+	public void strip() {
+		provideNode().strip();
+		// FIXME - st.bn - probably not...
+		// throw new UnsupportedOperationException();
+		// domNode().strip();
 	}
 
 	@Override

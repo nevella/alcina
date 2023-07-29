@@ -46,7 +46,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * <code>&lt;Input&gt;</code>, wrapping the corresponding DOM eventt.s
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Directed(

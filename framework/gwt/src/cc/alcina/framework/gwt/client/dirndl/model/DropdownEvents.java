@@ -11,11 +11,7 @@ public class DropdownEvents {
 			handler.onDropdownButtonClicked(this);
 		}
 
-		@Override
-		public Class<DropdownButtonClicked.Handler> getHandlerClass() {
-			return DropdownButtonClicked.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onDropdownButtonClicked(DropdownButtonClicked event);
 		}
@@ -28,11 +24,7 @@ public class DropdownEvents {
 			handler.onInsideDropdownClicked(this);
 		}
 
-		@Override
-		public Class<InsideDropdownClicked.Handler> getHandlerClass() {
-			return InsideDropdownClicked.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onInsideDropdownClicked(InsideDropdownClicked event);
 		}
@@ -45,11 +37,7 @@ public class DropdownEvents {
 			handler.onOutsideDropdownClicked(this);
 		}
 
-		@Override
-		public Class<OutsideDropdownClicked.Handler> getHandlerClass() {
-			return OutsideDropdownClicked.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onOutsideDropdownClicked(OutsideDropdownClicked event);
 		}

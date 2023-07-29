@@ -11,11 +11,7 @@ public class SuggestorEvents {
 			handler.onEditorAsk(this);
 		}
 
-		@Override
-		public Class<EditorAsk.Handler> getHandlerClass() {
-			return EditorAsk.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onEditorAsk(EditorAsk event);
 		}
@@ -28,11 +24,7 @@ public class SuggestorEvents {
 			handler.onEditorExit(this);
 		}
 
-		@Override
-		public Class<EditorExit.Handler> getHandlerClass() {
-			return EditorExit.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onEditorExit(EditorExit event);
 		}
@@ -45,11 +37,7 @@ public class SuggestorEvents {
 			handler.onShowingSuggestions(this);
 		}
 
-		@Override
-		public Class<SuggestionsVisible.Handler> getHandlerClass() {
-			return SuggestionsVisible.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onShowingSuggestions(SuggestionsVisible event);
 		}

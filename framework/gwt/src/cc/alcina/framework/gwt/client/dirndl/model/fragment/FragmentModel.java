@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.fragment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,13 +15,13 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
-import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
-import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal.W3cNode;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Mutation;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
@@ -28,6 +29,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.FragmentRoot;
 
@@ -68,7 +70,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * mutations can make that hard to reconstruct (see {@link SyncMutations})
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Feature.Ref(Feature_Dirndl_FragmentModel.class)
@@ -76,14 +78,20 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		LayoutEvents.Bind.Handler, NodeTransformer.Provider {
 	Model rootModel;
 
-	Map<Node, NodeTransformer> domNodeTransformer = AlcinaCollections
+	Map<DomNode, NodeTransformer> domNodeTransformer = AlcinaCollections
 			.newUnqiueMap();
 
 	ModelMutation currentModelMutation;
 
-	List<Class<? extends FragmentNode>> modelledTypes = new ArrayList<>();
+	List<Class<? extends FragmentNode>> modelledTypes = new LinkedList<>();
 
 	boolean eventScheduled;
+
+	boolean emitMutationEvents = true;
+
+	TransformerMatcher transformerMatcher = new TransformerMatcher(this);
+
+	List<NodeTransformer> matchingTransformers;
 
 	public FragmentModel(Model rootModel) {
 		this.rootModel = rootModel;
@@ -105,14 +113,18 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	@Override
-	public NodeTransformer createNodeTransformer(Node w3cNode) {
-		Class<? extends FragmentNode> fragmentNodeType = modelledTypes.stream()
-				.filter(type -> FragmentNode.provideIsModelFor(w3cNode, type))
-				.findFirst().get();
-		NodeTransformer transformer = FragmentNode
-				.provideTransformerFor(fragmentNodeType);
-		transformer.init(w3cNode);
-		return transformer;
+	public NodeTransformer createNodeTransformer(DomNode node) {
+		return transformerMatcher.createNodeTransformer(node);
+	}
+
+	public void domToModel() {
+		DirectedLayout.Node layoutNode = rootModel.provideNode();
+		DomNode node = layoutNode.getRendered().asDomNode();
+		FragmentRoot transformer = new NodeTransformer.FragmentRoot(layoutNode);
+		domNodeTransformer.put(node, transformer);
+		currentModelMutation = new ModelMutation(this);
+		addDescent(node);
+		scheduleEmitMutationEvent();
 	}
 
 	public FragmentNode getFragmentNode(Node node) {
@@ -121,20 +133,17 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				: (FragmentNode) transformer.getModel();
 	}
 
+	public boolean isEmitMutationEvents() {
+		return this.emitMutationEvents;
+	}
+
 	@Override
 	public void onBind(Bind event) {
 		/*
 		 * initialise the transformer/attach structure with a root
 		 */
 		if (event.isBound()) {
-			DirectedLayout.Node layoutNode = rootModel.provideNode();
-			Node w3cNode = layoutNode.getRendered().getNode();
-			FragmentRoot transformer = new NodeTransformer.FragmentRoot(
-					layoutNode);
-			domNodeTransformer.put(w3cNode, transformer);
-			currentModelMutation = new ModelMutation(this);
-			addDescent(w3cNode);
-			scheduleEmitMutationEvent();
+			domToModel();
 		}
 	}
 
@@ -158,17 +167,25 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		scheduleEmitMutationEvent();
 	}
 
+	public Resolver provideResolver() {
+		return rootModel.provideNode().getResolver();
+	}
+
+	public void setEmitMutationEvents(boolean emitMutationEvents) {
+		this.emitMutationEvents = emitMutationEvents;
+	}
+
 	protected void addDefaultModelledTypes() {
 		addModelled(FragmentNode.Text.class, FragmentNode.Generic.class);
 	}
 
-	void addDescent(Node node) {
-		W3cNode traversal = new DepthFirstTraversal.W3cNode(node);
+	void addDescent(DomNode node) {
+		DomNode.DomNodeTraversal traversal = new DomNode.DomNodeTraversal(node);
 		traversal.forEach(n -> {
 			NodeTransformer transformer = domNodeTransformer.get(n);
 			if (transformer == null) {
 				NodeTransformer parentTransformer = domNodeTransformer
-						.get(n.getParentNode());
+						.get(n.parent());
 				/*
 				 * Where the domNode -> model creation, attach to the
 				 * DirectedLayout.Node structure occurs
@@ -190,8 +207,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		eventScheduled = false;
 	}
 
-	void removeDescent(Node node) {
-		W3cNode traversal = new DepthFirstTraversal.W3cNode(node);
+	void removeDescent(DomNode node) {
+		DomNode.DomNodeTraversal traversal = new DomNode.DomNodeTraversal(node);
 		NodeTransformer topTransformer = domNodeTransformer.get(node);
 		// FIXME - fm - should this ever be null? can reproduce by deleting
 		// from a structured contenteditor
@@ -208,6 +225,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	void scheduleEmitMutationEvent() {
+		if (!emitMutationEvents) {
+			return;
+		}
 		if (eventScheduled) {
 			return;
 		}
@@ -243,11 +263,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			return super.getModel();
 		}
 
-		@Override
-		public Class<ModelMutation.Handler> getHandlerClass() {
-			return ModelMutation.Handler.class;
-		}
-
+		
 		UpdateRecord ensure(Node w3cNode) {
 			return getData().updateRecords.computeIfAbsent(w3cNode,
 					n -> getData().fragmentModel.new UpdateRecord(n));
@@ -379,8 +395,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 						removes.removeDescendants();
 					});
 			adds.removeIfContained(removes.nodes);
-			adds.nodes.forEach(FragmentModel.this::addDescent);
-			removes.nodes.forEach(FragmentModel.this::removeDescent);
+			adds.nodes.stream().map(DomNode::from)
+					.forEach(FragmentModel.this::addDescent);
+			removes.nodes.stream().map(DomNode::from)
+					.forEach(FragmentModel.this::removeDescent);
 		}
 	}
 }

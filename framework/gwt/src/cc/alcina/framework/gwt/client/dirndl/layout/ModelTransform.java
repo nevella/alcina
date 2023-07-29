@@ -18,7 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Reflected
@@ -45,7 +45,7 @@ public interface ModelTransform<A, B> extends Function<A, B> {
 	 * Note that the context DirectedLayout.Node only exposes its own properties
 	 * (not parent/children) to classes outside the main dirndl package.
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 * @param <A>
 	 *            The incoming model

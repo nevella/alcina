@@ -78,7 +78,7 @@ public abstract class DirectedRenderer {
 	 * Renders a container widget for the Bindable instance and layout nodes for
 	 * the properties
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Registration({ DirectedRenderer.class, Bindable.class })
@@ -99,7 +99,7 @@ public abstract class DirectedRenderer {
 	 * the collection itself, normally there will be one widget (or at least
 	 * dirndl node) per collection element
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Registration({ DirectedRenderer.class, AbstractCollection.class })
@@ -161,7 +161,7 @@ public abstract class DirectedRenderer {
 	/**
 	 * Renders a container widget (dom element, by default a div)
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class Container extends DirectedRenderer {
@@ -202,7 +202,7 @@ public abstract class DirectedRenderer {
 	/**
 	 *
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	/*
@@ -277,7 +277,7 @@ public abstract class DirectedRenderer {
 	 * Transitional. Allows the model/directedlayout system access to (to wrap)
 	 * a widget
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	@Registration({ DirectedRenderer.class, Widget.class })

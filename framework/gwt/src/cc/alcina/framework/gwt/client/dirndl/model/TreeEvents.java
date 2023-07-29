@@ -11,11 +11,7 @@ public class TreeEvents {
 			handler.onNodeLabelClicked(this);
 		}
 
-		@Override
-		public Class<NodeLabelClicked.Handler> getHandlerClass() {
-			return NodeLabelClicked.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onNodeLabelClicked(NodeLabelClicked event);
 		}
@@ -28,11 +24,7 @@ public class TreeEvents {
 			handler.onNodeToggleButtonClicked(this);
 		}
 
-		@Override
-		public Class<NodeToggleButtonClicked.Handler> getHandlerClass() {
-			return NodeToggleButtonClicked.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onNodeToggleButtonClicked(NodeToggleButtonClicked event);
 		}
@@ -45,11 +37,7 @@ public class TreeEvents {
 			handler.onPaginatorVisible(this);
 		}
 
-		@Override
-		public Class<PaginatorVisible.Handler> getHandlerClass() {
-			return PaginatorVisible.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onPaginatorVisible(PaginatorVisible event);
 		}

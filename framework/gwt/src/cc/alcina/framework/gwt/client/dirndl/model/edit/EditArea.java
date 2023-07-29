@@ -24,27 +24,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
 
 /**
  * <p>
- * This class models an editable text field, rendering as either an
- * <code>&lt;input&gt;</code> or <code>&lt;textarea&gt;</code> DOM element.
- *
- * <p>
- * It maintains a 'currentValue' r/o property, tracking the current edited (but
- * not committed) value of the element (an element is committed - and the value
- * property changed - on focus loss or [enter] in the case of input elements -
- * not on every change to the visible text) - see
- * https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event
- *
- * <p>
- * Note that the StringInput.value property may be out of sync with the
- * element.value property - since the StringInput.value property tracks the
- * committed value
- *
- * <p>
- * It fires modelevents <code>&lt;Change&gt;</code> and
- * <code>&lt;Input&gt;</code>, wrapping the corresponding DOM events.
+ * This class models an editable dom area. It maintains bi-directional sync
+ * between the dom tree and the dirndl node/featurenode tree via the
+ * FragmentModel helper, routing DOM mutation events to it
  *
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Directed(
@@ -71,8 +56,6 @@ public class EditArea extends Model implements FocusOnBind, HasTag,
 	private boolean focusOnBind;
 
 	private String tag = "edit";
-
-	private boolean selectAllOnBind;
 
 	boolean stripFontTagsOnInput = false;
 
@@ -111,10 +94,6 @@ public class EditArea extends Model implements FocusOnBind, HasTag,
 		return focusOnBind;
 	}
 
-	public boolean isSelectAllOnBind() {
-		return this.selectAllOnBind;
-	}
-
 	// @Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
 	@Override
 	public void onBeforeInput(BeforeInput event) {
@@ -125,9 +104,6 @@ public class EditArea extends Model implements FocusOnBind, HasTag,
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
-		if (isSelectAllOnBind()) {
-			throw new UnsupportedOperationException();
-		}
 		fragmentModel.onBind(event);
 	}
 
@@ -187,10 +163,6 @@ public class EditArea extends Model implements FocusOnBind, HasTag,
 
 	public void setPlaceholder(String placeholder) {
 		this.placeholder = placeholder;
-	}
-
-	public void setSelectAllOnBind(boolean selectAllOnBind) {
-		this.selectAllOnBind = selectAllOnBind;
 	}
 
 	public void setTag(String tag) {

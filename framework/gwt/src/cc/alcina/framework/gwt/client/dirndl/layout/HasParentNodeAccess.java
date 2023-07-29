@@ -14,7 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * The exception is editable documents - so the corresponding model
  * (FragmentNode) implements this interface
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public interface HasParentNodeAccess {

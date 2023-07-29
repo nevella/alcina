@@ -40,7 +40,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * <p>
  * FIXME - dirndl 1x1dz - switch SuggestorConfiguration to a builder
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Directed(
@@ -254,7 +254,7 @@ public class Suggestor extends Model
 	 * <p>
 	 * So named because 'query' is so tired
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public interface Ask {

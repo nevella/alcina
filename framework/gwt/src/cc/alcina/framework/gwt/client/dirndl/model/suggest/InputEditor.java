@@ -25,7 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.Edito
  * If enabled (and it is by default), this editor it also routes keyboard
  * navigation events to the suggestor
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Directed(

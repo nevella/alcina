@@ -11,11 +11,7 @@ public class ContentDecoratorEvents {
 			handler.onReferenceSelected(this);
 		}
 
-		@Override
-		public Class<ReferenceSelected.Handler> getHandlerClass() {
-			return ReferenceSelected.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onReferenceSelected(ReferenceSelected event);
 		}

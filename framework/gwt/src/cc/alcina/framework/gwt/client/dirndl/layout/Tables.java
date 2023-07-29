@@ -58,7 +58,7 @@ public class Tables {
 	 * Used in the generated gridTemplateColumns style attribute of a generated
 	 * grid
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public @interface ColumnWidth {

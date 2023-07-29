@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +112,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * reflective serializer typenode/propertynode implementation), scoped to
  * resolver but by default copying from parent
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 /*
@@ -233,7 +234,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * nodes' widgets are removed (TODO - explain with reasoning/motivation)
 	 *
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	OneWayTraversal<RendererInput> rendererInputs;
@@ -281,7 +282,7 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 		resolver.layout = this;
 		AnnotationLocation location = new AnnotationLocation(model.getClass(),
-				null);
+				null, resolver);
 		enqueueInput(resolver, model, location, null, null);
 		layout();
 		return root.firstDescendantRendered();
@@ -384,7 +385,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * ProcessObservers.observe(DirectedLayout.EventObservable.class, Ax::out,
 	 * true);
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class EventObservable implements ProcessObservable {
@@ -433,6 +434,9 @@ public class DirectedLayout implements AlcinaProcess {
 	 * example of a reasonable usage (because it requires access to the overlay
 	 * context) is the retrieval of the ancestor Overlay in
 	 * {@code Overlay.onBind()}
+	 * <p>
+	 * FIXME - dirndl - fragmentnode - some of those manipulations can probably
+	 * be generalised
 	 */
 	public class Node {
 		// not necessarily unchanged during the Node's lifetime - the renderer
@@ -479,19 +483,6 @@ public class DirectedLayout implements AlcinaProcess {
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			return annotationLocation.getAnnotation(clazz);
-		}
-
-		/**
-		 * Another bidi model/render (via dl.node) structure call, this calls an
-		 * immediate layout. model-model ownership is maintained by the
-		 * fragmentmodel rather than model fields
-		 */
-		public void appendFragmentChild(Model child) {
-			RendererInput input = getResolver().layout.enqueueInput(
-					getResolver(), child,
-					annotationLocation.copyWithClassLocationOf(child), null,
-					this);
-			getResolver().layout.layout();
 		}
 
 		public void applyReverseBindings() {
@@ -788,6 +779,20 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
+		/**
+		 * Another bidi model/render (via dl.node) structure call, this calls an
+		 * immediate layout. model-model ownership is maintained by the
+		 * fragmentmodel rather than model fields
+		 */
+		void appendFragmentChild(Model child) {
+			removeChildNode(child);
+			RendererInput input = getResolver().layout.enqueueInput(
+					getResolver(), child,
+					annotationLocation.copyWithClassLocationOf(child), null,
+					this);
+			getResolver().layout.layout();
+		}
+
 		int depth() {
 			if (depth == -1) {
 				if (parent == null) {
@@ -839,6 +844,38 @@ public class DirectedLayout implements AlcinaProcess {
 			return annotationLocation.property;
 		}
 
+		/**
+		 * Another bidi model/render (via dl.node) structure call, this calls an
+		 * immediate layout. model-model ownership is maintained by the
+		 * fragmentmodel rather than model fields
+		 *
+		 * Note this is a reparent of an existing node
+		 */
+		void insertAsFirstFragmentChild(Model model) {
+			Preconditions.checkState(model.provideNode() != null);
+			Node oldNode = model.provideNode();
+			removeChildNode(model);
+			RendererInput input = getResolver().layout.enqueueInput(
+					getResolver(), model,
+					annotationLocation.copyWithClassLocationOf(model), null,
+					this);
+			getResolver().layout.layout();
+			Node childNode = model.provideNode();
+			if (children.size() != 1) {
+				children.remove(childNode);
+				children.add(0, childNode);
+				rendered.insertAsFirstChild(childNode.rendered);
+			}
+			List<Node> oldChildren = oldNode.children.stream()
+					.collect(Collectors.toList());
+			childNode.children = new ArrayList<>();
+			oldChildren.forEach(child -> {
+				child.parent = childNode;
+				childNode.children.add(child);
+				childNode.rendered.append(child.rendered);
+			});
+		}
+
 		String path() {
 			String thisLoc = pathSegment();
 			if (parent == null) {
@@ -875,6 +912,35 @@ public class DirectedLayout implements AlcinaProcess {
 
 		List<Node> readOnlyChildren() {
 			return children != null ? children : Collections.emptyList();
+		}
+
+		void removeChildNode(Model child) {
+			if (child.provideNode() != null) {
+				child.provideNode().remove(true);
+			}
+		}
+
+		/*
+		 * A little nifty - insert a new node (model: newModel) replacing
+		 * oldNode, then append children of oldNode to newNode
+		 */
+		void replaceChild(Model oldModel, Model newModel) {
+			RendererInput input = getResolver().layout.enqueueInput(
+					getResolver(), newModel,
+					annotationLocation.copyWithClassLocationOf(newModel), null,
+					this);
+			Node oldNode = oldModel.provideNode();
+			List<Node> oldChildren = oldNode.children.stream()
+					.collect(Collectors.toList());
+			input.replace = oldNode;
+			getResolver().layout.layout();
+			Node newNode = newModel.provideNode();
+			newNode.children = new ArrayList<>();
+			oldChildren.forEach(child -> {
+				child.parent = newNode;
+				newNode.children.add(child);
+				newNode.rendered.append(child.rendered);
+			});
 		}
 
 		// this node will disappear, so refer to predecessor nodes
@@ -935,6 +1001,19 @@ public class DirectedLayout implements AlcinaProcess {
 			// visitor, minimises list creation
 			resolveRenderedRendereds0(list);
 			return list;
+		}
+
+		void strip() {
+			List<Node> oldChildren = children.stream()
+					.collect(Collectors.toList());
+			int insertionIndex = parent.children.indexOf(this);
+			// FIXME - fragmentmodel - this doesn't allow for delegating etc (in
+			// fact all the mutation methods don't)
+			for (Node child : oldChildren) {
+				child.parent = parent;
+				parent.children.add(insertionIndex, child);
+				parent.rendered.insertChild(child.rendered, insertionIndex++);
+			}
 		}
 
 		// i.e. that the node doesn't correspond to @Directed.Delegating
@@ -1265,8 +1344,8 @@ public class DirectedLayout implements AlcinaProcess {
 							? "class"
 							: binding.to().isEmpty() ? Ax.cssify(binding.from())
 									: binding.to();
-					if (element.hasAttribute(propertyName)) {
-						stringValue = element.getAttribute(propertyName);
+					if (domElement.hasAttribute(propertyName)) {
+						stringValue = domElement.getAttribute(propertyName);
 					}
 					break;
 				}
@@ -1451,7 +1530,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * The output of RendererInputs - for Uis with events the default is a GWT
 	 * element
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public interface Rendered {
@@ -1473,6 +1552,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 		org.w3c.dom.Node getNode();
 
+		void insertAsFirstChild(Rendered rendered);
+
 		void insertChild(Rendered rendered, int i);
 
 		boolean isElement();
@@ -1490,7 +1571,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * certain cases - see {@link Choices.Select}
 	 *
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public class RendererInput implements Traversable {
@@ -1710,7 +1791,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 *</code>
 	 *
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public static class RenderObservable implements ProcessObservable {
@@ -1732,7 +1813,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * A resolved location in the widget tree relative to which a widget should
 	 * be inserted
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	static class InsertionPoint {

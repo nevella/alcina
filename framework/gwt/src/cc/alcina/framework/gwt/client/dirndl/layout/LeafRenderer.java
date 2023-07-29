@@ -33,7 +33,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput
  *
  * </ul>
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 public abstract class LeafRenderer extends DirectedRenderer {

@@ -92,7 +92,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * shouldn't be used as an rpc class (when sending server-side renderable model
  * trees/graphs to the client), it just shouldn't be the go-to base.
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @ObjectPermissions(
@@ -121,7 +121,7 @@ public abstract class Model extends Bindable implements
 	 * onBeforeRender handler *before* the super call. First time they're used
 	 * is in this class's {@code onBeforeRender} method
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 */
 	public Bindings bindings() {
@@ -157,6 +157,7 @@ public abstract class Model extends Bindable implements
 	 */
 	public void onBind(Bind event) {
 		if (event.isBound()) {
+			Preconditions.checkState(node == null);
 			node = event.getContext().node;
 			if (bindings != null) {
 				bindings.bind();

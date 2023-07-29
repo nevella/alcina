@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 
@@ -8,8 +9,8 @@ public class FragmentResolver extends ContextResolver
 	FragmentModel fragmentModel;
 
 	@Override
-	public NodeTransformer createNodeTransformer(org.w3c.dom.Node w3cNode) {
-		return fragmentModel.createNodeTransformer(w3cNode);
+	public NodeTransformer createNodeTransformer(DomNode node) {
+		return fragmentModel.createNodeTransformer(node);
 	}
 
 	@Override

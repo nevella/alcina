@@ -106,7 +106,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	/**
 	 * Note that subclasses should *not* call the no-args constructor
 	 *
-	 * @author nick@alcina.cc
+	 * 
 	 *
 	 * @param <PN>
 	 */
@@ -161,11 +161,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			handler.onLabelClicked(this);
 		}
 
-		@Override
-		public Class<LabelClicked.Handler> getHandlerClass() {
-			return LabelClicked.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onLabelClicked(LabelClicked LabelClicked);
 		}
@@ -222,11 +218,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			handler.onSelectionChanged(this);
 		}
 
-		@Override
-		public Class<SelectionChanged.Handler> getHandlerClass() {
-			return SelectionChanged.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onSelectionChanged(SelectionChanged event);
 		}
@@ -239,11 +231,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			handler.onToggleButtonClicked(this);
 		}
 
-		@Override
-		public Class<ToggleButtonClicked.Handler> getHandlerClass() {
-			return ToggleButtonClicked.Handler.class;
-		}
-
+		
 		public interface Handler extends NodeEvent.Handler {
 			void onToggleButtonClicked(ToggleButtonClicked event);
 		}

@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.Edito
  * inputcontainer element), instead the events are routed here via the
  * containing contenteditable context
  *
- * @author nick@alcina.cc
+ * 
  *
  */
 @Directed(emits = { EditorAsk.class, EditorExit.class })

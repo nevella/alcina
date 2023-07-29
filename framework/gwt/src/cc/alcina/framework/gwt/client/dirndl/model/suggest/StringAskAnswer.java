@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion;
  * of Suggestion.Default elements (marked up by which parts of the model string
  * representation match the query)
  *
- * @author nick@alcina.cc
+ * 
  *
  * @param <T>
  */
