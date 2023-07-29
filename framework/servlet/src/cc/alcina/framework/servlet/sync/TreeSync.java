@@ -36,7 +36,7 @@ import cc.alcina.framework.servlet.sync.TreeSync.SyncAction.Type;
 /**
  * Synchronizes the states of two generative trees
  *
- * @author nreddel@barnet.com.au
+ * 
  *
  */
 public class TreeSync<T extends TreeSyncable> implements ProcessObservable {

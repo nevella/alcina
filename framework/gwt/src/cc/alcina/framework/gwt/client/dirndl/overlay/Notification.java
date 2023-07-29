@@ -188,7 +188,7 @@ public class Notification extends Model {
 	 * A dismissable message container (of arbitrary complexity) for use inside
 	 * a Notification
 	 *
-	 * @author nreddel@barnet.com.au
+	 * 
 	 *
 	 */
 	@Directed
