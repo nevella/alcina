@@ -340,7 +340,7 @@ public class SelectionTraversal
 
 	public void traverseLayers() {
 		state.layerTraversal = new DepthFirstTraversal<Layer>(state.rootLayer,
-				Layer::getChildren, false);
+				Layer::getChildren);
 		/*
 		 * layers with sublayers will compute their outputs after sublayer
 		 * traversal
@@ -511,7 +511,7 @@ public class SelectionTraversal
 	 * Because the runnables will generally require Alcina contexts, use this
 	 * (custom) approach rather than java.util.concurrent.Executor
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public interface Executor {

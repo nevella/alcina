@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.AllProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 
@@ -128,9 +129,17 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		}
 		if (result.isEmpty() && reflector instanceof Property) {
 			Class declaringType = ((Property) reflector).getDeclaringType();
-			if (Reflections.at(declaringType)
-					.has(Directed.AllProperties.class)) {
-				result.add(new Directed.Impl());
+			ClassReflector typeReflector = Reflections.at(declaringType);
+			AllProperties allProperties = resolver.contextAnnotation(
+					typeReflector, Directed.AllProperties.class,
+					Resolver.ResolutionContext.Strategy);
+			if (allProperties != null) {
+				Directed.Exclude exclude = resolver.contextAnnotation(reflector,
+						Directed.Exclude.class,
+						Resolver.ResolutionContext.Strategy);
+				if (exclude == null) {
+					result.add(new Directed.Impl());
+				}
 			}
 		}
 		return result;

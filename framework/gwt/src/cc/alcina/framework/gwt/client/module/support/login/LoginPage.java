@@ -14,7 +14,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.InputEnterC
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Next;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.PropertyNameTags;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage.Navigation.NavArea;
@@ -130,7 +129,7 @@ public abstract class LoginPage extends Model implements
 	}
 
 	@Directed
-	@PropertyNameTags
+	@Directed.PropertyNameTags
 	public static class HeadingArea extends Model {
 		private final Object logo = LeafRenderer.OBJECT_INSTANCE;
 

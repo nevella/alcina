@@ -27,7 +27,7 @@ import java.util.function.Function;
  *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
- * 
+ *
  */
 public interface Converter<T, C> extends Function<T, C> {
 	public static final Converter<Object, String> TO_STRING_CONVERTER = new Converter<Object, String>() {
@@ -111,6 +111,18 @@ public interface Converter<T, C> extends Function<T, C> {
 			return (original == null) ? null : Boolean.valueOf(original);
 		}
 	};
+
+	static <T, C> Converter<T, C> nullToNull(Function<T, C> function) {
+		return new Converter<T, C>() {
+			@Override
+			public C convert(T original) {
+				if (original == null) {
+					return null;
+				}
+				return function.apply(original);
+			}
+		};
+	}
 
 	static <T, C> Converter<T, C> wrap(Function<T, C> function) {
 		return new Converter<T, C>() {

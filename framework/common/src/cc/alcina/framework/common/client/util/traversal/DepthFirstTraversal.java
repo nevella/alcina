@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.util.Topic;
  * This does *not* throw ConcurrentModificationExceptions if traversing
  * forwards, but will if traversing lastFirst
  *
- * 
+ *
  *
  * @param <T>
  */
@@ -49,6 +49,10 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 	public Topic<T> topicNodeExit = Topic.create();
 
 	private T root;
+
+	public DepthFirstTraversal(T root, Function<T, List<T>> childrenSupplier) {
+		this(root, childrenSupplier, false);
+	}
 
 	public DepthFirstTraversal(T root, Function<T, List<T>> childrenSupplier,
 			boolean lastFirst) {
@@ -93,7 +97,7 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 
 	public String toTreeString() {
 		DepthFirstTraversal<T> toStringTraversal = new DepthFirstTraversal<>(
-				root, childrenSupplier, false);
+				root, childrenSupplier);
 		// assumes non-generative
 		toStringTraversal.writeOnce = true;
 		FormatBuilder format = new FormatBuilder();

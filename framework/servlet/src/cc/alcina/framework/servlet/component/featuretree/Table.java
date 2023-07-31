@@ -16,7 +16,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
-import cc.alcina.framework.gwt.client.dirndl.layout.PropertyNameTags;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features.Entry;
 import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
@@ -69,7 +68,7 @@ class Table extends Model.Fields {
 	}
 
 	@Directed(tag = "td")
-	@PropertyNameTags
+	@Directed.PropertyNameTags
 	class FeatureCell extends Model.Fields {
 		@Directed
 		String featureName;
@@ -87,7 +86,7 @@ class Table extends Model.Fields {
 	}
 
 	@Directed
-	@PropertyNameTags
+	@Directed.PropertyNameTags
 	class ReleaseColumn extends Model.Fields {
 		Class<? extends Feature.ReleaseVersion> version;
 

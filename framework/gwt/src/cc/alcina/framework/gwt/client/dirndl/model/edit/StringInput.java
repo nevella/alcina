@@ -43,10 +43,10 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  *
  * <p>
  * It fires modelevents <code>&lt;Change&gt;</code> and
- * <code>&lt;Input&gt;</code>, wrapping the corresponding DOM eventt.s
+ * <code>&lt;Input&gt;</code>, wrapping the corresponding DOM events
  *
  *
- * 
+ *
  *
  */
 @Directed(

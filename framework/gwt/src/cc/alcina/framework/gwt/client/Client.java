@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.Document.PerDocumentSupplierGwtImpl;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.place.shared.Place;
+import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 import com.google.gwt.user.client.History;
@@ -33,6 +34,7 @@ import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -44,6 +46,14 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 @Registration(Client.class)
 public abstract class Client implements ContextFrame {
 	public static ContextProvider<Object, Client> contextProvider;
+
+	/**
+	 * Utility method for a common pattern (ui bind :: do xxx on place change);
+	 */
+	public static void addPlaceChangeBinding(Model model, Runnable runnable) {
+		model.bindings().addRegistration(() -> Client.eventBus()
+				.addHandler(PlaceChangeEvent.TYPE, evt -> runnable.run()));
+	}
 
 	public static CommonRemoteServiceAsync commonRemoteService() {
 		return Registry.impl(CommonRemoteServiceAsync.class);

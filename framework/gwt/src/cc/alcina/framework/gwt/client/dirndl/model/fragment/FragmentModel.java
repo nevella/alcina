@@ -70,7 +70,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * mutations can make that hard to reconstruct (see {@link SyncMutations})
  *
  *
- * 
+ *
  *
  */
 @Feature.Ref(Feature_Dirndl_FragmentModel.class)
@@ -127,7 +127,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		scheduleEmitMutationEvent();
 	}
 
-	public FragmentNode getFragmentNode(Node node) {
+	public FragmentNode getFragmentNode(DomNode node) {
 		NodeTransformer transformer = domNodeTransformer.get(node);
 		return transformer == null ? null
 				: (FragmentNode) transformer.getModel();
@@ -154,7 +154,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		// collate - changes by node
 		for (MutationRecord record : event.records) {
 			Node w3cNode = record.target.w3cNode;
-			NodeTransformer targetModel = domNodeTransformer.get(w3cNode);
+			NodeTransformer targetModel = domNodeTransformer
+					.get(DomNode.from(w3cNode));
 			// only process records which have an existing targetModel - all
 			// others will be processed by subtree mods
 			if (targetModel == null) {
@@ -263,7 +264,6 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			return super.getModel();
 		}
 
-		
 		UpdateRecord ensure(Node w3cNode) {
 			return getData().updateRecords.computeIfAbsent(w3cNode,
 					n -> getData().fragmentModel.new UpdateRecord(n));
@@ -361,7 +361,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			/*
 			 * Always non null (see caller)
 			 */
-			transformer = domNodeTransformer.get(node);
+			transformer = domNodeTransformer.get(DomNode.from(node));
 		}
 
 		void add(MutationRecord record) {

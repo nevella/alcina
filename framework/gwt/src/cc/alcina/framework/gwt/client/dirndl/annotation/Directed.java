@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -27,7 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
  *
  *
  *
- * 
+ *
  *
  */
 /*
@@ -99,7 +100,7 @@ public @interface Directed {
 	 * All properties are rendered by the DirectedLayout algorithm (receive
 	 * an @Directed annotation if they have none)
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
@@ -114,7 +115,7 @@ public @interface Directed {
 	/**
 	 * Sugar for @Directed(renderer=DirectedRenderer.Delegating.class)
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
@@ -122,6 +123,19 @@ public @interface Directed {
 	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Delegating {
+	}
+
+	/**
+	 *
+	 * Exclude this property from directed layout if @Directed.AllProperties
+	 * exists on the type
+	 *
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	@ClientVisible
+	public static @interface Exclude {
 	}
 
 	public static class Impl implements Directed {
@@ -334,7 +348,7 @@ public @interface Directed {
 	 * </ul>
 	 *
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
@@ -351,6 +365,14 @@ public @interface Directed {
 	@ClientVisible
 	public static @interface Property {
 		String name();
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.TYPE)
+	@ClientVisible
+	@Inherited
+	public @interface PropertyNameTags {
 	}
 
 	/**
@@ -383,7 +405,7 @@ public @interface Directed {
 	 * Note that a Transform can be specified and applied only once per model
 	 * property
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@ClientVisible
@@ -444,9 +466,8 @@ public @interface Directed {
 	 * Renders the model as two nodes, the first having tag value() - i.e. sugar
 	 * for: <code>@Directed.Multiple({@Directed(tag="value"),@Directed})</code>
 	 *
-	 * Sugar for
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)

@@ -79,7 +79,7 @@ DomDocument.from(
  * DOM classes. There's also a fluent node builder - DomNode.builder() - and
  * other manipulation commands such as DomNode.strip()
  *
- * 
+ *
  *
  */
 public class DomNode {
@@ -1277,7 +1277,7 @@ public class DomNode {
 
 	public static class DomNodeTraversal extends DepthFirstTraversal<DomNode> {
 		public DomNodeTraversal(DomNode root) {
-			super(root, node -> node.children.nodes(), false);
+			super(root, node -> node.children.nodes());
 		}
 	}
 
@@ -1602,7 +1602,7 @@ public class DomNode {
 		}
 
 		public W3cNodeTraversal(Node root) {
-			super(root, W3cNodeTraversal::children, false);
+			super(root, W3cNodeTraversal::children);
 		}
 	}
 

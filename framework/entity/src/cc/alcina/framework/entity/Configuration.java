@@ -317,7 +317,7 @@ public class Configuration {
 	 * mutations to keyValues (and thus packageBundles) are synchronized on the
 	 * Properties instance
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class Properties {
@@ -996,7 +996,7 @@ public class Configuration {
 				Function<PropertyNode, List<PropertyNode>> childSupplier = n -> (List) n
 						.getChildren();
 				DepthFirstTraversal<PropertyNode> traversal = new DepthFirstTraversal<PropertyNode>(
-						this, childSupplier, false);
+						this, childSupplier);
 				return traversal.stream().collect(Collectors.toList());
 			}
 

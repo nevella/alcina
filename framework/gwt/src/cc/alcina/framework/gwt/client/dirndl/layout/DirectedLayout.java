@@ -112,7 +112,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * reflective serializer typenode/propertynode implementation), scoped to
  * resolver but by default copying from parent
  *
- * 
+ *
  *
  */
 /*
@@ -234,7 +234,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * nodes' widgets are removed (TODO - explain with reasoning/motivation)
 	 *
 	 *
-	 * 
+	 *
 	 *
 	 */
 	OneWayTraversal<RendererInput> rendererInputs;
@@ -385,7 +385,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * ProcessObservers.observe(DirectedLayout.EventObservable.class, Ax::out,
 	 * true);
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class EventObservable implements ProcessObservable {
@@ -818,7 +818,7 @@ public class DirectedLayout implements AlcinaProcess {
 
 		Rendered firstDescendantRendered() {
 			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
-					this, Node::readOnlyChildren, false);
+					this, Node::readOnlyChildren);
 			for (Node node : traversal) {
 				if (node.rendered != null) {
 					return node.rendered;
@@ -1403,6 +1403,8 @@ public class DirectedLayout implements AlcinaProcess {
 				case INNER_HTML:
 					if (value != null) {
 						element.setInnerHTML(stringValue);
+					} else {
+						element.removeAllChildren();
 					}
 					break;
 				case INNER_TEXT:
@@ -1411,6 +1413,16 @@ public class DirectedLayout implements AlcinaProcess {
 							node.setNodeValue(stringValue);
 						} else {
 							element.setInnerText(stringValue);
+						}
+					} else {
+						if (element == null) {
+							int count = node.getChildNodes().getLength();
+							Preconditions.checkState(count <= 1);
+							if (count == 1) {
+								node.removeChild(node.getChildNodes().item(0));
+							}
+						} else {
+							element.removeAllChildren();
 						}
 					}
 					break;
@@ -1530,7 +1542,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * The output of RendererInputs - for Uis with events the default is a GWT
 	 * element
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public interface Rendered {
@@ -1571,7 +1583,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * certain cases - see {@link Choices.Select}
 	 *
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public class RendererInput implements Traversable {
@@ -1791,7 +1803,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 *</code>
 	 *
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class RenderObservable implements ProcessObservable {
@@ -1813,7 +1825,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * A resolved location in the widget tree relative to which a widget should
 	 * be inserted
 	 *
-	 * 
+	 *
 	 *
 	 */
 	static class InsertionPoint {

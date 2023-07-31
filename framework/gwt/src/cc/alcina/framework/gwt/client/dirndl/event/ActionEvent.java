@@ -11,7 +11,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagClass;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.layout.PropertyNameTags;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -71,7 +70,7 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 	@Directed(
 		bindings = @Binding(from = "title", type = Binding.Type.PROPERTY),
 		receives = DomEvents.Click.class)
-	@PropertyNameTags
+	@Directed.PropertyNameTags
 	public static class Action extends Model
 			implements DomEvents.Click.Handler {
 		private final TagClass icon;

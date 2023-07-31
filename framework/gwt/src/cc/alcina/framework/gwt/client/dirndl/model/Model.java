@@ -92,7 +92,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * shouldn't be used as an rpc class (when sending server-side renderable model
  * trees/graphs to the client), it just shouldn't be the go-to base.
  *
- * 
+ *
  *
  */
 @ObjectPermissions(
@@ -121,7 +121,7 @@ public abstract class Model extends Bindable implements
 	 * onBeforeRender handler *before* the super call. First time they're used
 	 * is in this class's {@code onBeforeRender} method
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public Bindings bindings() {
@@ -132,10 +132,14 @@ public abstract class Model extends Bindable implements
 	}
 
 	public void emitEvent(Class<? extends ModelEvent> clazz) {
+		emitEvent(clazz, this);
+	}
+
+	public void emitEvent(Class<? extends ModelEvent> clazz, Object value) {
 		if (!provideIsBound()) {
 			return;
 		}
-		NodeEvent.Context.fromNode(provideNode()).dispatch(clazz, this);
+		NodeEvent.Context.fromNode(provideNode()).dispatch(clazz, value);
 	}
 
 	/**
@@ -270,7 +274,15 @@ public abstract class Model extends Bindable implements
 		public <I, O> void addOneway(Object leftPropertyName,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
 				Converter<I, O> rightToLeftConverter) {
-			add(leftPropertyName, Binding.IGNORE_CHANGE, right,
+			addOneway(getSource(), leftPropertyName, right, rightPropertyName,
+					rightToLeftConverter);
+		}
+
+		public <I, O> void addOneway(SourcesPropertyChangeEvents left,
+				Object leftPropertyName, SourcesPropertyChangeEvents right,
+				Object rightPropertyName,
+				Converter<I, O> rightToLeftConverter) {
+			add(left, leftPropertyName, Binding.IGNORE_CHANGE, right,
 					rightPropertyName, rightToLeftConverter);
 		}
 

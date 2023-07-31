@@ -94,7 +94,7 @@ public interface TreeSyncable<T extends TreeSyncable>
 						.comparing(HasEquivalenceString::equivalenceString))
 				.map(t -> (TreeSyncable) t).collect(Collectors.toList());
 		DepthFirstTraversal<TreeSyncable<?>> traversal = new DepthFirstTraversal<TreeSyncable<?>>(
-				this, childrenSupplier, false);
+				this, childrenSupplier);
 		return traversal.stream();
 	}
 

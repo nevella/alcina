@@ -135,8 +135,7 @@ public abstract class FragmentNode extends Model
 
 	public Stream<? extends FragmentNode> stream() {
 		return new DepthFirstTraversal<FragmentNode>(this,
-				fn -> fn.children().collect(Collectors.toList()), false)
-						.stream();
+				fn -> fn.children().collect(Collectors.toList())).stream();
 	}
 
 	public void strip() {

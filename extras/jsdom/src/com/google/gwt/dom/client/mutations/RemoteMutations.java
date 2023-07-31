@@ -74,8 +74,7 @@ public class RemoteMutations {
 		List<MutationRecord> records = new ArrayList<>();
 		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<Node>(
 				node,
-				n -> n.getChildNodes().stream().collect(Collectors.toList()),
-				false);
+				n -> n.getChildNodes().stream().collect(Collectors.toList()));
 		traversal.forEach(
 				n -> MutationRecord.generateInsertMutations(n, records));
 		return records;

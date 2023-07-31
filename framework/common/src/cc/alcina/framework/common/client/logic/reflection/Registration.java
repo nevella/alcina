@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
@@ -35,7 +35,6 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -98,6 +97,7 @@ public @interface Registration {
 	/*
 	 * Respected by ClientReflectionGenerator
 	 */
+	@Reflected
 	public interface AllSubtypesClient extends AllSubtypes {
 	}
 
@@ -188,7 +188,8 @@ public @interface Registration {
 
 		@Override
 		protected List<Registration> atProperty(
-				Class<Registration> annotationClass, Property property, Resolver resolver) {
+				Class<Registration> annotationClass, Property property,
+				Resolver resolver) {
 			throw new UnsupportedOperationException();
 		}
 

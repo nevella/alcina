@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * FIXME - move 'tokens' to ParserLayer
  *
  *
- * 
+ *
  *
  */
 public abstract class Layer<S extends Selection> implements
@@ -144,7 +144,7 @@ public abstract class Layer<S extends Selection> implements
 
 	public String toDebugString() {
 		DepthFirstTraversal<Layer> debugTraversal = new DepthFirstTraversal<Layer>(
-				this, Layer::getChildren, false);
+				this, Layer::getChildren);
 		return debugTraversal.toTreeString();
 	}
 

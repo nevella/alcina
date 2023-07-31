@@ -105,7 +105,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	}
 
 	@Override
-	public Class<H> getHandlerClass() {
+	public final Class<H> getHandlerClass() {
 		return Reflections.at(getClass()).getGenericBounds().bounds.get(1);
 	}
 
@@ -144,7 +144,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	 * few (Input, Change) - in almost all other cases a model event without a
 	 * handler is a dev issue.
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public interface NoHandlerRequired {
@@ -159,7 +159,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	 * links/actions where the context doesn't matter, such as 'logout' or
 	 * 'privacy')
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Registration.NonGenericSubtypes(TopLevelHandler.class)

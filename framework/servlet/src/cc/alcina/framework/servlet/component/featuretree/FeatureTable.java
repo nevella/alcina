@@ -51,8 +51,8 @@ class FeatureTable extends Model.Fields {
 					.filter(e -> e.parent == null).sorted()
 					.collect(Collectors.toList());
 			for (Entry entry : roots) {
-				new DepthFirstTraversal<>(entry, Entry::sortedChildren, false)
-						.stream().forEach(entries::add);
+				new DepthFirstTraversal<>(entry, Entry::sortedChildren).stream()
+						.forEach(entries::add);
 			}
 		}
 

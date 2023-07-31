@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.PropertyNameTags;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
@@ -78,7 +79,7 @@ public abstract class DirectedRenderer {
 	 * Renders a container widget for the Bindable instance and layout nodes for
 	 * the properties
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Registration({ DirectedRenderer.class, Bindable.class })
@@ -99,7 +100,7 @@ public abstract class DirectedRenderer {
 	 * the collection itself, normally there will be one widget (or at least
 	 * dirndl node) per collection element
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Registration({ DirectedRenderer.class, AbstractCollection.class })
@@ -161,14 +162,14 @@ public abstract class DirectedRenderer {
 	/**
 	 * Renders a container widget (dom element, by default a div)
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class Container extends DirectedRenderer {
 		@Override
 		protected void render(RendererInput input) {
 			Node node = input.node;
-			String tag = node.directed.tag();
+			String tag = getTag(node, "div");
 			Preconditions.checkState(tag.length() > 0);
 			node.resolver.renderElement(node, tag);
 		}
@@ -202,7 +203,7 @@ public abstract class DirectedRenderer {
 	/**
 	 *
 	 *
-	 * 
+	 *
 	 *
 	 */
 	/*
@@ -277,7 +278,7 @@ public abstract class DirectedRenderer {
 	 * Transitional. Allows the model/directedlayout system access to (to wrap)
 	 * a widget
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Registration({ DirectedRenderer.class, Widget.class })
