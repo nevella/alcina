@@ -81,6 +81,7 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  */
 public class CommitToStorageTransformListener
 		implements DomainTransformListener {
+	// FIXME - model - this should just be Scheduler.scheduleFinally
 	public static final int DELAY_MS = 100;
 
 	public static final transient String CONTEXT_REPLAYING_SYNTHESISED_EVENTS = CommitToStorageTransformListener.class
