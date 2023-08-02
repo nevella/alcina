@@ -425,6 +425,44 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		return false;
 	}
 
+	public void normaliseContent() {
+		content = TokenParserUtils.quickNormalisePunctuation(content);
+		if (checkLongBlankString()) {
+			int idx = content.indexOf(ParserContext.LONG_BLANK_STRING);
+			// slightly hacky but works;
+			// (long spaces plays havoc with some regexes)
+			if (idx != -1 && content.length() > 200) {
+				StringBuilder sb = new StringBuilder();
+				char[] val = content.toCharArray();
+				int wsCount = 0;
+				// because of WhitespaceNormalisationText windows, need to
+				// replace in reverse
+				// content =
+				// content.replace(ParserContext.LONG_BLANK_STRING,
+				// ParserContext.LONG_BLANK_STRING_REPLACE);
+				/*
+				 * reversed replace of same-length (8char) strings
+				 */
+				for (idx = content.length() - 1; idx >= 0; idx--) {
+					char c = val[idx];
+					if (c == ' ') {
+						wsCount++;
+					} else {
+						wsCount = 0;
+					}
+					if (wsCount == 8) {
+						for (int idx2 = 0; idx2 < 8; idx2++) {
+							val[idx + idx2] = ParserContext.LONG_BLANK_STRING_REPLACE
+									.charAt(idx2);
+						}
+						wsCount = 0;
+					}
+				}
+				content = new String(val);
+			}
+		}
+	}
+
 	public void removeToken(T token) {
 		for (Iterator<S> itr = matched.iterator(); itr.hasNext();) {
 			S next = itr.next();
@@ -652,18 +690,6 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			return false;
 		}
 
-		@Override
-		public int hashCode() {
-			return texts.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return String.format("(%s) (%s%s) %s", offset,
-					(emphasised ? "emph" : "not-emph"),
-					(superscript ? ":super" : ""), textContent);
-		}
-
 		public void extendMatch(AbstractParserSlice slice, String string) {
 			int offset = string.length();
 			for (Text text : texts) {
@@ -675,6 +701,18 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 				offset -= text.getLength();
 			}
 			throw new IllegalArgumentException();
+		}
+
+		@Override
+		public int hashCode() {
+			return texts.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return String.format("(%s) (%s%s) %s", offset,
+					(emphasised ? "emph" : "not-emph"),
+					(superscript ? ":super" : ""), textContent);
 		}
 	}
 
@@ -717,44 +755,6 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 				}
 			}
 			finished = true;
-		}
-	}
-
-	public void normaliseContent() {
-		content = TokenParserUtils.quickNormalisePunctuation(content);
-		if (checkLongBlankString()) {
-			int idx = content.indexOf(ParserContext.LONG_BLANK_STRING);
-			// slightly hacky but works;
-			// (long spaces plays havoc with some regexes)
-			if (idx != -1 && content.length() > 200) {
-				StringBuilder sb = new StringBuilder();
-				char[] val = content.toCharArray();
-				int wsCount = 0;
-				// because of WhitespaceNormalisationText windows, need to
-				// replace in reverse
-				// content =
-				// content.replace(ParserContext.LONG_BLANK_STRING,
-				// ParserContext.LONG_BLANK_STRING_REPLACE);
-				/*
-				 * reversed replace of same-length (8char) strings
-				 */
-				for (idx = content.length() - 1; idx >= 0; idx--) {
-					char c = val[idx];
-					if (c == ' ') {
-						wsCount++;
-					} else {
-						wsCount = 0;
-					}
-					if (wsCount == 8) {
-						for (int idx2 = 0; idx2 < 8; idx2++) {
-							val[idx + idx2] = ParserContext.LONG_BLANK_STRING_REPLACE
-									.charAt(idx2);
-						}
-						wsCount = 0;
-					}
-				}
-				content = new String(val);
-			}
 		}
 	}
 }
