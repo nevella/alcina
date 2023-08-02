@@ -224,6 +224,10 @@ public class FormModel extends Model
 		this.submitTextBoxesOnEnter = submitTextBoxesOnEnter;
 	}
 
+	public void setSubmitTextBoxesOnEnter(boolean submitTextBoxesOnEnter) {
+		this.submitTextBoxesOnEnter = submitTextBoxesOnEnter;
+	}
+
 	public boolean submit() {
 		Consumer<Void> onValid = o -> {
 			if (getState().model instanceof Entity) {
