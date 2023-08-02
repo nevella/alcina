@@ -17,6 +17,12 @@ $reset-font-tags: 'body, button, td'
   
   li:not(:last-child):after 
     content: $separator
+@mixin primary-color-links
+  #{$a-tags}
+    color: theme.$primary-color
+
+  a:hover 
+    color: theme.$primary-hover-color
 
 @mixin grey-link() 
   #{$a-tags}

@@ -86,6 +86,8 @@ public class FormModel extends Model
 
 	private boolean unAttachConfirmsTransformClear = false;
 
+	private boolean submitTextBoxesOnEnter = false;
+
 	private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
 		CommitToStorageTransformListener.get().flush();
 		// FIXME - mvcc.adjunct - need to ask adjuncts
@@ -110,6 +112,10 @@ public class FormModel extends Model
 
 	public FormModelState getState() {
 		return this.state;
+	}
+
+	public boolean isSubmitTextBoxesOnEnter() {
+		return this.submitTextBoxesOnEnter;
 	}
 
 	@Override
@@ -182,8 +188,8 @@ public class FormModel extends Model
 			EventTarget eventTarget = domEvent.getNativeEvent()
 					.getEventTarget();
 			if (Element.is(eventTarget)) {
-				if (Element.as(eventTarget).getTagName()
-						.equalsIgnoreCase("textarea")) {
+				if (Element.as(eventTarget).getTagName().equalsIgnoreCase(
+						"textarea") && !submitTextBoxesOnEnter) {
 					//
 				} else {
 					domEvent.preventDefault();
@@ -212,6 +218,10 @@ public class FormModel extends Model
 			// then propagate
 			event.getContext().bubble();
 		}
+	}
+
+	public void setSubmitTextBoxesOnEnter(boolean submitTextBoxesOnEnter) {
+		this.submitTextBoxesOnEnter = submitTextBoxesOnEnter;
 	}
 
 	public boolean submit() {
