@@ -31,7 +31,7 @@ public interface FragmentNodeOps {
 	Stream<? extends FragmentNode> children();
 
 	default Stream<? extends FragmentNode> stream() {
-		return (Stream<? extends FragmentNode>) new DepthFirstTraversal<FragmentNodeOps>(
+		return (Stream<? extends FragmentNode>) (Stream) new DepthFirstTraversal<FragmentNodeOps>(
 				this, fn -> fn.children().collect(Collectors.toList())).stream()
 						.filter(n -> n instanceof FragmentNode);
 	}
