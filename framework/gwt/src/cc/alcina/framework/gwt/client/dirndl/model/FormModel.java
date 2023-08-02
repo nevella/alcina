@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
@@ -84,6 +86,8 @@ public class FormModel extends Model
 
 	private boolean unAttachConfirmsTransformClear = false;
 
+	private boolean submitTextBoxesOnEnter = false;
+
 	private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
 		CommitToStorageTransformListener.get().flush();
 		// FIXME - mvcc.adjunct - need to ask adjuncts
@@ -108,6 +112,10 @@ public class FormModel extends Model
 
 	public FormModelState getState() {
 		return this.state;
+	}
+
+	public boolean isSubmitTextBoxesOnEnter() {
+		return this.submitTextBoxesOnEnter;
 	}
 
 	@Override
@@ -175,12 +183,22 @@ public class FormModel extends Model
 	public void onKeyDown(KeyDown event) {
 		KeyDownEvent domEvent = (KeyDownEvent) event.getContext().getGwtEvent();
 		if (domEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-			domEvent.preventDefault();
-			domEvent.stopPropagation();
-			// this is before KEY_ENTER is applied, so current form field
-			// may not have fired 'onchange'
-			GwittirUtils.commitAllTextBoxes(getState().formBinding);
-			event.reemitAs(this, ModelEvents.Submit.class);
+			EventTarget eventTarget = domEvent.getNativeEvent()
+					.getEventTarget();
+			if (Element.is(eventTarget)) {
+				if (Element.as(eventTarget).getTagName().equalsIgnoreCase(
+						"textarea") && !submitTextBoxesOnEnter) {
+					//
+				} else {
+					domEvent.preventDefault();
+					domEvent.stopPropagation();
+					// this is before KEY_ENTER is applied, so current form
+					// field
+					// may not have fired 'onchange'
+					GwittirUtils.commitAllTextBoxes(getState().formBinding);
+					event.reemitAs(this, ModelEvents.Submit.class);
+				}
+			}
 		}
 	}
 
@@ -197,6 +215,10 @@ public class FormModel extends Model
 		submit();
 		// also propagate
 		event.getContext().markCauseEventAsNotHandled();
+	}
+
+	public void setSubmitTextBoxesOnEnter(boolean submitTextBoxesOnEnter) {
+		this.submitTextBoxesOnEnter = submitTextBoxesOnEnter;
 	}
 
 	public boolean submit() {
