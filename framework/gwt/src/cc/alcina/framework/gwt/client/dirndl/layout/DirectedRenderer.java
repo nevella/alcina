@@ -53,7 +53,11 @@ public abstract class DirectedRenderer {
 
 	protected String getTag(Node node, String defaultTag) {
 		String tag = null;
-		if (node.model instanceof HasTag) {
+		/*
+		 * Only apply HasTag (tag from model) to the last (deepest) node for the
+		 * model
+		 */
+		if (node.model instanceof HasTag && node.lastForModel) {
 			tag = ((HasTag) node.model).provideTag();
 		}
 		if (Ax.notBlank(tag)) {

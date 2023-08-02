@@ -469,12 +469,16 @@ public class DirectedLayout implements AlcinaProcess {
 
 		private Runnable onUnbind;
 
+		boolean lastForModel;
+
 		protected Node(ContextResolver resolver, Node parent,
-				AnnotationLocation annotationLocation, Object model) {
+				AnnotationLocation annotationLocation, Object model,
+				boolean lastForModel) {
 			this.resolver = resolver;
 			this.parent = parent;
 			this.annotationLocation = annotationLocation;
 			this.model = model;
+			this.lastForModel = lastForModel;
 			current = this;
 			if (depth() > maxDepth && !checkedRecursion) {
 				checkRecursion();
@@ -545,7 +549,7 @@ public class DirectedLayout implements AlcinaProcess {
 		public Node insertFragmentChild(Model childModel,
 				org.w3c.dom.Node childW3cNode) {
 			Node node = new Node(resolver, this, new AnnotationLocation(
-					childModel.getClass(), null, resolver), childModel);
+					childModel.getClass(), null, resolver), childModel, true);
 			node.rendered = new RenderedW3cNode(childW3cNode);
 			node.directed = node.annotation(Directed.class);
 			if (node.directed == null) {
@@ -1736,7 +1740,8 @@ public class DirectedLayout implements AlcinaProcess {
 			this.directeds = directeds != null ? directeds
 					: location.getAnnotations(Directed.class);
 			// generate the node (1-1 with input)
-			node = new Node(resolver, parentNode, location, model);
+			node = new Node(resolver, parentNode, location, model,
+					this.directeds.size() == 1);
 			// don't add to parents yet (out of order) - but once we have a
 			// better queue, do
 			// if (parentNode != null) {
