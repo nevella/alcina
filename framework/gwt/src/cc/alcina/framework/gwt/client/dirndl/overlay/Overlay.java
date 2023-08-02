@@ -67,7 +67,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * (although css classes, not containing tags). FIXME - doc - example
  *
  *
- * 
+ *
  *
  */
 @Directed(
@@ -164,6 +164,12 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			NodeEvent.Context.fromEvent(from, provideNode())
 					.dispatch(ModelEvents.Submit.class, null);
 		}
+		/*
+		 * Any re-emission of events, model triggers should happen in the
+		 * BeforeClosed handlers
+		 */
+		NodeEvent.Context.fromEvent(from, provideNode())
+				.dispatch(ModelEvents.BeforeClosed.class, null);
 		OverlayPositions.get().hide(this);
 		NodeEvent.Context.fromEvent(from, provideNode())
 				.dispatch(ModelEvents.Closed.class, null);

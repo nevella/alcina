@@ -12,7 +12,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -20,7 +19,6 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -47,8 +45,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
  */
 @Transformer(NodeTransformer.DirectedTransformer.class)
 @Directed
-public abstract class FragmentNode extends Model
-		implements HasParentNodeAccess {
+public abstract class FragmentNode extends Model implements FragmentNodeOps {
 	protected FragmentModel fragmentModel;
 
 	public <N extends FragmentNode> Optional<N> ancestor(Class<N> clazz) {
@@ -64,22 +61,7 @@ public abstract class FragmentNode extends Model
 		provideNode().appendFragmentChild(child);
 	}
 
-	public <N extends FragmentNode> Stream<N> byType(Class<N> clazz) {
-		return (Stream<N>) stream().filter(n -> n.getClass() == clazz);
-	}
-
-	public <N extends FragmentNode> List<N> byTypeList(Class<N> clazz) {
-		return byType(clazz).collect(Collectors.toList());
-	}
-
-	public <N extends FragmentNode> N byTypeNode(Class<N> clazz) {
-		return byType(clazz).findFirst().orElse(null);
-	}
-
-	public <N extends FragmentNode> Optional<N> byTypeOptional(Class<N> clazz) {
-		return byType(clazz).findFirst();
-	}
-
+	@Override
 	public Stream<? extends FragmentNode> children() {
 		List<Node> childNodes = provideChildNodes();
 		return childNodes == null ? Stream.empty()
@@ -129,13 +111,16 @@ public abstract class FragmentNode extends Model
 		}
 	}
 
-	public void replaceWith(FragmentNode other) {
-		provideParentNode().replaceChild(this, other);
+	public List<Node> provideChildNodes() {
+		return provideNode().children;
 	}
 
-	public Stream<? extends FragmentNode> stream() {
-		return new DepthFirstTraversal<FragmentNode>(this,
-				fn -> fn.children().collect(Collectors.toList())).stream();
+	public Node provideParentNode() {
+		return provideNode().parent;
+	}
+
+	public void replaceWith(FragmentNode other) {
+		provideParentNode().replaceChild(this, other);
 	}
 
 	public void strip() {
@@ -200,6 +185,25 @@ public abstract class FragmentNode extends Model
 				cursor = cursor.parent();
 				return result;
 			}
+		}
+	}
+
+	/*
+	 * Mimics the behaviour of FragmentNode for the root (which is not
+	 * necessarily a fragment node)
+	 */
+	public static class FragmentRoot implements FragmentNodeOps {
+		Model rootModel;
+
+		public FragmentRoot(Model rootModel) {
+			this.rootModel = rootModel;
+		}
+
+		@Override
+		public Stream<? extends FragmentNode> children() {
+			return (Stream<? extends FragmentNode>) (Stream<?>) rootModel
+					.provideNode().children.stream().map(n -> n.model)
+							.filter(m -> m instanceof FragmentNode);
 		}
 	}
 

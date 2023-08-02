@@ -3,12 +3,16 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Close;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.BeforeClosed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorChooser.BeforeChooserClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.TagEditor;
@@ -30,10 +34,12 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 	// but see
 	// cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.computeCssClass()
 	cssClass = "decorator-chooser",
-	receives = { ModelEvents.SelectionChanged.class, ModelEvents.Close.class },
-	emits = ModelEvents.Selected.class)
-public abstract class DecoratorChooser extends Model.Fields implements
-		ModelEvents.SelectionChanged.Handler, ModelEvents.Close.Handler {
+	receives = { ModelEvents.SelectionChanged.class, ModelEvents.Closed.class,
+			ModelEvents.BeforeClosed.class },
+	emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
+public abstract class DecoratorChooser extends Model.Fields
+		implements ModelEvents.SelectionChanged.Handler,
+		ModelEvents.Closed.Handler, ModelEvents.BeforeClosed.Handler {
 	protected final ContentDecorator<?> contentDecorator;
 
 	@Directed
@@ -54,8 +60,12 @@ public abstract class DecoratorChooser extends Model.Fields implements
 	}
 
 	@Override
-	public void onClose(Close event) {
-		this.contentDecorator.cleanupInvalidDecorators();
+	public void onBeforeClosed(BeforeClosed event) {
+		event.reemitAs(this, BeforeChooserClosed.class);
+	}
+
+	@Override
+	public void onClosed(ModelEvents.Closed event) {
 		this.contentDecorator.chooser = null;
 		if (event != null) {
 			event.getContext().bubble();
@@ -91,6 +101,18 @@ public abstract class DecoratorChooser extends Model.Fields implements
 		suggestor = createSuggestorBuilder().build();
 		bindings().addListener(
 				() -> this.contentDecorator.topicInput.add(tagEditor::onInput));
+	}
+
+	public static class BeforeChooserClosed
+			extends ModelEvent<Object, BeforeChooserClosed.Handler> {
+		@Override
+		public void dispatch(BeforeChooserClosed.Handler handler) {
+			handler.onChooserClosed(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onChooserClosed(BeforeChooserClosed event);
+		}
 	}
 
 	public interface Provider {

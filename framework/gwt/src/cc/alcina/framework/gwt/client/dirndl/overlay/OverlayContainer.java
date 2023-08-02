@@ -20,7 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
  * Note - this *must not* receive model events, since model events will be
  * routed to the Overlay.logicalParent (if any), not this
  *
- * 
+ *
  *
  */
 @Directed(

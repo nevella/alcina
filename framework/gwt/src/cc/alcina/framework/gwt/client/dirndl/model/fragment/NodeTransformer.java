@@ -127,8 +127,8 @@ public interface NodeTransformer {
 	/**
 	 * The root of a FragmentModel (Node is already determined)
 	 */
-	public static class FragmentRoot extends DirectedTransformer {
-		public FragmentRoot(DirectedLayout.Node layoutNode) {
+	public static class FragmentRootTransformer extends DirectedTransformer {
+		public FragmentRootTransformer(DirectedLayout.Node layoutNode) {
 			super();
 			setNode(layoutNode.getRendered().asDomNode());
 			this.layoutNode = layoutNode;

@@ -25,7 +25,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * TODO - Doc - an example or two. This is particularly useful with multiple
  * handlers (e.g. a context menu)
  *
- * 
+ *
  *
  * @param <T>
  */
@@ -49,7 +49,11 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 		return CommonUtils.deInfix(getClass().getSimpleName()).trim();
 	}
 
-	
+	@Override
+	public Class<ActionEvent.Handler> getHandlerClass() {
+		return ActionEvent.Handler.class;
+	}
+
 	@Override
 	public Class<? extends ModelEvent> getReceiverType() {
 		return ActionEvent.class;
@@ -109,6 +113,10 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 		}
 	}
 
+	public static interface ActionContextProvider<T> {
+		public T provideActionContext();
+	}
+
 	public static class ActionTransform
 			extends AbstractModelTransform<ActionEvent, Action> {
 		@Override
@@ -117,15 +125,12 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 		}
 	}
 
-	public static interface ActionContextProvider<T> {
-		public T provideActionContext();
-	}
-
 	public interface Handler<T> extends NodeEvent.Handler {
 		default void onActionEvent(ActionEvent event) {
 			Object instance = null;
 			if (this instanceof ActionContextProvider) {
-				instance = ((ActionContextProvider) this).provideActionContext();
+				instance = ((ActionContextProvider) this)
+						.provideActionContext();
 			} else {
 				instance = this;
 			}

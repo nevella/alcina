@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
@@ -16,13 +15,14 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.BeforeInput;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Close;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
@@ -100,7 +100,7 @@ public class ContentDecorator<T>
 		implements DomEvents.BeforeInput.Handler, DomEvents.Input.Handler,
 		DomEvents.MouseUp.Handler, DomEvents.KeyDown.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
-		KeyboardNavigation.Navigation.Handler, ModelEvents.Close.Handler,
+		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
 		HasDecorator {
 	public static ContentDecorator.Builder builder() {
 		return new Builder();
@@ -125,6 +125,8 @@ public class ContentDecorator<T>
 	Function<T, String> itemRenderer;
 
 	HasDecorator decoratorParent;
+
+	Overlay overlay;
 
 	private ContentDecorator(ContentDecorator.Builder builder) {
 		this.logicalParent = builder.logicalParent;
@@ -156,11 +158,12 @@ public class ContentDecorator<T>
 	}
 
 	@Override
-	public void onClose(Close event) {
-		if (chooser != null) {
-			chooser.onClose(event);
-			chooser = null;
+	public void onClosed(Closed event) {
+		if (isActive()) {
+			chooser.onClosed(null);
 		}
+		chooser = null;
+		overlay = null;
 	}
 
 	/**
@@ -206,6 +209,14 @@ public class ContentDecorator<T>
 		if (chooser != null) {
 			chooser.suggestor.onNavigation(event);
 		}
+		// FIXME - ui2 - there's probably a better way to do this. but not
+		// super-obvious. Possibly suggestor -> non-overlay results
+		if (overlay != null) {
+			if (event.getModel() == Type.CANCEL
+					|| event.getModel() == Type.COMMIT) {
+				overlay.close(null, false);
+			}
+		}
 	}
 
 	@Override
@@ -215,18 +226,6 @@ public class ContentDecorator<T>
 			T model = (T) event.getModel();
 			decorator.setModel(model, itemRenderer.apply(model));
 		}
-	}
-
-	/*
-	 * This isn't ideal - but input beahviour is so complex, it's easier to do a
-	 * cleanup of all rather than try and monitor active decorators
-	 */
-	void cleanupInvalidDecorators() {
-		DomNode.from(logicalParent.provideElement()).stream()
-				.filter(n -> n.tagIs(tag))
-				.map(n -> new DecoratorNodeOld(this, n))
-				.collect(Collectors.toList())
-				.forEach(DecoratorNodeOld::stripIfInvalid);
 	}
 
 	boolean isSpaceOrLeftBracketish(String characterString) {
@@ -283,7 +282,7 @@ public class ContentDecorator<T>
 		Element domElement = (Element) decorator.w3cElement();
 		chooser = chooserProvider.apply(this, decorator);
 		builder.withCssClass("decorator-chooser");
-		Overlay overlay = builder.dropdown(OverlayPosition.Position.START,
+		overlay = builder.dropdown(OverlayPosition.Position.START,
 				domElement.getBoundingClientRect(), logicalParent, chooser)
 				.build();
 		overlay.open();

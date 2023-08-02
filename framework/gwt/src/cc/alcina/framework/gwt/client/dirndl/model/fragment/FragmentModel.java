@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,8 +29,9 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
+import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.FragmentRoot;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.FragmentRoot;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.FragmentRootTransformer;
 
 /**
  *
@@ -93,22 +93,29 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	List<NodeTransformer> matchingTransformers;
 
+	FragmentRoot fragmentRoot;
+
 	public FragmentModel(Model rootModel) {
 		this.rootModel = rootModel;
+		fragmentRoot = new FragmentRoot(rootModel);
 		addDefaultModelledTypes();
+	}
+
+	public void addModelled(Class<? extends FragmentNode> type) {
+		addModelled(List.of(type));
 	}
 
 	/**
 	 * types will be added at the start of the modelledTypes list, so will be
 	 * checked for a match before the default modelled types
 	 */
-	public void addModelled(Class<? extends FragmentNode>... types) {
+	public void addModelled(List<Class<? extends FragmentNode>> types) {
 		// ensure the types also extend Model (they will, but...you know...make
 		// it clear)
-		Preconditions.checkArgument(Arrays.stream(types)
+		Preconditions.checkArgument(types.stream()
 				.allMatch(t -> Reflections.isAssignableFrom(Model.class, t)));
-		for (int idx = types.length - 1; idx >= 0; idx--) {
-			modelledTypes.add(0, types[idx]);
+		for (int idx = types.size() - 1; idx >= 0; idx--) {
+			modelledTypes.add(0, types.get(idx));
 		}
 	}
 
@@ -120,7 +127,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	public void domToModel() {
 		DirectedLayout.Node layoutNode = rootModel.provideNode();
 		DomNode node = layoutNode.getRendered().asDomNode();
-		FragmentRoot transformer = new NodeTransformer.FragmentRoot(layoutNode);
+		FragmentRootTransformer transformer = new NodeTransformer.FragmentRootTransformer(
+				layoutNode);
 		domNodeTransformer.put(node, transformer);
 		currentModelMutation = new ModelMutation(this);
 		addDescent(node);
@@ -131,6 +139,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		NodeTransformer transformer = domNodeTransformer.get(node);
 		return transformer == null ? null
 				: (FragmentNode) transformer.getModel();
+	}
+
+	public FragmentRoot getFragmentRoot() {
+		return this.fragmentRoot;
 	}
 
 	public boolean isEmitMutationEvents() {
@@ -177,7 +189,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	protected void addDefaultModelledTypes() {
-		addModelled(FragmentNode.Text.class, FragmentNode.Generic.class);
+		addModelled(
+				List.of(FragmentNode.Text.class, FragmentNode.Generic.class));
 	}
 
 	void addDescent(DomNode node) {

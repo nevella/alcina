@@ -105,7 +105,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	}
 
 	@Override
-	public final Class<H> getHandlerClass() {
+	public Class<H> getHandlerClass() {
 		return Reflections.at(getClass()).getGenericBounds().bounds.get(1);
 	}
 

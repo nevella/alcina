@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.Edito
  * inputcontainer element), instead the events are routed here via the
  * containing contenteditable context
  *
- * 
+ *
  *
  */
 @Directed(emits = { EditorAsk.class, EditorExit.class })
@@ -68,8 +68,9 @@ public class TagEditor extends Model implements Suggestor.Editor,
 
 	@Override
 	public void onBind(Bind event) {
+		Scheduler.get()
+				.scheduleDeferred(() -> attachComplete = event.isBound());
 		super.onBind(event);
-		Scheduler.get().scheduleDeferred(() -> attachComplete = true);
 	}
 
 	@Override
@@ -77,7 +78,6 @@ public class TagEditor extends Model implements Suggestor.Editor,
 		if (!attachComplete) {
 			return;
 		}
-		Ax.err("TagEditor::focusout");
 	}
 
 	@Override
@@ -85,6 +85,7 @@ public class TagEditor extends Model implements Suggestor.Editor,
 		if (!attachComplete) {
 			return;
 		}
+		Ax.err("oninput: %s", event.getValue());
 		event.reemitAs(this, EditorAsk.class, computeAsk());
 	}
 

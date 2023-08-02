@@ -23,7 +23,6 @@ public class ModelEvents {
 			handler.onAdd(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onAdd(Add event);
 		}
@@ -35,9 +34,20 @@ public class ModelEvents {
 			handler.onBack(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onBack(Back event);
+		}
+	}
+
+	public static class BeforeClosed
+			extends ModelEvent<Object, BeforeClosed.Handler> {
+		@Override
+		public void dispatch(BeforeClosed.Handler handler) {
+			handler.onBeforeClosed(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBeforeClosed(BeforeClosed event);
 		}
 	}
 
@@ -47,7 +57,6 @@ public class ModelEvents {
 			handler.onCancel(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onCancel(Cancel event);
 		}
@@ -60,7 +69,6 @@ public class ModelEvents {
 			handler.onChange(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onChange(Change event);
 		}
@@ -72,7 +80,6 @@ public class ModelEvents {
 			handler.onClear(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onClear(Clear event);
 		}
@@ -84,7 +91,6 @@ public class ModelEvents {
 			handler.onClose(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onClose(Close event);
 		}
@@ -96,7 +102,6 @@ public class ModelEvents {
 			handler.onClosed(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onClosed(Closed event);
 		}
@@ -108,7 +113,6 @@ public class ModelEvents {
 			handler.onCommit(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onCommit(Commit event);
 		}
@@ -120,7 +124,6 @@ public class ModelEvents {
 			handler.onCreate(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onCreate(Create event);
 		}
@@ -132,7 +135,6 @@ public class ModelEvents {
 			handler.onDelete(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onDelete(Delete event);
 		}
@@ -144,7 +146,6 @@ public class ModelEvents {
 			handler.onDownload(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onDownload(Download event);
 		}
@@ -156,7 +157,6 @@ public class ModelEvents {
 			handler.onEdit(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onEdit(Edit event);
 		}
@@ -168,7 +168,6 @@ public class ModelEvents {
 			handler.onExpand(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onExpand(Expand event);
 		}
@@ -180,7 +179,6 @@ public class ModelEvents {
 			handler.onFilter(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onFilter(Filter event);
 		}
@@ -192,7 +190,6 @@ public class ModelEvents {
 			handler.onFind(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onFind(Find event);
 		}
@@ -204,7 +201,6 @@ public class ModelEvents {
 			handler.onForward(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onForward(Forward event);
 		}
@@ -215,7 +211,7 @@ public class ModelEvents {
 	 * has not been 'committed') - see
 	 * https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class Input extends ModelEvent<String, Input.Handler>
@@ -229,7 +225,6 @@ public class ModelEvents {
 			return getModel();
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onInput(Input event);
 		}
@@ -241,7 +236,6 @@ public class ModelEvents {
 			handler.onInsert(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onInsert(Insert event);
 		}
@@ -253,7 +247,6 @@ public class ModelEvents {
 			handler.onLogin(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onLogin(Login event);
 		}
@@ -265,7 +258,6 @@ public class ModelEvents {
 			handler.onLogout(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onLogout(Logout event);
 		}
@@ -277,7 +269,6 @@ public class ModelEvents {
 			handler.onNext(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onNext(Next event);
 		}
@@ -289,7 +280,6 @@ public class ModelEvents {
 			handler.onOpened(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onOpened(Opened event);
 		}
@@ -301,7 +291,6 @@ public class ModelEvents {
 			handler.onOptions(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onOptions(Options event);
 		}
@@ -313,7 +302,6 @@ public class ModelEvents {
 			handler.onRemove(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onRemove(Remove event);
 		}
@@ -325,7 +313,6 @@ public class ModelEvents {
 			handler.onSearch(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onSearch(Search event);
 		}
@@ -334,7 +321,7 @@ public class ModelEvents {
 	/**
 	 * Emitted by single-item selection sources, such as {@code Choices.Single}
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class Selected extends ModelEvent<Object, Selected.Handler> {
@@ -343,7 +330,6 @@ public class ModelEvents {
 			handler.onSelected(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onSelected(Selected event);
 		}
@@ -355,7 +341,7 @@ public class ModelEvents {
 	 *
 	 * Not to be confused with the selectionchange DOM event
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class SelectionChanged
@@ -365,7 +351,6 @@ public class ModelEvents {
 			handler.onSelectionChanged(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onSelectionChanged(SelectionChanged event);
 		}
@@ -377,7 +362,6 @@ public class ModelEvents {
 			handler.onShow(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onShow(Show event);
 		}
@@ -389,7 +373,6 @@ public class ModelEvents {
 			handler.onSubmit(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onSubmit(Submit event);
 		}
@@ -401,7 +384,6 @@ public class ModelEvents {
 			handler.onToggle(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onToggle(Toggle event);
 		}
@@ -426,7 +408,6 @@ public class ModelEvents {
 			handler.onTransformSourceModified(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onTransformSourceModified(TransformSourceModified event);
 		}
@@ -438,7 +419,6 @@ public class ModelEvents {
 			handler.onView(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onView(View event);
 		}
