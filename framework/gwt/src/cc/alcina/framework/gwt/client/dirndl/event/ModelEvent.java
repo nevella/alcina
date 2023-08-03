@@ -139,6 +139,11 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 				&& getContext().getPrevious().reemission == node;
 	}
 
+	public <M extends ModelEvent> M withTypedModel(T typedModel) {
+		this.model = typedModel;
+		return (M) this;
+	}
+
 	/**
 	 * Marks a ModelEvent subclass as not requiring a handler - there are only a
 	 * few (Input, Change) - in almost all other cases a model event without a

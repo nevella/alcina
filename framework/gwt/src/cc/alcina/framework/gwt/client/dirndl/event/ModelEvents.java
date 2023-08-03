@@ -307,6 +307,17 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Run extends ModelEvent<Object, Run.Handler> {
+		@Override
+		public void dispatch(Run.Handler handler) {
+			handler.onRun(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onRun(Run event);
+		}
+	}
+
 	public static class Search extends ModelEvent<Object, Search.Handler> {
 		@Override
 		public void dispatch(Search.Handler handler) {

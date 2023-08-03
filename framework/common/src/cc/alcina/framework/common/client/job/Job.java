@@ -156,7 +156,7 @@ public abstract class Job extends VersionableEntity<Job>
 	public JobTracker asJobTracker() {
 		JobTracker tracker = new JobTracker();
 		tracker.setCancelled(resolveState() == JobState.CANCELLED);
-		tracker.setComplete(resolveState().isComplete());
+		tracker.setComplete(resolveState().isSequenceComplete());
 		tracker.setEndTime(endTime);
 		tracker.setId(String.valueOf(getId()));
 		tracker.setJobName(getTask().getName());

@@ -40,4 +40,16 @@ public enum JobState {
 			return false;
 		}
 	}
+
+	public boolean isSequenceComplete() {
+		switch (this) {
+		case CANCELLED:
+		case ABORTED:
+		case SKIPPED:
+		case SEQUENCE_COMPLETE:
+			return true;
+		default:
+			return false;
+		}
+	}
 }
