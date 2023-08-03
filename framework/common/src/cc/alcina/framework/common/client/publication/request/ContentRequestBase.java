@@ -209,6 +209,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	}
 
 	@Override
+	@PropertySerialization(ignoreFlat = true)
 	public Map<String, String> getProperties() {
 		return this.properties;
 	}
@@ -644,7 +645,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		public void onBeforeTreeSerialize() {
 			serializable.propertiesSerialized = new StringMap(
 					serializable.properties).toPropertyString();
-			serializable.properties = null;
+			serializable.properties = new LinkedHashMap<>();
 			if (serializable.contentDefinition != null) {
 				serializable.contentDefinition.treeSerializationCustomiser()
 						.onBeforeTreeSerialize();

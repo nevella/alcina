@@ -53,6 +53,8 @@ public @interface PropertySerialization {
 
 	boolean ignore() default false;
 
+	boolean ignoreFlat() default false;
+
 	/*
 	 * The property name - only use if this annotation is part of a
 	 * TypeSerialization definition
