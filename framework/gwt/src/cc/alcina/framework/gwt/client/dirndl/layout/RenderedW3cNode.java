@@ -88,7 +88,10 @@ class RenderedW3cNode implements Rendered {
 
 	@Override
 	public void removeFromParent() {
-		node.getParentNode().removeChild(node);
+		Node parentNode = node.getParentNode();
+		if (parentNode != null) {
+			parentNode.removeChild(node);
+		}
 	}
 
 	static class UnstructuredChild extends Widget {
