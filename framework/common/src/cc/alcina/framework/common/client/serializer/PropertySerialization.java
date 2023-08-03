@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  *
- * 
+ *
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -50,7 +50,7 @@ public @interface PropertySerialization {
 
 	/*
 	 * Serialize if serializing on client
-	 * 
+	 *
 	 * FIXME - reflection - possibly replace with AlcinaTransient/ctx
 	 */
 	boolean fromClient() default true;
@@ -132,6 +132,11 @@ public @interface PropertySerialization {
 		@Override
 		public boolean ignore() {
 			return ignore;
+		}
+
+		@Override
+		public boolean ignoreFlat() {
+			return false;
 		}
 
 		@Override
