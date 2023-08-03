@@ -644,7 +644,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		@Override
 		public void onBeforeTreeSerialize() {
 			if (serializable.properties == null) {
-				serializable.properties = new LinkedHashMap<String, String>();
+				serializable.properties = new LinkedHashMap<>();
 			}
 			serializable.propertiesSerialized = new StringMap(
 					serializable.properties).toPropertyString();
