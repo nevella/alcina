@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 
 /**
  *
- * @author nick@alcina.cc
+ *
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -48,6 +48,8 @@ public @interface PropertySerialization {
 
 	/*
 	 * Serialize if serializing on client
+	 *
+	 * FIXME - reflection - possibly replace with AlcinaTransient/ctx
 	 */
 	boolean fromClient() default true;
 

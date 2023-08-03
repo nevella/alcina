@@ -21,37 +21,37 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * <h3>Example</h3> <br>
  * <div>
  * <h4>Before</h4>
- * 
+ *
  * <pre>
  * public enum PublicationFontOptions {
  * 	ARIAL, TIMES_NEW_ROMAN, COURIER, GEORGIA, ATHELAS
  * }
  * </pre>
- * 
+ *
  * <h4>After</h4>
- * 
+ *
  * <pre>
  * public abstract class PublicationFontOptions extends ExtensibleEnum {
  * 	public static final PublicationFontOptions ARIAL = new PublicationFontOptions_ARIAL();
- * 
+ *
  * 	public static final PublicationFontOptions TIMES_NEW_ROMAN = new PublicationFontOptions_TIMES_NEW_ROMAN();
- * 
+ *
  * 	public static final PublicationFontOptions COURIER = new PublicationFontOptions_COURIER();
- * 
+ *
  * 	public static final PublicationFontOptions GEORGIA = new PublicationFontOptions_GEORGIA();
- * 
+ *
  * 	public static final PublicationFontOptions ATHELAS = new PublicationFontOptions_ATHELAS();
- * 
+ *
  * 	public static class PublicationFontOptions_ARIAL extends
  * 			PublicationFontOptions {
  * 	}
- * 
+ *
  * 	public static class PublicationFontOptions_TIMES_NEW_ROMAN extends
  * 			PublicationFontOptions {
  * 	}
  * ...
  * }
- * 
+ *
  * </pre>
  * <p>
  * Yep, definition is much more verbose. <b>But...</b>
@@ -60,23 +60,23 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * <li>Usage is exactly the same (replace Class with ExtensibleEnum) - you can
  * use == rather than equals(), since there's guaranteed only one instance per
  * vm (protected constructor)<br>
- * 
+ *
  * <pre>
  * - acr.putPublicationFontOptions(PublicationFontOptions.ARIAL)
  * - ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
  * - List options = new ArrayList(ExtensibleEnum.values(clazz));
  * - if (fontOptions == PublicationFontOptions.ARIAL) {
  * </pre>
- * 
+ *
  * <li>Serialization (xml/gwt) is the only pain, you need to maintain a string
  * property, and a put/provide surrogate pair - using the FromSerializedForm and
  * ToSerializedForm converters for bindings:<br>
- * 
+ *
  * <pre>
  * ContentRequestBase
  * private String outputFormat = FormatConversionTarget.HTML.serializedForm();
  * ...
- * 
+ *
  * 	public ContentDeliveryType provideContentDeliveryType() {
  * 		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
  * 	}
@@ -90,13 +90,16 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * 			"deliveryMode", new FromSerializedFormConverter(
  * 			ContentDeliveryType.class)));
  * </pre>
- * 
+ *
  * </ul>
- * 
+ *
  * </div>
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
+ */
+/*
+ * Note that instances of this class are not (yet) Jackson serializable
  */
 public abstract class ExtensibleEnum {
 	private static Multimap<Class<? extends ExtensibleEnum>, List<ExtensibleEnum>> superLookup = new Multimap<Class<? extends ExtensibleEnum>, List<ExtensibleEnum>>();
@@ -111,6 +114,15 @@ public abstract class ExtensibleEnum {
 	public static Collection<ExtensibleEnum>
 			forClassAndTag(Class<? extends ExtensibleEnum> clazz, String tag) {
 		return tagLookup.asMap(clazz, tag).keySet();
+	}
+
+	public static Class<? extends ExtensibleEnum>
+			registryPoint(Class<? extends ExtensibleEnum> clazz) {
+		if (clazz.getSuperclass() == ExtensibleEnum.class) {
+			return clazz;
+		} else {
+			return (Class<? extends ExtensibleEnum>) clazz.getSuperclass();
+		}
 	}
 
 	public static <E extends ExtensibleEnum> E valueOf(Class<E> enumClass,
@@ -178,15 +190,6 @@ public abstract class ExtensibleEnum {
 	@Override
 	public String toString() {
 		return serializedForm();
-	}
-
-	public static Class<? extends ExtensibleEnum>
-			registryPoint(Class<? extends ExtensibleEnum> clazz) {
-		if (clazz.getSuperclass() == ExtensibleEnum.class) {
-			return clazz;
-		} else {
-			return (Class<? extends ExtensibleEnum>) clazz.getSuperclass();
-		}
 	}
 
 	private Class<? extends ExtensibleEnum> getRegistryPoint() {
