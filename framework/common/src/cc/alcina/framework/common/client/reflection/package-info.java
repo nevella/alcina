@@ -1,6 +1,6 @@
 /**
  * <h2>Alcina reflection</h2>
- * 
+ *
  * <h3>Goals</h3>
  * <ul>
  * <li>Equivalent reflection functionality and api for jvm and gwt code
@@ -8,13 +8,13 @@
  * <li>Maximally readable code
  * <li>Remove redundancy where possible
  * </ul>
- * 
+ *
  * <h3>Implementation</h3>
  * <ul>
  * <li>Reflections api
  * <li>Single internals api (GWT typemodel for both GWT compilation and JVM
  * runtime)
- * 
+ *
  * </ul>
  * <h3>'Beans 1x5 manifesto'</h3>
  * <p>
@@ -23,11 +23,11 @@
  * </p>
  * <p>
  * TL;DR
- * 
+ *
  * <pre>
  * <code>
 
-// A dirndl UI example
+// A dirndl UI example (Beans 1x0 - java beans spec)
 &#64;Bean
 &#64;Directed
 public static class HelloBeans1x0 {
@@ -43,7 +43,7 @@ public static class HelloBeans1x0 {
 	}
 }
 
-// A dirndl UI example
+// A dirndl UI example Beans 1x5
 &#64;Bean(PropertySource.FIELDS)
 &#64;Directed
 static class HelloBeans1x5 {
@@ -58,16 +58,43 @@ static class HelloBeans1x5 {
  * <li>Field-defined properties
  * <li>Package by default
  * <ul>
- * <li>The Java protection level mechanism default is the level at which -
+ * <li>
+ * <p>
+ * The Java protection level mechanism default is the level at which -
  * presumably - the designers of Java originally envisioned most code would
- * exist.
+ * exist. Most java code uses either private or public (rather than default/no
+ * access modifier) - essentially private by default (except for beans methods).
+ *
+ * <p>
+ * Alcina is moving towards 'package by default' - as with private, the onus is
+ * on the caller to verify that api usage is correct, if the method/field is not
+ * documented. The motivation for this is to simplify the java code and provide
+ * consistent protection semantics at the package level - see 'From private to
+ * package' below
  * </ul>
- * <li>Permit nested classes
+ *
  * </ul>
  * <p>
- * Level 2:
+ * Stage 2 (WIP):
  * <ul>
  * <li>No-args _serializable_ bean constructors not required
  * </ul>
+ * <h4>From private to package</h4>
+ * <p>
+ * Notes
+ * <ul>
+ * <li>Private signifies 'only classes in this nest can access the member', but
+ * given top-level classes can contain a nested class structure of arbitrary
+ * depth, the chance of incorrect member access of a private member (by say a
+ * nested class) is still significant. For this reason, Alcina-style code style
+ * is package-by-default, with the requirement that members with non-obvious
+ * access semantics should be javadoc-documented if they're intended to support
+ * access from outside the exact owning class (not the nest).
+ * <li>THe other benefit of private is that static analysis tools (e.g. the mvcc
+ * ClassTransformer) can make guarantees about access (since in java a class
+ * cannot be extended). Package access allows no such guarantees. For this
+ * reason, {@link Entity} subclasses retain the JavaBeans 1.0 property style.
+ *
+ * </p>
  */
 package cc.alcina.framework.common.client.reflection;
