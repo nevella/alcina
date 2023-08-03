@@ -105,7 +105,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	private String publicDescription;
 
-	private Map<String, String> properties = new LinkedHashMap<String, String>();
+	private Map<String, String> properties = new LinkedHashMap<>();
 
 	private String propertiesSerialized = "";
 
@@ -209,7 +209,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	}
 
 	@Override
-	@AlcinaTransient
 	public Map<String, String> getProperties() {
 		return this.properties;
 	}
@@ -624,6 +623,9 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 		@Override
 		public void onAfterTreeSerialize() {
+			serializable.properties = new LinkedHashMap<>();
+			StringMap.fromPropertyString(serializable.propertiesSerialized)
+					.forEach((k, v) -> serializable.properties.put(k, v));
 			if (serializable.contentDefinition != null) {
 				serializable.contentDefinition.treeSerializationCustomiser()
 						.onAfterTreeSerialize();
@@ -642,6 +644,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		public void onBeforeTreeSerialize() {
 			serializable.propertiesSerialized = new StringMap(
 					serializable.properties).toPropertyString();
+			serializable.properties = null;
 			if (serializable.contentDefinition != null) {
 				serializable.contentDefinition.treeSerializationCustomiser()
 						.onBeforeTreeSerialize();
