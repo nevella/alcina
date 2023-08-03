@@ -1756,7 +1756,8 @@ public class FlatTreeSerializer {
 
 		boolean ignoreForSerialization() {
 			return propertySerialization != null
-					&& !propertySerialization.fromClient() && GWT.isClient();
+					&& ((!propertySerialization.fromClient() && GWT.isClient())
+							|| propertySerialization.ignoreFlat());
 		}
 
 		boolean isMultipleTypes() {
