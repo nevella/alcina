@@ -38,15 +38,40 @@ import cc.alcina.framework.entity.util.CsvCols;
 import cc.alcina.framework.entity.util.CsvCols.CsvRow;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 
-/*
- * Replacement for system configuration portion of ResourceUtilities
+/**
+ * <h2>Structured application configuration</h2>
+ * <p>
+ * Application configuration is a key-value structure, where the keys are either
+ * [class-simple-name].[subkey] or specially handled fully qualified directives
+ * (for configuration that doesn't nicely map to classes, such as log levels or
+ * jvm system properties).
  *
- * TODO - clazz name -> property path segment[s] should change from
- * Class.simpleClassName to SeUtilities.getNestedSimpleName
+ * <p>
+ * Default configuration values are in the package configuration.properties
+ * files, applications specify a list of overriding <i>configuration sets</i>
+ * which modify the defaults.
  *
- * ... with a regression test
- *
- * FIXME ru iterate all classes, note if superfluous classref
+ * <h3>Usage</h3> <code><pre>
+
+[confguration.properties]
+
+Foo.enabled=true
+Foo.name=some-froo
+
+[access in code]
+
+// (called from code within Foo)
+boolean enabled = Configuration.is("enabled");
+// enabled == true, class parameter defaults to caller class (which is Foo)
+String name = Configuration.get("name");
+// name == "some-froo"
+
+(called outside Foo)
+boolean enabled = Configuration.is(Foo.class,"enabled");
+//enabled == true
+
+
+ * </pre></code>
  */
 public class Configuration {
 	public final static Properties properties = new Properties();
@@ -330,7 +355,7 @@ public class Configuration {
 		private Map<String, PropertyValues> keyValues = new ConcurrentHashMap();
 
 		// access is synchronized
-		private Map<String, PackageBundles> packageBundles = new LinkedHashMap<>();
+		private Map<String, PackageBundle> packageBundles = new LinkedHashMap<>();
 
 		// mutation is startup-only
 		private List<PropertySet> orderedSets = new ArrayList<>();
@@ -429,7 +454,7 @@ public class Configuration {
 		private void ensureBundles(Key key) {
 			String packageName = key.clazz.getPackage().getName();
 			if (!packageBundles.containsKey(packageName)) {
-				PackageBundles bundles = new PackageBundles(key.clazz);
+				PackageBundle bundles = new PackageBundle(key.clazz);
 				packageBundles.put(packageName, bundles);
 				bundles.load();
 			}
@@ -580,7 +605,7 @@ public class Configuration {
 		// FIXME - ru - originally intended for multiple bundles - now per-set
 		// properties are defined in a single file. So can be renamed to
 		// PackageBundle (and simplified)
-		class PackageBundles {
+		class PackageBundle {
 			String packageName;
 
 			Map<PropertySet, StringMap> bundles = new LinkedHashMap<>();
@@ -589,7 +614,7 @@ public class Configuration {
 
 			private ClassLoader classLoader;
 
-			public PackageBundles(Class clazz) {
+			public PackageBundle(Class clazz) {
 				packageName = clazz.getPackage().getName();
 				classLoader = clazz.getClassLoader();
 			}
@@ -769,7 +794,7 @@ public class Configuration {
 
 		static class ValueSource {
 			static Stream<ValueSource> fromBundles(PropertySet propertySet,
-					String key, Map<String, PackageBundles> packageBundles) {
+					String key, Map<String, PackageBundle> packageBundles) {
 				List<ValueSource> results = packageBundles.values().stream()
 						.filter(bundles -> bundles.containsKey(key))
 						.map(bundles -> new ValueSource(bundles, propertySet,
@@ -790,13 +815,13 @@ public class Configuration {
 						: null;
 			}
 
-			PackageBundles packageBundles;
+			PackageBundle packageBundles;
 
 			PropertySet set;
 
 			String value;
 
-			ValueSource(PackageBundles packageBundles, PropertySet set,
+			ValueSource(PackageBundle packageBundles, PropertySet set,
 					String value) {
 				this.packageBundles = packageBundles;
 				this.set = set;
