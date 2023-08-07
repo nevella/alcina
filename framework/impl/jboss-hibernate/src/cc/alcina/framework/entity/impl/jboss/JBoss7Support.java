@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.entity.impl.jboss;
 
-import java.net.URI;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.List;
@@ -23,7 +22,6 @@ import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
 
-import cc.alcina.framework.classmeta.ClasspathUrlTranslator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -65,25 +63,6 @@ public class JBoss7Support {
 				logger.setLevel(java.util.logging.Level.SEVERE);
 			} else {
 				logger.setLevel(level);
-			}
-		}
-	}
-
-	public static class VFSClasspathUrlTranslator
-			implements ClasspathUrlTranslator {
-		@Override
-		public URL translateClasspathUrl(URL in) {
-			try {
-				switch (in.getProtocol()) {
-				case PROTOCOL_VFS:
-					return new URI(in.toString().replaceFirst("vfs:", "file:"))
-							.toURL();
-				case PROTOCOL_VFSFILE:
-					throw new UnsupportedOperationException();
-				}
-				return in;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
 			}
 		}
 	}

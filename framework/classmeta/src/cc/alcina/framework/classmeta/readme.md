@@ -1,1 +1,0 @@
-See git history for rdb folder - remote rdb proxy for java8

@@ -350,6 +350,8 @@ public class SelectionTraversal
 		/*
 		 * @formatter:off
 		 *
+		 * FIXME - traversal
+		 *
 		 * - get rid of current, next generation
 		 * - use layer state
 		 * - layer *parser* emits measures, layer *selector* emits selections
@@ -361,7 +363,6 @@ public class SelectionTraversal
 			Layer untyped = layer;
 			state.currentLayer = layer;
 			layer.onBeforeTraversal(state);
-			// FIXME
 			ProcessObservers.publish(GenerationEntry.class,
 					() -> new GenerationEntry());
 			for (;;) {
@@ -385,7 +386,6 @@ public class SelectionTraversal
 				}
 			}
 		}
-		// FIXME
 		ProcessObservers.publish(GenerationExit.class,
 				() -> new GenerationExit());
 	}

@@ -25,7 +25,6 @@
 		<delete dir="${extras.rpc.servlet.build.dir}" />
 		<delete dir="${framework.jvmclient.build.dir}" />
 		<delete dir="${framework.clientreflectorjvm.build.dir}" />
-		<delete dir="${framework.classmeta.build.dir}" />
 		<delete dir="${framework.jscodeserver.build.dir}" />
 		<mkdir dir="${framework.dist.dir}" />
 	</target>
@@ -105,22 +104,10 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
-		<mkdir dir="${framework.classmeta.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" destdir="${framework.classmeta.build.dir}">
-			<src path="${framework.classmeta.src.dir}:${framework.jscodeserver.src.dir}" />
-			<exclude name="cc/alcina/framework/common/translatable/**" />
-			<classpath>
-				<path refid="framework.common.lib.path" />
-				<pathelement path="${framework.entity.build.dir}" />
-			</classpath>
-			<compilerarg value="${alcina.compiler.args}" />
-		</javac>
-		<!-- depends on classmeta -->
 		<mkdir dir="${framework.servlet.build.dir}" />
 		<javac target="11" source="11" includeantruntime="false" debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
 			<classpath>
 				<pathelement path="${framework.entity.build.dir}" />
-				<pathelement path="${framework.classmeta.build.dir}" />
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.servlet.lib.path" />
 			</classpath>
@@ -131,7 +118,6 @@
 			<src path="${framework.clientreflectorjvm.src.dir}" />
 			<exclude name="cc/alcina/framework/common/translatable/**" />
 			<classpath>
-				<pathelement path="${framework.classmeta.build.dir}" />
 				<pathelement path="${framework.entity.build.dir}" />
 				<path refid="framework.common.lib.path" />
 			</classpath>
@@ -143,7 +129,6 @@
 			<classpath>
 				<pathelement path="${framework.entity.build.dir}" />
 				<pathelement path="${framework.servlet.build.dir}" />
-				<pathelement path="${framework.classmeta.build.dir}" />
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.servlet.lib.path" />
 			</classpath>
@@ -154,7 +139,6 @@
 			<classpath>
 				<pathelement path="${framework.entity.build.dir}" />
 				<pathelement path="${framework.servlet.build.dir}" />
-				<pathelement path="${framework.classmeta.build.dir}" />
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.servlet.lib.path" />
 				<path refid="extras.wd.lib.path" />
@@ -164,7 +148,6 @@
 		<mkdir dir="${framework.impl.jboss-hibernate.build.dir}" />
 		<javac target="11" source="11" includeantruntime="false" debug="on" srcdir="${framework.impl.jboss-hibernate.src.dirs}" destdir="${framework.impl.jboss-hibernate.build.dir}">
 			<classpath>
-				<pathelement path="${framework.classmeta.build.dir}" />
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.impl.jboss-hibernate.lib.path" />
 				<pathelement path="${framework.entity.build.dir}" />
@@ -180,7 +163,7 @@
 			<fileset dir="${alcina.home}/extras/jsdom/build">
 				<include name="**/JAbstractMethod.class" />
 			</fileset>
-			<fileset dir="${alcina.home}/framework/classmeta/build">
+			<fileset dir="${alcina.home}/bin">
 				<include name="**/CrossSiteIframeLinker.class" />
 				<include name="**/DirectInstallLinker.class" />
 				<include name="**/CrossSiteIframeLinker$1.class" />
@@ -244,16 +227,6 @@
 				<include name="**/*.txt" />
 				<exclude name="org/w3c/dom/**/*.*" />
 			</fileset>
-			<fileset dir="${framework.classmeta.build.dir}">
-				<include name="**/*.*" />
-			</fileset>
-			<fileset dir="${framework.classmeta.src.dir}">
-				<include name="cc/**/*.*" />
-
-				<include name="**/*.java" />
-				<exclude name="**/*.class" />
-			</fileset>
-
 			<!-- give the server handy access to stylesheets for print, static serving etc -->
 			<fileset dir="${framework.gwt.src.dir}">
 				<include name="**/*.css" />

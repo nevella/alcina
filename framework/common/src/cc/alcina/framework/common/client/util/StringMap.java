@@ -21,7 +21,6 @@ public class StringMap extends LinkedHashMap<String, String> {
 
 	public static final StringMap EMPTY_PROPS = new StringMap();
 
-	// FIXME - ru - check usages
 	public static StringMap flatten(Map<String, String[]> parameterMap) {
 		StringMap result = new StringMap();
 		parameterMap.forEach((k, v) -> {

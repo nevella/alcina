@@ -51,10 +51,11 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * rather than more general 'arbitrary collection to table' transforms.
  *
  * <p>
- * The arbitrary case doesn't really need a supporting model - see (FIXME -
- * dirndl - doc) this example of using transforms
+ * The arbitrary case doesn't really need a supporting model - see (
  *
- * 
+ * FIXME - dirndl - doc) this example of using transforms
+ *
+ *
  *
  */
 public class TableModel extends Model {
@@ -306,7 +307,6 @@ public class TableModel extends Model {
 			handler.onTableColumnClicked(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onTableColumnClicked(TableColumnClicked TableColumnClicked);
 		}
