@@ -155,11 +155,7 @@ public class ProcessMetric extends Model implements ProcessObservable {
 			return this.metrics;
 		}
 
-		@Override
-		public Class<ProcessMetric> getObservableClass() {
-			return ProcessMetric.class;
-		}
-
+		
 		public String getSequenceId() {
 			return this.sequenceId;
 		}

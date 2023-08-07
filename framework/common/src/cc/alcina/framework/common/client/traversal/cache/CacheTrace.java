@@ -104,11 +104,7 @@ public class CacheTrace {
 			this.trace = trace;
 		}
 
-		@Override
-		public Class<CacheEvent> getObservableClass() {
-			return CacheEvent.class;
-		}
-
+		
 		@Override
 		public void onSubscription(boolean subscribed) {
 			if (!subscribed) {

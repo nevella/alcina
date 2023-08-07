@@ -702,11 +702,7 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 
 	private class SyncObserver
 			implements ProcessObserver<TreeSync.Syncer.Operation> {
-		@Override
-		public Class<TreeSync.Syncer.Operation> getObservableClass() {
-			return TreeSync.Syncer.Operation.class;
-		}
-
+		
 		@Override
 		public void topicPublished(TreeSync.Syncer.Operation operation) {
 			modificationOccurred |= operation.action.performed

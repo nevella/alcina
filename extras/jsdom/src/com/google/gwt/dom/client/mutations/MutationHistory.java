@@ -64,11 +64,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		return this.events;
 	}
 
-	@Override
-	public Class<MutationHistory.Event> getObservableClass() {
-		return MutationHistory.Event.class;
-	}
-
+	
 	public boolean hadExceptions() {
 		return events.stream().anyMatch(Event::isEquivalenceTestFailed);
 	}
