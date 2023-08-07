@@ -19,6 +19,7 @@ public class JavacTypeBounds {
 	 * See also (parallels, but with jdk type model) :
 	 * cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType.Members.computeBounds()
 	 *
+	 *
 	 * @param objectType
 	 *
 	 *
@@ -35,12 +36,24 @@ public class JavacTypeBounds {
 		} else {
 			while (cursor != null) {
 				if (cursor instanceof JParameterizedType) {
-					JParameterizedType nearestGenericSupertype = (JParameterizedType) cursor;
-					Arrays.stream(nearestGenericSupertype.getTypeArgs())
-							.map(arg -> (arg instanceof JWildcardType)
-									? objectType
-									: arg)
-							.forEach(bounds::add);
+					addToBounds(cursor, objectType);
+					break;
+				}
+				JClassType superclass = cursor.getSuperclass();
+				if (superclass instanceof JParameterizedType) {
+					addToBounds(superclass, objectType);
+					break;
+				}
+				boolean matchedInterface = false;
+				for (JClassType superInterface : cursor
+						.getImplementedInterfaces()) {
+					if (superInterface instanceof JParameterizedType) {
+						addToBounds(superInterface, objectType);
+						matchedInterface = true;
+						break;
+					}
+				}
+				if (matchedInterface) {
 					break;
 				}
 				if (cursor instanceof JRealClassType) {
@@ -57,6 +70,13 @@ public class JavacTypeBounds {
 				}
 			}
 		}
+	}
+
+	void addToBounds(JClassType clazz, JClassType objectType) {
+		JParameterizedType nearestGenericSupertype = (JParameterizedType) clazz;
+		Arrays.stream(nearestGenericSupertype.getTypeArgs())
+				.map(arg -> (arg instanceof JWildcardType) ? objectType : arg)
+				.forEach(bounds::add);
 	}
 
 	public static class Computed {
