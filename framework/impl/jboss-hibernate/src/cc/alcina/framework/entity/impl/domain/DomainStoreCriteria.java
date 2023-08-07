@@ -199,6 +199,16 @@ public class DomainStoreCriteria implements Criteria {
 				arg3);
 	}
 
+	public int depth() {
+		int depth = 0;
+		DomainStoreCriteria cursor = this;
+		while (cursor.parent != null) {
+			depth++;
+			cursor = cursor.parent;
+		}
+		return depth;
+	}
+
 	@Override
 	public String getAlias() {
 		return this.entityManagerCriteria == null ? alias

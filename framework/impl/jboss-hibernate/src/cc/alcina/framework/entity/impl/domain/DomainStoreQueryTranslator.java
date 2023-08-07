@@ -109,19 +109,7 @@ public class DomainStoreQueryTranslator {
 					context = aliasLookup.get(firstSegment);
 				}
 				// chain to the root
-				DomainStoreCriteria cursor = context;
-				while (cursor.parent != null && (cursor.parent.alias == null
-						|| cursor.parent.joinType != null)) {
-					if (cursor.alias != null) {
-						String aliasSegment = cursor.alias + ".";
-						if (propertyPath.startsWith(aliasSegment)) {
-							propertyPath = propertyPath
-									.substring(aliasSegment.length());
-						}
-					}
-					propertyPath = cursor.associationPath + "." + propertyPath;
-					cursor = cursor.parent;
-				}
+				propertyPath = computePathToRoot(context, propertyPath);
 			} else {
 				propertyPath = context.alias + "." + propertyPath;
 			}
@@ -138,6 +126,8 @@ public class DomainStoreQueryTranslator {
 				} else {
 					propertyPath = sub.associationPath + "."
 							+ propertyPath.substring(idx + 1);
+					propertyPath = computePathToRoot(context.parent,
+							propertyPath);
 				}
 			}
 			idx = propertyPath.indexOf(".");
@@ -186,13 +176,8 @@ public class DomainStoreQueryTranslator {
 			addJoinFilter(criteria, sub);
 		}
 		addFilters(criteria);
-		// sub sub restrictions are currently not supported -- aliasing would
-		// have to
-		// become more involved if they were
-		if (criteria == root) {
-			for (DomainStoreCriteria sub : criteria.subs) {
-				addRestrictions(sub);
-			}
+		for (DomainStoreCriteria sub : criteria.subs) {
+			addRestrictions(sub);
 		}
 		handleHints(criteria);
 	}
@@ -258,8 +243,9 @@ public class DomainStoreQueryTranslator {
 				.query(CriterionTranslator.class).implementations()
 				.filter(t -> t.handles(criterion.getClass())).findFirst();
 		if (translator.isPresent()) {
-			return translator.get().handle(criterion, domainStoreCriteria,
-					this);
+			DomainFilter filter = translator.get().handle(criterion,
+					domainStoreCriteria, this);
+			return filter;
 		} else {
 			throw new NotHandledException(criterion);
 		}
@@ -280,6 +266,24 @@ public class DomainStoreQueryTranslator {
 				groupedRows.handleProjection(null, projectionHelper, i++);
 			}
 		}
+	}
+
+	String computePathToRoot(DomainStoreCriteria context, String propertyPath) {
+		DomainStoreCriteria cursor = context;
+		while (cursor != null && cursor.parent != null
+				&& (cursor.parent.alias == null
+						|| cursor.parent.joinType != null)) {
+			if (cursor.alias != null) {
+				String aliasSegment = cursor.alias + ".";
+				if (propertyPath.startsWith(aliasSegment)) {
+					propertyPath = propertyPath
+							.substring(aliasSegment.length());
+				}
+			}
+			propertyPath = cursor.associationPath + "." + propertyPath;
+			cursor = cursor.parent;
+		}
+		return propertyPath;
 	}
 
 	public static class ConjunctionTranslator
