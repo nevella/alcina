@@ -125,7 +125,9 @@
 		</javac>
 		<copy tofile="${framework.clientreflectorjvm.build.dir}/registry.properties" file="${framework.clientreflectorjvm.src.dir}/registry.properties" />
 		<mkdir dir="${extras.dev.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" srcdir="${extras.dev.src.dir}" destdir="${extras.dev.build.dir}">
+		<javac target="11" source="11" includeantruntime="false" debug="on"  destdir="${extras.dev.build.dir}">
+			<src path="${extras.dev.src.dir}" />
+			<src path="${framework.jscodeserver.src.dir}" />
 			<classpath>
 				<pathelement path="${framework.entity.build.dir}" />
 				<pathelement path="${framework.servlet.build.dir}" />
@@ -160,7 +162,7 @@
 	</target>
 	<target name="make-gwt-dev-jar" description="gwt-dev-override" depends="">
 		<jar update="${alcina.update-jars}" destfile="${alcina.home}/dist-extras/gwt-dev-patch.jar">
-			<fileset dir="${alcina.home}/extras/jsdom/build">
+			<fileset dir="${alcina.home}/framework/entity/build">
 				<include name="**/JAbstractMethod.class" />
 			</fileset>
 			<fileset dir="${alcina.home}/bin">
