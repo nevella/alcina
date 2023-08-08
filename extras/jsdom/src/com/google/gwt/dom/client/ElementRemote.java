@@ -1173,7 +1173,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 			fb.line("Element remote:\n===========");
 			fb.line("Indicies (lowest first):\n%s", stringIndicies());
 			fb.line("Ancestors (lowest first):\n%s", ancestors());
-			fb.line("Root:\n%s", root().getTagNameRemote());
+			fb.line("Root:\n%s", root() != null ? root().getTagNameRemote() : "null");
 			fb.line("Debug data:\n%s", debugData());
 			fb.line("\nDebug log:\n%s", debugLog());
 			return fb.toString();
