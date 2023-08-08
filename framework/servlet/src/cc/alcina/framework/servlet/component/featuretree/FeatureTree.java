@@ -34,8 +34,8 @@ import cc.alcina.framework.servlet.dom.RemoteUi;
 /**
  * A remote component that models the jvm-visible feature tree
  *
- * 
  *
+ * FIXME - featuretree - leaves with no status should be open.
  */
 @Feature.Ref(Feature_FeatureTree.class)
 public class FeatureTree {
