@@ -5,16 +5,19 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -1281,8 +1284,16 @@ public class DomNode {
 		}
 	}
 
-	public class DomNodeTree {
+	public class DomNodeTree implements Iterator<DomNode> {
 		private TreeWalker tw;
+
+		public boolean forwards = true;
+
+		private Node hasNextFor;
+
+		private Node next;
+
+		private boolean currentIterated;
 
 		public DomNodeTree() {
 			tw = ((DocumentTraversal) document.domDoc()).createTreeWalker(
@@ -1292,6 +1303,20 @@ public class DomNode {
 
 		public DomNode currentNode() {
 			return document.nodeFor(tw.getCurrentNode());
+		}
+
+		@Override
+		public boolean hasNext() {
+			Node currentNode = tw.getCurrentNode();
+			if (currentNode != hasNextFor) {
+				hasNextFor = currentNode;
+				next = next0();
+				if (next != null) {
+					tw.setCurrentNode(currentNode);
+				} else {
+				}
+			}
+			return next != null;
 		}
 
 		public List<DomNode> listUntil(DomNode end, boolean endInclusive) {
@@ -1306,8 +1331,24 @@ public class DomNode {
 			return result;
 		}
 
+		@Override
+		public DomNode next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			} else {
+				if (!currentIterated) {
+					currentIterated = true;
+					// clear, since this will equal root, and we need to recalc
+					// next
+					hasNextFor = null;
+				}
+				tw.setCurrentNode(next);
+				return document.nodeFor(tw.getCurrentNode());
+			}
+		}
+
 		public DomNode nextLogicalNode() {
-			Node next = tw.nextNode();
+			Node next = nextNodeWithReversed();
 			return document.nodeFor(next);
 		}
 
@@ -1321,7 +1362,7 @@ public class DomNode {
 
 		public Optional<DomNode> nextTextNode(boolean nonWhitespace) {
 			while (true) {
-				Node next = tw.nextNode();
+				Node next = nextNodeWithReversed();
 				if (next == null) {
 					return Optional.empty();
 				}
@@ -1334,31 +1375,51 @@ public class DomNode {
 		}
 
 		public DomNode previousLogicalNode() {
-			Node previous = tw.previousNode();
-			return document.nodeFor(previous);
+			return withReversed(this::nextLogicalNode);
 		}
 
 		public String previousNonWhitespaceText() {
-			return previousNonWhitespaceTextNode().map(DomNode::ntc)
-					.orElse(null);
+			return withReversed(this::nextNonWhitespaceText);
 		}
 
 		public Optional<DomNode> previousNonWhitespaceTextNode() {
-			while (true) {
-				Node previous = tw.previousNode();
-				if (previous == null) {
-					return Optional.empty();
-				}
-				DomNode xPrevious = document.nodeFor(previous);
-				if (xPrevious.isText()
-						&& xPrevious.isNonWhitespaceTextContent()) {
-					return Optional.of(xPrevious);
-				}
-			}
+			return withReversed(this::nextNonWhitespaceTextNode);
+		}
+
+		public DomNodeTree reversed() {
+			this.forwards = !forwards;
+			return this;
 		}
 
 		public void setCurrentNode(DomNode cursor) {
 			tw.setCurrentNode(cursor.node);
+		}
+
+		public Stream<DomNode> stream() {
+			Iterable<DomNode> iterable = () -> this;
+			return StreamSupport.stream(iterable.spliterator(), false);
+		}
+
+		Node next0() {
+			if (!currentIterated) {
+				return tw.getCurrentNode();
+			}
+			while (true) {
+				// will be null at the end of the traversal
+				Node next = nextNodeWithReversed();
+				return next;
+			}
+		}
+
+		Node nextNodeWithReversed() {
+			return forwards ? tw.nextNode() : tw.previousNode();
+		}
+
+		<T> T withReversed(Supplier<T> supplier) {
+			reversed();
+			T result = supplier.get();
+			reversed();
+			return result;
 		}
 	}
 

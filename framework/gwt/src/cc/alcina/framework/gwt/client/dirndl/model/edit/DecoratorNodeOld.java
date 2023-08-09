@@ -23,11 +23,6 @@ class DecoratorNodeOld {
 
 	ContentDecorator decorator;
 
-	DecoratorNodeOld(ContentDecorator decorator, DomNode node) {
-		this.decorator = decorator;
-		this.node = node;
-	}
-
 	DecoratorNodeOld(ContentDecorator decorator,
 			RelativeInputModel relativeInput) {
 		this.decorator = decorator;

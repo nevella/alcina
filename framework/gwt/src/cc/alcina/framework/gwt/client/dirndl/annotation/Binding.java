@@ -14,6 +14,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringFunction;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -30,6 +32,22 @@ public @interface Binding {
 	Class<? extends ToStringFunction> transform() default ToStringFunction.Identity.class;
 
 	Type type();
+
+	public abstract static class AbstractContextSensitiveTransform<T>
+			implements ContextSensitiveTransform<T> {
+		protected Node node;
+
+		@Override
+		public ContextSensitiveTransform<T> withContextNode(Node node) {
+			this.node = node;
+			return this;
+		}
+	}
+
+	public interface ContextSensitiveTransform<T> extends ToStringFunction<T> {
+		public ContextSensitiveTransform<T>
+				withContextNode(DirectedLayout.Node node);
+	}
 
 	@Reflected
 	public static class DisplayFalseTrue implements ToStringFunction<Boolean> {

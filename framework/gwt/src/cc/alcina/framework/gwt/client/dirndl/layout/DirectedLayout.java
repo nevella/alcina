@@ -435,8 +435,12 @@ public class DirectedLayout implements AlcinaProcess {
 	 * context) is the retrieval of the ancestor Overlay in
 	 * {@code Overlay.onBind()}
 	 * <p>
-	 * FIXME - dirndl - fragmentnode - some of those manipulations can probably
-	 * be generalised
+	 * Note - fragmentnode ops - these follow DomNode (and w3c Node) ops -
+	 * append, insertbefore, insertAsFirstChild. They manipulate several trees,
+	 * at the moment via logical (DirectedLayout.Node) then Rendered(DOM) - this
+	 * *could* be done via direct rendered manipulation and then flush of local
+	 * changes, but it's more performant this way. But it may be better to
+	 * eventually switch to the latter for consistency
 	 */
 	public class Node {
 		// not necessarily unchanged during the Node's lifetime - the renderer
@@ -540,6 +544,14 @@ public class DirectedLayout implements AlcinaProcess {
 
 		public boolean hasRendered() {
 			return rendered != null;
+		}
+
+		public void insertAfter(FragmentNode newChildModel,
+				FragmentNode refModel) {
+			int nextNodeIndex = children.indexOf(refModel.provideNode()) + 1;
+			FragmentNode beforeModel = nextNodeIndex == children.size() ? null
+					: (FragmentNode) children.get(nextNodeIndex).model;
+			insertBefore(newChildModel, beforeModel);
 		}
 
 		/*
@@ -783,18 +795,8 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		/**
-		 * Another bidi model/render (via dl.node) structure call, this calls an
-		 * immediate layout. model-model ownership is maintained by the
-		 * fragmentmodel rather than model fields
-		 */
-		void appendFragmentChild(Model child) {
-			removeChildNode(child);
-			RendererInput input = getResolver().layout.enqueueInput(
-					getResolver(), child,
-					annotationLocation.copyWithClassLocationOf(child), null,
-					this);
-			getResolver().layout.layout();
+		void append(FragmentNode child) {
+			insertBefore(child, null);
 		}
 
 		int depth() {
@@ -808,10 +810,11 @@ public class DirectedLayout implements AlcinaProcess {
 			return depth;
 		}
 
-		void ensureChildren() {
+		List<Node> ensureChildren() {
 			if (children == null) {
 				children = new ArrayList<>();
 			}
+			return children;
 		}
 
 		void fireEvent(ModelEvent modelEvent) {
@@ -855,28 +858,37 @@ public class DirectedLayout implements AlcinaProcess {
 		 *
 		 * Note this is a reparent of an existing node
 		 */
-		void insertAsFirstFragmentChild(Model model) {
-			Preconditions.checkState(model.provideNode() != null);
-			Node oldNode = model.provideNode();
-			removeChildNode(model);
+		void insertAsFirstChild(FragmentNode newChildModel) {
+			ensureChildren();
+			insertBefore(newChildModel, Ax.firstOptional(children)
+					.<FragmentNode> map(Node::getModel).orElse(null));
+		}
+
+		void insertBefore(FragmentNode newChildModel,
+				FragmentNode refChildModel) {
+			ensureChildren();
+			Node oldNode = newChildModel.provideNode();
+			removeChildNode(newChildModel);
 			RendererInput input = getResolver().layout.enqueueInput(
 					getResolver(), model,
 					annotationLocation.copyWithClassLocationOf(model), null,
 					this);
+			input.before = refChildModel == null ? null
+					: refChildModel.provideNode();
 			getResolver().layout.layout();
-			Node childNode = model.provideNode();
-			if (children.size() != 1) {
-				children.remove(childNode);
-				children.add(0, childNode);
-				rendered.insertAsFirstChild(childNode.rendered);
+			moveChildren(oldNode, newChildModel.provideNode());
+		}
+
+		void moveChildren(Node from, Node to) {
+			if (from == null || from.ensureChildren().isEmpty()) {
+				return;
 			}
-			List<Node> oldChildren = oldNode.children.stream()
-					.collect(Collectors.toList());
-			childNode.children = new ArrayList<>();
-			oldChildren.forEach(child -> {
-				child.parent = childNode;
-				childNode.children.add(child);
-				childNode.rendered.append(child.rendered);
+			to.ensureChildren();
+			Preconditions.checkState(to.children.isEmpty());
+			from.children.forEach(child -> {
+				child.parent = to;
+				to.children.add(child);
+				to.rendered.append(child.rendered);
 			});
 		}
 
@@ -924,27 +936,15 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		/*
-		 * A little nifty - insert a new node (model: newModel) replacing
-		 * oldNode, then append children of oldNode to newNode
-		 */
 		void replaceChild(Model oldModel, Model newModel) {
 			RendererInput input = getResolver().layout.enqueueInput(
 					getResolver(), newModel,
 					annotationLocation.copyWithClassLocationOf(newModel), null,
 					this);
 			Node oldNode = oldModel.provideNode();
-			List<Node> oldChildren = oldNode.children.stream()
-					.collect(Collectors.toList());
 			input.replace = oldNode;
 			getResolver().layout.layout();
-			Node newNode = newModel.provideNode();
-			newNode.children = new ArrayList<>();
-			oldChildren.forEach(child -> {
-				child.parent = newNode;
-				newNode.children.add(child);
-				newNode.rendered.append(child.rendered);
-			});
+			moveChildren(oldNode, newModel.provideNode());
 		}
 
 		// this node will disappear, so refer to predecessor nodes
@@ -1320,6 +1320,12 @@ public class DirectedLayout implements AlcinaProcess {
 				boolean hasTransform = (Class) binding
 						.transform() != ToStringFunction.Identity.class;
 				if (hasTransform) {
+					ToStringFunction transform = Registry
+							.newInstanceOrImpl(binding.transform());
+					if (transform instanceof Binding.ContextSensitiveTransform) {
+						((Binding.ContextSensitiveTransform) transform)
+								.withContextNode(Node.this);
+					}
 					// FIXME - dirndl - requires bidi transform
 					throw new UnsupportedOperationException();
 				}
@@ -1391,8 +1397,13 @@ public class DirectedLayout implements AlcinaProcess {
 				boolean hasTransform = (Class) binding
 						.transform() != ToStringFunction.Identity.class;
 				if (hasTransform) {
-					value = Registry.newInstanceOrImpl(binding.transform())
-							.apply(value);
+					ToStringFunction transform = Registry
+							.newInstanceOrImpl(binding.transform());
+					if (transform instanceof Binding.ContextSensitiveTransform) {
+						((Binding.ContextSensitiveTransform) transform)
+								.withContextNode(Node.this);
+					}
+					value = transform.apply(value);
 				}
 				String stringValue = value == null ? "null" : value.toString();
 				Rendered rendered = verifySingleRendered();
@@ -1591,6 +1602,8 @@ public class DirectedLayout implements AlcinaProcess {
 	 *
 	 */
 	public class RendererInput implements Traversable {
+		Node before;
+
 		ContextResolver resolver;
 
 		// effectively final
@@ -1631,6 +1644,7 @@ public class DirectedLayout implements AlcinaProcess {
 			parentNode = null;
 			node = null;
 			replace = null;
+			before = null;
 		}
 
 		@Override
@@ -1686,6 +1700,8 @@ public class DirectedLayout implements AlcinaProcess {
 					// just insert normally (LAST), no insertionpoint required
 					node.insertionPoint = null;
 				} else {
+					// root can't have a sibling
+					Preconditions.checkState(before == null);
 					// root - if this is a replace, append to root panel
 					if (replace != null) {
 						resolver.replaceRoot(node.rendered);
@@ -1759,6 +1775,11 @@ public class DirectedLayout implements AlcinaProcess {
 				int indexInParentChildren = parentNode.children
 						.indexOf(replace);
 				replace.remove(true);
+				parentNode.children.add(indexInParentChildren, node);
+			} else if (before != null) {
+				node.insertionPoint = before.resolveInsertionPoint();
+				DirectedLayout.this.insertionPoint = node.insertionPoint;
+				int indexInParentChildren = parentNode.children.indexOf(before);
 				parentNode.children.add(indexInParentChildren, node);
 			} else {
 				if (parentNode != null) {

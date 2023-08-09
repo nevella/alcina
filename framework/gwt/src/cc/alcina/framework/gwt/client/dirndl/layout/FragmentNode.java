@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -45,7 +46,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
  */
 @Transformer(NodeTransformer.DirectedTransformer.class)
 @Directed
-public abstract class FragmentNode extends Model implements FragmentNodeOps {
+public abstract class FragmentNode extends Model.Fields
+		implements FragmentNodeOps {
 	protected FragmentModel fragmentModel;
 
 	public <N extends FragmentNode> Optional<N> ancestor(Class<N> clazz) {
@@ -55,10 +57,6 @@ public abstract class FragmentNode extends Model implements FragmentNodeOps {
 
 	public Ancestors ancestors() {
 		return new Ancestors();
-	}
-
-	public void append(FragmentNode child) {
-		provideNode().appendFragmentChild(child);
 	}
 
 	@Override
@@ -94,8 +92,16 @@ public abstract class FragmentNode extends Model implements FragmentNodeOps {
 		return fragmentModel;
 	}
 
+	public FragmentNodeTree fragmentNodeTree() {
+		return new FragmentNodeTree();
+	}
+
 	public void insertAsFirstChild(FragmentNode child) {
-		provideNode().insertAsFirstFragmentChild(child);
+		provideNode().insertAsFirstChild(child);
+	}
+
+	public Nodes nodes() {
+		return new Nodes();
 	}
 
 	public FragmentNode parent() {
@@ -119,15 +125,8 @@ public abstract class FragmentNode extends Model implements FragmentNodeOps {
 		return provideNode().parent;
 	}
 
-	public void replaceWith(FragmentNode other) {
-		provideParentNode().replaceChild(this, other);
-	}
-
 	public void strip() {
 		provideNode().strip();
-		// FIXME - st.bn - probably not...
-		// throw new UnsupportedOperationException();
-		// domNode().strip();
 	}
 
 	@Override
@@ -136,6 +135,10 @@ public abstract class FragmentNode extends Model implements FragmentNodeOps {
 		format.append(getClass().getSimpleName());
 		format.append(provideNode().getRendered().asDomNode());
 		return format.toString();
+	}
+
+	public FragmentTree tree() {
+		return new FragmentTree();
 	}
 
 	/**
@@ -188,6 +191,23 @@ public abstract class FragmentNode extends Model implements FragmentNodeOps {
 		}
 	}
 
+	public class FragmentNodeTree {
+		DomNodeTree domTree;
+
+		FragmentNodeTree() {
+			domTree = domNode().tree();
+		}
+
+		FragmentNodeTree reversed() {
+			domTree.reversed();
+			return this;
+		}
+
+		Stream<FragmentNode> stream() {
+			return domTree.stream().map(fragmentModel::getFragmentNode);
+		}
+	}
+
 	/*
 	 * Mimics the behaviour of FragmentNode for the root (which is not
 	 * necessarily a fragment node)
@@ -207,11 +227,43 @@ public abstract class FragmentNode extends Model implements FragmentNodeOps {
 		}
 	}
 
+	public class FragmentTree {
+		DomNodeTree tree;
+
+		FragmentTree() {
+			this.tree = domNode().tree();
+		}
+
+		public Optional<FragmentNode.Text> nextTextNode(boolean nonWhitespace) {
+			return (Optional<FragmentNode.Text>) (Optional<?>) tree
+					.nextTextNode(nonWhitespace)
+					.map(fragmentModel::getFragmentNode);
+		}
+	}
+
 	/*
 	 * Reverse transformation falls back on this model if no other matches exist
 	 */
 	@Transformer(NodeTransformer.Generic.class)
 	public static class Generic extends FragmentNode {
+	}
+
+	public class Nodes {
+		public void append(FragmentNode child) {
+			provideNode().append(child);
+		}
+
+		public void insertAfterThis(FragmentNode fragmentNode) {
+			provideParentNode().insertAfter(FragmentNode.this, fragmentNode);
+		}
+
+		public void insertBeforeThis(FragmentNode fragmentNode) {
+			provideParentNode().insertBefore(FragmentNode.this, fragmentNode);
+		}
+
+		public void replaceWith(FragmentNode other) {
+			provideParentNode().replaceChild(FragmentNode.this, other);
+		}
 	}
 
 	/*
