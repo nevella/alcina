@@ -1007,10 +1007,12 @@ public abstract class UIObject implements HasVisibility {
 	 */
 	void replaceElement(Element elem) {
 		if (element != null) {
+			element.uiObject = null;
 			// replace this.element in its parent with elem.
 			replaceNode(element, elem);
 		}
 		this.element = elem;
+		element.uiObject = this;
 	}
 
 	/**

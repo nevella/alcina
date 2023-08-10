@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -46,6 +47,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
  */
 @Transformer(NodeTransformer.DirectedTransformer.class)
 @Directed
+@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class FragmentNode extends Model.Fields
 		implements FragmentNodeOps {
 	protected FragmentModel fragmentModel;

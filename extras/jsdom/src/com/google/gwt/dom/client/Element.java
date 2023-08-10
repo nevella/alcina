@@ -1182,8 +1182,6 @@ public class Element extends Node implements ClientDomElement,
 			this.eventListener = uiObject instanceof EventListener
 					? (EventListener) uiObject
 					: this;
-		} else {
-			int debug = 3;
 		}
 		DOM.setEventListener(this, eventListener);
 		List<String> localBitlessEventsSunk = localBitlessEventsSunk();
@@ -1352,7 +1350,7 @@ public class Element extends Node implements ClientDomElement,
 	/**
 	 * Most of these methods assume the remote() is a NodeJso
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public class ElementImplAccess extends Node.ImplAccess {
