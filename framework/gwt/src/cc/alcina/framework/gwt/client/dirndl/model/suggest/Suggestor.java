@@ -44,11 +44,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  *
  */
 @Directed(
-	receives = { SuggestorEvents.EditorAsk.class,
-			ModelEvents.SelectionChanged.class,
-			// suggestion overlay close
-			ModelEvents.Closed.class },
-	emits = ModelEvents.SelectionChanged.class)
+	
+emits = ModelEvents.SelectionChanged.class)
 public class Suggestor extends Model
 		implements SuggestorEvents.EditorAsk.Handler,
 		ModelEvents.SelectionChanged.Handler, HasSelectedValue,

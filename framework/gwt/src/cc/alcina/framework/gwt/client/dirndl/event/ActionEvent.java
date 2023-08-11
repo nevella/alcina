@@ -72,8 +72,8 @@ public abstract class ActionEvent<T> extends ModelEvent<T, ActionEvent.Handler>
 	 * Presents an action as icon - text
 	 */
 	@Directed(
-		bindings = @Binding(from = "title", type = Binding.Type.PROPERTY),
-		receives = DomEvents.Click.class)
+		bindings = @Binding(from = "title", type = Binding.Type.PROPERTY)
+	)
 	@Directed.PropertyNameTags
 	public static class Action extends Model
 			implements DomEvents.Click.Handler {

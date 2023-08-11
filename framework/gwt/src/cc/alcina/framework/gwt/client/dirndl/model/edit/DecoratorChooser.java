@@ -34,9 +34,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 	// but see
 	// cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.computeCssClass()
 	cssClass = "decorator-chooser",
-	receives = { ModelEvents.SelectionChanged.class, ModelEvents.Closed.class,
-			ModelEvents.BeforeClosed.class },
-	emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
+	
+emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
 public abstract class DecoratorChooser extends Model.Fields
 		implements ModelEvents.SelectionChanged.Handler,
 		ModelEvents.Closed.Handler, ModelEvents.BeforeClosed.Handler {

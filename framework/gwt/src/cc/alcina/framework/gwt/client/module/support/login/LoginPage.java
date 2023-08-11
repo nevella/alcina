@@ -20,9 +20,8 @@ import cc.alcina.framework.gwt.client.module.support.login.LoginPage.Navigation.
 import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 
 @Directed(
-	cssClass = "login-page",
-	receives = { ModelEvents.Next.class,
-			InferredDomEvents.InputEnterCommit.class })
+	cssClass = "login-page"
+)
 @TypeSerialization(reflectiveSerializable = false)
 public abstract class LoginPage extends Model implements
 		ModelEvents.Next.Handler, InferredDomEvents.InputEnterCommit.Handler {

@@ -37,9 +37,11 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -60,6 +62,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -657,13 +660,24 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		private void bindBehaviours() {
-			if (model == null || directed.receives().length == 0) {
+			if (model == null) {
+				return;
+			}
+			if (model instanceof FormModel) {
+				int debug = 3;
+			}
+			ReceivesEvents.ClassData classData = ReceivesEvents
+					.get(model.getClass());
+			if (classData.receives.isEmpty()
+					&& directed.reemits().length == 0) {
 				return;
 			}
 			eventBindings = new ArrayList<>();
-			for (int idx = 0; idx < directed.receives().length; idx++) {
-				Class<? extends NodeEvent> clazz = directed.receives()[idx];
-				eventBindings.add(new NodeEventBinding(clazz, idx));
+			classData.receives.forEach(
+					clazz -> eventBindings.add(new NodeEventBinding(clazz)));
+			for (int idx = 0; idx < directed.reemits().length; idx += 2) {
+				Class<? extends NodeEvent> clazz = directed.reemits()[idx];
+				eventBindings.add(new NodeEventBinding(clazz));
 			}
 			eventBindings.forEach(NodeEventBinding::bind);
 		}
@@ -1112,13 +1126,10 @@ public class DirectedLayout implements AlcinaProcess {
 			 */
 			Class<? extends NodeEvent> type;
 
-			private int receiverIndex;
-
 			DomBinding domBinding;
 
-			public NodeEventBinding(Class<? extends NodeEvent> type, int idx) {
+			public NodeEventBinding(Class<? extends NodeEvent> type) {
 				this.type = type;
-				this.receiverIndex = idx;
 			}
 
 			public void onEvent(GwtEvent event) {
@@ -1216,15 +1227,19 @@ public class DirectedLayout implements AlcinaProcess {
 					((SimpleEventBus) Client.eventBus()).fireEventFromSource(
 							nodeEvent, context.node, List.of(handler));
 				} else {
-					// dispatch a new ModelEvent, compute its type from the
-					// correspondence between elements of @Directed.reemits and
-					// receives
+					// dispatch a new ModelEvent, compute its type [receive,
+					// reemit] tuple in Directed.reemits
 					Context eventContext = NodeEvent.Context
 							.fromContext(context, Node.this);
-					Preconditions.checkState(directed
-							.receives().length == directed.reemits().length);
-					Class<? extends ModelEvent> emitType = (Class<? extends ModelEvent>) directed
-							.reemits()[receiverIndex];
+					Class<? extends ModelEvent> emitType = null;
+					for (int idx = 0; idx < directed
+							.reemits().length; idx += 2) {
+						if (directed.reemits()[idx] == actualEventType) {
+							emitType = (Class<? extends ModelEvent>) directed
+									.reemits()[idx + 1];
+							break;
+						}
+					}
 					eventContext.dispatch(emitType, Node.this.getModel());
 				}
 			}
@@ -1869,6 +1884,61 @@ public class DirectedLayout implements AlcinaProcess {
 
 		enum Point {
 			FIRST, AFTER, LAST
+		}
+	}
+
+	static class ReceivesEvents {
+		static ReceivesEvents instance;
+
+		static ClassData get(Class clazz) {
+			if (instance == null) {
+				synchronized (ReceivesEvents.class) {
+					if (instance == null) {
+						instance = new ReceivesEvents();
+					}
+				}
+			}
+			return instance.get0(clazz);
+		}
+
+		Map<Class, ClassData> classData;
+
+		Map<Class<? extends NodeEvent.Handler>, Class<? extends NodeEvent>> handlerEvents;
+
+		ReceivesEvents() {
+			classData = CollectionCreators.Bootstrap.createConcurrentClassMap();
+			// FIXME - reflection - rebuild on registry change
+			handlerEvents = (Map) CollectionCreators.Bootstrap
+					.createConcurrentClassMap();
+			Registry.query(NodeEvent.class).registrations()
+					.forEach(eventClass -> {
+						ClassReflector<? extends NodeEvent> reflector = Reflections
+								.at(eventClass);
+						Class<? extends NodeEvent.Handler> handlerClass = reflector
+								.hasNoArgsConstructor()
+										? reflector.newInstance()
+												.getHandlerClass()
+										: reflector.getGenericBounds().bounds
+												.get(0);
+						handlerEvents.put(handlerClass, eventClass);
+					});
+		}
+
+		ClassData get0(Class clazz) {
+			return classData.computeIfAbsent(clazz, ClassData::new);
+		}
+
+		class ClassData {
+			List<Class<? extends NodeEvent>> receives = new ArrayList<>();
+
+			Class<?> clazz;
+
+			ClassData(Class<?> clazz) {
+				this.clazz = clazz;
+				Reflections.at(clazz).provideAllImplementedInterfaces()
+						.<Class<? extends NodeEvent>> map(handlerEvents::get)
+						.filter(Objects::nonNull).forEach(receives::add);
+			}
 		}
 	}
 

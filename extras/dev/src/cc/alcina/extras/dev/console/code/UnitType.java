@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Stream;
 
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
@@ -23,6 +24,19 @@ import cc.alcina.framework.common.client.util.LooseContext;
 
 public class UnitType {
 	public static transient boolean evaluateSuperclassFqn = false;
+
+	public static ClassOrInterfaceDeclaration
+			findContainingClassOrInterfaceDeclaration(Node n) {
+		Node cursor = n;
+		while (cursor != null) {
+			if (cursor instanceof ClassOrInterfaceDeclaration) {
+				return (ClassOrInterfaceDeclaration) cursor;
+			} else {
+				cursor = cursor.getParentNode().orElse(null);
+			}
+		}
+		return null;
+	}
 
 	private transient ClassOrInterfaceDeclaration declaration;
 
@@ -82,6 +96,9 @@ public class UnitType {
 		return Reflections.forName(qualifiedBinaryName);
 	}
 
+	/**
+	 * Call *before* modification
+	 */
 	public void dirty() {
 		unitWrapper.prepareForModification();
 		unitWrapper.dirty = true;

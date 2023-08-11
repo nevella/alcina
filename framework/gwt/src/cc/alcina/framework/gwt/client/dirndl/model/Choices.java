@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 
-@Directed(tag = "choices", receives = { ModelEvents.Selected.class })
+@Directed(tag = "choices")
 /*
  * I'm not entirely happy with 'Choices' firing 'Selection' events (could it not
  * be "chosen" events - or revert to "Selections/Selection") - even though
@@ -109,8 +109,8 @@ public abstract class Choices<T> extends Model
 					from = "selected",
 					to = "_selected"),
 				@Binding(type = Type.PROPERTY, from = "indexSelected") },
-		receives = { DomEvents.Click.class, DomEvents.MouseDown.class },
-		emits = ModelEvents.Selected.class)
+		
+	emits = ModelEvents.Selected.class)
 	public static class Choice<T> extends Model
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler {
 		private boolean selected;
@@ -206,7 +206,7 @@ public abstract class Choices<T> extends Model
 		}
 	}
 
-	@Directed(tag = "select", receives = DomEvents.Change.class)
+	@Directed(tag = "select")
 	public static class Select<T> extends Single<T>
 			implements DomEvents.Change.Handler {
 		@Override

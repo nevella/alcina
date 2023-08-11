@@ -69,9 +69,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 // FIXME - dirndl 1x1dz - actions - check validation, form submit
-@Directed(
-	receives = { DomEvents.KeyDown.class, ModelEvents.Cancel.class,
-			ModelEvents.Submit.class })
+@Directed
 @Registration(FormModel.class)
 public class FormModel extends Model
 		implements DomEvents.Submit.Handler, DomEvents.KeyDown.Handler,

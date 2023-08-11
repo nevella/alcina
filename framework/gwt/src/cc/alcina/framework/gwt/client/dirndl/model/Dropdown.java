@@ -34,9 +34,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * @param <D>
  */
 @Directed(
-	bindings = @Binding(from = "open", type = Type.CSS_CLASS),
-	receives = { DropdownEvents.DropdownButtonClicked.class,
-			ModelEvents.Closed.class })
+	bindings = @Binding(from = "open", type = Type.CSS_CLASS)
+)
 public class Dropdown extends Model
 		implements DropdownButtonClicked.Handler, ModelEvents.Closed.Handler {
 	private boolean open;
@@ -69,8 +68,8 @@ public class Dropdown extends Model
 	}
 
 	@Directed(
-		receives = DomEvents.Click.class,
-		reemits = DropdownEvents.DropdownButtonClicked.class)
+		
+	reemits = { DomEvents.Click.class, DropdownEvents.DropdownButtonClicked.class })
 	public Model getButton() {
 		return this.button;
 	}

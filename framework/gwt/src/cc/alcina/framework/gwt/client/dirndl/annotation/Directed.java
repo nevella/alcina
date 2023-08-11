@@ -81,6 +81,8 @@ public @interface Directed {
 	 * DirectedLayout.Node.nodeRenderer, DirectedLayout.Node.model. Currently,
 	 * events stop propagation by default when handled by a handler - this will
 	 * probably change to bubble by default.
+	 *
+	 * 202308 - going away (duplicates the handler interfaces)
 	 */
 	public Class<? extends NodeEvent>[] receives() default {};
 

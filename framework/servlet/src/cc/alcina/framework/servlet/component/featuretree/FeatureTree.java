@@ -111,7 +111,7 @@ public class FeatureTree {
 		}
 	}
 
-	@Directed(receives = DomEvents.Click.class)
+	@Directed
 	@Bean(PropertySource.FIELDS)
 	static class Mock extends Model implements DomEvents.Click.Handler {
 		@Directed(tag = "p")
