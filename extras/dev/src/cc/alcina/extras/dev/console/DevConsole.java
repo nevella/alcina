@@ -865,7 +865,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		devHelper.doParallelEarlyClassInit();
 		devHelper.copyTemplates();
-		devHelper.loadConfiguration();
+		devHelper.loadConfig();
 		devHelper.initLightweightServices();
 		long statEndInitLightweightServices = System.currentTimeMillis();
 		devHelper.getTestLogger();

@@ -133,7 +133,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public Connection getConn(boolean forceNewLocal, boolean forceRemote)
 			throws Exception {
 		boolean remote = forceRemote
-				|| (console.getProps().connection_useProduction && !forceNewLocal);
+				|| (console.getProps().connection_useProduction
+						&& !forceNewLocal);
 		if (forceNewLocal) {
 			connLocal = null;
 		}
@@ -1132,7 +1133,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					? System.getenv("USERPROFILE")
 					: System.getProperty("user.home");
 			String localPath = CommonUtils.combinePaths(homeDir + "/", argv[1]);
-			String remotePath = String.format("%s:%s", console.getProps().remoteSsh,
+			String remotePath = String.format("%s:%s",
+					console.getProps().remoteSsh,
 					(argv[2].startsWith("'") ? argv[2]
 							: (CommonUtils.combinePaths(
 									console.getProps().remoteHomeDir + "/",
@@ -1270,7 +1272,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				return "";
 			}
 			console.saveConfig();
-			return String.format("log level set to %s", console.getProps().logLevel);
+			return String.format("log level set to %s",
+					console.getProps().logLevel);
 		}
 	}
 
@@ -1316,7 +1319,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				} else if (type == Integer.class || type == int.class) {
 					field.set(console.getProps(), Integer.parseInt(argv[1]));
 				} else if (type == String.class) {
-					field.set(console.getProps(), argv.length == 1 ? null : argv[1]);
+					field.set(console.getProps(),
+							argv.length == 1 ? null : argv[1]);
 				}
 				console.saveConfig();
 				return String.format("set %s to '%s'", argv[0],
@@ -1363,7 +1367,13 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			// FIXME - ru - unify properties
+			// FIXME - low - ru - unify properties
+			/*
+			 * This would remove DevConsoleProperties - they would just be
+			 * migrated to appropriate points in the Configuration tree
+			 *
+			 * Add documentation to devconsole re 'common properties'
+			 */
 			throw new UnsupportedOperationException();
 			// if (argv.length == 0) {
 			// Map<String, String> map = new TreeMap<String, String>();

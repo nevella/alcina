@@ -102,7 +102,7 @@ import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener
  * FIXME - ops - fix webapp (and dev mode?) retaining refs to prior
  * app/classloader
  *
- * 
+ *
  */
 @SuppressWarnings("deprecation")
 @Registration.Singleton
@@ -253,50 +253,48 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	public void loadCustomProperties() {
 		try {
-			// note that this does *not* clear existing custom properties, which
-			// would require trickier sync control
-			// FIXME - ru - see if that's now easier
-			String loggerLevels = getDefaultLoggerLevels();
-			Configuration.properties.register(loggerLevels);
-			File propertiesFile = new File(
-					AlcinaWebappConfig.get().getCustomPropertiesFilePath());
-			if (propertiesFile.exists()) {
-				Configuration.properties
-						.register(Io.read().file(propertiesFile).asString());
-			} else {
-				File propertiesListFile = SEUtilities.getChildFile(
-						propertiesFile.getParentFile(),
-						"alcina-properties-files.txt");
-				if (propertiesListFile.exists()) {
-					String[] paths = Io.read().file(propertiesListFile)
-							.asString().split("\n");
-					int idx = 0;
-					for (String path : paths) {
-						String file = Io.read().path(path).asString();
-						if (idx++ == 0) {
-							if (file.contains("include.resource=")) {
-								Configuration.properties.setUseSets(true);
-								Configuration.properties.setClassLoader(
-										getClass().getClassLoader());
-								// re-register in v2 mode
-								Configuration.properties.register(loggerLevels);
+			/*
+			 * note that this *does* clear custom property keys added since
+			 * startup
+			 *
+			 */
+			Configuration.properties.load(() -> {
+				String loggerLevels = getDefaultLoggerLevels();
+				Configuration.properties.register(loggerLevels);
+				File propertiesFile = new File(
+						AlcinaWebappConfig.get().getCustomPropertiesFilePath());
+				if (propertiesFile.exists()) {
+					Configuration.properties.register(
+							Io.read().file(propertiesFile).asString());
+				} else {
+					File propertiesListFile = SEUtilities.getChildFile(
+							propertiesFile.getParentFile(),
+							"alcina-properties-files.txt");
+					if (propertiesListFile.exists()) {
+						String[] paths = Io.read().file(propertiesListFile)
+								.asString().split("\n");
+						int idx = 0;
+						for (String path : paths) {
+							String file = Io.read().path(path).asString();
+							if (idx++ == 0) {
+								if (file.contains("include.resource=")) {
+									Configuration.properties.setUseSets(true);
+									Configuration.properties.setClassLoader(
+											getClass().getClassLoader());
+									// re-register in v2 mode
+									Configuration.properties
+											.register(loggerLevels);
+								}
 							}
+							Configuration.properties.register(file);
 						}
-						Configuration.properties.register(file);
 					}
 				}
-			}
+			});
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	public void refreshProperties() {
-		// FIXME - ru - these should probably cascade/trigger via invalidation
-		Configuration.properties
-				.loadSystemPropertiesFromConfigurationProperties();
-		EntityLayerLogging.setLogLevelsFromCustomProperties();
 	}
 
 	@Override
@@ -386,6 +384,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			ThreadlocalTransformManager.ignoreAllTransformPermissions = Configuration
 					.is(ThreadlocalTransformManager.class,
 							"ignoreTransformPermissions");
+			Configuration.properties
+					.loadSystemPropertiesFromConfigurationProperties();
+			EntityLayerLogging.setLogLevelsFromCustomProperties();
 		});
 		if (Configuration.is("allowAllHostnameVerifier")) {
 			try {

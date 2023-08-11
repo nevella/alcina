@@ -8,7 +8,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -357,6 +356,8 @@ public class Configuration {
 		// access is synchronized
 		private Map<String, PackageBundle> packageBundles = new LinkedHashMap<>();
 
+		PropertySet base;
+
 		// mutation is startup-only
 		private List<PropertySet> orderedSets = new ArrayList<>();
 
@@ -417,6 +418,12 @@ public class Configuration {
 
 		public Stream<String> keys() {
 			return keyValues.keySet().stream();
+		}
+
+		public synchronized void load(Runnable runnable) {
+			keyValues.clear();
+			orderedSets.forEach(PropertySet::clear);
+			runnable.run();
 		}
 
 		public void loadSystemPropertiesFromConfigurationProperties() {
@@ -540,6 +547,9 @@ public class Configuration {
 			Preconditions.checkArgument(getSet(systemSet).isEmpty());
 			PropertySet set = new PropertySet(systemSet);
 			orderedSets.add(set);
+			if (systemSet == SystemSet.base) {
+				base = set;
+			}
 		}
 
 		PropertyValues ensureValues(Key key) {
@@ -602,15 +612,10 @@ public class Configuration {
 			return ensureValues(key).exists();
 		}
 
-		// FIXME - ru - originally intended for multiple bundles - now per-set
-		// properties are defined in a single file. So can be renamed to
-		// PackageBundle (and simplified)
 		class PackageBundle {
 			String packageName;
 
-			Map<PropertySet, StringMap> bundles = new LinkedHashMap<>();
-
-			StringMap unionMap = new StringMap();
+			StringMap map = new StringMap();
 
 			private ClassLoader classLoader;
 
@@ -620,47 +625,31 @@ public class Configuration {
 			}
 
 			public boolean containsKey(String key) {
-				return unionMap.containsKey(key);
+				return map.containsKey(key);
 			}
 
 			public String getValue(String key) {
-				return unionMap.get(key);
+				return map.get(key);
 			}
 
 			public Set<String> keys() {
-				return unionMap.keySet();
+				return map.keySet();
 			}
 
 			public void load() {
-				orderedSets.stream().filter(PropertySet::usesBundles)
-						.forEach(set -> {
-							String specifier = set.specifier();
-							String baseName = useSets ? "configuration"
-									: "Bundle";
-							String base = Ax.format("%s.%s%s", packageName,
-									baseName, specifier);
-							try {
-								ResourceBundle bundle = ResourceBundle
-										.getBundle(base, Locale.getDefault(),
-												classLoader);
-								StringMap map = new StringMap();
-								bundle.keySet().forEach(key -> {
-									map.put(key, bundle.getString(key));
-								});
-								bundles.put(set, map);
-								unionMap.putAll(map);
-							} catch (MissingResourceException e) {
-								if (set.isRequired()) {
-									throw e;
-								}
-							}
-						});
+				String baseName = useSets ? "configuration" : "Bundle";
+				String bundleBase = Ax.format("%s.%s", packageName, baseName);
+				ResourceBundle bundle = ResourceBundle.getBundle(bundleBase,
+						Locale.getDefault(), classLoader);
+				bundle.keySet().forEach(key -> {
+					map.put(key, bundle.getString(key));
+				});
 				invalidate();
 			}
 
 			@Override
 			public String toString() {
-				return bundles.toString();
+				return map.toString();
 			}
 		}
 
@@ -726,6 +715,12 @@ public class Configuration {
 				return systemSet != null;
 			}
 
+			void clear() {
+				if (map != null) {
+					map.clear();
+				}
+			}
+
 			void populateKeys(Set<String> keys) {
 				if (!resolves()) {
 					return;
@@ -785,7 +780,7 @@ public class Configuration {
 		}
 
 		enum SystemSet {
-			set_loader, base, custom;
+			base, custom;
 
 			boolean usesBundles() {
 				return this == base;
