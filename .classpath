@@ -19,7 +19,6 @@
 	<classpathentry kind="src" output="extras/jsdom/bin" path="extras/jsdom/src-element"/>
 	<classpathentry kind="src" path="extras/wd/src"/>
 	<classpathentry kind="src" output="extras/patches/nekohtml/bin" path="extras/patches/nekohtml/src"/>
-	<classpathentry kind="src" path="extras/console/src"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="module" value="true"/>
