@@ -21,39 +21,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
  *
  * @author Nick Reddel
  */
-public interface ToStringFunction<T> extends Function<T, String> {
-	public interface Bidi<T>
-			extends BidiFunction<T, String>, ToStringFunction<T> {
-	}
-
-	/**
-	 * Called this because ToStringFunction.Indentity is the default value (and
-	 * thus ignored)
-	 *
-	 *
-	 *
-	 */
-	@Reflected
-	public static class ExplicitIdentity implements ToStringFunction<String> {
-		@Override
-		public String apply(String t) {
-			return t;
-		}
-	}
-
-	@Reflected
-	public static class Identity implements ToStringFunction<String> {
-		@Override
-		public String apply(String t) {
-			return t;
-		}
-	}
-
-	@Reflected
-	public static class ToCssName implements ToStringFunction<String> {
-		@Override
-		public String apply(String t) {
-			return Ax.cssify(t);
-		}
-	}
+public interface FromStringFunction<T> extends Function< String,T> {
+	
 }

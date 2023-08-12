@@ -126,10 +126,33 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 	}
 
 	public static class ContextLocatorTransform
+			implements Binding.Bidi<EntityLocator> {
+		@Override
+		public Function<EntityLocator, String> leftToRight() {
+			return new ContextLocatorTransformLeft();
+		}
+
+		@Override
+		public Function<String, EntityLocator> rightToLeft() {
+			return new ContextLocatorTransformRight();
+		}
+	}
+
+	public static class ContextLocatorTransformLeft
 			extends Binding.AbstractContextSensitiveTransform<EntityLocator> {
 		@Override
 		public String apply(EntityLocator t) {
 			return t == null ? null : t.toRecoverableNumericString();
+		}
+	}
+
+	public static class ContextLocatorTransformRight extends
+			Binding.AbstractContextSensitiveReverseTransform<EntityLocator> {
+		@Override
+		public EntityLocator apply(String t) {
+			DecoratorNode contextNode = node.getModel();
+			return t == null ? null
+					: EntityLocator.parse(contextNode.entityClass(), t);
 		}
 	}
 

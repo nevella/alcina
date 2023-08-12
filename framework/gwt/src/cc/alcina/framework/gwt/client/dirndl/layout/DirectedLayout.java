@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -47,6 +48,7 @@ import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.common.client.util.ToStringFunction;
+import cc.alcina.framework.common.client.util.ToStringFunction.Bidi;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
@@ -1332,18 +1334,6 @@ public class DirectedLayout implements AlcinaProcess {
 					}
 				}
 				String stringValue = null;
-				boolean hasTransform = (Class) binding
-						.transform() != ToStringFunction.Identity.class;
-				if (hasTransform) {
-					ToStringFunction transform = Registry
-							.newInstanceOrImpl(binding.transform());
-					if (transform instanceof Binding.ContextSensitiveTransform) {
-						((Binding.ContextSensitiveTransform) transform)
-								.withContextNode(Node.this);
-					}
-					// FIXME - dirndl - requires bidi transform
-					throw new UnsupportedOperationException();
-				}
 				Rendered rendered = verifySingleRendered();
 				Element element = rendered.isElement() ? rendered.asElement()
 						: null;
@@ -1381,18 +1371,32 @@ public class DirectedLayout implements AlcinaProcess {
 				default:
 					throw new UnsupportedOperationException();
 				}
-				Object value = stringValue;
-				if (Ax.notBlank(stringValue)) {
-					if (property.getType() == Boolean.class) {
+				Object value = null;
+				boolean hasTransform = (Class) binding
+						.transform() != ToStringFunction.Identity.class;
+				if (hasTransform) {
+					ToStringFunction.Bidi bidiTransform = (Bidi) Registry
+							.newInstanceOrImpl(binding.transform());
+					Function<String, ?> transform = bidiTransform.rightToLeft();
+					if (transform instanceof Binding.ContextSensitiveReverseTransform) {
+						((Binding.ContextSensitiveReverseTransform) transform)
+								.withContextNode(Node.this);
+					}
+					value = transform.apply(stringValue);
+				} else {
+					value = stringValue;
+					if (Ax.notBlank(stringValue)) {
+						if (property.getType() == Boolean.class) {
+							value = Boolean.valueOf(stringValue);
+						} else if (property.getType() == Integer.class) {
+							value = Integer.parseInt(stringValue);
+						}
+					}
+					if (property.getType() == boolean.class) {
 						value = Boolean.valueOf(stringValue);
-					} else if (property.getType() == Integer.class) {
+					} else if (property.getType() == int.class) {
 						value = Integer.parseInt(stringValue);
 					}
-				}
-				if (property.getType() == boolean.class) {
-					value = Boolean.valueOf(stringValue);
-				} else if (property.getType() == int.class) {
-					value = Integer.parseInt(stringValue);
 				}
 				property.set(model, value);
 			}
