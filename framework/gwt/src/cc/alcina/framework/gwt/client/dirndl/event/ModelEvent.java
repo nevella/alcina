@@ -128,6 +128,10 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public void setHandled(boolean handled) {
 		this.handled = handled;
 	}
+	
+	public void bubble(){
+		getContext().bubble();
+	}
 
 	public void setTypedModel(T typedModel) {
 		this.model = typedModel;
