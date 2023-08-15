@@ -161,8 +161,11 @@ public abstract class Model extends Bindable implements
 	 */
 	public void onBind(Bind event) {
 		if (event.isBound()) {
-			Preconditions.checkState(node == null);
-			node = event.getContext().node;
+			if (event.isModelCorrespondsToNode()) {
+				// FIXME - dirndl - this should be true, but there's
+				// Preconditions.checkState(node == null);
+				node = event.getContext().node;
+			}
 			if (bindings != null) {
 				bindings.bind();
 			}
@@ -309,11 +312,35 @@ public abstract class Model extends Bindable implements
 			add(listener);
 		}
 
+		private ListenerBinding asBinding(
+				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
+			return new ListenerBinding() {
+				private HandlerRegistration reference;
+
+				@Override
+				public void bind() {
+					reference = handlerRegistrationSupplier.get();
+				}
+
+				@Override
+				public void unbind() {
+					reference.removeHandler();
+					reference = null;
+				}
+			};
+		}
+
 		public void bind() {
 			Preconditions.checkState(!bound);
 			binding.bind();
 			listenerBindings.bind();
 			bound = true;
+		}
+
+		private SourcesPropertyChangeEvents getSource() {
+			SourcesPropertyChangeEvents left = fieldless ? propertyChangeSource
+					: Model.this;
+			return left;
 		}
 
 		public boolean isFieldless() {
@@ -339,30 +366,6 @@ public abstract class Model extends Bindable implements
 			String propertyNameString = PropertyEnum
 					.asPropertyName(propertyName);
 			return (T) values.get(propertyNameString);
-		}
-
-		private ListenerBinding asBinding(
-				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
-			return new ListenerBinding() {
-				private HandlerRegistration reference;
-
-				@Override
-				public void bind() {
-					reference = handlerRegistrationSupplier.get();
-				}
-
-				@Override
-				public void unbind() {
-					reference.removeHandler();
-					reference = null;
-				}
-			};
-		}
-
-		private SourcesPropertyChangeEvents getSource() {
-			SourcesPropertyChangeEvents left = fieldless ? propertyChangeSource
-					: Model.this;
-			return left;
 		}
 
 		public class MapBackedProperty extends Property {

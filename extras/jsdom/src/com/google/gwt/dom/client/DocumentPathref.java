@@ -1,5 +1,8 @@
 package com.google.gwt.dom.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
@@ -12,6 +15,10 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	Document document;
 
 	public MutationProxy mutationProxy;
+
+	// hack-ish - the element path is not necessarily determined at sink events
+	// time
+	List<Runnable> sinkEventsQueue = new ArrayList<>();
 
 	public DocumentPathref(Document document) {
 		super(document);
@@ -554,20 +561,30 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	void emitMutation(MutationRecord mutation) {
+		mutationProxy.onMutation(mutation);
+	}
+
 	public void emitSinkBitlessEvent(ElementPathref elementPathref,
 			String eventTypeName) {
-		mutationProxy.onSinkBitlessEvent(Pathref.forNode(elementPathref.node()),
-				eventTypeName);
+		sinkEventsQueue.add(() -> mutationProxy.onSinkBitlessEvent(
+				Pathref.forNode(elementPathref.node()), eventTypeName));
 	}
 
 	public void emitSinkEvents(ElementPathref elementPathref, int eventBits) {
-		mutationProxy.onSinkEvents(Pathref.forNode(elementPathref.node()),
-				eventBits);
+		sinkEventsQueue.add(() -> mutationProxy.onSinkEvents(
+				Pathref.forNode(elementPathref.node()), eventBits));
 	}
 
 	@Override
 	public void enableScrolling(boolean enable) {
 		throw new UnsupportedOperationException();
+	}
+
+	public void flushSinkEventsQueue() {
+		sinkEventsQueue.forEach(Runnable::run);
+		sinkEventsQueue.clear();
 	}
 
 	@Override
@@ -723,11 +740,6 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	@Override
 	public void setTitle(String title) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void emitMutation(MutationRecord mutation) {
-		mutationProxy.onMutation(mutation);
 	}
 
 	public interface MutationProxy {

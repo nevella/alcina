@@ -123,6 +123,17 @@ public class Environment {
 		runInClientFrame(runnable);
 	}
 
+	// see class doc re sync
+	synchronized void emitMutations() {
+		if (mutations != null) {
+			runInClientFrame(() -> {
+				Document.get().pathrefRemote().flushSinkEventsQueue();
+				queue.send(mutations);
+				mutations = null;
+			});
+		}
+	}
+
 	public void initialiseClient(RemoteComponentProtocol.Session session) {
 		if (queue == null) {
 			startQueue();
@@ -151,6 +162,11 @@ public class Environment {
 		return client != null;
 	}
 
+	void onHistoryChange(ValueChangeEvent<String> event) {
+		mutationProxy.onLocationMutation(
+				Message.Mutations.ofLocation().locationMutation);
+	}
+
 	public synchronized void
 			registerRemoteMessageConsumer(Consumer<Message> consumer) {
 		queue.registerConsumer(consumer);
@@ -158,35 +174,6 @@ public class Environment {
 
 	public void renderInitialUi() {
 		runInClientFrame(() -> ui.render());
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format("env::%s [%s/%s]", uid, credentials.id,
-				credentials.auth);
-	}
-
-	public void validateSession(RemoteComponentProtocol.Session session,
-			boolean validateClientInstanceUid) throws Exception {
-		if (!Objects.equals(session.auth, credentials.auth)) {
-			throw new RemoteComponentProtocol.InvalidAuthenticationException();
-		}
-		if (validateClientInstanceUid) {
-			// FIXME - romcom - throw various exceptions if expired etc - see
-			// package javadoc
-			// if (!Objects.equals(session.clientInstanceUid,
-			// connectedClientUid)) {
-			// if (connectedClientUid == null) {
-			// logger.warn(
-			// "Call against new (dev) server with no connected client : {}",
-			// session.clientInstanceUid);
-			// } else {
-			// logger.warn("Expired client (tab) : {}",
-			// session.clientInstanceUid);
-			// }
-			// throw new InvalidClientUidException();
-			// }
-		}
 	}
 
 	private void runInClientFrame(Runnable runnable) {
@@ -216,17 +203,33 @@ public class Environment {
 		thread.start();
 	}
 
-	// see class doc re sync
-	synchronized void emitMutations() {
-		if (mutations != null) {
-			queue.send(mutations);
-			mutations = null;
-		}
+	@Override
+	public String toString() {
+		return Ax.format("env::%s [%s/%s]", uid, credentials.id,
+				credentials.auth);
 	}
 
-	void onHistoryChange(ValueChangeEvent<String> event) {
-		mutationProxy.onLocationMutation(
-				Message.Mutations.ofLocation().locationMutation);
+	public void validateSession(RemoteComponentProtocol.Session session,
+			boolean validateClientInstanceUid) throws Exception {
+		if (!Objects.equals(session.auth, credentials.auth)) {
+			throw new RemoteComponentProtocol.InvalidAuthenticationException();
+		}
+		if (validateClientInstanceUid) {
+			// FIXME - romcom - throw various exceptions if expired etc - see
+			// package javadoc
+			// if (!Objects.equals(session.clientInstanceUid,
+			// connectedClientUid)) {
+			// if (connectedClientUid == null) {
+			// logger.warn(
+			// "Call against new (dev) server with no connected client : {}",
+			// session.clientInstanceUid);
+			// } else {
+			// logger.warn("Expired client (tab) : {}",
+			// session.clientInstanceUid);
+			// }
+			// throw new InvalidClientUidException();
+			// }
+		}
 	}
 
 	class ClientProtocolMessageQueue implements Runnable {
