@@ -33,7 +33,6 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ClassUtil;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
@@ -43,7 +42,7 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.Pr
  * Builds a class reflector (or data required for ClassReflector source
  * gneration)
  *
- * 
+ *
  *
  */
 public class ClassReflection extends ReflectionElement {
@@ -124,10 +123,8 @@ public class ClassReflection extends ReflectionElement {
 		List<Property> properties = sortedPropertyReflections.stream()
 				.map(PropertyReflection::asProperty)
 				.collect(Collectors.toList());
-		Supplier supplier = noArgsConstructor == null ? () -> {
-			throw new IllegalArgumentException(Ax.format(
-					"Class '%s' has no no-args constructor", type.getName()));
-		} : (Supplier) noArgsConstructor;
+		Supplier supplier = noArgsConstructor == null ? null
+				: (Supplier) noArgsConstructor;
 		Predicate<Class> assignableTo = ((ProvidesAssignableTo) type)
 				.provideAssignableTo();
 		List<Class> interfaces = ((ProvidesInterfaces) type)
