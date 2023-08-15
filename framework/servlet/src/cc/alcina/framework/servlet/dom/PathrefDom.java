@@ -57,6 +57,11 @@ public class PathrefDom {
 				.anyMatch(env -> env.ui.getClass() == uiType);
 	}
 
+	public boolean isSingletonEnvironmentInitialised() {
+		Preconditions.checkState(environments.size() <= 1);
+		return environments.size() == 1;
+	}
+
 	public Environment register(RemoteUi ui, Credentials credentials) {
 		Environment environment = new Environment(ui, credentials);
 		environments.put(credentials.id, environment);
