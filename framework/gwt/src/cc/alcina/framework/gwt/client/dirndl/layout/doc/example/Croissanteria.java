@@ -31,8 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * to continue bubbling, call event.bubble()
  *
  */
-@Directed(
-	receives = { ModelEvents.Add.class, CroissanteriaEvents.BiteSample.class })
+@Directed
 public class Croissanteria extends Model.Fields implements
 		CroissanteriaEvents.BiteSample.Handler, ModelEvents.Add.Handler {
 	@Directed

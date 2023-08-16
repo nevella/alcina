@@ -73,19 +73,6 @@ public @interface Directed {
 	 */
 	public boolean merge() default true;
 
-	/**
-	 * If non-empty and the same length as the reemits() array, these events
-	 * will simply be reemitted by the DirectedLayout event subsystem. Otherwise
-	 * the event will bubble up the DirectedLayout.Node/Model tuples, looking
-	 * for handler implementations in this order:
-	 * DirectedLayout.Node.nodeRenderer, DirectedLayout.Node.model. Currently,
-	 * events stop propagation by default when handled by a handler - this will
-	 * probably change to bubble by default.
-	 *
-	 * 202308 - going away (duplicates the handler interfaces)
-	 */
-	public Class<? extends NodeEvent>[] receives() default {};
-
 	public Class<? extends NodeEvent>[] reemits() default {};
 
 	/**
@@ -157,8 +144,6 @@ public @interface Directed {
 
 		private Class[] emits = CommonUtils.EMPTY_CLASS_ARRAY;
 
-		private Class[] receives = CommonUtils.EMPTY_CLASS_ARRAY;
-
 		private Class[] reemits = CommonUtils.EMPTY_CLASS_ARRAY;
 
 		private boolean merge = true;
@@ -175,7 +160,6 @@ public @interface Directed {
 		public Impl(Directed directed) {
 			bindings = directed.bindings();
 			emits = directed.emits();
-			receives = directed.receives();
 			reemits = directed.reemits();
 			merge = directed.merge();
 			cssClass = directed.cssClass();
@@ -183,9 +167,39 @@ public @interface Directed {
 			renderer = directed.renderer();
 		}
 
+		private String __stringValue(Object o) {
+			if (o instanceof Class) {
+				return ((Class) o).getSimpleName() + ".class";
+			}
+			if (o.getClass().isArray()) {
+				return "[" + java.util.Arrays.stream((Object[]) o)
+						.map(this::__stringValue).collect(
+								java.util.stream.Collectors.joining(","))
+						+ "]";
+			}
+			return o.toString();
+		}
+
 		@Override
 		public Class<? extends Annotation> annotationType() {
 			return Directed.class;
+		}
+
+		private void append(StringBuilder stringBuilder, String fieldName,
+				Function<Directed, ?> function, boolean elideDefaults) {
+			Object value = function.apply(this);
+			if (elideDefaults) {
+				Object defaultValue = function.apply(DEFAULT_INSTANCE);
+				if (Objects.deepEquals(value, defaultValue)) {
+					return;
+				}
+			}
+			if (stringBuilder.length() > 0) {
+				stringBuilder.append(',');
+			}
+			stringBuilder.append(fieldName);
+			stringBuilder.append('=');
+			stringBuilder.append(__stringValue(value));
 		}
 
 		@Override
@@ -208,22 +222,22 @@ public @interface Directed {
 			return merge;
 		}
 
+		private <V> V mergeAttribute(Directed parent,
+				Function<Directed, V> function) {
+			return Resolution.MergeStrategy.mergeValues(parent, this,
+					DEFAULT_INSTANCE, function);
+		}
+
 		public Impl mergeParent(Directed parent) {
 			Impl merged = new Impl();
 			merged.bindings = mergeAttribute(parent, Directed::bindings);
 			merged.cssClass = mergeAttribute(parent, Directed::cssClass);
 			merged.emits = mergeAttribute(parent, Directed::emits);
 			merged.merge = mergeAttribute(parent, Directed::merge);
-			merged.receives = mergeAttribute(parent, Directed::receives);
 			merged.reemits = mergeAttribute(parent, Directed::reemits);
 			merged.renderer = mergeAttribute(parent, Directed::renderer);
 			merged.tag = mergeAttribute(parent, Directed::tag);
 			return merged;
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] receives() {
-			return receives;
 		}
 
 		@Override
@@ -252,10 +266,6 @@ public @interface Directed {
 			this.merge = merge;
 		}
 
-		public void setReceives(Class[] receives) {
-			this.receives = receives;
-		}
-
 		public void setReemits(Class[] reemits) {
 			this.reemits = reemits;
 		}
@@ -278,46 +288,6 @@ public @interface Directed {
 			return toString(false);
 		}
 
-		public String toStringElideDefaults() {
-			return toString(true);
-		}
-
-		private String __stringValue(Object o) {
-			if (o instanceof Class) {
-				return ((Class) o).getSimpleName() + ".class";
-			}
-			if (o.getClass().isArray()) {
-				return "[" + java.util.Arrays.stream((Object[]) o)
-						.map(this::__stringValue).collect(
-								java.util.stream.Collectors.joining(","))
-						+ "]";
-			}
-			return o.toString();
-		}
-
-		private void append(StringBuilder stringBuilder, String fieldName,
-				Function<Directed, ?> function, boolean elideDefaults) {
-			Object value = function.apply(this);
-			if (elideDefaults) {
-				Object defaultValue = function.apply(DEFAULT_INSTANCE);
-				if (Objects.deepEquals(value, defaultValue)) {
-					return;
-				}
-			}
-			if (stringBuilder.length() > 0) {
-				stringBuilder.append(',');
-			}
-			stringBuilder.append(fieldName);
-			stringBuilder.append('=');
-			stringBuilder.append(__stringValue(value));
-		}
-
-		private <V> V mergeAttribute(Directed parent,
-				Function<Directed, V> function) {
-			return Resolution.MergeStrategy.mergeValues(parent, this,
-					DEFAULT_INSTANCE, function);
-		}
-
 		String toString(boolean elideDefaults) {
 			StringBuilder stringBuilder = new StringBuilder();
 			append(stringBuilder, "tag", Directed::tag, elideDefaults);
@@ -326,13 +296,15 @@ public @interface Directed {
 			append(stringBuilder, "bindings", Directed::bindings,
 					elideDefaults);
 			append(stringBuilder, "emits", Directed::emits, elideDefaults);
-			append(stringBuilder, "receives", Directed::receives,
-					elideDefaults);
 			append(stringBuilder, "reemits", Directed::reemits, elideDefaults);
 			append(stringBuilder, "renderer", Directed::renderer,
 					elideDefaults);
 			append(stringBuilder, "merge", Directed::merge, elideDefaults);
 			return stringBuilder.toString();
+		}
+
+		public String toStringElideDefaults() {
+			return toString(true);
 		}
 	}
 
