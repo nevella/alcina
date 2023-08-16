@@ -58,6 +58,9 @@ public @interface Directed {
 	 */
 	public Binding[] bindings() default {};
 
+	/**
+	 * Css class names that will be added to the generated tag
+	 */
 	public String className() default "";
 
 	/**
@@ -83,6 +86,9 @@ public @interface Directed {
 	 */
 	public Class<? extends DirectedRenderer> renderer() default DirectedRenderer.ModelClass.class;
 
+	/**
+	 * The markup tag that will be generated for this layout node
+	 */
 	public String tag() default "";
 
 	/**
@@ -167,39 +173,9 @@ public @interface Directed {
 			renderer = directed.renderer();
 		}
 
-		private String __stringValue(Object o) {
-			if (o instanceof Class) {
-				return ((Class) o).getSimpleName() + ".class";
-			}
-			if (o.getClass().isArray()) {
-				return "[" + java.util.Arrays.stream((Object[]) o)
-						.map(this::__stringValue).collect(
-								java.util.stream.Collectors.joining(","))
-						+ "]";
-			}
-			return o.toString();
-		}
-
 		@Override
 		public Class<? extends Annotation> annotationType() {
 			return Directed.class;
-		}
-
-		private void append(StringBuilder stringBuilder, String fieldName,
-				Function<Directed, ?> function, boolean elideDefaults) {
-			Object value = function.apply(this);
-			if (elideDefaults) {
-				Object defaultValue = function.apply(DEFAULT_INSTANCE);
-				if (Objects.deepEquals(value, defaultValue)) {
-					return;
-				}
-			}
-			if (stringBuilder.length() > 0) {
-				stringBuilder.append(',');
-			}
-			stringBuilder.append(fieldName);
-			stringBuilder.append('=');
-			stringBuilder.append(__stringValue(value));
 		}
 
 		@Override
@@ -220,12 +196,6 @@ public @interface Directed {
 		@Override
 		public boolean merge() {
 			return merge;
-		}
-
-		private <V> V mergeAttribute(Directed parent,
-				Function<Directed, V> function) {
-			return Resolution.MergeStrategy.mergeValues(parent, this,
-					DEFAULT_INSTANCE, function);
 		}
 
 		public Impl mergeParent(Directed parent) {
@@ -288,6 +258,46 @@ public @interface Directed {
 			return toString(false);
 		}
 
+		public String toStringElideDefaults() {
+			return toString(true);
+		}
+
+		private String __stringValue(Object o) {
+			if (o instanceof Class) {
+				return ((Class) o).getSimpleName() + ".class";
+			}
+			if (o.getClass().isArray()) {
+				return "[" + java.util.Arrays.stream((Object[]) o)
+						.map(this::__stringValue).collect(
+								java.util.stream.Collectors.joining(","))
+						+ "]";
+			}
+			return o.toString();
+		}
+
+		private void append(StringBuilder stringBuilder, String fieldName,
+				Function<Directed, ?> function, boolean elideDefaults) {
+			Object value = function.apply(this);
+			if (elideDefaults) {
+				Object defaultValue = function.apply(DEFAULT_INSTANCE);
+				if (Objects.deepEquals(value, defaultValue)) {
+					return;
+				}
+			}
+			if (stringBuilder.length() > 0) {
+				stringBuilder.append(',');
+			}
+			stringBuilder.append(fieldName);
+			stringBuilder.append('=');
+			stringBuilder.append(__stringValue(value));
+		}
+
+		private <V> V mergeAttribute(Directed parent,
+				Function<Directed, V> function) {
+			return Resolution.MergeStrategy.mergeValues(parent, this,
+					DEFAULT_INSTANCE, function);
+		}
+
 		String toString(boolean elideDefaults) {
 			StringBuilder stringBuilder = new StringBuilder();
 			append(stringBuilder, "tag", Directed::tag, elideDefaults);
@@ -301,10 +311,6 @@ public @interface Directed {
 					elideDefaults);
 			append(stringBuilder, "merge", Directed::merge, elideDefaults);
 			return stringBuilder.toString();
-		}
-
-		public String toStringElideDefaults() {
-			return toString(true);
 		}
 	}
 
