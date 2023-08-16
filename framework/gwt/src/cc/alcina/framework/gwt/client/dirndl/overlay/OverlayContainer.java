@@ -25,7 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
  *
  */
 @Directed(
-	cssClass = "overlay-container",
+	className = "overlay-container",
 	bindings = { @Binding(from = "viewportCentered", type = Type.CSS_CLASS),
 			@Binding(
 				from = "visible",

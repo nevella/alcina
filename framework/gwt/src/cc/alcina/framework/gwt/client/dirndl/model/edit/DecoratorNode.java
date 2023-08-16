@@ -156,7 +156,7 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		}
 	}
 
-	@Directed(tag = "span", cssClass = "cursor-target")
+	@Directed(tag = "span", className = "cursor-target")
 	public static class ZeroWidthCursorTarget extends FragmentNode {
 		@Binding(type = Type.INNER_TEXT)
 		public String text = "\u200B";

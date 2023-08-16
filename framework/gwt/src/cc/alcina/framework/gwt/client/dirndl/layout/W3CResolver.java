@@ -22,7 +22,7 @@ public class W3CResolver extends ContextResolver {
 			Element element = document.domDoc().createElement(tagName);
 			domNode = document.nodeFor(element);
 		}
-		String cssClass = layoutNode.directed.cssClass();
+		String cssClass = layoutNode.directed.className();
 		if (cssClass.length() > 0) {
 			domNode.style().addClassName(cssClass);
 		}

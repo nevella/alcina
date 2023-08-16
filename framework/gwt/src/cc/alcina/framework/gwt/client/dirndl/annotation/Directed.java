@@ -58,7 +58,7 @@ public @interface Directed {
 	 */
 	public Binding[] bindings() default {};
 
-	public String cssClass() default "";
+	public String className() default "";
 
 	/**
 	 * Informative only (not required for a node/model to emit the corresponding
@@ -178,7 +178,7 @@ public @interface Directed {
 			receives = directed.receives();
 			reemits = directed.reemits();
 			merge = directed.merge();
-			cssClass = directed.cssClass();
+			cssClass = directed.className();
 			tag = directed.tag();
 			renderer = directed.renderer();
 		}
@@ -194,7 +194,7 @@ public @interface Directed {
 		}
 
 		@Override
-		public String cssClass() {
+		public String className() {
 			return cssClass;
 		}
 
@@ -211,7 +211,7 @@ public @interface Directed {
 		public Impl mergeParent(Directed parent) {
 			Impl merged = new Impl();
 			merged.bindings = mergeAttribute(parent, Directed::bindings);
-			merged.cssClass = mergeAttribute(parent, Directed::cssClass);
+			merged.cssClass = mergeAttribute(parent, Directed::className);
 			merged.emits = mergeAttribute(parent, Directed::emits);
 			merged.merge = mergeAttribute(parent, Directed::merge);
 			merged.receives = mergeAttribute(parent, Directed::receives);
@@ -321,7 +321,7 @@ public @interface Directed {
 		String toString(boolean elideDefaults) {
 			StringBuilder stringBuilder = new StringBuilder();
 			append(stringBuilder, "tag", Directed::tag, elideDefaults);
-			append(stringBuilder, "cssClass", Directed::cssClass,
+			append(stringBuilder, "cssClass", Directed::className,
 					elideDefaults);
 			append(stringBuilder, "bindings", Directed::bindings,
 					elideDefaults);

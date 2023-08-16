@@ -106,7 +106,7 @@ public interface NodeTransformer {
 		@Override
 		public boolean appliesTo(DomNode node) {
 			Directed directed = getDirected();
-			return node.tagAndClassIs(directed.tag(), directed.cssClass());
+			return node.tagAndClassIs(directed.tag(), directed.className());
 		}
 
 		@Override

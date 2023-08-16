@@ -20,7 +20,7 @@ import cc.alcina.framework.gwt.client.module.support.login.LoginPage.Navigation.
 import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 
 @Directed(
-	cssClass = "login-page"
+	className = "login-page"
 )
 @TypeSerialization(reflectiveSerializable = false)
 public abstract class LoginPage extends Model implements
