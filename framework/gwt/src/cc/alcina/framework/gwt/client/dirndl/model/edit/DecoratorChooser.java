@@ -33,7 +33,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 @Directed(
 	// but see
 	// cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.computeCssClass()
-	cssClass = "decorator-chooser",
+	className = "decorator-chooser",
 	
 emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
 public abstract class DecoratorChooser extends Model.Fields

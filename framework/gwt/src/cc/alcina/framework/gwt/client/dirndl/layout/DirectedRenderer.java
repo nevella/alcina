@@ -45,7 +45,7 @@ public abstract class DirectedRenderer {
 	}
 
 	protected void applyCssClass(Node node, Element element) {
-		String cssClass = node.directed.cssClass();
+		String cssClass = node.directed.className();
 		if (cssClass.length() > 0) {
 			element.addStyleName(cssClass);
 		}

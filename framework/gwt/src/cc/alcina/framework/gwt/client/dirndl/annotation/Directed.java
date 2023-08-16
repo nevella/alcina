@@ -58,7 +58,10 @@ public @interface Directed {
 	 */
 	public Binding[] bindings() default {};
 
-	public String cssClass() default "";
+	/**
+	 * Css class names that will be added to the generated tag
+	 */
+	public String className() default "";
 
 	/**
 	 * Informative only (not required for a node/model to emit the corresponding
@@ -83,6 +86,9 @@ public @interface Directed {
 	 */
 	public Class<? extends DirectedRenderer> renderer() default DirectedRenderer.ModelClass.class;
 
+	/**
+	 * The markup tag that will be generated for this layout node
+	 */
 	public String tag() default "";
 
 	/**
@@ -162,7 +168,7 @@ public @interface Directed {
 			emits = directed.emits();
 			reemits = directed.reemits();
 			merge = directed.merge();
-			cssClass = directed.cssClass();
+			cssClass = directed.className();
 			tag = directed.tag();
 			renderer = directed.renderer();
 		}
@@ -208,7 +214,7 @@ public @interface Directed {
 		}
 
 		@Override
-		public String cssClass() {
+		public String className() {
 			return cssClass;
 		}
 
@@ -231,7 +237,7 @@ public @interface Directed {
 		public Impl mergeParent(Directed parent) {
 			Impl merged = new Impl();
 			merged.bindings = mergeAttribute(parent, Directed::bindings);
-			merged.cssClass = mergeAttribute(parent, Directed::cssClass);
+			merged.cssClass = mergeAttribute(parent, Directed::className);
 			merged.emits = mergeAttribute(parent, Directed::emits);
 			merged.merge = mergeAttribute(parent, Directed::merge);
 			merged.reemits = mergeAttribute(parent, Directed::reemits);
@@ -291,7 +297,7 @@ public @interface Directed {
 		String toString(boolean elideDefaults) {
 			StringBuilder stringBuilder = new StringBuilder();
 			append(stringBuilder, "tag", Directed::tag, elideDefaults);
-			append(stringBuilder, "cssClass", Directed::cssClass,
+			append(stringBuilder, "cssClass", Directed::className,
 					elideDefaults);
 			append(stringBuilder, "bindings", Directed::bindings,
 					elideDefaults);
