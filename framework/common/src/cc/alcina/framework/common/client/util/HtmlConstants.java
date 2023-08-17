@@ -10,7 +10,13 @@ public class HtmlConstants {
 			+ "H1,H2,H3,H4,H5,H6,HEADER,HGROUP,HR,IFRAME,ILAYER,LAYER,LI,NOSCRIPT,"
 			+ "OL,OUTPUT,P,PRE,SECTION,TABLE,TD,TFOOT,TR,UL,VIDEO,BODY";
 
-	private static Set<String> blockTags = null;
+	private static Set<String> blockTags;
+	static {
+		blockTags = new HashSet<>();
+		Arrays.stream(HTML_BLOCKS.split(",")).forEach(blockTags::add);
+		Arrays.stream(HTML_BLOCKS.toLowerCase().split(","))
+				.forEach(blockTags::add);
+	}
 
 	public static final String HTML_TOPS = ",HEAD,HTML,BODY,";
 
@@ -78,13 +84,7 @@ public class HtmlConstants {
 
 	public static final String TARGET_BLANK = "_blank";
 
-	public static synchronized boolean isHtmlBlock(String tag) {
-		if (blockTags == null) {
-			blockTags = new HashSet<>();
-			Arrays.stream(HTML_BLOCKS.split(",")).forEach(blockTags::add);
-			Arrays.stream(HTML_BLOCKS.toLowerCase().split(","))
-					.forEach(blockTags::add);
-		}
+	public static boolean isHtmlBlock(String tag) {
 		return blockTags.contains(tag);
 	}
 }
