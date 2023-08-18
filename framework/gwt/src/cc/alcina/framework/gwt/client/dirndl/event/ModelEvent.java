@@ -95,6 +95,10 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public ModelEvent() {
 	}
 
+	public void bubble() {
+		getContext().bubble();
+	}
+
 	public boolean checkReemitted(HasNode hasNode) {
 		if (wasReemitted(hasNode.provideNode())) {
 			getContext().bubble();
@@ -117,20 +121,12 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		return staticDisplayName(getClass());
 	}
 
-	public Class<? extends ModelEvent> getReceiverType() {
-		return getClass();
-	}
-
 	public boolean isHandled() {
 		return handled;
 	}
 
 	public void setHandled(boolean handled) {
 		this.handled = handled;
-	}
-	
-	public void bubble(){
-		getContext().bubble();
 	}
 
 	public void setTypedModel(T typedModel) {

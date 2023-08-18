@@ -19,9 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage.Navigation.NavArea;
 import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 
-@Directed(
-	className = "login-page"
-)
+@Directed(className = "login-page")
 @TypeSerialization(reflectiveSerializable = false)
 public abstract class LoginPage extends Model implements
 		ModelEvents.Next.Handler, InferredDomEvents.InputEnterCommit.Handler {
