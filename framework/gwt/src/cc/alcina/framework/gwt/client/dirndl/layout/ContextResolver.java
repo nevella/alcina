@@ -107,6 +107,9 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 
 	public void renderElement(DirectedLayout.Node layoutNode, String tagName) {
+		if (layoutNode.rendered != null) {
+			return;
+		}
 		Element element = Document.get().createElement(tagName);
 		String cssClass = layoutNode.directed.className();
 		if (cssClass.length() > 0) {
@@ -116,6 +119,9 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 
 	public void renderText(Node layoutNode, String contents) {
+		if (layoutNode.rendered != null) {
+			return;
+		}
 		Text text = Document.get().createTextNode(contents);
 		layoutNode.rendered = new RenderedW3cNode(text);
 	}

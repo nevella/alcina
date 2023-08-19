@@ -1092,6 +1092,7 @@ public class LocalDom implements ContextFrame {
 			syncEventIdDirty = false;
 			syncing = false;
 		}
+		localMutations.fireMutations();
 	}
 
 	void handleReportedException(Exception exception) {

@@ -76,7 +76,20 @@ public @interface Binding {
 	public static class DisplayFalseTrue implements ToStringFunction<Boolean> {
 		@Override
 		public String apply(Boolean t) {
-			return CommonUtils.bv(t) ? "block" : "none";
+			return CommonUtils.bv(t) ? "true" : "false";
+		}
+	}
+
+	@Reflected
+	public static class DisplayFalseTrueBidi implements Binding.Bidi<Boolean> {
+		@Override
+		public Function<Boolean, String> leftToRight() {
+			return new DisplayFalseTrue();
+		}
+
+		@Override
+		public Function<String, Boolean> rightToLeft() {
+			return Boolean::parseBoolean;
 		}
 	}
 

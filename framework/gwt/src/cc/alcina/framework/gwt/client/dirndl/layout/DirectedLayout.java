@@ -163,12 +163,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *   1x1g performance (possibly before 1x1e)
  *   1x1h docs (ditto)
  *   1x1j overlay/preview events redux
- *   1x2 switch table/form rendering to pure model - adjunct transformmanager
- *   1x2a Java Records!
- *   1x2b Java Beans 2! Not public -- also consider removal of @Bean (but @ReflectionSerializable is required)
+ *   1x2 switch table/form rendering to pure model - adjunct transformmanager (in fact - client transactions)
+ *   1x2a Java Records! (done)
+ *   1x2b Java Beans 2! Not public -- also consider removal of @Bean (but @ReflectionSerializable is required) (done) (note beans manifesto)
+ *   1x2c Fragment Node fixes (FN)
  *   1x3 low priority fixmes
  *   1x3a consider consort rework
- *   1x4 consider removing widget entirely (localdom)
+ *   1x4 consider removing widget entirely (localdom) (basically done)
  *   1x5 non-critical but desirable larger refactorings
  *
  *
@@ -863,11 +864,14 @@ public class DirectedLayout implements AlcinaProcess {
 			Node oldNode = newChildModel.provideNode();
 			removeChildNode(newChildModel);
 			RendererInput input = getResolver().layout.enqueueInput(
-					getResolver(), model,
-					annotationLocation.copyWithClassLocationOf(model), null,
-					this);
+					getResolver(), newChildModel,
+					annotationLocation.copyWithClassLocationOf(newChildModel),
+					null, this);
 			input.before = refChildModel == null ? null
 					: refChildModel.provideNode();
+			if (oldNode != null) {
+				input.rendered = oldNode.rendered;
+			}
 			getResolver().layout.layout();
 			moveChildren(oldNode, newChildModel.provideNode());
 		}
@@ -1615,6 +1619,159 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	/**
+	 * Usage:
+	 *
+	 * <code>
+	 * <pre>
+	public class MyClientObservers extends ProcessObserver.AppDebug {
+	public MyClientObservers() {j
+		ProcessObservers.observe(DirectedLayout.RenderObservable.class, o -> {
+			if (o.node.getModel() instanceof MyModel) {
+				boolean breakpointHere = true;
+			}
+		}, true);
+	}
+	}
+	 * </pre>
+	 *</code>
+	 *
+	 *
+	 *
+	 *
+	 */
+	public static class RenderObservable implements ProcessObservable {
+		public Node node;
+
+		public RenderObservable(Node node) {
+			this.node = node;
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder fb = new FormatBuilder().separator("\n");
+			fb.append(node);
+			return fb.toString();
+		}
+	}
+
+	/**
+	 * A resolved location in the widget tree relative to which a widget should
+	 * be inserted
+	 *
+	 *
+	 *
+	 */
+	static class InsertionPoint {
+		Point point = Point.LAST;
+
+		Rendered after;
+
+		Rendered container;
+
+		void clear() {
+			// clear refs to possibly removed widgets
+			after = null;
+			container = null;
+		}
+
+		enum Point {
+			FIRST, AFTER, LAST
+		}
+	}
+
+	static class ReceivesEvents {
+		static ReceivesEvents instance;
+
+		static ClassData get(Class clazz) {
+			if (instance == null) {
+				synchronized (ReceivesEvents.class) {
+					if (instance == null) {
+						instance = new ReceivesEvents();
+					}
+				}
+			}
+			return instance.get0(clazz);
+		}
+
+		Map<Class, ClassData> classData;
+
+		Map<Class<? extends NodeEvent.Handler>, Class<? extends NodeEvent>> handlerEvents;
+
+		ReceivesEvents() {
+			classData = CollectionCreators.Bootstrap.createConcurrentClassMap();
+			// FIXME - reflection - rebuild on registry change
+			handlerEvents = (Map) CollectionCreators.Bootstrap
+					.createConcurrentClassMap();
+			Registry.query(NodeEvent.class).registrations()
+					.forEach(eventClass -> {
+						ClassReflector<? extends NodeEvent> reflector = Reflections
+								.at(eventClass);
+						Class<? extends NodeEvent.Handler> handlerClass = reflector
+								.hasNoArgsConstructor()
+										? reflector.newInstance()
+												.getHandlerClass()
+										: reflector.getGenericBounds().bounds
+												.get(0);
+						handlerEvents.put(handlerClass, eventClass);
+					});
+		}
+
+		ClassData get0(Class clazz) {
+			return classData.computeIfAbsent(clazz, ClassData::new);
+		}
+
+		class ClassData {
+			List<Class<? extends NodeEvent>> receives = new ArrayList<>();
+
+			Class<?> clazz;
+
+			ClassData(Class<?> clazz) {
+				this.clazz = clazz;
+				Reflections.at(clazz).provideAllImplementedInterfaces()
+						.<Class<? extends NodeEvent>> map(handlerEvents::get)
+						.filter(Objects::nonNull).forEach(receives::add);
+			}
+		}
+	}
+
+	class RecursionTest {
+		private Object model;
+
+		private AnnotationLocation annotationLocation;
+
+		RecursionTest(Node node) {
+			this.model = node.model;
+			this.annotationLocation = node.annotationLocation;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof RecursionTest) {
+				RecursionTest test = (RecursionTest) obj;
+				return CommonUtils.equals(test.annotationLocation,
+						annotationLocation, test.model, model);
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(model, annotationLocation);
+		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("location", annotationLocation,
+					"model", model);
+		}
+
+		Object model() {
+			return model;
+		}
+	}
+
+	/**
 	 * Instances act as an input and process state token for the
 	 * layout/transformation algorithm
 	 *
@@ -1627,7 +1784,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 *
 	 *
 	 */
-	public class RendererInput implements Traversable {
+	class RendererInput implements Traversable {
 		Node before;
 
 		ContextResolver resolver;
@@ -1644,6 +1801,12 @@ public class DirectedLayout implements AlcinaProcess {
 		Node node;
 
 		Node replace;
+
+		/*
+		 * preserve previous render (e.g. dom nodes) if possible (when moving
+		 * nodes due to a FragmentModel mutation)
+		 */
+		Rendered rendered;
 
 		private RendererInput() {
 		}
@@ -1820,6 +1983,10 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			beforeRender();
 			if (model != null) {
+				if (rendered != null) {
+					// preserve domNode/model identity
+					node.rendered = rendered;
+				}
 				DirectedRenderer renderer = resolveRenderer();
 				node.transformed = renderer instanceof DirectedRenderer.TransformRenderer;
 				renderer.render(this);
@@ -1835,159 +2002,6 @@ public class DirectedLayout implements AlcinaProcess {
 		Directed soleDirected() {
 			Preconditions.checkState(directeds.size() == 1);
 			return directeds.get(0);
-		}
-	}
-
-	/**
-	 * Usage:
-	 *
-	 * <code>
-	 * <pre>
-	public class MyClientObservers extends ProcessObserver.AppDebug {
-	public MyClientObservers() {j
-		ProcessObservers.observe(DirectedLayout.RenderObservable.class, o -> {
-			if (o.node.getModel() instanceof MyModel) {
-				boolean breakpointHere = true;
-			}
-		}, true);
-	}
-	}
-	 * </pre>
-	 *</code>
-	 *
-	 *
-	 *
-	 *
-	 */
-	public static class RenderObservable implements ProcessObservable {
-		public Node node;
-
-		public RenderObservable(Node node) {
-			this.node = node;
-		}
-
-		@Override
-		public String toString() {
-			FormatBuilder fb = new FormatBuilder().separator("\n");
-			fb.append(node);
-			return fb.toString();
-		}
-	}
-
-	/**
-	 * A resolved location in the widget tree relative to which a widget should
-	 * be inserted
-	 *
-	 *
-	 *
-	 */
-	static class InsertionPoint {
-		Point point = Point.LAST;
-
-		Rendered after;
-
-		Rendered container;
-
-		void clear() {
-			// clear refs to possibly removed widgets
-			after = null;
-			container = null;
-		}
-
-		enum Point {
-			FIRST, AFTER, LAST
-		}
-	}
-
-	static class ReceivesEvents {
-		static ReceivesEvents instance;
-
-		static ClassData get(Class clazz) {
-			if (instance == null) {
-				synchronized (ReceivesEvents.class) {
-					if (instance == null) {
-						instance = new ReceivesEvents();
-					}
-				}
-			}
-			return instance.get0(clazz);
-		}
-
-		Map<Class, ClassData> classData;
-
-		Map<Class<? extends NodeEvent.Handler>, Class<? extends NodeEvent>> handlerEvents;
-
-		ReceivesEvents() {
-			classData = CollectionCreators.Bootstrap.createConcurrentClassMap();
-			// FIXME - reflection - rebuild on registry change
-			handlerEvents = (Map) CollectionCreators.Bootstrap
-					.createConcurrentClassMap();
-			Registry.query(NodeEvent.class).registrations()
-					.forEach(eventClass -> {
-						ClassReflector<? extends NodeEvent> reflector = Reflections
-								.at(eventClass);
-						Class<? extends NodeEvent.Handler> handlerClass = reflector
-								.hasNoArgsConstructor()
-										? reflector.newInstance()
-												.getHandlerClass()
-										: reflector.getGenericBounds().bounds
-												.get(0);
-						handlerEvents.put(handlerClass, eventClass);
-					});
-		}
-
-		ClassData get0(Class clazz) {
-			return classData.computeIfAbsent(clazz, ClassData::new);
-		}
-
-		class ClassData {
-			List<Class<? extends NodeEvent>> receives = new ArrayList<>();
-
-			Class<?> clazz;
-
-			ClassData(Class<?> clazz) {
-				this.clazz = clazz;
-				Reflections.at(clazz).provideAllImplementedInterfaces()
-						.<Class<? extends NodeEvent>> map(handlerEvents::get)
-						.filter(Objects::nonNull).forEach(receives::add);
-			}
-		}
-	}
-
-	class RecursionTest {
-		private Object model;
-
-		private AnnotationLocation annotationLocation;
-
-		RecursionTest(Node node) {
-			this.model = node.model;
-			this.annotationLocation = node.annotationLocation;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof RecursionTest) {
-				RecursionTest test = (RecursionTest) obj;
-				return CommonUtils.equals(test.annotationLocation,
-						annotationLocation, test.model, model);
-			} else {
-				return false;
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(model, annotationLocation);
-		}
-
-		@Override
-		public String toString() {
-			return FormatBuilder.keyValues("location", annotationLocation,
-					"model", model);
-		}
-
-		Object model() {
-			return model;
 		}
 	}
 

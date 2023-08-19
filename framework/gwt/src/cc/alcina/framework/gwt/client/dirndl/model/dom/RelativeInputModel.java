@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.model.dom;
 
+import java.util.Optional;
+import java.util.function.Predicate;
+
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
@@ -65,24 +68,26 @@ public class RelativeInputModel {
 		}
 	}
 
-	public boolean containsPartialAncestorFocusTag(String tag) {
-		DomNode focussedTag = focusNode().ancestors().get(tag);
-		if (focussedTag == null) {
-			return false;
-		}
-		if (collapsed) {
-			return true;
-		}
-		Location.Range tagRange = focussedTag.asRange();
-		return !range.contains(tagRange);
-	}
-
 	public DomNode focusNode() {
 		return focusDomNode.asDomNode();
 	}
 
 	public int getFocusOffset() {
 		return this.focusOffset;
+	}
+
+	public Optional<DomNode>
+			getPartialAncestorFocusTag(Predicate<DomNode> predicate) {
+		Optional<DomNode> focussedTag = focusNode().ancestors()
+				.match(predicate);
+		if (focussedTag.isEmpty()) {
+			return Optional.empty();
+		}
+		if (collapsed) {
+			return focussedTag;
+		}
+		Location.Range tagRange = focussedTag.get().asRange();
+		return !range.contains(tagRange) ? focussedTag : Optional.empty();
 	}
 
 	public boolean hasAncestorFocusTag(String tag) {
@@ -97,11 +102,7 @@ public class RelativeInputModel {
 		return focusLocation.content().relativeString(startOffset, endOffset);
 	}
 
-	// FIXME - Feature_Dirndl_ContentDecorator - if selecting start of
-	// decorator (e.g. char 0, decorator starts contenteditable), insert a blank
-	// text node + move caret
-	public void selectWholeAncestorFocusTag(String tag) {
-		DomNode focussedTag = focusNode().ancestors().get(tag);
+	public void selectWholeAncestorFocusTag(DomNode focussedTag) {
 		String text = ((Element) focussedTag.gwtNode()).getInnerText();
 		Location.Range tagRange = focussedTag.asRange();
 		boolean anchorBeforeFocus = anchorLocation

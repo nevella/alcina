@@ -176,7 +176,7 @@ public interface NodeTransformer {
 
 		@Override
 		public void apply(DirectedLayout.Node parentNode) {
-			Model model = new FragmentNode.Text();
+			Model model = new FragmentNode.TextNode();
 			layoutNode = parentNode.insertFragmentChild(model, node.w3cNode());
 		}
 	}
