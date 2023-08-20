@@ -23,6 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
@@ -96,13 +97,17 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  *
  * FIXME - minor - if selecting after a mention, make sure the cursor is to the
  * *left* of the ZWS
+ *
+ * FIXME - less minor - always ensure post deletes that ZWS spaces exist both
+ * sides
  */
 @Feature.Ref(Feature_Dirndl_ContentDecorator.class)
 public class ContentDecorator<T>
 		implements DomEvents.BeforeInput.Handler, DomEvents.Input.Handler,
 		DomEvents.MouseUp.Handler, DomEvents.KeyDown.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
-		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler {
+		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
+		ModelEvents.Commit.Handler {
 	public static ContentDecorator.Builder builder() {
 		return new Builder();
 	}
@@ -173,6 +178,11 @@ public class ContentDecorator<T>
 		overlay = null;
 	}
 
+	@Override
+	public void onCommit(Commit event) {
+		descriptor.onCommit(event);
+	}
+
 	/**
 	 * <p>
 	 * Check if the selection context is valid for decorator creation, and if
@@ -237,12 +247,16 @@ public class ContentDecorator<T>
 	protected void validateSelection0() {
 		RelativeInputModel relativeInput = new RelativeInputModel();
 		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
-		Optional<DomNode> partialAncestorFocusTag = relativeInput
-				.getPartialAncestorFocusTag(n -> fragmentModel
+		Optional<DomNode> partiallySelectedAncestor = relativeInput
+				.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
 						.getFragmentNode(n) instanceof DecoratorNode);
-		if (partialAncestorFocusTag.isPresent()) {
-			relativeInput
-					.selectWholeAncestorFocusTag(partialAncestorFocusTag.get());
+		if (partiallySelectedAncestor.isPresent()) {
+			DomNode node = partiallySelectedAncestor.get();
+			DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
+					.getFragmentNode(node);
+			if (!decoratorNode.contentEditable) {
+				relativeInput.extendSelectionToIncludeAllOf(node);
+			}
 		}
 	}
 
@@ -251,7 +265,8 @@ public class ContentDecorator<T>
 	}
 
 	boolean isSpaceOrLeftBracketish(String characterString) {
-		return characterString != null && characterString.matches("[ ({\\[]");
+		return characterString != null
+				&& characterString.matches("[ \u200B({\\[]");
 	}
 
 	void onInput0(RelativeInputModel relativeInput) {

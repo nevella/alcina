@@ -11,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorChooser.BeforeChooserClosed;
@@ -29,6 +30,8 @@ public interface HasDecorators
 		ContentDecoratorEvents.ReferenceSelected.Handler,
 		// routes overlay closed events back to the referencedecorators
 		ModelEvents.Closed.Handler,
+		// routes (contenteditable) commits to the decorators
+		ModelEvents.Commit.Handler,
 		// routes keydown events to the keyboardNavigation and decorators
 		DomEvents.KeyDown.Handler,
 		// routes MouseUp events to decorators
@@ -56,6 +59,11 @@ public interface HasDecorators
 	@Override
 	default void onClosed(Closed event) {
 		getDecorators().forEach(d -> d.onClosed(null));
+	}
+
+	@Override
+	default void onCommit(Commit event) {
+		getDecorators().forEach(d -> d.onCommit(event));
 	}
 
 	@Override

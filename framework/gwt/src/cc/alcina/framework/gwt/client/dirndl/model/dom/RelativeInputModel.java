@@ -77,17 +77,17 @@ public class RelativeInputModel {
 	}
 
 	public Optional<DomNode>
-			getPartialAncestorFocusTag(Predicate<DomNode> predicate) {
-		Optional<DomNode> focussedTag = focusNode().ancestors()
+			getFocusNodePartiallySelectedAncestor(Predicate<DomNode> predicate) {
+		Optional<DomNode> ancestor = focusNode().ancestors()
 				.match(predicate);
-		if (focussedTag.isEmpty()) {
+		if (ancestor.isEmpty()) {
 			return Optional.empty();
 		}
 		if (collapsed) {
-			return focussedTag;
+			return ancestor;
 		}
-		Location.Range tagRange = focussedTag.get().asRange();
-		return !range.contains(tagRange) ? focussedTag : Optional.empty();
+		Location.Range ancestorRange = ancestor.get().asRange();
+		return !range.contains(ancestorRange) ? ancestor : Optional.empty();
 	}
 
 	public boolean hasAncestorFocusTag(String tag) {
@@ -102,27 +102,27 @@ public class RelativeInputModel {
 		return focusLocation.content().relativeString(startOffset, endOffset);
 	}
 
-	public void selectWholeAncestorFocusTag(DomNode focussedTag) {
-		String text = ((Element) focussedTag.gwtNode()).getInnerText();
-		Location.Range tagRange = focussedTag.asRange();
+	public void extendSelectionToIncludeAllOf(DomNode node) {
+		String text = ((Element) node.gwtNode()).getInnerText();
+		Location.Range tagRange = node.asRange();
 		boolean anchorBeforeFocus = anchorLocation
 				.compareTo(focusLocation) <= 0;
 		Location modifiedFocusLocation = null;
 		Location modifiedAnchorLocation = null;
 		if (tagRange.start.isBefore(range.start)) {
 			if (anchorBeforeFocus) {
-				modifiedAnchorLocation = focussedTag.asLocation();
+				modifiedAnchorLocation = node.asLocation();
 			} else {
-				modifiedFocusLocation = focussedTag.asLocation();
+				modifiedFocusLocation = node.asLocation();
 			}
 		}
 		if (tagRange.end.isAfter(range.end)) {
 			if (anchorBeforeFocus) {
-				modifiedFocusLocation = focussedTag.asLocation().clone();
+				modifiedFocusLocation = node.asLocation().clone();
 				modifiedFocusLocation.after = true;
 				modifiedFocusLocation = caretLocation(modifiedFocusLocation);
 			} else {
-				modifiedAnchorLocation = focussedTag.asLocation().clone();
+				modifiedAnchorLocation = node.asLocation().clone();
 				modifiedAnchorLocation.after = true;
 				modifiedAnchorLocation = caretLocation(modifiedAnchorLocation);
 			}

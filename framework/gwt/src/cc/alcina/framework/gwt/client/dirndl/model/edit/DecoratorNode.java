@@ -17,6 +17,8 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
@@ -37,6 +39,10 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 
 	@Binding(type = Type.PROPERTY, transform = ContextLocatorTransform.class)
 	public EntityLocator entity;
+
+	public EntityLocator entity() {
+		return this.entity;
+	}
 
 	public abstract Descriptor<E> getDescriptor();
 
@@ -103,8 +109,8 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		// 'cursor validator' to move it to a correct location
 		// try positioning cursor immediately after the decorator
 		// guaranteed non-null (due to zws insertion)
-		FragmentNode.TextNode cursorTarget = fragmentTree().nextTextNode(true)
-				.get();
+		FragmentNode.TextNode cursorTarget = textNode.fragmentTree()
+				.nextTextNode(true).get();
 		Node cursorNode = cursorTarget.domNode().gwtNode();
 		SelectionJso selection = Document.get().jsoRemote().getSelection();
 		cursorNode.implAccess().ensureRemote();
@@ -168,10 +174,14 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 	 * triggers its creation
 	 *
 	 */
-	public static abstract class Descriptor<E extends Entity> {
+	public static abstract class Descriptor<E extends Entity>
+			implements ModelEvents.Commit.Handler {
 		public abstract DecoratorNode createNode();
 
 		public abstract Function<E, String> itemRenderer();
+
+		@Override
+		public abstract void onCommit(Commit event);
 
 		public abstract String triggerSequence();
 
@@ -197,7 +207,9 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 
 	@Directed(tag = "span", className = "cursor-target")
 	public static class ZeroWidthCursorTarget extends FragmentNode {
-		@Binding(type = Type.INNER_TEXT)
-		public String text = "\u200B";
+		// @Binding(type = Type.INNER_TEXT)
+		// nope, require a distinct dirndl node
+		@Directed
+		public TextNode text = new TextNode("\u200B");
 	}
 }

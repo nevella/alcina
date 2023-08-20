@@ -230,10 +230,6 @@ public abstract class Model extends Bindable implements
 
 		private boolean bound;
 
-		public void add(ListenerBinding listenerBinding) {
-			listenerBindings.add(listenerBinding);
-		}
-
 		public void add(Object leftPropertyName, Converter leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
 				Converter rightToLeftConverter) {
@@ -267,6 +263,10 @@ public abstract class Model extends Bindable implements
 				Object leftPropertyName, SourcesPropertyChangeEvents right,
 				Object rightPropertyName) {
 			add(left, leftPropertyName, null, right, rightPropertyName, null);
+		}
+
+		public void addListener(ListenerBinding listenerBinding) {
+			listenerBindings.add(listenerBinding);
 		}
 
 		public void addListener(
@@ -309,25 +309,7 @@ public abstract class Model extends Bindable implements
 						source.firePropertyChange(null, evt.getOldValue(),
 								evt.getNewValue());
 					});
-			add(listener);
-		}
-
-		private ListenerBinding asBinding(
-				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
-			return new ListenerBinding() {
-				private HandlerRegistration reference;
-
-				@Override
-				public void bind() {
-					reference = handlerRegistrationSupplier.get();
-				}
-
-				@Override
-				public void unbind() {
-					reference.removeHandler();
-					reference = null;
-				}
-			};
+			addListener(listener);
 		}
 
 		public void bind() {
@@ -335,12 +317,6 @@ public abstract class Model extends Bindable implements
 			binding.bind();
 			listenerBindings.bind();
 			bound = true;
-		}
-
-		private SourcesPropertyChangeEvents getSource() {
-			SourcesPropertyChangeEvents left = fieldless ? propertyChangeSource
-					: Model.this;
-			return left;
 		}
 
 		public boolean isFieldless() {
@@ -366,6 +342,30 @@ public abstract class Model extends Bindable implements
 			String propertyNameString = PropertyEnum
 					.asPropertyName(propertyName);
 			return (T) values.get(propertyNameString);
+		}
+
+		private ListenerBinding asBinding(
+				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
+			return new ListenerBinding() {
+				private HandlerRegistration reference;
+
+				@Override
+				public void bind() {
+					reference = handlerRegistrationSupplier.get();
+				}
+
+				@Override
+				public void unbind() {
+					reference.removeHandler();
+					reference = null;
+				}
+			};
+		}
+
+		private SourcesPropertyChangeEvents getSource() {
+			SourcesPropertyChangeEvents left = fieldless ? propertyChangeSource
+					: Model.this;
+			return left;
 		}
 
 		public class MapBackedProperty extends Property {

@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -94,8 +95,12 @@ public abstract class FragmentNode extends Model.Fields
 		return fragmentModel;
 	}
 
-	public FragmentNodeTree fragmentNodeTree() {
-		return new FragmentNodeTree();
+	/**
+	 * returns the full FragmentModel tree with the current position set to the
+	 * FragmentNode
+	 */
+	public FragmentTree fragmentTree() {
+		return new FragmentTree(true);
 	}
 
 	public void insertAsFirstChild(FragmentNode child) {
@@ -139,12 +144,11 @@ public abstract class FragmentNode extends Model.Fields
 		return format.toString();
 	}
 
+	/**
+	 * returns a tree of FragmentNodes rooted at this node
+	 */
 	public FragmentTree tree() {
 		return new FragmentTree(false);
-	}
-
-	protected FragmentTree fragmentTree() {
-		return new FragmentTree(true);
 	}
 
 	void withMutating(Runnable runnable) {
@@ -201,23 +205,6 @@ public abstract class FragmentNode extends Model.Fields
 		}
 	}
 
-	public class FragmentNodeTree {
-		DomNodeTree domTree;
-
-		FragmentNodeTree() {
-			domTree = domNode().tree();
-		}
-
-		FragmentNodeTree reversed() {
-			domTree.reversed();
-			return this;
-		}
-
-		Stream<FragmentNode> stream() {
-			return domTree.stream().map(fragmentModel::getFragmentNode);
-		}
-	}
-
 	/*
 	 * Mimics the behaviour of FragmentNode for the root (which is not
 	 * necessarily a fragment node)
@@ -252,6 +239,15 @@ public abstract class FragmentNode extends Model.Fields
 					.nextTextNode(nonWhitespace)
 					.map(fragmentModel()::getFragmentNode);
 		}
+
+		FragmentTree reversed() {
+			tree.reversed();
+			return this;
+		}
+
+		Stream<FragmentNode> stream() {
+			return tree.stream().map(fragmentModel::getFragmentNode);
+		}
 	}
 
 	/*
@@ -264,21 +260,25 @@ public abstract class FragmentNode extends Model.Fields
 	public class Nodes {
 		public void append(FragmentNode child) {
 			withMutating(() -> provideNode().append(child));
+			fragmentModel().register(child);
 		}
 
 		public void insertAfterThis(FragmentNode fragmentNode) {
 			withMutating(() -> provideParentNode().insertAfter(fragmentNode,
 					FragmentNode.this));
+			fragmentModel().register(fragmentNode);
 		}
 
 		public void insertBeforeThis(FragmentNode fragmentNode) {
 			withMutating(() -> provideParentNode().insertBefore(fragmentNode,
 					FragmentNode.this));
+			fragmentModel().register(fragmentNode);
 		}
 
 		public void replaceWith(FragmentNode other) {
 			withMutating(() -> provideParentNode()
 					.replaceChild(FragmentNode.this, other));
+			fragmentModel().register(other);
 		}
 	}
 
@@ -291,7 +291,6 @@ public abstract class FragmentNode extends Model.Fields
 		private String value;
 
 		public TextNode() {
-			int debug = 3;
 		}
 
 		public TextNode(String value) {
@@ -304,6 +303,7 @@ public abstract class FragmentNode extends Model.Fields
 		}
 
 		public void setValue(String value) {
+			Ax.err(">>%s", value);
 			set("value", this.value, value, () -> this.value = value);
 		}
 	}

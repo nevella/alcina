@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 /**
  * Transforms a dom node (including attr/text) to a model
  *
- * 
+ *
  *
  */
 @Reflected
@@ -44,6 +44,8 @@ public interface NodeTransformer {
 	void setFragmentModel(FragmentModel fragmentModel);
 
 	void setFragmentNodeType(Class<? extends FragmentNode> fragmentNodeType);
+
+	void setLayoutNode(DirectedLayout.Node node);
 
 	void setNode(DomNode node);
 
@@ -94,6 +96,11 @@ public interface NodeTransformer {
 		}
 
 		@Override
+		public void setLayoutNode(DirectedLayout.Node layoutNode) {
+			this.layoutNode = layoutNode;
+		}
+
+		@Override
 		public void setNode(DomNode node) {
 			this.node = node;
 		}
@@ -112,7 +119,8 @@ public interface NodeTransformer {
 		@Override
 		public void apply(DirectedLayout.Node parentNode) {
 			Model model = (Model) Reflections.newInstance(fragmentNodeType);
-			layoutNode = parentNode.insertFragmentChild(model, node.w3cNode());
+			setLayoutNode(
+					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}
 
 		protected Directed getDirected() {
@@ -131,7 +139,7 @@ public interface NodeTransformer {
 		public FragmentRootTransformer(DirectedLayout.Node layoutNode) {
 			super();
 			setNode(layoutNode.getRendered().asDomNode());
-			this.layoutNode = layoutNode;
+			setLayoutNode(layoutNode);
 		}
 
 		@Override
@@ -157,7 +165,8 @@ public interface NodeTransformer {
 		@Override
 		public void apply(DirectedLayout.Node parentNode) {
 			Model model = new FragmentNode.Generic();
-			layoutNode = parentNode.insertFragmentChild(model, node.w3cNode());
+			setLayoutNode(
+					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}
 	}
 
@@ -177,7 +186,8 @@ public interface NodeTransformer {
 		@Override
 		public void apply(DirectedLayout.Node parentNode) {
 			Model model = new FragmentNode.TextNode();
-			layoutNode = parentNode.insertFragmentChild(model, node.w3cNode());
+			setLayoutNode(
+					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}
 	}
 }

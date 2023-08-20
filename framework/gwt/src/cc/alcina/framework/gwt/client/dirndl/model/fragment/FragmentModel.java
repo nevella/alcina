@@ -70,8 +70,21 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * <ul>
  * <li>Model structure is maintained *when valid* - no unknown nodes can be
  * present.
- *
  * </ul>
+ *
+ * <pre>
+ * <code>
+ - fragmentmodel/mutations
+  - since fn mutations don't need reflection in dom (although other listeners may
+   be interested in the mutations), mark the mutation events as such
+  - for completeness, this shouldn't be necessary - mutations should:
+    - preserve model/dom correspondence
+    - not be fired if the current dom is equivalent to the union state of the mutations
+
+
+</code>
+ * </pre>
+ *
  *
  *
  *
@@ -212,6 +225,17 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		return rootModel.provideNode().getResolver();
 	}
 
+	// FIXME - probably better done via LocalMutation/ModelMutation.
+	public void register(FragmentNode node) {
+		DomNode domNode = node.domNode();
+		if (!domNodeTransformer.containsKey(domNode)) {
+			NodeTransformer transformer = createNodeTransformer(domNode);
+			transformer.setLayoutNode(node.provideNode());
+			registerTransformer(domNode, transformer);
+		}
+		node.children().forEach(this::register);
+	}
+
 	public DomNode rootDomNode() {
 		return rootModel.provideElement().asDomNode();
 	}
@@ -241,9 +265,14 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				currentModelMutation.addEntry(
 						transformer.getLayoutNode().getModel(),
 						ModelMutation.Type.ADD);
-				domNodeTransformer.put(n, transformer);
+				registerTransformer(n, transformer);
 			}
 		});
+	}
+
+	NodeTransformer deregisterTransformer(DomNode n) {
+		NodeTransformer transformer = domNodeTransformer.remove(n);
+		return transformer;
 	}
 
 	void emitMutationEvent() {
@@ -251,6 +280,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				.dispatch(ModelMutation.class, currentModelMutation.getData());
 		currentModelMutation = null;
 		eventScheduled = false;
+	}
+
+	NodeTransformer registerTransformer(DomNode n,
+			NodeTransformer transformer) {
+		return domNodeTransformer.put(n, transformer);
 	}
 
 	void removeDescent(DomNode node) {
@@ -262,10 +296,12 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			return;
 		}
 		traversal.forEach(n -> {
-			NodeTransformer transformer = domNodeTransformer.remove(n);
-			currentModelMutation.addEntry(
-					transformer.getLayoutNode().getModel(),
-					ModelMutation.Type.REMOVE);
+			NodeTransformer transformer = deregisterTransformer(n);
+			if (transformer != null) {
+				currentModelMutation.addEntry(
+						transformer.getLayoutNode().getModel(),
+						ModelMutation.Type.REMOVE);
+			}
 		});
 		topTransformer.getLayoutNode().remove(false);
 	}
