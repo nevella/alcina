@@ -12,6 +12,11 @@ public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity
 	}
 
 	@Override
+	public Class<P> getTokenizedClass() {
+		return Reflections.at(getClass()).getGenericBounds().bounds.get(3);
+	}
+
+	@Override
 	protected P getPlace0(String token) {
 		P place = Reflections.newInstance(getTokenizedClass());
 		int offset = 0;
