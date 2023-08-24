@@ -48,11 +48,7 @@ public class LayoutEvents {
 	public static class Bind extends LayoutEvent<Bind.Handler> {
 		private final boolean bound;
 
-		private boolean modelCorrespondsToNode;
-
-		public Bind(DirectedLayout.Node node, boolean bound,
-				boolean modelCorrespondsToNode) {
-			this.modelCorrespondsToNode = modelCorrespondsToNode;
+		public Bind(DirectedLayout.Node node, boolean bound) {
 			setContext(Context.fromNode(node));
 			this.bound = bound;
 		}
@@ -64,14 +60,6 @@ public class LayoutEvents {
 
 		public boolean isBound() {
 			return this.bound;
-		}
-
-		public boolean isModelCorrespondsToNode() {
-			return this.modelCorrespondsToNode;
-		}
-
-		public void setModelCorrespondsToNode(boolean modelCorrespondsToNode) {
-			this.modelCorrespondsToNode = modelCorrespondsToNode;
 		}
 
 		public interface Handler extends NodeEvent.Handler {

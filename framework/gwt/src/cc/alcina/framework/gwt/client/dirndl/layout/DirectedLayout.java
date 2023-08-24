@@ -505,8 +505,6 @@ public class DirectedLayout implements AlcinaProcess {
 
 		boolean lastForModel;
 
-		boolean transformed;
-
 		protected Node(ContextResolver resolver, Node parent,
 				AnnotationLocation annotationLocation, Object model,
 				boolean lastForModel) {
@@ -570,12 +568,12 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 			if (model instanceof LayoutEvents.Bind.Handler) {
-				if (!lastForModel) {
+				if (!lastForModel || !directed.bindToModel()) {
 					// only bind if last of a multiple node -> single model
 					// chain
 				} else {
-					((LayoutEvents.Bind.Handler) model).onBind(
-							new LayoutEvents.Bind(this, true, !transformed));
+					((LayoutEvents.Bind.Handler) model)
+							.onBind(new LayoutEvents.Bind(this, true));
 				}
 			}
 		}
@@ -1041,8 +1039,8 @@ public class DirectedLayout implements AlcinaProcess {
 				if (parent != null && parent.model == model) {
 					// noop
 				} else {
-					((LayoutEvents.Bind.Handler) model).onBind(
-							new LayoutEvents.Bind(this, false, !transformed));
+					((LayoutEvents.Bind.Handler) model)
+							.onBind(new LayoutEvents.Bind(this, false));
 				}
 			}
 			if (onUnbind != null) {
@@ -1927,7 +1925,6 @@ public class DirectedLayout implements AlcinaProcess {
 			beforeRender();
 			if (model != null) {
 				DirectedRenderer renderer = resolveRenderer();
-				node.transformed = renderer instanceof DirectedRenderer.TransformRenderer;
 				renderer.render(this);
 			}
 			afterRender();
