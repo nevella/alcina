@@ -26,6 +26,14 @@ public interface ToStringFunction<T> extends Function<T, String> {
 			extends BidiFunction<T, String>, ToStringFunction<T> {
 	}
 
+	@Reflected
+	public static class ClassName implements ToStringFunction<Class> {
+		@Override
+		public String apply(Class t) {
+			return t == null ? null : t.getName();
+		}
+	}
+
 	/**
 	 * Called this because ToStringFunction.Indentity is the default value (and
 	 * thus ignored)
@@ -54,6 +62,14 @@ public interface ToStringFunction<T> extends Function<T, String> {
 		@Override
 		public String apply(String t) {
 			return Ax.cssify(t);
+		}
+	}
+
+	@Reflected
+	public static class Value implements ToStringFunction<Object> {
+		@Override
+		public String apply(Object t) {
+			return t == null ? null : t.toString();
 		}
 	}
 }

@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
@@ -161,11 +162,15 @@ public abstract class Model extends Bindable implements
 	 */
 	public void onBind(Bind event) {
 		if (event.isBound()) {
-			if (event.isModelCorrespondsToNode()) {
-				// FIXME - dirndl - this should be true, but there's
-				// Preconditions.checkState(node == null);
-				node = event.getContext().node;
+			if (node != null) {
+				Ax.err("binding a model to multiple nodes.\n"
+						+ "--------------------------\n" + "Existing node:\n%s"
+						+ "\n--------------------------\n"
+						+ "Incoming node:\n%s", node.toParentStack(),
+						event.getContext().node.toParentStack());
+				Preconditions.checkState(node == null);
 			}
+			node = event.getContext().node;
 			if (bindings != null) {
 				bindings.bind();
 			}
@@ -184,7 +189,8 @@ public abstract class Model extends Bindable implements
 			if (!hasPropertyChangeSupport()) {
 				return;
 			}
-			// TODO - nope, asymmetrical. Move to bindings
+			// FIXME - dirndl - low (not sure if this is accessed) - nope,
+			// asymmetrical. Move to bindings
 			Arrays.stream(propertyChangeSupport().getPropertyChangeListeners())
 					.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
 					.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)

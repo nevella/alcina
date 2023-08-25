@@ -59,6 +59,13 @@ public @interface Directed {
 	public Binding[] bindings() default {};
 
 	/**
+	 * if true, the generated node will be bound to the model. Defaults to true,
+	 * only set (selectively) to false when the model corresponds to multiple in
+	 * the layout
+	 */
+	public boolean bindToModel() default true;
+
+	/**
 	 * Css class names that will be added to the generated tag
 	 */
 	public String className() default "";
@@ -158,6 +165,8 @@ public @interface Directed {
 
 		private String tag = "";
 
+		private boolean bindToModel = true;
+
 		private Class<? extends DirectedRenderer> renderer = DirectedRenderer.ModelClass.class;
 
 		public Impl() {
@@ -171,6 +180,7 @@ public @interface Directed {
 			cssClass = directed.className();
 			tag = directed.tag();
 			renderer = directed.renderer();
+			bindToModel = directed.bindToModel();
 		}
 
 		@Override
@@ -181,6 +191,11 @@ public @interface Directed {
 		@Override
 		public Binding[] bindings() {
 			return bindings;
+		}
+
+		@Override
+		public boolean bindToModel() {
+			return bindToModel;
 		}
 
 		@Override
@@ -207,6 +222,7 @@ public @interface Directed {
 			merged.reemits = mergeAttribute(parent, Directed::reemits);
 			merged.renderer = mergeAttribute(parent, Directed::renderer);
 			merged.tag = mergeAttribute(parent, Directed::tag);
+			merged.bindToModel = mergeAttribute(parent, Directed::bindToModel);
 			return merged;
 		}
 
@@ -222,6 +238,10 @@ public @interface Directed {
 
 		public void setBindings(Binding[] bindings) {
 			this.bindings = bindings;
+		}
+
+		public void setBindToModel(boolean bindToModel) {
+			this.bindToModel = bindToModel;
 		}
 
 		public void setCssClass(String cssClass) {
@@ -310,6 +330,8 @@ public @interface Directed {
 			append(stringBuilder, "renderer", Directed::renderer,
 					elideDefaults);
 			append(stringBuilder, "merge", Directed::merge, elideDefaults);
+			append(stringBuilder, "bindToModel", Directed::bindToModel,
+					elideDefaults);
 			return stringBuilder.toString();
 		}
 	}
@@ -400,6 +422,8 @@ public @interface Directed {
 				Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 		mergeStrategy = Transform.MergeStrategy.class)
 	@interface Transform {
+		boolean bindToModel() default true;
+
 		boolean transformsNull() default false;
 
 		Class<? extends ModelTransform> value();
@@ -407,11 +431,18 @@ public @interface Directed {
 		public static class Impl implements Directed.Transform {
 			private boolean transformsNull;
 
+			private boolean bindToModel = true;
+
 			private Class<? extends ModelTransform> value;
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
 				return Directed.Transform.class;
+			}
+
+			@Override
+			public boolean bindToModel() {
+				return this.bindToModel;
 			}
 
 			@Override
@@ -422,6 +453,11 @@ public @interface Directed {
 			@Override
 			public Class<? extends ModelTransform> value() {
 				return value;
+			}
+
+			public Impl withBindToModel(boolean bindToModel) {
+				this.bindToModel = bindToModel;
+				return this;
 			}
 
 			public Impl withTransformsNull(boolean transformsNull) {
