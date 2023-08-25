@@ -53,6 +53,14 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 @ClientVisible
 public @interface Directed {
 	/**
+	 * only false in exceptional cases (such where a concrete class with dom
+	 * event bindings is mapped by a transformation - generally to a subclass
+	 * which then uses the superclass's listener). Note that only *dom* events
+	 * are affected by this filter, model events are always bound
+	 */
+	public boolean bindDomEvents() default true;
+
+	/**
 	 * Bind model object properties to various aspects of the generated (DOM)
 	 * view - css class, element property, inner text...
 	 */
@@ -161,6 +169,8 @@ public @interface Directed {
 
 		private boolean merge = true;
 
+		private boolean bindDomEvents = true;
+
 		private String cssClass = "";
 
 		private String tag = "";
@@ -181,11 +191,17 @@ public @interface Directed {
 			tag = directed.tag();
 			renderer = directed.renderer();
 			bindToModel = directed.bindToModel();
+			bindDomEvents = directed.bindDomEvents();
 		}
 
 		@Override
 		public Class<? extends Annotation> annotationType() {
 			return Directed.class;
+		}
+
+		@Override
+		public boolean bindDomEvents() {
+			return this.bindDomEvents;
 		}
 
 		@Override
@@ -223,6 +239,8 @@ public @interface Directed {
 			merged.renderer = mergeAttribute(parent, Directed::renderer);
 			merged.tag = mergeAttribute(parent, Directed::tag);
 			merged.bindToModel = mergeAttribute(parent, Directed::bindToModel);
+			merged.bindDomEvents = mergeAttribute(parent,
+					Directed::bindDomEvents);
 			return merged;
 		}
 
@@ -234,6 +252,10 @@ public @interface Directed {
 		@Override
 		public Class<? extends DirectedRenderer> renderer() {
 			return renderer;
+		}
+
+		public void setBindDomEvents(boolean bindDomEvents) {
+			this.bindDomEvents = bindDomEvents;
 		}
 
 		public void setBindings(Binding[] bindings) {
@@ -332,6 +354,8 @@ public @interface Directed {
 			append(stringBuilder, "merge", Directed::merge, elideDefaults);
 			append(stringBuilder, "bindToModel", Directed::bindToModel,
 					elideDefaults);
+			append(stringBuilder, "bindDomEvents", Directed::bindDomEvents,
+					elideDefaults);
 			return stringBuilder.toString();
 		}
 	}
@@ -422,6 +446,8 @@ public @interface Directed {
 				Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 		mergeStrategy = Transform.MergeStrategy.class)
 	@interface Transform {
+		boolean bindDomEvents() default true;
+
 		boolean bindToModel() default true;
 
 		boolean transformsNull() default false;
@@ -433,11 +459,18 @@ public @interface Directed {
 
 			private boolean bindToModel = true;
 
+			private boolean bindDomEvents = true;
+
 			private Class<? extends ModelTransform> value;
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
 				return Directed.Transform.class;
+			}
+
+			@Override
+			public boolean bindDomEvents() {
+				return this.bindDomEvents;
 			}
 
 			@Override
@@ -453,6 +486,11 @@ public @interface Directed {
 			@Override
 			public Class<? extends ModelTransform> value() {
 				return value;
+			}
+
+			public Impl withBindDomEvents(boolean bindDomEvents) {
+				this.bindDomEvents = bindDomEvents;
+				return this;
 			}
 
 			public Impl withBindToModel(boolean bindToModel) {
