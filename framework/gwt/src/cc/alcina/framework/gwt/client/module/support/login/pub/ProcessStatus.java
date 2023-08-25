@@ -41,6 +41,10 @@ public class ProcessStatus extends Model {
 		setMessages(newList);
 	}
 
+	public void clear() {
+		setMessages(new IdentityArrayList<>());
+	}
+
 	public void connectToTopics(Topic<Boolean> topicCallingRemote,
 			Topic<String> topicMessage) {
 		this.topicCallingRemote = topicCallingRemote;

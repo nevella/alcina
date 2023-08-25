@@ -60,4 +60,14 @@ public class LoginPagePassword extends LoginPage {
 		loginConsort.request.setPassword(getEnteredText());
 		super.onNextValidated();
 	}
+
+	@Override
+	protected void populateNavigation() {
+		super.populateNavigation();
+		// Link back = new Link().withModelEvent(ModelEvents.Back.class)
+		// .withTextFromModelEvent();
+		// // FIXME - ui2 1x0 - definitely want progress here
+		// // .withAsyncTopic(controller.topicCallingRemote);
+		// navigation.put(back, NavArea.BACK);
+	}
 }

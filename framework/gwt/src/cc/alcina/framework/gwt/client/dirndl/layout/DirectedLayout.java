@@ -1265,6 +1265,10 @@ public class DirectedLayout implements AlcinaProcess {
 
 			private String lastValue;
 
+			boolean innerTextWasSet;
+
+			boolean innerHtmlWasSet;
+
 			PropertyBinding(Binding binding) {
 				this.binding = binding;
 				switch (binding.type()) {
@@ -1418,8 +1422,12 @@ public class DirectedLayout implements AlcinaProcess {
 				case INNER_HTML:
 					if (value != null) {
 						element.setInnerHTML(stringValue);
+						innerHtmlWasSet = true;
 					} else {
-						element.removeAllChildren();
+						if (innerHtmlWasSet) {
+							element.removeAllChildren();
+							innerHtmlWasSet = false;
+						}
 					}
 					break;
 				case INNER_TEXT:
@@ -1429,15 +1437,20 @@ public class DirectedLayout implements AlcinaProcess {
 						} else {
 							element.setInnerText(stringValue);
 						}
+						innerTextWasSet = true;
 					} else {
-						if (element == null) {
-							int count = node.getChildNodes().getLength();
-							Preconditions.checkState(count <= 1);
-							if (count == 1) {
-								node.removeChild(node.getChildNodes().item(0));
+						if (innerTextWasSet) {
+							if (element == null) {
+								int count = node.getChildNodes().getLength();
+								Preconditions.checkState(count <= 1);
+								if (count == 1) {
+									node.removeChild(
+											node.getChildNodes().item(0));
+								}
+							} else {
+								element.removeAllChildren();
 							}
-						} else {
-							element.removeAllChildren();
+							innerTextWasSet = false;
 						}
 					}
 					break;

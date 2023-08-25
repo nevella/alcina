@@ -12,6 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.InputEnterCommit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Next;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
@@ -24,8 +25,9 @@ import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 	receives = { ModelEvents.Next.class,
 			InferredDomEvents.InputEnterCommit.class })
 @TypeSerialization(reflectiveSerializable = false)
-public abstract class LoginPage extends Model implements
-		ModelEvents.Next.Handler, InferredDomEvents.InputEnterCommit.Handler {
+public abstract class LoginPage extends Model
+		implements ModelEvents.Next.Handler,
+		InferredDomEvents.InputEnterCommit.Handler, ModelEvents.Input.Handler {
 	protected LoginConsort loginConsort;
 
 	private final HeadingArea headingArea;
@@ -69,6 +71,11 @@ public abstract class LoginPage extends Model implements
 	@Directed
 	public ProcessStatus getProcessStatus() {
 		return this.processStatus;
+	}
+
+	@Override
+	public void onInput(Input event) {
+		processStatus.clear();
 	}
 
 	@Override
