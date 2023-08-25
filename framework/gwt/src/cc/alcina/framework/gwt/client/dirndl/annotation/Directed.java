@@ -422,6 +422,8 @@ public @interface Directed {
 				Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 		mergeStrategy = Transform.MergeStrategy.class)
 	@interface Transform {
+		boolean bindToModel() default true;
+
 		boolean transformsNull() default false;
 
 		Class<? extends ModelTransform> value();
@@ -429,11 +431,18 @@ public @interface Directed {
 		public static class Impl implements Directed.Transform {
 			private boolean transformsNull;
 
+			private boolean bindToModel = true;
+
 			private Class<? extends ModelTransform> value;
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
 				return Directed.Transform.class;
+			}
+
+			@Override
+			public boolean bindToModel() {
+				return this.bindToModel;
 			}
 
 			@Override
@@ -444,6 +453,11 @@ public @interface Directed {
 			@Override
 			public Class<? extends ModelTransform> value() {
 				return value;
+			}
+
+			public Impl withBindToModel(boolean bindToModel) {
+				this.bindToModel = bindToModel;
+				return this;
 			}
 
 			public Impl withTransformsNull(boolean transformsNull) {
