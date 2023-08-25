@@ -41,7 +41,6 @@ public class InferredDomEvents {
 			handler.onActionOutside(this);
 		}
 
-		
 		public static class BindingImpl
 				extends EventRelativeBinding<ActionOutside> {
 			@Override
@@ -62,7 +61,6 @@ public class InferredDomEvents {
 			handler.onClickOutside(this);
 		}
 
-		
 		public static class BindingImpl
 				extends EventRelativeBinding<ClickOutside> {
 			@Override
@@ -84,7 +82,6 @@ public class InferredDomEvents {
 			handler.onCtrlEnterPressed(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<CtrlEnterPressed>
 				implements KeyUpHandler {
 			@Override
@@ -115,7 +112,6 @@ public class InferredDomEvents {
 			handler.onEnterPressed(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<EnterPressed>
 				implements KeyUpHandler {
 			@Override
@@ -146,7 +142,6 @@ public class InferredDomEvents {
 			handler.onEscapePressed(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<EscapePressed>
 				implements KeyUpHandler {
 			@Override
@@ -182,7 +177,6 @@ public class InferredDomEvents {
 			handler.onInputEnterCommit(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<InputEnterCommit>
 				implements ChangeHandler, KeyUpHandler {
 			private boolean enterReceived = false;
@@ -202,6 +196,7 @@ public class InferredDomEvents {
 
 			private void checkFire(GwtEvent event) {
 				if (changeReceivedWhileFocussedElement && enterReceived) {
+					enterReceived = false;
 					fireEvent(event);
 				}
 			}
@@ -347,7 +342,6 @@ public class InferredDomEvents {
 			handler.onLeftClick(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<LeftClick>
 				implements ClickHandler {
 			@Override
@@ -384,7 +378,6 @@ public class InferredDomEvents {
 			handler.onMouseDownOutside(this);
 		}
 
-		
 		public static class BindingImpl
 				extends EventRelativeBinding<MouseDownOutside> {
 			@Override
@@ -428,7 +421,6 @@ public class InferredDomEvents {
 			handler.onMutation(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<Mutation> {
 			TopicListener<List<MutationRecord>> mutationListener = this::onMutations;
 
@@ -481,7 +473,6 @@ public class InferredDomEvents {
 			handler.onNativePreviewEventAsync(this);
 		}
 
-		
 		@Override
 		public NativeEvent getNativeEvent() {
 			return this.nativeEvent;
@@ -496,7 +487,7 @@ public class InferredDomEvents {
 	 * Unless it's guaranteed that the callback will be inexpensive, use the
 	 * RequestAnimation subclass, which ensures smoothness
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class ResizeObserved
