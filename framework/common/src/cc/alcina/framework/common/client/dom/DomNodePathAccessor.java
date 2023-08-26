@@ -27,6 +27,7 @@ public class DomNodePathAccessor implements PathAccessor {
 	@Override
 	public Object getPropertyValue(Object bean, String propertyName) {
 		DomNode node = (DomNode) bean;
+		node.document.setReadonly(true);
 		List<DomNode> resolved = node.xpath(propertyName).nodes();
 		if (resolved.size() == 0) {
 			return null;
