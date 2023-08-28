@@ -147,6 +147,7 @@ class JobAllocator {
 			ensureStarted();
 			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
 				if (enqueuedStatusMessage != null) {
+					TransactionEnvironment.get().endAndBeginNew();
 					TransactionEnvironment.withDomain(this::applyStatusMessage);
 					TransactionEnvironment.get().end();
 				}
