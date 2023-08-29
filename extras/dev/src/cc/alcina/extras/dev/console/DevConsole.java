@@ -231,7 +231,7 @@ public abstract class DevConsole implements ClipboardOwner {
 			f2.setAccessible(true);
 			loggingPropertiesPath = (String) f2.get(s2);
 		} catch (Exception e) {
-			throw WrappedRuntimeException.wrap(e);
+			Ax.simpleExceptionOut(e);
 		}
 		System.setProperty("java.util.logging.config.file",
 				"/g/alcina/extras/dev/src/cc/alcina/extras/dev/console/logging.properties");
