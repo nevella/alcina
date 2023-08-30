@@ -19,6 +19,42 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 
 public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 	@Override
+	public List<Directed> merge(List<Directed> lessSpecific,
+			List<Directed> moreSpecific) {
+		if (moreSpecific == null || moreSpecific.isEmpty()) {
+			return lessSpecific;
+		}
+		if (lessSpecific == null || lessSpecific.isEmpty()) {
+			return moreSpecific;
+		}
+		// require moreSpecific.length==1 || lessSpecific.length ==1
+		//
+		// if moreSpecific.length==1, merge moreSpecific[0] with
+		// lessSpecific[0], then add remaining
+		// lessSpecific
+		//
+		// if lessSpecific.length==1, add moreSpecific[0..last-1], merge
+		// moreSpecific[last] with
+		// lessSpecific[0]
+		//
+		// merge via Directed.Impl
+		Directed mostSpecific = Ax.last(moreSpecific);
+		if (!mostSpecific.merge()) {
+			return moreSpecific;
+		}
+		Preconditions.checkArgument(
+				lessSpecific.size() == 1 || moreSpecific.size() == 1);
+		Directed.Impl lowestImpl = Directed.Impl.wrap(mostSpecific);
+		List<Directed> result = new ArrayList<>();
+		moreSpecific.stream().limit(moreSpecific.size() - 1)
+				.forEach(result::add);
+		Impl merged = lowestImpl.mergeParent(lessSpecific.get(0));
+		result.add(merged);
+		lessSpecific.stream().skip(1).forEach(result::add);
+		return result;
+	}
+
+	@Override
 	protected List<Directed> atClass(Class<Directed> annotationClass,
 			ClassReflector<?> reflector, ClassReflector<?> resolvingReflector,
 			Resolver resolver) {
@@ -27,6 +63,9 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 
 	protected List<Directed> atHasAnnotations(HasAnnotations reflector,
 			Resolver resolver) {
+		if (reflector.toString().contains("LoginPageUsername")) {
+			int debug = 3;
+		}
 		List<Directed> result = new ArrayList<>();
 		Directed directed = resolver.contextAnnotation(reflector,
 				Directed.class, Resolver.ResolutionContext.Strategy);
@@ -90,6 +129,7 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 				impl.setRenderer(DirectedRenderer.TransformRenderer.class);
 			}
 			impl.setBindToModel(transform.bindToModel());
+			impl.setBindDomEvents(transform.bindDomEvents());
 			result.add(impl);
 		}
 		if (result.isEmpty() && reflector instanceof Property) {
@@ -114,42 +154,6 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 	protected List<Directed> atProperty(Class<Directed> annotationClass,
 			Property property, Resolver resolver) {
 		return atHasAnnotations(property, resolver);
-	}
-
-	@Override
-	public List<Directed> merge(List<Directed> lessSpecific,
-			List<Directed> moreSpecific) {
-		if (moreSpecific == null || moreSpecific.isEmpty()) {
-			return lessSpecific;
-		}
-		if (lessSpecific == null || lessSpecific.isEmpty()) {
-			return moreSpecific;
-		}
-		// require moreSpecific.length==1 || lessSpecific.length ==1
-		//
-		// if moreSpecific.length==1, merge moreSpecific[0] with
-		// lessSpecific[0], then add remaining
-		// lessSpecific
-		//
-		// if lessSpecific.length==1, add moreSpecific[0..last-1], merge
-		// moreSpecific[last] with
-		// lessSpecific[0]
-		//
-		// merge via Directed.Impl
-		Directed mostSpecific = Ax.last(moreSpecific);
-		if (!mostSpecific.merge()) {
-			return moreSpecific;
-		}
-		Preconditions.checkArgument(
-				lessSpecific.size() == 1 || moreSpecific.size() == 1);
-		Directed.Impl lowestImpl = Directed.Impl.wrap(mostSpecific);
-		List<Directed> result = new ArrayList<>();
-		moreSpecific.stream().limit(moreSpecific.size() - 1)
-				.forEach(result::add);
-		Impl merged = lowestImpl.mergeParent(lessSpecific.get(0));
-		result.add(merged);
-		lessSpecific.stream().skip(1).forEach(result::add);
-		return result;
 	}
 
 	public static class Delegating extends Directed.Impl {

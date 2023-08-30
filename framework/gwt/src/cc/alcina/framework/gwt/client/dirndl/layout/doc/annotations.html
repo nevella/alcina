@@ -4,6 +4,80 @@
 </head>
 <body class="doc-body">
 	<h2>Dirndl annotations</h2>
-	
+	<p>One of the primary goals of dirndl is infinite customisability. It's achieved to a fair
+		degree already - since every step of the UI generation process (corresponding to each dom element)
+		is a declarative transformation, and the transformations can be *totally* by the context Resolver
+		- and the Resolver is defined declaratively, it's relatively simple to substitute any
+		implementation or presentation annotation at any point.</p>
+	<h3>Example 1 - Customising a login page</h3>
+	<p>The LoginConsort models the UI via several LoginPage models - the first is
+		LoginPageUsername. In the code below, the @DirectedContextResolver annotation instructs all
+		annotation resolution to go via LoginAreaCustom.ResolverImpl - which emits a custom
+		@Directed.Transform annotation for the LoginPageUsername class (which causes LoginPageUsername to
+		not be rendered, instead the LoginPageUsername instance is transformed into a
+		LoginPageUsernameCustom instance - which is rendered instead)</p>
+	<p>
+		Note that in general the
+		<code>contextAnnotation</code>
+		method should be overridden, rather than other resolver resolution methods (such as
+		<code>resolveAnnotations0</code>
+		) -
+		<code>contextAnnotation</code>
+		is lower in the resolution stack and is called by the Dirndl merge strategies, which makes its
+		overriding behaviour easier to understand.
+	<p>
+	<pre>
+<code>
+@Directed
+/*
+ * Define the resolver which will customise the resolution of LoginPageUsername. 
+ */
+@DirectedContextResolver(ResolverImpl.class)
+public class LoginAreaCustom extends LoginArea {
+	public LoginAreaCustom(Place place) {
+		super(place);
+	}
+
+	//...
+
+	@Directed(
+		tag = "login-page-username",
+		bindings = @Binding(from = "suggestingCreation", type = Type.CSS_CLASS))
+	public static class LoginPageUsernameCustom extends LoginPageUsername {
+//...
+
+		@Reflected
+		public static class Transform implements
+				ModelTransform&lt;LoginPageUsername, LoginPageUsernameCustom&gt; {
+			@Override
+			public LoginPageUsernameCustom apply(LoginPageUsername t) {
+				return new LoginPageUsernameCustom(t);
+			}
+		}
+	}
+
+	public static class ResolverImpl extends ContextResolver {
+		@Override
+		public &lt;A extends Annotation&gt; A contextAnnotation(
+				HasAnnotations reflector, Class&lt;A extends Annotation&gt; annotationClass,
+				ResolutionContext resolutionContext) {
+			if (annotationClass == Directed.Transform.class
+					&& reflector instanceof ClassReflector
+					&& ((ClassReflector) reflector)
+							.getReflectedClass() == LoginPageUsername.class) {
+				return (A) new Directed.Transform.Impl()
+						.withValue(LoginPageUsernameCustom.Transform.class)
+						.withBindToModel(false).withBindDomEvents(false);
+			} else {
+				return super.contextAnnotation(reflector, annotationClass,
+						resolutionContext);
+			}
+		}
+	}
+}
+
+
+		</code>
+</pre>
 </body>
 </html>

@@ -180,8 +180,8 @@ public class XmlUtils {
 	}
 
 	public static void cleanNamespacedAttributes(Document doc) {
-		DomDocument.from(doc).descendants()
-				.filter(DomNode::isElement).forEach(n -> {
+		DomDocument.from(doc).descendants().filter(DomNode::isElement)
+				.forEach(n -> {
 					if (n.w3cElement().hasAttributes()) {
 						n.attributes().keySet().stream()
 								.collect(Collectors.toList())
@@ -1436,7 +1436,8 @@ public class XmlUtils {
 		if (cacheMarker == null) {
 			cacheMarker = TRANSFORMER_CACHE_MARKER_NULL;
 		}
-		if (noTransformerCaching
+		if ((noTransformerCaching
+				&& cacheMarker != TRANSFORMER_CACHE_MARKER_STREAM_XML)
 				|| cacheMarker == TRANSFORMER_CACHE_MARKER_NULL) {
 			pool = new TransformerPool(false);
 		} else {

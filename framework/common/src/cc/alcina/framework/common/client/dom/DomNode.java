@@ -1679,8 +1679,8 @@ public class DomNode {
 
 		public boolean handlesXpath(String xpath) {
 			DomNodeReadonlyLookupQuery query = parse(xpath);
-			return query.valid
-					&& (query.immediateChild || DomNode.this == document);
+			return query.valid && (query.immediateChild || query.grandChild
+					|| DomNode.this == document);
 		}
 
 		private String normaliseTag(String tag) {
@@ -1717,10 +1717,17 @@ public class DomNode {
 			String tagAttrValueRegex = Ax.format("//(%s)/?\\[@(%s)='(%s)'\\]",
 					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
 			String immediateChildRegex = xmlIdentifierChars;
+			String grandChildRegex = Ax.format("(%s)/(%s)", xmlIdentifierChars,
+					xmlIdentifierChars);
 			if (xpath.matches(immediateChildRegex)) {
 				query.tag = xpath;
 				query.valid = true;
 				query.immediateChild = true;
+			} else if (xpath.matches(grandChildRegex)) {
+				query.tag = xpath.replaceFirst(grandChildRegex, "$1");
+				query.grandChildTag = xpath.replaceFirst(grandChildRegex, "$2");
+				query.valid = true;
+				query.grandChild = true;
 			} else if (xpath.matches(tagOnlyRegex)) {
 				query.tag = xpath.replaceFirst(tagOnlyRegex, "$1");
 				query.valid = true;
@@ -1799,6 +1806,11 @@ public class DomNode {
 			if (query.immediateChild) {
 				return children.byTag(query.tag).stream()
 						.filter(query.predicate).map(query.map);
+			} else if (query.grandChild) {
+				return children.byTag(query.tag).stream()
+						.filter(query.predicate)
+						.map(n -> n.children.byTag(query.grandChildTag))
+						.flatMap(Collection::stream).map(query.map);
 			} else {
 				Stream<DomNode> stream = null;
 				if (Ax.notBlank(query.id2)) {
@@ -1868,6 +1880,10 @@ public class DomNode {
 		}
 
 		class DomNodeReadonlyLookupQuery {
+			String grandChildTag;
+
+			boolean grandChild;
+
 			public String id2;
 
 			public String id;
