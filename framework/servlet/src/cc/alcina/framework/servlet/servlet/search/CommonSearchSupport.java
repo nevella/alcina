@@ -149,6 +149,7 @@ public class CommonSearchSupport {
 			SearchContext searchContext = SearchContext.startContext();
 			searchContext.def = def;
 			searchContext.orders = def.getSearchOrders();
+			searchContext.orders.putSearchDefinition(def);
 			searchContext.groupingParameters = def.getGroupingParameters();
 			MetricLogging.get().start(key);
 			def.initialiseContext();

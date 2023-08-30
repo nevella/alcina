@@ -127,6 +127,14 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		addOrder(order, true);
 	}
 
+	public void putSearchDefinition(BindableSearchDefinition searchDefinition) {
+		_getCmps().keySet().forEach(searchOrder -> {
+			if (searchOrder instanceof DisplaySearchOrder) {
+				((DisplaySearchOrder) searchOrder).searchDefinition = searchDefinition;
+			}
+		});
+	}
+
 	public boolean removeOrder(Class<SearchOrder> clazz) {
 		int size = _getCmps().size();
 		boolean result = _getCmps().keySet()

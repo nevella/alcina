@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -57,6 +58,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -129,28 +131,32 @@ public class FormModel extends Model
 		Place currentPlace = Client.currentPlace();
 		TransformManager.get().removeTransformsFor(getState().model);
 		TransformManager.get().deregisterProvisionalObject(getState().model);
-		if (currentPlace instanceof EntityPlace) {
-			/*
-			 * behaviour differs. If action was CREATE, go back - if EDIT go to
-			 * VIEW
-			 */
-			EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
-			if (currentEntityPlace.action == EntityAction.CREATE) {
-				History.back();
-			} else {
-				EntityPlace entityPlace = (EntityPlace) Reflections
-						.newInstance(currentPlace.getClass());
-				entityPlace.id = currentEntityPlace.id;
-				entityPlace.go();
+		/*
+		 * Defer place change, since parent handlers should be notified first
+		 */
+		Scheduler.get().scheduleDeferred(() -> {
+			if (currentPlace instanceof EntityPlace) {
+				/*
+				 * behaviour differs. If action was CREATE, go back - if EDIT go
+				 * to VIEW
+				 */
+				EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
+				if (currentEntityPlace.action == EntityAction.CREATE) {
+					History.back();
+				} else {
+					EntityPlace entityPlace = (EntityPlace) Reflections
+							.newInstance(currentPlace.getClass());
+					entityPlace.id = currentEntityPlace.id;
+					entityPlace.go();
+				}
+			} else if (currentPlace instanceof CategoryNamePlace) {
+				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
+						.copy();
+				categoryNamePlace.nodeName = null;
+				categoryNamePlace.go();
 			}
-		} else if (currentPlace instanceof CategoryNamePlace) {
-			CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
-					.copy();
-			categoryNamePlace.nodeName = null;
-			categoryNamePlace.go();
-		} else {
-			event.getContext().bubble();
-		}
+		});
+		event.getContext().bubble();
 	}
 
 	// FIXME - dirndl 1x1h - not sure where to put the handlers here. On the
@@ -202,46 +208,21 @@ public class FormModel extends Model
 		}
 	}
 
+	// the dom 'Submit' event - fired for instance by <submit> elements
 	@Override
 	public void onSubmit(DomEvents.Submit event) {
 		((DomEvent) event.getContext().getOriginatingGwtEvent())
 				.preventDefault();
-		submit();
+		submit(null);
 	}
 
-	// the dom 'Submit' event - fired for instance by <submit> elements
 	@Override
 	public void onSubmit(ModelEvents.Submit event) {
-		if (submit()) {
-			// then propagate
-			event.getContext().bubble();
-		}
+		submit(event);
 	}
 
 	public void setSubmitTextBoxesOnEnter(boolean submitTextBoxesOnEnter) {
 		this.submitTextBoxesOnEnter = submitTextBoxesOnEnter;
-	}
-
-
-	public boolean submit() {
-		Consumer<Void> onValid = o -> {
-			if (getState().model instanceof Entity) {
-				// FIXME - adjunct
-				ClientTransformManager.cast()
-						.promoteToDomainObject(getState().model);
-				CommitToStorageTransformListener
-						.flushAndRunWithFirstCreationConsumer(
-								this::onEditComittedRemote);
-			}
-			if (Client.currentPlace() instanceof EntityPlace) {
-			} else if (Client.currentPlace() instanceof CategoryNamePlace) {
-				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
-						.currentPlace();
-				DefaultPermissibleActionHandler.handleAction(null,
-						categoryNamePlace.ensureAction(), provideNode());
-			}
-		};
-		return new FormValidation().validate(onValid, getState().formBinding);
 	}
 
 	private void bind(Bind event) {
@@ -279,6 +260,34 @@ public class FormModel extends Model
 		}
 		// FIXME - dirndl 1x2 - this should be an annotation on the field,
 		//
+	}
+
+	/*
+	 * Designed this way so that the event is only bubbled once (possibly async)
+	 * validation is complete
+	 */
+	void submit(ModelEvent event) {
+		Consumer<Void> onValid = o -> {
+			if (getState().model instanceof Entity) {
+				// FIXME - adjunct
+				ClientTransformManager.cast()
+						.promoteToDomainObject(getState().model);
+				CommitToStorageTransformListener
+						.flushAndRunWithFirstCreationConsumer(
+								this::onEditComittedRemote);
+			}
+			if (Client.currentPlace() instanceof EntityPlace) {
+			} else if (Client.currentPlace() instanceof CategoryNamePlace) {
+				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
+						.currentPlace();
+				DefaultPermissibleActionHandler.handleAction(null,
+						categoryNamePlace.ensureAction(), provideNode());
+			}
+			if (event != null) {
+				event.getContext().bubble();
+			}
+		};
+		new FormValidation().validate(onValid, getState().formBinding);
 	}
 
 	public static class BindableFormModelTransformer extends

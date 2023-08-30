@@ -109,8 +109,7 @@ public abstract class Choices<T> extends Model
 					from = "selected",
 					to = "_selected"),
 				@Binding(type = Type.PROPERTY, from = "indexSelected") },
-		
-	emits = ModelEvents.Selected.class)
+		emits = ModelEvents.Selected.class)
 	public static class Choice<T> extends Model
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler {
 		private boolean selected;
@@ -216,9 +215,10 @@ public abstract class Choices<T> extends Model
 			SelectElement selectElement = (SelectElement) node.getRendered()
 					.asElement();
 			int index = selectElement.getSelectedIndex();
-			T value = index >= 0 ? choices.get(index).getValue() : null;
+			Choice<T> choice = choices.get(index);
+			T value = index >= 0 ? choice.getValue() : null;
 			setSelectedValue(value);
-			event.reemitAs(this, ModelEvents.Selected.class, value);
+			event.reemitAs(this, ModelEvents.Selected.class, choice);
 		}
 	}
 

@@ -148,6 +148,10 @@ public class Property implements HasAnnotations {
 		resolveSetter(bean).invoke(bean, new Object[] { newValue });
 	}
 
+	public String toLocationString() {
+		return Ax.format("%s.%s", owningType.getSimpleName(), name);
+	}
+
 	@Override
 	public String toString() {
 		return Ax.format("%s.%s : %s", owningType.getSimpleName(), name,
