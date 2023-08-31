@@ -16,6 +16,8 @@ public class DisplaySearchOrder extends SearchOrder {
 
 	transient BiFunction<Object, Object, Comparable> toComparable;
 
+	public transient BindableSearchDefinition searchDefinition;
+
 	public DisplaySearchOrder() {
 	}
 
@@ -33,7 +35,8 @@ public class DisplaySearchOrder extends SearchOrder {
 			return null;
 		}
 		if (toComparable == null) {
-			toComparable = Registry.impl(OrderProvider.class).toComparable(t);
+			toComparable = Registry.impl(OrderProvider.class).toComparable(this,
+					t);
 		}
 		return toComparable.apply(source, t);
 	}
@@ -64,8 +67,8 @@ public class DisplaySearchOrder extends SearchOrder {
 
 	@Registration(OrderProvider.class)
 	public static class OrderProvider {
-		public BiFunction<Object, Object, Comparable>
-				toComparable(Object nonNullFieldValue) {
+		public BiFunction<Object, Object, Comparable> toComparable(
+				DisplaySearchOrder order, Object nonNullFieldValue) {
 			if (nonNullFieldValue instanceof Comparable) {
 				return (source_, o) -> (Comparable) o;
 			} else if (nonNullFieldValue instanceof Collection) {

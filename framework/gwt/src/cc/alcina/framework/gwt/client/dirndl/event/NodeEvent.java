@@ -176,8 +176,8 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		void reemit() {
 			Context newContext = fromContext(this, node);
 			newContext.reemission = node;
-			newContext.dispatch(
-					(Class<? extends ModelEvent>) nodeEvent.getClass(), null);
+			ModelEvent modelEvent = (ModelEvent) nodeEvent;
+			newContext.dispatch(modelEvent.getClass(), modelEvent.getModel());
 		}
 	}
 
