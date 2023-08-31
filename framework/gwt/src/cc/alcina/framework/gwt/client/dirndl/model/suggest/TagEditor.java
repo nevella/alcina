@@ -7,7 +7,6 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
@@ -85,7 +84,6 @@ public class TagEditor extends Model implements Suggestor.Editor,
 		if (!attachComplete) {
 			return;
 		}
-		Ax.err("oninput: %s", event.getValue());
 		event.reemitAs(this, EditorAsk.class, computeAsk());
 	}
 

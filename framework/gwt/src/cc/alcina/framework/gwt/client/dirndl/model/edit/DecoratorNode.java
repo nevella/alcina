@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import com.google.gwt.dom.client.Document;
@@ -8,12 +11,15 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.SelectionJso;
 import com.google.gwt.dom.client.Text;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.remote.ReflectiveCommonRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -22,10 +28,29 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
+import cc.alcina.framework.gwt.client.util.Async;
 
 /**
+ * <p>
  * A node which is decorated by user activity (such as a # tag populated from a
  * dropdown)
+ *
+ * <p>
+ * It's better to use entitylocator rather than entity here - since (for various
+ * reasons) the client may not have the entity itself loaded into the graph when
+ * unmarshalling the node
+ *
+ * <p>
+ * Note that the validation behaviour is slightly wrinkly wrt entities -
+ * consider the following:
+ * <ol>
+ * <li>User creates a new entity via selecting some sort of 'create new' option
+ * <li>Next time the editable is edited, the 'local to persistent' call (which
+ * should convert the local entitylocator to its persistent equivalent) doesn't
+ * return before editing is complete
+ * <li>Any linked references that use the entity will be removed (since the
+ * client cannot determine the entity corresponding to the locator)
+ * </ol>
  *
  * @param <E>
  *            the type this decorator selects
@@ -37,27 +62,26 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		transform = Binding.DisplayFalseTrueBidi.class)
 	public boolean contentEditable = true;
 
-	@Binding(type = Type.PROPERTY, transform = ContextLocatorTransform.class)
-	public EntityLocator entity;
-
-	public EntityLocator entity() {
-		return this.entity;
-	}
+	EntityLocator entityLocator;
 
 	public abstract Descriptor<E> getDescriptor();
+
+	@Binding(
+		type = Type.PROPERTY,
+		to = "entity",
+		transform = ContextLocatorTransform.class)
+	public EntityLocator getEntityLocator() {
+		return this.entityLocator;
+	}
 
 	public void setContentEditable(boolean contentEditable) {
 		set("contentEditable", this.contentEditable, contentEditable,
 				() -> this.contentEditable = contentEditable);
 	}
 
-	public void setEntity(EntityLocator entity) {
-		set("entity", this.entity, entity, () -> this.entity = entity);
-	}
-
-	public String tag() {
-		// TODO Auto-generated method stub
-		return null;
+	public void setEntityLocator(EntityLocator entityLocator) {
+		set("entityLocator", this.entityLocator, entityLocator,
+				() -> this.entityLocator = entityLocator);
 	}
 
 	public void toNonEditable() {
@@ -73,8 +97,8 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 	}
 
 	/**
-	 * This is only called when a chooser is *not* showing, so isValid is
-	 * logically correct
+	 * This is only called when a chooser is *not* showing (post close or on
+	 * contenteditable init), so isValid is logically correct
 	 */
 	public void validate() {
 		if (!isValid()) {
@@ -85,20 +109,28 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 				firstNode.text().mergeWithAdjacentTexts();
 			}
 		}
+		validateLocator();
 	}
 
 	protected Class<E> entityClass() {
 		return Reflections.at(this).getGenericBounds().bounds.get(0);
 	}
 
+	void handleGetPersistentLocators(Map<EntityLocator, EntityLocator> map) {
+		EntityLocator result = map.values().iterator().next();
+		if (result != null) {
+			setEntityLocator(result);
+		}
+	}
+
 	boolean isValid() {
 		// FIXME - DN server shd validate entity on update. and other
 		// validations (e.g. not contained in a decorator)
-		return entity != null;
+		return entityLocator != null;
 	}
 
 	void putEntity(Entity entity) {
-		setEntity(entity.toLocator());
+		setEntityLocator(entity.toLocator());
 		FragmentNode.TextNode textNode = (TextNode) children().findFirst()
 				.get();
 		String text = getDescriptor().triggerSequence()
@@ -127,6 +159,19 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 			 * probably merge adjacent FragmentNode.Text children if any result
 			 * from the strip
 			 */
+		}
+	}
+
+	void validateLocator() {
+		if (entityLocator != null && entityLocator.getId() == 0 && entityLocator
+				.getClientInstanceId() != ClientInstance.self().getId()) {
+			Set<EntityLocator> locators = new LinkedHashSet<>();
+			locators.add(entityLocator);
+			AsyncCallback<Map<EntityLocator, EntityLocator>> callback = Async
+					.<Map<EntityLocator, EntityLocator>> callbackBuilder()
+					.success(this::handleGetPersistentLocators).build();
+			ReflectiveCommonRemoteServiceAsync.get()
+					.getPersistentLocators(locators, callback);
 		}
 	}
 

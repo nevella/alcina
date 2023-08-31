@@ -98,7 +98,8 @@ public @interface Binding {
 
 		public static Impl propertyBinding(Property property, Binding binding) {
 			Impl impl = new Impl(binding);
-			impl.from = property.getName();
+			impl.from = impl.from.length() != 0 ? impl.from
+					: property.getName();
 			return impl;
 		}
 

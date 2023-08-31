@@ -2,9 +2,12 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -23,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.HasSelectedValue;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion.Markup;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestions.State;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorAsk;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
@@ -40,12 +44,10 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * <p>
  * FIXME - dirndl 1x1dz - switch SuggestorConfiguration to a builder
  *
- * 
+ *
  *
  */
-@Directed(
-	
-emits = ModelEvents.SelectionChanged.class)
+@Directed(emits = ModelEvents.SelectionChanged.class)
 public class Suggestor extends Model
 		implements SuggestorEvents.EditorAsk.Handler,
 		ModelEvents.SelectionChanged.Handler, HasSelectedValue,
@@ -152,6 +154,10 @@ public class Suggestor extends Model
 		if (event.checkReemitted(this)) {
 			return;
 		}
+		/*
+		 *
+		 */
+		suggestions.ensureSelectedSuggestionValue();
 		setChosenSuggestions(suggestions.provideSelectedValue());
 		event.reemit();
 	}
@@ -220,6 +226,20 @@ public class Suggestor extends Model
 			total++;
 		}
 
+		public void addCreateNewSuggestion(String text,
+				Supplier<?> valueSupplier) {
+			Markup suggestion = new Markup();
+			suggestion.setMarkup(SafeHtmlUtils.htmlEscape(text));
+			suggestion.putModelCreator(valueSupplier);
+			suggestions.add(0, suggestion);
+			total++;
+		}
+
+		public boolean containsExactMatch(String value) {
+			return suggestions.stream()
+					.anyMatch(s -> Objects.equals(s.toString(), value));
+		}
+
 		public List<Suggestion> getSuggestions() {
 			return this.suggestions;
 		}
@@ -251,7 +271,7 @@ public class Suggestor extends Model
 	 * <p>
 	 * So named because 'query' is so tired
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public interface Ask {
@@ -425,6 +445,8 @@ public class Suggestor extends Model
 	 * Marker for the payload of a Suggestion
 	 */
 	public interface Suggestion {
+		void ensureModel();
+
 		/*
 		 * Typed model (for rendering, either this or markup)
 		 *
@@ -444,6 +466,8 @@ public class Suggestor extends Model
 		 */
 		boolean isMatch();
 
+		void putModelCreator(Supplier modelCreator);
+
 		@Directed(
 			tag = "suggestion",
 			bindings = @Binding(from = "markup", type = Type.INNER_HTML))
@@ -454,7 +478,16 @@ public class Suggestor extends Model
 
 			private boolean match;
 
+			private Supplier modelCreator;
+
 			public Markup() {
+			}
+
+			@Override
+			public void ensureModel() {
+				if (model == null) {
+					model = modelCreator.get();
+				}
 			}
 
 			public String getMarkup() {
@@ -469,6 +502,11 @@ public class Suggestor extends Model
 			@Override
 			public boolean isMatch() {
 				return this.match;
+			}
+
+			@Override
+			public void putModelCreator(Supplier modelCreator) {
+				this.modelCreator = modelCreator;
 			}
 
 			public void setMarkup(String markup) {
@@ -496,8 +534,17 @@ public class Suggestor extends Model
 
 			public boolean match;
 
+			public transient Supplier modelCreator;
+
 			public ModelSuggestion(Model model) {
 				this.model = model;
+			}
+
+			@Override
+			public void ensureModel() {
+				if (model == null) {
+					model = (Model) modelCreator.get();
+				}
 			}
 
 			@Override
@@ -510,6 +557,11 @@ public class Suggestor extends Model
 			public boolean isMatch() {
 				return match;
 			}
+
+			@Override
+			public void putModelCreator(Supplier modelCreator) {
+				this.modelCreator = modelCreator;
+			}
 		}
 	}
 
@@ -520,6 +572,13 @@ public class Suggestor extends Model
 	public interface Suggestions
 			extends HasSelectedValue, ModelEvents.Closed.Handler {
 		void close();
+
+		default void ensureSelectedSuggestionValue() {
+			Suggestion selectedValue = (Suggestion) provideSelectedValue();
+			if (selectedValue != null) {
+				selectedValue.ensureModel();
+			}
+		}
 
 		void onAnswers(Answers answers);
 
