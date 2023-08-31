@@ -70,14 +70,15 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		if (string == null) {
 			return null;
 		}
+		String clientInstanceIdLocalIdRegex = "(\\d+)[,/](\\d+)";
 		if (string.matches("\\d+")) {
 			long id = Long.parseLong(string);
 			return new EntityLocator(clazz, id, 0);
-		} else if (string.matches("(\\d+),(\\d+)")) {
-			long clientInstanceId = Long
-					.parseLong(string.replaceFirst("(\\d+),(\\d+)", "$1"));
-			long localId = Long
-					.parseLong(string.replaceFirst("(\\d+),(\\d+)", "$2"));
+		} else if (string.matches(clientInstanceIdLocalIdRegex)) {
+			long clientInstanceId = Long.parseLong(
+					string.replaceFirst(clientInstanceIdLocalIdRegex, "$1"));
+			long localId = Long.parseLong(
+					string.replaceFirst(clientInstanceIdLocalIdRegex, "$2"));
 			EntityLocator locator = new EntityLocator(clazz, 0L, localId);
 			locator.setClientInstanceId(clientInstanceId);
 			return locator;
