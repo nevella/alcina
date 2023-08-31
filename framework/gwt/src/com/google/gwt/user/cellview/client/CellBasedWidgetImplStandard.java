@@ -52,6 +52,10 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	private static void handleNonBubblingEvent(Event event) {
 		// Get the event target.
 		EventTarget eventTarget = event.getEventTarget();
+		if (eventTarget == null) {
+			// should not be required - but added due to production NPEs
+			return;
+		}
 		if (!Element.is(eventTarget)) {
 			return;
 		}
