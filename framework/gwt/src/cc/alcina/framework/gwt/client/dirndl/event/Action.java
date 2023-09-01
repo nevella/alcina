@@ -47,7 +47,7 @@ public abstract class Action<T> implements Permissible {
 		return AccessLevel.EVERYONE;
 	}
 
-	public ActionArea asAction() {
+	public ActionArea asArea() {
 		return new ActionArea(this);
 	}
 
@@ -138,7 +138,7 @@ public abstract class Action<T> implements Permissible {
 			extends AbstractModelTransform<Action, ActionArea> {
 		@Override
 		public ActionArea apply(Action t) {
-			return t.asAction();
+			return t.asArea();
 		}
 	}
 }
