@@ -17,6 +17,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -92,6 +93,7 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
+import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 /**
@@ -150,14 +152,14 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
  * FIXME - jobs - activeJobs is a non-transactional view - but possibly should
  * not be, since there are no guarantees that the job exists/has a visible
  * version for a given tx
- * 
+ *
  * <p>
  * Implementation note - the Job system exists in a JobEnvironment - the default
  * environment is within an Alcina mvcc domain, but other (e.g.
  * non-transactional) environments exist, supporting use on non-db-backed
  * systems (e.g. Android)
  *
- * 
+ *
  */
 @Registrations({
 		@Registration(
@@ -808,7 +810,9 @@ public class JobRegistry {
 	 * FIXME - mvcc.jobs.1a - launcherthreadstate should go away
 	 */
 	void performJob(Job job, boolean queueJobPersistence,
-			LauncherThreadState launcherThreadState) {
+			LauncherThreadState launcherThreadState,
+			ExecutorServiceProvider executorServiceProvider,
+			ExecutorService executorService) {
 		try {
 			if (environment.isInTransactionMultipleTxEnvironment()) {
 				logger.warn(
@@ -853,6 +857,7 @@ public class JobRegistry {
 			TransactionEnvironment.get().end();
 			LooseContext.pop();
 			LooseContext.confirmDepth(0);
+			executorServiceProvider.onServiceComplete(executorService);
 		}
 	}
 
