@@ -351,15 +351,14 @@ public abstract class DevHelper {
 
 	public abstract void initPostObjectServices();
 
-	// FIXME - ru - rename to loadConfig
-	public final void loadConfiguration() {
+	public final void loadConfig() {
 		String configPath = getConfigFilePath();
 		if (!new File(configPath).exists()) {
 			Io.read().path(configPath + ".template").write().toPath(configPath);
 		}
 		Configuration.properties.setUseSets(isUsesSets());
-		Configuration.properties
-				.register(Io.read().path(configPath).asString());
+		Configuration.properties.load(() -> Configuration.properties
+				.register(Io.read().path(configPath).asString()));
 	}
 
 	public abstract void loadDefaultLoggingProperties();
@@ -432,7 +431,7 @@ public abstract class DevHelper {
 
 	public void solidTestEnvFirstHalf() {
 		loadDefaultLoggingProperties();
-		loadConfiguration();
+		loadConfig();
 		initLightweightServices();
 	}
 

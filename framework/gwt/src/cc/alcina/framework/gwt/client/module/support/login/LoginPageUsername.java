@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
-@Directed(receives = ModelEvents.Cancel.class)
+@Directed
 public class LoginPageUsername extends LoginPage
 		implements ModelEvents.Cancel.Handler {
 	protected StringInput input;

@@ -25,6 +25,16 @@ public class LocalMutations {
 		this.mutationsAccess = mutationsAccess;
 	}
 
+	public void fireMutations() {
+		finallyCommand = null;
+		if (this.mutations.isEmpty()) {
+			return;
+		}
+		List<MutationRecord> mutations = this.mutations;
+		this.mutations = new ArrayList<>();
+		topicMutations.publish(mutations);
+	}
+
 	public void notify(Runnable runnable) {
 		if (!topicMutations.hasListeners()) {
 			return;
@@ -66,15 +76,5 @@ public class LocalMutations {
 			record.removedNodes.add(MutationNode.forNode(child));
 		}
 		mutations.add(record);
-	}
-
-	void fireMutations() {
-		finallyCommand = null;
-		if (this.mutations.isEmpty()) {
-			return;
-		}
-		List<MutationRecord> mutations = this.mutations;
-		this.mutations = new ArrayList<>();
-		topicMutations.publish(mutations);
 	}
 }

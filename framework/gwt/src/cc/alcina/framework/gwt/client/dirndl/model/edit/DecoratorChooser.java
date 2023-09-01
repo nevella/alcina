@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -33,9 +32,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 @Directed(
 	// but see
 	// cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.computeCssClass()
-	cssClass = "decorator-chooser",
-	receives = { ModelEvents.SelectionChanged.class, ModelEvents.Closed.class,
-			ModelEvents.BeforeClosed.class },
+	className = "decorator-chooser",
 	emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
 public abstract class DecoratorChooser extends Model.Fields
 		implements ModelEvents.SelectionChanged.Handler,
@@ -47,15 +44,12 @@ public abstract class DecoratorChooser extends Model.Fields
 
 	protected DomNode decoratorNode;
 
-	protected String triggerSequence;
-
 	protected TagEditor tagEditor;
 
 	public DecoratorChooser(ContentDecorator contentDecorator,
-			DomNode decoratorNode, String triggerSequence) {
+			DomNode decoratorNode) {
 		this.contentDecorator = contentDecorator;
 		this.decoratorNode = decoratorNode;
-		this.triggerSequence = triggerSequence;
 		init();
 	}
 
@@ -93,7 +87,9 @@ public abstract class DecoratorChooser extends Model.Fields
 
 	protected TagEditor createTagEditor() {
 		return new TagEditor((Element) this.decoratorNode.w3cElement(),
-				ask -> ask.replaceFirst("^" + triggerSequence, ""));
+				ask -> ask.replaceFirst(
+						"^" + contentDecorator.descriptor.triggerSequence(),
+						""));
 	}
 
 	protected void init() {

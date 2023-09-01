@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -94,8 +95,12 @@ public abstract class FragmentNode extends Model.Fields
 		return fragmentModel;
 	}
 
-	public FragmentNodeTree fragmentNodeTree() {
-		return new FragmentNodeTree();
+	/**
+	 * returns the full FragmentModel tree with the current position set to the
+	 * FragmentNode
+	 */
+	public FragmentTree fragmentTree() {
+		return new FragmentTree(true);
 	}
 
 	public void insertAsFirstChild(FragmentNode child) {
@@ -139,8 +144,15 @@ public abstract class FragmentNode extends Model.Fields
 		return format.toString();
 	}
 
+	/**
+	 * returns a tree of FragmentNodes rooted at this node
+	 */
 	public FragmentTree tree() {
-		return new FragmentTree();
+		return new FragmentTree(false);
+	}
+
+	void withMutating(Runnable runnable) {
+		FragmentModel.withMutating(runnable);
 	}
 
 	/**
@@ -193,23 +205,6 @@ public abstract class FragmentNode extends Model.Fields
 		}
 	}
 
-	public class FragmentNodeTree {
-		DomNodeTree domTree;
-
-		FragmentNodeTree() {
-			domTree = domNode().tree();
-		}
-
-		FragmentNodeTree reversed() {
-			domTree.reversed();
-			return this;
-		}
-
-		Stream<FragmentNode> stream() {
-			return domTree.stream().map(fragmentModel::getFragmentNode);
-		}
-	}
-
 	/*
 	 * Mimics the behaviour of FragmentNode for the root (which is not
 	 * necessarily a fragment node)
@@ -232,14 +227,26 @@ public abstract class FragmentNode extends Model.Fields
 	public class FragmentTree {
 		DomNodeTree tree;
 
-		FragmentTree() {
-			this.tree = domNode().tree();
+		FragmentTree(boolean fromRoot) {
+			this.tree = fromRoot ? fragmentModel().rootDomNode().tree()
+					: domNode().tree();
+			tree.setCurrentNode(domNode());
 		}
 
-		public Optional<FragmentNode.Text> nextTextNode(boolean nonWhitespace) {
-			return (Optional<FragmentNode.Text>) (Optional<?>) tree
+		public Optional<FragmentNode.TextNode>
+				nextTextNode(boolean nonWhitespace) {
+			return (Optional<FragmentNode.TextNode>) (Optional<?>) tree
 					.nextTextNode(nonWhitespace)
-					.map(fragmentModel::getFragmentNode);
+					.map(fragmentModel()::getFragmentNode);
+		}
+
+		FragmentTree reversed() {
+			tree.reversed();
+			return this;
+		}
+
+		Stream<FragmentNode> stream() {
+			return tree.stream().map(fragmentModel::getFragmentNode);
 		}
 	}
 
@@ -252,19 +259,26 @@ public abstract class FragmentNode extends Model.Fields
 
 	public class Nodes {
 		public void append(FragmentNode child) {
-			provideNode().append(child);
+			withMutating(() -> provideNode().append(child));
+			fragmentModel().register(child);
 		}
 
 		public void insertAfterThis(FragmentNode fragmentNode) {
-			provideParentNode().insertAfter(FragmentNode.this, fragmentNode);
+			withMutating(() -> provideParentNode().insertAfter(fragmentNode,
+					FragmentNode.this));
+			fragmentModel().register(fragmentNode);
 		}
 
 		public void insertBeforeThis(FragmentNode fragmentNode) {
-			provideParentNode().insertBefore(FragmentNode.this, fragmentNode);
+			withMutating(() -> provideParentNode().insertBefore(fragmentNode,
+					FragmentNode.this));
+			fragmentModel().register(fragmentNode);
 		}
 
 		public void replaceWith(FragmentNode other) {
-			provideParentNode().replaceChild(FragmentNode.this, other);
+			withMutating(() -> provideParentNode()
+					.replaceChild(FragmentNode.this, other));
+			fragmentModel().register(other);
 		}
 	}
 
@@ -273,13 +287,13 @@ public abstract class FragmentNode extends Model.Fields
 	 */
 	@Transformer(NodeTransformer.Text.class)
 	@Directed(renderer = LeafRenderer.TextNode.class)
-	public static class Text extends FragmentNode {
+	public static class TextNode extends FragmentNode {
 		private String value;
 
-		public Text() {
+		public TextNode() {
 		}
 
-		public Text(String value) {
+		public TextNode(String value) {
 			this.value = value;
 		}
 
@@ -289,6 +303,7 @@ public abstract class FragmentNode extends Model.Fields
 		}
 
 		public void setValue(String value) {
+			Ax.err(">>%s", value);
 			set("value", this.value, value, () -> this.value = value);
 		}
 	}

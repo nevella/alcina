@@ -63,6 +63,9 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 
 	protected List<Directed> atHasAnnotations(HasAnnotations reflector,
 			Resolver resolver) {
+		if (reflector.toString().contains("LoginPageUsername")) {
+			int debug = 3;
+		}
 		List<Directed> result = new ArrayList<>();
 		Directed directed = resolver.contextAnnotation(reflector,
 				Directed.class, Resolver.ResolutionContext.Strategy);
@@ -125,6 +128,8 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 			} else {
 				impl.setRenderer(DirectedRenderer.TransformRenderer.class);
 			}
+			impl.setBindToModel(transform.bindToModel());
+			impl.setBindDomEvents(transform.bindDomEvents());
 			result.add(impl);
 		}
 		if (result.isEmpty() && reflector instanceof Property) {

@@ -7,6 +7,7 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.SelectionJso;
+import com.google.gwt.dom.client.Text;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
@@ -16,15 +17,34 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
+/**
+ * A node which is decorated by user activity (such as a # tag populated from a
+ * dropdown)
+ *
+ * @param <E>
+ *            the type this decorator selects
+ */
 public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
-	@Binding(type = Type.PROPERTY)
-	public boolean contentEditable;
+	@Binding(
+		type = Type.PROPERTY,
+		to = "contentEditable",
+		transform = Binding.DisplayFalseTrueBidi.class)
+	public boolean contentEditable = true;
 
 	@Binding(type = Type.PROPERTY, transform = ContextLocatorTransform.class)
 	public EntityLocator entity;
+
+	public EntityLocator entity() {
+		return this.entity;
+	}
+
+	public abstract Descriptor<E> getDescriptor();
 
 	public void setContentEditable(boolean contentEditable) {
 		set("contentEditable", this.contentEditable, contentEditable,
@@ -35,16 +55,21 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		set("entity", this.entity, entity, () -> this.entity = entity);
 	}
 
+	public String tag() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public void toNonEditable() {
 		setContentEditable(false);
-		nodes().insertBeforeThis(new ZeroWidthCursorTarget());
-		nodes().insertAfterThis(new ZeroWidthCursorTarget());
 		/*
 		 * FIXME - dn - don't insert if unnecessary. 'necessary' test is: ensure
 		 * editable text before. tree iterate before, find first text. if it
 		 * doesn't exist, is in a CE or a different block, insert a
 		 * cursor-target span
 		 */
+		nodes().insertBeforeThis(new ZeroWidthCursorTarget());
+		nodes().insertAfterThis(new ZeroWidthCursorTarget());
 	}
 
 	/**
@@ -66,47 +91,32 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		return Reflections.at(this).getGenericBounds().bounds.get(0);
 	}
 
-	protected abstract Function<E, String> itemRenderer();
-
-	protected abstract String triggerSequence();
-
 	boolean isValid() {
-		// TODO - model the entity as an entitylocator field (of this class)
-		return domNode().has("_entity");
+		// FIXME - DN server shd validate entity on update. and other
+		// validations (e.g. not contained in a decorator)
+		return entity != null;
 	}
 
 	void putEntity(Entity entity) {
 		setEntity(entity.toLocator());
-		FragmentNode.Text textNode = (Text) children().findFirst().get();
-		String text = triggerSequence()
-				+ ((Function) itemRenderer()).apply(entity);
+		FragmentNode.TextNode textNode = (TextNode) children().findFirst()
+				.get();
+		String text = getDescriptor().triggerSequence()
+				+ ((Function) getDescriptor().itemRenderer()).apply(entity);
 		textNode.setValue(text);
 		LocalDom.flush();
 		// TODO - position cursor at the end of the mention, then allow the
 		// 'cursor validator' to move it to a correct location
 		// try positioning cursor immediately after the decorator
-		FragmentNode.Text cursorTarget = textNode.tree().nextTextNode(true)
-				.orElse(null);
-		LocalDom.flush();
+		// guaranteed non-null (due to zws insertion)
+		FragmentNode.TextNode cursorTarget = textNode.fragmentTree()
+				.nextTextNode(true).get();
 		Node cursorNode = cursorTarget.domNode().gwtNode();
 		SelectionJso selection = Document.get().jsoRemote().getSelection();
 		cursorNode.implAccess().ensureRemote();
 		NodeJso remote = cursorNode.implAccess().jsoRemote();
 		NodeJso rr1 = remote.getParentNodeJso();
 		selection.collapse(remote, 1);// after zws
-	}
-
-	void splitAndWrap(RelativeInputModel relativeInput) {
-		SplitResult splits = relativeInput.splitAt(-1, 0);
-		/*
-		 *
-		 */
-		// this.node = splits.contents.builder().tag(decorator.tag).wrap();
-		// LocalDom.flush();
-		// SelectionJso selection = Document.get().jsoRemote().getSelection();
-		// Text text = (Text) splits.contents.w3cNode();
-		// selection.collapse(text.implAccess().ensureRemote(),
-		// text.getLength());
 	}
 
 	void stripIfInvalid() {
@@ -121,11 +131,27 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 	}
 
 	void validateSelection() {
+		// if (relativeInput.containsPartialAncestorFocusTag(decorator.tag)) {
+		// relativeInput.selectWholeAncestorFocusTag(decorator.tag);
+		// }
 		// should be a static method on decorator node
 		throw new UnsupportedOperationException();
 	}
 
 	public static class ContextLocatorTransform
+			implements Binding.Bidi<EntityLocator> {
+		@Override
+		public Function<EntityLocator, String> leftToRight() {
+			return new ContextLocatorTransformLeft();
+		}
+
+		@Override
+		public Function<String, EntityLocator> rightToLeft() {
+			return new ContextLocatorTransformRight();
+		}
+	}
+
+	public static class ContextLocatorTransformLeft
 			extends Binding.AbstractContextSensitiveTransform<EntityLocator> {
 		@Override
 		public String apply(EntityLocator t) {
@@ -133,9 +159,57 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		}
 	}
 
-	@Directed(tag = "span", cssClass = "cursor-target")
+	public static class ContextLocatorTransformRight extends
+			Binding.AbstractContextSensitiveReverseTransform<EntityLocator> {
+		@Override
+		public EntityLocator apply(String t) {
+			DecoratorNode contextNode = node.getModel();
+			return t == null ? null
+					: EntityLocator.parse(contextNode.entityClass(), t);
+		}
+	}
+
+	/**
+	 * The characteristics of the decorator, such as the key sequence which
+	 * triggers its creation
+	 *
+	 */
+	public static abstract class Descriptor<E extends Entity>
+			implements ModelEvents.Commit.Handler {
+		public abstract DecoratorNode createNode();
+
+		public abstract Function<E, String> itemRenderer();
+
+		@Override
+		public abstract void onCommit(Commit event);
+
+		public abstract String triggerSequence();
+
+		DecoratorNode splitAndWrap(RelativeInputModel relativeInput,
+				FragmentModel fragmentModel) {
+			SplitResult splits = relativeInput.splitAt(-1, 0);
+			DomNode splitContents = splits.contents;
+			// may need to flush
+			LocalDom.flush();
+			FragmentNode textFragment = fragmentModel
+					.getFragmentNode(splitContents);
+			DecoratorNode created = createNode();
+			textFragment.nodes().insertBeforeThis(created);
+			created.nodes().append(textFragment);
+			LocalDom.flush();
+			SelectionJso selection = Document.get().jsoRemote().getSelection();
+			Text text = (Text) splits.contents.w3cNode();
+			selection.collapse(text.implAccess().ensureRemote(),
+					text.getLength());
+			return created;
+		}
+	}
+
+	@Directed(tag = "span", className = "cursor-target")
 	public static class ZeroWidthCursorTarget extends FragmentNode {
-		@Binding(type = Type.INNER_TEXT)
-		public String text = "\u200B";
+		// @Binding(type = Type.INNER_TEXT)
+		// nope, require a distinct dirndl node
+		@Directed
+		public TextNode text = new TextNode("\u200B");
 	}
 }

@@ -11,11 +11,14 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.ByteArrayOutputStream;
 import java.io.Console;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -56,6 +59,7 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.console.ArgParser;
 import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -208,13 +212,30 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	private Set<StatCategory> emitted = new LinkedHashSet<>();
 
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+	protected Logger logger;
 
 	protected LaunchConfiguration launchConfiguration;
 
 	CountDownLatch currentCommandLatch;
 
 	public DevConsole(String[] args) {
+		String loggingPropertiesPath = null;
+		try {
+			InputStream s1 = DevConsole.class
+					.getResourceAsStream("logging.properties");
+			// will be a bufferedinputstream wrapping a fileinputstream
+			Field f1 = SEUtilities.getFieldByName(s1.getClass(), "in");
+			f1.setAccessible(true);
+			FileInputStream s2 = (FileInputStream) f1.get(s1);
+			Field f2 = s2.getClass().getDeclaredField("path");
+			f2.setAccessible(true);
+			loggingPropertiesPath = (String) f2.get(s2);
+		} catch (Exception e) {
+			Ax.simpleExceptionOut(e);
+		}
+		System.setProperty("java.util.logging.config.file",
+				"/g/alcina/extras/dev/src/cc/alcina/extras/dev/console/logging.properties");
+		logger = LoggerFactory.getLogger(getClass());
 		shells.push(DevConsoleCommand.class);
 		launchConfiguration = new LaunchConfiguration(args);
 		DevConsoleRunnable.console = this;
@@ -865,7 +886,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		devHelper.doParallelEarlyClassInit();
 		devHelper.copyTemplates();
-		devHelper.loadConfiguration();
+		devHelper.loadConfig();
 		devHelper.initLightweightServices();
 		long statEndInitLightweightServices = System.currentTimeMillis();
 		devHelper.getTestLogger();

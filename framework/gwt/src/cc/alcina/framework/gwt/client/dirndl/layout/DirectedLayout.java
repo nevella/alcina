@@ -9,10 +9,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -37,28 +38,42 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.common.client.util.ToStringFunction;
+import cc.alcina.framework.common.client.util.ToStringFunction.Bidi;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.EventObservable;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.ReceivesEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RecursionTest;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RenderObservable;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererNotFoundException;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.PropertyBinding;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.PropertyBindings;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -159,12 +174,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *   1x1g performance (possibly before 1x1e)
  *   1x1h docs (ditto)
  *   1x1j overlay/preview events redux
- *   1x2 switch table/form rendering to pure model - adjunct transformmanager
- *   1x2a Java Records!
- *   1x2b Java Beans 2! Not public -- also consider removal of @Bean (but @ReflectionSerializable is required)
+ *   1x2 switch table/form rendering to pure model - adjunct transformmanager (in fact - client transactions)
+ *   1x2a Java Records! (done)
+ *   1x2b Java Beans 2! Not public -- also consider removal of @Bean (but @ReflectionSerializable is required) (done) (note beans manifesto)
+ *   1x2c Fragment Node fixes (FN)
  *   1x3 low priority fixmes
  *   1x3a consider consort rework
- *   1x4 consider removing widget entirely (localdom)
+ *   1x4 consider removing widget entirely (localdom) (basically done)
  *   1x5 non-critical but desirable larger refactorings
  *
  *
@@ -454,7 +470,7 @@ public class DirectedLayout implements AlcinaProcess {
 		// below are nullable
 		Node parent;
 
-		private int depth = -1;
+		int depth = -1;
 
 		final Object model;
 
@@ -467,11 +483,11 @@ public class DirectedLayout implements AlcinaProcess {
 
 		PropertyBindings propertyBindings;
 
-		private ChildReplacer replacementListener;
+		ChildReplacer replacementListener;
 
-		private InsertionPoint insertionPoint;
+		InsertionPoint insertionPoint;
 
-		private Runnable onUnbind;
+		Runnable onUnbind;
 
 		boolean lastForModel;
 
@@ -590,7 +606,7 @@ public class DirectedLayout implements AlcinaProcess {
 			/*
 			 * bind - tracks node.postRender()
 			 */
-			node.bindBehaviours();
+			node.bindEvents();
 			node.bindModel(false);
 			node.bindParentProperty();
 			return node;
@@ -656,14 +672,25 @@ public class DirectedLayout implements AlcinaProcess {
 			return pathSegment();
 		}
 
-		private void bindBehaviours() {
-			if (model == null || directed.receives().length == 0) {
+		private void bindEvents() {
+			if (model == null) {
+				return;
+			}
+			ReceivesEvents.ClassData classData = ReceivesEvents
+					.get(model.getClass());
+			if (classData.receives.isEmpty()
+					&& directed.reemits().length == 0) {
 				return;
 			}
 			eventBindings = new ArrayList<>();
-			for (int idx = 0; idx < directed.receives().length; idx++) {
-				Class<? extends NodeEvent> clazz = directed.receives()[idx];
-				eventBindings.add(new NodeEventBinding(clazz, idx));
+			classData.receives.forEach(
+					clazz -> eventBindings.add(new NodeEventBinding(clazz)));
+			for (int idx = 0; idx < directed.reemits().length; idx += 2) {
+				Class<? extends NodeEvent> clazz = directed.reemits()[idx];
+				eventBindings.add(new NodeEventBinding(clazz));
+			}
+			if (!directed.bindDomEvents()) {
+				eventBindings.removeIf(NodeEventBinding::isDomBinding);
 			}
 			eventBindings.forEach(NodeEventBinding::bind);
 		}
@@ -680,8 +707,8 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 			if (model instanceof LayoutEvents.Bind.Handler) {
-				if (parent != null && parent.model == model) {
-					// only bind if topmost of a multiple node -> single model
+				if (!lastForModel || !directed.bindToModel()) {
+					// only bind if last of a multiple node -> single model
 					// chain
 				} else {
 					((LayoutEvents.Bind.Handler) model)
@@ -768,33 +795,6 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		private void unbind() {
-			if (model instanceof LayoutEvents.Bind.Handler) {
-				if (parent != null && parent.model == model) {
-					// noop
-				} else {
-					((LayoutEvents.Bind.Handler) model)
-							.onBind(new LayoutEvents.Bind(this, false));
-				}
-			}
-			if (onUnbind != null) {
-				onUnbind.run();
-			}
-			if (children != null) {
-				children.forEach(Node::unbind);
-			}
-			if (replacementListener != null) {
-				replacementListener.unbind();
-				replacementListener = null;
-			}
-			if (eventBindings != null) {
-				eventBindings.forEach(NodeEventBinding::unbind);
-			}
-			if (propertyBindings != null) {
-				propertyBindings.unbind();
-			}
-		}
-
 		void append(FragmentNode child) {
 			insertBefore(child, null);
 		}
@@ -870,11 +870,14 @@ public class DirectedLayout implements AlcinaProcess {
 			Node oldNode = newChildModel.provideNode();
 			removeChildNode(newChildModel);
 			RendererInput input = getResolver().layout.enqueueInput(
-					getResolver(), model,
-					annotationLocation.copyWithClassLocationOf(model), null,
-					this);
+					getResolver(), newChildModel,
+					annotationLocation.copyWithClassLocationOf(newChildModel),
+					null, this);
 			input.before = refChildModel == null ? null
 					: refChildModel.provideNode();
+			if (oldNode != null) {
+				input.rendered = oldNode.rendered;
+			}
 			getResolver().layout.layout();
 			moveChildren(oldNode, newChildModel.provideNode());
 		}
@@ -921,7 +924,7 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void postRender() {
-			bindBehaviours();
+			bindEvents();
 			bindModel(true);
 			bindParentProperty();
 		}
@@ -1020,6 +1023,33 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
+		void unbind() {
+			if (model instanceof LayoutEvents.Bind.Handler) {
+				if (parent != null && parent.model == model) {
+					// noop
+				} else {
+					((LayoutEvents.Bind.Handler) model)
+							.onBind(new LayoutEvents.Bind(this, false));
+				}
+			}
+			if (onUnbind != null) {
+				onUnbind.run();
+			}
+			if (children != null) {
+				children.forEach(Node::unbind);
+			}
+			if (replacementListener != null) {
+				replacementListener.unbind();
+				replacementListener = null;
+			}
+			if (eventBindings != null) {
+				eventBindings.forEach(NodeEventBinding::unbind);
+			}
+			if (propertyBindings != null) {
+				propertyBindings.unbind();
+			}
+		}
+
 		// i.e. that the node doesn't correspond to @Directed.Delegating
 		Rendered verifySingleRendered() {
 			Preconditions.checkState(rendered != null);
@@ -1112,13 +1142,10 @@ public class DirectedLayout implements AlcinaProcess {
 			 */
 			Class<? extends NodeEvent> type;
 
-			private int receiverIndex;
-
 			DomBinding domBinding;
 
-			public NodeEventBinding(Class<? extends NodeEvent> type, int idx) {
+			public NodeEventBinding(Class<? extends NodeEvent> type) {
 				this.type = type;
-				this.receiverIndex = idx;
 			}
 
 			public void onEvent(GwtEvent event) {
@@ -1130,36 +1157,6 @@ public class DirectedLayout implements AlcinaProcess {
 			public String toString() {
 				return Ax.format("%s :: %s", model.getClass().getSimpleName(),
 						type.getSimpleName());
-			}
-
-			/*
-			 * this method contains devmode checks that a binding exists (if the
-			 * type does not implement WithoutDomBinding), and that the
-			 * DomBinding subclass is an inner class of the NodeEvent subclass
-			 */
-			private void bind() {
-				Optional<DomBinding> bindingOptional = Registry
-						.optional(DomBinding.class, type);
-				if (!bindingOptional.isPresent()) {
-					if (!GWT.isScript()) {
-						Preconditions.checkState(Reflections.isAssignableFrom(
-								NodeEvent.WithoutDomBinding.class, type));
-					}
-					return;
-				}
-				domBinding = bindingOptional.get();
-				if (!GWT.isScript()) {
-					Preconditions.checkState(domBinding.getClass().getName()
-							.indexOf(type.getName()) == 0);
-				}
-				domBinding.nodeEventBinding = this;
-				if (rendered == null) {
-					Ax.err(toParentStack());
-					Ax.err("No widget for model binding dom event %s - possibly delegating",
-							model);
-				}
-				domBinding.bind(getBindingRendered().as(Element.class), model,
-						true);
 			}
 
 			/*
@@ -1216,15 +1213,19 @@ public class DirectedLayout implements AlcinaProcess {
 					((SimpleEventBus) Client.eventBus()).fireEventFromSource(
 							nodeEvent, context.node, List.of(handler));
 				} else {
-					// dispatch a new ModelEvent, compute its type from the
-					// correspondence between elements of @Directed.reemits and
-					// receives
+					// dispatch a new ModelEvent, compute its type [receive,
+					// reemit] tuple in Directed.reemits
 					Context eventContext = NodeEvent.Context
 							.fromContext(context, Node.this);
-					Preconditions.checkState(directed
-							.receives().length == directed.reemits().length);
-					Class<? extends ModelEvent> emitType = (Class<? extends ModelEvent>) directed
-							.reemits()[receiverIndex];
+					Class<? extends ModelEvent> emitType = null;
+					for (int idx = 0; idx < directed
+							.reemits().length; idx += 2) {
+						if (directed.reemits()[idx] == actualEventType) {
+							emitType = (Class<? extends ModelEvent>) directed
+									.reemits()[idx + 1];
+							break;
+						}
+					}
 					eventContext.dispatch(emitType, Node.this.getModel());
 				}
 			}
@@ -1235,8 +1236,37 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 
+			/*
+			 * this method contains devmode checks that a binding exists (if the
+			 * event type does not implement WithoutDomBinding), and that the
+			 * DomBinding subclass is an inner class of the NodeEvent subclass
+			 */
+			void bind() {
+				if (!isDomBinding()) {
+					if (!GWT.isScript()) {
+						Preconditions.checkState(Reflections.isAssignableFrom(
+								NodeEvent.WithoutDomBinding.class, type));
+					}
+					return;
+				}
+				domBinding = Registry.impl(DomBinding.class, type);
+				if (!GWT.isScript()) {
+					Preconditions.checkState(domBinding.getClass().getName()
+							.indexOf(type.getName()) == 0);
+				}
+				domBinding.nodeEventBinding = this;
+				if (rendered == null) {
+					Ax.err(toParentStack());
+					throw new IllegalStateException(Ax.format(
+							"No widget for model binding dom event %s - possibly delegating",
+							model));
+				}
+				domBinding.bind(getBindingRendered().as(Element.class), model,
+						true);
+			}
+
 			void fireEventIfType(ModelEvent event) {
-				if (event.getReceiverType() == type) {
+				if (event.getClass() == type) {
 					Context context = NodeEvent.Context
 							.fromContext(event.getContext(), Node.this);
 					// set before we dispatch to the handler, so the handler can
@@ -1252,6 +1282,11 @@ public class DirectedLayout implements AlcinaProcess {
 
 			Node getNode() {
 				return Node.this;
+			}
+
+			boolean isDomBinding() {
+				return Registry.query(DomBinding.class).addKeys(type)
+						.hasImplementation();
 			}
 		}
 
@@ -1321,18 +1356,6 @@ public class DirectedLayout implements AlcinaProcess {
 					}
 				}
 				String stringValue = null;
-				boolean hasTransform = (Class) binding
-						.transform() != ToStringFunction.Identity.class;
-				if (hasTransform) {
-					ToStringFunction transform = Registry
-							.newInstanceOrImpl(binding.transform());
-					if (transform instanceof Binding.ContextSensitiveTransform) {
-						((Binding.ContextSensitiveTransform) transform)
-								.withContextNode(Node.this);
-					}
-					// FIXME - dirndl - requires bidi transform
-					throw new UnsupportedOperationException();
-				}
 				Rendered rendered = verifySingleRendered();
 				Element element = rendered.isElement() ? rendered.asElement()
 						: null;
@@ -1370,18 +1393,32 @@ public class DirectedLayout implements AlcinaProcess {
 				default:
 					throw new UnsupportedOperationException();
 				}
-				Object value = stringValue;
-				if (Ax.notBlank(stringValue)) {
-					if (property.getType() == Boolean.class) {
+				Object value = null;
+				boolean hasTransform = (Class) binding
+						.transform() != ToStringFunction.Identity.class;
+				if (hasTransform) {
+					ToStringFunction.Bidi bidiTransform = (Bidi) Registry
+							.newInstanceOrImpl(binding.transform());
+					Function<String, ?> transform = bidiTransform.rightToLeft();
+					if (transform instanceof Binding.ContextSensitiveReverseTransform) {
+						((Binding.ContextSensitiveReverseTransform) transform)
+								.withContextNode(Node.this);
+					}
+					value = transform.apply(stringValue);
+				} else {
+					value = stringValue;
+					if (Ax.notBlank(stringValue)) {
+						if (property.getType() == Boolean.class) {
+							value = Boolean.valueOf(stringValue);
+						} else if (property.getType() == Integer.class) {
+							value = Integer.parseInt(stringValue);
+						}
+					}
+					if (property.getType() == boolean.class) {
 						value = Boolean.valueOf(stringValue);
-					} else if (property.getType() == Integer.class) {
+					} else if (property.getType() == int.class) {
 						value = Integer.parseInt(stringValue);
 					}
-				}
-				if (property.getType() == boolean.class) {
-					value = Boolean.valueOf(stringValue);
-				} else if (property.getType() == int.class) {
-					value = Integer.parseInt(stringValue);
 				}
 				property.set(model, value);
 			}
@@ -1602,6 +1639,159 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	/**
+	 * Usage:
+	 *
+	 * <code>
+	 * <pre>
+	public class MyClientObservers extends ProcessObserver.AppDebug {
+	public MyClientObservers() {j
+		ProcessObservers.observe(DirectedLayout.RenderObservable.class, o -> {
+			if (o.node.getModel() instanceof MyModel) {
+				boolean breakpointHere = true;
+			}
+		}, true);
+	}
+	}
+	 * </pre>
+	 *</code>
+	 *
+	 *
+	 *
+	 *
+	 */
+	public static class RenderObservable implements ProcessObservable {
+		public Node node;
+
+		public RenderObservable(Node node) {
+			this.node = node;
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder fb = new FormatBuilder().separator("\n");
+			fb.append(node);
+			return fb.toString();
+		}
+	}
+
+	/**
+	 * A resolved location in the widget tree relative to which a widget should
+	 * be inserted
+	 *
+	 *
+	 *
+	 */
+	static class InsertionPoint {
+		Point point = Point.LAST;
+
+		Rendered after;
+
+		Rendered container;
+
+		void clear() {
+			// clear refs to possibly removed widgets
+			after = null;
+			container = null;
+		}
+
+		enum Point {
+			FIRST, AFTER, LAST
+		}
+	}
+
+	static class ReceivesEvents {
+		static ReceivesEvents instance;
+
+		static ClassData get(Class clazz) {
+			if (instance == null) {
+				synchronized (ReceivesEvents.class) {
+					if (instance == null) {
+						instance = new ReceivesEvents();
+					}
+				}
+			}
+			return instance.get0(clazz);
+		}
+
+		Map<Class, ClassData> classData;
+
+		Map<Class<? extends NodeEvent.Handler>, Class<? extends NodeEvent>> handlerEvents;
+
+		ReceivesEvents() {
+			classData = CollectionCreators.Bootstrap.createConcurrentClassMap();
+			// FIXME - reflection - rebuild on registry change
+			handlerEvents = (Map) CollectionCreators.Bootstrap
+					.createConcurrentClassMap();
+			Registry.query(NodeEvent.class).registrations()
+					.forEach(eventClass -> {
+						ClassReflector<? extends NodeEvent> reflector = Reflections
+								.at(eventClass);
+						Class<? extends NodeEvent.Handler> handlerClass = reflector
+								.hasNoArgsConstructor()
+										? reflector.newInstance()
+												.getHandlerClass()
+										: reflector.getGenericBounds().bounds
+												.get(0);
+						handlerEvents.put(handlerClass, eventClass);
+					});
+		}
+
+		ClassData get0(Class clazz) {
+			return classData.computeIfAbsent(clazz, ClassData::new);
+		}
+
+		class ClassData {
+			List<Class<? extends NodeEvent>> receives = new ArrayList<>();
+
+			Class<?> clazz;
+
+			ClassData(Class<?> clazz) {
+				this.clazz = clazz;
+				Reflections.at(clazz).provideAllImplementedInterfaces()
+						.<Class<? extends NodeEvent>> map(handlerEvents::get)
+						.filter(Objects::nonNull).forEach(receives::add);
+			}
+		}
+	}
+
+	class RecursionTest {
+		private Object model;
+
+		private AnnotationLocation annotationLocation;
+
+		RecursionTest(Node node) {
+			this.model = node.model;
+			this.annotationLocation = node.annotationLocation;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof RecursionTest) {
+				RecursionTest test = (RecursionTest) obj;
+				return CommonUtils.equals(test.annotationLocation,
+						annotationLocation, test.model, model);
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(model, annotationLocation);
+		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("location", annotationLocation,
+					"model", model);
+		}
+
+		Object model() {
+			return model;
+		}
+	}
+
+	/**
 	 * Instances act as an input and process state token for the
 	 * layout/transformation algorithm
 	 *
@@ -1614,7 +1804,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 *
 	 *
 	 */
-	public class RendererInput implements Traversable {
+	class RendererInput implements Traversable {
 		Node before;
 
 		ContextResolver resolver;
@@ -1631,6 +1821,12 @@ public class DirectedLayout implements AlcinaProcess {
 		Node node;
 
 		Node replace;
+
+		/*
+		 * preserve previous render (e.g. dom nodes) if possible (when moving
+		 * nodes due to a FragmentModel mutation)
+		 */
+		Rendered rendered;
 
 		private RendererInput() {
 		}
@@ -1807,6 +2003,10 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			beforeRender();
 			if (model != null) {
+				if (rendered != null) {
+					// preserve domNode/model identity
+					node.rendered = rendered;
+				}
 				DirectedRenderer renderer = resolveRenderer();
 				renderer.render(this);
 			}
@@ -1821,104 +2021,6 @@ public class DirectedLayout implements AlcinaProcess {
 		Directed soleDirected() {
 			Preconditions.checkState(directeds.size() == 1);
 			return directeds.get(0);
-		}
-	}
-
-	/**
-	 * Usage:
-	 *
-	 * <code>
-	 * <pre>
-	public class MyClientObservers extends ProcessObserver.AppDebug {
-	public MyClientObservers() {j
-		ProcessObservers.observe(DirectedLayout.RenderObservable.class, o -> {
-			if (o.node.getModel() instanceof MyModel) {
-				boolean breakpointHere = true;
-			}
-		}, true);
-	}
-	}
-	 * </pre>
-	 *</code>
-	 *
-	 *
-	 *
-	 *
-	 */
-	public static class RenderObservable implements ProcessObservable {
-		public Node node;
-
-		public RenderObservable(Node node) {
-			this.node = node;
-		}
-
-		@Override
-		public String toString() {
-			FormatBuilder fb = new FormatBuilder().separator("\n");
-			fb.append(node);
-			return fb.toString();
-		}
-	}
-
-	/**
-	 * A resolved location in the widget tree relative to which a widget should
-	 * be inserted
-	 *
-	 *
-	 *
-	 */
-	static class InsertionPoint {
-		Point point = Point.LAST;
-
-		Rendered after;
-
-		Rendered container;
-
-		void clear() {
-			// clear refs to possibly removed widgets
-			after = null;
-			container = null;
-		}
-
-		enum Point {
-			FIRST, AFTER, LAST
-		}
-	}
-
-	class RecursionTest {
-		private Object model;
-
-		private AnnotationLocation annotationLocation;
-
-		RecursionTest(Node node) {
-			this.model = node.model;
-			this.annotationLocation = node.annotationLocation;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof RecursionTest) {
-				RecursionTest test = (RecursionTest) obj;
-				return CommonUtils.equals(test.annotationLocation,
-						annotationLocation, test.model, model);
-			} else {
-				return false;
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(model, annotationLocation);
-		}
-
-		@Override
-		public String toString() {
-			return FormatBuilder.keyValues("location", annotationLocation,
-					"model", model);
-		}
-
-		Object model() {
-			return model;
 		}
 	}
 

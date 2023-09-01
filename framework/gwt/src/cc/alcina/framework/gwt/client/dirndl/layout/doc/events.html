@@ -4,6 +4,59 @@
 </head>
 <body class="doc-body">
 	<h2>Dirndl events</h2>
-	
+	<p>The dirndl event system aims to decouple 'event meaning' from 'event handling' - which is
+		both essential for preserving the declarative nature of the ui generation, and a significant aid
+		to clarity and code reuse.
+	<p>The basic philosophy is 'convert DOM events to Model (semantic) events low, and handle
+		semantic events high', low and high being levels in the dirndl node tree.
+
+ <p>
+ How the example below works:
+ 
+ <p>
+ {@code Link}...withModelEvent(ModelEvents.Add.class) instructs the Link
+ instance to translate a dom ClickEvent on its rendered DOM element to a
+ ModelEvent.Add event, which is then propagated up the stack. From the
+ application logic point of view, this is defining what a click on that Link
+ <i>means</i> (add) without needing to define there how to handle that 'add'.
+ 
+ <p>
+ At any point higher in the model structure (in this case, we're using the
+ containing {@link Croissanteria} instance, the 'add' event can be handled by
+ registering it as a receiver (adding the event class to
+ the @Directed.receives array) and implementing the event's Handler interface. Note that the first requirement is going away, implementing the handler interface will soon be the sole routing requirement
+ 
+ <p>
+ By default, the onXxx event handlers consume Model events (not DOM events) -
+ to continue bubbling, call event.bubble()
+ 		
+	<pre><code>
+
+@Directed(
+    receives = { ModelEvents.Add.class, CroissanteriaEvents.TrySample.class })
+class Croissanteria extends Model.Fields implements
+        CroissanteriaEvents.TrySample.Handler, ModelEvents.Add.Handler {
+    @Directed
+    String orderDemo = "Your order is 1 chocolate croissant and an espresso";
+
+    Link addAnotherCroissant = new Link().withText("Add another croissant")
+            .withModelEvent(ModelEvents.Add.class);
+
+    Link tryASample = new Link().withText("Try a free sample")
+            .withModelEvent(CroissanteriaEvents.TrySample.class);
+
+    @Override
+    public void onAdd(Add event) {
+        Window.alert("adding another croissant...");
+    }
+
+    @Override
+    public void onTrySample(TrySample event) {
+        Window.alert("trying a free sample...");
+    }
+}
+    
+	</code></pre>
+		
 </body>
 </html>

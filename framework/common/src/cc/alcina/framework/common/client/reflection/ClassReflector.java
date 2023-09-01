@@ -7,12 +7,15 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
@@ -103,6 +106,8 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	private TypeBounds genericBounds;
 
+	private transient List<Class> allInterfaces;
+
 	public ClassReflector(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
@@ -151,6 +156,10 @@ public class ClassReflector<T> implements HasAnnotations {
 		return annotationProvider.hasAnnotation(annotationClass);
 	}
 
+	public boolean hasNoArgsConstructor() {
+		return noArgsConstructor != null;
+	}
+
 	public boolean hasProperty(String propertyName) {
 		return byName.containsKey(propertyName);
 	}
@@ -185,6 +194,33 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	public Property property(String name) {
 		return byName.get(name);
+	}
+
+	public Stream<Class> provideAllImplementedInterfaces() {
+		if (allInterfaces == null) {
+			Set<Class> allInterfaces = new LinkedHashSet<>();
+			Set<Class> checked = new LinkedHashSet<>();
+			Set<Class> pending = new LinkedHashSet<>();
+			pending.add(reflectedClass);
+			while (!pending.isEmpty()) {
+				Iterator<Class> itr = pending.iterator();
+				Class<?> next = itr.next();
+				itr.remove();
+				if (next == null || checked.contains(next)) {
+					continue;
+				}
+				checked.add(next);
+				if (next.isInterface()) {
+					allInterfaces.add(next);
+				}
+				Reflections.at(next).getInterfaces().stream()
+						.forEach(pending::add);
+				pending.add(next.getSuperclass());
+			}
+			this.allInterfaces = allInterfaces.stream()
+					.collect(Collectors.toList());
+		}
+		return allInterfaces.stream();
 	}
 
 	// FIXME - reflection - this should probably go away - code which checks

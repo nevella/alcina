@@ -53,12 +53,30 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 @ClientVisible
 public @interface Directed {
 	/**
+	 * only false in exceptional cases (such where a concrete class with dom
+	 * event bindings is mapped by a transformation - generally to a subclass
+	 * which then uses the superclass's listener). Note that only *dom* events
+	 * are affected by this filter, model events are always bound
+	 */
+	public boolean bindDomEvents() default true;
+
+	/**
 	 * Bind model object properties to various aspects of the generated (DOM)
 	 * view - css class, element property, inner text...
 	 */
 	public Binding[] bindings() default {};
 
-	public String cssClass() default "";
+	/**
+	 * if true, the generated node will be bound to the model. Defaults to true,
+	 * only set (selectively) to false when the model corresponds to multiple in
+	 * the layout
+	 */
+	public boolean bindToModel() default true;
+
+	/**
+	 * Css class names that will be added to the generated tag
+	 */
+	public String className() default "";
 
 	/**
 	 * Informative only (not required for a node/model to emit the corresponding
@@ -73,17 +91,6 @@ public @interface Directed {
 	 */
 	public boolean merge() default true;
 
-	/**
-	 * If non-empty and the same length as the reemits() array, these events
-	 * will simply be reemitted by the DirectedLayout event subsystem. Otherwise
-	 * the event will bubble up the DirectedLayout.Node/Model tuples, looking
-	 * for handler implementations in this order:
-	 * DirectedLayout.Node.nodeRenderer, DirectedLayout.Node.model. Currently,
-	 * events stop propagation by default when handled by a handler - this will
-	 * probably change to bubble by default.
-	 */
-	public Class<? extends NodeEvent>[] receives() default {};
-
 	public Class<? extends NodeEvent>[] reemits() default {};
 
 	/**
@@ -94,6 +101,9 @@ public @interface Directed {
 	 */
 	public Class<? extends DirectedRenderer> renderer() default DirectedRenderer.ModelClass.class;
 
+	/**
+	 * The markup tag that will be generated for this layout node
+	 */
 	public String tag() default "";
 
 	/**
@@ -155,15 +165,17 @@ public @interface Directed {
 
 		private Class[] emits = CommonUtils.EMPTY_CLASS_ARRAY;
 
-		private Class[] receives = CommonUtils.EMPTY_CLASS_ARRAY;
-
 		private Class[] reemits = CommonUtils.EMPTY_CLASS_ARRAY;
 
 		private boolean merge = true;
 
+		private boolean bindDomEvents = true;
+
 		private String cssClass = "";
 
 		private String tag = "";
+
+		private boolean bindToModel = true;
 
 		private Class<? extends DirectedRenderer> renderer = DirectedRenderer.ModelClass.class;
 
@@ -173,12 +185,13 @@ public @interface Directed {
 		public Impl(Directed directed) {
 			bindings = directed.bindings();
 			emits = directed.emits();
-			receives = directed.receives();
 			reemits = directed.reemits();
 			merge = directed.merge();
-			cssClass = directed.cssClass();
+			cssClass = directed.className();
 			tag = directed.tag();
 			renderer = directed.renderer();
+			bindToModel = directed.bindToModel();
+			bindDomEvents = directed.bindDomEvents();
 		}
 
 		@Override
@@ -187,12 +200,22 @@ public @interface Directed {
 		}
 
 		@Override
+		public boolean bindDomEvents() {
+			return this.bindDomEvents;
+		}
+
+		@Override
 		public Binding[] bindings() {
 			return bindings;
 		}
 
 		@Override
-		public String cssClass() {
+		public boolean bindToModel() {
+			return bindToModel;
+		}
+
+		@Override
+		public String className() {
 			return cssClass;
 		}
 
@@ -209,19 +232,16 @@ public @interface Directed {
 		public Impl mergeParent(Directed parent) {
 			Impl merged = new Impl();
 			merged.bindings = mergeAttribute(parent, Directed::bindings);
-			merged.cssClass = mergeAttribute(parent, Directed::cssClass);
+			merged.cssClass = mergeAttribute(parent, Directed::className);
 			merged.emits = mergeAttribute(parent, Directed::emits);
 			merged.merge = mergeAttribute(parent, Directed::merge);
-			merged.receives = mergeAttribute(parent, Directed::receives);
 			merged.reemits = mergeAttribute(parent, Directed::reemits);
 			merged.renderer = mergeAttribute(parent, Directed::renderer);
 			merged.tag = mergeAttribute(parent, Directed::tag);
+			merged.bindToModel = mergeAttribute(parent, Directed::bindToModel);
+			merged.bindDomEvents = mergeAttribute(parent,
+					Directed::bindDomEvents);
 			return merged;
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] receives() {
-			return receives;
 		}
 
 		@Override
@@ -234,8 +254,16 @@ public @interface Directed {
 			return renderer;
 		}
 
+		public void setBindDomEvents(boolean bindDomEvents) {
+			this.bindDomEvents = bindDomEvents;
+		}
+
 		public void setBindings(Binding[] bindings) {
 			this.bindings = bindings;
+		}
+
+		public void setBindToModel(boolean bindToModel) {
+			this.bindToModel = bindToModel;
 		}
 
 		public void setCssClass(String cssClass) {
@@ -248,10 +276,6 @@ public @interface Directed {
 
 		public void setMerge(boolean merge) {
 			this.merge = merge;
-		}
-
-		public void setReceives(Class[] receives) {
-			this.receives = receives;
 		}
 
 		public void setReemits(Class[] reemits) {
@@ -319,17 +343,19 @@ public @interface Directed {
 		String toString(boolean elideDefaults) {
 			StringBuilder stringBuilder = new StringBuilder();
 			append(stringBuilder, "tag", Directed::tag, elideDefaults);
-			append(stringBuilder, "cssClass", Directed::cssClass,
+			append(stringBuilder, "cssClass", Directed::className,
 					elideDefaults);
 			append(stringBuilder, "bindings", Directed::bindings,
 					elideDefaults);
 			append(stringBuilder, "emits", Directed::emits, elideDefaults);
-			append(stringBuilder, "receives", Directed::receives,
-					elideDefaults);
 			append(stringBuilder, "reemits", Directed::reemits, elideDefaults);
 			append(stringBuilder, "renderer", Directed::renderer,
 					elideDefaults);
 			append(stringBuilder, "merge", Directed::merge, elideDefaults);
+			append(stringBuilder, "bindToModel", Directed::bindToModel,
+					elideDefaults);
+			append(stringBuilder, "bindDomEvents", Directed::bindDomEvents,
+					elideDefaults);
 			return stringBuilder.toString();
 		}
 	}
@@ -420,6 +446,10 @@ public @interface Directed {
 				Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 		mergeStrategy = Transform.MergeStrategy.class)
 	@interface Transform {
+		boolean bindDomEvents() default true;
+
+		boolean bindToModel() default true;
+
 		boolean transformsNull() default false;
 
 		Class<? extends ModelTransform> value();
@@ -427,11 +457,25 @@ public @interface Directed {
 		public static class Impl implements Directed.Transform {
 			private boolean transformsNull;
 
+			private boolean bindToModel = true;
+
+			private boolean bindDomEvents = true;
+
 			private Class<? extends ModelTransform> value;
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
 				return Directed.Transform.class;
+			}
+
+			@Override
+			public boolean bindDomEvents() {
+				return this.bindDomEvents;
+			}
+
+			@Override
+			public boolean bindToModel() {
+				return this.bindToModel;
 			}
 
 			@Override
@@ -442,6 +486,16 @@ public @interface Directed {
 			@Override
 			public Class<? extends ModelTransform> value() {
 				return value;
+			}
+
+			public Impl withBindDomEvents(boolean bindDomEvents) {
+				this.bindDomEvents = bindDomEvents;
+				return this;
+			}
+
+			public Impl withBindToModel(boolean bindToModel) {
+				this.bindToModel = bindToModel;
+				return this;
 			}
 
 			public Impl withTransformsNull(boolean transformsNull) {

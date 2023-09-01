@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
 import elemental.json.Json;
 import elemental.json.JsonNull;
 import elemental.json.JsonObject;
@@ -26,13 +27,39 @@ import elemental.json.JsonValue;
  * Devmode-friendly (faster) representations of browser MutationRecordJso
  * objects
  *
- * 
+ *
  *
  */
 @Bean(PropertySource.FIELDS)
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 @SuppressWarnings("deprecation")
 public class MutationRecord {
+	static final transient String CONTEXT_FLAGS = MutationRecord.class.getName()
+			+ ".CONTEXT_FLAGS";
+
+	public static void deltaFlag(String flag, boolean add) {
+		List<String> flags = LooseContext.get(CONTEXT_FLAGS);
+		// copy-on-write
+		flags = flags == null ? null : new ArrayList<>(flags);
+		if (add) {
+			if (flags == null) {
+				flags = new ArrayList<>();
+				LooseContext.set(CONTEXT_FLAGS, flags);
+			}
+			if (!flags.contains(flag)) {
+				flags.add(flag);
+			}
+		} else {
+			if (flags == null) {
+			} else {
+				flags.remove(flag);
+				if (flags.isEmpty()) {
+					LooseContext.remove(CONTEXT_FLAGS);
+				}
+			}
+		}
+	}
+
 	/**
 	 * Creates a list of mutations which would recreate the (shallow) node
 	 *
@@ -121,11 +148,15 @@ public class MutationRecord {
 
 	public String newValue;
 
+	public transient List<String> flags;
+
 	// for serialization
 	public MutationRecord() {
+		flags = LooseContext.get(CONTEXT_FLAGS);
 	}
 
 	public MutationRecord(SyncMutations sync, MutationRecordJso jso) {
+		this();
 		this.sync = sync;
 		this.jso = jso;
 		target = mutationNode(jso.getTarget());
@@ -168,6 +199,10 @@ public class MutationRecord {
 			oldValue = stringOrNull(jsonObj, "oldValue");
 			type = Type.valueOf(jsonObj.getString("type"));
 		}
+	}
+
+	public boolean hasFlag(String flag) {
+		return flags != null && flags.contains(flag);
 	}
 
 	public boolean provideIsStructuralMutation() {

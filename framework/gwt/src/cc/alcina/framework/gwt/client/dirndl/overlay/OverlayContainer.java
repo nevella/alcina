@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.overlay;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.user.client.Window;
@@ -24,7 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
  *
  */
 @Directed(
-	cssClass = "overlay-container",
+	className = "overlay-container",
 	bindings = { @Binding(from = "viewportCentered", type = Type.CSS_CLASS),
 			@Binding(
 				from = "visible",
@@ -65,23 +66,13 @@ public class OverlayContainer extends Model implements HasTag {
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (event.isBound()) {
-			Scheduler.get().scheduleFinally(this::position);
+			// FIXME - romcom
+			if (GWT.isClient()) {
+				Scheduler.get().scheduleFinally(this::position);
+			} else {
+				setVisible(true);
+			}
 		}
-	}
-
-	@Override
-	public String provideTag() {
-		// different tags (rather than css class) to support css
-		// last-of-type
-		return containerOptions.modal ? "overlay-container-modal"
-				: "overlay-container";
-	}
-
-	public void setVisible(boolean visible) {
-		boolean old_visible = this.visible;
-		this.visible = visible;
-		propertyChangeSupport().firePropertyChange("visible", old_visible,
-				visible);
 	}
 
 	void onResize(ResizeEvent event) {
@@ -100,5 +91,20 @@ public class OverlayContainer extends Model implements HasTag {
 	void position() {
 		containerOptions.position.toElement(provideElement()).apply();
 		setVisible(true);
+	}
+
+	@Override
+	public String provideTag() {
+		// different tags (rather than css class) to support css
+		// last-of-type
+		return containerOptions.modal ? "overlay-container-modal"
+				: "overlay-container";
+	}
+
+	public void setVisible(boolean visible) {
+		boolean old_visible = this.visible;
+		this.visible = visible;
+		propertyChangeSupport().firePropertyChange("visible", old_visible,
+				visible);
 	}
 }

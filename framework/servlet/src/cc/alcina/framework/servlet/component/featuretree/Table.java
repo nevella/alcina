@@ -113,7 +113,7 @@ class Table extends Model.Fields {
 		}
 	}
 
-	@Directed(tag = "tr", receives = DomEvents.Click.class)
+	@Directed(tag = "tr")
 	class Row extends Model.Fields implements DomEvents.Click.Handler {
 		@Directed
 		FeatureCell featureCell;

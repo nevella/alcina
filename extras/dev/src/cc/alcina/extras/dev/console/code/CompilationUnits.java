@@ -243,12 +243,12 @@ public class CompilationUnits {
 		return declarationsByName.get(simpleName);
 	}
 
-	public UnitType typeForClass(Class<?> clazz) {
-		return declarationByFqn(clazz.getCanonicalName());
-	}
-
 	public SolverUtils solverUtils() {
 		return new SolverUtils();
+	}
+
+	public UnitType typeForClass(Class<?> clazz) {
+		return declarationByFqn(clazz.getCanonicalName());
 	}
 
 	public void writeDirty(boolean test) {
@@ -289,13 +289,6 @@ public class CompilationUnits {
 			this.setFile(file);
 		}
 
-		public UnitType typeFor(ClassOrInterfaceDeclaration n) {
-			unit();
-			return declarations.stream().filter(
-					d -> d.qualifiedSourceName.endsWith(n.getNameAsString()))
-					.findFirst().get();
-		}
-
 		public void ensureImport(Class<?> clazz) {
 			ensureImport(clazz.getName().replace("$", "."));
 		}
@@ -328,6 +321,13 @@ public class CompilationUnits {
 
 		public void setFile(File file) {
 			this.path = file.getAbsolutePath();
+		}
+
+		public UnitType typeFor(ClassOrInterfaceDeclaration n) {
+			unit();
+			return declarations.stream().filter(
+					d -> d.qualifiedSourceName.endsWith(n.getNameAsString()))
+					.findFirst().get();
 		}
 
 		public CompilationUnit unit() {

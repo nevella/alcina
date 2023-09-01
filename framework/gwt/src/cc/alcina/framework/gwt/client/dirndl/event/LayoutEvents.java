@@ -31,7 +31,6 @@ public class LayoutEvents {
 			handler.onBeforeRender(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onBeforeRender(BeforeRender event);
 		}
@@ -59,7 +58,6 @@ public class LayoutEvents {
 			handler.onBind(this);
 		}
 
-		
 		public boolean isBound() {
 			return this.bound;
 		}

@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
@@ -161,7 +162,14 @@ public abstract class Model extends Bindable implements
 	 */
 	public void onBind(Bind event) {
 		if (event.isBound()) {
-			Preconditions.checkState(node == null);
+			if (node != null) {
+				Ax.err("binding a model to multiple nodes.\n"
+						+ "--------------------------\n" + "Existing node:\n%s"
+						+ "\n--------------------------\n"
+						+ "Incoming node:\n%s", node.toParentStack(),
+						event.getContext().node.toParentStack());
+				Preconditions.checkState(node == null);
+			}
 			node = event.getContext().node;
 			if (bindings != null) {
 				bindings.bind();
@@ -181,7 +189,8 @@ public abstract class Model extends Bindable implements
 			if (!hasPropertyChangeSupport()) {
 				return;
 			}
-			// TODO - nope, asymmetrical. Move to bindings
+			// FIXME - dirndl - low (not sure if this is accessed) - nope,
+			// asymmetrical. Move to bindings
 			Arrays.stream(propertyChangeSupport().getPropertyChangeListeners())
 					.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
 					.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
@@ -227,10 +236,6 @@ public abstract class Model extends Bindable implements
 
 		private boolean bound;
 
-		public void add(ListenerBinding listenerBinding) {
-			listenerBindings.add(listenerBinding);
-		}
-
 		public void add(Object leftPropertyName, Converter leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
 				Converter rightToLeftConverter) {
@@ -264,6 +269,10 @@ public abstract class Model extends Bindable implements
 				Object leftPropertyName, SourcesPropertyChangeEvents right,
 				Object rightPropertyName) {
 			add(left, leftPropertyName, null, right, rightPropertyName, null);
+		}
+
+		public void addListener(ListenerBinding listenerBinding) {
+			listenerBindings.add(listenerBinding);
 		}
 
 		public void addListener(
@@ -306,7 +315,7 @@ public abstract class Model extends Bindable implements
 						source.firePropertyChange(null, evt.getOldValue(),
 								evt.getNewValue());
 					});
-			add(listener);
+			addListener(listener);
 		}
 
 		public void bind() {

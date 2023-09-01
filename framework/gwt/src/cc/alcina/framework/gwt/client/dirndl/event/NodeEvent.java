@@ -6,6 +6,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -20,6 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *
  */
 @Reflected
+@Registration(NodeEvent.class)
 public abstract class NodeEvent<H extends NodeEvent.Handler>
 		extends GwtEvent<H> {
 	private Context context;
@@ -43,6 +45,9 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		return this.context;
 	}
 
+	/*
+	 * If a subclass overrides this, it must also have a no-args constructor
+	 */
 	public Class<H> getHandlerClass() {
 		return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
 	}

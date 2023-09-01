@@ -73,11 +73,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 @Directed(
 	emits = { ModelEvents.Closed.class, ModelEvents.Submit.class,
 			ModelEvents.Opened.class },
-	receives = { ModelEvents.Close.class, InferredDomEvents.EscapePressed.class,
-			InferredDomEvents.CtrlEnterPressed.class,
-			InferredDomEvents.MouseDownOutside.class, ModelEvents.Closed.class,
-			ModelEvents.Submit.class },
-	bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
+	
+bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
 public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,

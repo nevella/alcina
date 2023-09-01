@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Mutation;
@@ -44,9 +45,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * <ul>
  * <li>The event source (like the DOM mutationlistener) collects events and
  * emits as batches on request, rather than per mutation
- * <li>In client code, batch handling is automatic via scheduleFinally()
+ * <li>In client code, batch handling is automatic via
+ * scheduleFinally()/LocalDom.flush
  * <li>In server code, batch handling must be triggered via a call to
- * LocalDom.mutations().emitMutations()
+ * LocalDom.flush()
+ * <li>Note that a future, better implementation would add on-demand mutation
+ * processing - any call which might be affected the results of mutation
+ * processing would first trigger a flush
  * </ul>
  * <li>The model converts dommutations into changes to its model structure,
  * which are themselves batched and emitted (on localdom mutation processing
@@ -55,7 +60,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * <li>Unknown nodes (including unbound Text nodes) are modelled as
  * FragmentNode.Generic or .Text - to provide later support for model validation
  * <li>Attribute values are synced from dom to model (model to dom is provided
- * by Dirndl)
+ * by Dirndl). In fact, the whole dom -&gt; model mapping uses a 'reverse
+ * dirndl' transformation - currently without support for the more baroque
+ * transformations (delegated etc), but that's coming.
  *
  * </ul>
  * <p>
@@ -63,11 +70,21 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * <ul>
  * <li>Model structure is maintained *when valid* - no unknown nodes can be
  * present.
- *
  * </ul>
- * <p>
- * Note - this class maintains a parent/children model mapping , since complex
- * mutations can make that hard to reconstruct (see {@link SyncMutations})
+ *
+ * <pre>
+ * <code>
+ - fragmentmodel/mutations
+  - since fn mutations don't need reflection in dom (although other listeners may
+   be interested in the mutations), mark the mutation events as such
+  - for completeness, this shouldn't be necessary - mutations should:
+    - preserve model/dom correspondence
+    - not be fired if the current dom is equivalent to the union state of the mutations
+
+
+</code>
+ * </pre>
+ *
  *
  *
  *
@@ -76,6 +93,20 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
 @Feature.Ref(Feature_Dirndl_FragmentModel.class)
 public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		LayoutEvents.Bind.Handler, NodeTransformer.Provider {
+	static final String FLAG_MUTATING = FragmentModel.class.getName()
+			+ ".FLAG_MUTATING";
+
+	public static void withMutating(Runnable runnable) {
+		try {
+			LooseContext.push();
+			MutationRecord.deltaFlag(FLAG_MUTATING, true);
+			runnable.run();
+		} finally {
+			MutationRecord.deltaFlag(FLAG_MUTATING, false);
+			LooseContext.pop();
+		}
+	}
+
 	Model rootModel;
 
 	Map<DomNode, NodeTransformer> domNodeTransformer = AlcinaCollections
@@ -137,8 +168,15 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	public FragmentNode getFragmentNode(DomNode node) {
 		NodeTransformer transformer = domNodeTransformer.get(node);
-		return transformer == null ? null
-				: (FragmentNode) transformer.getModel();
+		if (transformer == null) {
+			return null;
+		}
+		Model model = transformer.getModel();
+		if (model instanceof FragmentNode) {
+			return (FragmentNode) model;
+		} else {
+			return null;
+		}
 	}
 
 	public FragmentRoot getFragmentRoot() {
@@ -165,6 +203,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		// sketch
 		// collate - changes by node
 		for (MutationRecord record : event.records) {
+			if (record.hasFlag(FLAG_MUTATING)) {
+				continue;
+			}
 			Node w3cNode = record.target.w3cNode;
 			NodeTransformer targetModel = domNodeTransformer
 					.get(DomNode.from(w3cNode));
@@ -184,13 +225,28 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		return rootModel.provideNode().getResolver();
 	}
 
+	// FIXME - probably better done via LocalMutation/ModelMutation.
+	public void register(FragmentNode node) {
+		DomNode domNode = node.domNode();
+		if (!domNodeTransformer.containsKey(domNode)) {
+			NodeTransformer transformer = createNodeTransformer(domNode);
+			transformer.setLayoutNode(node.provideNode());
+			registerTransformer(domNode, transformer);
+		}
+		node.children().forEach(this::register);
+	}
+
+	public DomNode rootDomNode() {
+		return rootModel.provideElement().asDomNode();
+	}
+
 	public void setEmitMutationEvents(boolean emitMutationEvents) {
 		this.emitMutationEvents = emitMutationEvents;
 	}
 
 	protected void addDefaultModelledTypes() {
-		addModelled(
-				List.of(FragmentNode.Text.class, FragmentNode.Generic.class));
+		addModelled(List.of(FragmentNode.TextNode.class,
+				FragmentNode.Generic.class));
 	}
 
 	void addDescent(DomNode node) {
@@ -209,9 +265,14 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				currentModelMutation.addEntry(
 						transformer.getLayoutNode().getModel(),
 						ModelMutation.Type.ADD);
-				domNodeTransformer.put(n, transformer);
+				registerTransformer(n, transformer);
 			}
 		});
+	}
+
+	NodeTransformer deregisterTransformer(DomNode n) {
+		NodeTransformer transformer = domNodeTransformer.remove(n);
+		return transformer;
 	}
 
 	void emitMutationEvent() {
@@ -219,6 +280,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				.dispatch(ModelMutation.class, currentModelMutation.getData());
 		currentModelMutation = null;
 		eventScheduled = false;
+	}
+
+	NodeTransformer registerTransformer(DomNode n,
+			NodeTransformer transformer) {
+		return domNodeTransformer.put(n, transformer);
 	}
 
 	void removeDescent(DomNode node) {
@@ -230,10 +296,12 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			return;
 		}
 		traversal.forEach(n -> {
-			NodeTransformer transformer = domNodeTransformer.remove(n);
-			currentModelMutation.addEntry(
-					transformer.getLayoutNode().getModel(),
-					ModelMutation.Type.REMOVE);
+			NodeTransformer transformer = deregisterTransformer(n);
+			if (transformer != null) {
+				currentModelMutation.addEntry(
+						transformer.getLayoutNode().getModel(),
+						ModelMutation.Type.REMOVE);
+			}
 		});
 		topTransformer.getLayoutNode().remove(false);
 	}

@@ -232,6 +232,8 @@ public class TableModel extends Model {
 	}
 
 	public static class TableCell extends Model {
+		public static transient boolean trackColumnValues = false;
+
 		protected TableValueModel value;
 
 		protected TableColumn column;
@@ -245,6 +247,9 @@ public class TableModel extends Model {
 			this.column = column;
 			this.row = row;
 			this.value = new TableValueModel(this);
+			if (trackColumnValues) {
+				column.onValueAdded(value.getBindable());
+			}
 		}
 
 		public TableValueModel getValue() {
@@ -260,6 +265,8 @@ public class TableModel extends Model {
 		private SortDirection sortDirection;
 
 		private String caption;
+
+		private Class valueClass;
 
 		public TableColumn() {
 		}
@@ -286,9 +293,36 @@ public class TableModel extends Model {
 			return this.sortDirection;
 		}
 
+		public Class getValueClass() {
+			return this.valueClass;
+		}
+
 		@Override
 		public void onClick(Click event) {
 			new SearchTableColumnClickHandler(this).onClick(event);
+		}
+
+		public void onValueAdded(Object rowValue) {
+			if (rowValue == null) {
+				return;
+			}
+			Object value = field.getProperty().get(rowValue);
+			if (value == null) {
+				return;
+			}
+			Class clazz = value.getClass();
+			if (valueClass == null) {
+				valueClass = clazz;
+			} else {
+				if (Reflections.isAssignableFrom(clazz, valueClass)) {
+					valueClass = clazz;
+				} else if (Reflections.isAssignableFrom(clazz, valueClass)) {
+					// preserve
+				} else {
+					// common ancestor
+					throw new UnsupportedOperationException();
+				}
+			}
 		}
 
 		public void setField(Field field) {

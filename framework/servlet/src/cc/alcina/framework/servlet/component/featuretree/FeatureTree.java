@@ -11,18 +11,10 @@ import com.google.gwt.place.shared.PlaceHistoryHandler;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.module.support.login.pub.LoginPlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.component.featuretree.place.FeatureTreePlace;
@@ -108,28 +100,6 @@ public class FeatureTree {
 		@Override
 		protected void createPlaceController() {
 			placeController = new PlaceController(eventBus);
-		}
-	}
-
-	@Directed(receives = DomEvents.Click.class)
-	@Bean(PropertySource.FIELDS)
-	static class Mock extends Model implements DomEvents.Click.Handler {
-		@Directed(tag = "p")
-		// @Directed(tag = "div")
-		String m1 = "baa";
-
-		@Directed(
-			tag = "a",
-			bindings = @Binding(
-				type = Binding.Type.PROPERTY,
-				to = "href",
-				literal = "#mm"))
-		String m2 = "maa";
-
-		@Override
-		public void onClick(Click event) {
-			set("m1", "lamb");
-			new LoginPlace().go();
 		}
 	}
 }

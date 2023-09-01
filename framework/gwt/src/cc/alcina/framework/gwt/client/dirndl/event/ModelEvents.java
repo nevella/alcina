@@ -85,6 +85,18 @@ public class ModelEvents {
 		}
 	}
 
+	/**
+	 * <p>
+	 * Note - 'close' is an event modelling a request ('please close x') -
+	 * 'Closed' is an event modelling an occurrence ('x was closed')
+	 *
+	 * <p>
+	 * So clicking on a tiny little x in a UI will generally be modelled as
+	 * {@code Click -> Close}, just prior to the model representation then
+	 * being'closed' (removed from the UI) it could then emit a {@code Closed}
+	 * event
+	 *
+	 */
 	public static class Close extends ModelEvent<Object, Close.Handler> {
 		@Override
 		public void dispatch(Close.Handler handler) {

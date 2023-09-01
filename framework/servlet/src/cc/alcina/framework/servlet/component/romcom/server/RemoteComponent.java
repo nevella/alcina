@@ -12,7 +12,7 @@ import cc.alcina.framework.servlet.dom.RemoteUi;
 public interface RemoteComponent {
 	default RemoteComponentProtocol.Session createEnvironment(HttpServletRequest request) {
 		Credentials credentials = Credentials.createUnique();
-		RemoteUi ui = Reflections.newInstance(getUiType());
+		RemoteUi ui = getUiInstance();
 		Environment environment = PathrefDom.get().register(ui,
 				credentials);
 		RemoteComponentProtocol.Session session = new RemoteComponentProtocol.Session();
@@ -21,6 +21,10 @@ public interface RemoteComponent {
 		session.url = request.getRequestURL().toString();
 		session.componentClassName = ui.getClass().getName();
 		return session;
+	}
+
+	default RemoteUi getUiInstance() {
+		return Reflections.newInstance(getUiType());
 	}
 
 	String getPath();

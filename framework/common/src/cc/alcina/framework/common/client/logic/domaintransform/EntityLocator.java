@@ -65,6 +65,27 @@ public class EntityLocator implements Serializable, TreeSerializable {
 				dte.getObjectLocalId());
 	}
 
+	public static EntityLocator parse(Class<? extends Entity> clazz,
+			String string) {
+		if (string == null) {
+			return null;
+		}
+		if (string.matches("\\d+")) {
+			long id = Long.parseLong(string);
+			return new EntityLocator(clazz, id, 0);
+		} else if (string.matches("(\\d+),(\\d+)")) {
+			long clientInstanceId = Long
+					.parseLong(string.replaceFirst("(\\d+),(\\d+)", "$1"));
+			long localId = Long
+					.parseLong(string.replaceFirst("(\\d+),(\\d+)", "$2"));
+			EntityLocator locator = new EntityLocator(clazz, 0L, localId);
+			locator.setClientInstanceId(clientInstanceId);
+			return locator;
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	public static EntityLocator parse(String v) {
 		if (v == null || v.equals("null")) {
 			return new EntityLocator();

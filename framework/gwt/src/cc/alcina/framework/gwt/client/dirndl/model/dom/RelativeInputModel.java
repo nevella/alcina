@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.model.dom;
 
+import java.util.Optional;
+import java.util.function.Predicate;
+
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
@@ -65,24 +68,26 @@ public class RelativeInputModel {
 		}
 	}
 
-	public boolean containsPartialAncestorFocusTag(String tag) {
-		DomNode focussedTag = focusNode().ancestors().get(tag);
-		if (focussedTag == null) {
-			return false;
-		}
-		if (collapsed) {
-			return true;
-		}
-		Location.Range tagRange = focussedTag.asRange();
-		return !range.contains(tagRange);
-	}
-
 	public DomNode focusNode() {
 		return focusDomNode.asDomNode();
 	}
 
 	public int getFocusOffset() {
 		return this.focusOffset;
+	}
+
+	public Optional<DomNode>
+			getFocusNodePartiallySelectedAncestor(Predicate<DomNode> predicate) {
+		Optional<DomNode> ancestor = focusNode().ancestors()
+				.match(predicate);
+		if (ancestor.isEmpty()) {
+			return Optional.empty();
+		}
+		if (collapsed) {
+			return ancestor;
+		}
+		Location.Range ancestorRange = ancestor.get().asRange();
+		return !range.contains(ancestorRange) ? ancestor : Optional.empty();
 	}
 
 	public boolean hasAncestorFocusTag(String tag) {
@@ -97,31 +102,27 @@ public class RelativeInputModel {
 		return focusLocation.content().relativeString(startOffset, endOffset);
 	}
 
-	// FIXME - Feature_Dirndl_ContentDecorator - if selecting start of
-	// decorator (e.g. char 0, decorator starts contenteditable), insert a blank
-	// text node + move caret
-	public void selectWholeAncestorFocusTag(String tag) {
-		DomNode focussedTag = focusNode().ancestors().get(tag);
-		String text = ((Element) focussedTag.gwtNode()).getInnerText();
-		Location.Range tagRange = focussedTag.asRange();
+	public void extendSelectionToIncludeAllOf(DomNode node) {
+		String text = ((Element) node.gwtNode()).getInnerText();
+		Location.Range tagRange = node.asRange();
 		boolean anchorBeforeFocus = anchorLocation
 				.compareTo(focusLocation) <= 0;
 		Location modifiedFocusLocation = null;
 		Location modifiedAnchorLocation = null;
 		if (tagRange.start.isBefore(range.start)) {
 			if (anchorBeforeFocus) {
-				modifiedAnchorLocation = focussedTag.asLocation();
+				modifiedAnchorLocation = node.asLocation();
 			} else {
-				modifiedFocusLocation = focussedTag.asLocation();
+				modifiedFocusLocation = node.asLocation();
 			}
 		}
 		if (tagRange.end.isAfter(range.end)) {
 			if (anchorBeforeFocus) {
-				modifiedFocusLocation = focussedTag.asLocation().clone();
+				modifiedFocusLocation = node.asLocation().clone();
 				modifiedFocusLocation.after = true;
 				modifiedFocusLocation = caretLocation(modifiedFocusLocation);
 			} else {
-				modifiedAnchorLocation = focussedTag.asLocation().clone();
+				modifiedAnchorLocation = node.asLocation().clone();
 				modifiedAnchorLocation.after = true;
 				modifiedAnchorLocation = caretLocation(modifiedAnchorLocation);
 			}

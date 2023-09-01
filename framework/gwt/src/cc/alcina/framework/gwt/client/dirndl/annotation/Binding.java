@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FromStringFunction;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -33,6 +34,18 @@ public @interface Binding {
 
 	Type type();
 
+	public abstract static class AbstractContextSensitiveReverseTransform<T>
+			implements ContextSensitiveReverseTransform<T> {
+		protected Node node;
+
+		@Override
+		public ContextSensitiveReverseTransform<T> withContextNode(Node node) {
+			this.node = node;
+			return this;
+		}
+	}
+
+	@Reflected
 	public abstract static class AbstractContextSensitiveTransform<T>
 			implements ContextSensitiveTransform<T> {
 		protected Node node;
@@ -44,6 +57,16 @@ public @interface Binding {
 		}
 	}
 
+	@Reflected
+	public interface Bidi<T> extends ToStringFunction.Bidi<T> {
+	}
+
+	public interface ContextSensitiveReverseTransform<T>
+			extends FromStringFunction<T> {
+		public ContextSensitiveReverseTransform<T>
+				withContextNode(DirectedLayout.Node node);
+	}
+
 	public interface ContextSensitiveTransform<T> extends ToStringFunction<T> {
 		public ContextSensitiveTransform<T>
 				withContextNode(DirectedLayout.Node node);
@@ -53,7 +76,20 @@ public @interface Binding {
 	public static class DisplayFalseTrue implements ToStringFunction<Boolean> {
 		@Override
 		public String apply(Boolean t) {
-			return CommonUtils.bv(t) ? "block" : "none";
+			return CommonUtils.bv(t) ? "true" : "false";
+		}
+	}
+
+	@Reflected
+	public static class DisplayFalseTrueBidi implements Binding.Bidi<Boolean> {
+		@Override
+		public Function<Boolean, String> leftToRight() {
+			return new DisplayFalseTrue();
+		}
+
+		@Override
+		public Function<String, Boolean> rightToLeft() {
+			return Boolean::parseBoolean;
 		}
 	}
 

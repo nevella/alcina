@@ -39,9 +39,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
 				type = Type.PROPERTY,
 				literal = "true",
 				to = "contenteditable") },
-	receives = { DomEvents.Input.class, DomEvents.BeforeInput.class,
-			DomEvents.Focusout.class, InferredDomEvents.Mutation.class },
-	emits = { ModelEvents.Input.class })
+	
+emits = { ModelEvents.Input.class })
 @DirectedContextResolver(FragmentResolver.class)
 public class EditArea extends Model implements FocusOnBind, HasTag,
 		DomEvents.Input.Handler, DomEvents.BeforeInput.Handler,

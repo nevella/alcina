@@ -992,6 +992,16 @@ public class Document extends Node
 	}
 
 	@Override
+	protected boolean linkedToRemote() {
+		return true;
+	}
+
+	@Override
+	protected DocumentLocal local() {
+		return local;
+	}
+
+	@Override
 	public Node node() {
 		return this;
 	}
@@ -999,6 +1009,20 @@ public class Document extends Node
 	@Override
 	public void normalizeDocument() {
 		throw new UnsupportedOperationException();
+	}
+
+	public DocumentPathref pathrefRemote() {
+		return (DocumentPathref) remote;
+	}
+
+	@Override
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected ClientDomDocument remote() {
+		return remote;
 	}
 
 	@Override
@@ -1009,6 +1033,11 @@ public class Document extends Node
 	@Override
 	public org.w3c.dom.Node renameNode(org.w3c.dom.Node arg0, String arg1,
 			String arg2) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void resetRemote0() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -1049,31 +1078,6 @@ public class Document extends Node
 
 	@Override
 	public void setXmlVersion(String arg0) throws DOMException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	protected boolean linkedToRemote() {
-		return true;
-	}
-
-	@Override
-	protected DocumentLocal local() {
-		return local;
-	}
-
-	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	protected ClientDomDocument remote() {
-		return remote;
-	}
-
-	@Override
-	protected void resetRemote0() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -1156,6 +1160,19 @@ public class Document extends Node
 			return currentNode = currentNode.getLastChild();
 		}
 
+		private org.w3c.dom.Node lastChildBreadthFirst(org.w3c.dom.Node node) {
+			org.w3c.dom.Node cursor = node;
+			while (true) {
+				org.w3c.dom.Node lastChild = cursor.getLastChild();
+				if (lastChild != null) {
+					cursor = lastChild;
+				} else {
+					break;
+				}
+			}
+			return cursor;
+		}
+
 		@Override
 		public org.w3c.dom.Node nextNode() {
 			if (currentNode.getFirstChild() != null) {
@@ -1202,19 +1219,6 @@ public class Document extends Node
 		public void setCurrentNode(org.w3c.dom.Node currentNode)
 				throws DOMException {
 			this.currentNode = currentNode;
-		}
-
-		private org.w3c.dom.Node lastChildBreadthFirst(org.w3c.dom.Node node) {
-			org.w3c.dom.Node cursor = node;
-			while (true) {
-				org.w3c.dom.Node lastChild = cursor.getLastChild();
-				if (lastChild != null) {
-					cursor = lastChild;
-				} else {
-					break;
-				}
-			}
-			return cursor;
 		}
 	}
 }
