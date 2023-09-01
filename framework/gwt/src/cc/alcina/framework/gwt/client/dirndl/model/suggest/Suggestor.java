@@ -154,10 +154,6 @@ public class Suggestor extends Model
 		if (event.checkReemitted(this)) {
 			return;
 		}
-		/*
-		 *
-		 */
-		suggestions.ensureSelectedSuggestionValue();
 		setChosenSuggestions(suggestions.provideSelectedValue());
 		event.reemit();
 	}
@@ -226,13 +222,12 @@ public class Suggestor extends Model
 			total++;
 		}
 
-		public void addCreateNewSuggestion(String text,
-				Supplier<?> valueSupplier) {
+		public Markup addCreateNewSuggestion(String text) {
 			Markup suggestion = new Markup();
 			suggestion.setMarkup(SafeHtmlUtils.htmlEscape(text));
-			suggestion.putModelCreator(valueSupplier);
 			suggestions.add(0, suggestion);
 			total++;
+			return suggestion;
 		}
 
 		public boolean containsExactMatch(String value) {
@@ -445,8 +440,6 @@ public class Suggestor extends Model
 	 * Marker for the payload of a Suggestion
 	 */
 	public interface Suggestion {
-		void ensureModel();
-
 		/*
 		 * Typed model (for rendering, either this or markup)
 		 *
@@ -466,8 +459,6 @@ public class Suggestor extends Model
 		 */
 		boolean isMatch();
 
-		void putModelCreator(Supplier modelCreator);
-
 		@Directed(
 			tag = "suggestion",
 			bindings = @Binding(from = "markup", type = Type.INNER_HTML))
@@ -478,16 +469,7 @@ public class Suggestor extends Model
 
 			private boolean match;
 
-			private Supplier modelCreator;
-
 			public Markup() {
-			}
-
-			@Override
-			public void ensureModel() {
-				if (model == null) {
-					model = modelCreator.get();
-				}
 			}
 
 			public String getMarkup() {
@@ -502,11 +484,6 @@ public class Suggestor extends Model
 			@Override
 			public boolean isMatch() {
 				return this.match;
-			}
-
-			@Override
-			public void putModelCreator(Supplier modelCreator) {
-				this.modelCreator = modelCreator;
 			}
 
 			public void setMarkup(String markup) {
@@ -534,17 +511,8 @@ public class Suggestor extends Model
 
 			public boolean match;
 
-			public transient Supplier modelCreator;
-
 			public ModelSuggestion(Model model) {
 				this.model = model;
-			}
-
-			@Override
-			public void ensureModel() {
-				if (model == null) {
-					model = (Model) modelCreator.get();
-				}
 			}
 
 			@Override
@@ -557,11 +525,6 @@ public class Suggestor extends Model
 			public boolean isMatch() {
 				return match;
 			}
-
-			@Override
-			public void putModelCreator(Supplier modelCreator) {
-				this.modelCreator = modelCreator;
-			}
 		}
 	}
 
@@ -572,13 +535,6 @@ public class Suggestor extends Model
 	public interface Suggestions
 			extends HasSelectedValue, ModelEvents.Closed.Handler {
 		void close();
-
-		default void ensureSelectedSuggestionValue() {
-			Suggestion selectedValue = (Suggestion) provideSelectedValue();
-			if (selectedValue != null) {
-				selectedValue.ensureModel();
-			}
-		}
 
 		void onAnswers(Answers answers);
 
