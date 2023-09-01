@@ -258,8 +258,6 @@ public class InternalMetrics {
 					if (persistExecutor.getActiveCount() == 0) {
 						persistExecutor.submit(() -> {
 							try {
-								LooseContext.push();
-								LooseContext.set(JacksonJsonObjectSerializer.MAX_LENGTH, 40000000);
 								persist();
 							} catch (Throwable e) {
 								try {
@@ -270,8 +268,6 @@ public class InternalMetrics {
 									return;
 								}
 								e.printStackTrace();
-							} finally {
-								LooseContext.pop();
 							}
 						});
 					} else {
