@@ -24,8 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.PaginatorVisible;
 @Directed(
 	className = "tree",
 	bindings = { @Binding(from = "rootHidden", type = Type.CSS_CLASS) },
-	
-emits = SelectionChanged.class)
+	emits = SelectionChanged.class)
 public class Tree<TN extends TreeNode<TN>> extends Model
 		implements NodeLabelClicked.Handler, NodeToggleButtonClicked.Handler,
 		PaginatorVisible.Handler {
@@ -104,7 +103,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	/**
 	 * Note that subclasses should *not* call the no-args constructor
 	 *
-	 * 
+	 *
 	 *
 	 * @param <PN>
 	 */
@@ -159,7 +158,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			handler.onLabelClicked(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onLabelClicked(LabelClicked LabelClicked);
 		}
@@ -167,8 +165,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	@Directed(
 		tag = "paginator",
-		bindings = @Binding(type = Type.INNER_TEXT, from = "text")
-	)
+		bindings = @Binding(type = Type.INNER_TEXT, from = "text"))
 	public static class Paginator extends Model
 			implements InferredDomEvents.IntersectionObserved.Handler {
 		private String text;
@@ -216,7 +213,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			handler.onSelectionChanged(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onSelectionChanged(SelectionChanged event);
 		}
@@ -229,7 +225,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			handler.onToggleButtonClicked(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onToggleButtonClicked(ToggleButtonClicked event);
 		}
@@ -237,21 +232,8 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	@Directed(
 		className = "node",
-		bindings = {
-				@Binding(
-					from = "open",
-					type = Type.CSS_CLASS,
-					literal = "open"),
-				@Binding(
-					from = "selected",
-					type = Type.CSS_CLASS,
-					literal = "selected"),
-				@Binding(
-					from = "leaf",
-					type = Type.CSS_CLASS,
-					literal = "leaf") },
-		
-	reemits = { LabelClicked.class, NodeLabelClicked.class })
+		reemits = { LabelClicked.class, NodeLabelClicked.class,
+				ToggleButtonClicked.class, NodeToggleButtonClicked.class })
 	public static class TreeNode<NM extends TreeNode> extends Model {
 		public transient boolean populated;
 
@@ -281,14 +263,17 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			return this.parent;
 		}
 
+		@Binding(type = Type.CSS_CLASS)
 		public boolean isLeaf() {
 			return this.leaf;
 		}
 
+		@Binding(type = Type.CSS_CLASS)
 		public boolean isOpen() {
 			return this.open;
 		}
 
+		@Binding(type = Type.CSS_CLASS)
 		public boolean isSelected() {
 			return this.selected;
 		}
@@ -352,8 +337,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 			@Directed(
 				merge = true,
-				
-			reemits = { DomEvents.Click.class, LabelClicked.class })
+				reemits = { DomEvents.Click.class, LabelClicked.class })
 			public Object getLabel() {
 				return this.label;
 			}
@@ -364,8 +348,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 			@Directed(
 				tag = "span",
-				
-			reemits = { DomEvents.Click.class, ToggleButtonClicked.class })
+				reemits = { DomEvents.Click.class, ToggleButtonClicked.class })
 			public Object getToggle() {
 				return this.toggle;
 			}
