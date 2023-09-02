@@ -36,6 +36,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Subque
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
+import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
 import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
 
 /*
@@ -382,8 +383,9 @@ class JobAllocator {
 					// but it does...
 					if (incompleteAllocated < 30 && queue.getUnallocatedJobs()
 							.anyMatch(this::isAllocatable)) {
-						ExecutorService executorService = executionConstraints
-								.getExecutorServiceProvider()
+						ExecutorServiceProvider executorServiceProvider = executionConstraints
+								.getExecutorServiceProvider();
+						ExecutorService executorService = executorServiceProvider
 								.getService(constraintQueue);
 						List<Job> allocating = new ArrayList<>();
 						Runnable allocateJobs = () -> {
@@ -442,7 +444,9 @@ class JobAllocator {
 													.submit(() -> JobRegistry
 															.get().performJob(j,
 																	false,
-																	launcherThreadState));
+																	launcherThreadState,
+																	executorServiceProvider,
+																	executorService));
 										}
 									});
 						};

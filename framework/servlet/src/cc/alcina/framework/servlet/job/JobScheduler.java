@@ -60,7 +60,7 @@ import cc.alcina.framework.entity.util.MethodContext;
  * <li>UI
  * <ul>
  *
- * 
+ *
  */
 public class JobScheduler {
 	private JobRegistry jobRegistry;
@@ -584,11 +584,19 @@ public class JobScheduler {
 							}
 						});
 			}
+
+			@Override
+			public void onServiceComplete(ExecutorService executorService) {
+				executorService.shutdown();
+			}
 		}
 	}
 
 	public interface ExecutorServiceProvider {
 		ExecutorService getService(AllocationQueue queue);
+
+		default void onServiceComplete(ExecutorService executorService) {
+		}
 	}
 
 	public static class NoResubmitPolicy extends ResubmitPolicy {
