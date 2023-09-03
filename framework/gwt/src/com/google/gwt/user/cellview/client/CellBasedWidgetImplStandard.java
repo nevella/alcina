@@ -50,32 +50,39 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	 *            the event to handle.
 	 */
 	private static void handleNonBubblingEvent(Event event) {
-		// Get the event target.
-		EventTarget eventTarget = event.getEventTarget();
-		if (eventTarget == null) {
-			// should not be required - but added due to production NPEs
-			return;
-		}
-		if (!Element.is(eventTarget)) {
-			return;
-		}
-		Element target = eventTarget.cast();
-		// Get the event listener, which is the first widget that handles the
-		// specified event type.
-		String typeName = event.getType();
-		EventListener listener = DOM.getEventListener(target);
-		while (target != null && listener == null
-				&& target.getParentElement() != null) {
-			target = target.getParentElement().cast();
-			if (target != null && isNonBubblingEventHandled(target, typeName)) {
-				// The target handles the event, so this must be the event
-				// listener.
-				listener = DOM.getEventListener(target);
+		try {
+			// Get the event target.
+			EventTarget eventTarget = event.getEventTarget();
+			if (eventTarget == null) {
+				// should not be required - but added due to production NPEs
+				return;
 			}
-		}
-		// Fire the event.
-		if (listener != null) {
-			DOM.dispatchEvent(event, target, listener);
+			if (!Element.is(eventTarget)) {
+				return;
+			}
+			Element target = eventTarget.cast();
+			// Get the event listener, which is the first widget that handles
+			// the
+			// specified event type.
+			String typeName = event.getType();
+			EventListener listener = DOM.getEventListener(target);
+			while (target != null && listener == null
+					&& target.getParentElement() != null) {
+				target = target.getParentElement().cast();
+				if (target != null
+						&& isNonBubblingEventHandled(target, typeName)) {
+					// The target handles the event, so this must be the event
+					// listener.
+					listener = DOM.getEventListener(target);
+				}
+			}
+			// Fire the event.
+			if (listener != null) {
+				DOM.dispatchEvent(event, target, listener);
+			}
+		} catch (Exception e) {
+			// FIXME - dirndl - there are strange NPEs around the event system
+			// here -
 		}
 	}
 
