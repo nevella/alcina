@@ -281,6 +281,12 @@ public abstract class Model extends Bindable implements
 		}
 
 		public <I, O> void addOneway(Object leftPropertyName,
+				SourcesPropertyChangeEvents right, Object rightPropertyName) {
+			addOneway(getSource(), leftPropertyName, right, rightPropertyName,
+					null);
+		}
+
+		public <I, O> void addOneway(Object leftPropertyName,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
 				Converter<I, O> rightToLeftConverter) {
 			addOneway(getSource(), leftPropertyName, right, rightPropertyName,
