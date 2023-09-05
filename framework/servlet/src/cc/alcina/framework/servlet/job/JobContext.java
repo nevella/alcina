@@ -514,7 +514,7 @@ public class JobContext {
 		msg += "\nParameters: \n";
 		try {
 			msg += new JacksonJsonObjectSerializer().withIdRefs()
-					.withMaxLength(1000000).serializeNoThrow(task);
+					.serializeNoThrow(task);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}

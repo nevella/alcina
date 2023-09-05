@@ -112,7 +112,6 @@ public class ClusterTransformSerializer {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			OutputStream outputStream = new GZIPOutputStream(out);
 			new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
-					.withMaxLength(Integer.MAX_VALUE)
 					.serializeToStream(clusterRequest, outputStream);
 			zipped = out.toByteArray();
 			if (state == State.PRE_COMMIT) {
