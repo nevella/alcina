@@ -740,7 +740,10 @@ public class LocalDom implements ContextFrame {
 			if (parent.getChildCount() == parentRemote.getChildCount()) {
 				Node childNode = parent.getChild(index);
 				linkRemote(remote, childNode);
-				if (markNonStructuralNodesAsSyncedOnSync
+				// FIXME - dirndl - localdom - syncmutations doesn't completely
+				// handle this - e.g. bold/unbold (with keyboard) of
+				// contenteditable - so added || true for now
+				if ((markNonStructuralNodesAsSyncedOnSync || true)
 						&& !childNode.wasSynced()) {
 					childNode.onSync(syncEventId);
 				}

@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.SelectionJso;
 
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -47,7 +48,8 @@ public class RelativeInputModel {
 		selection = Document.get().jsoRemote().getSelection();
 		collapsed = selection.isCollapsed();
 		{
-			focusDomNode = selection.getFocusNode().node();
+			NodeJso focusNode = selection.getFocusNode();
+			focusDomNode = focusNode.node();
 			if (focusDomNode != null) {
 				focusOffset = selection.getFocusOffset();
 				focusLocation = focusDomNode.asDomNode().asLocation()
