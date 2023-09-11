@@ -2,9 +2,12 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -23,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.HasSelectedValue;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion.Markup;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestions.State;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorAsk;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
@@ -40,12 +44,10 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * <p>
  * FIXME - dirndl 1x1dz - switch SuggestorConfiguration to a builder
  *
- * 
+ *
  *
  */
-@Directed(
-	
-emits = ModelEvents.SelectionChanged.class)
+@Directed(emits = ModelEvents.SelectionChanged.class)
 public class Suggestor extends Model
 		implements SuggestorEvents.EditorAsk.Handler,
 		ModelEvents.SelectionChanged.Handler, HasSelectedValue,
@@ -220,6 +222,19 @@ public class Suggestor extends Model
 			total++;
 		}
 
+		public Markup addCreateNewSuggestion(String text) {
+			Markup suggestion = new Markup();
+			suggestion.setMarkup(SafeHtmlUtils.htmlEscape(text));
+			suggestions.add(0, suggestion);
+			total++;
+			return suggestion;
+		}
+
+		public boolean containsExactMatch(String value) {
+			return suggestions.stream()
+					.anyMatch(s -> Objects.equals(s.toString(), value));
+		}
+
 		public List<Suggestion> getSuggestions() {
 			return this.suggestions;
 		}
@@ -251,7 +266,7 @@ public class Suggestor extends Model
 	 * <p>
 	 * So named because 'query' is so tired
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public interface Ask {

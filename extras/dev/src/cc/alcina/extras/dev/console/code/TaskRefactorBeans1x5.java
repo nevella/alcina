@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.AccessSpecifier;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.Statement;
 
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
@@ -26,6 +28,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
@@ -97,6 +100,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 					case MANIFEST: {
 						accessToPackage(type);
 						removeDefaultPropertyMethods(type);
+						updatePropertySetters(type);
 						break;
 					}
 					}
@@ -177,6 +181,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 						String defaultBody = Ax.format("return this.%s;",
 								propertyName);
 						if (Objects.equals(string, defaultBody)) {
+							type.dirty();
 							getterDeclaration.getAnnotations().forEach(ann -> {
 								field.addAnnotation(ann);
 							});
@@ -206,6 +211,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 						String defaultBody = Ax.format("this.%s = %s;",
 								propertyName, propertyName);
 						if (Objects.equals(string, defaultBody)) {
+							type.dirty();
 							setterDeclaration.remove();
 						} else {
 							warns.add(
@@ -218,6 +224,66 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 					// warns.add(Ax.format("%s - no setter", propertyName));
 				}
 			}
+		}
+		warns.forEach(s -> Ax.out("  %s", s));
+	}
+
+	void updatePropertySetters(UnitType type) {
+		ClassOrInterfaceDeclaration decl = type.getDeclaration();
+		List<Property> properties = Reflections.at(type.clazz()).properties();
+		List<String> warns = new ArrayList<>();
+		boolean hasSetters = false;
+		for (Property property : properties) {
+			String propertyName = property.getName();
+			FieldDeclaration field = decl.getFieldByName(propertyName)
+					.orElse(null);
+			if (field == null) {
+				// warns.add(Ax.format("%s - no field", propertyName));
+				continue;
+			}
+			VariableDeclarator fieldVariable = field.getVariables().get(0);
+			boolean isBoolean = fieldVariable.getType().asString()
+					.equals("boolean");
+			String fieldMethodNamePart = propertyName.substring(0, 1)
+					.toUpperCase() + propertyName.substring(1);
+			{
+				String setMethodName = "set" + fieldMethodNamePart;
+				MethodDeclaration setterDeclaration = decl
+						.getMethodsByName(setMethodName).stream()
+						.filter(m -> m.getParameters().size() == 1).findFirst()
+						.orElse(null);
+				if (setterDeclaration != null) {
+					hasSetters = true;
+					String defaultOldChange = ("\\{\\s*\\S+ old_%s = this.%s;\n"
+							+ "this.%s = %s;\n"
+							+ "propertyChangeSupport\\(\\).firePropertyChange\\(\"%s\",\n"
+							+ "old_%s, %s\\s*\\);\\s*\\}").replace("%s",
+									propertyName);
+					String defaultOldChangeNormalised = TextUtils
+							.normalizeWhitespaceAndTrim(defaultOldChange);
+					BlockStmt blockStmt = setterDeclaration.getBody().get();
+					String setterBodyNormalised = TextUtils
+							.normalizeWhitespaceAndTrim(blockStmt.toString());
+					if (setterBodyNormalised
+							.matches(defaultOldChangeNormalised)) {
+						type.dirty();
+						blockStmt.getChildNodes().stream()
+								.collect(Collectors.toList()).forEach(
+										com.github.javaparser.ast.Node::remove);
+						String newSource = "set(\"%s\", this.%s, %s,() -> this.%s = %s);"
+								.replace("%s", propertyName);
+						Statement parse = StaticJavaParser
+								.parseStatement(newSource);
+						blockStmt.addStatement(parse);
+						int debug = 3;
+					}
+				} else {
+					// warns.add(Ax.format("%s - no setter", propertyName));
+				}
+			}
+		}
+		if (hasSetters) {
+			Ax.out("Updated setters: %s", NestedNameProvider.get(type.clazz()));
 		}
 		warns.forEach(s -> Ax.out("  %s", s));
 	}

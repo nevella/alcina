@@ -9,9 +9,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -54,26 +54,15 @@ import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.EventObservable;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.ReceivesEvents;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RecursionTest;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RenderObservable;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererNotFoundException;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.PropertyBinding;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.PropertyBindings;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -1342,11 +1331,8 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 
-			void setLeft() {
+			Property getProperty() {
 				Property property = null;
-				if (Ax.isBlank(binding.from())) {
-					return;
-				}
 				if (Ax.notBlank(binding.from())) {
 					property = Reflections.at(model).property(binding.from());
 					if (property == null) {
@@ -1355,6 +1341,11 @@ public class DirectedLayout implements AlcinaProcess {
 								NestedNameProvider.get(model)));
 					}
 				}
+				return property;
+			}
+
+			void setLeft() {
+				Property property = getProperty();
 				String stringValue = null;
 				Rendered rendered = verifySingleRendered();
 				Element element = rendered.isElement() ? rendered.asElement()
@@ -1424,15 +1415,7 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 
 			void setRight() {
-				Property property = null;
-				if (Ax.notBlank(binding.from())) {
-					property = Reflections.at(model).property(binding.from());
-					if (property == null) {
-						throw new IllegalArgumentException(Ax.format(
-								"No property %s for model %s", binding.from(),
-								NestedNameProvider.get(model)));
-					}
-				}
+				Property property = getProperty();
 				Object value = binding.from().length() > 0 ? property.get(model)
 						: binding.literal();
 				boolean hasTransform = (Class) binding

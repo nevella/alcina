@@ -14,6 +14,8 @@
 package cc.alcina.framework.common.client.remote;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
@@ -32,6 +34,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
@@ -91,6 +94,9 @@ public interface CommonRemoteService extends RemoteService {
 			DomainTransformCommitPosition position) throws PermissionsException;
 
 	String getJobLog(long jobId);
+
+	Map<EntityLocator, EntityLocator>
+			getPersistentLocators(Set<EntityLocator> locators);
 
 	JobTracker.Response pollJobStatus(JobTracker.Request request);
 }

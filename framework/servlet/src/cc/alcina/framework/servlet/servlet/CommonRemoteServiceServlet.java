@@ -131,6 +131,7 @@ import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager.ExpiredClientInstanceException;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
+import cc.alcina.framework.servlet.servlet.handler.GetPersistentLocatorsHandler;
 import cc.alcina.framework.servlet.task.TaskPublish;
 
 /**
@@ -142,7 +143,7 @@ import cc.alcina.framework.servlet.task.TaskPublish;
  * layer so not needed here
  * </p>
  *
- * 
+ *
  */
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		implements CommonRemoteService, SearchRemoteService,
@@ -280,6 +281,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public List<JobTracker> getLogsForAction(RemoteAction action,
 			Integer count) {
 		return JobRegistry.get().getLogsForAction(action, count);
+	}
+
+	@Override
+	public Map<EntityLocator, EntityLocator>
+			getPersistentLocators(Set<EntityLocator> locators) {
+		// FIXME - low - permissions (although honestly almost totally harmless)
+		return new GetPersistentLocatorsHandler().handle(locators);
 	}
 
 	@Override

@@ -258,7 +258,7 @@ public class CompilationUnits {
 	public void writeDirty(boolean test,
 			Function<CompilationUnitWrapper, String> mapper, int writeLimit) {
 		File outDir = new File("/tmp/refactor");
-		SEUtilities.deleteDirectory(outDir);
+		SEUtilities.deleteDirectory(outDir, true);
 		outDir.mkdirs();
 		long dirtyCount = units.stream().filter(u -> u.dirty).count();
 		Ax.out("Writing: %s/%s units dirty", dirtyCount, units.size());

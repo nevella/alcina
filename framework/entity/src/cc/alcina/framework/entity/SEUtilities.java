@@ -104,7 +104,7 @@ import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
- * 
+ *
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class SEUtilities {
@@ -340,6 +340,10 @@ public class SEUtilities {
 	}
 
 	public static boolean deleteDirectory(File folder) {
+		return deleteDirectory(folder, false);
+	}
+
+	public static boolean deleteDirectory(File folder, boolean justContents) {
 		if (!folder.exists()) {
 			return false;
 		}
@@ -367,6 +371,9 @@ public class SEUtilities {
 		}
 		while (dirStack.size() != 0) {
 			File dInf = dirStack.pop();
+			if (justContents && dInf.equals(folder)) {
+				continue;
+			}
 			boolean b = dInf.delete();
 			if (!b) {
 				return b;

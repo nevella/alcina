@@ -199,8 +199,8 @@ public abstract class Choices<T> extends Model
 			choices.forEach(c -> c.setSelected(valuesSet.contains(c.value)));
 			List<T> newValues = getSelectedValues();
 			if (!Objects.equals(oldValues, newValues)) {
-				NodeEvent.Context.fromNode(provideNode())
-						.dispatch(ModelEvents.SelectionChanged.class, null);
+				NodeEvent.Context.fromNode(provideNode()).dispatch(
+						ModelEvents.SelectionChanged.class, newValues);
 			}
 		}
 	}
@@ -385,8 +385,11 @@ public abstract class Choices<T> extends Model
 			choices.forEach(c -> c.setSelected(c.value == value));
 			T newValue = getSelectedValue();
 			if (!Objects.equals(oldValue, newValue)) {
+				NodeEvent.Context.fromNode(provideNode()).dispatch(
+						ModelEvents.BeforeSelectionChangedDispatch.class,
+						newValue);
 				NodeEvent.Context.fromNode(provideNode())
-						.dispatch(ModelEvents.SelectionChanged.class, null);
+						.dispatch(ModelEvents.SelectionChanged.class, newValue);
 				selectionChanged.signal();
 			}
 		}

@@ -14,6 +14,8 @@
 package cc.alcina.framework.common.client.remote;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -28,6 +30,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
 /**
@@ -65,6 +68,9 @@ public interface CommonRemoteServiceAsync {
 
 	public void validateOnServer(List<ServerValidator> validators,
 			AsyncCallback<List<ServerValidator>> callback);
+
+	void getPersistentLocators(Set<EntityLocator> locators,
+			AsyncCallback<Map<EntityLocator, EntityLocator>> callback);
 
 	void log(ILogRecord remoteLogRecord, AsyncCallback<Long> callback);
 

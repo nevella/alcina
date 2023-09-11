@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -118,6 +119,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
 
 	static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
+
+	static String accessSafeClassLiteral(JClassType type) {
+		return String.format("%s.%s.clazz", type.getPackage().getName(),
+				implementationName(type, false));
+	}
 
 	static void configureRegistry() {
 		if (Registry.optional(DomainCollections.class).isEmpty()) {
@@ -338,6 +344,17 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		return t.getAnnotation(annotationClass) != null;
 	}
 
+	boolean hasNonPublicSelfOrContainer(Class valueClass) {
+		Class cursor = valueClass;
+		do {
+			if (!Modifier.isPublic(cursor.getModifiers())) {
+				return true;
+			}
+			cursor = cursor.getEnclosingClass();
+		} while (cursor != null);
+		return false;
+	}
+
 	void setupEnvironment() {
 		start = System.currentTimeMillis();
 		configureRegistry();
@@ -406,11 +423,17 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					new AnnotationReflection((Annotation) value))
 							.writeExpression(sourceWriter);
 		} else if (clazz.equals(Class.class)) {
+			Class valueClass = (Class) value;
 			if (quoted) {
-				sourceWriter.print(((Class) value).getSimpleName() + ".class");
+				sourceWriter.print((valueClass).getSimpleName() + ".class");
 			} else {
-				sourceWriter
-						.print(((Class) value).getCanonicalName() + ".class");
+				if (hasNonPublicSelfOrContainer(valueClass)) {
+					JClassType type = getType(valueClass);
+					sourceWriter.print(accessSafeClassLiteral(type));
+				} else {
+					sourceWriter
+							.print((valueClass).getCanonicalName() + ".class");
+				}
 			}
 		} else if (clazz.equals(String.class)) {
 			sourceWriter.print(stringLiteral(value.toString(), quoted));
@@ -775,15 +798,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			reflection.getRegistrations().stream()
 					.sorted(REGISTRY_LOCATION_COMPARATOR)
 					.forEach(registryLocation -> {
-						if (reflection.type.isPublic()) {
-							sourceWriter.print(
-									"Registry.register().add(%s.class,",
-									reflection.type.getQualifiedSourceName());
-						} else {
-							sourceWriter.print(
-									"Registry.register().add(%s___refImpl.clazz,",
-									reflection.type.getQualifiedSourceName());
-						}
+						sourceWriter.print("Registry.register().add(%s,",
+								accessSafeClassLiteral(reflection.type));
 						AnnotationExpressionWriter instanceGenerator = new AnnotationExpressionWriter(
 								new AnnotationReflection(registryLocation));
 						instanceGenerator.writeExpression(sourceWriter);

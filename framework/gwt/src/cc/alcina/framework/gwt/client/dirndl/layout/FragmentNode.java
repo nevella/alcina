@@ -219,8 +219,8 @@ public abstract class FragmentNode extends Model.Fields
 		@Override
 		public Stream<? extends FragmentNode> children() {
 			return (Stream<? extends FragmentNode>) (Stream<?>) rootModel
-					.provideNode().children.stream().map(n -> n.model)
-							.filter(m -> m instanceof FragmentNode);
+					.provideNode().ensureChildren().stream().map(n -> n.model)
+					.filter(m -> m instanceof FragmentNode);
 		}
 	}
 

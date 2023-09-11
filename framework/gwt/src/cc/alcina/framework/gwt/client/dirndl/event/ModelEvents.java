@@ -51,6 +51,28 @@ public class ModelEvents {
 		}
 	}
 
+	/**
+	 * <p>
+	 * Emitted by multiple-item and single-item selection sources, such as
+	 * {@code Choices.Multiple}, {@code Choices.Single}), before the selection
+	 * changes are dispatched. This allows code which changes the value of a
+	 * selection (by, say creating a new model which fulfils a suggestion
+	 * contract) to be called before the 'selected' event handlers (which expect
+	 * a model) fire
+	 *
+	 */
+	public static class BeforeSelectionChangedDispatch
+			extends ModelEvent<Object, BeforeSelectionChangedDispatch.Handler> {
+		@Override
+		public void dispatch(BeforeSelectionChangedDispatch.Handler handler) {
+			handler.onBeforeSelectionChanged(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBeforeSelectionChanged(BeforeSelectionChangedDispatch event);
+		}
+	}
+
 	public static class Cancel extends ModelEvent<Object, Cancel.Handler> {
 		@Override
 		public void dispatch(Cancel.Handler handler) {

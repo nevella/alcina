@@ -1,6 +1,8 @@
 package cc.alcina.framework.common.client.remote;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -42,6 +44,13 @@ public class ReflectiveCommonRemoteServiceAsync extends
 		call("getLogsForAction",
 				new Class[] { RemoteAction.class, Integer.class }, callback,
 				action, count);
+	}
+
+	@Override
+	public void getPersistentLocators(Set<EntityLocator> locators,
+			AsyncCallback<Map<EntityLocator, EntityLocator>> callback) {
+		call("getPersistentLocators", new Class[] { Set.class }, callback,
+				locators);
 	}
 
 	@Override

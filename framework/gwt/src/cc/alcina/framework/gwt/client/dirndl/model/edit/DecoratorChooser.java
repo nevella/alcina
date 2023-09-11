@@ -7,6 +7,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.BeforeClosed;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.BeforeSelectionChangedDispatch;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -35,8 +36,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 	className = "decorator-chooser",
 	emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
 public abstract class DecoratorChooser extends Model.Fields
-		implements ModelEvents.SelectionChanged.Handler,
-		ModelEvents.Closed.Handler, ModelEvents.BeforeClosed.Handler {
+		implements ModelEvents.BeforeSelectionChangedDispatch.Handler,
+		ModelEvents.SelectionChanged.Handler, ModelEvents.Closed.Handler,
+		ModelEvents.BeforeClosed.Handler {
 	protected final ContentDecorator<?> contentDecorator;
 
 	@Directed
@@ -56,6 +58,10 @@ public abstract class DecoratorChooser extends Model.Fields
 	@Override
 	public void onBeforeClosed(BeforeClosed event) {
 		event.reemitAs(this, BeforeChooserClosed.class);
+	}
+
+	@Override
+	public void onBeforeSelectionChanged(BeforeSelectionChangedDispatch event) {
 	}
 
 	@Override
