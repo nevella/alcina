@@ -24,4 +24,9 @@ public class EqlWithParameters {
 	public List parameters = new ArrayList();
 
 	public String eql = "";
+
+	@Override
+	public String toString() {
+		return eql;
+	}
 }
