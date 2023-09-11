@@ -193,48 +193,6 @@ public abstract class DirectedRenderer {
 		}
 	}
 
-	interface GeneratesPropertyInputs {
-		default void generatePropertyInputs(RendererInput input) {
-			for (Property property : Reflections.at((input.model))
-					.properties()) {
-				Property directedProperty = input.resolver
-						.resolveDirectedProperty(property);
-				if (directedProperty != null) {
-					Object childModel = property.get(input.model);
-					// add input even if childModel==null
-					Class locationType = childModel == null ? void.class
-							: childModel.getClass();
-					input.enqueueInput(input.resolver, childModel,
-							new AnnotationLocation(locationType,
-									directedProperty, input.resolver),
-							null, input.node);
-				}
-			}
-		}
-	}
-
-	interface GeneratesTransformModel {
-		default Object transformModel(RendererInput input, Object model) {
-			Directed.Transform transform = input.location
-					.getAnnotation(Directed.Transform.class);
-			if (transform == null) {
-				return model;
-			}
-			if (model == null && !transform.transformsNull()) {
-				// null output
-				return null;
-			}
-			ModelTransform modelTransform = (ModelTransform) Reflections
-					.newInstance(transform.value());
-			if (modelTransform instanceof ContextSensitiveTransform) {
-				((ContextSensitiveTransform) modelTransform)
-						.withContextNode(input.node);
-			}
-			Object transformedModel = modelTransform.apply(model);
-			return transformedModel;
-		}
-	}
-
 	/*
 	 * Indicates that the annotation/resolution chain does not define a
 	 * renderer. Fall back on the model class
@@ -300,6 +258,7 @@ public abstract class DirectedRenderer {
 					.wrap(input.soleDirected());
 			descendantResolvedPropertyAnnotation.setRenderer(ModelClass.class);
 			if (transformedModel == input.model) {
+				descendantResolvedPropertyAnnotation.setBindToModel(true);
 				// preserve all other attributes
 			} else {
 				Preconditions.checkArgument(descendantResolvedPropertyAnnotation
@@ -331,6 +290,48 @@ public abstract class DirectedRenderer {
 		protected void render(RendererInput input) {
 			Widget model = (Widget) input.model;
 			input.resolver.linkRenderedObject(input.node, input.model);
+		}
+	}
+
+	interface GeneratesPropertyInputs {
+		default void generatePropertyInputs(RendererInput input) {
+			for (Property property : Reflections.at((input.model))
+					.properties()) {
+				Property directedProperty = input.resolver
+						.resolveDirectedProperty(property);
+				if (directedProperty != null) {
+					Object childModel = property.get(input.model);
+					// add input even if childModel==null
+					Class locationType = childModel == null ? void.class
+							: childModel.getClass();
+					input.enqueueInput(input.resolver, childModel,
+							new AnnotationLocation(locationType,
+									directedProperty, input.resolver),
+							null, input.node);
+				}
+			}
+		}
+	}
+
+	interface GeneratesTransformModel {
+		default Object transformModel(RendererInput input, Object model) {
+			Directed.Transform transform = input.location
+					.getAnnotation(Directed.Transform.class);
+			if (transform == null) {
+				return model;
+			}
+			if (model == null && !transform.transformsNull()) {
+				// null output
+				return null;
+			}
+			ModelTransform modelTransform = (ModelTransform) Reflections
+					.newInstance(transform.value());
+			if (modelTransform instanceof ContextSensitiveTransform) {
+				((ContextSensitiveTransform) modelTransform)
+						.withContextNode(input.node);
+			}
+			Object transformedModel = modelTransform.apply(model);
+			return transformedModel;
 		}
 	}
 }
