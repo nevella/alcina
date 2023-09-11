@@ -6,7 +6,9 @@ import java.util.Date;
 import javax.persistence.Transient;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
@@ -14,10 +16,12 @@ import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ClassSimpleNameCustomiser;
+import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ExpandableLabelCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser;
+import cc.alcina.framework.gwt.client.gwittir.renderer.ClassSimpleNameRenderer;
+import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 // has no pcls, read-only on client
 @Bean
@@ -66,11 +70,7 @@ public class DomainTransformEventView extends DomainTransformEvent
 					name = ExpandableLabelCustomiser.MAX_WIDTH,
 					intValue = 30) })
 	public String getNewStringValue() {
-		if (getValueId() != 0 || getValueLocalId() != 0) {
-			return Ax.format("id:%s/%s", getValueId(), getValueLocalId());
-		} else {
-			return super.getNewStringValue();
-		}
+		return super.getNewStringValue();
 	}
 
 	@Override
@@ -122,6 +122,13 @@ public class DomainTransformEventView extends DomainTransformEvent
 	}
 
 	@Override
+	@Display(name = "Reference", orderingHint = 31)
+	@Custom(customiserClass = LongBlankZeroCustomiser.class)
+	public long getValueId() {
+		return super.getValueId();
+	}
+
+	@Override
 	public PropertyChangeListener[] propertyChangeListeners() {
 		return null;
 	}
@@ -149,6 +156,25 @@ public class DomainTransformEventView extends DomainTransformEvent
 
 	public void setUserName(String userName) {
 		this.userName = userName;
+	}
+
+	@Reflected
+	public static class LongBlankZeroCustomiser implements Customiser {
+		public static final BoundWidgetProvider INSTANCE = new BoundWidgetProvider() {
+			@Override
+			public BoundWidget get() {
+				RenderingLabel label = new RenderingLabel();
+				label.setWordWrap(false);
+				label.setRenderer(ClassSimpleNameRenderer.INSTANCE);
+				return label;
+			}
+		};
+
+		@Override
+		public BoundWidgetProvider getProvider(boolean editable,
+				Class objectClass, boolean multiple, Custom info) {
+			return INSTANCE;
+		}
 	}
 
 	@Reflected

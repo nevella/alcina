@@ -41,8 +41,8 @@ public class BasicSearcher implements Searcher {
 	private Query searchStub(SingleTableSearchDefinition sdef, String prefix,
 			String postfix, boolean withOrderClause) {
 		EqlWithParameters ewp = getEqlWithParameters(sdef, withOrderClause);
-		Query query = getEntityManager()
-				.createQuery(prefix + " " + ewp.eql + postfix);
+		String ql = prefix + " " + ewp.eql + postfix;
+		Query query = getEntityManager().createQuery(ql);
 		int i = 1;
 		for (Object o : ewp.parameters) {
 			query.setParameter(i++, o);

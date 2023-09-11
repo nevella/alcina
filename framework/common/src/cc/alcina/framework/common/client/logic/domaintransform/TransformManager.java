@@ -2231,9 +2231,14 @@ public abstract class TransformManager
 					.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION
 					&& existingTargetObject instanceof Set) {
 				EntityLocator valueLocator = event.toValueLocator();
-				existingTargetEntity = getObjectStore().getObject(valueLocator);
-				existingTargetEntity = (Entity) ensureEndpointInTransformGraph(
-						existingTargetEntity);
+				if (valueLocator == null) {
+					// an enum set
+				} else {
+					existingTargetEntity = getObjectStore()
+							.getObject(valueLocator);
+					existingTargetEntity = (Entity) ensureEndpointInTransformGraph(
+							existingTargetEntity);
+				}
 			}
 			newTargetObject = transformType == null ? null
 					: getTargetObject(event, false);
