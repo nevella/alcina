@@ -1228,7 +1228,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.distinct()
 					.filter(t -> !t.getQualifiedSourceName()
 							.equals(Object.class.getCanonicalName()))
-					.filter(t -> t.isPublic()).map(t -> new TypeHierarchy(t,
+					.filter(this::isProtectionVisible).map(t -> new TypeHierarchy(t,
 							subtypes, asyncSerializableTypes, settableTypes));
 		}
 
