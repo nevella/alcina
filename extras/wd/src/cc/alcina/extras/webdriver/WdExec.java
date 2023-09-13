@@ -227,6 +227,7 @@ public class WdExec {
 				throw new TimedOutException("forced timeout");
 			}
 			try {
+				elem = getElement();
 				actor.accept(elem);
 				return false;
 			} catch (RuntimeException e) {
