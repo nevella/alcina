@@ -50,39 +50,33 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	 *            the event to handle.
 	 */
 	private static void handleNonBubblingEvent(Event event) {
-		try {
-			// Get the event target.
-			EventTarget eventTarget = event.getEventTarget();
-			if (eventTarget == null) {
-				// should not be required - but added due to production NPEs
-				return;
+		// Get the event target.
+		EventTarget eventTarget = event.getEventTarget();
+		if (eventTarget == null) {
+			// should not be required - but added due to production NPEs
+			return;
+		}
+		if (!Element.is(eventTarget)) {
+			return;
+		}
+		Element target = eventTarget.cast();
+		// Get the event listener, which is the first widget that handles
+		// the
+		// specified event type.
+		String typeName = event.getType();
+		EventListener listener = DOM.getEventListener(target);
+		while (target != null && listener == null
+				&& target.getParentElement() != null) {
+			target = target.getParentElement().cast();
+			if (target != null && isNonBubblingEventHandled(target, typeName)) {
+				// The target handles the event, so this must be the event
+				// listener.
+				listener = DOM.getEventListener(target);
 			}
-			if (!Element.is(eventTarget)) {
-				return;
-			}
-			Element target = eventTarget.cast();
-			// Get the event listener, which is the first widget that handles
-			// the
-			// specified event type.
-			String typeName = event.getType();
-			EventListener listener = DOM.getEventListener(target);
-			while (target != null && listener == null
-					&& target.getParentElement() != null) {
-				target = target.getParentElement().cast();
-				if (target != null
-						&& isNonBubblingEventHandled(target, typeName)) {
-					// The target handles the event, so this must be the event
-					// listener.
-					listener = DOM.getEventListener(target);
-				}
-			}
-			// Fire the event.
-			if (listener != null) {
-				DOM.dispatchEvent(event, target, listener);
-			}
-		} catch (Exception e) {
-			// FIXME - dirndl - there are strange NPEs around the event system
-			// here -
+		}
+		// Fire the event.
+		if (listener != null) {
+			DOM.dispatchEvent(event, target, listener);
 		}
 	}
 
@@ -127,7 +121,8 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	 */
 	private native void initEventSystem() /*-{
     @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent = $entry(function(
-        evt) {
+        evtJso) {
+      var evt = @com.google.gwt.user.client.Event::new(Lcom/google/gwt/dom/client/NativeEventJso;)(evtJso);
       @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::handleNonBubblingEvent(Lcom/google/gwt/user/client/Event;)(evt);
     });
 	}-*/;

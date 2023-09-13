@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -62,23 +62,17 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 	 */
 	private boolean isReady;
 
-	// @Override
-	// public native Element createElement() /*-{
-	// return $doc.createElement('iframe');
-	// }-*/;
 	@Override
-	protected Element createElement() {
-		return Document.get().createIFrameElement();
-	}
-
 	public void createLink(String url) {
 		execCommand("CreateLink", url);
 	}
 
+	@Override
 	public String getBackColor() {
 		return queryCommandValue("BackColor");
 	}
 
+	@Override
 	public String getForeColor() {
 		return queryCommandValue("ForeColor");
 	}
@@ -97,45 +91,52 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 
 	@Override
 	public native void initElement() /*-{
-										// Most browsers don't like setting designMode until slightly _after_
-										// the iframe becomes attached to the DOM. Any non-zero timeout will do
-										// just fine.
-										var _this = this;
-										_this.@com.google.gwt.user.client.ui.impl.RichTextAreaImplStandard::onElementInitializing()();
-										setTimeout($entry(function() {
-										// We need to check to see if the content window still is there. It might not be if the RTA
-										// first was attached to the DOM and then quickly was removed before the timeout fired.
-										if (_this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow != null) {
-										// Turn on design mode.
-										_this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.designMode = 'On';
-										
-										// Send notification that the iframe has reached design mode.
-										_this.@com.google.gwt.user.client.ui.impl.RichTextAreaImplStandard::onElementInitialized()();
-										}
-										}), 1);
-										}-*/;
+    // Most browsers don't like setting designMode until slightly _after_
+    // the iframe becomes attached to the DOM. Any non-zero timeout will do
+    // just fine.
+    var _this = this;
+    _this.@com.google.gwt.user.client.ui.impl.RichTextAreaImplStandard::onElementInitializing()();
+    setTimeout(
+        $entry(function() {
+          // We need to check to see if the content window still is there. It might not be if the RTA
+          // first was attached to the DOM and then quickly was removed before the timeout fired.
+          if (_this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow != null) {
+            // Turn on design mode.
+            _this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.designMode = 'On';
 
+            // Send notification that the iframe has reached design mode.
+            _this.@com.google.gwt.user.client.ui.impl.RichTextAreaImplStandard::onElementInitialized()();
+          }
+        }), 1);
+	}-*/;
+
+	@Override
 	public void insertHorizontalRule() {
 		execCommand("InsertHorizontalRule", null);
 	}
 
+	@Override
 	public void insertHTML(@IsSafeHtml
 	String html) {
 		execCommand("InsertHTML", html);
 	}
 
+	@Override
 	public void insertImage(String url) {
 		execCommand("InsertImage", url);
 	}
 
+	@Override
 	public void insertOrderedList() {
 		execCommand("InsertOrderedList", null);
 	}
 
+	@Override
 	public void insertUnorderedList() {
 		execCommand("InsertUnorderedList", null);
 	}
 
+	@Override
 	public boolean isBold() {
 		return queryCommandState("Bold");
 	}
@@ -146,50 +147,62 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 				: !beforeInitPlaceholder.getPropertyBoolean("disabled");
 	}
 
+	@Override
 	public boolean isItalic() {
 		return queryCommandState("Italic");
 	}
 
+	@Override
 	public boolean isStrikethrough() {
 		return queryCommandState("Strikethrough");
 	}
 
+	@Override
 	public boolean isSubscript() {
 		return queryCommandState("Subscript");
 	}
 
+	@Override
 	public boolean isSuperscript() {
 		return queryCommandState("Superscript");
 	}
 
+	@Override
 	public boolean isUnderlined() {
 		return queryCommandState("Underline");
 	}
 
+	@Override
 	public void leftIndent() {
 		execCommand("Outdent", null);
 	}
 
+	@Override
 	public void redo() {
 		execCommand("Redo", "false");
 	}
 
+	@Override
 	public void removeFormat() {
 		execCommand("RemoveFormat", null);
 	}
 
+	@Override
 	public void removeLink() {
 		execCommand("Unlink", "false");
 	}
 
+	@Override
 	public void rightIndent() {
 		execCommand("Indent", null);
 	}
 
+	@Override
 	public void selectAll() {
 		execCommand("SelectAll", null);
 	}
 
+	@Override
 	public void setBackColor(String color) {
 		execCommand("BackColor", color);
 	}
@@ -215,14 +228,17 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 		}
 	}
 
+	@Override
 	public void setFontName(String name) {
 		execCommand("FontName", name);
 	}
 
+	@Override
 	public void setFontSize(FontSize fontSize) {
 		execCommand("FontSize", Integer.toString(fontSize.getNumber()));
 	}
 
+	@Override
 	public void setForeColor(String color) {
 		execCommand("ForeColor", color);
 	}
@@ -237,6 +253,7 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 		}
 	}
 
+	@Override
 	public void setJustification(Justification justification) {
 		if (justification == Justification.CENTER) {
 			execCommand("JustifyCenter", null);
@@ -258,30 +275,37 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 		}
 	}
 
+	@Override
 	public void toggleBold() {
 		execCommand("Bold", "false");
 	}
 
+	@Override
 	public void toggleItalic() {
 		execCommand("Italic", "false");
 	}
 
+	@Override
 	public void toggleStrikethrough() {
 		execCommand("Strikethrough", "false");
 	}
 
+	@Override
 	public void toggleSubscript() {
 		execCommand("Subscript", "false");
 	}
 
+	@Override
 	public void toggleSuperscript() {
 		execCommand("Superscript", "false");
 	}
 
+	@Override
 	public void toggleUnderline() {
 		execCommand("Underline", "False");
 	}
 
+	@Override
 	public void undo() {
 		execCommand("Undo", "false");
 	}
@@ -312,59 +336,69 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 		setEnabled(enabled);
 	}
 
+	// @Override
+	// public native Element createElement() /*-{
+	// return $doc.createElement('iframe');
+	// }-*/;
+	@Override
+	protected Element createElement() {
+		return Document.get().createIFrameElement();
+	}
+
 	protected native String getHTMLImpl() /*-{
-											return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.innerHTML;
-											}-*/;
+    return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.innerHTML;
+	}-*/;
 
 	protected native String getTextImpl() /*-{
-											return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.textContent;
-											}-*/;
+    return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.textContent;
+	}-*/;
 
 	@Override
 	protected native void hookEvents() /*-{
-										var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
-										var wnd = elem.contentWindow;
-										
-										elem.__gwt_handler = $entry(function(evt) {
-										@com.google.gwt.user.client.DOM::dispatchEvent(Lcom/google/gwt/user/client/Event;Lcom/google/gwt/dom/client/Element;)(evt, elem);
-										});
-										
-										elem.__gwt_focusHandler = function(evt) {
-										if (elem.__gwt_isFocused) {
-										return;
-										}
-										
-										elem.__gwt_isFocused = true;
-										elem.__gwt_handler(evt);
-										};
-										
-										elem.__gwt_blurHandler = function(evt) {
-										if (!elem.__gwt_isFocused) {
-										return;
-										}
-										
-										elem.__gwt_isFocused = false;
-										elem.__gwt_handler(evt);
-										};
-										
-										wnd.addEventListener('keydown', elem.__gwt_handler, true);
-										wnd.addEventListener('keyup', elem.__gwt_handler, true);
-										wnd.addEventListener('keypress', elem.__gwt_handler, true);
-										wnd.addEventListener('mousedown', elem.__gwt_handler, true);
-										wnd.addEventListener('mouseup', elem.__gwt_handler, true);
-										wnd.addEventListener('mousemove', elem.__gwt_handler, true);
-										wnd.addEventListener('mouseover', elem.__gwt_handler, true);
-										wnd.addEventListener('mouseout', elem.__gwt_handler, true);
-										wnd.addEventListener('click', elem.__gwt_handler, true);
-										
-										wnd.addEventListener('focus', elem.__gwt_focusHandler, true);
-										wnd.addEventListener('blur', elem.__gwt_blurHandler, true);
-										}-*/;
+    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
+    var wnd = elem.contentWindow;
+
+    elem.__gwt_handler = $entry(function(evtJso) {
+      var evt = @com.google.gwt.user.client.Event::new(Lcom/google/gwt/dom/client/NativeEventJso;)(evtJso);
+      @com.google.gwt.user.client.DOM::dispatchEvent(Lcom/google/gwt/user/client/Event;Lcom/google/gwt/dom/client/Element;)(evt, elem);
+    });
+
+    elem.__gwt_focusHandler = function(evt) {
+      if (elem.__gwt_isFocused) {
+        return;
+      }
+
+      elem.__gwt_isFocused = true;
+      elem.__gwt_handler(evt);
+    };
+
+    elem.__gwt_blurHandler = function(evt) {
+      if (!elem.__gwt_isFocused) {
+        return;
+      }
+
+      elem.__gwt_isFocused = false;
+      elem.__gwt_handler(evt);
+    };
+
+    wnd.addEventListener('keydown', elem.__gwt_handler, true);
+    wnd.addEventListener('keyup', elem.__gwt_handler, true);
+    wnd.addEventListener('keypress', elem.__gwt_handler, true);
+    wnd.addEventListener('mousedown', elem.__gwt_handler, true);
+    wnd.addEventListener('mouseup', elem.__gwt_handler, true);
+    wnd.addEventListener('mousemove', elem.__gwt_handler, true);
+    wnd.addEventListener('mouseover', elem.__gwt_handler, true);
+    wnd.addEventListener('mouseout', elem.__gwt_handler, true);
+    wnd.addEventListener('click', elem.__gwt_handler, true);
+
+    wnd.addEventListener('focus', elem.__gwt_focusHandler, true);
+    wnd.addEventListener('blur', elem.__gwt_blurHandler, true);
+	}-*/;
 
 	protected native boolean isEnabledImpl() /*-{
-												var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
-												return elem.contentWindow.document.designMode.toUpperCase() == 'ON';
-												}-*/;
+    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
+    return elem.contentWindow.document.designMode.toUpperCase() == 'ON';
+	}-*/;
 
 	@Override
 	@SuppressIsSafeHtmlCastCheck
@@ -397,48 +431,50 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 	}
 
 	protected native void setEnabledImpl(boolean enabled) /*-{
-															var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
-															elem.contentWindow.document.designMode = enabled ? 'On' : 'Off';
-															}-*/;
+    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
+    elem.contentWindow.document.designMode = enabled ? 'On' : 'Off';
+	}-*/;
 
 	protected native void setFocusImpl(boolean focused) /*-{
-														if (focused) {
-														this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.focus();
-														} else {
-														this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.blur();
-														}
-														}-*/;
+    if (focused) {
+      this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow
+          .focus();
+    } else {
+      this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow
+          .blur();
+    }
+	}-*/;
 
 	protected native void setHTMLImpl(@IsSafeHtml
 	String html) /*-{
-																this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.innerHTML = html;
-																}-*/;
+    this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.innerHTML = html;
+	}-*/;
 
 	protected native void setTextImpl(String text) /*-{
-													this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.textContent = text;
-													}-*/;
+    this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.textContent = text;
+	}-*/;
 
 	protected native void unhookEvents() /*-{
-											var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
-											var wnd = elem.contentWindow;
-											
-											wnd.removeEventListener('keydown', elem.__gwt_handler, true);
-											wnd.removeEventListener('keyup', elem.__gwt_handler, true);
-											wnd.removeEventListener('keypress', elem.__gwt_handler, true);
-											wnd.removeEventListener('mousedown', elem.__gwt_handler, true);
-											wnd.removeEventListener('mouseup', elem.__gwt_handler, true);
-											wnd.removeEventListener('mousemove', elem.__gwt_handler, true);
-											wnd.removeEventListener('mouseover', elem.__gwt_handler, true);
-											wnd.removeEventListener('mouseout', elem.__gwt_handler, true);
-											wnd.removeEventListener('click', elem.__gwt_handler, true);
-											
-											wnd.removeEventListener('focus', elem.__gwt_focusHandler, true);
-											wnd.removeEventListener('blur', elem.__gwt_blurHandler, true);
-											
-											elem.__gwt_handler = null;
-											elem.__gwt_focusHandler = null;
-											elem.__gwt_blurHandler = null;
-											}-*/;
+    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
+    var wnd = elem.contentWindow;
+
+    wnd.removeEventListener('keydown', elem.__gwt_handler, true);
+    wnd.removeEventListener('keyup', elem.__gwt_handler, true);
+    wnd.removeEventListener('keypress', elem.__gwt_handler, true);
+    wnd.removeEventListener('mousedown', elem.__gwt_handler, true);
+    wnd.removeEventListener('mouseup', elem.__gwt_handler, true);
+    wnd.removeEventListener('mousemove', elem.__gwt_handler, true);
+    wnd.removeEventListener('mouseover', elem.__gwt_handler, true);
+    wnd.removeEventListener('mouseout', elem.__gwt_handler, true);
+    wnd.removeEventListener('click', elem.__gwt_handler, true);
+
+    wnd.removeEventListener('focus', elem.__gwt_focusHandler, true);
+    wnd.removeEventListener('blur', elem.__gwt_blurHandler, true);
+
+    elem.__gwt_handler = null;
+    elem.__gwt_focusHandler = null;
+    elem.__gwt_blurHandler = null;
+	}-*/;
 
 	void execCommand(String cmd, String param) {
 		assert isReady : INACTIVE_MESSAGE;
@@ -457,8 +493,9 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 	}
 
 	native void execCommandAssumingFocus(String cmd, String param) /*-{
-																	this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.execCommand(cmd, false, param);
-																	}-*/;
+    this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document
+        .execCommand(cmd, false, param);
+	}-*/;
 
 	boolean queryCommandState(String cmd) {
 		if (isReady) {
@@ -476,8 +513,9 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 	}
 
 	native boolean queryCommandStateAssumingFocus(String cmd) /*-{
-																return !!this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.queryCommandState(cmd);
-																}-*/;
+    return !!this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document
+        .queryCommandState(cmd);
+	}-*/;
 
 	String queryCommandValue(String cmd) {
 		if (isReady) {
@@ -495,6 +533,7 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 	}
 
 	native String queryCommandValueAssumingFocus(String cmd) /*-{
-																return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.queryCommandValue(cmd);
-																}-*/;
+    return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document
+        .queryCommandValue(cmd);
+	}-*/;
 }

@@ -41,15 +41,10 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
 @Registration(JsonObjectSerializer.class)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
-	public static final String MAX_LENGTH = "maxLength";
-
-	public static final int DEFAULT_MAX_LENGTH = 10000000;
-
 	public static final String CONTEXT_WITHOUT_MAPPER_POOL = JacksonJsonObjectSerializer.class
 			+ ".CONTEXT_NO_MAPPER";
 
@@ -66,23 +61,15 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private boolean withBase64Encoding;
 
-	private int maxLength;
-
 	private boolean withPrettyPrint;
 
 	private boolean withDefaults = true;
 
 	private boolean withDuplicateIdRefCheck = false;
 
-	private boolean truncateAtMaxLength;
-
 	private boolean withWrapRootValue;
 
-	// FIXME - 2023 - remove maxLength - check should be for mvcc (domaingraph)
-	// objects, not length per se
 	public JacksonJsonObjectSerializer() {
-		maxLength = Configuration.key(MAX_LENGTH).withContextOverride(true)
-				.intValue();
 	}
 
 	public <T> T deserialize(Reader reader, Class<T> clazz) {
@@ -136,9 +123,9 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 			return CommonUtils.equals(withIdRefs, o.withIdRefs, withTypeInfo,
 					o.withTypeInfo, withAllowUnknownProperties,
 					o.withAllowUnknownProperties, withBase64Encoding,
-					o.withBase64Encoding, maxLength, o.maxLength,
-					withPrettyPrint, o.withPrettyPrint, withDefaults,
-					o.withDefaults, withWrapRootValue, o.withWrapRootValue);
+					o.withBase64Encoding, withPrettyPrint, o.withPrettyPrint,
+					withDefaults, o.withDefaults, withWrapRootValue,
+					o.withWrapRootValue);
 		} else {
 			return false;
 		}
@@ -147,16 +134,15 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	@Override
 	public int hashCode() {
 		return Objects.hash(withIdRefs, withTypeInfo,
-				withAllowUnknownProperties, withBase64Encoding, maxLength,
-				withPrettyPrint, withDefaults, withWrapRootValue);
+				withAllowUnknownProperties, withBase64Encoding, withPrettyPrint,
+				withDefaults, withWrapRootValue);
 	}
 
 	@Override
 	public String serialize(Object object) {
 		return runWithObjectMapper(mapper -> {
 			try {
-				StringWriter writer = new LengthConstrainedStringWriter(
-						maxLength, truncateAtMaxLength);
+				StringWriter writer = new StringWriter();
 				if (withPrettyPrint) {
 					SerializationConfig config = mapper
 							.getSerializationConfig();
@@ -241,19 +227,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		return this;
 	}
 
-	public JacksonJsonObjectSerializer withMaxLength(int maxLength) {
-		this.maxLength = maxLength;
-		return this;
-	}
-
 	public JacksonJsonObjectSerializer withPrettyPrint() {
 		this.withPrettyPrint = true;
-		return this;
-	}
-
-	public JacksonJsonObjectSerializer
-			withTruncateAtMaxLength(boolean truncateAtMaxLength) {
-		this.truncateAtMaxLength = truncateAtMaxLength;
 		return this;
 	}
 

@@ -154,11 +154,7 @@ public @interface Directed {
 		public static final Directed DEFAULT_INSTANCE = new Directed.Impl();
 
 		public static Impl wrap(Directed directed) {
-			if (directed instanceof Impl) {
-				return (Impl) directed;
-			} else {
-				return new Impl(directed);
-			}
+			return new Impl(directed);
 		}
 
 		private Binding[] bindings = EMPTY_BINDINGS_ARRAY;
@@ -304,6 +300,16 @@ public @interface Directed {
 			return toString(true);
 		}
 
+		public Impl withBindDomEvents(boolean bindDomEvents) {
+			this.bindDomEvents = bindDomEvents;
+			return this;
+		}
+
+		public Impl withBindToModel(boolean bindToModel) {
+			this.bindToModel = bindToModel;
+			return this;
+		}
+
 		private String __stringValue(Object o) {
 			if (o instanceof Class) {
 				return ((Class) o).getSimpleName() + ".class";
@@ -446,10 +452,6 @@ public @interface Directed {
 				Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 		mergeStrategy = Transform.MergeStrategy.class)
 	@interface Transform {
-		boolean bindDomEvents() default true;
-
-		boolean bindToModel() default true;
-
 		boolean transformsNull() default false;
 
 		Class<? extends ModelTransform> value();
@@ -457,25 +459,11 @@ public @interface Directed {
 		public static class Impl implements Directed.Transform {
 			private boolean transformsNull;
 
-			private boolean bindToModel = true;
-
-			private boolean bindDomEvents = true;
-
 			private Class<? extends ModelTransform> value;
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
 				return Directed.Transform.class;
-			}
-
-			@Override
-			public boolean bindDomEvents() {
-				return this.bindDomEvents;
-			}
-
-			@Override
-			public boolean bindToModel() {
-				return this.bindToModel;
 			}
 
 			@Override
@@ -486,16 +474,6 @@ public @interface Directed {
 			@Override
 			public Class<? extends ModelTransform> value() {
 				return value;
-			}
-
-			public Impl withBindDomEvents(boolean bindDomEvents) {
-				this.bindDomEvents = bindDomEvents;
-				return this;
-			}
-
-			public Impl withBindToModel(boolean bindToModel) {
-				this.bindToModel = bindToModel;
-				return this;
 			}
 
 			public Impl withTransformsNull(boolean transformsNull) {

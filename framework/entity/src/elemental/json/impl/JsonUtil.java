@@ -21,7 +21,6 @@ import java.util.Set;
 
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.entity.util.LengthConstrainedStringBuilder;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonException;
@@ -150,7 +149,7 @@ public class JsonUtil {
 	 * @return json formatted string
 	 */
 	public static String stringify(JsonValue jsonValue, final String indent) {
-		final LengthConstrainedStringBuilder sb = new LengthConstrainedStringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		final boolean isPretty = indent != null && !"".equals(indent);
 		new StringifyJsonVisitor(indent, sb, isPretty).accept(jsonValue);
 		return sb.toString();
@@ -191,12 +190,12 @@ public class JsonUtil {
 
 		private final String indent;
 
-		private final LengthConstrainedStringBuilder sb;
+		private final StringBuilder sb;
 
 		private final boolean pretty;
 
 		private StringifyJsonVisitor(String indent,
-				LengthConstrainedStringBuilder sb, boolean pretty) {
+				StringBuilder sb, boolean pretty) {
 			this.indent = indent;
 			this.sb = sb;
 			this.pretty = pretty;

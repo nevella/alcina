@@ -128,8 +128,6 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 			} else {
 				impl.setRenderer(DirectedRenderer.TransformRenderer.class);
 			}
-			impl.setBindToModel(transform.bindToModel());
-			impl.setBindDomEvents(transform.bindDomEvents());
 			result.add(impl);
 		}
 		if (result.isEmpty() && reflector instanceof Property) {
