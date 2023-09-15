@@ -11,6 +11,9 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FromStringFunction;
@@ -22,6 +25,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 @Documented
 // Use as a field of @Directed, or on a property
 @Target({ ElementType.METHOD, ElementType.FIELD })
+// if on a property, merge superclass
+@Resolution(
+	inheritance = { Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
+	mergeStrategy = Binding.MergeStrategy.class)
 @ClientVisible
 public @interface Binding {
 	String from() default "";
@@ -70,6 +77,14 @@ public @interface Binding {
 	public interface ContextSensitiveTransform<T> extends ToStringFunction<T> {
 		public ContextSensitiveTransform<T>
 				withContextNode(DirectedLayout.Node node);
+	}
+
+	@Reflected
+	public static class DisplayBlankNone implements ToStringFunction<Boolean> {
+		@Override
+		public String apply(Boolean t) {
+			return CommonUtils.bv(t) ? "" : "none";
+		}
 	}
 
 	@Reflected
@@ -223,6 +238,11 @@ public @interface Binding {
 			append(stringBuilder, "type", Impl::type, elideDefaults);
 			return stringBuilder.toString();
 		}
+	}
+
+	@Reflected
+	public static class MergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOnly<Binding> {
 	}
 
 	@Reflected

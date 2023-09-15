@@ -183,8 +183,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 	 * </pre></code>
 	 */
-	protected <A extends Annotation> Class
-			resolveLocationClass(AnnotationLocation location) {
+	protected Class resolveLocationClass(AnnotationLocation location) {
 		return location.classLocation;
 	}
 
@@ -244,14 +243,17 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		List<Binding> computeBindings(Key key) {
 			List<Binding> result = new ArrayList<>();
 			Arrays.asList(key.directed.bindings()).forEach(result::add);
-			ClassReflector<? extends Object> reflector = Reflections
-					.at(key.clazz);
+			Class<? extends Object> clazz = key.clazz;
+			ClassReflector<? extends Object> reflector = Reflections.at(clazz);
 			if (reflector != null) {
-				reflector.properties().stream()
-						.filter(p -> p.has(Binding.class))
-						.map(p -> Binding.Impl.propertyBinding(p,
-								p.annotation(Binding.class)))
-						.forEach(result::add);
+				reflector.properties().stream().forEach(p -> {
+					AnnotationLocation location = new AnnotationLocation(clazz,
+							p, ContextResolver.this);
+					Binding binding = location.getAnnotation(Binding.class);
+					if (binding != null) {
+						result.add(Binding.Impl.propertyBinding(p, binding));
+					}
+				});
 			}
 			return result;
 		}
