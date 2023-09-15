@@ -29,13 +29,11 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * logical application level - e.g. a dropdown shows a "color" action, the color
  * selector could be displayed as a pushed dropdown
  *
- * 
+ *
  *
  * @param <D>
  */
-@Directed(
-	bindings = @Binding(from = "open", type = Type.CSS_CLASS)
-)
+@Directed(bindings = @Binding(from = "open", type = Type.CSS_CLASS))
 public class Dropdown extends Model
 		implements DropdownButtonClicked.Handler, ModelEvents.Closed.Handler {
 	private boolean open;
@@ -54,6 +52,8 @@ public class Dropdown extends Model
 
 	private Supplier<List<Class<? extends Model>>> logicalAncestorsSupplier;
 
+	private Model logicalParent;
+
 	public Dropdown(Model button, Model dropdown) {
 		this.button = button;
 		setDropdown(dropdown);
@@ -68,14 +68,18 @@ public class Dropdown extends Model
 	}
 
 	@Directed(
-		
-	reemits = { DomEvents.Click.class, DropdownEvents.DropdownButtonClicked.class })
+		reemits = { DomEvents.Click.class,
+				DropdownEvents.DropdownButtonClicked.class })
 	public Model getButton() {
 		return this.button;
 	}
 
 	public Model getDropdown() {
 		return this.dropdown;
+	}
+
+	public Model getLogicalParent() {
+		return this.logicalParent;
 	}
 
 	public OverlayPosition.Position getXalign() {
@@ -99,6 +103,8 @@ public class Dropdown extends Model
 
 	public void pushDropdown(Model model) {
 		Preconditions.checkState(!open);
+		// this must receive the closed event
+		Preconditions.checkState(logicalParent == this);
 		dropdownStack.add(model);
 		dropdown = model;
 	}
@@ -126,10 +132,6 @@ public class Dropdown extends Model
 		}
 	}
 
-	public void setXalign(OverlayPosition.Position xalign) {
-		this.xalign = xalign;
-	}
-
 	public Dropdown withLogicalAncestors(
 			List<Class<? extends Model>> logicalAncestors) {
 		return withLogicalAncestorsSupplier(() -> logicalAncestors);
@@ -138,6 +140,21 @@ public class Dropdown extends Model
 	public Dropdown withLogicalAncestorsSupplier(
 			Supplier<List<Class<? extends Model>>> logicalAncestorsSupplier) {
 		this.logicalAncestorsSupplier = logicalAncestorsSupplier;
+		return this;
+	}
+
+	/*
+	 * Rare - when you want a dropdown overlay to stay visible , and the
+	 * originating dropdown may disappear due to a rerender, set this somewhere
+	 * higher in the node/model ancestor chain
+	 */
+	public Dropdown withLogicalParent(Model logicalParent) {
+		this.logicalParent = logicalParent;
+		return this;
+	}
+
+	public Dropdown withXalign(OverlayPosition.Position xalign) {
+		this.xalign = xalign;
 		return this;
 	}
 
@@ -153,6 +170,10 @@ public class Dropdown extends Model
 			if (dropdownStack.size() == 1 && logicalAncestorsSupplier != null) {
 				builder.withLogicalAncestors(logicalAncestorsSupplier.get());
 			}
+			if (logicalParent == null) {
+				logicalParent = this;
+			}
+			builder.withLogicalParent(logicalParent);
 			overlay = builder.build();
 			overlay.open();
 		} else {
