@@ -104,7 +104,8 @@ import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
- *
+ * FIXME - dirndl - remove all property descriptor code (use
+ * ClassReflector.properties)
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class SEUtilities {

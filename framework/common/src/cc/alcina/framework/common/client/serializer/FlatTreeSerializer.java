@@ -151,7 +151,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * </ul>
  *
  *
- * 
+ *
  */
 public class FlatTreeSerializer {
 	private static final String CLASS = "class$";
@@ -1419,7 +1419,7 @@ public class FlatTreeSerializer {
 			int tzOffsetMinutes = tzOffset % 60;
 			String tzDirection = tzOffset <= 0 ? "+" : "-";
 			format.append(tzDirection);
-			format.appendZeroesLeft(2, tzOffsetHours);
+			format.appendZeroesLeft(2, Math.abs(tzOffsetHours));
 			format.appendZeroesLeft(2, tzOffsetMinutes);
 			return format.toString();
 		}
