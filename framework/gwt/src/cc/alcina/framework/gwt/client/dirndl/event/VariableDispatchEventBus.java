@@ -31,7 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * changed') should be fired asynchronously since they're not a translation,
  * rather an effect.
  *
- * 
+ *
  *
  */
 public class VariableDispatchEventBus extends SimpleEventBus {
@@ -67,6 +67,16 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 				Class<? extends ModelEvent> clazz) {
 			distinct().lambda(() -> NodeEvent.Context.fromNode(node)
 					.dispatch(clazz, null)).dispatch();
+		}
+
+		/**
+		 * Sugar for a commonn emission pattern. Note that it is *not*
+		 * distinct()
+		 */
+		public void dispatchModelEvent(Node node,
+				Class<? extends ModelEvent> clazz, Object model) {
+			lambda(() -> NodeEvent.Context.fromNode(node).dispatch(clazz,
+					model)).dispatch();
 		}
 
 		public QueuedEvent distinct() {
