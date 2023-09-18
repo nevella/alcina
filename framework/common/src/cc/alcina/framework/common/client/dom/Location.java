@@ -25,10 +25,10 @@ The serialized representation of a location must provide info as to whether a lo
 either by serialized field or by (say) having a 'start' and 'end' location property of some parent object.
 
 The current (treeindex/runindex) fields should be augmented to 'treeindex/runindex/offset' - all computed via an ensure() check
-in the getter, which checks computedOffsetEvent against the container (document) mutationEvent counter
+in the getter, which checks the computedOffsetEvent value against the container (document) mutationEvent counter
 
 Re-computation should just involve offset addition and ascent to root (O(N) where N is the tree depth), and update should just involve
-mutation of parent.children.offset (only required, not, if the child is not at the end of parent.children, the most common case)
+mutation of parent.children.offset (only required if the child is not at the end of parent.children, the most common case durin)
 
 'After' is computable via location.parent.children lookup - if 'containingNode' == location.parent.children[offset].node, then
  the location is at the start of the node, otherwise at the end (FIXME - doc - show a worked example)
