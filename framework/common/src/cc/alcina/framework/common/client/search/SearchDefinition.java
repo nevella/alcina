@@ -164,6 +164,10 @@ public abstract class SearchDefinition extends Bindable
 		}
 	}
 
+	public void ensureDefaultCriteria() {
+		getCriteriaGroups().forEach(CriteriaGroup::ensureDefaultCriteria);
+	}
+
 	public <V extends OrderGroup> V ensureOrderGroup(V orderGroup) {
 		V og = (V) orderGroup(orderGroup.getClass());
 		if (og != null) {
@@ -531,15 +535,13 @@ public abstract class SearchDefinition extends Bindable
 		@Override
 		public void onAfterTreeDeserialize() {
 			super.onAfterTreeDeserialize();
-			serializable.getCriteriaGroups()
-					.forEach(CriteriaGroup::ensureDefaultCriteria);
+			serializable.ensureDefaultCriteria();
 		}
 
 		@Override
 		public void onAfterTreeSerialize() {
 			super.onAfterTreeSerialize();
-			serializable.getCriteriaGroups()
-					.forEach(CriteriaGroup::ensureDefaultCriteria);
+			serializable.ensureDefaultCriteria();
 		}
 
 		@Override

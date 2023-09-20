@@ -194,6 +194,18 @@ public class CommonUtils {
 		return Math.abs(d1.getTime() - d2.getTime()) < ms;
 	}
 
+	public static LinkedHashMap<Integer, Integer>
+			collateHashes(Collection<?> collection) {
+		Multimap<Integer, ?> map = collection.stream()
+				.collect(AlcinaCollectors.toKeyMultimap(Object::hashCode));
+		LinkedHashMap<Integer, Integer> linkedHashMap = map.asCountingMap()
+				.toLinkedHashMap(true);
+		Integer key = linkedHashMap.entrySet().iterator().next().getKey();
+		List list = map.get(key);
+		list.get(0).equals(list.get(1));
+		return linkedHashMap;
+	}
+
 	// assume slash-delineated
 	public static String combinePaths(String absPath, String relPath) {
 		if (relPath.contains("://")) {
@@ -428,6 +440,17 @@ public class CommonUtils {
 					idx + subString.length(),
 					Math.min(idx + subString.length() + 100, text.length())));
 		}
+	}
+
+	public static void dumpHashes(Collection collection) {
+		StringBuilder sb = new StringBuilder();
+		for (Object e : collection) {
+			sb.append(e.hashCode());
+			sb.append("\t ");
+			sb.append(e);
+			sb.append("\n");
+		}
+		System.out.println(sb);
 	}
 
 	public static double dv(Double d) {
@@ -1815,6 +1838,22 @@ public class CommonUtils {
 		return format("FY%s%s", year, year + 1);
 	}
 
+	public static String toHex(byte[] data) {
+		StringBuffer buf = new StringBuffer();
+		for (int i = 0; i < data.length; i++) {
+			int halfbyte = (data[i] >>> 4) & 0x0F;
+			int two_halfs = 0;
+			do {
+				if ((0 <= halfbyte) && (halfbyte <= 9))
+					buf.append((char) ('0' + halfbyte));
+				else
+					buf.append((char) ('a' + (halfbyte - 10)));
+				halfbyte = data[i] & 0x0F;
+			} while (two_halfs++ < 1);
+		}
+		return buf.toString();
+	}
+
 	public static String toLimitedCollectionString(Collection<?> collection,
 			int maxLength) {
 		if (collection.size() <= maxLength) {
@@ -2231,22 +2270,6 @@ public class CommonUtils {
 			}
 		}
 		return false;
-	}
-
-	public static String toHex(byte[] data) {
-		StringBuffer buf = new StringBuffer();
-		for (int i = 0; i < data.length; i++) {
-			int halfbyte = (data[i] >>> 4) & 0x0F;
-			int two_halfs = 0;
-			do {
-				if ((0 <= halfbyte) && (halfbyte <= 9))
-					buf.append((char) ('0' + halfbyte));
-				else
-					buf.append((char) ('a' + (halfbyte - 10)));
-				halfbyte = data[i] & 0x0F;
-			} while (two_halfs++ < 1);
-		}
-		return buf.toString();
 	}
 
 	public enum ComparatorResult {
