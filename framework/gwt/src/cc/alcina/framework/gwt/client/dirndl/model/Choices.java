@@ -49,6 +49,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
  * Also - possibly the wrapping with Choice could be done reflectively/more
  * elegantly
  *
+ * Note - big one - clicking on a choice fires a 'Selected' event, but
+ * programattic change does not - both fire a 'SelectionChanged' event so that's
+ * generally what you want to observe
+ *
  * FIXME - dirndl 1x1e - Now that overlay events are routed to logical parents,
  * it may be possible to cleanup event handling in this class
  */
