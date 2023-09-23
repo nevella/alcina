@@ -74,7 +74,7 @@ import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 /**
- * 
+ *
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class TransformPersisterInPersistenceContext {
@@ -689,6 +689,7 @@ public class TransformPersisterInPersistenceContext {
 			if (observing) {
 				observingFlushData.put(currentThread, true);
 			} else {
+				lastFlushData.remove(currentThread);
 				observingFlushData.remove(currentThread);
 			}
 		}
