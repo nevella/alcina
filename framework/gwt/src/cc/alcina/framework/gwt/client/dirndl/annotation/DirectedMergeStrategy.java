@@ -63,9 +63,6 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 
 	protected List<Directed> atHasAnnotations(HasAnnotations reflector,
 			Resolver resolver) {
-		if (reflector.toString().contains("LoginPageUsername")) {
-			int debug = 3;
-		}
 		List<Directed> result = new ArrayList<>();
 		Directed directed = resolver.contextAnnotation(reflector,
 				Directed.class, Resolver.ResolutionContext.Strategy);
@@ -113,22 +110,24 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		if (delegating != null) {
 			result.add(new Delegating());
 		}
-		if (transform != null && result.isEmpty()) {
-			Directed.Impl impl = new Directed.Impl();
-			/*
-			 * if collection property, render the collection normally (the
-			 * transform will be applied to the collection elements), otherwise
-			 * use the transform renderer)
-			 */
-			boolean isCollection = reflector instanceof Property
-					&& Reflections.isAssignableFrom(Collection.class,
-							((Property) reflector).getType());
-			if (isCollection) {
-				impl.setRenderer(DirectedRenderer.ModelClass.class);
-			} else {
-				impl.setRenderer(DirectedRenderer.TransformRenderer.class);
+		if (transform != null) {
+			if (result.isEmpty()) {
+				Directed.Impl impl = new Directed.Impl();
+				/*
+				 * if collection property, render the collection normally (the
+				 * transform will be applied to the collection elements),
+				 * otherwise use the transform renderer)
+				 */
+				boolean isCollection = reflector instanceof Property
+						&& Reflections.isAssignableFrom(Collection.class,
+								((Property) reflector).getType());
+				if (isCollection) {
+					impl.setRenderer(DirectedRenderer.ModelClass.class);
+				} else {
+					impl.setRenderer(DirectedRenderer.TransformRenderer.class);
+				}
+				result.add(impl);
 			}
-			result.add(impl);
 		}
 		if (result.isEmpty() && reflector instanceof Property) {
 			Class declaringType = ((Property) reflector).getDeclaringType();

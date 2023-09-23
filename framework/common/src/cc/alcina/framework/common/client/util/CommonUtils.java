@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -508,7 +509,7 @@ public class CommonUtils {
 				if (o1 == null || o2 == null) {
 					return false;
 				} else {
-					if (!o1.equals(o2)) {
+					if (!Objects.deepEquals(o1, o2)) {
 						return false;
 					}
 				}

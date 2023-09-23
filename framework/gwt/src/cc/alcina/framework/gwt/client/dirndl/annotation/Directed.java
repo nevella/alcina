@@ -7,14 +7,18 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -148,10 +152,30 @@ public @interface Directed {
 	public static @interface Exclude {
 	}
 
+	/**
+	 *
+	 * FIXME - for consistency, all Impl annotation reifications should have
+	 * similar (auto-generated) hashcode/equals methods
+	 *
+	 *
+	 */
 	public static class Impl implements Directed {
 		public static final Binding[] EMPTY_BINDINGS_ARRAY = new Binding[0];
 
 		public static final Directed DEFAULT_INSTANCE = new Directed.Impl();
+
+		public static boolean areEqual(Directed d1, Directed d2) {
+			return CommonUtils.equals(d1.bindDomEvents(), d2.bindDomEvents(),
+					d1.bindings(), d2.bindings(), d1.bindToModel(),
+					d2.bindToModel(), d1.className(), d2.className(),
+					d1.emits(), d2.emits(), d1.merge(), d2.merge(),
+					d1.reemits(), d2.reemits(), d1.renderer(), d2.renderer(),
+					d1.tag(), d2.tag());
+		}
+
+		public static boolean provideIsDefault(Directed directed) {
+			return areEqual(directed, DEFAULT_INSTANCE);
+		}
 
 		public static Impl wrap(Directed directed) {
 			return new Impl(directed);
@@ -167,7 +191,7 @@ public @interface Directed {
 
 		private boolean bindDomEvents = true;
 
-		private String cssClass = "";
+		private String className = "";
 
 		private String tag = "";
 
@@ -183,7 +207,7 @@ public @interface Directed {
 			emits = directed.emits();
 			reemits = directed.reemits();
 			merge = directed.merge();
-			cssClass = directed.className();
+			className = directed.className();
 			tag = directed.tag();
 			renderer = directed.renderer();
 			bindToModel = directed.bindToModel();
@@ -212,12 +236,27 @@ public @interface Directed {
 
 		@Override
 		public String className() {
-			return cssClass;
+			return className;
 		}
 
 		@Override
 		public Class<? extends NodeEvent>[] emits() {
 			return emits;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Directed) {
+				return areEqual(this, (Directed) obj);
+			} else {
+				return super.equals(obj);
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(bindings, emits, reemits, merge, className, tag,
+					renderer, bindToModel, bindDomEvents);
 		}
 
 		@Override
@@ -228,7 +267,7 @@ public @interface Directed {
 		public Impl mergeParent(Directed parent) {
 			Impl merged = new Impl();
 			merged.bindings = mergeAttribute(parent, Directed::bindings);
-			merged.cssClass = mergeAttribute(parent, Directed::className);
+			merged.className = mergeAttribute(parent, Directed::className);
 			merged.emits = mergeAttribute(parent, Directed::emits);
 			merged.merge = mergeAttribute(parent, Directed::merge);
 			merged.reemits = mergeAttribute(parent, Directed::reemits);
@@ -262,8 +301,8 @@ public @interface Directed {
 			this.bindToModel = bindToModel;
 		}
 
-		public void setCssClass(String cssClass) {
-			this.cssClass = cssClass;
+		public void setClassName(String cssClass) {
+			this.className = cssClass;
 		}
 
 		public void setEmits(Class[] emits) {
@@ -490,6 +529,30 @@ public @interface Directed {
 		@Reflected
 		public static class MergeStrategy extends
 				AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOrClass<Transform> {
+			@Override
+			protected List<Transform> atClass(Class<Transform> annotationClass,
+					ClassReflector<?> reflector,
+					ClassReflector<?> resolvingReflector, Resolver resolver) {
+				Transform annotation = resolver.contextAnnotation(reflector,
+						Directed.Transform.class,
+						Resolver.ResolutionContext.Strategy);
+				// FIXME - dirndl - util method
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
+			}
+
+			// FIXME - dirndl - should this go to the parent?
+			@Override
+			protected List<Transform> atProperty(
+					Class<Transform> annotationClass,
+					cc.alcina.framework.common.client.reflection.Property property,
+					Resolver resolver) {
+				Transform annotation = resolver.contextAnnotation(property,
+						Directed.Transform.class,
+						Resolver.ResolutionContext.Strategy);
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
+			}
 		}
 	}
 
