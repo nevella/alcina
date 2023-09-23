@@ -12,12 +12,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
-
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -29,14 +26,11 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableTypeFactory;
 
 public class Tables {
 	public static class ColumnHeaders extends LeafModel.StringListModel {
 		public ColumnHeaders(Class<? extends Bindable> clazz,
 				DirectedLayout.Node node) {
-			BoundWidgetTypeFactory factory = Registry
-					.impl(TableTypeFactory.class);
 			List<String> strings = Reflections.at(clazz).properties().stream()
 					.map(p -> Annotations.resolve(p, Directed.Property.class,
 							node.getResolver()))
@@ -53,19 +47,33 @@ public class Tables {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	/**
 	 * Used in the generated gridTemplateColumns style attribute of a generated
 	 * grid
 	 *
-	 * 
+	 *
+	 *
+	 */
+	public @interface ColumnNames {
+		public String value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+	/**
+	 * Used in the generated gridTemplateColumns style attribute of a generated
+	 * grid
+	 *
+	 *
 	 *
 	 */
 	public @interface ColumnWidth {
 		public String value();
 	}
 
-	@Reflected
 	/*
 	 * Constructs a multi-column table from a list of reflected objects. Column
 	 * headers are either supplied or derived from fields
@@ -103,8 +111,14 @@ public class Tables {
 					Model template = rows.iterator().next();
 					columnNames = Reflections.at(template).properties().stream()
 							.filter(Property::provideRenderable)
-							.map(Property::getName)
-							.collect(Collectors.toList());
+							.map(property -> {
+								Directed.Property propertyAnnotation = node
+										.annotation(Directed.Property.class);
+								return propertyAnnotation != null
+										? propertyAnnotation.name()
+										: CommonUtils
+												.deInfix(property.getName());
+							}).collect(Collectors.toList());
 					gridTemplateColumns = Reflections.at(template).properties()
 							.stream().filter(Property::provideRenderable)
 							.map(p -> {

@@ -432,7 +432,7 @@ public @interface Directed {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target(ElementType.METHOD)
+	@Target({ ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Property {
 		String name();
