@@ -388,7 +388,7 @@ public class Transaction implements Comparable<Transaction> {
 
 	private DomainTransformCommitPosition commitPosition;
 
-	List<Entity> createdLocals = new ArrayList<>();
+	List<Entity> createdLocalsForEviction = new ArrayList<>();
 
 	/**
 	 * Rare case, when a map should be purely transactional for iterator/remove
@@ -438,7 +438,7 @@ public class Transaction implements Comparable<Transaction> {
 					.createEntityVersions(t, this, true);
 		}
 		if (t.domain().isLocal()) {
-			createdLocals.add(t);
+			createdLocalsForEviction.add(t);
 		}
 		return t;
 	}
@@ -524,6 +524,14 @@ public class Transaction implements Comparable<Transaction> {
 
 	public long provideAge() {
 		return System.currentTimeMillis() - startTime;
+	}
+
+	/**
+	 * For when an entity will be committed, but on a different (say backend
+	 * queue) thread
+	 */
+	public void removeFromLocalEviction(Entity entity) {
+		createdLocalsForEviction.remove(entity);
 	}
 
 	/**
@@ -727,7 +735,7 @@ public class Transaction implements Comparable<Transaction> {
 					break;
 				default:
 					ThreadlocalTransformManager.cast()
-							.evictNonPromotedLocals(createdLocals);
+							.evictNonPromotedLocals(createdLocalsForEviction);
 					ThreadlocalTransformManager.cast().resetTltm(null);
 					break;
 				}
