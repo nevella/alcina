@@ -63,6 +63,10 @@ public class DomainUpdate implements Serializable {
 			return commitTimestamp;
 		}
 
+		public long provideAgeMs() {
+			return System.currentTimeMillis() - commitTimestamp.getTime();
+		}
+
 		public void setCommitRequestId(Long commitRequestId) {
 			this.commitRequestId = commitRequestId;
 		}

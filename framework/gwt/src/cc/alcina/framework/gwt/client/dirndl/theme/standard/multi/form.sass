@@ -118,18 +118,16 @@ ol-editor
             padding-right: 2em
   actions
     margin: 1em
-    > ul 
-      display: flex
-      justify-content: center
-      list-style: none
-      margin: 0
-      padding: 0
-      > li 
-        display: inline-block
-        line-height: theme.$list-element-height
-        padding: 0 0.5em
-      &.right 
-        justify-content: flex-end
+    display: flex
+    justify-content: center
+    list-style: none
+    padding: 0
+    > *
+      display: inline-block
+      line-height: theme.$list-element-height
+      padding: 0 0.5em
+    &.right 
+      justify-content: flex-end
   &.over-only form
     @include over-only
     @include subtle-form

@@ -101,6 +101,10 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
  * <p>
  * to generate PathChange objects.
  * </p>
+ * <h4>Thread safety</h4>
+ * <p>
+ * All access is on the acccess thread (to ensure transaction/state
+ * correctness), so all accesses within the class do not need to verify safety
  */
 public class LiveTree {
 	public static final transient String CONTEXT_LIVE_NODE_JUST_VALUE = LiveTree.class
@@ -179,7 +183,8 @@ public class LiveTree {
 
 	public void checkChangeListeners() {
 		Iterator<ChangeListener> itr = changeListeners.iterator();
-		long expire = System.currentTimeMillis() - getEvictMillis();
+		long expire = System.currentTimeMillis()
+				- getChangeListenerExpireSeconds();
 		while (itr.hasNext()) {
 			ChangeListener next = itr.next();
 			if (next.getSince().compareTo(currentPosition) < 0
@@ -345,11 +350,6 @@ public class LiveTree {
 		rootGenerator.generationComplete();
 	}
 
-	private long getEvictMillis() {
-		return Configuration.getInt("evictSeconds")
-				* TimeConstants.ONE_SECOND_MS;
-	}
-
 	private void newGeneratorContext() {
 		this.generatorContext = new GeneratorContext();
 		generatorContext.root = root;
@@ -444,10 +444,17 @@ public class LiveTree {
 			liveNode.onChange();
 			context.ensureInTransactionResult(liveNode);
 		} while (pathChanged.size() > 0);
-		// Phase 3 - bottom up (re)-generate dirty path content models. Parent
-		// content models
-		// will be regenerated and added to the transform list if any
-		// descendants have changed
+		/*
+		 * Phase 3 - bottom up (re)-generate dirty path content models. Parent
+		 * content models will be regenerated and added to the transform list if
+		 * any descendants have changed
+		 *
+		 * Note that this means that top-level node *contents* (not the nodes
+		 * themselves) will be constantly regenerated (which is correct, given
+		 * they can depend on children). Given those contents can be heavy-ish
+		 * (if they collate children), that then basically forces some sort of
+		 * eviction policy on server-side recording of Transform objects
+		 */
 		while (context.depthChanged.size() > 0) {
 			Entry<Integer, Set<TreePath<LiveNode>>> lastEntry = context.depthChanged
 					.lastEntry();
@@ -468,6 +475,7 @@ public class LiveTree {
 		modifiedNodes.forEach(LiveNode::clearContextData);
 		modifiedNodes.clear();
 		transactionTransforms.put(currentPosition, result);
+		evictTransforms();
 		checkChangeListeners();
 		context.finish();
 		processLogger.logProcessEvents(this);
@@ -689,6 +697,29 @@ public class LiveTree {
 
 	boolean containsEntity(Entity e) {
 		return entityNodes.containsKey(e);
+	}
+
+	void evictTransforms() {
+		Iterator<Entry<DomainTransformCommitPosition, List<Transform>>> itr = transactionTransforms
+				.entrySet().iterator();
+		while (itr.hasNext()) {
+			Entry<DomainTransformCommitPosition, List<Transform>> entry = itr
+					.next();
+			if (transactionTransforms.size() > Configuration
+					.getInt("evictTransformsMaxHistorySize")
+					|| entry.getKey().provideAgeMs() > Configuration
+							.getInt("evictTransformsMaxAgeMs")) {
+				itr.remove();
+			} else {
+				break;
+			}
+			// if(
+		}
+	}
+
+	long getChangeListenerExpireSeconds() {
+		return Configuration.getInt("changeListenerExpireSeconds")
+				* TimeConstants.ONE_SECOND_MS;
 	}
 
 	public class GeneratorContext {
@@ -1134,7 +1165,7 @@ public class LiveTree {
 	 *
 	 * Enable by setting LiveTree.processLoggerEnabled to true
 	 *
-	 * 
+	 *
 	 */
 	public static class ProcessLoggerImpl extends ProcessLogger<LiveTree> {
 		public static ProcessLoggerImpl context() {
