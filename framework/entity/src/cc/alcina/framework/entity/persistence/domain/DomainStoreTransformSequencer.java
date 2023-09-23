@@ -8,7 +8,6 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +27,7 @@ import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.util.OffThreadLogger;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 
 /**
  * A postgres-specific class to order applications of transformrequests to the
@@ -39,7 +39,7 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
  * As it now is, COMMIT_ERRROR dtr events are fired (and ignored) on
  * non-originating servers - remove?
  *
- * 
+ *
  */
 public class DomainStoreTransformSequencer
 		implements DomainTransformPersistenceQueue.Sequencer {
@@ -67,7 +67,7 @@ public class DomainStoreTransformSequencer
 
 	List<DomainTransformCommitPosition> unpublishedPositions = new ArrayList<>();
 
-	Map<Long, DomainTransformCommitPosition> visiblePositions = new LinkedHashMap<>();
+	Map<Long, DomainTransformCommitPosition> visiblePositions = new Long2ObjectLinkedOpenHashMap<>();
 
 	private volatile boolean initialised = false;
 
