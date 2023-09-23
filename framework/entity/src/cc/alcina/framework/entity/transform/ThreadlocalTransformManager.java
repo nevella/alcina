@@ -305,6 +305,23 @@ public class ThreadlocalTransformManager extends TransformManager {
 		super.deregisterDomainObject(entity);
 	}
 
+	/*
+	 * At the end of a transaction, evict created locals that were never
+	 * persisted (to not leak)
+	 */
+	public void evictNonPromotedLocals(List<Entity> createdLocals) {
+		DomainStore store = DomainStore.writableStore();
+		createdLocals.forEach(e -> {
+			if (!e.domain().wasPersisted()) {
+				if (store.isCached(e.entityClass())) {
+					store.getCache().evictCreatedLocal(e);
+				}
+			} else {
+				// retain
+			}
+		});
+	}
+
 	public void flush() {
 		flush(new ArrayList<>());
 	}

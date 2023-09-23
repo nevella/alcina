@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -387,6 +388,8 @@ public class Transaction implements Comparable<Transaction> {
 
 	private DomainTransformCommitPosition commitPosition;
 
+	List<Entity> createdLocals = new ArrayList<>();
+
 	/**
 	 * Rare case, when a map should be purely transactional for iterator/remove
 	 * reasons - during warmup, set this to true while populating
@@ -433,6 +436,9 @@ public class Transaction implements Comparable<Transaction> {
 		if (!isBaseTransaction()) {
 			MvccObjectVersions<T> versions = MvccObjectVersions
 					.createEntityVersions(t, this, true);
+		}
+		if (t.domain().isLocal()) {
+			createdLocals.add(t);
 		}
 		return t;
 	}
@@ -720,6 +726,8 @@ public class Transaction implements Comparable<Transaction> {
 					ThreadlocalTransformManager.cast().resetTltmNonCommitalTx();
 					break;
 				default:
+					ThreadlocalTransformManager.cast()
+							.evictNonPromotedLocals(createdLocals);
 					ThreadlocalTransformManager.cast().resetTltm(null);
 					break;
 				}
