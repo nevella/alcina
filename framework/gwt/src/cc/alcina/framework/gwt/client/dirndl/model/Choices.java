@@ -271,7 +271,7 @@ public abstract class Choices<T> extends Model
 		 */
 		@Bean
 		public static class Select {
-			@Directed.Transform(Option.Transform.class)
+			@Directed.TransformElements(Option.Transform.class)
 			public List<Choices.Choice> getChoices() {
 				return null;
 			}

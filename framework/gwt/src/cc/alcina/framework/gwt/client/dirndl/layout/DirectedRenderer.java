@@ -116,7 +116,7 @@ public abstract class DirectedRenderer {
 					.checkArgument(input.model instanceof java.util.Collection);
 			// zero widgets for the container, generates input per child
 			((java.util.Collection) input.model).forEach(model -> {
-				Object transformedModel = transformModel(input, model);
+				Object transformedModel = transformModel(input, model, true);
 				// the @Directed for the collection element is merge (the input
 				// @Directed :: the element's merged hierarchy @Directed)
 				AnnotationLocation location = input.location
@@ -154,8 +154,8 @@ public abstract class DirectedRenderer {
 				location.resolutionState.resolvedPropertyAnnotations = Arrays
 						.asList(input.soleDirected());
 				// inelegant, but works to avoid double-transform
-				location.resolutionState.addConsumed(
-						input.location.getAnnotation(Directed.Transform.class));
+				location.resolutionState.addConsumed(input.location
+						.getAnnotation(Directed.TransformElements.class));
 				input.enqueueInput(input.resolver, transformedModel, location,
 						// force resolution
 						null, input.node);
@@ -230,7 +230,7 @@ public abstract class DirectedRenderer {
 			implements GeneratesTransformModel {
 		@Override
 		protected void render(RendererInput input) {
-			Object transformedModel = transformModel(input, input.model);
+			Object transformedModel = transformModel(input, input.model, false);
 			AnnotationLocation location = input.location
 					.copyWithClassLocationOf(transformedModel);
 			// FIXME - dirndl 1x1g - *definitely* optimise. Possibly
@@ -314,24 +314,44 @@ public abstract class DirectedRenderer {
 	}
 
 	interface GeneratesTransformModel {
-		default Object transformModel(RendererInput input, Object model) {
-			Directed.Transform transform = input.location
-					.getAnnotation(Directed.Transform.class);
-			if (transform == null) {
+		default Object transformModel(RendererInput input, Object model,
+				boolean collectionElements) {
+			Directed.Transform transform = collectionElements ? null
+					: input.location.getAnnotation(Directed.Transform.class);
+			Directed.TransformElements transformElements = collectionElements
+					? input.location
+							.getAnnotation(Directed.TransformElements.class)
+					: null;
+			if (transform == null && transformElements == null) {
 				return model;
 			}
-			if (model == null && !transform.transformsNull()) {
-				// null output
-				return null;
+			if (transform != null) {
+				if (model == null && !transform.transformsNull()) {
+					// null output
+					return null;
+				}
+				ModelTransform modelTransform = (ModelTransform) Reflections
+						.newInstance(transform.value());
+				if (modelTransform instanceof ContextSensitiveTransform) {
+					((ContextSensitiveTransform) modelTransform)
+							.withContextNode(input.node);
+				}
+				Object transformedModel = modelTransform.apply(model);
+				return transformedModel;
+			} else {
+				if (model == null && !transformElements.transformsNull()) {
+					// null output
+					return null;
+				}
+				ModelTransform modelTransform = (ModelTransform) Reflections
+						.newInstance(transformElements.value());
+				if (modelTransform instanceof ContextSensitiveTransform) {
+					((ContextSensitiveTransform) modelTransform)
+							.withContextNode(input.node);
+				}
+				Object transformedModel = modelTransform.apply(model);
+				return transformedModel;
 			}
-			ModelTransform modelTransform = (ModelTransform) Reflections
-					.newInstance(transform.value());
-			if (modelTransform instanceof ContextSensitiveTransform) {
-				((ContextSensitiveTransform) modelTransform)
-						.withContextNode(input.node);
-			}
-			Object transformedModel = modelTransform.apply(model);
-			return transformedModel;
 		}
 	}
 }

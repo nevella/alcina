@@ -20,6 +20,7 @@ import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.ReflectiveSerializable;
@@ -31,6 +32,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 /*
@@ -101,6 +104,10 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 						accessToPackage(type);
 						removeDefaultPropertyMethods(type);
 						updatePropertySetters(type);
+						break;
+					}
+					case TRANSFORM_TO_TRANSFORM_ELEMENTS: {
+						transformToTransformElements(type);
 						break;
 					}
 					}
@@ -228,6 +235,21 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 		warns.forEach(s -> Ax.out("  %s", s));
 	}
 
+	void transformToTransformElements(UnitType type) {
+		if (type.hasFlag(Type.HasBeanAnnotation)
+				|| type.hasFlag(Type.HasPropertyMethods)) {
+			ClassReflector<?> reflector = Reflections.at(type.clazz());
+			List<TransformableProperty> props = reflector.properties().stream()
+					.map(TransformableProperty::new)
+					.filter(TransformableProperty::isTransformable)
+					.collect(Collectors.toList());
+			if (props.size() > 0) {
+				type.dirty();
+				props.forEach(p -> p.apply(type));
+			}
+		}
+	}
+
 	void updatePropertySetters(UnitType type) {
 		ClassOrInterfaceDeclaration decl = type.getDeclaration();
 		List<Property> properties = Reflections.at(type.clazz()).properties();
@@ -275,7 +297,6 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 						Statement parse = StaticJavaParser
 								.parseStatement(newSource);
 						blockStmt.addStatement(parse);
-						int debug = 3;
 					}
 				} else {
 					// warns.add(Ax.format("%s - no setter", propertyName));
@@ -289,7 +310,8 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 	}
 
 	public enum Action {
-		LIST_INTERESTING, MANIFEST, ACCESS_TO_PACKAGE;
+		LIST_INTERESTING, MANIFEST, ACCESS_TO_PACKAGE,
+		TRANSFORM_TO_TRANSFORM_ELEMENTS;
 	}
 
 	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {
@@ -345,6 +367,36 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 				}
 			}
 			super.visit(node, arg);
+		}
+	}
+
+	class TransformableProperty {
+		Property property;
+
+		boolean transformable;
+
+		TransformableProperty(Property property) {
+			this.property = property;
+			if (property.has(Directed.Transform.class)) {
+				if (java.util.Collection.class
+						.isAssignableFrom(property.getType())) {
+					if (property.has(Directed.class) && property
+							.annotation(Directed.class)
+							.renderer() == DirectedRenderer.TransformRenderer.class) {
+						Ax.err("non-element transform :: %s", NestedNameProvider
+								.get(property.getOwningType()));
+					} else {
+						transformable = true;
+					}
+				}
+			}
+		}
+
+		public void apply(UnitType type) {
+		}
+
+		boolean isTransformable() {
+			return transformable;
 		}
 	}
 
