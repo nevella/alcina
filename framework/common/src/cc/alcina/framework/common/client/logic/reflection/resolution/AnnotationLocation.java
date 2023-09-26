@@ -214,7 +214,7 @@ public class AnnotationLocation {
 	}
 
 	/*
-	 * Handles annotation resolution at thes same Property but with a different
+	 * Handles annotation resolution at the same Property but with a different
 	 * ClassLocation (due to transformation of the Property value - currently
 	 * the only client is dirndl/transform). AnnotationLocations form a sequence
 	 * (modelled by Resolution.transformationParent)
@@ -232,6 +232,9 @@ public class AnnotationLocation {
 	 * - rule defining behaviour in resolvedPropertyAnnotations
 	 *
 	 * - examples
+	 *
+	 * - note that hashcode/equals do *not* depend on the parent - there's
+	 * probably some formal logic out there explaining why this is always true
 	 */
 	public static class ResolutionState {
 		public AnnotationLocation transformationParent;
@@ -265,9 +268,9 @@ public class AnnotationLocation {
 		public boolean equals(Object obj) {
 			if (obj instanceof ResolutionState) {
 				ResolutionState o = (ResolutionState) obj;
-				return transformationParent == o.transformationParent
-						&& Objects.equals(resolvedPropertyAnnotations,
-								o.resolvedPropertyAnnotations)
+				return // transformationParent == o.transformationParent &&
+				Objects.equals(resolvedPropertyAnnotations,
+						o.resolvedPropertyAnnotations)
 						&& Objects.equals(consumed, o.consumed);
 			} else {
 				return false;
@@ -276,8 +279,10 @@ public class AnnotationLocation {
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(transformationParent,
-					resolvedPropertyAnnotations, consumed);
+			// don't use parent in a hash
+			return Objects.hash(resolvedPropertyAnnotations, consumed);
+			// return Objects.hash(transformationParent,
+			// resolvedPropertyAnnotations, consumed);
 		}
 
 		void setTransformationParent(AnnotationLocation annotationLocation) {
@@ -300,7 +305,7 @@ public class AnnotationLocation {
 	 * Resolves annotations (really, returns declarative information packaged in
 	 * annotation instances) at a class/property location
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static abstract class Resolver {
