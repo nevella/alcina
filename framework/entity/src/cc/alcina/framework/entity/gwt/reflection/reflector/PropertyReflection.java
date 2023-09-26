@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JField;
@@ -92,6 +93,11 @@ public class PropertyReflection extends ReflectionElement
 	@Override
 	public int compareTo(PropertyReflection o) {
 		return name.compareTo(o.name);
+	}
+
+	public Stream<Class> getAnnotationAttributeTypes() {
+		return annotationReflections.stream()
+				.flatMap(AnnotationReflection::getAnnotationAttributeTypes);
 	}
 
 	public List<AnnotationReflection> getAnnotationReflections() {

@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JConstructor;
@@ -150,6 +151,14 @@ public class ClassReflection extends ReflectionElement {
 			computeTypeBounds(ProvidesTypeBounds providesJavacTypeBounds) {
 		return (List<JClassType>) (List<?>) providesJavacTypeBounds
 				.provideTypeBounds(type);
+	}
+
+	public Stream<Class> getAnnotationAttributeTypes() {
+		return Stream.concat(
+				annotationReflections.stream().flatMap(
+						AnnotationReflection::getAnnotationAttributeTypes),
+				propertyReflections.values().stream().flatMap(
+						PropertyReflection::getAnnotationAttributeTypes));
 	}
 
 	public List<AnnotationReflection> getAnnotationReflections() {

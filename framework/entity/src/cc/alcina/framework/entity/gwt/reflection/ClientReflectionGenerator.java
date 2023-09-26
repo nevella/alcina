@@ -633,6 +633,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.compareTo(o.reflection.type.getQualifiedSourceName());
 		}
 
+		public Stream<JClassType> getAnnotationAttributeTypes() {
+			return reflection.getAnnotationAttributeTypes()
+					.map(ClientReflectionGenerator.this::getType);
+		}
+
 		@Override
 		public String toString() {
 			return "reflector-generator: " + reflectedTypeFqBinaryName();
@@ -842,20 +847,21 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					            typed.firePropertyChange("overwriteOriginals", oldValue, value);
 					            }
 					      }
-						 * @formatter: on
+						 * @formatter:on
 						 */
 						sourceWriter.println("%s typed = (%s) bean;",
 								accessor.getEnclosingType()
 										.getQualifiedSourceName(),
-										accessor.getEnclosingType()
-										.getQualifiedSourceName()
-								);
+								accessor.getEnclosingType()
+										.getQualifiedSourceName());
 						sourceWriter.println("Object oldValue = typed.%s;",
 								accessor.getName());
 						sourceWriter.println("typed.%s=(%s)value;",
 								accessor.getName(), accessor.getPropertyType()
 										.getQualifiedSourceName());
-						sourceWriter.println("typed.firePropertyChange(\"%s\", oldValue, value);",accessor.getName());
+						sourceWriter.println(
+								"typed.firePropertyChange(\"%s\", oldValue, value);",
+								accessor.getName());
 					} else {
 						/*
 						 * @formatter:off
@@ -864,7 +870,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					      public void set(Object bean,Object value){
 					            ((<beantypefqn>)bean).<fieldName>=((valuetypefqn)value);}
 					      }
-						 * @formatter: on
+						 * @formatter:on
 						 */
 						sourceWriter.println("((%s)bean).%s=(%s)value;",
 								accessor.getEnclosingType()
@@ -1055,7 +1061,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		Map<JClassType, ClassReflectorGenerator> classReflectors = new LinkedHashMap<>();
 
-		List<ClassReflectorGenerator> writeReflectors;
+		List<ClassReflectorGenerator> writeReflectors = new ArrayList<>();
 
 		boolean alreadyWritten = false;
 
@@ -1195,9 +1201,23 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			types.stream().map(ClassReflectorGenerator::new).forEach(
 					crg -> classReflectors.put(crg.reflection.type, crg));
 			classReflectors.values().forEach(ClassReflectorGenerator::prepare);
-			writeReflectors = classReflectors.values().stream()
-					.filter(r -> filter.emitType(r.reflection.type))
-					.collect(Collectors.toList());
+			/*
+			 * multi-pass - since any classes referred to by non-registration
+			 * annotation attributes must also be in the written
+			 *
+			 */
+			int entrySize = 0;
+			do {
+				entrySize = writeReflectors.size();
+				long t0 = System.currentTimeMillis();
+				Set<JClassType> importTypes = writeReflectors.stream().flatMap(
+						ClassReflectorGenerator::getAnnotationAttributeTypes)
+						.collect(AlcinaCollectors.toLinkedHashSet());
+				writeReflectors = classReflectors.values().stream()
+						.filter(r -> importTypes.contains(r.reflection.type)
+								|| filter.emitType(r.reflection.type))
+						.collect(Collectors.toList());
+			} while (writeReflectors.size() != entrySize);
 		}
 
 		@Override
@@ -1232,6 +1252,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.distinct().filter(this::isProtectionVisible)
 					.collect(Collectors.toList());
 		}
+
 		Stream<TypeHierarchy> computeReflectableTypes() {
 			subtypes = computeSubtypes();
 			Multiset<JClassType, Set<JClassType>> asyncSerializableTypes = computeAsyncSerializableTypes(
@@ -1244,8 +1265,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.distinct()
 					.filter(t -> !t.getQualifiedSourceName()
 							.equals(Object.class.getCanonicalName()))
-					.filter(this::isProtectionVisible).map(t -> new TypeHierarchy(t,
-							subtypes, asyncSerializableTypes, settableTypes));
+					.filter(this::isProtectionVisible)
+					.map(t -> new TypeHierarchy(t, subtypes,
+							asyncSerializableTypes, settableTypes));
 		}
 
 		List<JClassType> computeRegistryTypes() {
@@ -1253,29 +1275,25 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.filter(t -> has(t, Registration.class))
 					.map(ClassReflection::erase).distinct()
 					/*
-					 *  see RegistryScanner.process
+					 * see RegistryScanner.process
 					 */
-
 					.filter(t -> {
-						boolean registrable = t.isPublic()
-								&& !t.isAbstract()
-								&&t.isInterface()==null;
+						boolean registrable = t.isPublic() && !t.isAbstract()
+								&& t.isInterface() == null;
 						/*
 						 * note use of AllSubtypes.Client, not AllSubtypes
 						 */
-						registrable |=
-								t.isAssignableFrom(registrationAllSubtypesClient);
-
+						registrable |= t.isAssignableFrom(
+								registrationAllSubtypesClient);
 						return registrable;
-					})
-					.collect(Collectors.toList());
+					}).collect(Collectors.toList());
 		}
 
-		boolean isProtectionVisible(JClassType type){
-			if(type.isPrivate()){
-			return false;
+		boolean isProtectionVisible(JClassType type) {
+			if (type.isPrivate()) {
+				return false;
 			}
-			if(type.isPublic()){
+			if (type.isPublic()) {
 				return true;
 			}
 			return !type.getQualifiedSourceName().startsWith("java");
