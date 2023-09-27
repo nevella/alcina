@@ -40,7 +40,8 @@ public class ModelEvents {
 	}
 
 	public static class BeforeClosed
-			extends ModelEvent<Object, BeforeClosed.Handler> {
+			extends ModelEvent<Object, BeforeClosed.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(BeforeClosed.Handler handler) {
 			handler.onBeforeClosed(this);
@@ -62,7 +63,8 @@ public class ModelEvents {
 	 *
 	 */
 	public static class BeforeSelectionChangedDispatch
-			extends ModelEvent<Object, BeforeSelectionChangedDispatch.Handler> {
+			extends ModelEvent<Object, BeforeSelectionChangedDispatch.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(BeforeSelectionChangedDispatch.Handler handler) {
 			handler.onBeforeSelectionChanged(this);
@@ -119,7 +121,8 @@ public class ModelEvents {
 	 * event
 	 *
 	 */
-	public static class Close extends ModelEvent<Object, Close.Handler> {
+	public static class Close extends ModelEvent<Object, Close.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Close.Handler handler) {
 			handler.onClose(this);
@@ -130,7 +133,8 @@ public class ModelEvents {
 		}
 	}
 
-	public static class Closed extends ModelEvent<Object, Closed.Handler> {
+	public static class Closed extends ModelEvent<Object, Closed.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Closed.Handler handler) {
 			handler.onClosed(this);
@@ -308,7 +312,8 @@ public class ModelEvents {
 		}
 	}
 
-	public static class Opened extends ModelEvent<Object, Opened.Handler> {
+	public static class Opened extends ModelEvent<Object, Opened.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Opened.Handler handler) {
 			handler.onOpened(this);
@@ -369,7 +374,8 @@ public class ModelEvents {
 	 *
 	 *
 	 */
-	public static class Selected extends ModelEvent<Object, Selected.Handler> {
+	public static class Selected extends ModelEvent<Object, Selected.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Selected.Handler handler) {
 			handler.onSelected(this);

@@ -60,7 +60,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 	public <O extends ModelEvent> void reemitAs(Model from,
 			Class<O> eventClass) {
-		reemitAs(from, eventClass, from);
+		reemitAs(from, eventClass, null);
 	}
 
 	public <O extends ModelEvent> void reemitAs(Model from, Class<O> eventClass,
