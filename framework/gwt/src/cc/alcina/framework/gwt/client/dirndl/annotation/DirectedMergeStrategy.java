@@ -73,6 +73,9 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 				Directed.Delegating.class, Resolver.ResolutionContext.Strategy);
 		Directed.Transform transform = resolver.contextAnnotation(reflector,
 				Directed.Transform.class, Resolver.ResolutionContext.Strategy);
+		Directed.TransformElements transformElements = resolver
+				.contextAnnotation(reflector, Directed.TransformElements.class,
+						Resolver.ResolutionContext.Strategy);
 		if (directed != null) {
 			Preconditions.checkState(
 					wrap == null && multiple == null && delegating == null);
@@ -113,6 +116,12 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 			if (result.isEmpty()) {
 				Directed.Impl impl = new Directed.Impl();
 				impl.setRenderer(DirectedRenderer.TransformRenderer.class);
+				result.add(impl);
+			}
+		}
+		if (transformElements != null) {
+			if (result.isEmpty()) {
+				Directed.Impl impl = new Directed.Impl();
 				result.add(impl);
 			}
 		}
