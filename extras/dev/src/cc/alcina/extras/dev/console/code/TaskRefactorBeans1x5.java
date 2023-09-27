@@ -7,12 +7,14 @@ import java.util.stream.Collectors;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.AccessSpecifier;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
@@ -80,6 +82,8 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 
 	public String classNameFilter;
 
+	public transient List<String> warnings = new ArrayList<>();
+
 	@Override
 	public void run() throws Exception {
 		StringMap classPaths = StringMap.fromStringList(classPathList);
@@ -101,7 +105,11 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 						break;
 					}
 					case MANIFEST: {
+						if (type.name.contains("Left")) {
+							int debug = 3;
+						}
 						accessToPackage(type);
+						modelToModelFields(type);
 						removeDefaultPropertyMethods(type);
 						updatePropertySetters(type);
 						break;
@@ -113,6 +121,16 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 					}
 				});
 		compUnits.writeDirty(test);
+		Ax.out("\n\n");
+		Ax.err(warnings.stream().collect(Collectors.joining("\n")));
+	}
+
+	private void warn(UnitType type, String template, Object... args) {
+		String message = Ax.format(template, args);
+		message = Ax.format("%s :: %s", type.getDeclaration().getNameAsString(),
+				message);
+		Ax.err(message);
+		warnings.add(message);
 	}
 
 	void accessToPackage(UnitType type) {
@@ -130,7 +148,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 			List<String> names = publicOrProtectedFields.stream()
 					.map(f -> f.getVariables().get(0).getNameAsString())
 					.collect(Collectors.toList());
-			Ax.err("Fields with public/protected access: %s - %s ",
+			warn(type, "Fields with public/protected access: %s - %s ",
 					type.simpleName(), names.toString());
 			return;
 		}
@@ -141,6 +159,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 		if (declaration.isPublic()) {
 			type.dirty();
 			declaration.setPublic(false);
+			declaration.getConstructors().forEach(con -> con.setPublic(false));
 		}
 	}
 
@@ -155,8 +174,22 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 		}
 	}
 
+	void modelToModelFields(UnitType type) {
+		ClassOrInterfaceDeclaration decl = type.getDeclaration();
+		NodeList<ClassOrInterfaceType> extendedTypes = decl.getExtendedTypes();
+		List<Property> properties = Reflections.at(type.clazz()).properties();
+		if (properties.isEmpty()) {
+			return;
+		}
+		if (extendedTypes.size() == 1
+				&& extendedTypes.get(0).getNameAsString().equals("Model")) {
+			type.dirty();
+			extendedTypes.get(0).setName("Model.Fields");
+		}
+	}
+
 	void removeDefaultPropertyMethods(UnitType type) {
-		Ax.out("Removing methods: %s", NestedNameProvider.get(type.clazz()));
+		// Ax.out("Removing methods: %s", NestedNameProvider.get(type.clazz()));
 		ClassOrInterfaceDeclaration decl = type.getDeclaration();
 		List<Property> properties = Reflections.at(type.clazz()).properties();
 		List<String> warns = new ArrayList<>();
@@ -232,7 +265,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 				}
 			}
 		}
-		warns.forEach(s -> Ax.out("  %s", s));
+		warns.forEach(s -> warn(type, "  %s", s));
 	}
 
 	void transformToTransformElements(UnitType type) {
@@ -240,7 +273,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 				|| type.hasFlag(Type.HasPropertyMethods)) {
 			ClassReflector<?> reflector = Reflections.at(type.clazz());
 			List<TransformableProperty> props = reflector.properties().stream()
-					.map(TransformableProperty::new)
+					.map(t -> new TransformableProperty(type, t))
 					.filter(TransformableProperty::isTransformable)
 					.collect(Collectors.toList());
 			if (props.size() > 0) {
@@ -375,7 +408,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 
 		boolean transformable;
 
-		TransformableProperty(Property property) {
+		TransformableProperty(UnitType type, Property property) {
 			this.property = property;
 			if (property.has(Directed.Transform.class)) {
 				if (java.util.Collection.class
@@ -383,8 +416,9 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 					if (property.has(Directed.class) && property
 							.annotation(Directed.class)
 							.renderer() == DirectedRenderer.TransformRenderer.class) {
-						Ax.err("non-element transform :: %s", NestedNameProvider
-								.get(property.getOwningType()));
+						warn(type, "non-element transform :: %s",
+								NestedNameProvider
+										.get(property.getOwningType()));
 					} else {
 						transformable = true;
 					}
