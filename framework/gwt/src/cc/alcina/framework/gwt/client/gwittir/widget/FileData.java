@@ -8,13 +8,13 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Topic;
 
 @Reflected
-public class FileSelectorInfo extends Bindable
+public class FileData extends Bindable
 		implements Serializable, TreeSerializable {
 	private String fileName;
 
 	private byte[] bytes;
 
-	private transient Topic<FileSelectorInfo> clearTopic = Topic.create();
+	private transient Topic<FileData> clearTopic = Topic.create();
 
 	public void clear() {
 		setBytes(null);
@@ -43,7 +43,7 @@ public class FileSelectorInfo extends Bindable
 				fileName);
 	}
 
-	public Topic<FileSelectorInfo> topicClear() {
+	public Topic<FileData> topicClear() {
 		return clearTopic;
 	}
 }
