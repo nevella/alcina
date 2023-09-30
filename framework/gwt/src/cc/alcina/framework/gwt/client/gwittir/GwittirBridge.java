@@ -71,6 +71,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceValueCustomiser;
@@ -98,6 +99,9 @@ public class GwittirBridge {
 
 	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY_NO_NULLS = new BoundWidgetTypeFactorySimpleGenerator(
 			false);
+
+	public static final String CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS = GwittirBridge.class
+			.getName() + ".CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS";
 
 	public static final BoundWidgetProvider NOWRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
 		@Override
@@ -243,6 +247,9 @@ public class GwittirBridge {
 
 	public static Converter getDefaultConverter(BoundWidgetProvider bwp,
 			Class propertyType) {
+		if (bwp == null) {
+			return null;
+		}
 		if (propertyType == Boolean.class) {
 			return BooleanEnsureNonNullCoverter.INSTANCE;
 		}
@@ -481,7 +488,8 @@ public class GwittirBridge {
 				bwp = customiser.getProvider(fieldEditable, domainType,
 						multiple, customiserInfo, propertyLocation);
 			}
-			if (bwp != null) {
+			if (bwp != null || LooseContext
+					.is(CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS)) {
 				ValidationFeedback validationFeedback = null;
 				Validator validator = null;
 				if (fieldEditable) {

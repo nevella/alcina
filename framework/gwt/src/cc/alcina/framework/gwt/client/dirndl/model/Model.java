@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.csobjects.HasChanges;
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.ListenerBindings;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -144,8 +145,8 @@ public abstract class Model extends Bindable implements
 	}
 
 	/**
-	 * Subclasses should call super.onBeforeRender at the *end* of their
-	 * handling
+	 * Subclasses should call super.onBeforeRender at the *end* of their binding
+	 * setup (generally at the end of the method)
 	 */
 	@Override
 	public void onBeforeRender(BeforeRender event) {
@@ -236,20 +237,21 @@ public abstract class Model extends Bindable implements
 
 		private boolean bound;
 
-		public void add(Object leftPropertyName, Converter leftToRightConverter,
+		public Binding add(Object leftPropertyName,
+				Converter leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
 				Converter rightToLeftConverter) {
 			SourcesPropertyChangeEvents left = getSource();
-			add(left, leftPropertyName, leftToRightConverter, right,
+			return add(left, leftPropertyName, leftToRightConverter, right,
 					rightPropertyName, rightToLeftConverter);
 		}
 
-		public void add(Object leftPropertyName,
+		public Binding add(Object leftPropertyName,
 				SourcesPropertyChangeEvents right, Object rightPropertyName) {
-			add(leftPropertyName, null, right, rightPropertyName, null);
+			return add(leftPropertyName, null, right, rightPropertyName, null);
 		}
 
-		public void add(SourcesPropertyChangeEvents left,
+		public Binding add(SourcesPropertyChangeEvents left,
 				Object leftPropertyName, Converter leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
 				Converter rightToLeftConverter) {
@@ -263,6 +265,7 @@ public abstract class Model extends Bindable implements
 					.onRightProperty(rightPropertyNameString)
 					.convertRightWith(rightToLeftConverter).toBinding();
 			binding.getChildren().add(child);
+			return child;
 		}
 
 		public void add(SourcesPropertyChangeEvents left,
@@ -271,6 +274,21 @@ public abstract class Model extends Bindable implements
 			add(left, leftPropertyName, null, right, rightPropertyName, null);
 		}
 
+		public void addBinding(Binding childBinding) {
+			binding.getChildren().add(childBinding);
+		}
+
+		/**
+		 * Add a ListenerBinding (often a RemovablePropertyChangeListener which
+		 * fires on a model property change) e.g:
+		 *
+		 * <pre>
+		 * <code>
+		 * bindings().addListener(new RemovablePropertyChangeListener(
+		 * this, "value", e -> select.setSelectedValue(value)));
+		 * </code>
+		 * </pre>
+		 */
 		public void addListener(ListenerBinding listenerBinding) {
 			listenerBindings.add(listenerBinding);
 		}
@@ -430,5 +448,8 @@ public abstract class Model extends Bindable implements
 
 	public interface RerouteBubbledEvents {
 		Model rerouteBubbledEventsTo();
+	}
+
+	public abstract static class Value<T> extends Model implements HasValue<T> {
 	}
 }

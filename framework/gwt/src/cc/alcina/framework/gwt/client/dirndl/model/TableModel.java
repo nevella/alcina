@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
-import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
+import cc.alcina.framework.common.client.logic.reflection.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -58,7 +58,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  *
  *
  */
-public class TableModel extends Model {
+public class TableModel extends Model implements NodeEditorContext {
 	protected TableHeader header = new TableHeader();
 
 	protected List<TableRow> rows = new ArrayList<>();
@@ -78,6 +78,17 @@ public class TableModel extends Model {
 
 	public List<TableRow> getRows() {
 		return this.rows;
+	}
+
+	@Override
+	public boolean isEditable() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isRenderAsNodeEditors() {
+		return false;
 	}
 
 	public static class DirectedCategoriesActivityTransformer extends

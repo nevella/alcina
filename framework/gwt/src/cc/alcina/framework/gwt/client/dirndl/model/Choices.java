@@ -141,7 +141,7 @@ public abstract class Choices<T> extends Model
 
 		@Override
 		public void onClick(Click event) {
-			event.reemitAs(this, ModelEvents.Selected.class);
+			event.reemitAs(this, ModelEvents.Selected.class, this);
 		}
 
 		@Override

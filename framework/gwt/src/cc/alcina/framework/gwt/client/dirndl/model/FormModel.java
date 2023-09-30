@@ -43,7 +43,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Action;
-import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
+import cc.alcina.framework.common.client.logic.reflection.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -52,6 +52,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -73,8 +74,8 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 // FIXME - dirndl 1x1dz - actions - check validation, form submit
 @Directed
 @Registration(FormModel.class)
-public class FormModel extends Model
-		implements DomEvents.Submit.Handler, DomEvents.KeyDown.Handler,
+public class FormModel extends Model implements NodeEditorContext,
+		DomEvents.Submit.Handler, DomEvents.KeyDown.Handler,
 		ModelEvents.Cancel.Handler, ModelEvents.Submit.Handler {
 	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
 
@@ -112,6 +113,16 @@ public class FormModel extends Model
 
 	public FormModelState getState() {
 		return this.state;
+	}
+
+	@Override
+	public boolean isEditable() {
+		return state.editable;
+	}
+
+	@Override
+	public boolean isRenderAsNodeEditors() {
+		return state.nodeEditors;
 	}
 
 	public boolean isSubmitTextBoxesOnEnter() {
@@ -294,30 +305,60 @@ public class FormModel extends Model
 			AbstractContextSensitiveModelTransform<Bindable, FormModel> {
 		@Override
 		public FormModel apply(Bindable bindable) {
-			FormModelState state = new FormModelState();
-			state.editable = true;
-			if (bindable instanceof Entity && state.editable) {
+			FormModelState attributes = new FormModelState();
+			attributes.editable = true;
+			if (bindable instanceof Entity && attributes.editable) {
 				bindable = ClientTransformManager.cast()
 						.ensureEditable((Entity) bindable);
 			}
-			state.model = bindable;
-			state.adjunct = true;
+			attributes.model = bindable;
+			attributes.adjunct = true;
+			attributes.nodeEditors = false;
 			BindableFormModelTransformer.Args args = node
 					.annotation(BindableFormModelTransformer.Args.class);
 			if (args != null) {
-				state.adjunct = args.adjunct();
+				attributes.adjunct = args.adjunct();
+				attributes.nodeEditors = args.nodeEditors();
 			}
-			return new FormModelTransformer().withContextNode(node)
-					.apply(state);
+			try {
+				LooseContext.push();
+				// FIXME - dirndl - cleanup GwittirBridge calling (use a
+				// builder)
+				if (attributes.nodeEditors) {
+					LooseContext.setTrue(
+							GwittirBridge.CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS);
+				}
+				return new FormModelTransformer().withContextNode(node)
+						.apply(attributes);
+			} finally {
+				LooseContext.pop();
+			}
 		}
 
 		@ClientVisible
 		@Retention(RetentionPolicy.RUNTIME)
 		@Documented
-		@Target({ ElementType.TYPE, ElementType.METHOD })
+		@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 		public @interface Args {
+			/*
+			 * the rendered form changes the bound bean directly, without
+			 * save/cancel
+			 */
 			boolean adjunct() default false;
+
+			/*
+			 * use node editors (dirndl) rather than abstractboundwidgets
+			 * (gwittir)
+			 */
+			boolean nodeEditors() default false;
 		}
+	}
+
+	/**
+	 * Marker interface for edtiors of a type
+	 *
+	 */
+	public interface Editor {
 	}
 
 	public static class EntityTransformer extends
@@ -340,6 +381,8 @@ public class FormModel extends Model
 	}
 
 	public static class FormElement extends Model {
+		public static transient String PREFIX = "";
+
 		protected LabelModel label;
 
 		protected FormValueModel value;
@@ -361,7 +404,7 @@ public class FormModel extends Model
 		}
 
 		public String getElementName() {
-			return Ax.format("_dl_form_%s", field.getPropertyName());
+			return Ax.format("%s%s", PREFIX, field.getPropertyName());
 		}
 
 		public Field getField() {
@@ -388,6 +431,8 @@ public class FormModel extends Model
 	}
 
 	public static class FormModelState {
+		public boolean nodeEditors;
+
 		public Bindable presentationModel;
 
 		public boolean expectsModel;
@@ -418,6 +463,7 @@ public class FormModel extends Model
 				return formModel;
 			}
 			Args args = node.annotation(Args.class);
+			// FIXME - dirndl - put these as methods on the Resolver
 			ActionsModulator actionsModulator = args != null
 					? Reflections.newInstance(args.actionsModulator())
 					: new ActionsModulator();
@@ -585,6 +631,15 @@ public class FormModel extends Model
 	public static class ModelEventContext {
 	}
 
+	/**
+	 *
+	 * The bean properties will be rendered via Dirndl model transforms (as
+	 * Editor models), rather than (legacy) AbstractBoundWidgets
+	 *
+	 */
+	public @interface NodeEditors {
+	}
+
 	@Reflected
 	public static class PermissibleActionFormTransformer extends
 			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
@@ -634,5 +689,12 @@ public class FormModel extends Model
 		Field getField();
 
 		String getGroupName();
+	}
+
+	/**
+	 * Marker interface for viewers of a type
+	 *
+	 */
+	public interface Viewer {
 	}
 }

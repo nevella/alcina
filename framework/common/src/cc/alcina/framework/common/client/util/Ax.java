@@ -60,7 +60,11 @@ public class Ax {
 				.collect(Collectors.joining(", "));
 	}
 
-	public static String cssify(String s) {
+	public static String cssify(Object o) {
+		if (o == null) {
+			return null;
+		}
+		String s = o.toString();
 		if (CommonUtils.isNullOrEmpty(s)) {
 			return s;
 		}

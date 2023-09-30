@@ -1,11 +1,19 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -17,9 +25,11 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -56,9 +66,10 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			@Binding(type = Type.PROPERTY, from = "spellcheck"),
 			@Binding(type = Type.PROPERTY, from = "autocomplete"),
 			@Binding(type = Type.INNER_TEXT, from = "innerText") },
-	
-emits = { ModelEvents.Change.class, ModelEvents.Input.class })
-public class StringInput extends Model
+	emits = { ModelEvents.Change.class, ModelEvents.Input.class })
+@Registration({ Model.Value.class, FormModel.Editor.class, String.class })
+@Registration({ Model.Value.class, FormModel.Editor.class, Number.class })
+public class StringInput extends Model.Value<String>
 		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
 		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
 		DomEvents.Focusin.Handler, DomEvents.Focusout.Handler {
@@ -138,6 +149,7 @@ public class StringInput extends Model
 		return this.type;
 	}
 
+	@Override
 	public String getValue() {
 		return this.value;
 	}
@@ -157,8 +169,18 @@ public class StringInput extends Model
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
-		if (tag.equals("textarea") && innerText == null) {
-			innerText = value;
+		event.node.optional(Placeholder.class)
+				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
+		super.onBeforeRender(event);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			if (tag.equals("textarea") && innerText == null) {
+				innerText = value;
+			}
 		}
 	}
 
@@ -240,6 +262,7 @@ public class StringInput extends Model
 		this.type = type;
 	}
 
+	@Override
 	public void setValue(String value) {
 		String old_value = this.value;
 		this.value = value;
@@ -248,6 +271,17 @@ public class StringInput extends Model
 
 	private String elementValue() {
 		return provideElement().getPropertyString("value");
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface Placeholder {
+		/**
+		 * The placeholder
+		 */
+		String value();
 	}
 
 	static class SelectionState {

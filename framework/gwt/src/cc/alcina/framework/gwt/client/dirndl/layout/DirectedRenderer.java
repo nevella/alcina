@@ -227,10 +227,13 @@ public abstract class DirectedRenderer {
 	 *
 	 */
 	public static class TransformRenderer extends DirectedRenderer
-			implements GeneratesTransformModel {
+			implements GeneratesTransformModel, RendersNull {
 		@Override
 		protected void render(RendererInput input) {
 			Object transformedModel = transformModel(input, input.model, false);
+			if (transformedModel == null) {
+				return;
+			}
 			AnnotationLocation location = input.location
 					.copyWithClassLocationOf(transformedModel);
 			// FIXME - dirndl 1x1g - *definitely* optimise. Possibly
@@ -253,7 +256,8 @@ public abstract class DirectedRenderer {
 			//
 			// will merge to transformed
 			//
-			// note the special case when input.model == transformedModel
+			// note the special case when input.model == transformedModel -
+			// assumes current directed.bindToModel=false
 			Impl descendantResolvedPropertyAnnotation = Directed.Impl
 					.wrap(input.soleDirected());
 			descendantResolvedPropertyAnnotation.setRenderer(ModelClass.class);
@@ -353,5 +357,11 @@ public abstract class DirectedRenderer {
 				return transformedModel;
 			}
 		}
+	}
+
+	/*
+	 * Renderer will attempt to render null
+	 */
+	interface RendersNull {
 	}
 }

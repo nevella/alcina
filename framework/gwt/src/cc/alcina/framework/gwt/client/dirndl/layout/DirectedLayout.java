@@ -3,8 +3,8 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -63,6 +63,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.RendersNull;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -346,6 +347,12 @@ public class DirectedLayout implements AlcinaProcess {
 	 */
 	Class<? extends DirectedRenderer> resolveModelRenderer(Object model) {
 		return modelRenderers.computeIfAbsent(model.getClass(), clazz -> {
+			// Object.class itself (not as the root of the class hieararchy)
+			// resolves to a Container. It's generally used for images or
+			// other CSS placeholders
+			if (clazz == Object.class) {
+				return DirectedRenderer.Container.class;
+			}
 			try {
 				Class<? extends DirectedRenderer> registration = Registry
 						.query(DirectedRenderer.class).addKeys(clazz)
@@ -365,21 +372,7 @@ public class DirectedLayout implements AlcinaProcess {
 			AnnotationLocation location, Object model) {
 		Class<? extends DirectedRenderer> rendererClass = directed.renderer();
 		if (rendererClass == DirectedRenderer.ModelClass.class) {
-			// default - see Directed.Transform
-			boolean transform = location
-					.hasAnnotation(Directed.Transform.class);
-			if (transform && !(model instanceof Collection)) {
-				rendererClass = DirectedRenderer.TransformRenderer.class;
-			} else {
-				// Object.class itself (not as the root of the class hieararchy)
-				// resolves to a Container. It's generally used for images or
-				// other CSS placeholders
-				if (model.getClass() == Object.class) {
-					rendererClass = DirectedRenderer.Container.class;
-				} else {
-					rendererClass = resolveModelRenderer(model);
-				}
-			}
+			rendererClass = resolveModelRenderer(model);
 		}
 		return Reflections.newInstance(rendererClass);
 	}
@@ -613,6 +606,11 @@ public class DirectedLayout implements AlcinaProcess {
 			return Optional.ofNullable(annotation(clazz));
 		}
 
+		public <A extends Annotation> Optional<A>
+				optionalAnnotation(Class<A> clazz) {
+			return Optional.ofNullable(annotationLocation.getAnnotation(clazz));
+		}
+
 		public Node provideMostSpecificNodeForModel() {
 			Node cursor = this;
 			while (true) {
@@ -761,7 +759,7 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		private Rendered provideRenderedOrLastDescendantChildRendered() {
+		private Rendered provideRenderedOrLastDescendantChildRenderedPriorTo() {
 			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
 					this, Node::readOnlyChildren, true);
 			for (Node node : traversal) {
@@ -903,9 +901,12 @@ public class DirectedLayout implements AlcinaProcess {
 			String typeName = annotationLocation.classLocation.getSimpleName();
 			fb.appendPadRight(30, typeName);
 			fb.append(" ");
-			DirectedRenderer renderer = resolver.layout
-					.resolveRenderer(directed, annotationLocation, model);
-			fb.appendPadRight(30, renderer.getClass().getSimpleName());
+			String rendererClassName = model == null
+					? "[no renderer/null model]"
+					: resolver.layout.resolveRenderer(directed,
+							annotationLocation, model).getClass()
+							.getSimpleName();
+			fb.appendPadRight(30, rendererClassName);
 			fb.append(" ");
 			Impl impl = new Directed.Impl(directed);
 			fb.append(impl.toStringElideDefaults());
@@ -960,17 +961,29 @@ public class DirectedLayout implements AlcinaProcess {
 			result.point = Point.FIRST;
 			Node cursor = this;
 			result.container = firstSelfOrAncestorRendered.get();
+			IdentityHashMap<Node, Boolean> ancestors = new IdentityHashMap<>();
+			// of course, there's sure to be a mor
+			cursor = cursor.parent;
+			while (cursor != null) {
+				ancestors.put(cursor, true);
+				cursor = cursor.parent;
+			}
+			cursor = this;
 			while (true) {
+				// test for rendered, if there is one return it - either AFTER
+				// or FIRST, depending on its relation to the node
 				if (cursor != this) {
-					Rendered widget = cursor
-							.provideRenderedOrLastDescendantChildRendered();
-					if (widget != null) {
-						if (widget == result.container) {
+					if (ancestors.containsKey(cursor)) {
+						if (cursor.rendered != null) {
 							// no preceding widget, insert first
 							return result;
-						} else {
+						}
+					} else {
+						Rendered rendered = cursor
+								.provideRenderedOrLastDescendantChildRenderedPriorTo();
+						if (rendered != null) {
 							result.point = Point.AFTER;
-							result.after = widget;
+							result.after = rendered;
 							return result;
 						}
 					}
@@ -1908,9 +1921,16 @@ public class DirectedLayout implements AlcinaProcess {
 
 		void beforeRender() {
 			this.model = resolver.resolveModel(model);
+			/*
+			 * This event is fired directly (as method calls), not via
+			 * bubbling/dispatch
+			 */
+			LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
+					node, model);
+			resolver.onBeforeRender(beforeRender);
 			if (model instanceof LayoutEvents.BeforeRender.Handler) {
 				((LayoutEvents.BeforeRender.Handler) model)
-						.onBeforeRender(new LayoutEvents.BeforeRender(node));
+						.onBeforeRender(beforeRender);
 			}
 		}
 
@@ -1985,7 +2005,8 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 			beforeRender();
-			if (model != null) {
+			if (model != null || Reflections.isAssignableFrom(RendersNull.class,
+					node.directed.renderer())) {
 				if (rendered != null) {
 					// preserve domNode/model identity
 					node.rendered = rendered;

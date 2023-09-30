@@ -13,11 +13,14 @@
     &:focus 
       border-color: transparent
       box-shadow: #5299e3 0 0 3px
+
   select 
-    height: 24px
+    //height: 24px
     padding-top: 2px
     box-sizing: content-box
-    padding-left: 2px
+    //padding-left: 2px
+    padding-right: 2px
+
   textarea 
     padding-top: 1px
 
@@ -55,7 +58,7 @@
         max-width: 30em
       */
 
-ol-editor 
+bean-editor 
   padding: 1em 2em
   line-height: 2.0em
   padding-bottom: 1px
@@ -64,20 +67,31 @@ ol-editor
     font-weight: 500
     padding-bottom: 0.2em
     padding-left: 3px
+
+  > description
+    line-height: 1.3rem
+    display: block
+
+    &:not(:empty)
+      margin-bottom: 1rem
   
   &.bordered 
     margin: 1em 0
     border-top: solid 1px #ccc
     border: none
     background-color: #f9f9f9
+
   &:empty 
     display: none
+
   &.not-first 
     padding-top: 0
+
   &.no-labels 
     form
       label 
         display: none
+  
   &.single-line 
     display: inline-block
     flex: 1
@@ -111,12 +125,13 @@ ol-editor
       > section 
         display: grid
         grid-template-columns: min-content 1fr
-        > div 
+        row-gap: 0.3rem
+        > div, form-element
           display: contents
           > label 
             white-space: nowrap
             padding-right: 2em
-  actions
+  > form > actions
     margin: 1em
     display: flex
     justify-content: center
@@ -128,9 +143,11 @@ ol-editor
       padding: 0 0.5em
     &.right 
       justify-content: flex-end
-  &.over-only form
+
+  &.over-only > form
     @include over-only
     @include subtle-form
+    
   &.tight 
     padding: 0.5rem 1rem
     form-element
@@ -160,8 +177,12 @@ ol-editor
         white-space: nowrap
         width: 230px
 
+  &[inert] > form
+    opacity: 0.7
+
+
 /*
-will always have single-line ol-editor, pad label until we work out baseline alignment
+will always have single-line bean-editor, pad label until we work out baseline alignment
   */
 edit-value 
   > label  

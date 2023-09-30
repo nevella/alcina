@@ -24,6 +24,8 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 
@@ -61,18 +63,20 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
  *
  */
 @Reflected
-public class ContextResolver extends AnnotationLocation.Resolver {
+public class ContextResolver extends AnnotationLocation.Resolver
+		implements LayoutEvents.BeforeRender.Handler {
 	protected ContextResolver parent;
 
 	protected DirectedLayout layout;
 
 	Object rootModel;
 
-	DefaultAnnotationResolver annotationResolver = new DefaultAnnotationResolver();
+	protected DefaultAnnotationResolver annotationResolver;
 
-	BindingsCache bindingsCache = new BindingsCache();
+	protected BindingsCache bindingsCache;
 
 	public ContextResolver() {
+		initCaches();
 	}
 
 	public void appendToRoot(Rendered rendered) {
@@ -104,6 +108,11 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		} else {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	@Override
+	public void onBeforeRender(BeforeRender event) {
+		// generally, setup child bindings for complex structures
 	}
 
 	public void renderElement(DirectedLayout.Node layoutNode, String tagName) {
@@ -145,6 +154,11 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	protected void init(DirectedLayout.Node node) {
 		init(node.getResolver(), node.parent.resolver.layout,
 				this.rootModel = node.getModel());
+	}
+
+	protected void initCaches() {
+		annotationResolver = new DefaultAnnotationResolver();
+		bindingsCache = new BindingsCache();
 	}
 
 	@Override
@@ -202,8 +216,8 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	 * This method is sometimes simpler for controlling the annotations exposed
 	 * than {@link #resolveAnnotations0}, since it returns a property that will
 	 * be used to evaluate *all* annotations at a node. Implementations are only
-	 * reachable from {@link DirectedRenderer.GeneratesPropertyInputs} via the
-	 * package/protected access route
+	 * reachable from {@link DirectedRenderer.GeneratesPropertyInputs} and
+	 * {@link BridgingValueRenderer}via the package/protected access route
 	 */
 	Property resolveDirectedProperty(Property property) {
 		return resolveDirectedProperty0(property);

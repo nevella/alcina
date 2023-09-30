@@ -15,11 +15,9 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
@@ -62,31 +60,14 @@ public class FileSelector extends AbstractBoundWidget<FileData>
 		Html5File[] files = base.getFiles();
 		if (files.length == 1) {
 			Html5File file = files[0];
-			final FileData newInfo = new FileData();
-			newInfo.setFileName(file.getFileName());
-			readAsBinaryString(file, new AsyncCallback<String>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					throw new WrappedRuntimeException(caught);
+			FileData.fromFile(file, fileData -> {
+				fileData.topicClear().add(clearListener);
+				FileData oldValue = this.value;
+				if (oldValue != null) {
+					oldValue.topicClear().remove(clearListener);
 				}
-
-				@Override
-				public void onSuccess(String result) {
-					int length = result.length();
-					byte[] bytes = new byte[length];
-					for (int i = 0; i < length; i++) {
-						bytes[i] = (byte) result.charAt(i);
-					}
-					newInfo.setBytes(bytes);
-					//
-					newInfo.topicClear().add(clearListener);
-					FileData oldValue = value;
-					if (oldValue != null) {
-						oldValue.topicClear().remove(clearListener);
-					}
-					value = newInfo;
-					changes.firePropertyChange("value", oldValue, newInfo);
-				}
+				this.value = fileData;
+				changes.firePropertyChange("value", oldValue, fileData);
 			});
 		}
 	}
@@ -105,16 +86,6 @@ public class FileSelector extends AbstractBoundWidget<FileData>
 	public void setValue(FileData value) {
 		this.value = value;
 	}
-
-	private native void readAsBinaryString(Html5File file,
-			AsyncCallback<String> callback)/*-{
-    var reader = new FileReader();
-    reader.onloadend = function() {
-      callback.@com.google.gwt.user.client.rpc.AsyncCallback::onSuccess(Ljava/lang/Object;)(reader.result);
-
-    };
-    reader.readAsBinaryString(file);
-	}-*/;
 
 	@Override
 	protected void onAttach() {

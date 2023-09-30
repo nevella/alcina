@@ -15,7 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @ClientVisible
 @Resolution(
 	inheritance = { Inheritance.CLASS, Inheritance.INTERFACE,

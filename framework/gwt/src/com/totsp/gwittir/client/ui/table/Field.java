@@ -60,6 +60,8 @@ public class Field {
 
 	Class<?> declaringType;
 
+	private Property property;
+
 	public Field(String propertyName, String label,
 			BoundWidgetProvider cellProvider, Validator validator,
 			ValidationFeedback feedback, Converter converter,
@@ -72,12 +74,6 @@ public class Field {
 		this.converter = converter;
 		this.declaringType = declaringType;
 		this.property = Reflections.at(declaringType).property(propertyName);
-	}
-
-	private Property property;
-
-	public Property getProperty() {
-		return property;
 	}
 
 	public String getAutocompleteName() {
@@ -106,6 +102,10 @@ public class Field {
 
 	public String getLabel() {
 		return label;
+	}
+
+	public Property getProperty() {
+		return property;
 	}
 
 	public String getPropertyName() {
