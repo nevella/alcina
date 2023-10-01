@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,6 +20,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.TransactionId;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
@@ -681,6 +683,7 @@ public class Transaction implements Comparable<Transaction> {
 		if (transformManager == null) {
 			return;
 		}
+		Set<DomainTransformEvent> transforms = transformManager.getTransforms();
 		switch (endPhase) {
 		case TO_DB_PERSISTED:
 		case TO_DB_ABORTED:
@@ -697,16 +700,16 @@ public class Transaction implements Comparable<Transaction> {
 			// transactions - we can end up here if an exception is thrown on
 			// postProcess()
 			if (AppPersistenceBase.isTestServer()) {
-				throw new MvccException(Ax.format(
-						"Ending on invalid phase: %s %s transforms", endPhase,
-						transformManager.getTransforms().size()));
+				throw new MvccException(
+						Ax.format("Ending on invalid phase: %s %s transforms",
+								endPhase, transforms.size()));
 			} else {
 				logger.warn("Ending transaction on invalid phase: {}",
 						endPhase);
 			}
 		}
 		if (isWriteable()) {
-			if (transformManager.getTransforms().size() == 0) {
+			if (transforms.size() == 0) {
 			} else {
 				// FIXME - mvcc.5 - mvcc exception (after cleanup)
 				switch (endPhase) {
@@ -716,7 +719,11 @@ public class Transaction implements Comparable<Transaction> {
 				default:
 					logger.warn(
 							"Ending transaction with uncommitted transforms: {} {}",
-							endPhase, transformManager.getTransforms().size());
+							endPhase, transforms.size());
+					if (Ax.isTest()) {
+						throw new RuntimeException(Ax.format(
+								"Uncommitted transforms\n\n%s", transforms));
+					}
 					break;
 				}
 			}

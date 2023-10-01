@@ -40,6 +40,8 @@ public class ClientReflections {
 				.findFirst();
 		if (optional.isEmpty()) {
 			if (clazz.getName().startsWith("java.") || clazz.isPrimitive()
+					|| (clazz.isArray()
+							&& clazz.getComponentType().isPrimitive())
 					|| emptyReflectorClasses.contains(clazz)) {
 				// non-public internal class, either GWT or JDK, e.g.
 				// Arrays$ArrayList - or primitive
