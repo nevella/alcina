@@ -12,12 +12,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.search.SearchResults;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.util.Ax;
 
 @Bean
 public class ModelSearchResults<B extends IsBindable & SearchResult>
-		implements Serializable {
+		implements Serializable, SearchResults {
 	private List<B> queriedResultObjects;
 
 	private String resultClassName;

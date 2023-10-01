@@ -282,7 +282,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * Render a model object and add top-level output widgets to the parent
 	 * widget
 	 */
-	public Rendered render(ContextResolver resolver, Object model) {
+	public LayoutResult render(ContextResolver resolver, Object model) {
 		if (resolver == null) {
 			resolver = ContextResolver.Default.get().createResolver();
 		}
@@ -291,10 +291,10 @@ public class DirectedLayout implements AlcinaProcess {
 				null, resolver);
 		enqueueInput(resolver, model, location, null, null);
 		layout();
-		return root.firstDescendantRendered();
+		return new LayoutResult();
 	}
 
-	public Rendered render(Object model) {
+	public LayoutResult render(Object model) {
 		return render(null, model);
 	}
 
@@ -408,6 +408,16 @@ public class DirectedLayout implements AlcinaProcess {
 			fb.append(context.node.toParentStack());
 			fb.append("");
 			return fb.toString();
+		}
+	}
+
+	public class LayoutResult {
+		public Rendered getRendered() {
+			return root.firstDescendantRendered();
+		}
+
+		public Node getRoot() {
+			return root;
 		}
 	}
 

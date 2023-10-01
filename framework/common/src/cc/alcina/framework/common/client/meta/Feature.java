@@ -33,16 +33,9 @@ public interface Feature extends Registration.AllSubtypes {
 		Class<? extends Feature>[] value();
 	}
 
+	@Registration(Note.class)
 	public interface Note {
 		String contents();
-
-		@Retention(RetentionPolicy.RUNTIME)
-		@Inherited
-		@Documented
-		@Target({ ElementType.TYPE })
-		@interface Ref {
-			Class<? extends Feature.Note>[] value();
-		}
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
@@ -59,13 +52,15 @@ public interface Feature extends Registration.AllSubtypes {
 	@Target({ ElementType.METHOD, ElementType.TYPE })
 	@Repeatable(Refs.class)
 	@interface Ref {
+		Class<? extends Type>[] types() default {};
+
 		Class<? extends Feature>[] value();
 	}
 
 	/**
 	 * Container for multiple {@link Ref} annotations
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
@@ -167,6 +162,10 @@ public interface Feature extends Registration.AllSubtypes {
 			Class<? extends Feature.Type> value();
 		}
 		/*
+		 * The feature is logically also visible here (say 'geting started' as well as its logical ui parent)
+		 */
+		public interface Secondary_parent extends Type{}
+		/*
 		 * A restriction on a ui feature implementation, worth tracking (and/or testing) separately
 		 */
 		public interface Ui_constraint extends Type{}
@@ -178,6 +177,7 @@ public interface Feature extends Registration.AllSubtypes {
 		 * A detail of a ui feature implementation, worth tracking (and/or testing) separately
 		 */
 		public interface Ui_implementation extends Type{}
+
 		public interface Ui_support extends Type{}
 	}
 }

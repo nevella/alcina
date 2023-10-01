@@ -46,7 +46,8 @@ public class OverlayPositions {
 		Preconditions.checkState(!openOverlays.containsKey(model));
 		DirectedLayout layout = new DirectedLayout();
 		Rendered rendered = layout
-				.render(new OverlayContainer(model, containerOptions));
+				.render(new OverlayContainer(model, containerOptions))
+				.getRendered();
 		RenderedOverlay renderedOverlay = new RenderedOverlay(layout, rendered);
 		openOverlays.put(model, renderedOverlay);
 		rendered.appendToRoot();

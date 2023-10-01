@@ -83,6 +83,10 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 		return result;
 	}
 
+	public E firstValue() {
+		return getValue().iterator().next();
+	}
+
 	@Override
 	@PropertySerialization(defaultProperty = true)
 	@XmlTransient

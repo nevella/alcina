@@ -28,7 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * A set of tests that mutate the dom in different ways, and validate the
  * localdom is updated correctly
  *
- * 
+ *
  *
  */
 public class MutationsTests {
@@ -235,7 +235,8 @@ public class MutationsTests {
 					}).collect(Collectors.toList())
 							.forEach(Node::removeFromParent);
 					TestContainer cont = new TestContainer(color);
-					Rendered rendered = new DirectedLayout().render(cont);
+					Rendered rendered = new DirectedLayout().render(cont)
+							.getRendered();
 					rendered.appendToRoot();
 					LocalDom.flush();
 					this.remote = rendered.asElement().implAccess().jsoRemote();

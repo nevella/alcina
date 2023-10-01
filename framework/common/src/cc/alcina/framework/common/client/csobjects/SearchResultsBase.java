@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.SearchResults;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -32,7 +33,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @Bean
-public class SearchResultsBase<B extends SearchResult> implements Serializable {
+public class SearchResultsBase<B extends SearchResult>
+		implements Serializable, SearchResults {
 	private String log = "";
 
 	private int totalResultCount;

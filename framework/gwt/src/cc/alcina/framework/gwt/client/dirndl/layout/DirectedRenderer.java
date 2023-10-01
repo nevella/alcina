@@ -67,6 +67,7 @@ public abstract class DirectedRenderer {
 		if (Ax.notBlank(tag)) {
 			return tag;
 		}
+		// FIXME - dirndl - doesn't handle transform of the parent
 		if (node.parent != null && node.parent.has(PropertyNameTags.class)
 				&& node.getProperty().getName() != null) {
 			return Ax.cssify(node.getProperty().getName());

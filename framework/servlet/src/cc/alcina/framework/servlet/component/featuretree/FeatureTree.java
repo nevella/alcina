@@ -84,7 +84,8 @@ public class FeatureTree {
 		public void render() {
 			injectCss("res/css/styles.css");
 			Client.get().initAppHistory();
-			new DirectedLayout().render(new Page()).appendToRoot();
+			new DirectedLayout().render(new Page()).getRendered()
+					.appendToRoot();
 		}
 	}
 

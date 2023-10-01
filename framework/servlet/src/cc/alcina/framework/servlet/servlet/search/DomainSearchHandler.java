@@ -45,16 +45,14 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
  * calls the query executor {@link DomainSearcher}, projects the results and
  * calls any grouping handlers
  *
- * 
- *
  */
 @Registration.Singleton
-public class CommonSearchSupport {
-	public static final transient String CONTEXT_DO_NOT_PROJECT_SEARCH = CommonSearchSupport.class
+public class DomainSearchHandler {
+	public static final transient String CONTEXT_DO_NOT_PROJECT_SEARCH = DomainSearchHandler.class
 			.getName() + ".CONTEXT_DO_NOT_PROJECT_SEARCH";
 
-	public static CommonSearchSupport get() {
-		return Registry.impl(CommonSearchSupport.class);
+	public static DomainSearchHandler get() {
+		return Registry.impl(DomainSearchHandler.class);
 	}
 
 	public void copySearchMetadata(SearchDefinition from, SearchDefinition to) {

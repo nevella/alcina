@@ -47,6 +47,23 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
+/**
+ * <p>
+ * Doc - work in progress - topics are:
+ * <ul>
+ * <li>criteria groups - operate as more-or-less a set of parentheses (a
+ * grouping on the criterion) as well as organisation hooks for the ui. Note
+ * movement away from CGs to multi-valued criteria
+ * <li>criteria - the meat of the definition - define constraints on the search.
+ * <li>ordering
+ * <li>eql
+ * <li>string representation
+ * <li>serialization
+ * </ul>
+ *
+ * @author nick@alcina.cc
+ *
+ */
 @Registrations({ @Registration(JaxbContextRegistration.class), })
 public abstract class SearchDefinition extends Bindable
 		implements TreeSerializable, TreeRenderable, ContentDefinition,
