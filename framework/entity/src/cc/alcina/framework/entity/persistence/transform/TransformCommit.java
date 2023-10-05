@@ -86,7 +86,7 @@ import cc.alcina.framework.entity.util.ProcessLogFolder;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 
 /**
- * 
+ *
  */
 @Registration.Singleton
 public class TransformCommit {
@@ -769,6 +769,7 @@ public class TransformCommit {
 
 	private void commitLocalTranformInChunks0(int maxTransformChunkSize)
 			throws Exception {
+		Transaction.current().clearLocalEvictionList();
 		CommitClientInstanceContext commitClientInstanceContext = LooseContext
 				.get(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT);
 		ClientInstance fromInstance = AuthenticationPersistence.get()

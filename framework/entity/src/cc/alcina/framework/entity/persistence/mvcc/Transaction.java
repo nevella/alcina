@@ -408,6 +408,10 @@ public class Transaction implements Comparable<Transaction> {
 		logger.debug("Created tx: {}", this);
 	}
 
+	public void clearLocalEvictionList() {
+		createdLocalsForEviction.clear();
+	}
+
 	@Override
 	public int compareTo(Transaction o) {
 		return id.compareTo(o.id);
