@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.MultisetCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPath;
 
@@ -208,22 +209,20 @@ public class DomainLookup<T, E extends Entity>
 		return normaliser == null ? key : normaliser.convert(key);
 	}
 
-	protected boolean remove(T key, E value) {
-		Set<E> set = get(key);
-		if (set != null) {
-			return set.remove(value);
-		} else {
-			return false;
-		}
-	}
-
 	protected boolean add(T key, E value) {
 		if (value == null) {
 			System.err.println(
 					"Invalid value (null) for cache lookup put - " + key);
 			return false;
 		}
-		return getAndEnsure(key).add(value);
+		try {
+			return getAndEnsure(key).add(value);
+		} catch (RuntimeException e) {
+			String message = FormatBuilder.keyValues("Issue type",
+					"lookup insert", "lookup", this, "key", key, "value",
+					value);
+			throw new RuntimeException(message, e);
+		}
 	}
 
 	protected Set<E> getAndEnsure(T key) {
@@ -236,5 +235,14 @@ public class DomainLookup<T, E extends Entity>
 			return descriptor.valueFunction.apply(entity);
 		}
 		return propertyPath.getChainedProperty(entity);
+	}
+
+	protected boolean remove(T key, E value) {
+		Set<E> set = get(key);
+		if (set != null) {
+			return set.remove(value);
+		} else {
+			return false;
+		}
 	}
 }
