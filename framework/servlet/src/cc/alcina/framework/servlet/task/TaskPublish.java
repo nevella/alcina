@@ -35,7 +35,8 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 
 	@Override
 	public String getName() {
-		return getPublicationRequest().provideJobName();
+		return getClass().getSimpleName() + " - "
+				+ getPublicationRequest().provideJobName();
 	}
 
 	public ContentRequestBase getPublicationRequest() {
