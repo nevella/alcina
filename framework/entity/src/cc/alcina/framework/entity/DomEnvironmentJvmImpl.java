@@ -78,8 +78,10 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 			if (node.getNodeType() == Node.DOCUMENT_FRAGMENT_NODE) {
 				return XmlUtils
 						.prettyPrintWithDOM3LSNode((DocumentFragment) node);
-			} else {
+			} else if (node.getNodeType() == Node.ELEMENT_NODE) {
 				return XmlUtils.prettyPrintWithDOM3LSNode((Element) node);
+			} else {
+				return XmlUtils.streamXML(node);
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
