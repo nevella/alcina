@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
@@ -67,6 +68,11 @@ public class LayoutEvents {
 
 		public boolean isBound() {
 			return this.bound;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s - bound: %s", super.toString(), bound);
 		}
 
 		public interface Handler extends NodeEvent.Handler {
