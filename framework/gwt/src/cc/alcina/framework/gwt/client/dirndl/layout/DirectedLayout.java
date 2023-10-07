@@ -595,12 +595,7 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 				children.add(insertAfter + 1, node);
 			}
-			/*
-			 * bind - tracks node.postRender()
-			 */
-			node.bindEvents();
-			node.bindModel(false);
-			node.bindParentProperty();
+			bind(false);
 			return node;
 		}
 
@@ -796,6 +791,19 @@ public class DirectedLayout implements AlcinaProcess {
 			insertBefore(child, null);
 		}
 
+		void bind(boolean leftToRight) {
+			bindEvents();
+			bindModel(leftToRight);
+			bindParentProperty();
+			/*
+			 * During normal rendering there will be no children - this handles
+			 * reverse-model node movements (e.g. wrapping, re-parenting)
+			 */
+			if (children != null) {
+				children.forEach(c -> c.bind(leftToRight));
+			}
+		}
+
 		int depth() {
 			if (depth == -1) {
 				if (parent == null) {
@@ -885,11 +893,14 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			to.ensureChildren();
 			Preconditions.checkState(to.children.isEmpty());
-			from.children.forEach(child -> {
-				child.parent = to;
-				to.children.add(child);
-				to.rendered.append(child.rendered);
-			});
+			from.children.stream().collect(Collectors.toList())
+					.forEach(child -> {
+						child.remove(false);
+						child.parent = to;
+						to.children.add(child);
+						to.rendered.append(child.rendered);
+						child.bind(false);
+					});
 		}
 
 		String path() {
@@ -924,9 +935,7 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void postRender() {
-			bindEvents();
-			bindModel(true);
-			bindParentProperty();
+			bind(true);
 		}
 
 		List<Node> readOnlyChildren() {
