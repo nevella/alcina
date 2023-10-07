@@ -14,6 +14,12 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 @TypeSerialization(flatSerializable = false)
 public class TaskPublish extends PerformerTask implements ServletAwaitTask {
+	public static String extractDownloadUrl(String response) {
+		return response.replaceFirst(
+				"(?s).+Added download at (/downloadServlet.do\\?id=.+)\n.+",
+				"$1");
+	}
+
 	private ContentRequestBase publicationRequest;
 
 	private boolean copyContentToLargeResult;
@@ -29,7 +35,8 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 
 	@Override
 	public String getName() {
-		return getPublicationRequest().provideJobName();
+		return getClass().getSimpleName() + " - "
+				+ getPublicationRequest().provideJobName();
 	}
 
 	public ContentRequestBase getPublicationRequest() {
@@ -43,23 +50,6 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 
 	public boolean isCopyContentToLargeResult() {
 		return this.copyContentToLargeResult;
-	}
-
-	public void setAwaitJobCompletion(boolean awaitJobCompletion) {
-		this.awaitJobCompletion = awaitJobCompletion;
-	}
-
-	public void setCopyContentToLargeResult(boolean copyContentToLargeResult) {
-		this.copyContentToLargeResult = copyContentToLargeResult;
-	}
-
-	public void setPublicationRequest(ContentRequestBase publicationRequest) {
-		this.publicationRequest = publicationRequest;
-	}
-
-	public ServletAwaitTask withRequest(ContentRequestBase publicationRequest) {
-		setPublicationRequest(publicationRequest);
-		return this;
 	}
 
 	@Override
@@ -84,5 +74,22 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 		}
 		JobContext.get().getJob().setResult(result);
 		Transaction.commit();
+	}
+
+	public void setAwaitJobCompletion(boolean awaitJobCompletion) {
+		this.awaitJobCompletion = awaitJobCompletion;
+	}
+
+	public void setCopyContentToLargeResult(boolean copyContentToLargeResult) {
+		this.copyContentToLargeResult = copyContentToLargeResult;
+	}
+
+	public void setPublicationRequest(ContentRequestBase publicationRequest) {
+		this.publicationRequest = publicationRequest;
+	}
+
+	public ServletAwaitTask withRequest(ContentRequestBase publicationRequest) {
+		setPublicationRequest(publicationRequest);
+		return this;
 	}
 }
