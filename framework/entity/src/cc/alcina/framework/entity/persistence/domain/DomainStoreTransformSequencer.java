@@ -288,10 +288,9 @@ public class DomainStoreTransformSequencer
 		String querySql = Ax.format("vacuum (VERBOSE, ANALYZE) %s ",
 				tableName());
 		try (Statement statement = conn.createStatement()) {
-			ResultSet rs = statement.executeQuery(querySql);
-			while (rs.next()) {
-				logger.info(rs.getString(1));
-			}
+			// commit to end tx - it has to be in the one statement or auto-tx
+			// handling will wrap it
+			statement.execute(Ax.format("COMMIT; %s", querySql));
 		} catch (SQLException sqlex) {
 			logger.warn("Issue in vacuum");
 			throw sqlex;
