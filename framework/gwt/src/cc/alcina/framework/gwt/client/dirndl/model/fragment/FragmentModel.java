@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Mutation;
@@ -93,18 +92,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
 @Feature.Ref(Feature_Dirndl_FragmentModel.class)
 public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		LayoutEvents.Bind.Handler, NodeTransformer.Provider {
-	static final String FLAG_MUTATING = FragmentModel.class.getName()
-			+ ".FLAG_MUTATING";
-
 	public static void withMutating(Runnable runnable) {
-		try {
-			LooseContext.push();
-			MutationRecord.deltaFlag(FLAG_MUTATING, true);
-			runnable.run();
-		} finally {
-			MutationRecord.deltaFlag(FLAG_MUTATING, false);
-			LooseContext.pop();
-		}
+		MutationRecord.withFlag(FlagMutating.class, runnable);
 	}
 
 	Model rootModel;
@@ -203,7 +192,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		// sketch
 		// collate - changes by node
 		for (MutationRecord record : event.records) {
-			if (record.hasFlag(FLAG_MUTATING)) {
+			if (record.hasFlag(FlagMutating.class)) {
 				continue;
 			}
 			Node w3cNode = record.target.w3cNode;
@@ -392,6 +381,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		public enum Type {
 			ADD, REMOVE, CHANGE
 		}
+	}
+
+	interface FlagMutating extends MutationRecord.Flag {
 	}
 
 	class MinimalAncestorSet {

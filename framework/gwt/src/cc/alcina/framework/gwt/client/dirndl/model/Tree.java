@@ -79,7 +79,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	@Override
 	public void onKeyboardSelectNode(KeyboardSelectNode event) {
-		keyboardSelectModel(event);
+		keyboardSelectModel((ModelEvent) event);
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	@Override
 	public void onNodeLabelClicked(NodeLabelClicked event) {
 		focusTree();
-		selectNode(event);
+		selectNode((ModelEvent) event);
 	}
 
 	@Override
@@ -123,7 +123,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	@Override
 	public void onSelectNode(SelectNode event) {
-		selectNode(event);
+		selectNode((ModelEvent) event);
 	}
 
 	public void setCommitAfterKeyboardNavigation(
@@ -159,7 +159,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		provideElement().focus();
 	}
 
-	void keyboardSelectModel(ModelEvent<?, ?> event) {
+	void keyboardSelectModel(ModelEvent<TN, ?> event) {
 		TN model = event.getModel();
 		if (model == keyboardSelectedNodeModel) {
 			return;
@@ -177,7 +177,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 	}
 
-	void selectNode(ModelEvent<?, ?> event) {
+	void selectNode(ModelEvent<TN, ?> event) {
 		keyboardSelectModel(event);
 		TN model = event.getModel();
 		if (selectedNodeModel != null) {

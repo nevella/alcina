@@ -123,17 +123,6 @@ public class Environment {
 		runInClientFrame(runnable);
 	}
 
-	// see class doc re sync
-	synchronized void emitMutations() {
-		if (mutations != null) {
-			runInClientFrame(() -> {
-				Document.get().pathrefRemote().flushSinkEventsQueue();
-				queue.send(mutations);
-				mutations = null;
-			});
-		}
-	}
-
 	public void initialiseClient(RemoteComponentProtocol.Session session) {
 		if (queue == null) {
 			startQueue();
@@ -149,7 +138,7 @@ public class Environment {
 			client.getPlaceController();
 			client.setupPlaceMapping();
 			document = Document.contextProvider.createFrame(RemoteType.PATHREF);
-			document.createDocumentElement("html");
+			document.createDocumentElement("<html/>");
 			document.implAccess().pathrefRemote().mutationProxy = mutationProxy;
 			LocalDom.initalizeDetachedSync();
 			ui.init();
@@ -162,11 +151,6 @@ public class Environment {
 		return client != null;
 	}
 
-	void onHistoryChange(ValueChangeEvent<String> event) {
-		mutationProxy.onLocationMutation(
-				Message.Mutations.ofLocation().locationMutation);
-	}
-
 	public synchronized void
 			registerRemoteMessageConsumer(Consumer<Message> consumer) {
 		queue.registerConsumer(consumer);
@@ -174,33 +158,6 @@ public class Environment {
 
 	public void renderInitialUi() {
 		runInClientFrame(() -> ui.render());
-	}
-
-	private void runInClientFrame(Runnable runnable) {
-		if (LooseContext.has(CONTEXT_ENVIRONMENT)) {
-			runnable.run();
-		} else {
-			try {
-				LooseContext.push();
-				LooseContext.set(CONTEXT_ENVIRONMENT, this);
-				Client.contextProvider.registerFrame(client);
-				History.contextProvider.registerFrame(history);
-				Window.Location.contextProvider.registerFrame(location);
-				Document.contextProvider.registerFrame(document);
-				runnable.run();
-				LocalDom.flush();
-			} finally {
-				LooseContext.pop();
-			}
-		}
-	}
-
-	private void startQueue() {
-		queue = new ClientProtocolMessageQueue();
-		String threadName = Ax.format("remcom-env-%s", credentials.id);
-		Thread thread = new Thread(queue, threadName);
-		thread.setDaemon(true);
-		thread.start();
 	}
 
 	@Override
@@ -230,6 +187,49 @@ public class Environment {
 			// throw new InvalidClientUidException();
 			// }
 		}
+	}
+
+	private void runInClientFrame(Runnable runnable) {
+		if (LooseContext.has(CONTEXT_ENVIRONMENT)) {
+			runnable.run();
+		} else {
+			try {
+				LooseContext.push();
+				LooseContext.set(CONTEXT_ENVIRONMENT, this);
+				Client.contextProvider.registerFrame(client);
+				History.contextProvider.registerFrame(history);
+				Window.Location.contextProvider.registerFrame(location);
+				Document.contextProvider.registerFrame(document);
+				runnable.run();
+				LocalDom.flush();
+			} finally {
+				LooseContext.pop();
+			}
+		}
+	}
+
+	private void startQueue() {
+		queue = new ClientProtocolMessageQueue();
+		String threadName = Ax.format("remcom-env-%s", credentials.id);
+		Thread thread = new Thread(queue, threadName);
+		thread.setDaemon(true);
+		thread.start();
+	}
+
+	// see class doc re sync
+	synchronized void emitMutations() {
+		if (mutations != null) {
+			runInClientFrame(() -> {
+				Document.get().pathrefRemote().flushSinkEventsQueue();
+				queue.send(mutations);
+				mutations = null;
+			});
+		}
+	}
+
+	void onHistoryChange(ValueChangeEvent<String> event) {
+		mutationProxy.onLocationMutation(
+				Message.Mutations.ofLocation().locationMutation);
 	}
 
 	class ClientProtocolMessageQueue implements Runnable {

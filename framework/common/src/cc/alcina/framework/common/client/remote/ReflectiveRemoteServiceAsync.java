@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.remote;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -16,6 +17,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.Seriali
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.util.Async;
 
 /*
  * @formatter:off
@@ -88,6 +90,10 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 		} catch (Exception e) {
 			callback.onFailure(e);
 		}
+	}
+
+	protected AsyncCallback successCallback(Consumer consumer) {
+		return Async.callbackBuilder().success(consumer::accept).build();
 	}
 
 	public static class ReflectiveRemoteServicePayload extends Model {
