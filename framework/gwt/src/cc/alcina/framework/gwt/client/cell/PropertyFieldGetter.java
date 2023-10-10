@@ -5,28 +5,23 @@ import java.util.function.Function;
 import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.reflection.Property;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
 public class PropertyFieldGetter<O> implements Function<O, Object> {
 	private Field field;
 
-	private Property property;
-
 	public PropertyFieldGetter(String propertyName, Class clazz) {
-		this.field = GwittirBridge.get().getField(clazz, propertyName, true,
-				false);
+		this.field = BeanFields.query().forClass(clazz)
+				.forPropertyName(propertyName).asEditable(true).getField();
 		// FIXME - reflection.post-gwittir - use field.property
-		this.property = Reflections.at(clazz).property(propertyName);
 	}
 
 	@Override
 	public Object apply(O object) {
 		Entity entity = (Entity) object;
-		Object value = property.get(entity);
+		Object value = field.getProperty().get(entity);
 		if (field.getValidator() != null) {
 			try {
 				value = field.getValidator().validate(value);

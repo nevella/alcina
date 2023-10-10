@@ -27,8 +27,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.BoundWidgetProviderTextBox;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields.BoundWidgetProviderTextBox;
 import cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectSuggestCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox;
@@ -397,9 +397,9 @@ public class ColumnsBuilder<T> {
 			if (editableCell != null) {
 				editInfo.cell = editableCell;
 			} else {
-				field = GwittirBridge.get().getField(clazz,
-						editInfo.propertyName, true, true,
-						GwittirBridge.SIMPLE_FACTORY_NO_NULLS, null);
+				field = BeanFields.query().forClass(clazz)
+						.forPropertyName(editInfo.propertyName).asEditable(true)
+						.forMultipleWidgetContainer(true).getField();
 				BoundWidgetProvider cellProvider = field.getCellProvider();
 				if (cellProvider instanceof ListBoxEnumProvider) {
 					ListBoxEnumProvider listBoxEnumProvider = (ListBoxEnumProvider) cellProvider;

@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -28,7 +27,6 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
@@ -36,9 +34,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridFormCellRendererGrid;
@@ -99,21 +96,13 @@ public class ChildBeanCustomiser implements Customiser {
 		public ChildBeanWidget(Class objectClass, final boolean editable,
 				String excludesStr) {
 			this.objectClass = objectClass;
-			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			Object bean = Reflections.at(objectClass).templateInstance();
 			List<String> excludeList = excludesStr == null ? new ArrayList<>()
 					: Arrays.asList(excludesStr.split(","));
-			Predicate<Field> filter = f -> !excludeList
-					.contains(f.getPropertyName());
-			List<Field> fieldList = Arrays
-					.asList(GwittirBridge.get()
-							.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-									factory, editable, false))
-					.stream().filter(filter).collect(Collectors.toList());
-			Field[] fields = (Field[]) fieldList
-					.toArray(new Field[fieldList.size()]);
-			this.gridForm = new GridForm(fields, 1, factory,
-					new GridFormCellRendererGrid(false));
+			Predicate<String> filter = n -> !excludeList.contains(n);
+			List<Field> fields = BeanFields.query().forClass(objectClass)
+					.asEditable(editable).withEditableNamePredicate(filter)
+					.listFields();
+			this.gridForm = new GridForm(fields, 1, new GridFormCellRendererGrid(false));
 			gridForm.setDirectSetModelDisabled(true);
 			gridForm.addAttachHandler(new RecheckVisibilityHandler(gridForm));
 			// the model should be the child

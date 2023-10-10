@@ -18,7 +18,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
 
 @Reflected
@@ -36,6 +36,6 @@ public class PasswordCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, Custom info) {
 		return (editable) ? EDITABLE_PASSWORD_PROVIDER
-				: GwittirBridge.NOWRAP_LABEL_PROVIDER;
+				: BeanFields.NOWRAP_LABEL_PROVIDER;
 	}
 }

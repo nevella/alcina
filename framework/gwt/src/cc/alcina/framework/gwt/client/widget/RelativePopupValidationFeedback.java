@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -40,7 +40,7 @@ import cc.alcina.framework.gwt.client.util.GwtDomUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class RelativePopupValidationFeedback
@@ -52,6 +52,10 @@ public class RelativePopupValidationFeedback
 	public static final int RIGHT = 3;
 
 	public static final int BOTTOM = 4;
+
+	public static void setupDefaultProvider() {
+		ValidationFeedback.Support.DEFAULT_PROVIDER = new ProviderImpl();
+	}
 
 	final HashMap popups = new HashMap();
 
@@ -213,6 +217,26 @@ public class RelativePopupValidationFeedback
 	protected Widget renderExceptionWidget(ValidationException exception) {
 		return asHtml ? new HTML(this.getMessage(exception))
 				: new Label(this.getMessage(exception));
+	}
+
+	static class ProviderImpl implements ValidationFeedback.Provider {
+		@Override
+		public Builder builder() {
+			return new BuilderImpl();
+		}
+
+		class BuilderImpl extends Builder {
+			@Override
+			public ValidationFeedback createFeedback() {
+				boolean rightPositioned = direction == Direction.RIGHT;
+				RelativePopupValidationFeedback feedback = new RelativePopupValidationFeedback(
+						rightPositioned ? RIGHT : BOTTOM);
+				((RelativePopupValidationFeedback) feedback).setCss(
+						rightPositioned ? "gwittir-ValidationPopup-right"
+								: null);
+				return feedback;
+			}
+		}
 	}
 
 	class RelativePopup extends FlowPanel {

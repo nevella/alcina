@@ -23,7 +23,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 
@@ -63,11 +63,11 @@ public class RadioButtonListCustomiser implements Customiser {
 					columnCount, radioButtonStyleName);
 		} else {
 			if (multiple) {
-				int maxLength = GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH;
+				int maxLength = BeanFields.MAX_EXPANDABLE_LABEL_LENGTH;
 				return new ExpandableDomainNodeCollectionLabelProvider(
 						maxLength, false);
 			} else {
-				return GwittirBridge.DN_LABEL_PROVIDER;
+				return BeanFields.DN_LABEL_PROVIDER;
 			}
 		}
 	}

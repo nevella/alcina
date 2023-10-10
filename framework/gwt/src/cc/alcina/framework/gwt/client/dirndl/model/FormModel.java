@@ -26,7 +26,8 @@ import com.google.gwt.user.client.ui.Focusable;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+import com.totsp.gwittir.client.validator.ValidationException;
+import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -62,11 +63,12 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
@@ -266,7 +268,7 @@ public class FormModel extends Model implements NodeEditorContext,
 		if (focus.isPresent()) {
 			Node childWithModel = event.getContext().node
 					.childWithModel(m -> m != null && m instanceof ValueModel
-							&& m == focus.get().getValue());
+							&& m == focus.get().provideValueModel());
 			((Focusable) childWithModel.getRendered()).setFocus(true);
 		}
 		// FIXME - dirndl 1x2 - this should be an annotation on the field,
@@ -326,7 +328,7 @@ public class FormModel extends Model implements NodeEditorContext,
 				// builder)
 				if (attributes.nodeEditors) {
 					LooseContext.setTrue(
-							GwittirBridge.CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS);
+							BeanFields.CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS);
 				}
 				return new FormModelTransformer().withContextNode(node)
 						.apply(attributes);
@@ -380,12 +382,51 @@ public class FormModel extends Model implements NodeEditorContext,
 		}
 	}
 
-	public static class FormElement extends Model {
+	public static class Feedback extends ValidationFeedback.Provider.Builder
+			implements ValidationFeedback, Model.Has {
+		FeedbackModel model;
+
+		Feedback() {
+			model = new FeedbackModel();
+		}
+
+		@Override
+		public ValidationFeedback createFeedback() {
+			return this;
+		}
+
+		@Override
+		public void handleException(Object source,
+				ValidationException exception) {
+			model.setMessage(exception.getMessage());
+		}
+
+		@Override
+		public Model provideModel() {
+			return model;
+		}
+
+		@Override
+		public void resolve(Object source) {
+			// TODO Auto-generated method stub
+		}
+
+		@Directed.Delegating
+		public class FeedbackModel extends Model.Fields {
+			@Directed
+			String message;
+
+			public void setMessage(String message) {
+				set("message", this.message, message,
+						() -> this.message = message);
+			}
+		}
+	}
+
+	public static class FormElement extends Model.Fields {
 		public static transient String PREFIX = "";
 
-		protected LabelModel label;
-
-		protected FormValueModel value;
+		private LabelModel label;
 
 		protected Field field;
 
@@ -393,14 +434,22 @@ public class FormModel extends Model implements NodeEditorContext,
 
 		private boolean focusOnAttach;
 
+		private ValueContainer valueContainer;
+
 		public FormElement() {
 		}
 
 		public FormElement(Field field, Bindable bindable) {
 			this.field = field;
 			this.bindable = bindable;
-			this.label = Registry.impl(LabelModel.class).withFormElement(this);
-			this.value = new FormValueModel(this);
+			ContextResolver resolver = (ContextResolver) field.getResolver();
+			this.label = resolver.impl(LabelModel.class).withFormElement(this);
+			valueContainer = new ValueContainer();
+			valueContainer.value = new FormValueModel(this);
+			ValidationFeedback feedback = field.getFeedback();
+			if (feedback instanceof Model.Has) {
+				valueContainer.feedback = ((Model.Has) feedback).provideModel();
+			}
 		}
 
 		public String getElementName() {
@@ -417,16 +466,37 @@ public class FormModel extends Model implements NodeEditorContext,
 		}
 
 		@Directed
-		public FormValueModel getValue() {
-			return this.value;
+		public ValueContainer getValueContainer() {
+			return this.valueContainer;
 		}
 
 		public boolean isFocusOnAttach() {
 			return this.focusOnAttach;
 		}
 
+		public FormValueModel provideValueModel() {
+			return valueContainer.value;
+		}
+
 		public void setFocusOnAttach(boolean focusOnAttach) {
 			this.focusOnAttach = focusOnAttach;
+		}
+
+		@Directed(tag = "value")
+		public static class ValueContainer extends Model {
+			private FormValueModel value;
+
+			private Model feedback;
+
+			@Directed
+			public Model getFeedback() {
+				return this.feedback;
+			}
+
+			@Directed
+			public FormValueModel getValue() {
+				return this.value;
+			}
 		}
 	}
 
@@ -470,7 +540,6 @@ public class FormModel extends Model implements NodeEditorContext,
 			FieldModulator fieldModulator = args != null
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
-			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			ModalResolver resolver = ModalResolver.single(node,
 					!state.editable);
 			resolver.setFormModel(formModel);
@@ -485,10 +554,15 @@ public class FormModel extends Model implements NodeEditorContext,
 				}
 			}
 			if (state.presentationModel != null) {
-				List<Field> fields = GwittirBridge.get()
-						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-								state.presentationModel, factory,
-								state.editable, state.adjunct, resolver);
+				ValidationFeedback.Provider validationFeedbackProvider = state.nodeEditors
+						? new ValidationFeedbackProvider()
+						: null;
+				List<Field> fields = BeanFields.query()
+						.forBean(state.presentationModel).withResolver(resolver)
+						.withValidationFeedbackProvider(
+								validationFeedbackProvider)
+						.asEditable(state.editable)
+						.asAdjunctEditor(state.adjunct).listFields();
 				fields.stream()
 						.filter(field -> fieldModulator
 								.accept(state.presentationModel, field))
@@ -680,6 +754,14 @@ public class FormModel extends Model implements NodeEditorContext,
 			}
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
+		}
+	}
+
+	public static class ValidationFeedbackProvider
+			implements ValidationFeedback.Provider {
+		@Override
+		public Builder builder() {
+			return new Feedback();
 		}
 	}
 

@@ -20,6 +20,7 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Arrays;
+import java.util.List;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -39,13 +40,12 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.HasDefaultBinding;
 import com.totsp.gwittir.client.ui.table.AbstractTableWidget;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 
 /**
- * 
+ *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  * @author Nick Reddel
@@ -62,7 +62,7 @@ import cc.alcina.framework.gwt.client.gwittir.HasBinding;
  *         <li>Add debugIds and multline rendering prettiness to the render
  *         method</li>
  *         </ul>
- * 
+ *
  *         Years later - composed with gridformcellrenderer for custom rendering
  */
 @SuppressWarnings("deprecation")
@@ -152,18 +152,17 @@ public class GridForm extends AbstractTableWidget
 
 	private GridFormCellRenderer cellRenderer;
 
-	public GridFormCellRenderer getCellRenderer() {
-		return this.cellRenderer;
-	}
-
-	public GridForm(Field[] fields, int columns, BoundWidgetTypeFactory factory,
-			GridFormCellRenderer cellRenderer) {
+	public GridForm(Field[] fields, int columns, GridFormCellRenderer cellRenderer) {
 		this.cellRenderer = cellRenderer;
 		this.fields = fields;
 		this.columns = columns;
-		this.factory = factory;
 		super.initWidget(cellRenderer.getWidget());
 		this.setAction(GridForm.DEFAULT_ACTION);
+	}
+
+	public GridForm(List<Field> fieldList, int columns,
+			GridFormCellRenderer cellRenderer) {
+		this((Field[]) fieldList.toArray(), columns, cellRenderer);
 	}
 
 	public void addButtonWidget(Widget widget) {
@@ -197,6 +196,10 @@ public class GridForm extends AbstractTableWidget
 		return (T) Arrays.asList(fields).stream()
 				.filter(f -> f.getPropertyName().equals(fieldName))
 				.map(this::getBoundWidget).findFirst().orElse(null);
+	}
+
+	public GridFormCellRenderer getCellRenderer() {
+		return this.cellRenderer;
 	}
 
 	public Field[] getFields() {

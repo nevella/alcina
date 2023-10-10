@@ -18,7 +18,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.provider.FixedWidthLabelProvider;
 
 @Reflected
@@ -35,7 +35,7 @@ public class FixedWidthLabelCustomiser implements Customiser {
 			boolean multiple, Custom info) {
 		NamedParameter p = NamedParameter.Support
 				.getParameter(info.parameters(), MAX_WIDTH);
-		int maxLength = p == null ? GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH
+		int maxLength = p == null ? BeanFields.MAX_EXPANDABLE_LABEL_LENGTH
 				: p.intValue();
 		p = NamedParameter.Support.getParameter(info.parameters(),
 				SHOW_NEWLINES_AS_HTML_BREAKS);

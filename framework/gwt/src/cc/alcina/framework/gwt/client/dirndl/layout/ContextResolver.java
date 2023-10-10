@@ -91,6 +91,10 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		return (T) this.rootModel;
 	}
 
+	public <T> T impl(Class<T> clazz) {
+		return Registry.impl(clazz);
+	}
+
 	/**
 	 * Associate an arbitrary object with the renderer tree Node. Default
 	 * handles gwt widget

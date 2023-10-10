@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.BoundWidgetProviderTextBox;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields.BoundWidgetProviderTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
 
 @Reflected

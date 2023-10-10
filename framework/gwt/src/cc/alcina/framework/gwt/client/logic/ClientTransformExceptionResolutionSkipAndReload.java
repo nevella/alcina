@@ -11,7 +11,6 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
@@ -33,11 +32,10 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ClassSimpleNameCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ExpandableLabelCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
@@ -132,17 +130,13 @@ public class ClientTransformExceptionResolutionSkipAndReload
 			callback.accept(token);
 			return;
 		}
-		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(
-						Reflections.at(DTEView.class).templateInstance(),
-						factory, false, true);
+		List<Field> fields = BeanFields.query().forClass(DTEView.class)
+				.listFields();
 		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK;
 		CollectionDataProvider cp = new CollectionDataProvider(adapters);
 		RenderContext.get().push();
 		RelativePopupPositioning.setCurrentBoundingParent(RootPanel.get());
-		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, factory,
-				fields, cp);
+		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, fields, cp);
 		RenderContext.get().pop();
 		FlowPanel view = new FlowPanel();
 		view.add(table);

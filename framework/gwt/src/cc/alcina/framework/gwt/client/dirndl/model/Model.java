@@ -446,6 +446,10 @@ public abstract class Model extends Bindable implements
 		}
 	}
 
+	public interface Has {
+		Model provideModel();
+	}
+
 	public interface RerouteBubbledEvents {
 		Model rerouteBubbledEventsTo();
 	}

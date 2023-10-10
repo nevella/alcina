@@ -17,7 +17,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
 @Reflected
 /**
@@ -27,6 +27,6 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 public class FriendlyEnumCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		return GwittirBridge.FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE;
+		return BeanFields.FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE;
 	}
 }

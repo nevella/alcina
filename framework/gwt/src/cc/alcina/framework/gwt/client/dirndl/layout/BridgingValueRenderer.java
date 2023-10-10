@@ -25,7 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
 /**
  * <p>
@@ -135,7 +135,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		if (field.getConverter() != null) {
 			binding.getRight().converter = field.getConverter();
 		}
-		Converter inverseConverter = GwittirBridge
+		Converter inverseConverter = BeanFields
 				.getInverseConverter(field.getConverter());
 		if (inverseConverter != null) {
 			binding.getLeft().converter = inverseConverter;

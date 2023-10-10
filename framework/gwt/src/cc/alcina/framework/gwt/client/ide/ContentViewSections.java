@@ -16,13 +16,12 @@ import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridFormCellRenderer;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -92,11 +91,9 @@ public class ContentViewSections {
 	}
 
 	public ContentViewSections allFields(Object bean, Predicate<Field> filter) {
-		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
-						editable, false);
-		section("").fields(Arrays.asList(fields).stream().filter(filter)
+		List<Field> fields = BeanFields.query().forBean(bean)
+				.asEditable(editable).listFields();
+		section("").fields(fields.stream().filter(filter)
 				.map(Field::getPropertyName).collect(Collectors.toList()));
 		buildWidget(bean);
 		return this;

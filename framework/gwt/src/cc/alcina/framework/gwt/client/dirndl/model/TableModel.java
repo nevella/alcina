@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
@@ -38,7 +37,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
@@ -96,8 +95,6 @@ public class TableModel extends Model implements NodeEditorContext {
 		@Override
 		public TableModel apply(DirectedCategoriesActivity<?> activity) {
 			TableModel tableModel = new TableModel();
-			BoundWidgetTypeFactory factory = Registry
-					.impl(TableTypeFactory.class);
 			ModalResolver resolver = ModalResolver.multiple(node, true);
 			node.setResolver(resolver);
 			resolver.setTableModel(tableModel);
@@ -105,11 +102,10 @@ public class TableModel extends Model implements NodeEditorContext {
 					.getNamedPlaces();
 			places.removeIf(p -> !isPermitted(p));
 			Class<? extends Bindable> resultClass = CategoryNamePlaceTableAdapter.class;
-			GwittirBridge.get()
-					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							Reflections.at(resultClass).templateInstance(),
-							factory, false, true, node.getResolver())
-					.stream().map(TableColumn::new)
+			BeanFields.query().forClass(resultClass)
+					.forMultipleWidgetContainer(true)
+					.withResolver(node.getResolver()).listFields().stream()
+					.map(TableColumn::new)
 					.forEach(tableModel.header.columns::add);
 			places.stream().map(CategoryNamePlaceTableAdapter::new)
 					.map(bindable -> new TableRow(tableModel, bindable))
@@ -159,8 +155,6 @@ public class TableModel extends Model implements NodeEditorContext {
 		public TableModel apply(
 				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
 			TableModel tableModel = new TableModel();
-			BoundWidgetTypeFactory factory = Registry
-					.impl(TableTypeFactory.class);
 			if (activity.getSearchResults() == null) {
 				return tableModel;
 			}
@@ -175,10 +169,9 @@ public class TableModel extends Model implements NodeEditorContext {
 							: SortDirection.DESCENDING;
 			Class<? extends Bindable> resultClass = activity.getSearchResults()
 					.resultClass();
-			List<Field> fields = GwittirBridge.get()
-					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							Reflections.at(resultClass).templateInstance(),
-							factory, false, true, resolver);
+			List<Field> fields = BeanFields.query().forClass(resultClass)
+					.forMultipleWidgetContainer(true).withResolver(resolver)
+					.listFields();
 			fields.stream().map(field -> {
 				SortDirection fieldDirection = field.getPropertyName()
 						.equals(sortFieldName) ? sortDirection : null;
@@ -388,11 +381,6 @@ public class TableModel extends Model implements NodeEditorContext {
 		public List<TableCell> getCells() {
 			return this.cells;
 		}
-	}
-
-	@Reflected
-	@Registration(TableTypeFactory.class)
-	public static class TableTypeFactory extends BoundWidgetTypeFactory {
 	}
 
 	public static class TableValueModel extends Model implements ValueModel {

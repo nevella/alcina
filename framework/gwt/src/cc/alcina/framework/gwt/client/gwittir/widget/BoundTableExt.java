@@ -73,7 +73,6 @@ import com.totsp.gwittir.client.ui.table.DataProvider;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.table.HasChunks;
 import com.totsp.gwittir.client.ui.table.SortableDataProvider;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import com.totsp.gwittir.client.util.ListSorter;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -316,107 +315,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private int sortedColumn = -1;
 
-	/** Creates a new instance of BoundTable */
-	public BoundTableExt() {
-		super();
-		this.init(0);
-	}
-
-	/**
-	 * Creates a new instance of Bound table with the indicated options value.
-	 *
-	 * @param masks
-	 *            int value containing the sum of the *_MASK options for the
-	 *            table.
-	 */
-	public BoundTableExt(int masks) {
-		super();
-		this.init(masks);
-	}
-
-	/**
-	 * Creates a new instance of Bound table with the indicated options value.
-	 *
-	 * @param typeFactory
-	 *            A BoundWidget type factory used to create the widgets that
-	 *            appear in the table.
-	 * @param masks
-	 *            int value containing the sum of the *_MASK options for the
-	 *            table.
-	 */
-	public BoundTableExt(int masks, BoundWidgetTypeFactory typeFactory) {
-		super();
-		this.factory = typeFactory;
-		this.init(masks);
-	}
-
-	/**
-	 * Creates a new instance of a table using a Collection as a data set.
-	 *
-	 * @param typeFactory
-	 *            A BoundWidget type factory used to create the widgets that
-	 *            appear in the table.
-	 * @param masks
-	 *            int value containing the sum of the *_MASK options for the
-	 *            table.
-	 * @param cols
-	 *            The Column objects for the table.
-	 */
-	public BoundTableExt(int masks, BoundWidgetTypeFactory typeFactory,
-			Field[] cols) {
-		super();
-		this.setColumns(cols);
-		this.factory = typeFactory;
-		this.init(masks);
-	}
-
-	/**
-	 * Creates a new instance of a table using a Collection as a data set.
-	 *
-	 * @param typeFactory
-	 *            A BoundWidget type factory used to create the widgets that
-	 *            appear in the table.
-	 * @param masks
-	 *            int value containing the sum of the *_MASK options for the
-	 *            table.
-	 * @param cols
-	 *            The Column objects for the table.
-	 * @param value
-	 *            A collection containing SourcesPropertyChangeEvents objects to
-	 *            render in the table.
-	 */
-	public BoundTableExt(int masks, BoundWidgetTypeFactory typeFactory,
-			Field[] cols, Collection value) {
-		super();
-		this.setColumns(cols);
-		this.value = value;
-		this.factory = typeFactory;
-		this.init(masks);
-	}
-
-	/**
-	 * Creates a new instance of BoundTable
-	 *
-	 * @param typeFactory
-	 *            A BoundWidget type factory used to create the widgets that
-	 *            appear in the table.
-	 * @param masks
-	 *            int value containing the sum of the *_MASK options for the
-	 *            table.
-	 * @param cols
-	 *            The Column objects for the table.
-	 * @param provider
-	 *            Instance of DataProvider to get chunked data from.
-	 */
-	public BoundTableExt(int masks, BoundWidgetTypeFactory typeFactory,
-			Field[] cols, DataProvider provider) {
-		super();
-		this.setColumns(cols);
-		this.provider = provider;
-		this.factory = typeFactory;
-		this.init(masks);
-	}
-
 	/**
 	 * Creates a new instance of a table using a Collection as a data set.
 	 *
@@ -467,6 +365,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.setColumns(cols);
 		this.provider = provider;
 		this.init(masks);
+	}
+
+	public BoundTableExt(int mask, List<Field> fields, DataProvider provider) {
+		this(mask, (Field[]) fields.toArray(), provider);
 	}
 
 	/**
@@ -1339,8 +1241,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		final BoundTableExt instance = this;
 		this.topBinding = new Binding();
 		this.masks = masksValue;
-		this.factory = (this.factory == null) ? new BoundWidgetTypeFactory(true)
-				: this.factory;
 		if (((this.masks & BoundTableExt.SORT_MASK) > 0)
 				&& (this.columns != null)) {
 			this.ascending = new boolean[this.columns.length];

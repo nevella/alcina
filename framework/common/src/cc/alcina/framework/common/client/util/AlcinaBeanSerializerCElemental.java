@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import elemental.json.Json;
@@ -293,7 +292,6 @@ public class AlcinaBeanSerializerCElemental extends AlcinaBeanSerializer {
 		} else {
 			seenOut.put(object, seenOut.size());
 		}
-		GwittirBridge gb = GwittirBridge.get();
 		ClassReflector<?> classReflector = Reflections.at(clazz);
 		Object template = classReflector.templateInstance();
 		JsonObject props = Json.createObject();

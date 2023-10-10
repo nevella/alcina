@@ -27,7 +27,7 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.reflection.Property;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
 /**
  *
@@ -35,7 +35,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
  *         Cooper</a>
  */
 public abstract class AbstractTableWidget<T> extends AbstractBoundWidget<T> {
-	protected BoundWidgetTypeFactory factory;
+	protected BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory();
 
 	/** Creates a new instance of AbstractTableWidget */
 	public AbstractTableWidget() {
@@ -59,7 +59,7 @@ public abstract class AbstractTableWidget<T> extends AbstractBoundWidget<T> {
 		if (field.getConverter() != null) {
 			binding.getRight().converter = field.getConverter();
 		}
-		Converter inverseConverter = GwittirBridge
+		Converter inverseConverter = BeanFields
 				.getInverseConverter(field.getConverter());
 		if (inverseConverter != null) {
 			binding.getLeft().converter = inverseConverter;

@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser.RenderedLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.SelectorProvider;
@@ -119,7 +119,7 @@ public class SelectorCustomiser implements Customiser {
 				NamedParameter p = NamedParameter.Support
 						.getParameter(info.parameters(), MAX_WIDTH);
 				int maxLength = p == null
-						? GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH
+						? BeanFields.MAX_EXPANDABLE_LABEL_LENGTH
 						: p.intValue();
 				p = NamedParameter.Support.getParameter(info.parameters(),
 						FORCE_COLUMN_WIDTH);

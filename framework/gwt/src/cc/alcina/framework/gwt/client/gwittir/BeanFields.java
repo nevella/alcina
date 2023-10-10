@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
@@ -64,7 +64,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -72,7 +71,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceValueCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
@@ -80,7 +78,6 @@ import cc.alcina.framework.gwt.client.gwittir.provider.FriendlyEnumLabelProvider
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
-import cc.alcina.framework.gwt.client.gwittir.widget.DateBox.DateBoxProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
@@ -88,19 +85,12 @@ import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 /**
  * @author Nick Reddel
  */
-public class GwittirBridge {
-	private static GwittirBridge INSTANCE = new GwittirBridge();
-
+public class BeanFields {
 	public static final String HINT_DATE_WITH_TIME_TITLE = "HINT_DATE_WITH_TIME_TITLE";
 
 	public static final String HINT_DATE_WITH_TIME_TITLE_TZ = "HINT_DATE_WITH_TIME_TITLE_TZ";
 
-	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY = new BoundWidgetTypeFactorySimpleGenerator();
-
-	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY_NO_NULLS = new BoundWidgetTypeFactorySimpleGenerator(
-			false);
-
-	public static final String CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS = GwittirBridge.class
+	public static final String CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS = BeanFields.class
 			.getName() + ".CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS";
 
 	public static final BoundWidgetProvider NOWRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
@@ -219,8 +209,9 @@ public class GwittirBridge {
 		if (field.getCellProvider() != null) {
 			widget = field.getCellProvider().get();
 		} else {
-			widget = SIMPLE_FACTORY.getWidgetProvider(Reflections.at(target)
-					.property(field.getPropertyName()).getType()).get();
+			widget = new BoundWidgetTypeFactory().getWidgetProvider(Reflections
+					.at(target).property(field.getPropertyName()).getType())
+					.get();
 		}
 		binding = new Binding(widget, "value", field.getValidator(),
 				field.getFeedback(), target, field.getPropertyName(), null,
@@ -238,11 +229,6 @@ public class GwittirBridge {
 		}
 		parent.getChildren().add(binding);
 		return widget;
-	}
-
-	// will be compiled to a field ref
-	public static GwittirBridge get() {
-		return INSTANCE;
 	}
 
 	public static Converter getDefaultConverter(BoundWidgetProvider bwp,
@@ -267,6 +253,10 @@ public class GwittirBridge {
 		return null;
 	}
 
+	public static Field getFieldToFocus(List<Field> fields) {
+		return null;
+	}
+
 	public static Converter getInverseConverter(Converter c) {
 		if (c == null) {
 			return null;
@@ -281,9 +271,13 @@ public class GwittirBridge {
 		return renderDatesWithTimezoneTitle;
 	}
 
+	public static FieldQuery query() {
+		return new BeanFields().new FieldQuery();
+	}
+
 	public static void setRenderDatesWithTimezoneTitle(
 			boolean renderDatesWithTimezoneTitle) {
-		GwittirBridge.renderDatesWithTimezoneTitle = renderDatesWithTimezoneTitle;
+		BeanFields.renderDatesWithTimezoneTitle = renderDatesWithTimezoneTitle;
 	}
 
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
@@ -297,61 +291,12 @@ public class GwittirBridge {
 		validatorMap.put(Date.class, ShortDateValidator.INSTANCE);
 	}
 
-	private List<String> ignoreProperties;
-
 	private GwittirDateRendererProvider dateRendererProvider = new GwittirDateRendererProvider();
 
-	private GwittirBridge() {
+	BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory();
+
+	private BeanFields() {
 		super();
-	}
-
-	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
-			BoundWidgetTypeFactory factory, boolean editableWidgets,
-			boolean multiple) {
-		return fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory,
-				editableWidgets, multiple, null, null,
-				new DefaultAnnotationResolver());
-	}
-
-	// FIXME - reflection - Field.property to alcina property, remove most of
-	// gwittir (in fact that jar, just keep what we want)
-	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
-			BoundWidgetTypeFactory factory, boolean editableWidgets,
-			boolean multiple, String propertyName,
-			Predicate<String> editableFieldNameFilter, Resolver resolver) {
-		factory.add(Date.class, new DateBoxProvider());
-		List<Field> fields = new ArrayList<Field>();
-		Class<? extends Object> clazz = obj.getClass();
-		ClassReflector<? extends Object> classReflector = Reflections.at(clazz);
-		classReflector.properties().stream().map(property -> {
-			String pn = property.getName();
-			if (propertyName != null && !(propertyName.equals(pn))) {
-				return null;
-			}
-			if (ignoreProperties != null && ignoreProperties.contains(pn)) {
-				return null;
-			}
-			boolean editableField = editableWidgets;
-			if (editableFieldNameFilter != null
-					&& !editableFieldNameFilter.test(pn)) {
-				editableField = false;
-			}
-			return getField(clazz, pn, editableField, multiple, factory, obj,
-					resolver);
-		}).filter(Objects::nonNull).sorted(new FieldOrdering(classReflector))
-				.forEach(fields::add);
-		return (Field[]) fields.toArray(new Field[fields.size()]);
-	}
-
-	/*
-	 * FIXME - dirndl 1x2 - in general, pass around clazz instead of obj
-	 */
-	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-			Object obj, BoundWidgetTypeFactory factory, boolean editableWidgets,
-			boolean multiple, AnnotationLocation.Resolver resolver) {
-		return new ArrayList<Field>(Arrays.asList(
-				fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory,
-						editableWidgets, multiple, null, null, resolver)));
 	}
 
 	public Object findObjectWithPropertyInCollection(Collection c,
@@ -369,38 +314,48 @@ public class GwittirBridge {
 		return this.dateRendererProvider;
 	}
 
-	public Field getField(Class c, String propertyName, boolean editableWidgets,
-			boolean multiple) {
-		return getField(c, propertyName, editableWidgets, multiple,
-				SIMPLE_FACTORY, null);
+	public List<Field> listFields(FieldQuery query) {
+		query.validationFeedbackProvider = query.validationFeedbackProvider != null
+				? query.validationFeedbackProvider
+				: ValidationFeedback.Support.DEFAULT_PROVIDER;
+		ClassReflector<? extends Object> classReflector = Reflections
+				.at(query.clazz);
+		return classReflector.properties().stream().map(property -> {
+			String propertyName = property.getName();
+			if (query.propertyName != null
+					&& !(query.propertyName.equals(propertyName))) {
+				return null;
+			}
+			boolean editableField = query.editable
+					&& query.editableNamePredicate.test(propertyName);
+			FieldQuery perFieldQuery = query.clone().asEditable(editableField)
+					.forPropertyName(propertyName);
+			return getField(perFieldQuery);
+		}).filter(Objects::nonNull).sorted(new FieldOrdering(classReflector))
+				.collect(Collectors.toList());
 	}
 
-	public Field getField(Class clazz, String propertyName,
-			boolean editableWidgets, boolean multiple,
-			BoundWidgetTypeFactory factory, Object obj) {
-		return getField(clazz, propertyName, editableWidgets, multiple, factory,
-				obj, new DefaultAnnotationResolver());
+	public void setDateRendererProvider(
+			GwittirDateRendererProvider dateRendererProvider) {
+		this.dateRendererProvider = dateRendererProvider;
 	}
 
-	// FIXME - dirndl 1x2 - clean this up - probably one code path and a bunch
-	// of reflection/registry
-	public Field getField(Class<?> clazz, String propertyName,
-			boolean editableWidgets, boolean multiple,
-			BoundWidgetTypeFactory factory, Object object,
-			AnnotationLocation.Resolver resolver) {
+	Field getField(FieldQuery query) {
+		Class clazz = query.clazz;
+		Object object = query.bean;
 		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,
-				resolver);
+				query.resolver);
 		Bean bean = clazzLocation.getAnnotation(Bean.class);
 		ClassReflector<?> classReflector = Reflections.at(clazz);
 		ObjectPermissions op = clazzLocation
 				.getAnnotation(ObjectPermissions.class);
 		object = object != null ? object : classReflector.templateInstance();
-		Property property = Reflections.at(clazz).property(propertyName);
+		Property property = Reflections.at(clazz).property(query.propertyName);
 		AnnotationLocation propertyLocation = new AnnotationLocation(clazz,
-				property, resolver);
-		Class type = classReflector.property(propertyName).getType();
+				property, query.resolver);
+		Class type = classReflector.property(query.propertyName).getType();
 		BoundWidgetProvider bwp = factory.getWidgetProvider(type);
-		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
+		int position = query.multiple ? RelativePopupValidationFeedback.BOTTOM
 				: RelativePopupValidationFeedback.RIGHT;
 		Display display = propertyLocation.getAnnotation(Display.class);
 		Display.AllProperties displayAllProperties = propertyLocation
@@ -422,7 +377,7 @@ public class GwittirBridge {
 			}
 			boolean focus = display.focus();
 			boolean propertyIsCollection = type == Set.class;
-			boolean fieldEditable = editableWidgets
+			boolean fieldEditable = query.editable
 					&& (PermissionsManager.get()
 							.checkEffectivePropertyPermission(op, pp, object,
 									false)
@@ -445,7 +400,7 @@ public class GwittirBridge {
 						bwp = new ExpandableDomainNodeCollectionLabelProvider(
 								MAX_EXPANDABLE_LABEL_LENGTH, true);
 					} else {
-						if (multiple) {
+						if (query.multiple) {
 							bwp = DN_LABEL_PROVIDER;
 						} else {
 							bwp = new ModelPlaceValueCustomiser();
@@ -486,32 +441,26 @@ public class GwittirBridge {
 				Customiser customiser = Reflections
 						.newInstance(customiserInfo.customiserClass());
 				bwp = customiser.getProvider(fieldEditable, domainType,
-						multiple, customiserInfo, propertyLocation);
+						query.multiple, customiserInfo, propertyLocation);
 			}
 			if (bwp != null || LooseContext
 					.is(CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS)) {
 				ValidationFeedback validationFeedback = null;
 				Validator validator = null;
 				if (fieldEditable) {
-					Function<String, ValidationFeedback> validationFeedbackSupplier = RenderContext
-							.get().getValidationFeedbackSupplier();
-					if (validationFeedbackSupplier == null) {
-						validationFeedback = new RelativePopupValidationFeedback(
-								position);
-						((RelativePopupValidationFeedback) validationFeedback)
-								.setCss(multiple ? null
-										: "gwittir-ValidationPopup-right");
-					} else {
-						validationFeedback = validationFeedbackSupplier
-								.apply(propertyName);
-					}
-					validator = getValidator(domainType, object, propertyName,
-							validationFeedback);
+					validationFeedback = query.validationFeedbackProvider
+							.builder().forPropertyName(query.propertyName)
+							.displayDirection(query.multiple
+									? ValidationFeedback.Provider.Direction.BOTTOM
+									: ValidationFeedback.Provider.Direction.RIGHT)
+							.createFeedback();
+					validator = getValidator(domainType, object,
+							query.propertyName, validationFeedback);
 				}
-				Field field = new Field(propertyName,
+				Field field = new Field(property,
 						TextProvider.get().getLabelText(propertyLocation), bwp,
 						validator, validationFeedback,
-						getDefaultConverter(bwp, type), clazz);
+						getDefaultConverter(bwp, type), clazz, query.resolver);
 				if (!display.styleName().isEmpty()) {
 					field.setStyleName(display.styleName());
 				}
@@ -528,12 +477,12 @@ public class GwittirBridge {
 			}
 		} else if (displayAllProperties != null
 				&& PermissionsManager.get().checkEffectivePropertyPermission(op,
-						null, object, !editableWidgets)) {
+						null, object, !query.editable)) {
 			// no property info, but all writeable (if object is set)
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
 					position);
-			vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
-			if (bwp != null && !editableWidgets) {
+			vf.setCss(query.multiple ? null : "gwittir-ValidationPopup-right");
+			if (bwp != null && !query.editable) {
 				Class domainType = type;
 				boolean isEnum = domainType.isEnum();
 				if (domainType == Date.class) {
@@ -552,7 +501,7 @@ public class GwittirBridge {
 				if (domainType == Date.class) {
 					bwp = AU_DATE_PROVIDER;
 				} else if (isEnum) {
-					bwp = editableWidgets
+					bwp = query.editable
 							? new ListBoxEnumProvider(domainType, true)
 							: NOWRAP_LABEL_PROVIDER;
 				} else if (domainType == boolean.class
@@ -562,29 +511,16 @@ public class GwittirBridge {
 					bwp = NOWRAP_LABEL_PROVIDER;
 				}
 			}
-			return new Field(propertyName,
+			return new Field(property,
 					TextProvider.get().getLabelText(propertyLocation), bwp,
-					getValidator(type, object, propertyName, vf), vf,
-					getDefaultConverter(bwp, type), clazz);
+					getValidator(type, object, query.propertyName, vf), vf,
+					getDefaultConverter(bwp, type), clazz, query.resolver);
 		}
 		return null;
 	}
 
-	public Field getFieldToFocus(Object bean, Field[] fields) {
-		ClassReflector<? extends Object> classReflector = Reflections.at(bean);
-		return Arrays.stream(fields).filter(f -> {
-			Property p = classReflector.property(f.getPropertyName());
-			return p != null && p.has(Display.class)
-					&& p.annotation(Display.class).focus();
-		}).findFirst().orElse(null);
-	}
-
-	public List<String> getIgnoreProperties() {
-		return ignoreProperties;
-	}
-
-	public Validator getValidator(Class<?> clazz, Object obj,
-			String propertyName, ValidationFeedback validationFeedback) {
+	Validator getValidator(Class<?> clazz, Object obj, String propertyName,
+			ValidationFeedback validationFeedback) {
 		ClassReflector<? extends Object> classReflector = Reflections.at(obj);
 		Property property = classReflector.property(propertyName);
 		List<cc.alcina.framework.common.client.logic.reflection.Validator> validators = new ArrayList<>();
@@ -649,83 +585,11 @@ public class GwittirBridge {
 		}
 	}
 
-	// FIXME - reflection - move to permissions manager
-	public boolean isFieldEditable(Class<?> clazz, String propertyName) {
-		ClassReflector<?> classReflector = Reflections.at(clazz);
-		Object templateInstance = classReflector.templateInstance();
-		Bean beanInfo = classReflector.annotation(Bean.class);
-		ObjectPermissions op = classReflector
-				.annotation(ObjectPermissions.class);
-		Property property = classReflector.property(propertyName);
-		if (property != null && property.has(Display.class)) {
-			PropertyPermissions pp = property
-					.annotation(PropertyPermissions.class);
-			Display display = property.annotation(Display.class);
-			boolean fieldVisible = PermissionsManager.get()
-					.checkEffectivePropertyPermission(op, pp, templateInstance,
-							true)
-					&& display != null
-					&& PermissionsManager.get().isPermitted(templateInstance,
-							display.visible())
-					&& ((display.displayMask()
-							& Display.DISPLAY_AS_PROPERTY) != 0);
-			if (!fieldVisible) {
-				return false;
-			}
-			boolean propertyIsCollection = (property.getType() == Set.class);
-			return PermissionsManager.get().checkEffectivePropertyPermission(op,
-					pp, templateInstance, false)
-					&& ((display.displayMask() & Display.DISPLAY_RO) == 0);
-		}
-		return false;
-	}
-
-	public void setDateRendererProvider(
-			GwittirDateRendererProvider dateRendererProvider) {
-		this.dateRendererProvider = dateRendererProvider;
-	}
-
-	public void setIgnoreProperties(List<String> ignoreProperties) {
-		this.ignoreProperties = ignoreProperties;
-	}
-
 	public static class BoundWidgetProviderTextBox
 			implements BoundWidgetProvider {
 		@Override
 		public TextBox get() {
 			return new TextBox();
-		}
-	}
-
-	public static class BoundWidgetTypeFactorySimpleGenerator
-			extends BoundWidgetTypeFactory {
-		private boolean withNull;
-
-		public BoundWidgetTypeFactorySimpleGenerator() {
-			super(true);
-			add(Date.class, new DateBoxProvider());
-			add(String.class, new BoundWidgetProviderTextBox());
-			add(Integer.class, new BoundWidgetProviderTextBox());
-			add(int.class, new BoundWidgetProviderTextBox());
-			add(Long.class, new BoundWidgetProviderTextBox());
-			add(long.class, new BoundWidgetProviderTextBox());
-			add(Float.class, new BoundWidgetProviderTextBox());
-			add(float.class, new BoundWidgetProviderTextBox());
-			add(Double.class, new BoundWidgetProviderTextBox());
-			add(double.class, new BoundWidgetProviderTextBox());
-		}
-
-		public BoundWidgetTypeFactorySimpleGenerator(boolean withNull) {
-			this();
-			this.withNull = withNull;
-		}
-
-		@Override
-		public BoundWidgetProvider getWidgetProvider(Class type) {
-			if (type.isEnum()) {
-				return new ListBoxEnumProvider(type, withNull);
-			}
-			return super.getWidgetProvider(type);
 		}
 	}
 
@@ -790,17 +654,61 @@ public class GwittirBridge {
 		}
 	}
 
+	/**
+	 * <p>
+	 * Generate the edit {@link Field} objects for a given class which are used
+	 * to create an edit form, detail view or table rendering of one or more
+	 * instances
+	 * <p>
+	 * The default field configuration is non-editable, non-adjunct (i.e. when
+	 * editing, changes are made directly to the object without save/cancel) and
+	 * single (i.e. fields are for a form, not a table)
+	 *
+	 *
+	 */
 	public class FieldQuery {
 		Class clazz;
 
 		String propertyName;
 
-		boolean editableWidgets;
+		boolean editable;
 
 		boolean multiple;
 
-		public FieldQuery asEditableWidgets(boolean editableWidgets) {
-			this.editableWidgets = editableWidgets;
+		AnnotationLocation.Resolver resolver = new DefaultAnnotationResolver();
+
+		boolean adjunct;
+
+		Predicate<String> editableNamePredicate = name -> true;
+
+		Object bean;
+
+		ValidationFeedback.Provider validationFeedbackProvider;
+
+		public FieldQuery asAdjunctEditor(boolean adjunct) {
+			this.adjunct = adjunct;
+			return this;
+		}
+
+		public FieldQuery asEditable(boolean editable) {
+			this.editable = editable;
+			return this;
+		}
+
+		@Override
+		public FieldQuery clone() {
+			return new FieldQuery().asAdjunctEditor(adjunct)
+					.asEditable(editable).forClass(clazz).forBean(bean)
+					.forPropertyName(propertyName)
+					.forMultipleWidgetContainer(multiple)
+					.withEditableNamePredicate(editableNamePredicate)
+					.withResolver(resolver)
+					.withValidationFeedbackProvider(validationFeedbackProvider);
+		}
+
+		public FieldQuery forBean(Object bean) {
+			this.bean = bean;
+			forClass(bean.getClass());
 			return this;
 		}
 
@@ -816,6 +724,36 @@ public class GwittirBridge {
 
 		public FieldQuery forPropertyName(String propertyName) {
 			this.propertyName = propertyName;
+			return this;
+		}
+
+		public Field getField() {
+			return listFields().get(0);
+		}
+
+		public Validator getValidator() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public List<Field> listFields() {
+			return BeanFields.this.listFields(this);
+		}
+
+		public FieldQuery withEditableNamePredicate(
+				Predicate<String> editableNamePredicate) {
+			this.editableNamePredicate = editableNamePredicate;
+			return this;
+		}
+
+		public FieldQuery withResolver(AnnotationLocation.Resolver resolver) {
+			this.resolver = resolver;
+			return this;
+		}
+
+		public FieldQuery withValidationFeedbackProvider(
+				ValidationFeedback.Provider validationFeedbackProvider) {
+			this.validationFeedbackProvider = validationFeedbackProvider;
 			return this;
 		}
 	}

@@ -26,8 +26,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 import com.totsp.gwittir.client.validator.Validator;
 
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -46,8 +46,6 @@ public class Field {
 
 	private String label;
 
-	private String propertyName;
-
 	private String styleName;
 
 	private String widgetStyleName;
@@ -62,18 +60,20 @@ public class Field {
 
 	private Property property;
 
-	public Field(String propertyName, String label,
+	private AnnotationLocation.Resolver resolver;
+
+	public Field(Property property, String label,
 			BoundWidgetProvider cellProvider, Validator validator,
 			ValidationFeedback feedback, Converter converter,
-			Class<?> declaringType) {
-		this.propertyName = propertyName;
+			Class<?> declaringType, AnnotationLocation.Resolver resolver) {
+		this.property = property;
 		this.label = label;
 		this.cellProvider = cellProvider;
 		this.validator = validator;
 		this.feedback = feedback;
 		this.converter = converter;
 		this.declaringType = declaringType;
-		this.property = Reflections.at(declaringType).property(propertyName);
+		this.resolver = resolver;
 	}
 
 	public String getAutocompleteName() {
@@ -109,7 +109,11 @@ public class Field {
 	}
 
 	public String getPropertyName() {
-		return propertyName;
+		return property.getName();
+	}
+
+	public AnnotationLocation.Resolver getResolver() {
+		return this.resolver;
 	}
 
 	public String getStyleName() {
@@ -152,10 +156,6 @@ public class Field {
 		this.label = label;
 	}
 
-	public void setPropertyName(String propertyName) {
-		this.propertyName = propertyName;
-	}
-
 	public void setStyleName(String styleName) {
 		this.styleName = styleName;
 	}
@@ -170,6 +170,6 @@ public class Field {
 
 	@Override
 	public String toString() {
-		return Ax.format("Field: %s", propertyName);
+		return Ax.format("Field: %s", getPropertyName());
 	}
 }
