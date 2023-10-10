@@ -610,7 +610,7 @@ public class GwittirBridge {
 			CompositeValidator cv = new CompositeValidator();
 			for (cc.alcina.framework.common.client.logic.reflection.Validator validatorAnnotation : validators) {
 				Validator v = Reflections
-						.newInstance(validatorAnnotation.validator());
+						.newInstance(validatorAnnotation.value());
 				if (v instanceof ParameterisedValidator) {
 					ParameterisedValidator pv = (ParameterisedValidator) v;
 					pv.setParameters(validatorAnnotation.parameters());
@@ -635,7 +635,7 @@ public class GwittirBridge {
 				if (msg != null
 						&& validationFeedback instanceof AbstractValidationFeedback) {
 					((AbstractValidationFeedback) validationFeedback)
-							.addMessage(validatorAnnotation.validator(),
+							.addMessage(validatorAnnotation.value(),
 									msg.stringValue());
 				}
 				if (validatorAnnotation.validateBeanOnly()) {
@@ -787,6 +787,36 @@ public class GwittirBridge {
 			}
 			return RenderedProperty.displayName(p1)
 					.compareToIgnoreCase(RenderedProperty.displayName(p2));
+		}
+	}
+
+	public class FieldQuery {
+		Class clazz;
+
+		String propertyName;
+
+		boolean editableWidgets;
+
+		boolean multiple;
+
+		public FieldQuery asEditableWidgets(boolean editableWidgets) {
+			this.editableWidgets = editableWidgets;
+			return this;
+		}
+
+		public FieldQuery forClass(Class clazz) {
+			this.clazz = clazz;
+			return this;
+		}
+
+		public FieldQuery forMultipleWidgetContainer(boolean multiple) {
+			this.multiple = multiple;
+			return this;
+		}
+
+		public FieldQuery forPropertyName(String propertyName) {
+			this.propertyName = propertyName;
+			return this;
 		}
 	}
 
