@@ -72,7 +72,7 @@ public abstract class SearchDefinition extends Bindable
 	public static final transient int LARGE_SEARCH = 0xFF0000;
 
 	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
-			.getName() + ":" + "current-search-definition";
+			.getName() + ".CONTEXT_CURRENT_SEARCH_DEFINITION";
 
 	final transient String orderJoin = ", ";
 
