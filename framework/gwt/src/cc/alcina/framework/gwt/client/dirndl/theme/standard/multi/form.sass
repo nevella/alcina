@@ -1,4 +1,5 @@
 @use '../../theme/theme'
+@use '../../theme/color'
 
 @mixin subtle-form 
   input,
@@ -63,23 +64,26 @@ bean-editor
   line-height: 2.0em
   padding-bottom: 1px
   display: block
-  > header 
-    font-weight: 500
-    padding-bottom: 0.2em
-    padding-left: 3px
 
-  > description
-    line-height: 1.3rem
-    display: block
-
-    &:not(:empty)
-      margin-bottom: 1rem
-
-  > form
-    > section
-      > form-element
-        display: block
   
+  
+  &.vertical-validation
+    line-height: 2.6rem
+
+    > form > section > form-element > value > validation-feedback > message
+      top: 0.1rem
+      left: 1rem
+      line-height: 1
+
+  &.horizontal-validation
+    > form > section > form-element > value 
+      display: flex
+      flex-direction: row
+
+      > validation-feedback > message
+        left: 1rem
+        white-space: nowrap
+
   &.bordered 
     margin: 1em 0
     border-top: solid 1px #ccc
@@ -130,24 +134,13 @@ bean-editor
       > section 
         display: grid
         grid-template-columns: min-content 1fr
-        row-gap: 0.3rem
+        row-gap: 0.5rem
         > div, form-element
           display: contents
           > label 
             white-space: nowrap
             padding-right: 2em
-  > form > actions
-    margin: 1em
-    display: flex
-    justify-content: center
-    list-style: none
-    padding: 0
-    > *
-      display: inline-block
-      line-height: theme.$list-element-height
-      padding: 0 0.5em
-    &.right 
-      justify-content: flex-end
+   
 
   &.over-only > form
     @include over-only
@@ -184,6 +177,62 @@ bean-editor
 
   &[inert] > form
     opacity: 0.7
+
+  > header 
+    font-weight: 500
+    padding-bottom: 0.2em
+    padding-left: 3px
+
+  > description
+    line-height: 1.3rem
+    display: block
+
+    &:not(:empty)
+      margin-bottom: 1rem
+
+  > form
+    > section
+      > form-element
+        display: block
+        &[invalid]
+          select, input
+            border-color: color.$validation-error-color
+         
+        > value
+          display: relative
+
+          > validation-feedback
+            display: block
+            position: relative
+            color: color.$validation-error-color
+
+            > message
+              position: absolute
+              font-size: 90%
+              
+    > actions
+        margin: 1em
+        display: flex
+        justify-content: center
+        list-style: none
+        padding: 0
+
+        > *
+          display: inline-block
+          line-height: theme.$list-element-height
+          padding: 0 0.5em
+
+        &.right 
+          justify-content: flex-end
+
+    > form-validation
+      display: block
+      text-align: center
+      padding: 0.5rem 1rem
+      background-color: color.$validation-panel-background
+      border: solid 1px color.$validation-error-color
+      color: color.$validation-error-color
+      margin-top: 2rem
 
 
 /*

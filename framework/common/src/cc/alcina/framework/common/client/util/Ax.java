@@ -68,6 +68,9 @@ public class Ax {
 		if (CommonUtils.isNullOrEmpty(s)) {
 			return s;
 		}
+		if (s.contains("_")) {
+			return s.toLowerCase().replace('_', '-');
+		}
 		StringBuilder builder = new StringBuilder();
 		builder.append(s.substring(0, 1).toLowerCase());
 		for (int i = 1; i < s.length(); i++) {

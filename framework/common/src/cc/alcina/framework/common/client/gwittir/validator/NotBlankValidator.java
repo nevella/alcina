@@ -19,16 +19,11 @@ import com.totsp.gwittir.client.validator.Validator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @Reflected
-/**
- *
- * @author Nick Reddel
- */
 public class NotBlankValidator implements Validator {
 	@Override
 	public Object validate(Object value) throws ValidationException {
 		if ((value == null) || (value.toString().isEmpty())) {
-			throw new ValidationException("Value must be a non-empty string",
-					NotBlankValidator.class);
+			throw new ValidationException("Required", NotBlankValidator.class);
 		}
 		return value;
 	}
