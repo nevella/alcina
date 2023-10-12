@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -144,10 +145,9 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
  * ConcurrentLinkedQueue??
  * </p>
  *
- * 
  *
- *         FIXME - mvcc.5 - don't add listeners during postprocess
- *         (optimisation)
+ *
+ * FIXME - mvcc.5 - don't add listeners during postprocess (optimisation)
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomainStore implements IDomainStore {
@@ -747,7 +747,11 @@ public class DomainStore implements IDomainStore {
 				// said fanciness is needed
 				Entity local = cache.getCreatedLocals().get(localId);
 				Transactions.resolve(local, ResolvedVersionState.WRITE, false);
-				Preconditions.checkState(local != null);
+				if (local == null) {
+					throw new NoSuchElementException(Ax.format(
+							"Entity not found for localId: {}/{} - localId {}",
+							clazz.getSimpleName(), id, localId));
+				}
 				// The created local is the 'domain identity', so need to
 				// preserve it but revert
 				// its field values before transforming
@@ -886,6 +890,7 @@ public class DomainStore implements IDomainStore {
 		StringBuilder warnBuilder = new StringBuilder();
 		long postProcessStart = 0;
 		DomainStoreHealth health = getHealth();
+		DomainTransformEvent currentTransform = null;
 		try {
 			LooseContext.pushWithTrue(
 					TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
@@ -925,6 +930,7 @@ public class DomainStore implements IDomainStore {
 			// filtered.removeIf(collation::isCreatedAndDeleted);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
 			for (DomainTransformEventPersistent transform : filtered) {
+				currentTransform = transform;
 				postProcessTransform = transform;
 				// remove from indicies before first change - and only if
 				// preexisting object
@@ -1006,6 +1012,8 @@ public class DomainStore implements IDomainStore {
 			Transaction.current()
 					.toDomainCommitted(persistenceEvent.getPosition());
 		} catch (Exception e) {
+			logger.warn(
+					Ax.format("exception transform: \n%s", currentTransform));
 			logger.warn("post process exception - pre final", e);
 			Transaction.current().toDomainAborted();
 			causes.add(e);
@@ -1401,8 +1409,9 @@ public class DomainStore implements IDomainStore {
 										.isDomainVersion(v);
 			}
 
+			@Override
 			public <V extends Entity> boolean isMvccObject(V v) {
-				return v == null ? false 
+				return v == null ? false
 						: MvccObject.class.isAssignableFrom(v.getClass());
 			};
 
@@ -1829,8 +1838,9 @@ public class DomainStore implements IDomainStore {
 			return isRawValue(v);
 		}
 
+		@Override
 		public <V extends Entity> boolean isMvccObject(V v) {
-			return v == null ? false 
+			return v == null ? false
 					: MvccObject.class.isAssignableFrom(v.getClass());
 		};
 
