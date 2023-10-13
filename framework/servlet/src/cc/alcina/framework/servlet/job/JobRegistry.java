@@ -559,38 +559,30 @@ public class JobRegistry {
 			Optional<JobResource> antecedentAcquired = getAcquiredResource(
 					forJob, resource);
 			/*
-			 * FIXME - domain - ensureProcessState is broken - it returns a
-			 * different ProcessState on the first/second call due to the
-			 * transition of mvcc version from read to write
-			 *
-			 * This is a general problem of state transition within a getter
-			 *
-			 * Workaround is the `ProcessState processState3 =
-			 * forJob.getProcessState();` call
+			 * FIXME - domain -
 			 *
 			 *
 			 */
-			ProcessState processState3 = forJob.getProcessState();
-			ProcessState processState = forJob.ensureProcessState();
-			ProcessState processState2 = forJob.getProcessState();
-			Preconditions.checkState(processState2 == processState);
+			ProcessState processState = Optional
+					.ofNullable(forJob.getProcessState())
+					.orElse(new ProcessState()).clone();
 			ResourceRecord record = processState.addResourceRecord(resource);
 			if (antecedentAcquired.isPresent()) {
 				record.setAcquired(true);
 				record.setAcquiredFromAntecedent(true);
-				forJob.persistProcessState();
+				forJob.setProcessState(processState);
 				Transaction.commit();
 			} else {
-				forJob.persistProcessState();
+				forJob.setProcessState(processState);
 				Transaction.commit();
 				MethodContext.instance().withExecuteOutsideTransaction(true)
 						.run(resource::acquire);
 				try {
 					// ensure lazy (process state) field.
 					forJob = forJob.domain().ensurePopulated();
-					forJob.ensureProcessState().provideRecord(record)
-							.setAcquired(true);
-					forJob.persistProcessState();
+					processState = forJob.getProcessState().clone();
+					processState.provideRecord(record).setAcquired(true);
+					forJob.setProcessState(processState);
 					Transaction.commit();
 					acquired.add(resource);
 				} catch (Exception e) {
