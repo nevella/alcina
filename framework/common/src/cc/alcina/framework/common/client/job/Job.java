@@ -325,9 +325,6 @@ public abstract class Job extends VersionableEntity<Job>
 	public ProcessState getProcessState() {
 		processState = TransformManager.resolveMaybeDeserialize(processState,
 				this.processStateSerialized, null);
-		Ax.err("%s : %s : processState hash: %s", toStringEntity(),
-				System.identityHashCode(this),
-				System.identityHashCode(processState));
 		return this.processState;
 	}
 
