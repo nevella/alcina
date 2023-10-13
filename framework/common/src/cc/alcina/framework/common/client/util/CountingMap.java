@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +27,13 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		}
 		put(key, nextValue);
 		return nextValue;
+	}
+
+	public CountingMap<K> addCollectionMap(Map<K, Collection> map) {
+		for (Map.Entry<K, Collection> entry : map.entrySet()) {
+			add(entry.getKey(), entry.getValue().size());
+		}
+		return this;
 	}
 
 	public void addIntMap(Map<K, Integer> m) {
