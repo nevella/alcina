@@ -173,9 +173,9 @@ public class FormModel extends Model
 			DefaultPermissibleActionHandler.handleAction(null,
 					categoryNamePlace.ensureAction(), provideNode());
 		}
-		// now bubble the submit event (post validation)
-		if (event != null) {
-			event.getContext().bubble();
+		// now bubble the originating submit event (post validation)
+		if (data.originatingEvent != null) {
+			data.originatingEvent.bubble();
 		}
 	}
 
@@ -336,7 +336,7 @@ public class FormModel extends Model
 
 	void onValidationStateChange(ModelEvent event,
 			FormValidation formValidation, FormValidation.State state) {
-		Data data = new FormEvents.BeanValidationChange.Data(state,
+		Data data = new FormEvents.BeanValidationChange.Data(event, state,
 				formValidation.beanValidationExceptionMessage);
 		emitEvent(FormEvents.BeanValidationChange.class, data);
 	}

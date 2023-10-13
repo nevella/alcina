@@ -443,6 +443,7 @@ public @interface Directed {
 	@Target(ElementType.TYPE)
 	@ClientVisible
 	@Inherited
+	// FIXME - dirndl - make this the default
 	public @interface PropertyNameTags {
 	}
 

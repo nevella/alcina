@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.overlay;
 
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -8,26 +9,41 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * FIXME - ui2 - 1 - add param to 'only show after 1sec', etc - and update the
  * animation
  */
-@Directed.Multiple({ @Directed(tag = "spinner"), @Directed(tag = "inner") })
-public class Spinner extends Model {
+@Directed(tag = "spinner")
+@Directed.PropertyNameTags
+@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
+public class Spinner extends Model.Fields {
 	public static Builder builder() {
-		return new Builder();
+		return new Spinner().new Builder();
 	}
 
-	@SuppressWarnings("unused")
-	private Builder builder;
+	Builder builder;
 
-	Spinner(Builder builder) {
-		this.builder = builder;
+	@Directed
+	Object inner = new Object();
+
+	@Directed
+	String message;
+
+	Spinner() {
 	}
 
 	public Spinner generate() {
 		return this;
 	}
 
-	public static class Builder {
+	public class Builder {
+		Builder() {
+			builder = this;
+		}
+
 		public Spinner generate() {
-			return new Spinner(this).generate();
+			return Spinner.this.generate();
+		}
+
+		public Builder showingMessage(String message) {
+			Spinner.this.message = message;
+			return this;
 		}
 	}
 }

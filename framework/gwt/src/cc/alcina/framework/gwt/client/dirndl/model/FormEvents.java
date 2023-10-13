@@ -35,7 +35,11 @@ public class FormEvents {
 
 			String exceptionMessage;
 
-			Data(State state, String exceptionMessage) {
+			ModelEvent originatingEvent;
+
+			Data(ModelEvent originatingEvent, State state,
+					String exceptionMessage) {
+				this.originatingEvent = originatingEvent;
 				this.state = state;
 				this.exceptionMessage = exceptionMessage;
 			}
