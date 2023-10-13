@@ -745,8 +745,11 @@ public class Transaction implements Comparable<Transaction> {
 					ThreadlocalTransformManager.cast().resetTltmNonCommitalTx();
 					break;
 				default:
-					ThreadlocalTransformManager.cast()
-							.evictNonPromotedLocals(createdLocalsForEviction);
+					if (createdLocalsForEviction.size() > 0) {
+						ThreadlocalTransformManager.cast()
+								.evictNonPromotedLocals(
+										createdLocalsForEviction);
+					}
 					ThreadlocalTransformManager.cast().resetTltm(null);
 					break;
 				}

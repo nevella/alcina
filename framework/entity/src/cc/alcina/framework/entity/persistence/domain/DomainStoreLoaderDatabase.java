@@ -143,11 +143,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private UnsortedMultikeyMap<Field> domainStorePropertyFields = new UnsortedMultikeyMap<Field>(
 			2);
 
-	@Override
-	public void close() {
-		connectionPool.drain();
-	}
-
 	//
 	MultikeyMap<PdOperator> operatorsByClass = new UnsortedMultikeyMap<>(2);
 
@@ -206,6 +201,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		} finally {
 			releaseConn(connection);
 		}
+	}
+
+	@Override
+	public void close() {
+		connectionPool.drain();
 	}
 
 	@Override
@@ -1300,6 +1300,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
+	/*
+	 * This pool provides per-thread connections, allowing reentrancy (threads
+	 * attempting to acquire a connection will get the one already allocated, if
+	 * any)
+	 *
+	 */
 	class ConnectionPool {
 		int maxConnections = Configuration
 				.getInt(DomainStoreLoaderDatabase.class, "maxConnections");
@@ -1353,7 +1359,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		 */
 		private Optional<Member> getMember0() {
 			Optional<Member> o_member = members.stream()
-					.filter(m -> m.threads.isEmpty()).findFirst();
+					.filter(this::availableForCurrentThread).findFirst();
 			if (o_member.isPresent()) {
 				return o_member;
 			}
@@ -1363,6 +1369,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return Optional.of(member);
 			}
 			return Optional.empty();
+		}
+
+		boolean availableForCurrentThread(Member member) {
+			return member.threads.isEmpty() || member.threads.stream()
+					.allMatch(t -> t == Thread.currentThread());
 		}
 
 		synchronized void drain() {
@@ -1375,6 +1386,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		synchronized Connection getConnection() {
 			Member member = getMember();
+			Preconditions.checkState(availableForCurrentThread(member));
 			member.threads.add(Thread.currentThread());
 			return member.connection;
 		}

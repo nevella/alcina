@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -80,9 +81,11 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -151,6 +154,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	public static final Topic<Thread> topicTransformManagerWasReset = Topic
 			.create();
+
+	public static Predicate<Entity> permitEviction = e -> true;
 
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
@@ -313,8 +318,21 @@ public class ThreadlocalTransformManager extends TransformManager {
 		DomainStore store = DomainStore.writableStore();
 		createdLocals.forEach(e -> {
 			if (!e.domain().wasPersisted()) {
-				if (store.isCached(e.entityClass())) {
-					store.getCache().evictCreatedLocal(e);
+				Class entityClass = e.entityClass();
+				if (store.isCached(entityClass)) {
+					if (permitEviction.test(e)) {
+						boolean logEvictions = Configuration.is("logEvictions");
+						if (logEvictions) {
+							logger.info("Evicting: {}", e.toLocator());
+						}
+						store.getCache().evictCreatedLocal(e);
+					} else {
+						logger.warn("Invalid eviction: {}", e);
+						logger.warn("Invalid eviction: ", new Exception());
+						if (EntityLayerUtils.isTestOrTestServer()) {
+							throw new RuntimeException();
+						}
+					}
 				}
 			} else {
 				// retain

@@ -1011,6 +1011,9 @@ public class DomainStore implements IDomainStore {
 			topicBeforeDomainCommitted().publish(persistenceEvent);
 			Transaction.current()
 					.toDomainCommitted(persistenceEvent.getPosition());
+			if (Configuration.is("logPostProcessStats")) {
+				logger.info(collation.toStatisticsString());
+			}
 		} catch (Exception e) {
 			logger.warn(
 					Ax.format("exception transform: \n%s", currentTransform));
