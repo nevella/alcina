@@ -558,7 +558,22 @@ public class JobRegistry {
 			 */
 			Optional<JobResource> antecedentAcquired = getAcquiredResource(
 					forJob, resource);
+			/*
+			 * FIXME - domain - ensureProcessState is broken - it returns a
+			 * different ProcessState on the first/second call due to the
+			 * transition of mvcc version from read to write
+			 *
+			 * This is a general problem of state transition within a getter
+			 *
+			 * Workaround is the `ProcessState processState3 =
+			 * forJob.getProcessState();` call
+			 *
+			 *
+			 */
+			ProcessState processState3 = forJob.getProcessState();
 			ProcessState processState = forJob.ensureProcessState();
+			ProcessState processState2 = forJob.getProcessState();
+			Preconditions.checkState(processState2 == processState);
 			ResourceRecord record = processState.addResourceRecord(resource);
 			if (antecedentAcquired.isPresent()) {
 				record.setAcquired(true);
@@ -643,6 +658,7 @@ public class JobRegistry {
 		} catch (Throwable t) {
 			Exception e = (Exception) ((t instanceof Exception) ? t
 					: new WrappedRuntimeException(t));
+			e.printStackTrace();
 			/*
 			 * May have arrived here as a result of a failed transform commit
 			 */

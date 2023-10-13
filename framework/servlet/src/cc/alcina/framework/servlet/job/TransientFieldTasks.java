@@ -29,8 +29,8 @@ public class TransientFieldTasks {
 
 		@Override
 		public void acquire() {
-			task = TransientFieldTasks.get().perJobTask
-					.remove(JobContext.get().getJob());
+			Job job = JobContext.get().getJob();
+			task = TransientFieldTasks.get().perJobTask.remove(job);
 		}
 
 		public <T extends Task> T getTask() {

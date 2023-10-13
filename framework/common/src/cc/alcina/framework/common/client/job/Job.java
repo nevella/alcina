@@ -263,8 +263,8 @@ public abstract class Job extends VersionableEntity<Job>
 			if (getProcessState() == null) {
 				setProcessState(new ProcessState());
 			}
+			return getProcessState();
 		}
-		return getProcessState();
 	}
 
 	public String getCause() {
@@ -321,9 +321,13 @@ public abstract class Job extends VersionableEntity<Job>
 
 	@Transient
 	@DomainProperty(serialize = true)
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public ProcessState getProcessState() {
 		processState = TransformManager.resolveMaybeDeserialize(processState,
 				this.processStateSerialized, null);
+		Ax.err("%s : %s : processState hash: %s", toStringEntity(),
+				System.identityHashCode(this),
+				System.identityHashCode(processState));
 		return this.processState;
 	}
 

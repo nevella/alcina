@@ -26,13 +26,15 @@ import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.Io;
 
 public class WdExec {
+	private static final int DEFAULT_TIMEOUT = 5;
+
 	private WebDriver driver;
 
 	private String xpath;
 
 	private String cssSelector;
 
-	private int timeoutSecs = 5;
+	private int timeoutSecs = DEFAULT_TIMEOUT;
 
 	private int index;
 
@@ -64,6 +66,21 @@ public class WdExec {
 
 	public void assertHasText() {
 		assert (getElement().getText().length() > 0);
+	}
+
+	public void awaitRemoval(WebElement elt) {
+		long timeoutAt = System.currentTimeMillis() + timeoutSecs * 1000;
+		while (System.currentTimeMillis() < timeoutAt) {
+			try {
+				elt.isDisplayed();
+				sleep(100);
+			} catch (Exception e) {
+				// removed
+				int debug = 3;
+				return;
+			}
+		}
+		throw new TimedOutException();
 	}
 
 	public void clear() {
@@ -350,6 +367,10 @@ public class WdExec {
 	public WdExec timeout(int timeoutSecs) {
 		this.timeoutSecs = timeoutSecs;
 		return this;
+	}
+
+	public void toDefaultTimeout() {
+		timeout(DEFAULT_TIMEOUT);
 	}
 
 	public WdExec token(WDToken token) {
