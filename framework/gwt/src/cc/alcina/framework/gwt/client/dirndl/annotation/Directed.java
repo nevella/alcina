@@ -120,6 +120,7 @@ public @interface Directed {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target(ElementType.TYPE)
+	@Inherited
 	@ClientVisible
 	public static @interface AllProperties {
 	}
@@ -435,7 +436,7 @@ public @interface Directed {
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Property {
-		String name();
+		String value();
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
@@ -615,6 +616,18 @@ public @interface Directed {
 						: Collections.singletonList(annotation);
 			}
 		}
+	}
+
+	/*
+	 * WIP - force rendering of null models (for grids and tables, as a blank
+	 * element)
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	@ClientVisible
+	@Inherited
+	public @interface RenderNull {
 	}
 
 	/**

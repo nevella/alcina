@@ -371,6 +371,11 @@ public class DirectedLayout implements AlcinaProcess {
 	DirectedRenderer resolveRenderer(Directed directed,
 			AnnotationLocation location, Object model) {
 		Class<? extends DirectedRenderer> rendererClass = directed.renderer();
+		if (model == null && !Reflections.isAssignableFrom(RendersNull.class,
+				directed.renderer())) {
+			// @Directed.RenderNull
+			return new LeafRenderer.Blank();
+		}
 		if (rendererClass == DirectedRenderer.ModelClass.class) {
 			rendererClass = resolveModelRenderer(model);
 		}
@@ -2024,8 +2029,10 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 			beforeRender();
-			if (model != null || Reflections.isAssignableFrom(RendersNull.class,
-					node.directed.renderer())) {
+			if (model != null
+					|| Reflections.isAssignableFrom(RendersNull.class,
+							node.directed.renderer())
+					|| node.has(Directed.RenderNull.class)) {
 				if (rendered != null) {
 					// preserve domNode/model identity
 					node.rendered = rendered;

@@ -39,6 +39,7 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils.LogMuter;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -47,6 +48,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -81,6 +83,7 @@ import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.task.TaskPublish;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
 /*
@@ -247,7 +250,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		if (Configuration.is("logStartupMetrics")) {
 			new DevStats().parse(logProvider).dump(true);
 		}
-		logger.info("Domain stores loaded - time from launch {} ms",
+		logger.info("\nDomain stores loaded - time from launch {} ms\n",
 				System.currentTimeMillis() - startupTime);
 		logProvider.startRemote();
 		BackendTransformQueue.get().start();
@@ -701,6 +704,14 @@ public abstract class DevConsole implements ClipboardOwner {
 			String s2) {
 		printDiff(ignoreEqualLength, ignoreInsertions, ignoreLatterSubstring,
 				false, f1, s1, f2, s2);
+	}
+
+	public void publish(ContentRequestBase request) {
+		TaskPublish task = new TaskPublish();
+		task.setPublicationRequest(request);
+		Job job = task.perform();
+		job.domain().ensurePopulated();
+		Ax.out(job.getTaskSerialized());
 	}
 
 	public void pushSubshell(Class<? extends DevConsoleCommand> clazz) {

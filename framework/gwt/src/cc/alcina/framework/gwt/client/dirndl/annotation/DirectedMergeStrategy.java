@@ -147,7 +147,9 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 				Directed.Exclude exclude = resolver.contextAnnotation(reflector,
 						Directed.Exclude.class,
 						Resolver.ResolutionContext.Strategy);
-				if (exclude == null) {
+				Binding binding = resolver.contextAnnotation(reflector,
+						Binding.class, Resolver.ResolutionContext.Strategy);
+				if (exclude == null && binding == null) {
 					result.add(new Directed.Impl());
 				}
 			}

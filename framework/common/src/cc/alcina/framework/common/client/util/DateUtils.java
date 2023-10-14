@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * Interchangable because this (gwt-compat) version is weak compared to real,
  * calendar based implementations
  *
- * 
+ *
  */
 @SuppressWarnings("deprecation")
 @Reflected
@@ -36,7 +36,7 @@ public class DateUtils {
 	}
 
 	public DatePair getYearRange(int startingMonth, int yearOffset) {
-		DatePair result = new DatePair();
+		DatePair result = new DatePair(new Date(), new Date());
 		toMonth(result.d1, startingMonth - 1);
 		if (result.d1.after(new Date())) {
 			CalendarUtil.addMonthsToDate(result.d1, -12);

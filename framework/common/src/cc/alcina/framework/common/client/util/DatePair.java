@@ -4,10 +4,18 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
-public class DatePair implements Comparable<DatePair>, Serializable {
-	public Date d1 = new Date();
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
-	public Date d2 = new Date();
+@Reflected
+@Bean(PropertySource.FIELDS)
+public class DatePair
+		implements Comparable<DatePair>, Serializable, TreeSerializable {
+	public Date d1;
+
+	public Date d2;
 
 	public DatePair() {
 	}
@@ -26,6 +34,10 @@ public class DatePair implements Comparable<DatePair>, Serializable {
 		return i;
 	}
 
+	public boolean contains(Date date) {
+		return d1.compareTo(date) <= 0 && d2.compareTo(date) >= 0;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof DatePair) {
@@ -39,6 +51,10 @@ public class DatePair implements Comparable<DatePair>, Serializable {
 	@Override
 	public int hashCode() {
 		return Objects.hash(d1, d2);
+	}
+
+	public String toHumanDateRange() {
+		return Ax.format("%s to %s", Ax.dateSlash(d1), Ax.dateSlash(d2));
 	}
 
 	@Override

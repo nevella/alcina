@@ -28,19 +28,26 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class Tables {
-	public static class ColumnHeaders extends LeafModel.StringListModel {
+	public static class ColumnHeaders extends Model.Simple {
+		List<ColumnName> names;
+
 		public ColumnHeaders(Class<? extends Bindable> clazz,
 				DirectedLayout.Node node) {
 			List<String> strings = Reflections.at(clazz).properties().stream()
 					.map(p -> Annotations.resolve(p, Directed.Property.class,
 							node.getResolver()))
-					.filter(Objects::nonNull).map(Directed.Property::name)
+					.filter(Objects::nonNull).map(Directed.Property::value)
 					.collect(Collectors.toList());
-			setList(strings);
+			init(strings);
 		}
 
 		public ColumnHeaders(List<String> strings) {
-			super(strings);
+			init(strings);
+		}
+
+		void init(List<String> strings) {
+			names = strings.stream().map(ColumnName::new)
+					.collect(Collectors.toList());
 		}
 	}
 
@@ -93,7 +100,7 @@ public class Tables {
 		public class IntermediateModel extends Model {
 			private String gridTemplateColumns;
 
-			private List<String> columnNames;
+			private List<ColumnName> columnNames;
 
 			private String gridColumnWidth;
 
@@ -115,10 +122,11 @@ public class Tables {
 								Directed.Property propertyAnnotation = node
 										.annotation(Directed.Property.class);
 								return propertyAnnotation != null
-										? propertyAnnotation.name()
+										? propertyAnnotation.value()
 										: CommonUtils
 												.deInfix(property.getName());
-							}).collect(Collectors.toList());
+							}).map(ColumnName::new)
+							.collect(Collectors.toList());
 					gridTemplateColumns = Reflections.at(template).properties()
 							.stream().filter(Property::provideRenderable)
 							.map(p -> {
@@ -131,7 +139,7 @@ public class Tables {
 			}
 
 			@Directed.Wrap("column-names")
-			public List<String> getColumnNames() {
+			public List<ColumnName> getColumnNames() {
 				return this.columnNames;
 			}
 
@@ -263,6 +271,21 @@ public class Tables {
 					this.value = value;
 				}
 			}
+		}
+	}
+
+	@Directed
+	static class ColumnName extends Model.Fields {
+		@Binding(type = Type.INNER_TEXT)
+		String text;
+
+		// for css selection
+		@Binding(type = Type.PROPERTY)
+		String name;
+
+		ColumnName(String name) {
+			this.name = name;
+			this.text = name;
 		}
 	}
 }

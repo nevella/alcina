@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
@@ -461,6 +462,11 @@ public abstract class Model extends Bindable implements
 
 	public interface RerouteBubbledEvents {
 		Model rerouteBubbledEventsTo();
+	}
+
+	@Directed.AllProperties
+	@Directed.PropertyNameTags
+	public static abstract class Simple extends Fields {
 	}
 
 	public abstract static class Value<T> extends Model implements HasValue<T> {

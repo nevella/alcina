@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.Locale;
 
@@ -43,6 +44,7 @@ import javax.imageio.stream.MemoryCacheImageOutputStream;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
@@ -348,6 +350,18 @@ public class ImgUtil {
 	}
 
 	public ImgUtil() {
+	}
+
+	public static class DataUrl {
+		public static String generate(byte[] bytes, String mimeType) {
+			try {
+				String encoded = Base64.getEncoder().encodeToString(bytes);
+				String url = Ax.format("data:%s;base64,%s", mimeType, encoded);
+				return url;
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
 	}
 
 	// This class overrides the setCompressionQuality() method to workaround
