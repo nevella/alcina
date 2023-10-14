@@ -223,6 +223,9 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			if (parent == null) {
 				treePath = TreePath.absolutePath(path);
 			} else {
+				if (!path.contains(".")) {
+					path = parent.treePath.childPath(path);
+				}
 				treePath = parent.treePath.ensurePath(path);
 				if (addToParentChildren) {
 					parent.getChildren().add(this);
@@ -393,6 +396,16 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		private boolean selected;
 
 		private boolean keyboardSelected;
+
+		public int depth() {
+			int depth = 0;
+			TreeNode cursor = this;
+			while (cursor.getParent() != null) {
+				depth++;
+				cursor = cursor.getParent();
+			}
+			return depth;
+		}
 
 		@Directed.Wrap("nodes")
 		public List<TreeNode<NM>> getChildren() {

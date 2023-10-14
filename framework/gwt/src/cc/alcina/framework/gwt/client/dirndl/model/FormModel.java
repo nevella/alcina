@@ -89,6 +89,10 @@ public class FormModel extends Model
 		FormEvents.PropertyValidationChange.Handler {
 	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
 
+	public static void installFeedbackProvider() {
+		ValidationFeedback.Support.DEFAULT_PROVIDER = new ValidationFeedbackProvider();
+	}
+
 	protected List<FormElement> elements = new ArrayList<>();
 
 	protected List<Link> actions = new ArrayList<>();

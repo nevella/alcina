@@ -118,17 +118,20 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 				impl.setRenderer(DirectedRenderer.TransformRenderer.class);
 				result.add(impl);
 			} else {
-				Directed first = result.get(0);
-				if (result.size() == 1 && first
-						.renderer() != DirectedRenderer.TransformRenderer.class) {
-					Impl impl = new Directed.Impl(first);
-					result.remove(first);
+				Directed last = Ax.last(result);
+				if (last.renderer() != DirectedRenderer.TransformRenderer.class) {
+					Impl impl = new Directed.Impl(last);
+					result.remove(last);
 					impl.setRenderer(DirectedRenderer.TransformRenderer.class);
 					result.add(impl);
 				}
 			}
 		}
 		if (transformElements != null) {
+			/*
+			 * Not as complex as Transform - only modifies
+			 * DirectedRender.Collection behaviour, not the renderer itself
+			 */
 			if (result.isEmpty()) {
 				Directed.Impl impl = new Directed.Impl();
 				result.add(impl);

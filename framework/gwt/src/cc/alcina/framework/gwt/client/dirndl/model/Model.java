@@ -319,6 +319,15 @@ public abstract class Model extends Bindable implements
 					rightPropertyName, rightToLeftConverter);
 		}
 
+		/**
+		 * Add a property change listener which does not inspect the event
+		 */
+		public void addPropertyChangeListener(SourcesPropertyChangeEvents bean,
+				Object propertyName, Runnable action) {
+			addListener(new RemovablePropertyChangeListener(bean, propertyName,
+					e -> action.run()));
+		}
+
 		public void addRegistration(
 				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
 			listenerBindings.add(asBinding(handlerRegistrationSupplier));
