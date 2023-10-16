@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -61,8 +60,8 @@ public class EnumSelect<E extends Enum> extends Model.Value<E>
 			values.add(0, null);
 		}
 		select.setValues(values);
-		bindings().addListener(new RemovablePropertyChangeListener(this,
-				"value", e -> select.setSelectedValue(value)));
+		bindings().addPropertyChangeListener(this, "value",
+				() -> select.setSelectedValue(value));
 		super.onBeforeRender(event);
 	}
 

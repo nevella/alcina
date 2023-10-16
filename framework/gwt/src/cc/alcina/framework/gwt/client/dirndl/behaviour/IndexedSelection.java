@@ -5,6 +5,13 @@ import java.util.List;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 
+/**
+ * Models 'indexed' (keyboard) navigation over a list of items. The
+ * keyboard-selected item is 'indexselected'
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class IndexedSelection implements KeyboardNavigation.Navigation.Handler {
 	private Host host;
 

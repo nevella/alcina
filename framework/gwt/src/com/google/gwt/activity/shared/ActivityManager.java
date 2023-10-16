@@ -116,11 +116,11 @@ public class ActivityManager
 			if (currentActivity.equals(nextActivity)) {
 				return;
 			}
-			if (currentActivity instanceof HasSameWidgetActivity
-					&& nextActivity instanceof HasSameWidgetActivity) {
-				HasSameWidgetActivity activity1 = (HasSameWidgetActivity) currentActivity;
-				HasSameWidgetActivity activity2 = (HasSameWidgetActivity) nextActivity;
-				if (activity1.isSameWigetAs(activity2)) {
+			if (currentActivity instanceof PlaceUpdateable
+					&& nextActivity instanceof PlaceUpdateable) {
+				PlaceUpdateable activity1 = (PlaceUpdateable) currentActivity;
+				PlaceUpdateable activity2 = (PlaceUpdateable) nextActivity;
+				if (activity1.canUpdate(activity2)) {
 					if (activity1 instanceof HasPlace) {
 						((HasPlace) activity1)
 								.setPlace(((HasPlace) activity2).getPlace());
@@ -139,11 +139,11 @@ public class ActivityManager
 		} else if (!currentActivity.equals(NULL_ACTIVITY)) {
 			boolean removeCurrentWidget = true;
 			if (currentActivity != null
-					&& currentActivity instanceof HasSameWidgetActivity
-					&& nextActivity instanceof HasSameWidgetActivity) {
-				HasSameWidgetActivity activity1 = (HasSameWidgetActivity) currentActivity;
-				HasSameWidgetActivity activity2 = (HasSameWidgetActivity) nextActivity;
-				if (activity1.isSameWigetAs(activity2)) {
+					&& currentActivity instanceof PlaceUpdateable
+					&& nextActivity instanceof PlaceUpdateable) {
+				PlaceUpdateable activity1 = (PlaceUpdateable) currentActivity;
+				PlaceUpdateable activity2 = (PlaceUpdateable) nextActivity;
+				if (activity1.canUpdate(activity2)) {
 					removeCurrentWidget = false;
 				}
 			}

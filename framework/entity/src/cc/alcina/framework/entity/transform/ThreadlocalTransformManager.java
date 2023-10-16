@@ -129,6 +129,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public static final String CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS";
 
+	public static final String CONTEXT_DISABLE_EVICTION = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_DISABLE_EVICTION";
+
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
@@ -315,6 +318,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 	 * persisted (to not leak)
 	 */
 	public void evictNonPromotedLocals(List<Entity> createdLocals) {
+		if (LooseContext.is(CONTEXT_DISABLE_EVICTION)) {
+			return;
+		}
 		DomainStore store = DomainStore.writableStore();
 		createdLocals.forEach(e -> {
 			if (!e.domain().wasPersisted()) {

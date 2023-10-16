@@ -445,7 +445,20 @@ public @interface Directed {
 	@ClientVisible
 	@Inherited
 	// FIXME - dirndl - make this the default
+	// Also - should *not* be default for anything but leaf renderers
 	public @interface PropertyNameTags {
+	}
+
+	/*
+	 * WIP - force rendering of null models (for grids and tables, as a blank
+	 * element)
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	@ClientVisible
+	@Inherited
+	public @interface RenderNull {
 	}
 
 	/**
@@ -616,18 +629,6 @@ public @interface Directed {
 						: Collections.singletonList(annotation);
 			}
 		}
-	}
-
-	/*
-	 * WIP - force rendering of null models (for grids and tables, as a blank
-	 * element)
-	 */
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.METHOD, ElementType.FIELD })
-	@ClientVisible
-	@Inherited
-	public @interface RenderNull {
 	}
 
 	/**

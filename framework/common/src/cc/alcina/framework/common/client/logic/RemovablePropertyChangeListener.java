@@ -8,12 +8,13 @@ import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
  *
- * 
+ *
  *
  */
 public class RemovablePropertyChangeListener
@@ -58,6 +59,10 @@ public class RemovablePropertyChangeListener
 			unbind();
 		}
 		return this;
+	}
+
+	public Object currentValue() {
+		return Reflections.at(source).property(propertyName).get(source);
 	}
 
 	@Override

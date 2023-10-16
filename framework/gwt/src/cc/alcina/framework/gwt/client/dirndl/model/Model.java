@@ -210,6 +210,11 @@ public abstract class Model extends Bindable implements
 		return node;
 	}
 
+	@Directed.AllProperties
+	@Directed.PropertyNameTags
+	public static abstract class All extends Fields {
+	}
+
 	/*
 	 * This class supports 'fieldless' mode, where the property values are
 	 * stored in the values map
@@ -322,11 +327,16 @@ public abstract class Model extends Bindable implements
 
 		/**
 		 * Add a property change listener which does not inspect the event
+		 *
+		 * @return
 		 */
-		public void addPropertyChangeListener(SourcesPropertyChangeEvents bean,
-				Object propertyName, Runnable action) {
-			addListener(new RemovablePropertyChangeListener(bean, propertyName,
-					e -> action.run()));
+		public RemovablePropertyChangeListener addPropertyChangeListener(
+				SourcesPropertyChangeEvents bean, Object propertyName,
+				Runnable action) {
+			RemovablePropertyChangeListener listener = new RemovablePropertyChangeListener(
+					bean, propertyName, e -> action.run());
+			addListener(listener);
+			return listener;
 		}
 
 		public void addRegistration(
@@ -357,6 +367,10 @@ public abstract class Model extends Bindable implements
 			binding.bind();
 			listenerBindings.bind();
 			bound = true;
+		}
+
+		public ModelBindingBuilder<?> build() {
+			return new ModelBindingBuilder(this);
 		}
 
 		public boolean isFieldless() {
@@ -462,11 +476,6 @@ public abstract class Model extends Bindable implements
 
 	public interface RerouteBubbledEvents {
 		Model rerouteBubbledEventsTo();
-	}
-
-	@Directed.AllProperties
-	@Directed.PropertyNameTags
-	public static abstract class Simple extends Fields {
 	}
 
 	public abstract static class Value<T> extends Model implements HasValue<T> {

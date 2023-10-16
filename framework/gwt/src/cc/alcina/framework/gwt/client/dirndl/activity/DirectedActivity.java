@@ -9,6 +9,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.MultipleImplementationsException;
@@ -31,7 +32,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * do), and interception/re-render (via property change) by the container or the
  * activity subclass itself
  *
- * 
+ *
  *
  * @param <P>
  */
@@ -123,7 +124,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 
 	@Override
 	public void setPlace(P place) {
-		this.place = place;
+		set("place", this.place, place, () -> this.place = place);
 	}
 
 	@Override
@@ -135,6 +136,10 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	public <DA extends DirectedActivity> DA withPlace(P place) {
 		setPlace(place);
 		return (DA) this;
+	}
+
+	public static enum PropertyName implements PropertyEnum {
+		place;
 	}
 
 	@Registration.NonGenericSubtypes(Provider.class)

@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 
 /**
  * <p>
@@ -369,7 +370,13 @@ public class ModelEvents {
 	}
 
 	/**
+	 * <p>
 	 * Emitted by single-item selection sources, such as {@code Choices.Single}
+	 *
+	 * <p>
+	 * Note that the most common use (by {@link Choices}) sets the model to be
+	 * the new *choice/choies* - so most of the time {@link SelectionChanged} is
+	 * a better event to listen for
 	 *
 	 *
 	 *
@@ -387,10 +394,16 @@ public class ModelEvents {
 	}
 
 	/**
+	 * <p>
 	 * Emitted by multiple-item and single-item selection sources, such as
 	 * {@code Choices.Multiple}, {@code Choices.Single}) .
 	 *
+	 * <p>
 	 * Not to be confused with the selectionchange DOM event
+	 *
+	 * <p>
+	 * Note that the most common use (by {@link Choices}) sets the model to be
+	 * the new *value/values*
 	 *
 	 *
 	 *

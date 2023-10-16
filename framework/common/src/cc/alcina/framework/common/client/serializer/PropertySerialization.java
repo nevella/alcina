@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target({ ElementType.METHOD })
+@Target({ ElementType.METHOD, ElementType.FIELD })
 @ClientVisible
 /*
  * Not necessary if the containing type has one property with

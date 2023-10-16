@@ -28,7 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class Tables {
-	public static class ColumnHeaders extends Model.Simple {
+	public static class ColumnHeaders extends Model.All {
 		List<ColumnName> names;
 
 		public ColumnHeaders(Class<? extends Bindable> clazz,
