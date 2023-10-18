@@ -5,7 +5,7 @@
 /bin
 /dist-extras
 /build
-
+/tmp
 /bin2
 /dist-tasks
 /.gwt-tmp
