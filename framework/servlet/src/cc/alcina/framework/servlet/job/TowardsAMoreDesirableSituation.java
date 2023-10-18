@@ -41,7 +41,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  * <li>
  * </ul>
  */
-class TowardsAMoreDesirableSituation {
+public class TowardsAMoreDesirableSituation {
 	private List<Job> activeJobs = Collections
 			.synchronizedList(new ArrayList<>());
 
