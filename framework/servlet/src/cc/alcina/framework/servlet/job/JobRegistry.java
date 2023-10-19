@@ -173,7 +173,7 @@ public class JobRegistry {
 	public static final String CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET = JobRegistry.class
 			.getName() + ".CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET";
 
-	public static final String CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY = = JobRegistry.class
+	public static final String CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY =  JobRegistry.class
 			.getName() + ".CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY";
 
 	public static final String TRANSFORM_QUEUE_NAME = JobRegistry.class
