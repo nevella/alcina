@@ -222,6 +222,12 @@ public abstract class DevConsole implements ClipboardOwner {
 	CountDownLatch currentCommandLatch;
 
 	public DevConsole(String[] args) {
+		if (args.length == 0) {
+			String propertyArgs = System.getProperty("DevConsole.args");
+			if (Ax.notBlank(propertyArgs)) {
+				args = propertyArgs.split(";");
+			}
+		}
 		String loggingPropertiesPath = null;
 		try {
 			InputStream s1 = DevConsole.class

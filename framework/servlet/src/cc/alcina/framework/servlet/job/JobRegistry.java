@@ -167,11 +167,14 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 			implementation = Registration.Implementation.SINGLETON),
 		@Registration(ClearStaticFieldsOnAppShutdown.class) })
 public class JobRegistry {
-	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
+	public static final String CONTEXT_NO_ACTION_LOG = JobRegistry.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
 
-	public static final String CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET = CommonRemoteServiceServlet.class
+	public static final String CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET = JobRegistry.class
 			.getName() + ".CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET";
+
+	public static final String CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY =  JobRegistry.class
+			.getName() + ".CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY";
 
 	public static final String TRANSFORM_QUEUE_NAME = JobRegistry.class
 			.getName();
@@ -937,6 +940,12 @@ public class JobRegistry {
 			if (initialState == JobState.FUTURE_CONSISTENCY) {
 				String consistencyPriority = JobDomain.DefaultConsistencyPriorities._default
 						.toString();
+				if (LooseContext
+						.has(CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY)) {
+					consistencyPriority = LooseContext
+							.get(CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY)
+							.toString();
+				}
 				if (!PermissionsManager.isSystemUser()) {
 					// raise the priority of jobs that are directly caused by
 					// non-system users
