@@ -692,7 +692,7 @@ public class DirectedLayout implements AlcinaProcess {
 			eventBindings.forEach(NodeEventBinding::bind);
 		}
 
-		private void bindModel(boolean leftToRight) {
+		private void bindModel(boolean modelToRendered) {
 			if (model == null) {
 				return;
 			}
@@ -700,13 +700,15 @@ public class DirectedLayout implements AlcinaProcess {
 				List<Binding> bindings = resolver.getBindings(directed, model);
 				if (bindings.size() > 0) {
 					propertyBindings = new PropertyBindings();
-					propertyBindings.bind(leftToRight);
+					propertyBindings.bind(modelToRendered);
 				}
 			}
 			if (model instanceof LayoutEvents.Bind.Handler) {
 				if (!lastForModel || !directed.bindToModel()) {
 					// only bind if last of a multiple node -> single model
 					// chain
+				} else if (!modelToRendered) {
+					// model.node will already be set
 				} else {
 					((LayoutEvents.Bind.Handler) model)
 							.onBind(new LayoutEvents.Bind(this, true));
@@ -796,16 +798,16 @@ public class DirectedLayout implements AlcinaProcess {
 			insertBefore(child, null);
 		}
 
-		void bind(boolean leftToRight) {
+		void bind(boolean modelToRendered) {
 			bindEvents();
-			bindModel(leftToRight);
+			bindModel(modelToRendered);
 			bindParentProperty();
 			/*
 			 * During normal rendering there will be no children - this handles
 			 * reverse-model node movements (e.g. wrapping, re-parenting)
 			 */
 			if (children != null) {
-				children.forEach(c -> c.bind(leftToRight));
+				children.forEach(c -> c.bind(modelToRendered));
 			}
 		}
 

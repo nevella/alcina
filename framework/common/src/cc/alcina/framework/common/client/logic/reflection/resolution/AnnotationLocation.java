@@ -187,8 +187,9 @@ public class AnnotationLocation {
 	public String toString() {
 		if (property != null) {
 			String declaringSuffix = property.getOwningType() == classLocation
-					? ""
-					: Ax.format(" :: [%s]", classLocation.getSimpleName());
+					|| classLocation == null ? ""
+							: Ax.format(" :: [%s]",
+									classLocation.getSimpleName());
 			return Ax.format("%s%s", property.toString(), declaringSuffix);
 		} else {
 			return classLocation.getSimpleName();

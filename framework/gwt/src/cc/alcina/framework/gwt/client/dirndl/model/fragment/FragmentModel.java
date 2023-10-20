@@ -474,4 +474,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 					.forEach(FragmentModel.this::removeDescent);
 		}
 	}
+
+	public FragmentNode copyExternal(FragmentNode external) {
+		FragmentNode copy = Reflections.newInstance(external.getClass());
+		copy.copyFromExternal(external);
+		return copy;
+	}
 }

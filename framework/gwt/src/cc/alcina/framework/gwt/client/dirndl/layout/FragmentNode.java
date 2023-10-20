@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -101,10 +100,6 @@ public abstract class FragmentNode extends Model.Fields
 	 */
 	public FragmentTree fragmentTree() {
 		return new FragmentTree(true);
-	}
-
-	public void insertAsFirstChild(FragmentNode child) {
-		provideNode().insertAsFirstChild(child);
 	}
 
 	public Nodes nodes() {
@@ -254,7 +249,18 @@ public abstract class FragmentNode extends Model.Fields
 	 * Reverse transformation falls back on this model if no other matches exist
 	 */
 	@Transformer(NodeTransformer.Generic.class)
-	public static class Generic extends FragmentNode {
+	public static class Generic extends FragmentNode implements HasTag {
+		public String tag;
+
+		@Override
+		public void copyFromExternal(FragmentNode external) {
+			tag = ((Generic) external).tag;
+		}
+
+		@Override
+		public String provideTag() {
+			return tag;
+		}
 	}
 
 	public class Nodes {
@@ -280,6 +286,10 @@ public abstract class FragmentNode extends Model.Fields
 					.replaceChild(FragmentNode.this, other));
 			fragmentModel().register(other);
 		}
+
+		public void insertAsFirstChild(FragmentNode child) {
+			provideNode().insertAsFirstChild(child);
+		}
 	}
 
 	/*
@@ -297,13 +307,17 @@ public abstract class FragmentNode extends Model.Fields
 			this.value = value;
 		}
 
+		@Override
+		public void copyFromExternal(FragmentNode external) {
+			value = ((TextNode) external).value;
+		}
+
 		@Binding(type = Type.INNER_TEXT)
 		public String getValue() {
 			return this.value;
 		}
 
 		public void setValue(String value) {
-			Ax.err(">>%s", value);
 			set("value", this.value, value, () -> this.value = value);
 		}
 	}
@@ -315,5 +329,8 @@ public abstract class FragmentNode extends Model.Fields
 	@Target({ ElementType.TYPE })
 	public @interface Transformer {
 		Class<? extends NodeTransformer> value();
+	}
+
+	public void copyFromExternal(FragmentNode external) {
 	}
 }

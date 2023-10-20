@@ -164,7 +164,8 @@ public interface NodeTransformer {
 
 		@Override
 		public void apply(DirectedLayout.Node parentNode) {
-			Model model = new FragmentNode.Generic();
+			FragmentNode.Generic model = new FragmentNode.Generic();
+			model.tag = node.w3cElement().getTagName();
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}
