@@ -15,6 +15,7 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
@@ -24,6 +25,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.Transformer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -59,6 +61,19 @@ public abstract class FragmentNode extends Model.Fields
 
 	public Ancestors ancestors() {
 		return new Ancestors();
+	}
+
+	public void ensureComputedNodes() {
+		fragmentModel().ensureComputedNodes(this);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			provideNode().ensureChildren().topicNotifications
+					.add(this::onNotification);
+		}
 	}
 
 	@Override
@@ -332,5 +347,9 @@ public abstract class FragmentNode extends Model.Fields
 	}
 
 	public void copyFromExternal(FragmentNode external) {
+	}
+
+	void onNotification(NotifyingList.Notification notification) {
+		fragmentModel().onChildNodesNotification(this, notification);
 	}
 }

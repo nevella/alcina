@@ -51,7 +51,7 @@ public abstract class DirectedRenderer {
 		}
 	}
 
-	protected String getTag(Node node, String defaultTag) {
+	public static String defaultGetTag(Node node, String defaultTag) {
 		String tag = null;
 		/*
 		 * Only apply HasTag (tag from model) to the last (deepest) node for the
@@ -76,6 +76,10 @@ public abstract class DirectedRenderer {
 			return defaultTag;
 		}
 		return Ax.blankTo(tag, tagName(node.model.getClass()));
+	}
+
+	protected String getTag(Node node, String defaultTag) {
+		return defaultGetTag(node, defaultTag);
 	}
 
 	protected abstract void render(DirectedLayout.RendererInput input);

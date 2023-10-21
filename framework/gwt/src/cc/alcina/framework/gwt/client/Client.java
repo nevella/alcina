@@ -74,6 +74,10 @@ public abstract class Client implements ContextFrame {
 		CommitToStorageTransformListener.flushAndRun(runnable);
 	}
 
+	public static boolean has() {
+		return contextProvider != null;
+	}
+
 	public static Client get() {
 		return contextProvider.contextFrame();
 	}

@@ -29,6 +29,7 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.web.bindery.event.shared.SimpleEventBus;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
@@ -182,10 +183,6 @@ public class DirectedLayout implements AlcinaProcess {
 	static {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.INFO);
 	}
-
-	// FIXME - dirndl 1x2 - remove (required until decoupling from
-	// RnederContext)
-	public static Node current = null;
 
 	public static void dispatchModelEvent(ModelEvent modelEvent) {
 		/*
@@ -472,7 +469,7 @@ public class DirectedLayout implements AlcinaProcess {
 		final Object model;
 
 		// many below may be null if a 'simple' node (particularly a leaf)
-		List<Node> children;
+		NotifyingList<Node> children;
 
 		Rendered rendered;
 
@@ -496,7 +493,6 @@ public class DirectedLayout implements AlcinaProcess {
 			this.annotationLocation = annotationLocation;
 			this.model = model;
 			this.lastForModel = lastForModel;
-			current = this;
 			if (depth() > maxDepth && !checkedRecursion) {
 				checkRecursion();
 			}
@@ -822,9 +818,9 @@ public class DirectedLayout implements AlcinaProcess {
 			return depth;
 		}
 
-		List<Node> ensureChildren() {
+		NotifyingList<Node> ensureChildren() {
 			if (children == null) {
-				children = new ArrayList<>();
+				children = new NotifyingList<>(new ArrayList<>());
 			}
 			return children;
 		}
@@ -1238,8 +1234,15 @@ public class DirectedLayout implements AlcinaProcess {
 				if (Reflections.isAssignableFrom(handlerClass,
 						context.node.model.getClass())) {
 					handler = (NodeEvent.Handler) context.node.model;
-					((SimpleEventBus) Client.eventBus()).fireEventFromSource(
-							nodeEvent, context.node, List.of(handler));
+					if (Client.has()) {
+						SimpleEventBus eventBus = (SimpleEventBus) Client
+								.eventBus();
+						eventBus.fireEventFromSource(nodeEvent, context.node,
+								List.of(handler));
+					} else {
+						// pure-server
+						nodeEvent.dispatch(handler);
+					}
 				} else {
 					// dispatch a new ModelEvent, compute its type [receive,
 					// reemit] tuple in Directed.reemits

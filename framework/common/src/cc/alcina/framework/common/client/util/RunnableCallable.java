@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.common.client.util;
 
 import java.util.concurrent.Callable;
 

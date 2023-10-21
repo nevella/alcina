@@ -22,15 +22,13 @@ import com.totsp.gwittir.client.validator.ValidationFeedback;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.objecttree.IsRenderableFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
  *
- * //FIXME - dirndlx2 - delegate to DirectedContext (if there is one), and
- * deprecate (UI1 only)
+ * Deprecated (UI1 only)
  *
  * @author Nick Reddel
  *
@@ -98,12 +96,6 @@ public class RenderContext extends LooseContextInstance {
 
 	@Override
 	public <T> T get(String key) {
-		if (DirectedLayout.current != null) {
-			T t = DirectedLayout.current.resolveRenderContextProperty(key);
-			if (t != null) {
-				return t;
-			}
-		}
 		return super.get(key);
 	}
 

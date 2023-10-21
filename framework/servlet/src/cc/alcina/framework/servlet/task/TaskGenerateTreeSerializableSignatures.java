@@ -15,6 +15,8 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -57,6 +59,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 
  * @formatter:on
  */
+@Bean(PropertySource.FIELDS)
 public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 	public transient TreeSerializableSignatures signatures = new TreeSerializableSignatures();
 
