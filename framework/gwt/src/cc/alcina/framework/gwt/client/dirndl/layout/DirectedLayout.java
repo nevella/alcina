@@ -700,12 +700,21 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 			if (model instanceof LayoutEvents.Bind.Handler) {
+				boolean bind = true;
 				if (!lastForModel || !directed.bindToModel()) {
 					// only bind if last of a multiple node -> single model
 					// chain
-				} else if (!modelToRendered) {
-					// model.node will already be set
-				} else {
+					bind = false;
+				} else if (!modelToRendered && model instanceof HasNode
+						&& ((HasNode) model).provideIsBound()) {
+					/*
+					 * model.node will already be set in most cases (exceptions
+					 * are like 'FragmentNode.replaceWith', which regenerates
+					 * child node bindings)
+					 */
+					bind = false;
+				}
+				if (bind) {
 					((LayoutEvents.Bind.Handler) model)
 							.onBind(new LayoutEvents.Bind(this, true));
 				}
