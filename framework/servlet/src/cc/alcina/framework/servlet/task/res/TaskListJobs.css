@@ -5,13 +5,16 @@ body {
 tr:first-child td {
 	font-weight: bold;
 }
-table{
-	border-collapse:collapse;
+
+table {
+	border-collapse: collapse;
 }
 
-tr:hover,tr:hover td {
-	background-color:hsl(207deg 47% 96%);
+tr:hover,
+tr:hover td {
+	background-color: hsl(207deg 47% 96%);
 }
+
 td {
 	padding: 2px 8px;
 }
@@ -22,12 +25,13 @@ td.numeric {
 }
 
 td.numeric-right {
-	text-align:right;
-	padding-left:2em;
+	text-align: right;
+	padding-left: 2em;
 }
 
 
-td.date, td.links {
+td.date,
+td.links {
 	min-width: 150px;
 	white-space: nowrap;
 }
@@ -52,6 +56,12 @@ td.trim-medium {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-td.imperfect-state{
-	color:#777;
+
+td.imperfect-state {
+	color: #777;
+}
+
+td.imperfect-state.error-state {
+	color: #B00;
+	;
 }

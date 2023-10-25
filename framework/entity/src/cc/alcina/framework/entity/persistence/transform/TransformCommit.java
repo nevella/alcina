@@ -416,9 +416,6 @@ public class TransformCommit {
 
 	public static DomainTransformLayerWrapper commitTransforms(String tag,
 			boolean asRoot, boolean returnResponse) {
-		if (tag == null) {
-			tag = DomainTransformRequestTagProvider.get().getTag();
-		}
 		int cleared = TransformManager.get().removeCreateDeleteTransforms();
 		if (cleared != 0) {
 			logger.trace("Cleared {} created/deleted transforms", cleared);
@@ -734,6 +731,9 @@ public class TransformCommit {
 		request.setClientInstance(clientInstance);
 		if (tag == null && Configuration.is("tagTransformsWithThreadName")) {
 			tag = Thread.currentThread().getName();
+		}
+		if (tag == null) {
+			tag = DomainTransformRequestTagProvider.get().getTag();
 		}
 		request.setTag(tag);
 		request.setRequestId(requestId);
