@@ -23,6 +23,9 @@ import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFact
 public class TaskReapJobs extends PerformerTask {
 	@Override
 	public void run() throws Exception {
+		if (!Configuration.is("enabled")) {
+			return;
+		}
 		Stream<? extends Job> jobs = JobDomain.get().getAllJobs();
 		AtomicInteger counter = new AtomicInteger(0);
 		AtomicInteger reaped = new AtomicInteger(0);
