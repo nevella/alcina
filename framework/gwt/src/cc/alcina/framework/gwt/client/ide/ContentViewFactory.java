@@ -522,7 +522,7 @@ public class ContentViewFactory {
 
 	public BoundTableExt createTable(Collection beans, boolean editable,
 			int tableMask, Class type) {
-		List<Field> fields = BeanFields.query().forClass(type).forBean(beans)
+		List<Field> fields = BeanFields.query().forClass(type)
 				.asEditable(editable).forMultipleWidgetContainer(true)
 				.listFields();
 		if (fieldFilter != null) {
@@ -835,7 +835,8 @@ public class ContentViewFactory {
 
 		public NiceWidthBoundTable(int mask, List<Field> fields,
 				DataProvider provider) {
-			this(mask, (Field[]) fields.toArray(), provider);
+			this(mask, (Field[]) fields.toArray(new Field[fields.size()]),
+					provider);
 		}
 
 		@Override

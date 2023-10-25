@@ -708,7 +708,9 @@ public class BeanFields {
 
 		public FieldQuery forBean(Object bean) {
 			this.bean = bean;
-			forClass(bean.getClass());
+			if (bean != null) {
+				forClass(bean.getClass());
+			}
 			return this;
 		}
 
