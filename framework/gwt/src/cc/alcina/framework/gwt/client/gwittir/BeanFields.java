@@ -744,12 +744,16 @@ public class BeanFields {
 
 		public FieldQuery withEditableNamePredicate(
 				Predicate<String> editableNamePredicate) {
-			this.editableNamePredicate = editableNamePredicate;
+			if (editableNamePredicate != null) {
+				this.editableNamePredicate = editableNamePredicate;
+			}
 			return this;
 		}
 
 		public FieldQuery withResolver(AnnotationLocation.Resolver resolver) {
-			this.resolver = resolver;
+			if (resolver != null) {
+				this.resolver = resolver;
+			}
 			return this;
 		}
 

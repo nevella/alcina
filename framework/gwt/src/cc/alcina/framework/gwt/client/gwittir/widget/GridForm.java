@@ -152,7 +152,8 @@ public class GridForm extends AbstractTableWidget
 
 	private GridFormCellRenderer cellRenderer;
 
-	public GridForm(Field[] fields, int columns, GridFormCellRenderer cellRenderer) {
+	public GridForm(Field[] fields, int columns,
+			GridFormCellRenderer cellRenderer) {
 		this.cellRenderer = cellRenderer;
 		this.fields = fields;
 		this.columns = columns;
@@ -162,7 +163,8 @@ public class GridForm extends AbstractTableWidget
 
 	public GridForm(List<Field> fieldList, int columns,
 			GridFormCellRenderer cellRenderer) {
-		this((Field[]) fieldList.toArray(), columns, cellRenderer);
+		this((Field[]) fieldList.toArray(new Field[fieldList.size()]), columns,
+				cellRenderer);
 	}
 
 	public void addButtonWidget(Widget widget) {
