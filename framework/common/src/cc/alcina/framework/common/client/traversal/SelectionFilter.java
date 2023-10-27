@@ -23,6 +23,7 @@ public class SelectionFilter extends Model implements TreeSerializable {
 
 	private transient Map<String, SelectionFilter.GenerationEntry> entriesByGeneration;
 
+	// TODO - change to 'LayerFilter' generation to Class<? extends Layer>
 	public GenerationEntry addGenerationFilter(Object generation,
 			String pathSegmentRegex) {
 		SelectionFilter.GenerationEntry entry = new GenerationEntry(generation,

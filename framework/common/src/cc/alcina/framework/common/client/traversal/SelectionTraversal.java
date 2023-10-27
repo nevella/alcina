@@ -489,7 +489,7 @@ public class SelectionTraversal
 				&& selectionExceptions.size() >= filter.getMaxExceptions()) {
 			return false;
 		}
-		String generationName = state.currentLayer.name.toString();
+		String generationName = state.currentLayer.getName();
 		if (filter.hasGenerationFilter(generationName)) {
 			if (filter.matchesGenerationFilter(generationName,
 					selection.getFilterableSegments())) {
@@ -912,7 +912,7 @@ public class SelectionTraversal
 			public String getKey() {
 				FormatBuilder keyBuilder = new FormatBuilder();
 				keyBuilder.indent(layer.depth());
-				keyBuilder.append(layer.name);
+				keyBuilder.append(layer.getName());
 				return keyBuilder.toString();
 			}
 

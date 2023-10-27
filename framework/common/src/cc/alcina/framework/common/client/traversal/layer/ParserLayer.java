@@ -4,10 +4,6 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 
 public abstract class ParserLayer<S extends Selection> extends Layer<S> {
-	public ParserLayer(Class<S> input, Class<? extends Selection>... outputs) {
-		super(input, outputs);
-	}
-
 	protected void onBeforeDetach(LayerParser layerParser) {
 	}
 

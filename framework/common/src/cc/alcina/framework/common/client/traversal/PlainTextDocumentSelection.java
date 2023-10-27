@@ -43,9 +43,7 @@ public class PlainTextDocumentSelection extends TextSelection
 			extends Layer<I> {
 		private Function<I, O> transform;
 
-		public TransformLayer(Class<I> input, Class<O> output,
-				Function<I, O> transform) {
-			super(input, output);
+		public TransformLayer(Function<I, O> transform) {
 			this.transform = transform;
 		}
 
