@@ -22,8 +22,8 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *
  *
  */
-public abstract class Layer<S extends Selection> implements
-		SelectionTraversal.Generation, Selector<S, Selection>, Iterable<S> {
+public abstract class Layer<S extends Selection>
+		implements Selector<S, Selection>, Iterable<S> {
 	List<Layer<?>> children = new ArrayList<>();
 
 	Layer<?> parent;
@@ -34,12 +34,16 @@ public abstract class Layer<S extends Selection> implements
 
 	protected Layer inputsFromLayer;
 
+	protected Layer inputsToLayer;
+
 	public void inputsFromLayer(Layer inputsFromLayer) {
 		this.inputsFromLayer = inputsFromLayer;
 	}
 
 	public void inputsFromPreviousSiblingLayer() {
-		this.inputsFromLayer = parent.children.get(parent.children.size() - 2);
+		Layer<?> fromLayer = parent.children.get(parent.children.size() - 2);
+		this.inputsFromLayer = fromLayer;
+		fromLayer.inputsToLayer = this;
 	}
 
 	public Layer() {
@@ -239,5 +243,9 @@ public abstract class Layer<S extends Selection> implements
 
 	public String getName() {
 		return NestedNameProvider.get(this);
+	}
+
+	public boolean hasReceivingLayer() {
+		return inputsToLayer != null;
 	}
 }

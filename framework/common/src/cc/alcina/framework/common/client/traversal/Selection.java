@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.traversal.SelectionTraversal.Generation;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -78,11 +77,10 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return Collections.singletonList(getPathSegment());
 	};
 
-	default void onDuplicatePathSelection(Generation generation,
-			Selection selection) {
+	default void onDuplicatePathSelection(Layer layer, Selection selection) {
 		throw new IllegalArgumentException(
 				Ax.format("Duplicate selection path: %s :: %s",
-						selection.getPathSegment(), generation));
+						selection.getPathSegment(), layer));
 	};
 
 	default Selection parentSelection() {
