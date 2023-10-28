@@ -49,12 +49,12 @@ import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.common.client.util.ToStringFunction;
-import cc.alcina.framework.common.client.util.ToStringFunction.Bidi;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Bidi;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
@@ -811,8 +811,8 @@ public class DirectedLayout implements AlcinaProcess {
 			 * During normal rendering there will be no children - this handles
 			 * reverse-model node movements (e.g. wrapping, re-parenting)
 			 */
-			if (children != null) {
-				children.forEach(c -> c.bind(modelToRendered));
+			if (children != null && !modelToRendered) {
+				children.forEach(c -> c.bind(false));
 			}
 		}
 
@@ -1397,6 +1397,10 @@ public class DirectedLayout implements AlcinaProcess {
 
 			void setLeft() {
 				Property property = getProperty();
+				if (property == null) {
+					// literatl
+					return;
+				}
 				String stringValue = null;
 				Rendered rendered = verifySingleRendered();
 				Element element = rendered.isElement() ? rendered.asElement()
