@@ -134,6 +134,9 @@ public abstract class DevConsole implements ClipboardOwner {
 		devOut.s2 = new NullPrintStream();
 		System.setErr(err);
 		System.setOut(out);
+		// headless
+		System.setProperty("java.awt.headless", "true");
+		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
 		File devConsoleRegistry = new File(
 				"/g/alcina/extras/dev/bin/registry.properties");
 		if (!devConsoleRegistry.exists()
@@ -940,9 +943,6 @@ public abstract class DevConsole implements ClipboardOwner {
 		if (!headless) {
 			throw new UnsupportedOperationException();
 		}
-		// headless
-		System.setProperty("java.awt.headless", "true");
-		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
 		clear();
 		MetricLogging.get().setStart("init-console", statStartInit);
 		MetricLogging.get().end("init-console");
