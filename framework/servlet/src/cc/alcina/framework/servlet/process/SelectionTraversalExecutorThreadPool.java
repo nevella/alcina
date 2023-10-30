@@ -13,10 +13,10 @@ import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.util.AlcinaParallel;
 
 @Registration.Singleton
-public class SelectionTraversalExecutorImpl
+public class SelectionTraversalExecutorThreadPool
 		implements SelectionTraversal.Executor {
-	public static SelectionTraversalExecutorImpl get() {
-		return Registry.impl(SelectionTraversalExecutorImpl.class);
+	public static SelectionTraversalExecutorThreadPool get() {
+		return Registry.impl(SelectionTraversalExecutorThreadPool.class);
 	}
 
 	private List<Runnable> runnables = new ArrayList<>();
@@ -25,7 +25,7 @@ public class SelectionTraversalExecutorImpl
 
 	private boolean serial;
 
-	public SelectionTraversalExecutorImpl() {
+	public SelectionTraversalExecutorThreadPool() {
 		executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
 				Configuration.getInt("threadCount"),
 				new NamedThreadFactory("SelectionTraversal-ExecutorImpl"));

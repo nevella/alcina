@@ -9,13 +9,13 @@ public abstract class HttpUrlSelector<I extends AbstractUrlSelection, O extends 
 	public static class Dom<I extends AbstractUrlSelection, O extends DomSelection.Document>
 			extends HttpUrlSelector<I, O> {
 		@Override
-		public void process(SelectionTraversal traversal, I selection) {
+		public void process(I selection) {
 			DomDocument domDocument = DomEnvironment.get()
 					.loadFromUrl(selection.get());
 			Document<DomDocument> out = new DomSelection.Document<DomDocument>(
 					selection, domDocument,
 					domDocument.getDocumentElementNode().name());
-			traversal.select(out);
+			// state.select(out);
 		}
 	}
 }

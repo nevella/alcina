@@ -129,8 +129,7 @@ public abstract class Layer<S extends Selection>
 	}
 
 	@Override
-	public void process(SelectionTraversal traversal, S selection)
-			throws Exception {
+	public void process(S selection) throws Exception {
 		// if this layer processes no inputs, its children must
 		Preconditions.checkState(children.size() > 0);
 	}
@@ -239,6 +238,10 @@ public abstract class Layer<S extends Selection>
 		public State(SelectionTraversal.State traversalState) {
 			this.traversalState = traversalState;
 		}
+
+		public void select(Selection selection) {
+			traversalState.select(selection);
+		}
 	}
 
 	public String getName() {
@@ -247,5 +250,9 @@ public abstract class Layer<S extends Selection>
 
 	public boolean hasReceivingLayer() {
 		return inputsToLayer != null;
+	}
+
+	public String getFilterName() {
+		return getClass().getName();
 	}
 }

@@ -19,5 +19,5 @@ public interface Selector<I extends Selection, O extends Selection> {
 		return true;
 	}
 
-	void process(SelectionTraversal traversal, I selection) throws Exception;
+	void process(I selection) throws Exception;
 }

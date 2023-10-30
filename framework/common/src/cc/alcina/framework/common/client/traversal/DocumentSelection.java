@@ -64,6 +64,12 @@ public abstract class DocumentSelection extends MeasureSelection {
 		return measure;
 	}
 
+	@Override
+	public void releaseResources() {
+		super.releaseResources();
+		document = null;
+	}
+
 	public interface Loader<S extends Selection> {
 		DomDocument load(S selection) throws Exception;
 
@@ -79,9 +85,8 @@ public abstract class DocumentSelection extends MeasureSelection {
 		}
 
 		@Override
-		public void process(SelectionTraversal traversal, I selection)
-				throws Exception {
-			traversal.select(transform.apply(selection));
+		public void process(I selection) throws Exception {
+			state.select(transform.apply(selection));
 		}
 	}
 }

@@ -48,9 +48,8 @@ public class PlainTextDocumentSelection extends TextSelection
 		}
 
 		@Override
-		public void process(SelectionTraversal traversal, I selection)
-				throws Exception {
-			traversal.select(transform.apply(selection));
+		public void process(I selection) throws Exception {
+			state.select(transform.apply(selection));
 		}
 	}
 }

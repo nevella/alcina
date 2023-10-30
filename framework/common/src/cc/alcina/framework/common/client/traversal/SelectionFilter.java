@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedNameProvider;
 
 public class SelectionFilter extends Bindable.Fields
 		implements TreeSerializable {
@@ -20,49 +21,50 @@ public class SelectionFilter extends Bindable.Fields
 
 	public int maxExceptions = 0;
 
-	public List<SelectionFilter.LayerEntry> layers = new ArrayList<>();
+	public List<SelectionFilter.SelectionClassEntry> filters = new ArrayList<>();
 
-	private transient Map<String, SelectionFilter.LayerEntry> entriesByLayer;
+	private transient Map<Class<? extends Selection>, SelectionFilter.SelectionClassEntry> filtersByClass;
 
-	public LayerEntry addLayerFilter(Class<? extends Layer> layer,
+	public SelectionClassEntry addLayerFilter(
+			Class<? extends Selection> selectionClass,
 			String pathSegmentRegex) {
-		SelectionFilter.LayerEntry entry = new LayerEntry(layer,
-				pathSegmentRegex);
-		layers.add(entry);
+		SelectionFilter.SelectionClassEntry entry = new SelectionClassEntry(
+				selectionClass, pathSegmentRegex);
+		filters.add(entry);
 		return entry;
 	}
 
 	public void copyFrom(SelectionFilter other) {
 		allLayersLimit = other.allLayersLimit;
-		layers = other.layers;
+		filters = other.filters;
 		maxExceptions = other.maxExceptions;
-		entriesByLayer = null;
+		filtersByClass = null;
 	}
 
-	public boolean hasLayerFilter(String layer) {
-		return entriesByLayer.containsKey(layer);
+	public boolean
+			hasSelectionFilter(Class<? extends Selection> selectionClass) {
+		return filtersByClass.containsKey(selectionClass);
 	}
 
-	public boolean matchesLayerFilter(String layer, List<String> list) {
-		return entriesByLayer.get(layer).matches(list);
+	public boolean matchesSelectionTypeFilter(
+			Class<? extends Selection> selectionClass, List<String> list) {
+		return filtersByClass.get(selectionClass).matches(list);
 	}
 
 	public void prepareToFilter() {
-		layers.forEach(SelectionFilter.LayerEntry::prepareToFilter);
-		entriesByLayer = layers.stream().collect(
-				AlcinaCollectors.toKeyMap(SelectionFilter.LayerEntry::_layer));
+		filters.forEach(SelectionFilter.SelectionClassEntry::prepareToFilter);
+		filtersByClass = filters.stream().collect(AlcinaCollectors.toKeyMap(
+				SelectionFilter.SelectionClassEntry::_selectionClass));
 	}
 
 	public boolean provideNotEmpty() {
-		return allLayersLimit != 0 || layers.size() != 0 || maxExceptions != 0;
+		return allLayersLimit != 0 || filters.size() != 0 || maxExceptions != 0;
 	}
 
-	public static class LayerEntry extends Bindable.Fields
+	public static class SelectionClassEntry extends Bindable.Fields
 			implements TreeSerializable {
-		public String layer;
-
-		public String _layer() {
-			return layer;
+		public Class<? extends Selection> _selectionClass() {
+			return selectionClass;
 		}
 
 		public String filterRegex;
@@ -73,11 +75,14 @@ public class SelectionFilter extends Bindable.Fields
 
 		public int logCount;
 
-		public LayerEntry() {
+		Class<? extends Selection> selectionClass;
+
+		public SelectionClassEntry() {
 		}
 
-		public LayerEntry(Class<? extends Layer> layer, String filterRegex) {
-			this.layer = layer.toString();
+		public SelectionClassEntry(Class<? extends Selection> selectionClass,
+				String filterRegex) {
+			this.selectionClass = selectionClass;
 			this.filterRegex = filterRegex;
 		}
 
@@ -92,7 +97,8 @@ public class SelectionFilter extends Bindable.Fields
 			synchronized (this) {
 				if (logCount != 0) {
 					logCount--;
-					logger.info("Layer filter: {} : {} : {}", layer, list,
+					logger.info("Selection class filter: {} : {} : {}",
+							NestedNameProvider.get(selectionClass), list,
 							result);
 				}
 			}
@@ -101,7 +107,8 @@ public class SelectionFilter extends Bindable.Fields
 
 		@Override
 		public String toString() {
-			return Ax.format("Filter entry :: %s :: %s", layer, filterRegex);
+			return Ax.format("Filter entry :: %s :: %s",
+					NestedNameProvider.get(selectionClass), filterRegex);
 		}
 
 		void prepareToFilter() {
