@@ -321,7 +321,8 @@ public class SelectionTraversal
 		void onBeforeLayerTraversal() {
 			if (!(currentLayer instanceof InputsFromPreviousSibling)) {
 				Class<?> inputType = currentLayer.inputType;
-				if (EmittedBySoleLayer.class.isAssignableFrom(inputType)) {
+				if (Reflections.isAssignableFrom(EmittedBySoleLayer.class,
+						inputType)) {
 					return;
 				}
 				SelectionLayers layerSelections = layersByInput.get(inputType);
