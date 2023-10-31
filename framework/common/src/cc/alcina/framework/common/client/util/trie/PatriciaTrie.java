@@ -209,7 +209,7 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 	 * This is implemented by going always to the right until we encounter a
 	 * valid uplink. That uplink is the last key.
 	 */
-	private TrieEntry<K, V> lastEntry() {
+	public TrieEntry<K, V> lastEntry() {
 		return followRight(root.getLeft());
 	}
 
