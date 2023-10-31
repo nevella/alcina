@@ -804,13 +804,13 @@ class HasDataPresenter<T>
 							selectionModel.setSelected(oldValue, false);
 						}
 						// Select the new value.
-						newselectedValue = newValue;
+						newState.selectedValue = newValue;
 						if (newValue != null && !newValueWasSelected) {
 							selectionModel.setSelected(newValue, true);
 						}
 					} else if (!newValueWasSelected) {
 						// The value was programmatically deselected.
-						newselectedValue = null;
+						newState.selectedValue = null;
 					}
 				}
 			}
@@ -843,7 +843,7 @@ class HasDataPresenter<T>
 				// Compare to the old selection state.
 				boolean wasSelected = oldState.isRowSelected(i);
 				if (isSelected) {
-					newselectedRows.add(i);
+					newState.selectedRows.add(i);
 					newlySelectedRows.add(i);
 					if (!wasSelected) {
 						modifiedRows.push(i);
@@ -888,8 +888,8 @@ class HasDataPresenter<T>
 			// Propagate modifications to the temporary pending state into the
 			// new
 			// pending state instance.
-			pendingselectedValue = newselectedValue;
-			pendingselectedRows.addAll(newlySelectedRows);
+			pendingState.selectedValue = newState.selectedValue;
+			pendingState.selectedRows.addAll(newlySelectedRows);
 			if (keyboardRowChanged) {
 				pendingState.keyboardSelectedRowChanged = true;
 			}
