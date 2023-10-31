@@ -22,8 +22,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *
  *
  */
-public abstract class Layer<S extends Selection>
-		implements Selector<S, Selection>, Iterable<S> {
+public abstract class Layer<S extends Selection> implements Iterable<S> {
 	List<Layer<?>> children = new ArrayList<>();
 
 	Layer<?> parent;
@@ -128,7 +127,6 @@ public abstract class Layer<S extends Selection>
 		state = new State(traversalState);
 	}
 
-	@Override
 	public void process(S selection) throws Exception {
 		// if this layer processes no inputs, its children must
 		Preconditions.checkState(children.size() > 0);
@@ -198,8 +196,8 @@ public abstract class Layer<S extends Selection>
 		state.iterationSubmitted = 0;
 	}
 
-	protected void select(Selection selection) {
-		state.traversalState.select(selection);
+	public void select(Selection selection) {
+		state.select(selection);
 	}
 
 	protected <T extends Selection> T selection(Class<T> clazz) {
@@ -239,7 +237,7 @@ public abstract class Layer<S extends Selection>
 			this.traversalState = traversalState;
 		}
 
-		public void select(Selection selection) {
+		void select(Selection selection) {
 			traversalState.select(selection);
 		}
 	}

@@ -49,7 +49,7 @@ public class PlainTextDocumentSelection extends TextSelection
 
 		@Override
 		public void process(I selection) throws Exception {
-			state.select(transform.apply(selection));
+			select(transform.apply(selection));
 		}
 	}
 }

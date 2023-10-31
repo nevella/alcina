@@ -86,7 +86,7 @@ public abstract class DocumentSelection extends MeasureSelection {
 
 		@Override
 		public void process(I selection) throws Exception {
-			state.select(transform.apply(selection));
+			select(transform.apply(selection));
 		}
 	}
 }

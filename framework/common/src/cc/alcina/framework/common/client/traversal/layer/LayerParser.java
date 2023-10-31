@@ -80,7 +80,7 @@ public class LayerParser {
 		inputState.matches.stream()
 				.map(measure -> ((MatchingToken) measure.token)
 						.select(inputState, measure))
-				.filter(Objects::nonNull).forEach(parserPeer.traversal::select);
+				.filter(Objects::nonNull).forEach(parserPeer.layer::select);
 	}
 
 	public void setForwardsTraversalOrder(boolean forwardsTraversalOrder) {

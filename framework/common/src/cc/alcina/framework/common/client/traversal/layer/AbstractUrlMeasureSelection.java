@@ -4,11 +4,11 @@ import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.HasUrl;
 
-public abstract class AbstractUrlMeasureSlection extends AbstractUrlSelection
+public abstract class AbstractUrlMeasureSelection extends AbstractUrlSelection
 		implements HasUrl {
 	private final Measure measure;
 
-	public AbstractUrlMeasureSlection(Selection parent, Measure measure,
+	public AbstractUrlMeasureSelection(Selection parent, Measure measure,
 			String url) {
 		super(parent, url, url);
 		this.measure = measure;

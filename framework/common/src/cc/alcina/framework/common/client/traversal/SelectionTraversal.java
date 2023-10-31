@@ -2,9 +2,11 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -12,6 +14,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.web.bindery.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
@@ -22,6 +25,8 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal.State.SelectionLayers.LayerSelections;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -46,16 +51,11 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * 		for each l
  *          for all inputs appropriate to l (computedInputs)
  *              for each input, produce new selections 
- *          if new inputs for l, repeat layer
+ *          if new inputs are generated for a previous layer, rewind to that layer
+ *           otherwise continue to the next layer
  *  }
  * </pre>
  *
- *
- *
- * 
- */
-/*
- * FIXME - st - reinstate filters for layer-based traversal - also progress...?
  */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {
@@ -233,6 +233,7 @@ public class SelectionTraversal
 			}
 			if (add) {
 				size++;
+				state.onSelectionAdded(selection);
 				selectionAdded.publish(selection);
 			}
 			return add;
@@ -257,6 +258,13 @@ public class SelectionTraversal
 		}
 	}
 
+	/*
+	 * Note that Layer.State is reset each time the layer is processed, so
+	 * per-layer state that lasts the entire traversal lifetime is stored here
+	 * 
+	 * CLEAN - it'd be cleaner to have per-layer persistent state attached to
+	 * the layer
+	 */
 	public class State {
 		public Layer<?> currentLayer;
 
@@ -270,7 +278,25 @@ public class SelectionTraversal
 			return rootLayer.findHandlingLayer(value.getClass());
 		}
 
-		public void select(Selection selection) {
+		void onSelectionAdded(Selection selection) {
+			if (currentLayer != null) {
+				SelectionLayers layerSelections = layersByInput
+						.get(selection.getClass());
+				if (layerSelections != null) {
+					layerSelections.onSelectionAdded(selection);
+				}
+			}
+		}
+
+		synchronized void onSelectionProcessed(Selection selection) {
+			LayerSelections layerSelections = selectionsByLayer
+					.get(currentLayer);
+			if (layerSelections != null) {
+				layerSelections.onSelectionProcessed(selection);
+			}
+		}
+
+		void select(Selection selection) {
 			SelectionTraversal.this.select(selection);
 		}
 
@@ -286,6 +312,82 @@ public class SelectionTraversal
 		public <S extends Selection> List<S> getSelections(
 				Class<? extends S> clazz, boolean includeSubclasses) {
 			return selections.get(clazz, includeSubclasses);
+		}
+
+		Map<Class<? extends Selection>, SelectionLayers> layersByInput = new LinkedHashMap<>();
+
+		Map<Layer, SelectionLayers.LayerSelections> selectionsByLayer = new LinkedHashMap<>();
+
+		void onBeforeLayerTraversal() {
+			if (!(currentLayer instanceof InputsFromPreviousSibling)) {
+				SelectionLayers layerSelections = layersByInput
+						.get(currentLayer.inputType);
+				if (layerSelections == null) {
+					layersByInput.put(currentLayer.inputType,
+							new SelectionLayers());
+				}
+				layersByInput.get(currentLayer.inputType).add(currentLayer);
+				selectionsByLayer.get(currentLayer).dirty = false;
+			}
+		}
+
+		/*
+		 * handles groups of layers which receive the same input type, tracking
+		 * their dirty state (for rewind)
+		 */
+		class SelectionLayers {
+			void add(Layer layer) {
+				if (layers.containsKey(layer)) {
+					return;
+				}
+				Preconditions.checkState(layers.isEmpty() || layers.keySet()
+						.stream().anyMatch(l -> layer.parent == l));
+				LayerSelections layerSelections = new LayerSelections(layer);
+				layers.put(layer, layerSelections);
+				selectionsByLayer.put(layer, layerSelections);
+			}
+
+			void onSelectionAdded(Selection selection) {
+				layers.values().forEach(ls -> ls.dirty = true);
+			}
+
+			Map<Layer, LayerSelections> layers = new LinkedHashMap<>();
+
+			class LayerSelections {
+				LayerSelections(Layer layer) {
+					this.layer = layer;
+				}
+
+				void onSelectionProcessed(Selection selection) {
+					processed.add(selection);
+				}
+
+				Layer layer;
+
+				Set<Selection> processed = AlcinaCollections.newUniqueSet();
+
+				boolean dirty;
+			}
+		}
+
+		/*
+		 * If inputs were created for a previous layer, rewind to that layer
+		 */
+		void onAfterTraversal() {
+			Optional<LayerSelections> firstDirty = selectionsByLayer.values()
+					.stream().filter(ls -> ls.dirty).findFirst();
+			if (firstDirty.isPresent()) {
+				Layer layer = firstDirty.get().layer;
+				logger.info("  --> Rewind :: {}", layer.getName());
+				layerTraversal.setNext(layer);
+			}
+		}
+
+		boolean wasProcessed(Selection selection) {
+			LayerSelections layerSelections = state.selectionsByLayer
+					.get(currentLayer);
+			return layerSelections != null
+					&& layerSelections.processed.contains(selection);
 		}
 	}
 
@@ -445,9 +547,6 @@ public class SelectionTraversal
 		// return filter;
 	}
 
-	/*
-	 * Add to both new and old (1,2) selection trackers
-	 */
 	public void select(Selection selection) {
 		state.selections.add(selection);
 	}
@@ -490,13 +589,15 @@ public class SelectionTraversal
 		for (Layer<?> layer : state.layerTraversal) {
 			Layer untyped = layer;
 			state.currentLayer = layer;
+			state.onBeforeLayerTraversal();
 			layer.onBeforeTraversal(state);
 			ProcessObservers.publish(LayerEntry.class, () -> new LayerEntry());
 			for (;;) {
 				layer.onBeforeIteration();
 				try {
 					for (Selection selection : layer) {
-						if (untyped.submit(selection)) {
+						if (!state.wasProcessed(selection)
+								&& untyped.submit(selection)) {
 							executor.submit(() -> processSelection(selection));
 						}
 					}
@@ -512,6 +613,7 @@ public class SelectionTraversal
 					break;
 				}
 			}
+			state.onAfterTraversal();
 		}
 		ProcessObservers.publish(LayerExit.class, () -> new LayerExit());
 	}
@@ -553,6 +655,7 @@ public class SelectionTraversal
 			exitSelectionContext(selection);
 			selection.processNode().setSelfComplete(true);
 			releaseCompletedSelections(selection);
+			state.onSelectionProcessed(selection);
 			selectionProcessed.publish(selection);
 		}
 	}
