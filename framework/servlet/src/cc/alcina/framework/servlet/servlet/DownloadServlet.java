@@ -37,6 +37,7 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.SimpleHttp;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 
 /**
  *
@@ -52,18 +53,23 @@ public class DownloadServlet extends HttpServlet {
 
 	public static String add(DownloadItem item) {
 		items.put(item.id, item);
-		Ax.out("Added download at /downloadServlet.do?id=%s", item.id);
 		String remoteRegistrationUrl = Configuration
 				.get("remoteRegistrationUrl");
 		if (Ax.notBlank(remoteRegistrationUrl)) {
 			try {
 				registerRemote(Io.read().path(item.tmpFileName).asBytes(),
 						item.fileName, item.mimeType, item.id);
-				Ax.out("Registered remote download %s at %s", item.id,
-						remoteRegistrationUrl);
+				Ax.out("Registered remote download \n\t%s?id=%s",
+						remoteRegistrationUrl, item.id);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		} else {
+			String hostAndProtocol = Ax.blankTo(
+					Configuration.get("remoteDownloadHostAndProtocol"),
+					EntityLayerUtils.getLocalHostName());
+			Ax.out("Registered remote download \n\thttp://%s/downloadServlet.do?id=%s",
+					hostAndProtocol, item.id);
 		}
 		return item.id;
 	}
