@@ -60,6 +60,14 @@ public class MutationRecord {
 		}
 	}
 
+	public static MutationRecord generateDocumentInsert(String markup) {
+		MutationRecord creationRecord = new MutationRecord();
+		creationRecord.type = Type.childList;
+		// note - no parent
+		creationRecord.newValue = markup;
+		return creationRecord;
+	}
+
 	/**
 	 * Creates a list of mutations which would recreate the (shallow) node
 	 *
