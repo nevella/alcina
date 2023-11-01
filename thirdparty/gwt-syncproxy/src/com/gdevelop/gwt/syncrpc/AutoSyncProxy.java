@@ -43,9 +43,8 @@ import com.google.gwt.user.server.rpc.SerializationPolicy;
  *         classpath. This will not detect if the code being tested is different
  *         than the code deployed to the tested server.
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class AutoSyncProxy implements Serializable {
-	
-
 	private static final transient String GWT_RPC_POLICY_FILE_EXT = ".gwt.rpc";
 
 	public static Object getProxyInstance(Class serviceIntf,
@@ -85,7 +84,6 @@ public class AutoSyncProxy implements Serializable {
 
 	// this contains the service and the policyname
 	private Map<String, String> policyMap = new HashMap<String, String>();
-	
 
 	// this contains the policyname and the SerializationPolicy
 	private transient Map<String, SerializationPolicy> serializationPolicyMap = new HashMap<String, SerializationPolicy>();
@@ -113,7 +111,6 @@ public class AutoSyncProxy implements Serializable {
 	 * @return A new proxy object which implements the service interface
 	 *         serviceIntf
 	 */
-	
 	private Object newProxyInstance(Class serviceIntf, String moduleBaseURL,
 			String remoteServiceRelativePath,
 			boolean failingProxyOnRetrieveFail, String policyFileName,
@@ -123,12 +120,11 @@ public class AutoSyncProxy implements Serializable {
 					savePathForOffline);
 		} catch (Exception e) {
 			if (failingProxyOnRetrieveFail) {
-				return Proxy
-						.newProxyInstance(SyncProxy.class.getClassLoader(),
-								new Class[] { serviceIntf },
-								new FailAsyncCallHandler(moduleBaseURL,
-										remoteServiceRelativePath, "",
-										DEFAULT_SESSION_MANAGER));
+				return Proxy.newProxyInstance(SyncProxy.class.getClassLoader(),
+						new Class[] { serviceIntf },
+						new FailAsyncCallHandler(moduleBaseURL,
+								remoteServiceRelativePath, "",
+								DEFAULT_SESSION_MANAGER));
 			} else {
 				throw new RuntimeException(e);
 			}
@@ -149,8 +145,8 @@ public class AutoSyncProxy implements Serializable {
 		moduleBaseURL = moduleBaseURL.trim(); // remove outer trim just in case
 		List<String> guessAllGwtPolicyName = null;
 		if (policyFileName != null) {
-			guessAllGwtPolicyName = RpcFinderUtil.guessAllGwtPolicyName(
-					moduleBaseURL, policyFileName);
+			guessAllGwtPolicyName = RpcFinderUtil
+					.guessAllGwtPolicyName(moduleBaseURL, policyFileName);
 		} else {
 			guessAllGwtPolicyName = RpcFinderUtil
 					.guessAllGwtPolicyName(moduleBaseURL);
@@ -167,17 +163,18 @@ public class AutoSyncProxy implements Serializable {
 		}
 		if (savePathForOffline != null) {
 			if (policyMap.size() > 0) {
-				this.getRequestCache=RpcFinderUtil.getRequestCache;
+				this.getRequestCache = RpcFinderUtil.getRequestCache;
 				writeObject(this, savePathForOffline);
 			} else {
 				AutoSyncProxy prior = readObject(new AutoSyncProxy(),
 						savePathForOffline);
 				policyMap = prior.policyMap;
-				RpcFinderUtil.getRequestCache=prior.getRequestCache;
-				for(String policyName:policyMap.values()){
+				RpcFinderUtil.getRequestCache = prior.getRequestCache;
+				for (String policyName : policyMap.values()) {
 					String policyUrl = moduleBaseURL + "/" + policyName
 							+ GWT_RPC_POLICY_FILE_EXT;
-					SerializationPolicy p = RpcFinderUtil.getSchedulePolicy(policyUrl);
+					SerializationPolicy p = RpcFinderUtil
+							.getSchedulePolicy(policyUrl);
 					serializationPolicyMap.put(policyName, p);
 				}
 			}
@@ -189,8 +186,8 @@ public class AutoSyncProxy implements Serializable {
 		if (!cacheFile.exists()) {
 			return null;
 		}
-		ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(
-				new FileInputStream(cacheFile)));
+		ObjectInputStream ois = new ObjectInputStream(
+				new BufferedInputStream(new FileInputStream(cacheFile)));
 		V value = (V) ois.readObject();
 		ois.close();
 		return value;
@@ -209,7 +206,8 @@ public class AutoSyncProxy implements Serializable {
 	static class FailAsyncCallHandler extends RemoteServiceInvocationHandler {
 		public FailAsyncCallHandler(String moduleBaseURL,
 				String remoteServiceRelativePath,
-				String serializationPolicyName, SessionManager connectionManager) {
+				String serializationPolicyName,
+				SessionManager connectionManager) {
 			super(moduleBaseURL, remoteServiceRelativePath,
 					serializationPolicyName, connectionManager);
 		}

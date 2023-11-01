@@ -56,7 +56,7 @@ public class NotifyingList<T> implements List<T> {
 		return delegate.toArray();
 	}
 
-	public <T> T[] toArray(T[] a) {
+	public <E> E[] toArray(E[] a) {
 		return delegate.toArray(a);
 	}
 

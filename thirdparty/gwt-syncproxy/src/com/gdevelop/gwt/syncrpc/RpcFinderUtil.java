@@ -38,12 +38,14 @@ import com.google.gwt.user.server.rpc.SerializationPolicyLoader;
  * @author dhartford This is a pretty heavyweight prototype class for use with
  *         AutoSyncProxy, can be improved upon.
  */
+@SuppressWarnings({ "rawtypes", "deprecation" })
 public class RpcFinderUtil {
 	private static final String NOCACHEJS = ".nocache.js";
-	
-	public static Map<String,String> getRequestCache=new LinkedHashMap<String, String>();
+
+	public static Map<String, String> getRequestCache = new LinkedHashMap<String, String>();
+
 	private static String getResponseText(String myurl) throws IOException {
-		if(getRequestCache.containsKey(myurl)){
+		if (getRequestCache.containsKey(myurl)) {
 			return getRequestCache.get(myurl);
 		}
 		URL url = new URL(myurl);
@@ -64,14 +66,14 @@ public class RpcFinderUtil {
 		getRequestCache.put(myurl, responseText);
 		return responseText;
 	}
-	
-	public static List<String> guessAllGwtPolicyName(String baseurlwithendingslash, String policyFileName) {
+
+	public static List<String> guessAllGwtPolicyName(
+			String baseurlwithendingslash, String policyFileName) {
 		String url = baseurlwithendingslash + policyFileName;
 		String response = "";
 		try {
 			response = getResponseText(url);
 		} catch (IOException e) {
-			
 			e.printStackTrace();
 		}
 		List<String> findRpcNames = findGwtNames(response);
@@ -89,12 +91,10 @@ public class RpcFinderUtil {
 		return gwtRpcValidatedList;
 	}
 
-	public static List<String> guessAllGwtPolicyName(
-			String baseurlwithendingslash) {
-		
+	public static List<String>
+			guessAllGwtPolicyName(String baseurlwithendingslash) {
 		String[] urlparts = baseurlwithendingslash.split("/");
 		String nocachejs = urlparts[urlparts.length - 1] + NOCACHEJS;
-		
 		String surl = baseurlwithendingslash + nocachejs;
 		String responseText = "";
 		try {
@@ -105,7 +105,7 @@ public class RpcFinderUtil {
 		// System.out.println(responseText);
 		List<String> findGwtNames = findGwtNames(responseText);
 		for (Iterator iterator = findGwtNames.iterator(); iterator.hasNext();) {
-			String string = (String) iterator.next();
+			// String string = (String) iterator.next();
 			// System.out.println("top: " + string);
 		}
 		String firstCacheHtml = findGwtNames.iterator().next();
@@ -115,11 +115,11 @@ public class RpcFinderUtil {
 		try {
 			responseCache = getResponseText(cacheurl);
 		} catch (IOException e) {
-			
 			e.printStackTrace();
 		}
 		List<String> findRpcNames = findGwtNames(responseCache);
 		String secondRpcFind = findRpcNames.get(1);
+		secondRpcFind.length();
 		List<String> gwtRpcValidatedList = new ArrayList<String>();
 		boolean skippedfirst = false;
 		// System.out.println("second:" + findRpcNames.get(1));
@@ -141,7 +141,6 @@ public class RpcFinderUtil {
 		try {
 			responseText = getResponseText(rpcUrl);
 		} catch (IOException e1) {
-			
 			e1.printStackTrace();
 		}
 		BufferedReader reader;
@@ -170,17 +169,14 @@ public class RpcFinderUtil {
 		try {
 			responseText = getResponseText(rpcUrl);
 		} catch (IOException e1) {
-			
 			e1.printStackTrace();
 		}
 		InputStream is = new java.io.StringBufferInputStream(responseText);
 		try {
 			result = SerializationPolicyLoader.loadFromStream(is, null);
 		} catch (IOException e) {
-			
 			e.printStackTrace();
 		} catch (ParseException e) {
-			
 			e.printStackTrace();
 		}
 		return result;
