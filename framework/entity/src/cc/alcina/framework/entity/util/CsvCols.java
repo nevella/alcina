@@ -64,6 +64,7 @@ public class CsvCols
 	public void addColumn(String string) {
 		colLookup.put(string, colLookup.size());
 		colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
+		grid.forEach(list -> list.add(""));
 	}
 
 	public CsvCols.CsvRow addRow() {
@@ -176,6 +177,18 @@ public class CsvCols
 			return Boolean.parseBoolean(get(key));
 		}
 
+		private int getColumnIndex(String key) {
+			Integer index = csvCols.colLookup.get(key);
+			if (index != null) {
+				return index;
+			}
+			index = csvCols.colLcLookup.get(key.toLowerCase());
+			if (index != null) {
+				return index;
+			}
+			return -1;
+		}
+
 		public long getLong(String key) {
 			String s = get(key);
 			return Ax.isBlank(s) ? -1 : Long.parseLong(s);
@@ -216,18 +229,6 @@ public class CsvCols
 		public String toString() {
 			return map().entrySet().stream().map(Object::toString)
 					.collect(Collectors.joining("\n"));
-		}
-
-		private int getColumnIndex(String key) {
-			Integer index = csvCols.colLookup.get(key);
-			if (index != null) {
-				return index;
-			}
-			index = csvCols.colLcLookup.get(key.toLowerCase());
-			if (index != null) {
-				return index;
-			}
-			return -1;
 		}
 	}
 }
