@@ -60,25 +60,8 @@ public class Ax {
 				.collect(Collectors.joining(", "));
 	}
 
-	public static String cssify(Object o) {
-		if (o == null) {
-			return null;
-		}
-		String s = o.toString();
-		if (CommonUtils.isNullOrEmpty(s)) {
-			return s;
-		}
-		if (s.contains("_")) {
-			return s.toLowerCase().replace('_', '-');
-		}
-		StringBuilder builder = new StringBuilder();
-		builder.append(s.substring(0, 1).toLowerCase());
-		for (int i = 1; i < s.length(); i++) {
-			String c = s.substring(i, i + 1);
-			builder.append(c.toUpperCase().equals(c) ? "-" : "");
-			builder.append(c.toLowerCase());
-		}
-		return builder.toString();
+	public static String cssify(String s) {
+		return CommonUtils.cssify(s);
 	}
 
 	public static String dateSlash(Date date) {

@@ -2455,4 +2455,39 @@ public class CommonUtils {
 	enum DateAdjustmentModifier {
 		LOCAL_TZ, ADJUST_TO_TZ
 	}
+
+	public static String toUrlFragment(Object object) {
+		if (object == null) {
+			return "null";
+		}
+		String fragment = object.toString();
+		if (Objects.equals(fragment.toUpperCase(), fragment.toLowerCase())
+				|| fragment.contains("-") || fragment.contains("_")) {
+			fragment = fragment.toLowerCase();
+			return fragment.replace("_", "-").replace(" ", "-");
+		} else {
+			return fragment.replaceAll("[/:-?#]]", "_");
+		}
+	}
+
+	public static String cssify(Object o) {
+		if (o == null) {
+			return null;
+		}
+		String s = o.toString();
+		if (CommonUtils.isNullOrEmpty(s)) {
+			return s;
+		}
+		if (s.contains("_")) {
+			return s.toLowerCase().replace('_', '-');
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(s.substring(0, 1).toLowerCase());
+		for (int i = 1; i < s.length(); i++) {
+			String c = s.substring(i, i + 1);
+			builder.append(c.toUpperCase().equals(c) ? "-" : "");
+			builder.append(c.toLowerCase());
+		}
+		return builder.toString();
+	}
 }
