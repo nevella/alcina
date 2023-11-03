@@ -60,8 +60,8 @@ public class Ax {
 				.collect(Collectors.joining(", "));
 	}
 
-	public static String cssify(String s) {
-		return CommonUtils.cssify(s);
+	public static String cssify(Object o) {
+		return CommonUtils.cssify(o);
 	}
 
 	public static String dateSlash(Date date) {
