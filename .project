@@ -23,7 +23,6 @@
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
-		<nature>com.gwtplugins.gwt.eclipse.core.gwtNature</nature>
 	</natures>
 	<filteredResources>
 		<filter>
