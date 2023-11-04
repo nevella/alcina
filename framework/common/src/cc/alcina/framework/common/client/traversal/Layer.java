@@ -54,11 +54,20 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	}
 
 	public void addChild(Layer child) {
+		child.ensureChildren();
 		child.parent = this;
 		children.add(child);
 		if (child instanceof InputsFromPreviousSibling) {
 			child.inputsFromPreviousSiblingLayer();
 		}
+	}
+
+	/**
+	 * Normally child layers are populated during the constructor, this allows a
+	 * builder pattern to specify attributes of the layer before child
+	 * population
+	 */
+	public void ensureChildren() {
 	}
 
 	public Collection<S> computeInputs() {

@@ -1899,4 +1899,8 @@ public class DomNode {
 			boolean valid = false;
 		}
 	}
+
+	public boolean classMatches(String regex) {
+		return attr("class").matches(regex);
+	}
 }

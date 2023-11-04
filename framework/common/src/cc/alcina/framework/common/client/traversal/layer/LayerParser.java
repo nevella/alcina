@@ -94,7 +94,7 @@ public class LayerParser {
 	}
 
 	public abstract static class CustomState {
-		LayerParser parser;
+		protected LayerParser parser;
 
 		public InputState inputState() {
 			return parser.inputState;

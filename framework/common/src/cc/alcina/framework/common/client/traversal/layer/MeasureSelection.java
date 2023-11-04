@@ -9,7 +9,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	private boolean omit;
 
 	public MeasureSelection(Selection parent, Measure measure) {
-		super(parent, measure, measure.toString());
+		super(parent, measure, measure.toPathSegment());
 	}
 
 	public MeasureSelection(Selection parent, Measure measure,
@@ -20,6 +20,14 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	@Override
 	public int compareTo(MeasureSelection o) {
 		return get().compareTo(o.get());
+	}
+
+	/**
+	 * A fallback for complex ordering behaviour (generally for two selections
+	 * of the same type), such as nested indents
+	 */
+	public int equalRangeCompare(MeasureSelection o) {
+		return 0;
 	}
 
 	public boolean contains(MeasureSelection o, Token.Order order,

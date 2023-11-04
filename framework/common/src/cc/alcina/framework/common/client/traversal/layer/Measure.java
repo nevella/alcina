@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.IdCounter;
 
 // FIXME - selection - Measure extends HasSelection? or hasParentSelection?
 /**
@@ -219,5 +220,16 @@ public class Measure extends Location.Range {
 				}
 			}
 		}
+	}
+
+	static IdCounter counter = new IdCounter(false);
+
+	public String toPathSegment() {
+		String tokenString = token.toString();
+		if (tokenString.contains(token.getClass().getName())) {
+			tokenString = token.getClass().getSimpleName();
+		}
+		return Ax.format("[%s,%s] %s #%s", Ax.padLeft(start.index, 8),
+				Ax.padLeft(end.index, 8), tokenString, counter.nextId());
 	}
 }
