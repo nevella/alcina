@@ -22,6 +22,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -71,6 +73,7 @@ public abstract class FragmentNode extends Model.Fields
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (event.isBound()) {
+			// FIXME - use bindings() in constructor
 			provideNode().ensureChildren().topicNotifications
 					.add(this::onNotification);
 		}
@@ -231,6 +234,18 @@ public abstract class FragmentNode extends Model.Fields
 			return (Stream<? extends FragmentNode>) (Stream<?>) rootModel
 					.provideNode().ensureChildren().stream().map(n -> n.model)
 					.filter(m -> m instanceof FragmentNode);
+		}
+
+		public void addNotificationHandler(
+				TopicListener<NotifyingList.Notification> notificationListener) {
+			Topic<NotifyingList.Notification> top = (Topic) rootModel
+					.provideNode().ensureChildren().topicNotifications;
+			top.add(notificationListener);
+		}
+
+		@Override
+		public void ensureComputedNodes() {
+			// noop
 		}
 	}
 

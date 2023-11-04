@@ -13,6 +13,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
+import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.collections.NotifyingList.Notification;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
@@ -31,6 +32,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.FragmentRoot;
+import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNodeOps;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.FragmentRootTransformer;
 
@@ -178,6 +180,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		 */
 		if (event.isBound()) {
 			domToModel();
+			fragmentRoot.addNotificationHandler(this::onNotification);
 		}
 	}
 
@@ -264,6 +267,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		return domNodeTransformer.put(n, transformer);
 	}
 
+	void onNotification(NotifyingList.Notification notification) {
+		onChildNodesNotification(fragmentRoot, notification);
+	}
+
 	void removeDescent(DomNode node) {
 		DomNode.DomNodeTraversal traversal = new DomNode.DomNodeTraversal(node);
 		NodeTransformer topTransformer = domNodeTransformer.get(node);
@@ -273,15 +280,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			return;
 		}
 		traversal.forEach(n -> {
+			// FIXME - fm - possibly do this via removal listen (or FN unbind)
 			NodeTransformer transformer = deregisterTransformer(n);
-			if (transformer != null) {
-				// FIXME - check that node notifyinglist events are actually
-				// received
-				throw new UnsupportedOperationException();
-				// currentModelMutation.addEntry(
-				// transformer.getLayoutNode().getModel(),
-				// ModelMutation.Type.REMOVE);
-			}
 		});
 		topTransformer.getLayoutNode().remove(false);
 	}
@@ -311,7 +311,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			getData().fragmentModel = fragmentModel;
 		}
 
-		public void addEntry(FragmentNode parent, Model model, Type type) {
+		public void addEntry(FragmentNodeOps parent, Model model, Type type) {
 			getData().add(new Entry(parent, model, type));
 		}
 
@@ -351,8 +351,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				entries.add(entry);
 			}
 
-			public Set<FragmentNode> provideAffectedFragmentNodes() {
-				Set<FragmentNode> result = new LinkedHashSet<>();
+			public Set<FragmentNodeOps> provideAffectedFragmentNodes() {
+				Set<FragmentNodeOps> result = new LinkedHashSet<>();
 				entries.forEach(e -> {
 					result.add(e.parent);
 					Model m = e.model;
@@ -369,9 +369,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 			public Type type;
 
-			public FragmentNode parent;
+			public FragmentNodeOps parent;
 
-			Entry(FragmentNode parent, Model model, Type type) {
+			Entry(FragmentNodeOps parent, Model model, Type type) {
 				this.parent = parent;
 				this.model = model;
 				this.type = type;
@@ -498,7 +498,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		return copy;
 	}
 
-	public void onChildNodesNotification(FragmentNode parent,
+	public void onChildNodesNotification(FragmentNodeOps parent,
 			Notification notification) {
 		if (notification.postMutation) {
 			currentModelMutation.addEntry(parent,
