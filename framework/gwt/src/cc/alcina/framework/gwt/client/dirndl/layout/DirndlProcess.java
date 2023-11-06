@@ -4,7 +4,6 @@ import com.google.gwt.event.shared.GwtEvent;
 
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
 
 public class DirndlProcess {
 	public static class DomBindingBind extends Observable {

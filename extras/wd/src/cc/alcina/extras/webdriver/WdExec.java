@@ -186,13 +186,21 @@ public class WdExec {
 		return this;
 	}
 
-	public boolean immediateTest() {
+	public boolean immediateIsInteractable() {
+		try {
+			return immediate(this::click);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public boolean immediate(Runnable runnable) {
 		int oTimeoutSecs = timeoutSecs;
 		try {
 			LooseContext.pushWithTrue(WDUtils.CONTEXT_DONT_LOG_EXCEPTION);
 			LooseContext.set(WDUtils.CONTEXT_OVERRIDE_TIMEOUT, 0);
 			timeoutSecs = 0;
-			getElement();
+			runnable.run();
 			return true;
 		} catch (RuntimeException e) {
 			if (e instanceof TimedOutException) {
@@ -204,6 +212,10 @@ public class WdExec {
 			LooseContext.pop();
 		}
 		return false;
+	}
+
+	public boolean immediateTest() {
+		return immediate(this::getElement);
 	}
 
 	public boolean immediateTest(String... paths) {

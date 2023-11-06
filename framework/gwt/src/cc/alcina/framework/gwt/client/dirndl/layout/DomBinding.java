@@ -9,7 +9,6 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
 
 @Registration.NonGenericSubtypes(DomBinding.class)
 public abstract class DomBinding<E extends NodeEvent> implements EventHandler {

@@ -22,11 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.event.shared.EventHandler;
-import com.google.gwt.event.shared.GwtEvent;
-import com.google.web.bindery.event.shared.SimpleEventBus;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.collections.NotifyingList;
@@ -52,7 +48,6 @@ import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
-import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Bidi;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -61,6 +56,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.Emitter;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
@@ -184,42 +180,58 @@ public class DirectedLayout implements AlcinaProcess {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.INFO);
 	}
 
-	public static void dispatchModelEvent(ModelEvent modelEvent) {
-		/*
-		 * Bubble until event is handled or we've reached the top of the node
-		 * tree
-		 */
-		Node cursor = modelEvent.getContext().node;
-		while (cursor != null) {
-			cursor.fireEvent(modelEvent);
-			if (modelEvent.isHandled()) {
-				break;
-			}
-			boolean rerouted = false;
-			{
-				/*
-				 * this logic supports the DOM requirement that popups
-				 * (overlays) be outside the dom containment of the parent (in
-				 * general) - while maintining the event bubbling relationship
-				 * of a popup model to its logical model parent
-				 *
-				 */
-				if (cursor.model instanceof Model.RerouteBubbledEvents) {
-					Model rerouteTo = ((Model.RerouteBubbledEvents) cursor.model)
-							.rerouteBubbledEventsTo();
-					if (rerouteTo != null && rerouteTo instanceof HasNode) {
-						Node rerouteToNode = ((HasNode) rerouteTo)
-								.provideNode();
-						if (rerouteToNode != null) {
-							cursor = rerouteToNode;
-							rerouted = true;
+	static class ModelEventDispatch {
+		static void dispatchDescent(ModelEvent modelEvent) {
+			Node cursor = modelEvent.getContext().node;
+			cursor.ensureEventBinding(modelEvent.getClass())
+					.dispatchDescent(modelEvent);
+		}
+
+		static void dispatchAscent(ModelEvent modelEvent) {
+			/*
+			 * Bubble until event is handled or we've reached the top of the
+			 * node tree
+			 */
+			Node cursor = modelEvent.getContext().node;
+			while (cursor != null) {
+				cursor.fireEvent(modelEvent);
+				if (modelEvent.isHandled()) {
+					break;
+				}
+				boolean rerouted = false;
+				{
+					/*
+					 * this logic supports the DOM requirement that popups
+					 * (overlays) be outside the dom containment of the parent
+					 * (in general) - while maintining the event bubbling
+					 * relationship of a popup model to its logical model parent
+					 *
+					 */
+					if (cursor.model instanceof Model.RerouteBubbledEvents) {
+						Model rerouteTo = ((Model.RerouteBubbledEvents) cursor.model)
+								.rerouteBubbledEventsTo();
+						if (rerouteTo != null && rerouteTo instanceof HasNode) {
+							Node rerouteToNode = ((HasNode) rerouteTo)
+									.provideNode();
+							if (rerouteToNode != null) {
+								cursor = rerouteToNode;
+								rerouted = true;
+							}
 						}
 					}
 				}
+				if (!rerouted) {
+					cursor = cursor.parent;
+				}
 			}
-			if (!rerouted) {
-				cursor = cursor.parent;
-			}
+		}
+	}
+
+	public static void dispatchModelEvent(ModelEvent modelEvent) {
+		if (modelEvent instanceof ModelEvent.DescendantEvent) {
+			ModelEventDispatch.dispatchDescent(modelEvent);
+		} else {
+			ModelEventDispatch.dispatchAscent(modelEvent);
 		}
 	}
 
@@ -676,11 +688,11 @@ public class DirectedLayout implements AlcinaProcess {
 				return;
 			}
 			eventBindings = new ArrayList<>();
-			classData.receives.forEach(
-					clazz -> eventBindings.add(new NodeEventBinding(clazz)));
+			classData.receives.forEach(clazz -> eventBindings
+					.add(new NodeEventBinding(this, clazz)));
 			for (int idx = 0; idx < directed.reemits().length; idx += 2) {
 				Class<? extends NodeEvent> clazz = directed.reemits()[idx];
-				eventBindings.add(new NodeEventBinding(clazz));
+				eventBindings.add(new NodeEventBinding(this, clazz));
 			}
 			if (!directed.bindDomEvents()) {
 				eventBindings.removeIf(NodeEventBinding::isDomBinding);
@@ -836,7 +848,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 		void fireEvent(ModelEvent modelEvent) {
 			if (eventBindings != null) {
-				eventBindings.forEach(bb -> bb.fireEventIfType(modelEvent));
+				eventBindings.forEach(eventBinding -> eventBinding
+						.fireEventIfType(modelEvent));
 			}
 		}
 
@@ -1122,211 +1135,6 @@ public class DirectedLayout implements AlcinaProcess {
 					input.replace = Node.this;
 					getResolver().layout.layout();
 				});
-			}
-		}
-
-		/**
-		 * <p>
-		 * Note that dom/inferred-dom events (NodeEvent *not* subclass
-		 * ModelEvent) and model events have quite different event propagation
-		 * mechanisms, so there's essentially two event propagation mechanisms:
-		 *
-		 * <p>
-		 * DOM: model -> widget -> element.addListener(x) -- Model implements
-		 * the handler mechanism, event propagation is DOM propagation, so up
-		 * the widget tree (which mostly corresponds to the DL node tree). (TODO
-		 * - actually explain this - possibly in javadoc)
-		 *
-		 * <p>
-		 * Model: ModelEvent.fire(...) - event fires on the current Model if it
-		 * implements the Model.Handler class, and propagation finishes at the
-		 * first Node that handles the event (implements the Handler class)
-		 * unless explicitly permitted via
-		 * NodeEvent.Context.markCauseEventAsNotHandled()
-		 *
-		 * <h3>An example</h3>
-		 *
-		 * <pre>
-		 * <code>
-		 *
-		 *
-		 * &#64;Override
-		 * public void onSubmitted(Submitted event) {
-		 * 	// this occurs when enter is clicked, so handle here, but also propagate
-		 * 	// to the containing form
-		 * 	event.getContext().markCauseEventAsNotHandled();
-		 * 	String value = textArea.getValue();
-		 * 	setDirty(!Objects.equals(originalOrLastSubmittedValue, value));
-		 * 	originalOrLastSubmittedValue = value;
-		 * }
-		 *
-		 * </code>
-		 * </pre>
-		 *
-		 * <p>
-		 * FIXME - dirndl 1x1h - should these in fact be two different bindings
-		 * - say a base class and subclass?
-		 */
-		class NodeEventBinding {
-			/*
-			 * This may be a superclass of the event type (see ActionEvent).
-			 * TODO - Doc (it makes event binding slightly more complicated, but
-			 * allows a really useful inversion for one-off event handling
-			 */
-			Class<? extends NodeEvent> type;
-
-			DomBinding domBinding;
-
-			public NodeEventBinding(Class<? extends NodeEvent> type) {
-				this.type = type;
-			}
-
-			public void onEvent(GwtEvent event) {
-				Context context = NodeEvent.Context.fromEvent(event, Node.this);
-				fireEvent(type, context, Node.this.getModel());
-			}
-
-			@Override
-			public String toString() {
-				return Ax.format("%s :: %s", model.getClass().getSimpleName(),
-						type.getSimpleName());
-			}
-
-			/*
-			 * FIXME - dirndl 1x1h - receive/reemit merging - document how to
-			 * reemit from StringInput (annotation merge should fail if
-			 * receive/reemit pair - instead, add just receipt and manually
-			 * reemit)
-			 *
-			 * FIXME - dirndl 1x1h - Also: warn if a model implements a handler
-			 * but has no receive (reverse will be a ClassCast, so no need to
-			 * check)
-			 *
-			 * What this (opaque) comment is saying is that there *was* an issue
-			 * with the StringInput @Directed annotation - or a subclass?
-			 * Anyway, merging receive [z] to superclass receive[x]/reemit[y] is
-			 * obviously problematic. Solution is to disallow that with an
-			 * informative exception (as above)
-			 *
-			 * FIXME - dirndl 1x1h - doc - note that a new NodeEvent is at each
-			 * point in the model ancestor chain that it's fired - since an
-			 * event is immutable and we want to fire additional (context)
-			 * information at each point. Hence the cloning of the originating
-			 * event, which should copy any additional payload fields of the
-			 * originating event
-			 *
-			 */
-			private void fireEvent(Class<? extends NodeEvent> actualEventType,
-					Context context, Object model) {
-				NodeEvent nodeEvent = context.getNodeEvent();
-				if (nodeEvent == null) {
-					GwtEvent gwtEvent = context.getOriginatingGwtEvent();
-					if (gwtEvent instanceof NodeEvent) {
-						nodeEvent = (NodeEvent) gwtEvent;
-					}
-				}
-				if (nodeEvent != null
-						&& nodeEvent.getClass() == actualEventType) {
-					nodeEvent = nodeEvent.clone();
-				} else {
-					nodeEvent = Reflections.newInstance(actualEventType);
-				}
-				context.setNodeEvent(nodeEvent);
-				nodeEvent.setModel(model);
-				ProcessObservers.publish(EventObservable.class,
-						() -> new EventObservable(actualEventType, context,
-								model));
-				Class<? extends EventHandler> handlerClass = Reflections
-						.at(actualEventType).templateInstance()
-						.getHandlerClass();
-				NodeEvent.Handler handler = null;
-				if (Reflections.isAssignableFrom(handlerClass,
-						context.node.model.getClass())) {
-					handler = (NodeEvent.Handler) context.node.model;
-					if (Client.has()) {
-						SimpleEventBus eventBus = (SimpleEventBus) Client
-								.eventBus();
-						eventBus.fireEventFromSource(nodeEvent, context.node,
-								List.of(handler));
-					} else {
-						// pure-server
-						nodeEvent.dispatch(handler);
-					}
-				} else {
-					// dispatch a new ModelEvent, compute its type [receive,
-					// reemit] tuple in Directed.reemits
-					Context eventContext = NodeEvent.Context
-							.fromContext(context, Node.this);
-					Class<? extends ModelEvent> emitType = null;
-					for (int idx = 0; idx < directed
-							.reemits().length; idx += 2) {
-						if (directed.reemits()[idx] == actualEventType) {
-							emitType = (Class<? extends ModelEvent>) directed
-									.reemits()[idx + 1];
-							break;
-						}
-					}
-					eventContext.dispatch(emitType, Node.this.getModel());
-				}
-			}
-
-			private void unbind() {
-				if (domBinding != null) {
-					domBinding.bind(null, null, false);
-				}
-			}
-
-			/*
-			 * this method contains devmode checks that a binding exists (if the
-			 * event type does not implement WithoutDomBinding), and that the
-			 * DomBinding subclass is an inner class of the NodeEvent subclass
-			 */
-			void bind() {
-				if (!isDomBinding()) {
-					if (!GWT.isScript()) {
-						Preconditions.checkState(Reflections.isAssignableFrom(
-								NodeEvent.WithoutDomBinding.class, type));
-					}
-					return;
-				}
-				domBinding = Registry.impl(DomBinding.class, type);
-				if (!GWT.isScript()) {
-					Preconditions.checkState(domBinding.getClass().getName()
-							.indexOf(type.getName()) == 0);
-				}
-				domBinding.nodeEventBinding = this;
-				if (rendered == null) {
-					Ax.err(toParentStack());
-					throw new IllegalStateException(Ax.format(
-							"No widget for model binding dom event %s - possibly delegating",
-							model));
-				}
-				domBinding.bind(getBindingRendered().as(Element.class), model,
-						true);
-			}
-
-			void fireEventIfType(ModelEvent event) {
-				if (event.getClass() == type) {
-					Context context = NodeEvent.Context
-							.fromContext(event.getContext(), Node.this);
-					// set before we dispatch to the handler, so the handler can
-					// unset
-					event.setHandled(true);
-					fireEvent(event.getClass(), context, event.getModel());
-				}
-			}
-
-			Rendered getBindingRendered() {
-				return verifySingleRendered();
-			}
-
-			Node getNode() {
-				return Node.this;
-			}
-
-			boolean isDomBinding() {
-				return Registry.query(DomBinding.class).addKeys(type)
-						.hasImplementation();
 			}
 		}
 
@@ -1637,6 +1445,37 @@ public class DirectedLayout implements AlcinaProcess {
 
 			void unbind() {
 				bindings.forEach(PropertyBinding::unbind);
+			}
+		}
+
+		Emitter findEmitter(Class<? extends NodeEvent> type) {
+			/*
+			 * See signature of DescendantEvent
+			 */
+			Class<? extends Emitter> emitterType = Reflections.at(type)
+					.getGenericBounds().bounds.get(2);
+			Node cursor = this;
+			while (cursor != null) {
+				if (Reflections.isAssignableFrom(emitterType,
+						cursor.model.getClass())) {
+					return (Emitter) cursor.model;
+				}
+				cursor = cursor.parent;
+			}
+			return null;
+		}
+
+		NodeEventBinding ensureEventBinding(Class<? extends NodeEvent> type) {
+			Optional<NodeEventBinding> binding = eventBindings.stream()
+					.filter(eb -> eb.type == type).findFirst();
+			if (binding.isPresent()) {
+				return binding.get();
+			} else {
+				Preconditions.checkState(Reflections.isAssignableFrom(
+						ModelEvent.DescendantEvent.class, type));
+				NodeEventBinding newBinding = new NodeEventBinding(this, type);
+				eventBindings.add(newBinding);
+				return newBinding;
 			}
 		}
 	}

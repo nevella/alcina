@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -55,6 +56,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 			Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 	mergeStrategy = DirectedMergeStrategy.class)
 @ClientVisible
+@Repeatable(Directed.Multiple.class)
 public @interface Directed {
 	/**
 	 * only false in exceptional cases (such where a concrete class with dom

@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 
@@ -26,6 +27,27 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onAdd(Add event);
+		}
+	}
+
+	public static class FilterContents extends
+			DescendantEvent<Object, FilterContents.Handler, FilterContents.Emitter> {
+		@Override
+		public void dispatch(FilterContents.Handler handler) {
+			handler.onFilterContents(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFilterContents(FilterContents event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public String provideFilterValue() {
+			ModelEvents.Input triggeringInput = getContext()
+					.getPreviousEvent(ModelEvents.Input.class);
+			return triggeringInput.getCurrentValue();
 		}
 	}
 
@@ -486,5 +508,17 @@ public class ModelEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onView(View event);
 		}
+	}
+
+	public interface FilterContentsFilterable extends FilterContents.Handler {
+		@Override
+		default void onFilterContents(FilterContents event) {
+			String filterValue = event.provideFilterValue();
+			setVisible(matchesFilter(filterValue));
+		}
+
+		boolean matchesFilter(String filterString);
+
+		void setVisible(boolean visible);
 	}
 }

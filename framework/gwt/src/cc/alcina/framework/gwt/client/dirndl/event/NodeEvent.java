@@ -158,13 +158,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		}
 
 		public boolean hasPrevious(Class<? extends NodeEvent> eventClass) {
-			if (eventClass == nodeEvent.getClass()) {
-				return true;
-			}
-			if (getPrevious() == null) {
-				return false;
-			}
-			return getPrevious().hasPrevious(eventClass);
+			return getPreviousEvent(eventClass) != null;
 		}
 
 		public void setNodeEvent(NodeEvent nodeEvent) {
@@ -178,6 +172,17 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			newContext.reemission = node;
 			ModelEvent modelEvent = (ModelEvent) nodeEvent;
 			newContext.dispatch(modelEvent.getClass(), modelEvent.getModel());
+		}
+
+		public <E extends NodeEvent> E getPreviousEvent(Class<E> eventClass) {
+			Context cursor = this;
+			while (cursor != null) {
+				if (eventClass == cursor.nodeEvent.getClass()) {
+					return (E) cursor.getNodeEvent();
+				}
+				cursor = cursor.getPrevious();
+			}
+			return null;
 		}
 	}
 

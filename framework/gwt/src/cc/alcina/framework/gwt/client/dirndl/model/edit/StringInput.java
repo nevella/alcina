@@ -171,6 +171,8 @@ public class StringInput extends Model.Value<String>
 	public void onBeforeRender(BeforeRender event) {
 		event.node.optional(Placeholder.class)
 				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
+		event.node.optional(FocusOnBind.class)
+				.ifPresent(ann -> setFocusOnBind(true));
 		super.onBeforeRender(event);
 	}
 
@@ -282,6 +284,13 @@ public class StringInput extends Model.Value<String>
 		 * The placeholder
 		 */
 		String value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface FocusOnBind {
 	}
 
 	static class SelectionState {
