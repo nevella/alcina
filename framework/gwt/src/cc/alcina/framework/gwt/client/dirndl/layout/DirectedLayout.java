@@ -171,7 +171,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *   1x5 non-critical but desirable larger refactorings
  *
  *
- *
  *  @formatter:on
  */
 public class DirectedLayout implements AlcinaProcess {
