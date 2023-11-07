@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.PropertyNameTags;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.HtmlDefaultTags;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
@@ -53,6 +53,10 @@ public abstract class DirectedRenderer {
 
 	public static String defaultGetTag(Node node, String defaultTag) {
 		String tag = null;
+		if (node.model != null
+				&& node.model.getClass().getName().contains("EditorialPanel")) {
+			int debug = 3;
+		}
 		/*
 		 * Only apply HasTag (tag from model) to the last (deepest) node for the
 		 * model
@@ -67,15 +71,22 @@ public abstract class DirectedRenderer {
 		if (Ax.notBlank(tag)) {
 			return tag;
 		}
-		// FIXME - dirndl - doesn't handle transform of the parent
-		if (node.parent != null && node.parent.has(PropertyNameTags.class)
-				&& node.getProperty().getName() != null) {
-			return Ax.cssify(node.getProperty().getName());
-		}
+		// for models which have default tags (leaf models such as String,
+		// Boolean, Enum), compute the tag
+		// - property name by default, but optionally SPAN etc
+		//
+		// for models without default tags (e.g. Model subclasses), always use
+		// the tag name
 		if (Ax.notBlank(defaultTag)) {
-			return defaultTag;
+			if ((node.parent != null && node.parent.has(HtmlDefaultTags.class))
+					|| node.getProperty() == null) {
+				return defaultTag;
+			} else {
+				return Ax.cssify(node.getProperty().getName());
+			}
+		} else {
+			return Ax.blankTo(tag, tagName(node.model.getClass()));
 		}
-		return Ax.blankTo(tag, tagName(node.model.getClass()));
 	}
 
 	protected String getTag(Node node, String defaultTag) {

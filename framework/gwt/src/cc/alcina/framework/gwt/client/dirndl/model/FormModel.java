@@ -468,7 +468,6 @@ public class FormModel extends Model
 		@Directed(
 			tag = "validation-feedback",
 			emits = FormEvents.PropertyValidationChange.class)
-		@Directed.PropertyNameTags
 		public class FeedbackModel extends Model.Fields {
 			@Directed
 			String message;
@@ -735,7 +734,6 @@ public class FormModel extends Model
 	}
 
 	@Directed(tag = "form-validation")
-	@Directed.PropertyNameTags
 	public static class FormValidationModel extends Model.Fields {
 		@Directed
 		public String message;

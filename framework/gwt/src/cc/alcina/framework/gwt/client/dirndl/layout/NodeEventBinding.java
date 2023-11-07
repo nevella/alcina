@@ -88,6 +88,8 @@ class NodeEventBinding {
 
 	DescendantBindings descendantBindings;
 
+	Class<? extends ModelEvent> reemitAs;
+
 	public NodeEventBinding(DirectedLayout.Node node,
 			Class<? extends NodeEvent> type) {
 		this.node = node;
@@ -187,8 +189,7 @@ class NodeEventBinding {
 		Class<? extends EventHandler> handlerClass = Reflections
 				.at(actualEventType).templateInstance().getHandlerClass();
 		NodeEvent.Handler handler = null;
-		if (Reflections.isAssignableFrom(handlerClass,
-				context.node.model.getClass())) {
+		if (reemitAs == null) {
 			handler = (NodeEvent.Handler) context.node.model;
 			if (Client.has()) {
 				SimpleEventBus eventBus = (SimpleEventBus) Client.eventBus();
@@ -202,15 +203,7 @@ class NodeEventBinding {
 			// dispatch a new ModelEvent, compute its type [receive,
 			// reemit] tuple in Directed.reemits
 			Context eventContext = NodeEvent.Context.fromContext(context, node);
-			Class<? extends ModelEvent> emitType = null;
-			for (int idx = 0; idx < node.directed.reemits().length; idx += 2) {
-				if (node.directed.reemits()[idx] == actualEventType) {
-					emitType = (Class<? extends ModelEvent>) node.directed
-							.reemits()[idx + 1];
-					break;
-				}
-			}
-			eventContext.dispatch(emitType, node.getModel());
+			eventContext.dispatch(reemitAs, node.getModel());
 		}
 	}
 

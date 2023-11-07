@@ -10,7 +10,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * animation
  */
 @Directed(tag = "spinner")
-@Directed.PropertyNameTags
 @TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 public class Spinner extends Model.Fields {
 	public static Builder builder() {

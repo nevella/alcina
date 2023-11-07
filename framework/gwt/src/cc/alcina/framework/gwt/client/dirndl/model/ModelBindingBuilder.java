@@ -21,7 +21,7 @@ public class ModelBindingBuilder<T> {
 
 	SourcesPropertyChangeEvents from;
 
-	PropertyEnum fromPropertyName;
+	Object fromPropertyName;
 
 	boolean oneWay;
 
@@ -82,6 +82,14 @@ public class ModelBindingBuilder<T> {
 	}
 
 	/**
+	 * The name of the property to bind to, or null for any property change
+	 */
+	public ModelBindingBuilder<T> on(String fromPropertyName) {
+		this.fromPropertyName = fromPropertyName;
+		return this;
+	}
+
+	/**
 	 * Convert a bi-di bindings
 	 */
 	public ModelBindingBuilder<T> oneWay(boolean oneWay) {
@@ -106,14 +114,14 @@ public class ModelBindingBuilder<T> {
 	}
 
 	void acceptStreamElement(Object obj) {
-		Object o1 = supplier.get();
-		Object o2 = ((Function) map).apply(o1);
+		Object o1 = supplier == null ? obj : supplier.get();
+		Object o2 = map == null ? o1 : ((Function) map).apply(o1);
 		((Consumer) consumer).accept(o2);
 	}
 
 	void bind() {
 		listener = bindings.addPropertyChangeListener(from, fromPropertyName,
-				() -> acceptStreamElement(null));
+				evt -> acceptStreamElement(evt.getNewValue()));
 		if (setOnInitialise) {
 			acceptStreamElement(listener.currentValue());
 		}

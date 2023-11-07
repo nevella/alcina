@@ -29,8 +29,7 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 @Directed(
-	
-bindings = { @Binding(from = "href", type = Type.PROPERTY),
+	bindings = { @Binding(from = "href", type = Type.PROPERTY),
 			@Binding(from = "className", type = Type.CLASS_PROPERTY),
 			@Binding(from = "innerHtml", type = Type.INNER_HTML),
 			@Binding(from = "text", type = Type.INNER_TEXT),
@@ -155,7 +154,7 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 						Reflections.newInstance(nonStandardObjectAction),
 						((EntityPlace) Client.currentPlace()).provideEntity());
 			} else {
-				// propagate href
+				// propagate href (not squelched)
 				if (!Objects.equals(tag, "a") && Ax.notBlank(href)) {
 					History.newItem(href);
 				}
@@ -312,8 +311,8 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		return this;
 	}
 
-	public Link withWithoutLink(boolean withoutLink) {
-		if (withoutLink) {
+	public Link withNoLink(boolean noLink) {
+		if (noLink) {
 			setHref("");
 		}
 		return this;

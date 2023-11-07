@@ -5,17 +5,17 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 /**
- * A simple panel header
+ * A simple panel heading
  */
-@Directed(tag = "header")
-public class HeaderModel extends Model.Fields {
+@Directed(tag = "heading")
+public class HeadingModel extends Model.Fields {
 	@Binding(type = Type.INNER_TEXT)
 	public String value;
 
-	public HeaderModel() {
+	public HeadingModel() {
 	}
 
-	public HeaderModel(String value) {
+	public HeadingModel(String value) {
 		this.value = value;
 	}
 }

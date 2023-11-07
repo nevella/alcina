@@ -691,7 +691,11 @@ public class DirectedLayout implements AlcinaProcess {
 					.add(new NodeEventBinding(this, clazz)));
 			for (int idx = 0; idx < directed.reemits().length; idx += 2) {
 				Class<? extends NodeEvent> clazz = directed.reemits()[idx];
-				eventBindings.add(new NodeEventBinding(this, clazz));
+				NodeEventBinding reemitBinding = new NodeEventBinding(this,
+						clazz);
+				reemitBinding.reemitAs = (Class<? extends ModelEvent>) directed
+						.reemits()[idx + 1];
+				eventBindings.add(reemitBinding);
 			}
 			if (!directed.bindDomEvents()) {
 				eventBindings.removeIf(NodeEventBinding::isDomBinding);

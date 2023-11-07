@@ -441,14 +441,16 @@ public @interface Directed {
 		String value();
 	}
 
+	/**
+	 * Where a renderer has a default tag, such as SPAN, use it (rather than the
+	 * property name)
+	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target(ElementType.TYPE)
 	@ClientVisible
 	@Inherited
-	// FIXME - dirndl - make this the default
-	// Also - should *not* be default for anything but leaf renderers
-	public @interface PropertyNameTags {
+	public @interface HtmlDefaultTags {
 	}
 
 	/*

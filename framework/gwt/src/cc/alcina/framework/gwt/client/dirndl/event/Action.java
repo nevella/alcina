@@ -72,7 +72,6 @@ public abstract class Action<T> implements Permissible {
 	@Directed(
 		tag = "action",
 		bindings = @Binding(from = "title", type = Binding.Type.PROPERTY))
-	@Directed.PropertyNameTags
 	public static class ActionArea extends Model
 			implements DomEvents.MouseDown.Handler, DomEvents.Click.Handler {
 		private final TagClass icon;

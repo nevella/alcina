@@ -7,7 +7,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 @Directed(tag = "key-value")
 @Directed.AllProperties
-@Directed.PropertyNameTags
 public class KeyValueModel extends Model.Fields {
 	public static KeyValueModel objectValue(String key, Object value) {
 		return new KeyValueModel(key, value);

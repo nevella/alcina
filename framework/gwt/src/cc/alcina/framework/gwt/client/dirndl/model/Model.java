@@ -1,7 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.beans.PropertyChangeEvent;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
@@ -211,7 +213,6 @@ public abstract class Model extends Bindable implements
 	}
 
 	@Directed.AllProperties
-	@Directed.PropertyNameTags
 	public static abstract class All extends Fields {
 	}
 
@@ -326,17 +327,29 @@ public abstract class Model extends Bindable implements
 		}
 
 		/**
+		 * Add a consumer-form property change listener
+		 *
+		 * @return
+		 */
+		public RemovablePropertyChangeListener addPropertyChangeListener(
+				SourcesPropertyChangeEvents bean, Object propertyName,
+				Consumer<PropertyChangeEvent> consumer) {
+			RemovablePropertyChangeListener listener = new RemovablePropertyChangeListener(
+					bean, propertyName, e -> consumer.accept(e));
+			addListener(listener);
+			return listener;
+		}
+
+		/**
 		 * Add a property change listener which does not inspect the event
 		 *
 		 * @return
 		 */
 		public RemovablePropertyChangeListener addPropertyChangeListener(
 				SourcesPropertyChangeEvents bean, Object propertyName,
-				Runnable action) {
-			RemovablePropertyChangeListener listener = new RemovablePropertyChangeListener(
-					bean, propertyName, e -> action.run());
-			addListener(listener);
-			return listener;
+				Runnable runnable) {
+			return addPropertyChangeListener(bean, propertyName,
+					evt -> runnable.run());
 		}
 
 		public void addRegistration(
