@@ -3,11 +3,13 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
+@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 public class Toggle extends Model.Fields implements ModelEvents.Toggle.Handler {
 	@Directed(reemits = { DomEvents.Click.class, ModelEvents.Toggle.class })
 	public Object displayed;
