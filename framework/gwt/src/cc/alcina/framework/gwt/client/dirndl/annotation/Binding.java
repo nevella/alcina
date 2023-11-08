@@ -87,6 +87,19 @@ public @interface Binding {
 		}
 	}
 
+	/*
+	 * FIXME - dirndl - don't use (since this doesn't unclear a display:none).
+	 * It will be prettier than the display:<empty-string> of DisplayBlankNone,
+	 * once fixed
+	 */
+	@Reflected
+	public static class DisplayNullNone implements ToStringFunction<Boolean> {
+		@Override
+		public String apply(Boolean t) {
+			return CommonUtils.bv(t) ? null : "none";
+		}
+	}
+
 	@Reflected
 	public static class DisplayFalseTrue implements ToStringFunction<Boolean> {
 		@Override
