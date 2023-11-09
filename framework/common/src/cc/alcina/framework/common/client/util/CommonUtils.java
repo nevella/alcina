@@ -2490,4 +2490,8 @@ public class CommonUtils {
 		}
 		return builder.toString();
 	}
+
+	public static String tf(boolean b) {
+		return b ? "t" : "f";
+	}
 }

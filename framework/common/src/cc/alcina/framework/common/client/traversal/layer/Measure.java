@@ -39,7 +39,10 @@ import cc.alcina.framework.common.client.util.IdCounter;
  */
 public class Measure extends Location.Range {
 	public static Measure fromNode(DomNode node, Token token) {
-		Location.Range range = node.asRange();
+		return fromRange(node.asRange(), token);
+	}
+
+	public static Measure fromRange(Location.Range range, Token token) {
 		return new Measure(range.start, range.end, token);
 	}
 
