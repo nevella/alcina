@@ -223,6 +223,12 @@ public class Location implements Comparable<Location> {
 			return new Range(start, modifiedEnd);
 		}
 
+		public Range truncateToIndexStart(int startIndex) {
+			Location modifiedStart = start.createRelativeLocation(startIndex,
+					false);
+			return new Range(modifiedStart, end);
+		}
+
 		@Override
 		public int compareTo(Range o) {
 			return compareTo(o, false);
