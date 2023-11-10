@@ -61,17 +61,6 @@ public class AlcinaDevHelper extends DevHelper {
 	}
 
 	@Override
-	public AlcinaDevHelper solidTestEnv() {
-		return (AlcinaDevHelper) super.solidTestEnv();
-	}
-
-	@Override
-	public AlcinaDevHelper solidTestEnvSecondHalf() {
-		initPostObjectServices();
-		return this;
-	}
-
-	@Override
 	protected String getConfigFilePath() {
 		return getConsoleSourceRelativePath("alcina.console.properties");
 	}

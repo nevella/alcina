@@ -1,0 +1,204 @@
+.ol-status {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  padding: 20px;
+  z-index: 1;
+}
+.ol-status > .element {
+  display: block;
+  background-color: #323232;
+  color: #f1f1f1;
+  min-height: 48px;
+  min-width: 20rem;
+  max-width: 35rem;
+  padding: 16px 24px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+  border-radius: 2px;
+  margin: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  cursor: default;
+  white-space: pre-wrap;
+  max-height: 70vh;
+  overflow: scroll;
+}
+.ol-status > .element.removing {
+  transition: transform 0.5s, opacity 0.5s;
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+caught {
+  display: block;
+  padding: 1em;
+  white-space: pre-wrap;
+}
+
+body > .overlay-container {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  display: inline-block;
+}
+body > .overlay-container > overlay {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+body > .overlay-container > overlay > actions {
+  display: flex;
+  justify-content: center;
+}
+body > .overlay-container > overlay > actions:not(:empty) {
+  margin-bottom: 1rem;
+}
+body > .overlay-container > overlay > actions > a {
+  cursor: pointer;
+  color: #333;
+}
+body > .overlay-container > overlay > actions > a:hover {
+  color: #777;
+}
+
+body > overlay-container-modal {
+  display: block;
+  bottom: 0;
+  right: 0;
+}
+body > overlay-container-modal:last-of-type {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+body > overlay-container-modal.viewport-centered > * {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+body > overlay-container-modal > overlay {
+  background-color: white;
+}
+
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Arial;
+  font-size: 14px;
+}
+
+body > page {
+  display: grid;
+  grid-template-areas: "header" "main";
+  grid-template-rows: 50px 1fr;
+  height: 100vh;
+  width: 100vw;
+}
+body > page > * {
+  min-height: 0;
+}
+body > page > header {
+  display: flex;
+  background-color: #ff8fa2;
+  color: white;
+  align-items: center;
+  justify-content: center;
+  line-height: 100%;
+  font-size: 120%;
+}
+body > page > main {
+  display: grid;
+  grid-template-areas: "table properties" "table documentation";
+  grid-template-columns: 2fr 1fr;
+  gap: 1px;
+  background-color: #777;
+}
+body > page > main > feature-table {
+  grid-area: table;
+  display: block;
+}
+body > page > main > feature-table > table {
+  border: solid 1px #ddd;
+  border-collapse: collapse;
+  /* align-self: start
+  * unused - but good to know - this is how to stop auto-stretch of tables
+  * */
+  width: 100%;
+}
+body > page > main > feature-table > table tr.selected {
+  background-color: #f0f0fa;
+}
+body > page > main > feature-table > table th {
+  min-width: 7em;
+}
+body > page > main > feature-table > table td.in-progress {
+  background-color: #99cc66;
+}
+body > page > main > feature-table > table td.complete {
+  background-color: #99cccc;
+}
+body > page > main > feature-table > table td.open {
+  background-color: #ffff66;
+}
+body > page > main > feature-table > table td, body > page > main > feature-table > table th {
+  border: solid 1px #ddd;
+  font-weight: normal;
+  padding: 4px 2px;
+}
+body > page > main > feature-table > table td > *, body > page > main > feature-table > table th > * {
+  line-height: 18px;
+  height: 20px;
+  display: block;
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+body > page > main > feature-table > table td > version-name, body > page > main > feature-table > table th > version-name {
+  color: #777;
+}
+body > page > main > feature-table > table td > feature-name, body > page > main > feature-table > table th > feature-name {
+  max-width: 250px;
+  padding-left: 5px;
+}
+body > page > main > properties {
+  grid-area: properties;
+}
+body > page > main > properties > header {
+  display: flex;
+  background-color: #eee;
+  color: #333;
+  align-items: center;
+  justify-content: center;
+  line-height: 100%;
+  height: 28px;
+}
+body > page > main > properties > table {
+  padding: 0.5rem;
+}
+body > page > main > properties > table th, body > page > main > properties > table td {
+  text-align: left;
+  padding-left: 0.5rem;
+}
+body > page > main > documentation {
+  grid-area: documentation;
+}
+body > page > main > documentation > header {
+  display: flex;
+  background-color: #eee;
+  color: #333;
+  align-items: center;
+  justify-content: center;
+  line-height: 100%;
+  height: 28px;
+}
+body > page > main > documentation > content {
+  display: block;
+  padding: 0.5em;
+  font-size: 16px;
+}
+body > page > main > * {
+  background-color: white;
+  min-height: 0;
+  min-width: 0;
+  overflow: scroll;
+}

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.web.bindery.event.shared.UmbrellaException;
 
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ProcessContextProvider;
@@ -31,6 +32,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -82,6 +84,9 @@ public class SelectionTraversal
 					+ currentLayer().toString();
 		}
 	}
+
+	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
+			.create();
 
 	public interface Context {
 	}
@@ -256,6 +261,10 @@ public class SelectionTraversal
 			}
 			return null;
 		}
+	}
+
+	public Layer getRootLayer() {
+		return state.rootLayer;
 	}
 
 	/*
@@ -581,7 +590,13 @@ public class SelectionTraversal
 		}
 	}
 
-	public void traverseLayers() {
+	public String id;
+
+	static IdCounter counter = new IdCounter();
+
+	public void traverse() {
+		id = Ax.format("%s.%s", ClientInstance.self().getId(),
+				counter.nextId());
 		state.layerTraversal = new DepthFirstTraversal<Layer>(state.rootLayer,
 				Layer::getChildren);
 		/*
@@ -618,8 +633,9 @@ public class SelectionTraversal
 				}
 			}
 			state.onAfterTraversal();
+			ProcessObservers.publish(LayerExit.class, () -> new LayerExit());
 		}
-		ProcessObservers.publish(LayerExit.class, () -> new LayerExit());
+		topicTraversalComplete.publish(this);
 	}
 
 	public Layer<?> currentLayer() {

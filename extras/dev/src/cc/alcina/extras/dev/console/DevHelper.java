@@ -85,6 +85,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
+import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import elemental.json.impl.JsonUtil;
 
@@ -432,19 +433,10 @@ public abstract class DevHelper {
 		AlcinaTopics.jobCompletion.add(jobCompletionLister);
 	}
 
-	public DevHelper solidTestEnv() {
-		solidTestEnvFirstHalf();
-		solidTestEnvSecondHalf();
-		return this;
+	void initLifecycleServices() {
+		Registry.query(LifecycleService.AlsoDev.class).implementations()
+				.forEach(LifecycleService::onApplicationStartup);
 	}
-
-	public void solidTestEnvFirstHalf() {
-		loadDefaultLoggingProperties();
-		loadConfig();
-		initLightweightServices();
-	}
-
-	public abstract DevHelper solidTestEnvSecondHalf();
 
 	public void writeObject(Object obj) {
 		writeObject(obj, obj.getClass().getSimpleName());

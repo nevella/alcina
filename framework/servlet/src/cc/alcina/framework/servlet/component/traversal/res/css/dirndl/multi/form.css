@@ -1,0 +1,215 @@
+ol-editor {
+  padding: 1em 2em;
+  line-height: 2em;
+  padding-bottom: 1px;
+  display: block;
+  /* FIXME - 2022 - either move to per-app style of theme - 
+  * */
+}
+ol-editor > header {
+  font-weight: 500;
+  padding-bottom: 0.2em;
+  padding-left: 3px;
+}
+ol-editor.bordered {
+  margin: 1em 0;
+  border-top: solid 1px #ccc;
+  border: none;
+  background-color: #f9f9f9;
+}
+ol-editor:empty {
+  display: none;
+}
+ol-editor.not-first {
+  padding-top: 0;
+}
+ol-editor.no-labels form label {
+  display: none;
+}
+ol-editor.single-line {
+  display: inline-block;
+  flex: 1;
+  min-width: auto;
+  width: 100%;
+}
+ol-editor.single-line form {
+  display: flex;
+}
+ol-editor.single-line form section {
+  display: inline-block;
+  flex: 1;
+}
+ol-editor.single-line form section form-element,
+ol-editor.single-line form section select {
+  display: inline-block;
+}
+ol-editor.single-line form section form-element {
+  padding-right: 1rem;
+}
+ol-editor.single-line form actions {
+  display: inline-block;
+  margin: 0;
+}
+ol-editor.wide form input,
+ol-editor.wide form select,
+ol-editor.wide form textarea {
+  line-height: 1.4em;
+  padding-left: 0.5em;
+  padding-top: 4px;
+  border: solid 1px #ddd;
+  font-size: 15px;
+  font-family: "Helvetica Neue", Arial;
+}
+ol-editor.wide form input:focus,
+ol-editor.wide form select:focus,
+ol-editor.wide form textarea:focus {
+  border-color: transparent;
+  box-shadow: #5299e3 0 0 3px;
+}
+ol-editor.wide form select {
+  height: 24px;
+  padding-top: 2px;
+  box-sizing: content-box;
+  padding-left: 2px;
+}
+ol-editor.wide form textarea {
+  padding-top: 1px;
+}
+ol-editor.wide form input,
+ol-editor.wide form select,
+ol-editor.wide form textarea {
+  width: 20em;
+}
+ol-editor.wide form div.ol-select {
+  display: inline-block;
+}
+ol-editor.grid > form {
+  display: block;
+}
+ol-editor.grid > form > section {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+}
+ol-editor.grid > form > section > div {
+  display: contents;
+}
+ol-editor.grid > form > section > div > label {
+  white-space: nowrap;
+  padding-right: 2em;
+}
+ol-editor actions {
+  margin: 1em;
+}
+ol-editor actions > ul {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+ol-editor actions > ul > li {
+  display: inline-block;
+  line-height: 1.5rem;
+  padding: 0 0.5em;
+}
+ol-editor actions > ul.right {
+  justify-content: flex-end;
+}
+ol-editor.over-only form input:not(:hover):not(:focus), ol-editor.over-only form input[readonly],
+ol-editor.over-only form select:not(:hover):not(:focus),
+ol-editor.over-only form select[readonly],
+ol-editor.over-only form textarea:not(:hover):not(:focus),
+ol-editor.over-only form textarea[readonly] {
+  background: none;
+  border: solid 1px transparent;
+  -webkit-appearance: none;
+}
+ol-editor.over-only form input:not(:hover):not(:focus)[type=checkbox], ol-editor.over-only form input[readonly][type=checkbox],
+ol-editor.over-only form select:not(:hover):not(:focus)[type=checkbox],
+ol-editor.over-only form select[readonly][type=checkbox],
+ol-editor.over-only form textarea:not(:hover):not(:focus)[type=checkbox],
+ol-editor.over-only form textarea[readonly][type=checkbox] {
+  background: initial;
+  border: initial;
+  -webkit-appearance: auto;
+  width: initial;
+}
+ol-editor.over-only form input[type=checkbox],
+ol-editor.over-only form select[type=checkbox],
+ol-editor.over-only form textarea[type=checkbox] {
+  width: initial;
+}
+ol-editor.over-only form input,
+ol-editor.over-only form select,
+ol-editor.over-only form textarea {
+  line-height: 1.4em;
+  padding-left: 0.5em;
+  padding-top: 4px;
+  border: solid 1px #ddd;
+  font-size: 15px;
+  font-family: "Helvetica Neue", Arial;
+}
+ol-editor.over-only form input:focus,
+ol-editor.over-only form select:focus,
+ol-editor.over-only form textarea:focus {
+  border-color: transparent;
+  box-shadow: #5299e3 0 0 3px;
+}
+ol-editor.over-only form select {
+  height: 24px;
+  padding-top: 2px;
+  box-sizing: content-box;
+  padding-left: 2px;
+}
+ol-editor.over-only form textarea {
+  padding-top: 1px;
+}
+ol-editor.tight {
+  padding: 0.5rem 1rem;
+}
+ol-editor.tight form-element {
+  line-height: 1.3em;
+}
+ol-editor.tight form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 100px;
+}
+ol-editor.tight180 {
+  padding: 0.5rem 1rem;
+}
+ol-editor.tight180 form-element {
+  line-height: 1.3em;
+}
+ol-editor.tight180 form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 180px;
+}
+ol-editor.tight230 {
+  padding: 0.25rem 0.5rem;
+}
+ol-editor.tight230 form-element {
+  line-height: 1.3em;
+}
+ol-editor.tight230 form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 230px;
+}
+
+/* will always have single-line ol-editor, pad label until we work out baseline alignment
+ * */
+edit-value > label {
+  padding-top: 2px;
+}
+edit-value:not(.dirty) actions {
+  visibility: hidden;
+}
+edit-value section > div {
+  width: 100%;
+}
+edit-value input,
+edit-value textarea {
+  width: 100%;
+}

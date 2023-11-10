@@ -1,0 +1,72 @@
+@use '../../theme/theme'
+@use '../../dirndl/multi/base'
+@use '../cmp/feature-table'
+
+body
+  margin: 0
+  font-family: theme.$font-stack
+  font-size: 14px
+
+body > page
+  display: grid
+  grid-template-areas: "header" "main"
+  grid-template-rows: 50px 1fr
+  height: 100vh
+  width: 100vw
+
+  > *
+    min-height: 0
+
+  > header
+    display: flex
+    background-color: hsl(350 100% 78% / 1)
+    color: white
+    align-items: center
+    justify-content: center
+    line-height: 100%
+    font-size: 120%
+
+  > main
+    display: grid
+    grid-template-areas: "table properties" "table documentation"
+    grid-template-columns: 2fr 1fr
+    gap: 1px
+    background-color: #777
+
+    > feature-table
+      @include feature-table.feature-table
+
+    > properties
+      grid-area: properties
+
+      > header
+        @include base.panel-header
+
+      > table
+        padding: 0.5rem
+
+        th, td
+          text-align: left
+          padding-left: 0.5rem
+
+    > documentation
+      grid-area: documentation
+
+      > header
+        @include base.panel-header
+
+      > content
+        display: block
+        padding: 0.5em
+        font-size: 16px
+
+    > *
+      background-color: white
+      min-height: 0
+      min-width: 0
+      overflow: scroll
+
+
+
+
+

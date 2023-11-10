@@ -1,0 +1,50 @@
+@use '../../theme/theme'
+
+@mixin feature-table
+  grid-area: table
+  display: block
+
+  > table
+    border: solid 1px #ddd
+    border-collapse: collapse
+    /*
+      align-self: start
+      unused - but good to know - this is how to stop auto-stretch of tables
+      */
+    width: 100%
+
+    tr.selected
+      background-color: hsl(240deg 50% 96%)
+
+    th
+      min-width: 7em
+
+    td
+      &.in-progress
+        background-color: #99cc66
+
+      &.complete
+        background-color: #99cccc
+
+      &.open
+        background-color: #ffff66
+
+    td, th
+      border: solid 1px #ddd
+      font-weight: normal
+      padding: 4px 2px
+
+      > *
+        line-height: 18px
+        height: 20px
+        display: block
+        white-space: nowrap
+        overflow-x: hidden
+        text-overflow: ellipsis
+
+      > version-name
+        color: #777
+
+      > feature-name
+        max-width: 250px
+        padding-left: 5px

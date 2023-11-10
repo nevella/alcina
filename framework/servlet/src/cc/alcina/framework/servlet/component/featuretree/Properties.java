@@ -13,13 +13,12 @@ import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features;
 import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features.Entry;
 import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
 
-class Properties extends Model.Fields {
-	@Directed
+class Properties extends Model.All {
 	HeadingModel header = new HeadingModel("Properties");
 
-	@Directed
 	FeatureProperties properties;
 
+	@Directed.Exclude
 	Features features;
 
 	Properties(Features features) {
