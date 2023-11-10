@@ -54,9 +54,17 @@ public class ModelBinding<T> {
 	 * When the change occurs, rather than pipe the event/change, pipe the
 	 * object from <code>supplier</code>
 	 */
-	public <V> ModelBinding<V> consume(Supplier<V> supplier) {
+	public <V> ModelBinding<V> value(Supplier<V> supplier) {
 		this.supplier = supplier;
 		return (ModelBinding<V>) this;
+	}
+
+	/**
+	 * When the change occurs, rather than pipe the event/change, pipe the
+	 * replaceWith object
+	 */
+	public <V> ModelBinding<V> value(V replaceWith) {
+		return value(() -> replaceWith);
 	}
 
 	/**
@@ -78,17 +86,17 @@ public class ModelBinding<T> {
 	/**
 	 * The name of the property to bind to, or null for any property change
 	 */
-	public ModelBinding<T> on(PropertyEnum fromPropertyName) {
+	public <P> ModelBinding<P> on(PropertyEnum fromPropertyName) {
 		this.fromPropertyName = fromPropertyName;
-		return this;
+		return (ModelBinding<P>) this;
 	}
 
 	/**
 	 * The name of the property to bind to, or null for any property change
 	 */
-	public ModelBinding<T> on(String fromPropertyName) {
+	public <P> ModelBinding<P> on(String fromPropertyName) {
 		this.fromPropertyName = fromPropertyName;
-		return this;
+		return (ModelBinding<P>) this;
 	}
 
 	/**
@@ -144,6 +152,9 @@ public class ModelBinding<T> {
 	}
 
 	void bind() {
+	}
+
+	void prepare() {
 		listener = bindings.addPropertyChangeListener(from, fromPropertyName,
 				evt -> acceptStreamElement(evt.getNewValue()));
 		if (setOnInitialise) {

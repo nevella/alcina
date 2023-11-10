@@ -84,18 +84,23 @@ body > overlay-container-modal > overlay {
 body {
   margin: 0;
   font-family: "Helvetica Neue", Arial;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 body > page {
   display: grid;
-  grid-template-areas: "header" "main";
-  grid-template-rows: 50px 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto;
+  grid-template-areas: "header header header header" "layers layers layers props" "input input output output";
+  grid-template-rows: 50px 1fr 200px;
   height: 100vh;
   width: 100vw;
+  background: #ccc;
+  gap: 1px;
 }
 body > page > * {
   min-height: 0;
+  background: white;
 }
 body > page > header {
   display: flex;
@@ -105,100 +110,28 @@ body > page > header {
   justify-content: center;
   line-height: 100%;
   font-size: 120%;
+  grid-area: header;
 }
-body > page > main {
-  display: grid;
-  grid-template-areas: "table properties" "table documentation";
-  grid-template-columns: 2fr 1fr;
-  gap: 1px;
-  background-color: #777;
-}
-body > page > main > feature-table {
-  grid-area: table;
-  display: block;
-}
-body > page > main > feature-table > table {
-  border: solid 1px #ddd;
-  border-collapse: collapse;
-  /* align-self: start
-  * unused - but good to know - this is how to stop auto-stretch of tables
-  * */
-  width: 100%;
-}
-body > page > main > feature-table > table tr.selected {
-  background-color: #f0f0fa;
-}
-body > page > main > feature-table > table th {
-  min-width: 7em;
-}
-body > page > main > feature-table > table td.in-progress {
-  background-color: #99cc66;
-}
-body > page > main > feature-table > table td.complete {
-  background-color: #99cccc;
-}
-body > page > main > feature-table > table td.open {
-  background-color: #ffff66;
-}
-body > page > main > feature-table > table td, body > page > main > feature-table > table th {
-  border: solid 1px #ddd;
-  font-weight: normal;
-  padding: 4px 2px;
-}
-body > page > main > feature-table > table td > *, body > page > main > feature-table > table th > * {
-  line-height: 18px;
-  height: 20px;
-  display: block;
-  white-space: nowrap;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
-}
-body > page > main > feature-table > table td > version-name, body > page > main > feature-table > table th > version-name {
-  color: #777;
-}
-body > page > main > feature-table > table td > feature-name, body > page > main > feature-table > table th > feature-name {
-  max-width: 250px;
-  padding-left: 5px;
-}
-body > page > main > properties {
-  grid-area: properties;
-}
-body > page > main > properties > header {
+body > page > layers {
   display: flex;
-  background-color: #eee;
-  color: #333;
-  align-items: center;
-  justify-content: center;
-  line-height: 100%;
-  height: 28px;
+  flex-direction: column;
+  gap: 2px;
+  grid-area: layers;
 }
-body > page > main > properties > table {
-  padding: 0.5rem;
-}
-body > page > main > properties > table th, body > page > main > properties > table td {
-  text-align: left;
-  padding-left: 0.5rem;
-}
-body > page > main > documentation {
-  grid-area: documentation;
-}
-body > page > main > documentation > header {
-  display: flex;
-  background-color: #eee;
-  color: #333;
-  align-items: center;
-  justify-content: center;
-  line-height: 100%;
-  height: 28px;
-}
-body > page > main > documentation > content {
+body > page > layers > layer-selections {
   display: block;
-  padding: 0.5em;
-  font-size: 16px;
+  white-space: pre;
 }
-body > page > main > * {
-  background-color: white;
-  min-height: 0;
-  min-width: 0;
-  overflow: scroll;
+body > page > properties {
+  display: block;
+  grid-area: props;
+}
+body > page > selections {
+  display: block;
+}
+body > page > selections.input {
+  grid-area: input;
+}
+body > page > selections.output {
+  grid-area: output;
 }

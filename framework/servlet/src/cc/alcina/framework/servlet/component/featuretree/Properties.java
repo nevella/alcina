@@ -7,14 +7,14 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
-import cc.alcina.framework.gwt.client.dirndl.model.HeadingModel;
+import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features;
 import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features.Entry;
 import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
 
 class Properties extends Model.All {
-	HeadingModel header = new HeadingModel("Properties");
+	Heading header = new Heading("Properties");
 
 	FeatureProperties properties;
 

@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.web.bindery.event.shared.UmbrellaException;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ProcessContextProvider;
 import cc.alcina.framework.common.client.process.ProcessObservable;
@@ -402,25 +402,30 @@ public class SelectionTraversal
 			return layerSelections != null
 					&& layerSelections.processed.contains(selection);
 		}
+
+		Collection<Selection> getSelections(Layer layer) {
+			return selections.byLayer(layer);
+		}
 	}
 
 	public static class StatsLogger {
-		@PropertyOrder({ "key", "outputs" })
-		public class LayerEntry {
+		public class LayerEntry extends Bindable.Fields {
 			private Layer layer;
+
+			String key;
+
+			String outputs;
 
 			public LayerEntry(Layer layer) {
 				this.layer = layer;
-			}
-
-			public String getKey() {
 				FormatBuilder keyBuilder = new FormatBuilder();
 				keyBuilder.indent(layer.depth());
 				keyBuilder.append(layer.getName());
-				return keyBuilder.toString();
+				key = keyBuilder.toString();
+				outputs = computeOutputs();
 			}
 
-			public String getOutputs() {
+			String computeOutputs() {
 				int size = selectionTraversal.state.selections.byLayer(layer)
 						.size();
 				if (size != 0) {
@@ -523,6 +528,10 @@ public class SelectionTraversal
 	public <S extends Selection> List<S>
 			getSelections(Class<? extends S> clazz) {
 		return state.getSelections(clazz);
+	}
+
+	public Collection<Selection> getSelections(Layer layer) {
+		return state.getSelections(layer);
 	}
 
 	public <S extends Selection> List<S> getSelections(Class<? extends S> clazz,

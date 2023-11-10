@@ -1,0 +1,54 @@
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Arial;
+  font-size: 16px;
+}
+
+body > page {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto;
+  grid-template-areas: "header header header header" "layers layers layers props" "input input output output";
+  grid-template-rows: 50px 1fr 200px;
+  height: 100vh;
+  width: 100vw;
+  background: #ccc;
+  gap: 1px;
+}
+body > page > * {
+  min-height: 0;
+  background: white;
+}
+body > page > header {
+  display: flex;
+  background-color: #ff8fa2;
+  color: white;
+  align-items: center;
+  justify-content: center;
+  line-height: 100%;
+  font-size: 120%;
+  grid-area: header;
+}
+body > page > layers {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  grid-area: layers;
+}
+body > page > layers > layer-selections {
+  display: block;
+  white-space: pre;
+}
+body > page > properties {
+  display: block;
+  grid-area: props;
+}
+body > page > selections {
+  display: block;
+}
+body > page > selections.input {
+  grid-area: input;
+}
+body > page > selections.output {
+  grid-area: output;
+}

@@ -2,13 +2,13 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.model.HeadingModel;
+import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-class Properties extends Model.All {
-	HeadingModel header = new HeadingModel("Properties");
+class Properties extends Model.Fields {
+	@Directed
+	Heading header = new Heading("Properties");
 
-	@Directed.Exclude
 	Selection selection;
 
 	public void setSelection(Selection selection) {
@@ -16,6 +16,9 @@ class Properties extends Model.All {
 				() -> this.selection = selection);
 	}
 
-	Properties() {
+	Page page;
+
+	Properties(Page page) {
+		this.page = page;
 	}
 }

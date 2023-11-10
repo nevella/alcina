@@ -15,13 +15,13 @@ import cc.alcina.framework.entity.persistence.mvcc.SourceFinder;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
-import cc.alcina.framework.gwt.client.dirndl.model.HeadingModel;
+import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
 
 class Documentation extends Model.Fields {
 	@Directed
-	HeadingModel header = new HeadingModel("Documentation");
+	Heading header = new Heading("Documentation");
 
 	@Directed(renderer = LeafRenderer.Html.class, tag = "content")
 	String content;

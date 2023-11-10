@@ -8,6 +8,7 @@
   font-size: 15px;
   line-height: 23px;
   padding: 0.5rem;
+  outline: none;
 }
 
 .tree.root-hidden > .node > label {
@@ -54,7 +55,7 @@
 .tree .node.leaf > label > span {
   visibility: hidden;
 }
-.tree .node.selected > label {
+.tree .node.keyboard-selected > label {
   background-color: #E6E6E6;
 }
 .tree .node > nodes {

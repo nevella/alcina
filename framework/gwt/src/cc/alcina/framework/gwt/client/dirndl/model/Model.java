@@ -383,11 +383,14 @@ public abstract class Model extends Bindable implements
 			Preconditions.checkState(!bound);
 			binding.bind();
 			listenerBindings.bind();
+			modelBindings.forEach(ModelBinding::bind);
 			bound = true;
 		}
 
-		public ModelBinding<?> build() {
-			return new ModelBinding(this);
+		public ModelBinding<?> from(SourcesPropertyChangeEvents source) {
+			ModelBinding binding = new ModelBinding(this);
+			modelBindings.add(binding);
+			return binding.from(source);
 		}
 
 		public boolean isFieldless() {
@@ -400,6 +403,7 @@ public abstract class Model extends Bindable implements
 
 		public void setLeft() {
 			binding.setLeft();
+			modelBindings.forEach(ModelBinding::prepare);
 		}
 
 		public void unbind() {

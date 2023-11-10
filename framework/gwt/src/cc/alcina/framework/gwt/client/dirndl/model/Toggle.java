@@ -37,8 +37,8 @@ public class Toggle extends Model.Fields implements ModelEvents.Toggle.Handler {
 		this.values = values;
 		// this could also have been implemented by adding code to
 		// setDisplayedIndex - but note that we get init for free this way
-		bindings().build().from(this).on(Property.displayedIndex)
-				.typed(Integer.class).accept(this::onDisplayedIndexSet);
+		bindings().from(this).on(Property.displayedIndex).typed(Integer.class)
+				.accept(this::onDisplayedIndexSet);
 	}
 
 	void onDisplayedIndexSet(int newIndex) {
