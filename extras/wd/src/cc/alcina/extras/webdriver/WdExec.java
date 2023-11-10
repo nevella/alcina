@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Io;
 
 public class WdExec {
@@ -135,7 +135,7 @@ public class WdExec {
 		if (getBy() == null) {
 			return WDUtils.executeScript(driver, null, script);
 		} else {
-			ObjectWrapper<Object> scriptResult = new ObjectWrapper<>();
+			Ref<Object> scriptResult = new Ref<>();
 			performAction(false, e -> scriptResult
 					.set(WDUtils.executeScript(driver, e, script)));
 			return scriptResult.get();

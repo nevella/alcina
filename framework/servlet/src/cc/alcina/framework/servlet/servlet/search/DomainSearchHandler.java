@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilterWithCache;
@@ -173,8 +173,7 @@ public class DomainSearchHandler {
 			// FIXME - domainsearch - there may be places where we can get
 			// result set
 			// size without collecting (i.e. index-only)
-			ObjectWrapper<Stream<? extends Entity>> streamRef = ObjectWrapper
-					.of(search);
+			Ref<Stream<? extends Entity>> streamRef = Ref.of(search);
 			List<Entity> rows = DomainStore.queryPool().call(
 					() -> streamRef.get().collect(Collectors.toList()),
 					streamRef, true);

@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal;
 
-import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalHistory;
@@ -32,9 +32,10 @@ class Page extends Model.All {
 		}
 
 		String computeName(TraversalHistory history) {
-			return Ax.format("%s - %s",
-					TraversalProcessView.Ui.get().getMainCaption(),
-					history.displayName());
+			FormatBuilder format = new FormatBuilder().separator(" - ");
+			format.append(TraversalProcessView.Ui.get().getMainCaption());
+			format.appendIfNonNull(history, TraversalHistory::displayName);
+			return format.toString();
 		}
 
 		public void setName(String name) {

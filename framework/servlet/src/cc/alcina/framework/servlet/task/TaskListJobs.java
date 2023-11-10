@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.CountingMap;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -268,8 +268,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 					&& filter(job.getTaskClassName(), job.getTaskSerialized());
 			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
 					.filter(textFilter).filter(sectionFilter);
-			ObjectWrapper<Stream<? extends Entity>> streamRef = ObjectWrapper
-					.of(stream);
+			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
 			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
 					() -> streamRef.get().collect(Collectors.toList()),
 					streamRef, true);
@@ -331,8 +330,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 						Comparator.comparing(Job::getEndTime).reversed());
 				parallel = true;
 			}
-			ObjectWrapper<Stream<? extends Entity>> streamRef = ObjectWrapper
-					.of(stream);
+			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
 			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
 					() -> streamRef.get().collect(Collectors.toList()),
 					streamRef, parallel);

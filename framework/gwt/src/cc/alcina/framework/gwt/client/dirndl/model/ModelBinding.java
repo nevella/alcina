@@ -8,6 +8,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
 
 /**
@@ -16,7 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
  *
  * @param <T>
  */
-public class ModelBindingBuilder<T> {
+public class ModelBinding<T> {
 	Bindings bindings;
 
 	SourcesPropertyChangeEvents from;
@@ -33,9 +34,11 @@ public class ModelBindingBuilder<T> {
 
 	RemovablePropertyChangeListener listener;
 
-	boolean setOnInitialise;
+	boolean setOnInitialise = true;
 
-	public ModelBindingBuilder(Bindings bindings) {
+	Ref<Consumer<Runnable>> dispatchRef = null;
+
+	public ModelBinding(Bindings bindings) {
 		this.bindings = bindings;
 	}
 
@@ -45,22 +48,21 @@ public class ModelBindingBuilder<T> {
 	 */
 	public void accept(Consumer<T> consumer) {
 		this.consumer = consumer;
-		bind();
 	}
 
 	/**
 	 * When the change occurs, rather than pipe the event/change, pipe the
 	 * object from <code>supplier</code>
 	 */
-	public <V> ModelBindingBuilder<V> consume(Supplier<V> supplier) {
+	public <V> ModelBinding<V> consume(Supplier<V> supplier) {
 		this.supplier = supplier;
-		return (ModelBindingBuilder<V>) this;
+		return (ModelBinding<V>) this;
 	}
 
 	/**
 	 * The source of the binding property changes
 	 */
-	public ModelBindingBuilder<T> from(SourcesPropertyChangeEvents from) {
+	public ModelBinding<T> from(SourcesPropertyChangeEvents from) {
 		this.from = from;
 		return this;
 	}
@@ -68,15 +70,15 @@ public class ModelBindingBuilder<T> {
 	/**
 	 * Add an intermediate mapping to the pipeline
 	 */
-	public <U> ModelBindingBuilder<U> map(Function<T, U> map) {
+	public <U> ModelBinding<U> map(Function<T, U> map) {
 		this.map = (Function) map;
-		return (ModelBindingBuilder<U>) this;
+		return (ModelBinding<U>) this;
 	}
 
 	/**
 	 * The name of the property to bind to, or null for any property change
 	 */
-	public ModelBindingBuilder<T> on(PropertyEnum fromPropertyName) {
+	public ModelBinding<T> on(PropertyEnum fromPropertyName) {
 		this.fromPropertyName = fromPropertyName;
 		return this;
 	}
@@ -84,7 +86,7 @@ public class ModelBindingBuilder<T> {
 	/**
 	 * The name of the property to bind to, or null for any property change
 	 */
-	public ModelBindingBuilder<T> on(String fromPropertyName) {
+	public ModelBinding<T> on(String fromPropertyName) {
 		this.fromPropertyName = fromPropertyName;
 		return this;
 	}
@@ -92,7 +94,7 @@ public class ModelBindingBuilder<T> {
 	/**
 	 * Convert a bi-di bindings
 	 */
-	public ModelBindingBuilder<T> oneWay(boolean oneWay) {
+	public ModelBinding<T> oneWay(boolean oneWay) {
 		this.oneWay = oneWay;
 		return this;
 	}
@@ -100,20 +102,42 @@ public class ModelBindingBuilder<T> {
 	/**
 	 * Define the type of the incoming property
 	 */
-	public <V> ModelBindingBuilder<V> typed(Class<V> propertyType) {
-		return (ModelBindingBuilder<V>) this;
+	public <V> ModelBinding<V> typed(Class<V> propertyType) {
+		return (ModelBinding<V>) this;
 	}
 
 	/**
 	 * Trigger the pipeline with the source's initial value when the binding is
-	 * created
+	 * created (defaults to true)
 	 */
-	public ModelBindingBuilder<T> withSet() {
-		this.setOnInitialise = true;
+	public ModelBinding<T> withSetOnInitialise(boolean setOnInitialise) {
+		this.setOnInitialise = setOnInitialise;
 		return this;
 	}
 
 	void acceptStreamElement(Object obj) {
+		Consumer<Runnable> dispatch = ensureDispatch();
+		if (dispatch == null) {
+			acceptStreamElement0(obj);
+		} else {
+			dispatch.accept(() -> acceptStreamElement0(obj));
+		}
+	}
+
+	Consumer<Runnable> ensureDispatch() {
+		if (dispatchRef == null) {
+			if (bindings.model().provideIsBound()) {
+				dispatchRef = bindings.model().provideNode().getResolver()
+						.dispatch();
+			} else {
+				// pre-binding, return null
+				return null;
+			}
+		}
+		return dispatchRef.get();
+	}
+
+	void acceptStreamElement0(Object obj) {
 		Object o1 = supplier == null ? obj : supplier.get();
 		Object o2 = map == null ? o1 : ((Function) map).apply(o1);
 		((Consumer) consumer).accept(o2);

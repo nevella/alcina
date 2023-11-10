@@ -82,7 +82,7 @@ public class TraversalProcessView {
 		public void render() {
 			injectCss("res/css/styles.css");
 			Client.get().initAppHistory();
-			new DirectedLayout().render(new Page()).getRendered()
+			new DirectedLayout().render(resolver(), new Page()).getRendered()
 					.appendToRoot();
 		}
 	}

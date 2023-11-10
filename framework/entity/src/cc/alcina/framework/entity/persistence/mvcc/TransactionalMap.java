@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIte
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.UnboxedLongMap;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
@@ -127,7 +127,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				logger.info("debugNotFound - concurrent - txValue {} ", value);
 				logger.info("debugNotFound - concurrent - isNotRemoved {} ",
 						value.isNotRemoved());
-				ObjectWrapper resolve = value.resolve(false);
+				Ref resolve = value.resolve(false);
 				logger.info("debugNotFound - concurrent - txValue.resolve {} ",
 						resolve);
 				if (resolve != null) {
@@ -227,8 +227,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			if (transactionalValue == null) {
 				transactionalValue = (TransactionalValue) concurrent
 						.computeIfAbsent(transactionalKey, k -> {
-							return new TransactionalValue(key,
-									ObjectWrapper.of(value),
+							return new TransactionalValue(key, Ref.of(value),
 									currentTransaction);
 						});
 			}
@@ -258,14 +257,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			Object transactionalKey = wrapTransactionalKey(key);
 			TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 					.get(transactionalKey);
-			ObjectWrapper<Boolean> createdTransactionalValue = new ObjectWrapper<>();
+			Ref<Boolean> createdTransactionalValue = new Ref<>();
 			createdTransactionalValue.set(false);
 			if (transactionalValue == null) {
 				transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 						.computeIfAbsent(transactionalKey, k -> {
 							createdTransactionalValue.set(true);
 							return new TransactionalValue((K) key,
-									ObjectWrapper.of(REMOVED_VALUE_MARKER),
+									Ref.of(REMOVED_VALUE_MARKER),
 									currentTransaction);
 						});
 			}
@@ -719,11 +718,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	class TransactionalValue extends MvccObjectVersions<ObjectWrapper> {
+	class TransactionalValue extends MvccObjectVersions<Ref> {
 		private K key;
 
-		TransactionalValue(K key, ObjectWrapper t,
-				Transaction initialTransaction) {
+		TransactionalValue(K key, Ref t, Transaction initialTransaction) {
 			super(t, initialTransaction, false, key);
 			this.key = key;
 		}
@@ -738,7 +736,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		public V getValue() {
-			ObjectWrapper o = resolve(false);
+			Ref o = resolve(false);
 			if (o == null) {
 				/*
 				 * No visible transaction
@@ -763,7 +761,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		public boolean isNotRemoved() {
-			ObjectWrapper o = resolve(false);
+			Ref o = resolve(false);
 			if (o == null) {
 				/*
 				 * No visible transaction
@@ -777,7 +775,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		 * return true if changed
 		 */
 		public boolean remove() {
-			ObjectWrapper resolved = resolve(true);
+			Ref resolved = resolve(true);
 			if (notRemovedValueMarker(resolved)) {
 				resolved.set(REMOVED_VALUE_MARKER);
 				return true;
@@ -789,19 +787,18 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		protected ObjectWrapper copyObject(ObjectWrapper mostRecentObject) {
-			return ObjectWrapper.of(mostRecentObject.get());
+		protected Ref copyObject(Ref mostRecentObject) {
+			return Ref.of(mostRecentObject.get());
 		}
 
 		@Override
-		protected void copyObject(ObjectWrapper fromObject,
-				ObjectWrapper baseObject) {
+		protected void copyObject(Ref fromObject, Ref baseObject) {
 			baseObject.set(fromObject.get());
 		}
 
 		@Override
-		protected ObjectWrapper initialAllTransactionsValueFor(ObjectWrapper t,
-				Object context, boolean baseTransaction) {
+		protected Ref initialAllTransactionsValueFor(Ref t, Object context,
+				boolean baseTransaction) {
 			// (if in baseTransaction/pureTransaction mode)
 			if (baseTransaction) {
 				return domainIdentity;
@@ -815,9 +812,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				K key = (K) context;
 				if (nonConcurrent.containsKey(key)) {
 					V nonTransactionalValue = nonConcurrent.get(key);
-					return ObjectWrapper.of(nonTransactionalValue);
+					return Ref.of(nonTransactionalValue);
 				} else {
-					return ObjectWrapper.of(REMOVED_VALUE_MARKER);
+					return Ref.of(REMOVED_VALUE_MARKER);
 				}
 			}
 		}
@@ -847,12 +844,12 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		 * synchronized: must block vacuum() calls
 		 */
 		synchronized V getAnyTransaction() {
-			ObjectWrapper baseObject = visibleAllTransactions;
+			Ref baseObject = visibleAllTransactions;
 			if (notRemovedValueMarker(baseObject)) {
 				return (V) baseObject.get();
 			}
-			Optional<ObjectVersion<ObjectWrapper>> version = versions().values()
-					.stream().filter(objectVersion -> notRemovedValueMarker(
+			Optional<ObjectVersion<Ref>> version = versions().values().stream()
+					.filter(objectVersion -> notRemovedValueMarker(
 							objectVersion.object))
 					.findFirst();
 			if (version.isEmpty()) {
@@ -867,11 +864,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return !isNotRemoved();
 		}
 
-		boolean isRemovedValueMarker(ObjectWrapper o) {
+		boolean isRemovedValueMarker(Ref o) {
 			return o.get() == REMOVED_VALUE_MARKER;
 		}
 
-		boolean notRemovedValueMarker(ObjectWrapper o) {
+		boolean notRemovedValueMarker(Ref o) {
 			return !isRemovedValueMarker(o);
 		}
 

@@ -589,30 +589,35 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
+	public static void initLifecycleServiceClasses(
+			Class<? extends LifecycleService> typeFilter) {
+		/*
+		 * If custom LifecycleService impl init is required, call it earlier
+		 * (initCustom) and don't override LifecycleService.onApplicationStartup
+		 */
+		Registry.query(LifecycleService.class).registrations()
+				.filter(typeFilter::isAssignableFrom).
+				/*
+				 * each class implementing LifecycleService must also have a
+				 * 
+				 * @Registration.Singleton
+				 */
+				map(Registry::impl).forEach(service -> {
+					try {
+						service.onApplicationStartup();
+					} catch (Exception e) {
+						Ax.sysLogHigh("Exception starting up %s",
+								service.getClass().getSimpleName());
+						e.printStackTrace();
+					}
+				});
+	}
+
 	protected void runFinalPreInitTasks() throws Exception {
 		try {
 			Transaction.begin();
 			ThreadedPermissionsManager.cast().pushSystemUser();
-			/*
-			 * If custom LifecycleService impl init is required, call it earlier
-			 * (initCustom) and don't override
-			 * LifecycleService.onApplicationStartup
-			 */
-			Registry.query(LifecycleService.class).registrations().// each class
-																	// implementing
-																	// LifecycleService
-																	// must also
-																	// have a
-			// @Registration.Singleton
-					map(Registry::impl).forEach(service -> {
-						try {
-							service.onApplicationStartup();
-						} catch (Exception e) {
-							Ax.sysLogHigh("Exception starting up %s",
-									service.getClass().getSimpleName());
-							e.printStackTrace();
-						}
-					});
+			initLifecycleServiceClasses(LifecycleService.class);
 			if (serializationSignatureListener != null) {
 				/*
 				 * throw if reflective serializer or tree serializer consistency
@@ -627,11 +632,13 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						.call(() -> serializationSignatureListener
 								.ensureSignature());
 				if (cancelStartupOnSignatureGenerationFailure) {
-					// will throw an exception if there's an issue.
-					//
-					// FIXME - startup - this
-					// is never performed scheduled if run as a job - probably
-					// an interplay with the signature generation? Fix it anyway
+					/*
+					 * will throw an exception if there's an issue.
+					 * 
+					 * FIXME - startup - this is never performed scheduled if
+					 * run as a job - probably an interplay with the signature
+					 * generation? Fix it anyway
+					 */
 					new TaskGenerateReflectiveSerializerSignatures().run();
 				} else {
 					new TaskGenerateReflectiveSerializerSignatures().schedule();
@@ -676,10 +683,12 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		private Object handler;
 
 		public PerThreadLoggingWrapper(Object handler) {
-			// handler is an instance of
-			// cc.alcina.framework.servlet.logging.PerThreadLoggingHandler, but
-			// from a different classloader - so call begin/end buffer via
-			// reflection
+			/*
+			 * handler is an instance of
+			 * cc.alcina.framework.servlet.logging.PerThreadLoggingHandler, but
+			 * from a different classloader - so call begin/end buffer via
+			 * reflection
+			 */
 			this.handler = handler;
 		}
 

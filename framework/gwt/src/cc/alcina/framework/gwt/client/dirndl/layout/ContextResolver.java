@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -22,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
@@ -77,6 +79,19 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	public ContextResolver() {
 		initCaches();
+	}
+
+	protected Ref<Consumer<Runnable>> dispatch = null;
+
+	public Ref<Consumer<Runnable>> dispatch() {
+		if (dispatch == null) {
+			if (parent != null) {
+				dispatch = parent.dispatch;
+			} else {
+				dispatch = new Ref<>();
+			}
+		}
+		return dispatch;
 	}
 
 	public void appendToRoot(Rendered rendered) {

@@ -104,7 +104,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.Configuration;
@@ -1501,8 +1501,7 @@ public class DomainStore implements IDomainStore {
 		 * the context and serial arguments
 		 */
 		public <T> T call(Callable<T> callable,
-				ObjectWrapper<Stream<? extends Entity>> streamRef,
-				boolean parallel) {
+				Ref<Stream<? extends Entity>> streamRef, boolean parallel) {
 			boolean runInPool = false;
 			parallel &= !LooseContext.is(CONTEXT_SERIAL_QUERY);
 			if (parallel) {

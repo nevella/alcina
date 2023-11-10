@@ -87,6 +87,7 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import elemental.json.impl.JsonUtil;
 
 @SuppressWarnings("deprecation")
@@ -434,8 +435,8 @@ public abstract class DevHelper {
 	}
 
 	void initLifecycleServices() {
-		Registry.query(LifecycleService.AlsoDev.class).implementations()
-				.forEach(LifecycleService::onApplicationStartup);
+		AppLifecycleServletBase
+				.initLifecycleServiceClasses(LifecycleService.AlsoDev.class);
 	}
 
 	public void writeObject(Object obj) {

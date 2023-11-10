@@ -1,7 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.beans.PropertyChangeEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -244,6 +246,8 @@ public abstract class Model extends Bindable implements
 
 		private boolean bound;
 
+		public List<ModelBinding> modelBindings = new ArrayList<>();
+
 		public Binding add(Object leftPropertyName,
 				Converter leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
@@ -382,8 +386,8 @@ public abstract class Model extends Bindable implements
 			bound = true;
 		}
 
-		public ModelBindingBuilder<?> build() {
-			return new ModelBindingBuilder(this);
+		public ModelBinding<?> build() {
+			return new ModelBinding(this);
 		}
 
 		public boolean isFieldless() {
@@ -461,6 +465,10 @@ public abstract class Model extends Bindable implements
 						.property(propertyName);
 				return new MapBackedProperty(property);
 			}
+		}
+
+		Model model() {
+			return Model.this;
 		}
 	}
 

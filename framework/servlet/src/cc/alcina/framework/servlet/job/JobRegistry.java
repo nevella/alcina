@@ -68,7 +68,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -173,7 +173,7 @@ public class JobRegistry {
 	public static final String CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET = JobRegistry.class
 			.getName() + ".CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET";
 
-	public static final String CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY =  JobRegistry.class
+	public static final String CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY = JobRegistry.class
 			.getName() + ".CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY";
 
 	public static final String TRANSFORM_QUEUE_NAME = JobRegistry.class
@@ -320,7 +320,7 @@ public class JobRegistry {
 	 * affecting the model which will be missed by an in-glight)
 	 */
 	public Job ensureScheduled(Task task, boolean scheduleAfterInFlight) {
-		ObjectWrapper<Job> jobRef = new ObjectWrapper<>();
+		Ref<Job> jobRef = new Ref<>();
 		String serialized = FlatTreeSerializer.serialize(task);
 		withJobMetadataLock(task.getClass().getName(), () -> {
 			Optional<? extends Job> pending = JobDomain.get()

@@ -230,4 +230,13 @@ public class Topic<T> {
 			topic.add(wrapper);
 		}
 	}
+
+	public T getPublished() {
+		return published;
+	}
+
+	public void clearPublished() {
+		wasPublished = false;
+		published = null;
+	}
 }

@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.domain.TransactionId;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
 public class TransactionEnvironmentNonTx implements TransactionEnvironment {
@@ -97,7 +97,7 @@ public class TransactionEnvironmentNonTx implements TransactionEnvironment {
 
 	@Override
 	public <T> T withDomainAccess0(Supplier<T> supplier) {
-		ObjectWrapper<T> ref = new ObjectWrapper<>();
+		Ref<T> ref = new Ref<>();
 		LocalDomainQueue.run(() -> {
 			ref.set(supplier.get());
 		});
