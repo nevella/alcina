@@ -66,7 +66,7 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 				PermissionsManager.get().popUser();
 			}
 		}
-		if (copyContentToLargeResult) {
+		if (copyContentToLargeResult || Ax.isTest()) {
 			JobContext.get().getJob().setLargeResult(result.getContent());
 		}
 		if (!Ax.isTest()) {
