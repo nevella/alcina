@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -225,6 +226,8 @@ public class Tables {
 					if (propertyValue == null) {
 					} else if (propertyValue instanceof Model) {
 						value = propertyValue;
+					} else if (propertyValue instanceof Collection) {
+						value = propertyValue;
 					} else if (propertyValue instanceof Enum) {
 						value = Ax.friendly(propertyValue);
 					} else if (propertyValue instanceof HasDisplayName) {
@@ -246,7 +249,7 @@ public class Tables {
 					return this.key;
 				}
 
-				@Directed(tag = "td")
+				@Directed.Wrap("td")
 				public Object getValue() {
 					return this.value;
 				}

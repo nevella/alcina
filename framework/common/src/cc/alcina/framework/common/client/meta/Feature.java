@@ -10,12 +10,14 @@ import java.lang.annotation.Target;
 import java.util.Comparator;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.relational.RelationalCode;
 
 /*
  * Project planning/structure - expressed in code
  *
  */
 @Registration(Feature.class)
+@RelationalCode
 public interface Feature extends Registration.AllSubtypes {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited

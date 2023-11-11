@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.features;
+package cc.alcina.framework.common.client.feature;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
