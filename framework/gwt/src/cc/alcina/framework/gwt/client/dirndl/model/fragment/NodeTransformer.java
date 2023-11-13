@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
@@ -117,6 +118,14 @@ public interface NodeTransformer {
 		}
 
 		@Override
+		public String toString() {
+			Directed directed = getDirected();
+			return Ax.format("Directed %s :: matches %s.%s",
+					fragmentNodeType.getSimpleName(), directed.tag(),
+					directed.className());
+		}
+
+		@Override
 		public void apply(DirectedLayout.Node parentNode) {
 			Model model = (Model) Reflections.newInstance(fragmentNodeType);
 			setLayoutNode(
@@ -154,18 +163,53 @@ public interface NodeTransformer {
 	}
 
 	/**
-	 * Default, catchall transform (to a GenericDomModel)
+	 * Default, catchall element transform (to a GenericDomModel)
 	 */
-	public static class Generic extends AbstractNodeTransformer {
+	public static class GenericElement extends AbstractNodeTransformer {
 		@Override
 		public boolean appliesTo(DomNode node) {
-			return true;
+			return node.isElement();
 		}
 
 		@Override
 		public void apply(DirectedLayout.Node parentNode) {
-			FragmentNode.Generic model = new FragmentNode.Generic();
+			FragmentNode.GenericElement model = new FragmentNode.GenericElement();
 			model.tag = node.w3cElement().getTagName();
+			setLayoutNode(
+					parentNode.insertFragmentChild(model, node.w3cNode()));
+		}
+	}
+
+	/**
+	 * Default, catchall pi transform
+	 */
+	public static class GenericProcessingInstruction
+			extends AbstractNodeTransformer {
+		@Override
+		public boolean appliesTo(DomNode node) {
+			return node.isProcessingInstruction();
+		}
+
+		@Override
+		public void apply(DirectedLayout.Node parentNode) {
+			FragmentNode.GenericProcessingInstruction model = new FragmentNode.GenericProcessingInstruction();
+			setLayoutNode(
+					parentNode.insertFragmentChild(model, node.w3cNode()));
+		}
+	}
+
+	/**
+	 * Default, catchall comment transform (to a GenericDomModel)
+	 */
+	public static class GenericComment extends AbstractNodeTransformer {
+		@Override
+		public boolean appliesTo(DomNode node) {
+			return node.isComment();
+		}
+
+		@Override
+		public void apply(DirectedLayout.Node parentNode) {
+			FragmentNode.GenericComment model = new FragmentNode.GenericComment();
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}

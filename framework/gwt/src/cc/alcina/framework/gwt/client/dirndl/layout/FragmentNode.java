@@ -278,19 +278,33 @@ public abstract class FragmentNode extends Model.Fields
 	/*
 	 * Reverse transformation falls back on this model if no other matches exist
 	 */
-	@Transformer(NodeTransformer.Generic.class)
-	public static class Generic extends FragmentNode implements HasTag {
+	@Transformer(NodeTransformer.GenericElement.class)
+	public static class GenericElement extends FragmentNode implements HasTag {
 		public String tag;
 
 		@Override
 		public void copyFromExternal(FragmentNode external) {
-			tag = ((Generic) external).tag;
+			tag = ((GenericElement) external).tag;
 		}
 
 		@Override
 		public String provideTag() {
 			return tag;
 		}
+	}
+
+	/**
+	 * Output not yet implemented
+	 */
+	@Transformer(NodeTransformer.GenericProcessingInstruction.class)
+	public static class GenericProcessingInstruction extends FragmentNode {
+	}
+
+	/**
+	 * Output not yet implemented
+	 */
+	@Transformer(NodeTransformer.GenericComment.class)
+	public static class GenericComment extends FragmentNode {
 	}
 
 	public class Nodes {

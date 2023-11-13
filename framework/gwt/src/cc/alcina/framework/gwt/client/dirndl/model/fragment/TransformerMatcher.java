@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 
 class TransformerMatcher {
@@ -46,6 +47,7 @@ class TransformerMatcher {
 			matcherTransformers = this.fragmentModel.modelledTypes.stream()
 					.map(this::createTransformerForType)
 					.collect(Collectors.toList());
+			matcherTransformers.forEach(Ax::out);
 		}
 	}
 }

@@ -229,7 +229,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	protected void addDefaultModelledTypes() {
 		addModelled(List.of(FragmentNode.TextNode.class,
-				FragmentNode.Generic.class));
+				FragmentNode.GenericElement.class,
+				FragmentNode.GenericProcessingInstruction.class,
+				FragmentNode.GenericComment.class));
 	}
 
 	void addDescent(DomNode node) {
