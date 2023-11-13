@@ -30,9 +30,14 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
-/*
- */
 
+/**
+ * <p>
+ * A persistent tree of facts about a system (such as a server cluster)
+ * 
+ * <p>
+ * Each fact is modelled as a {@link KnownNode}
+ */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Knowns {
 	public static Object reachableKnownsModificationNotifier = new Object();
