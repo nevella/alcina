@@ -14,6 +14,20 @@ A good example satisfying all the above is the `Feature.java` feature modelling 
 useable in other projects) - code which satisfies/models a given feature references the `Feature` via
 `@Feature.Ref` annotations - and there's a strong relational model between features and their attributes
 
+## Benefits
+
+- The model is refactorable
+- The model is in code (so no serialization required)
+- The model can be documented
+- The model is version controlled
+- The model allows any degree of validation
+
+## Disadvantages
+
+- The model can't scale beyond a certain size
+- There's no "dev vs production" separation (which may not be a problem)
+- (minor) there's a limited amount of required linking code (particularly with the @Data pattern below)
+
 ## Patterns
 
 ### Enums and @Data

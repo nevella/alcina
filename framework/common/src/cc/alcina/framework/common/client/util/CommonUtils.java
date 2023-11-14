@@ -2231,6 +2231,9 @@ public class CommonUtils {
 		case DATESTAMP_HUMAN:
 			return format("%s.%s.%s", padTwo(date.getYear() + 1900),
 					padTwo(date.getMonth() + 1), padTwo(date.getDate()));
+		case DATESTAMP_DASHED:
+			return format("%s-%s-%s", padTwo(date.getYear() + 1900),
+					padTwo(date.getMonth() + 1), padTwo(date.getDate()));
 		}
 		return date.toString();
 	}
@@ -2381,7 +2384,7 @@ public class CommonUtils {
 		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
 		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY,
 		AU_DATE_MONTH_NO_PAD_DAY, AU_DATE_TIME_SHORT, DATESTAMP_HUMAN,
-		AU_DATE_TIME_TZ
+		AU_DATE_TIME_TZ, DATESTAMP_DASHED
 	}
 
 	public static class DeduplicatePredicate<C, K> implements Predicate<C> {
