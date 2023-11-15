@@ -5,7 +5,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 public class StandardModels {
 	@Registration.Singleton
@@ -28,7 +27,6 @@ public class StandardModels {
 		}
 	}
 
-	@Directed(tag = "span")
 	public static class TextTitle extends Model.Fields {
 		@Binding(type = Type.INNER_TEXT)
 		public String text;
