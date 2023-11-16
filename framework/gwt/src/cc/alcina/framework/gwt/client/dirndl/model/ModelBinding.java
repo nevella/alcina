@@ -2,8 +2,11 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.Scheduler;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
@@ -37,6 +40,8 @@ public class ModelBinding<T> {
 	boolean setOnInitialise = true;
 
 	Ref<Consumer<Runnable>> dispatchRef = null;
+
+	Predicate<T> predicate;
 
 	public ModelBinding(Bindings bindings) {
 		this.bindings = bindings;
@@ -148,6 +153,9 @@ public class ModelBinding<T> {
 	void acceptStreamElement0(Object obj) {
 		Object o1 = supplier == null ? obj : supplier.get();
 		Object o2 = map == null ? o1 : ((Function) map).apply(o1);
+		if (predicate != null && !((Predicate) predicate).test(o2)) {
+			return;
+		}
 		((Consumer) consumer).accept(o2);
 	}
 
@@ -160,5 +168,17 @@ public class ModelBinding<T> {
 		if (setOnInitialise) {
 			acceptStreamElement(listener.currentValue());
 		}
+	}
+
+	public ModelBinding<T> filter(Predicate<T> predicate) {
+		this.predicate = predicate;
+		return this;
+	}
+
+	public ModelBinding<?> withDeferred() {
+		Preconditions.checkState(dispatchRef == null);
+		dispatchRef = Ref
+				.of(r -> Scheduler.get().scheduleDeferred(() -> r.run()));
+		return this;
 	}
 }
