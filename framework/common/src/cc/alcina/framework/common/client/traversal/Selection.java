@@ -53,6 +53,10 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return (ST) get();
 	}
 
+	public interface Has {
+		Selection provideSelection();
+	}
+
 	/**
 	 * This method (and teardown exitContext) should generally only operate on
 	 * context properties - see

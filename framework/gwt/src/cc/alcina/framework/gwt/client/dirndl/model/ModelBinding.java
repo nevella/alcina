@@ -43,6 +43,13 @@ public class ModelBinding<T> {
 
 	Predicate<T> predicate;
 
+	boolean transformsNull;
+
+	public ModelBinding<T> withTransformsNull() {
+		this.transformsNull = true;
+		return this;
+	}
+
 	public ModelBinding(Bindings bindings) {
 		this.bindings = bindings;
 	}
@@ -152,7 +159,8 @@ public class ModelBinding<T> {
 
 	void acceptStreamElement0(Object obj) {
 		Object o1 = supplier == null ? obj : supplier.get();
-		Object o2 = map == null ? o1 : ((Function) map).apply(o1);
+		Object o2 = map == null || (o1 == null && !transformsNull) ? o1
+				: ((Function) map).apply(o1);
 		if (predicate != null && !((Predicate) predicate).test(o2)) {
 			return;
 		}

@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
+import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalHistory;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalProcessPlace;
 import cc.alcina.framework.servlet.dom.ClientRemoteImpl;
 import cc.alcina.framework.servlet.dom.Environment;
@@ -61,6 +62,8 @@ public class TraversalProcessView {
 	}
 
 	public static class Ui implements RemoteUi {
+		private Page page;
+
 		public static Ui get() {
 			return (Ui) Environment.get().ui;
 		}
@@ -82,8 +85,13 @@ public class TraversalProcessView {
 		public void render() {
 			injectCss("res/css/styles.css");
 			Client.get().initAppHistory();
-			new DirectedLayout().render(resolver(), new Page()).getRendered()
+			page = new Page();
+			new DirectedLayout().render(resolver(), page).getRendered()
 					.appendToRoot();
+		}
+
+		public TraversalHistory getHistory() {
+			return page.history;
 		}
 	}
 

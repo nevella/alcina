@@ -5,7 +5,39 @@
   flex-direction: column
   gap: 2px
   grid-area: layers
+  background: #eee
 
-  > layer-selections
-    display: block
-    white-space: pre
+  > layers
+    display: grid
+    gap: 1rem
+    grid-template-columns: 18rem 1fr 1fr 1fr 1fr 1fr
+    overflow: scroll
+
+    > layer-selections
+      display: contents
+
+      .bordered-area
+        
+        border: solid 1px #ccc
+        padding: 0.5rem
+        overflow-x: hidden
+        text-overflow: ellipsis
+        white-space: pre
+        min-height: 3rem
+
+      > name-area
+        display: block
+        background: #f7fffe
+
+        > *
+          display: inline-block
+          padding-right: 1rem
+
+      > selections-area
+        display: contents
+
+        > selection-area
+          display: flex
+          flex-direction: column
+          background: #fff
+

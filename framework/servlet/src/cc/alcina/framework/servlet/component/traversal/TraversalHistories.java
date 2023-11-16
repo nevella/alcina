@@ -29,7 +29,7 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 	}
 
 	public static class TraversalHistory {
-		SelectionTraversal traversal;
+		public SelectionTraversal traversal;
 
 		long lastAccessed;
 

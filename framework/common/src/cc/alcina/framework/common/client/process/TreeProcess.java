@@ -201,6 +201,11 @@ public class TreeProcess {
 					.collect(Collectors.toList());
 		}
 
+		default String treePath() {
+			return asNodeIndicies().stream().map(Object::toString)
+					.collect(Collectors.joining("."));
+		}
+
 		default List<Node> asNodePath() {
 			List<Node> result = new ArrayList<>();
 			Node cursor = this;
@@ -299,6 +304,12 @@ public class TreeProcess {
 		default Node nodeForValue(Object value) {
 			return getChildren().stream().filter(c -> c.getValue() == value)
 					.findFirst().get();
+		}
+
+		default Node nodeForTreePath(String treePath) {
+			return getChildren().stream()
+					.filter(c -> c.treePath().equals(treePath)).findFirst()
+					.get();
 		}
 
 		default void onException(Exception exception) {

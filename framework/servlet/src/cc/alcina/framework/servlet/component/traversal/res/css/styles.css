@@ -102,6 +102,10 @@ body > page > * {
   min-height: 0;
   background: white;
 }
+body > page > * > heading {
+  padding: 0.5rem;
+  display: block;
+}
 body > page > header {
   display: flex;
   background-color: #ff8fa2;
@@ -117,10 +121,40 @@ body > page > layers {
   flex-direction: column;
   gap: 2px;
   grid-area: layers;
+  background: #eee;
 }
-body > page > layers > layer-selections {
-  display: block;
+body > page > layers > layers {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 18rem 1fr 1fr 1fr 1fr 1fr;
+  overflow: scroll;
+}
+body > page > layers > layers > layer-selections {
+  display: contents;
+}
+body > page > layers > layers > layer-selections .bordered-area {
+  border: solid 1px #ccc;
+  padding: 0.5rem;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
   white-space: pre;
+  min-height: 3rem;
+}
+body > page > layers > layers > layer-selections > name-area {
+  display: block;
+  background: #f7fffe;
+}
+body > page > layers > layers > layer-selections > name-area > * {
+  display: inline-block;
+  padding-right: 1rem;
+}
+body > page > layers > layers > layer-selections > selections-area {
+  display: contents;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
 }
 body > page > properties {
   display: block;
