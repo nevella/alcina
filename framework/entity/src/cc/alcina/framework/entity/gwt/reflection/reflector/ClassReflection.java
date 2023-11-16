@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ClassUtil;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
@@ -54,6 +55,11 @@ public class ClassReflection extends ReflectionElement {
 					.getAnnotation(NonClientRegistryPointType.class) == null;
 		}
 	};
+
+	@Override
+	public String toString() {
+		return Ax.format("Reflection: %s", type);
+	}
 
 	public static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {

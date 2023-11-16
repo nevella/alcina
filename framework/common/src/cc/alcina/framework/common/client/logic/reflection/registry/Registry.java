@@ -301,7 +301,7 @@ public class Registry {
 
 		public Stream<V> implementations() {
 			return (Stream) registrations.stream(this)
-					.map(this::checkNonSingleton);
+					.map(this::checkNonSingleton).filter(Objects::nonNull);
 		}
 
 		public Optional<V> optional() {
@@ -355,7 +355,8 @@ public class Registry {
 
 		V checkNonSingleton(Class<? extends V> clazz) {
 			Preconditions.checkArgument(!singletons.contains(clazz));
-			return Reflections.newInstance(clazz);
+			return Reflections.at(clazz).isAbstract() ? null
+					: Reflections.newInstance(clazz);
 		}
 
 		Query<V> subQuery(Class<? extends V> subKey) {

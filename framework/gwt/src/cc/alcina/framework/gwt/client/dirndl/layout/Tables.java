@@ -7,7 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -114,7 +113,7 @@ public class Tables {
 						: "auto";
 				this.rows = rows;
 				if (rows.isEmpty()) {
-					this.columnNames = Collections.emptyList();
+					this.columnNames = new ArrayList<>();
 				} else {
 					Model template = rows.iterator().next();
 					columnNames = Reflections.at(template).properties().stream()
