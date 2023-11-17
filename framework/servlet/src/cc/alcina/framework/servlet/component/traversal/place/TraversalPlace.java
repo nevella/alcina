@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal.place;
 
+import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -17,10 +18,14 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	}
 
 	public Selection provideSelection() {
-		if (selection == null && treePath != null) {
-			selection = TraversalProcessView.Ui.get().getHistory().traversal
-					.getRootSelection().processNode().nodeForTreePath(treePath)
-					.typedValue();
+		if (selection == null && treePath != null
+				&& TraversalProcessView.Ui.get().getHistory() != null
+				&& TraversalProcessView.Ui.get().getHistory().traversal
+						.getRootSelection() != null) {
+			selection = (Selection) TraversalProcessView.Ui.get()
+					.getHistory().traversal.getRootSelection().processNode()
+							.nodeForTreePath(treePath).map(Node::getValue)
+							.orElse(null);
 		}
 		return selection;
 	}
@@ -42,7 +47,10 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		@Override
 		protected void getToken0(TraversalPlace place) {
 			if (place.selection != null) {
-				addTokenPart(place.selection.processNode().treePath());
+				place.treePath = place.selection.processNode().treePath();
+			}
+			if (Ax.notBlank(place.treePath)) {
+				addTokenPart(place.treePath);
 			}
 		}
 	}

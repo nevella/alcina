@@ -211,7 +211,7 @@ bean-editor > form > section > form-element[invalid] select, bean-editor > form 
   border-color: #FF5030;
 }
 bean-editor > form > section > form-element > value {
-  display: relative;
+  position: relative;
 }
 bean-editor > form > section > form-element > value > validation-feedback {
   display: block;

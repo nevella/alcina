@@ -1,6 +1,8 @@
 @use '../../theme/theme'
 @use '../../dirndl/multi/base'
+@use '../../dirndl/multi/form'
 @use '../cmp/layer-selections'
+@use '../cmp/properties'
 
 body
   margin: 0
@@ -38,12 +40,10 @@ body > page
 
   > layers
     @include layer-selections.contents
-    
 
   > properties
-    display: block
-    grid-area: props
-
+    @include properties.contents
+    
   > selections
     display: block
 
@@ -52,6 +52,8 @@ body > page
 
     &.output
       grid-area: output
+
+
 
 
 

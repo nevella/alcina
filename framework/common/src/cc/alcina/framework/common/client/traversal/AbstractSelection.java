@@ -62,4 +62,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	public String toString() {
 		return getPathSegment();
 	}
+
+	static class View implements Selection.View<AbstractSelection> {
+	}
 }

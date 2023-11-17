@@ -134,6 +134,8 @@ public class SelectionTraversal
 	}
 
 	public class Selections {
+		Selection rootSelection;
+
 		private Multiset<Class<? extends Selection>, Set<Selection>> byClass = new Multiset<>();
 
 		private Multiset<Layer, Set<Selection>> byLayer = new Multiset<>();
@@ -225,6 +227,9 @@ public class SelectionTraversal
 			}
 			if (!checkSelectionPath(selection)) {
 				return false;
+			}
+			if (rootSelection == null) {
+				rootSelection = selection;
 			}
 			byLayer.add(currentLayer(), selection);
 			byLayerSegments.put(currentLayer(), selection.getPathSegment(),
@@ -469,8 +474,6 @@ public class SelectionTraversal
 
 	private State state = new State();
 
-	Selection rootSelection;
-
 	Map<Selection, Integer> selectionIndicies = new ConcurrentHashMap<>();
 
 	Map<Selection, Exception> selectionExceptions = new ConcurrentHashMap<>();
@@ -522,7 +525,7 @@ public class SelectionTraversal
 	}
 
 	public Selection getRootSelection() {
-		return this.rootSelection;
+		return state.selections.rootSelection;
 	}
 
 	public <S extends Selection> List<S>
@@ -586,10 +589,6 @@ public class SelectionTraversal
 
 	public void setRootLayer(Layer rootLayer) {
 		state.rootLayer = rootLayer;
-	}
-
-	public void setRootSelection(Selection rootSelection) {
-		this.rootSelection = rootSelection;
 	}
 
 	public void throwExceptions() {

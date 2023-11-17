@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +20,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * <p>
@@ -302,14 +305,18 @@ public class TreeProcess {
 		}
 
 		default Node nodeForValue(Object value) {
-			return getChildren().stream().filter(c -> c.getValue() == value)
-					.findFirst().get();
+			return stream().filter(c -> c.getValue() == value).findFirst()
+					.get();
 		}
 
-		default Node nodeForTreePath(String treePath) {
-			return getChildren().stream()
-					.filter(c -> c.treePath().equals(treePath)).findFirst()
-					.get();
+		default Stream<Node> stream() {
+			return new DepthFirstTraversal<>(this, Node::getChildren, false)
+					.stream();
+		}
+
+		default Optional<Node> nodeForTreePath(String treePath) {
+			return stream().filter(c -> c.treePath().equals(treePath))
+					.findFirst();
 		}
 
 		default void onException(Exception exception) {

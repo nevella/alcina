@@ -297,14 +297,15 @@ public abstract class FragmentNode extends Model.Fields
 	 * Output not yet implemented
 	 */
 	@Transformer(NodeTransformer.GenericProcessingInstruction.class)
-	public static class GenericProcessingInstruction extends FragmentNode {
+	public static class GenericProcessingInstruction extends FragmentNode
+			implements Leaf {
 	}
 
 	/**
 	 * Output not yet implemented
 	 */
 	@Transformer(NodeTransformer.GenericComment.class)
-	public static class GenericComment extends FragmentNode {
+	public static class GenericComment extends FragmentNode implements Leaf {
 	}
 
 	public class Nodes {
@@ -336,12 +337,16 @@ public abstract class FragmentNode extends Model.Fields
 		}
 	}
 
+	// childless DOM structure - anything except ELEMENT
+	public interface Leaf {
+	}
+
 	/*
 	 * Models a w3c Text node
 	 */
 	@Transformer(NodeTransformer.Text.class)
 	@Directed(renderer = LeafRenderer.TextNode.class)
-	public static class TextNode extends FragmentNode {
+	public static class TextNode extends FragmentNode implements Leaf {
 		private String value;
 
 		public TextNode() {

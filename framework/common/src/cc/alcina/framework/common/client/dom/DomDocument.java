@@ -17,6 +17,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -700,6 +701,20 @@ public class DomDocument extends DomNode {
 			@Override
 			public int compare(Location l1, Location l2) {
 				return compareIndexOnly(l1, l2);
+			}
+		}
+
+		@Override
+		public String markupContent(Range range) {
+			DomNode node = range.containingNode();
+			if (node.isText()) {
+				return range.text();
+			}
+			if (range.start.containingNode() == node
+					&& range.end.containingNode() == node) {
+				return node.prettyToString();
+			} else {
+				return "";
 			}
 		}
 	}

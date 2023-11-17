@@ -625,7 +625,7 @@ public class BeanFields {
 					idx1 = classReflector.properties().indexOf(
 							classReflector.property(o1.getPropertyName()));
 					idx2 = classReflector.properties().indexOf(
-							classReflector.property(o1.getPropertyName()));
+							classReflector.property(o2.getPropertyName()));
 				}
 				if (idx1 == -1) {
 					if (idx2 == -1) {

@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.traversal.layer;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 
 public class MeasureSelection extends AbstractSelection<Measure>
 		implements Comparable<MeasureSelection> {
@@ -44,5 +45,30 @@ public class MeasureSelection extends AbstractSelection<Measure>
 
 	public void setOmit(boolean omit) {
 		this.omit = omit;
+	}
+
+	static class View implements Selection.View<MeasureSelection> {
+		@Override
+		public String getPathSegment(MeasureSelection selection) {
+			return selection.get().toIntPair().toString();
+		}
+
+		@Override
+		public String getText(MeasureSelection selection) {
+			return selection.get().text();
+		}
+
+		@Override
+		public String getMarkup(MeasureSelection selection) {
+			return selection.get().markup();
+		}
+
+		@Override
+		public String getDiscriminator(MeasureSelection selection) {
+			FormatBuilder format = new FormatBuilder().separator(" - ");
+			format.appendIfNotBlank(selection.get().token,
+					selection.get().getData());
+			return format.toString();
+		}
 	}
 }

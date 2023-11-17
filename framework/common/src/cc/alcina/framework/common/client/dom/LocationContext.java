@@ -71,4 +71,6 @@ public interface LocationContext {
 			RelativeDirection direction);
 
 	String textContent(Range range);
+
+	String markupContent(Range range);
 }

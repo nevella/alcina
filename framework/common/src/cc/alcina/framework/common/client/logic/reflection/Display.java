@@ -89,16 +89,16 @@ public @interface Display {
 
 	String widgetStyleName() default "";
 
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@ClientVisible
-	@Inherited
-	@Target({ ElementType.TYPE })
 	/**
 	 *
 	 * Marks that all properties should be displayed, irresepective of
 	 * {@link Display} annotation presence
 	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@ClientVisible
+	@Inherited
+	@Target({ ElementType.TYPE })
 	public @interface AllProperties {
 	}
 

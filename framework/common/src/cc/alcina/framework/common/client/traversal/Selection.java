@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -115,5 +116,25 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			cursor = cursor.parentSelection();
 		}
 		return selections;
+	}
+
+	@Registration.NonGenericSubtypes(View.class)
+	public interface View<S extends Selection>
+			extends Registration.AllSubtypes {
+		default String getPathSegment(S selection) {
+			return selection.getPathSegment();
+		}
+
+		default String getText(S selection) {
+			return selection.get().toString();
+		}
+
+		default String getDiscriminator(S selection) {
+			return "";
+		}
+
+		default String getMarkup(S selection) {
+			return "";
+		}
 	}
 }

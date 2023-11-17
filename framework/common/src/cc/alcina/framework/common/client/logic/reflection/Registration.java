@@ -28,7 +28,6 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
@@ -37,7 +36,6 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -159,10 +157,6 @@ public @interface Registration {
 				Class<Registration> annotationClass,
 				ClassReflector<?> reflector,
 				ClassReflector<?> resolvingReflector, Resolver resolver) {
-			if (resolvingReflector.getReflectedClass().getName()
-					.contains("Adc1TestRegistrationAnnotations")) {
-				int debug = 3;
-			}
 			List<Registration> result = new ArrayList<>();
 			Registration registration = reflector
 					.annotation(Registration.class);

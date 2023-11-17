@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
@@ -81,6 +82,11 @@ class Page extends Model.All
 				setPlace((TraversalPlace) evt.getNewPlace());
 			}
 		};
+		Place place = Client.currentPlace();
+		if (place instanceof TraversalPlace) {
+			this.place = (TraversalPlace) place;
+		}
+		// FIXME - dirndl - bindings - should set startup
 		bindings().addRegistration(() -> Client.eventBus()
 				.addHandler(PlaceChangeEvent.TYPE, handler));
 	}

@@ -3,8 +3,10 @@ package cc.alcina.framework.servlet.component.traversal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.Selection.View;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -37,14 +39,19 @@ class LayerSelections extends Model.All {
 				implements DomEvents.Click.Handler {
 			String pathSegment;
 
+			String type;
+
 			String text;
 
 			private Selection selection;
 
 			SelectionArea(Selection selection) {
 				this.selection = selection;
-				pathSegment = selection.getPathSegment();
-				text = Ax.ntrim(Ax.trim(selection.get().toString(), 100));
+				View view = Registry.impl(Selection.View.class,
+						selection.getClass());
+				pathSegment = view.getPathSegment(selection);
+				text = view.getText(selection);
+				text = Ax.ntrim(Ax.trim(text, 100));
 			}
 
 			@Override

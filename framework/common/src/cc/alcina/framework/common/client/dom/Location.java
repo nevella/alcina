@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.IntPair;
 
 /**
  * Models a position in an alcina dom document via [T,I,A]
@@ -272,7 +273,7 @@ public class Location implements Comparable<Location> {
 		}
 
 		public boolean provideIsPoint() {
-			return start.index == end.index;
+			return toIntPair().isPoint();
 		}
 
 		public String text() {
@@ -280,6 +281,14 @@ public class Location implements Comparable<Location> {
 				textContent = start.locationContext.textContent(this);
 			}
 			return textContent;
+		}
+
+		public String markup() {
+			return start.locationContext.markupContent(this);
+		}
+
+		public IntPair toIntPair() {
+			return new IntPair(start.index, end.index);
 		}
 
 		@Override

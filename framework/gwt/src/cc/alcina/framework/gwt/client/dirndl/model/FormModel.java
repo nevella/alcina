@@ -375,6 +375,7 @@ public class FormModel extends Model
 			if (args != null) {
 				attributes.adjunct = args.adjunct();
 				attributes.nodeEditors = args.nodeEditors();
+				attributes.editable = args.editable();
 			}
 			try {
 				LooseContext.push();
@@ -401,6 +402,11 @@ public class FormModel extends Model
 			 * save/cancel
 			 */
 			boolean adjunct() default false;
+
+			/*
+			 * the rendered form is editable
+			 */
+			boolean editable() default true;
 
 			/*
 			 * use node editors (dirndl) rather than abstractboundwidgets
