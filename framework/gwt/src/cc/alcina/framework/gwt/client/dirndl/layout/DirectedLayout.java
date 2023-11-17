@@ -819,7 +819,9 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void bind(boolean modelToRendered) {
-			bindEvents();
+			if (modelToRendered) {
+				bindEvents();
+			}
 			bindModel(modelToRendered);
 			bindParentProperty();
 			/*
