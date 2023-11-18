@@ -16,8 +16,7 @@ import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
 
 @Bean(PropertySource.FIELDS)
-public class TraversalPlace extends BasePlace
-		implements TraversalProcessPlace, TreeSerializable {
+public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	public static class SelectionPath extends Bindable.Fields
 			implements TreeSerializable {
 		public String path;
@@ -76,8 +75,9 @@ public class TraversalPlace extends BasePlace
 			TraversalPlace place = new TraversalPlace();
 			if (parts.length > 1) {
 				try {
-					place = FlatTreeSerializer.deserialize(TraversalPlace.class,
+					Data data = FlatTreeSerializer.deserialize(Data.class,
 							parts[1]);
+					data.copyTo(place);
 				} catch (Exception e) {
 					Ax.simpleExceptionOut(e);
 				}
@@ -87,7 +87,26 @@ public class TraversalPlace extends BasePlace
 
 		@Override
 		protected void getToken0(TraversalPlace place) {
-			addTokenPart(FlatTreeSerializer.serializeSingleLine(place));
+			addTokenPart(
+					FlatTreeSerializer.serializeSingleLine(Data.from(place)));
+		}
+	}
+
+	static class Data extends Bindable.Fields implements TreeSerializable {
+		String textFilter;
+
+		List<SelectionPath> paths = new ArrayList<>();
+
+		public void copyTo(TraversalPlace place) {
+			place.textFilter = textFilter;
+			place.paths = paths;
+		}
+
+		public static TreeSerializable from(TraversalPlace place) {
+			Data data = new Data();
+			data.textFilter = place.textFilter;
+			data.paths = place.paths;
+			return data;
 		}
 	}
 
