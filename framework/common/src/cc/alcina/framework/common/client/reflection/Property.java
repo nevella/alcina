@@ -1,10 +1,17 @@
 package cc.alcina.framework.common.client.reflection;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -173,5 +180,16 @@ public class Property implements HasAnnotations {
 		public int compare(Property o1, Property o2) {
 			return o1.name.compareTo(o2.name);
 		}
+	}
+
+	/**
+	 * *NOT* a property method or field
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	@ClientVisible
+	public @interface Not {
 	}
 }

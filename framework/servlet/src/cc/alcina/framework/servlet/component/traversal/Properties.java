@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.BeanEditor.ClassName;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
+import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
 class Properties extends Model.Fields {
 	@Directed
@@ -67,7 +68,7 @@ class Properties extends Model.Fields {
 		this.page = page;
 		bindings().from(page).on(Page.Property.place)
 				.typed(TraversalPlace.class)
-				.map(TraversalPlace::provideSelection)
+				.map(p -> p.provideSelection(SelectionType.VIEW))
 				.accept(this::setSelection);
 	}
 

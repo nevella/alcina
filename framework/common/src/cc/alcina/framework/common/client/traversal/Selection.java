@@ -3,14 +3,18 @@ package cc.alcina.framework.common.client.traversal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
  * An example of "side composition" - selections form a tree, but the tree
@@ -78,6 +82,17 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return segments.stream().collect(Collectors.joining("/"));
 	}
 
+	default Selection root() {
+		Selection cursor = this;
+		for (;;) {
+			Selection parent = cursor.parentSelection();
+			if (parent == null) {
+				return this;
+			}
+			cursor = parent;
+		}
+	}
+
 	default List<String> getFilterableSegments() {
 		return Collections.singletonList(getPathSegment());
 	};
@@ -136,5 +151,42 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		default String getMarkup(S selection) {
 			return "";
 		}
+	}
+
+	@Property.Not
+	default boolean isContainedBy(Selection selection) {
+		return selection.isSelfOrAncestor(this);
+	}
+
+	default boolean hasDescendantRelation(Selection selection) {
+		return selection.isSelfOrAncestor(this)
+				|| this.isSelfOrAncestor(selection);
+	}
+
+	default boolean hasContainmentRelation(Selection selection) {
+		return selection.isContainedBy(this) || this.isContainedBy(selection);
+	}
+
+	@Property.Not
+	default boolean isSelfOrAncestor(Selection selection) {
+		Selection cursor = selection;
+		while (cursor != null) {
+			if (Objects.equals(cursor.processNode().treePath(),
+					processNode().treePath())) {
+				return true;
+			}
+			cursor = cursor.parentSelection();
+		}
+		return false;
+	}
+
+	default boolean matchesText(String textFilter) {
+		View view = view();
+		return SearchUtils.containsIgnoreCase(textFilter, view.getText(this),
+				view.getDiscriminator(this));
+	}
+
+	default View view() {
+		return Registry.impl(Selection.View.class, getClass());
 	}
 }

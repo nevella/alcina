@@ -359,7 +359,8 @@ public class SelectionTraversal
 					return;
 				}
 				Preconditions.checkState(layers.isEmpty() || layers.keySet()
-						.stream().anyMatch(l -> layer.parent == l));
+						.stream().anyMatch(l -> layer.parent == l
+								|| layer.parent == l.parent));
 				LayerSelections layerSelections = new LayerSelections(layer);
 				layers.put(layer, layerSelections);
 				selectionsByLayer.put(layer, layerSelections);
@@ -714,5 +715,20 @@ public class SelectionTraversal
 		}
 		int allLayersLimit = filter.allLayersLimit;
 		return allLayersLimit == 0 || allLayersLimit > state.selections.size();
+	}
+
+	public Object outputContainer;
+
+	public String getDocumentMarkup(boolean input) {
+		if (input) {
+			Object rootValue = getRootSelection().get();
+			return rootValue instanceof HasMarkup
+					? ((HasMarkup) rootValue).provideMarkup()
+					: null;
+		} else {
+			return outputContainer instanceof HasMarkup
+					? ((HasMarkup) outputContainer).provideMarkup()
+					: null;
+		}
 	}
 }

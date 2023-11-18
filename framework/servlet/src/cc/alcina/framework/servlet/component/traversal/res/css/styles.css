@@ -356,7 +356,7 @@ body > page {
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: auto;
   grid-template-areas: "header header header header" "layers layers layers props" "input input output output";
-  grid-template-rows: 50px 1fr 200px;
+  grid-template-rows: 50px 1fr 260px;
   height: 100vh;
   width: 100vw;
   background: #ccc;
@@ -365,10 +365,18 @@ body > page {
 body > page > * {
   min-height: 0;
   background: white;
+  position: relative;
 }
 body > page > * > heading {
-  padding: 0.5rem;
-  display: block;
+  margin-bottom: 0.2rem;
+  height: 2rem;
+  display: flex;
+  padding-left: 1rem;
+  align-items: center;
+  background: #e8e8e8;
+  border-bottom: solid 1px #aaa;
+  width: 100%;
+  box-sizing: border-box;
 }
 body > page > header {
   display: flex;
@@ -381,17 +389,16 @@ body > page > header {
   grid-area: header;
 }
 body > page > layers {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: block;
   grid-area: layers;
-  background: #eee;
 }
 body > page > layers > layers {
   display: grid;
   gap: 1rem;
   grid-template-columns: 18rem 1fr 1fr 1fr 1fr 1fr;
   overflow: scroll;
+  background: #f7f7f7;
+  max-height: calc(100% - 2.2rem);
 }
 body > page > layers > layers > layer-selections {
   display: contents;
@@ -403,6 +410,9 @@ body > page > layers > layers > layer-selections .bordered-area {
   text-overflow: ellipsis;
   white-space: pre;
   min-height: 3rem;
+}
+body > page > layers > layers > layer-selections[empty=true] .bordered-area {
+  min-height: 1rem;
 }
 body > page > layers > layers > layer-selections > name-area {
   display: block;
@@ -419,6 +429,15 @@ body > page > layers > layers > layer-selections > selections-area > selection-a
   display: flex;
   flex-direction: column;
   background: #fff;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=VIEW] {
+  background: #fdd;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=CONTAINMENT] {
+  background: #dfd;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=DESCENT] {
+  background: #ddf;
 }
 body > page > properties {
   display: block;
@@ -449,6 +468,12 @@ body > page > properties bean-editor form-element[name=markup] > value > value {
 }
 body > page > selections {
   display: block;
+}
+body > page > selections > html-model {
+  display: block;
+  padding: 0 0.5em;
+  max-height: calc(100% - 2.2rem);
+  overflow: scroll;
 }
 body > page > selections.input {
   grid-area: input;

@@ -337,8 +337,7 @@ public class ClassReflection extends ReflectionElement {
 			// non-transient, non-private, non-static and immutable unless
 			// Bean.Fields. Note that this includes superclass fields (including
 			// package- and protected-)
-					filter(f -> !f.isTransient() && !f.isPrivate()
-							&& !f.isStatic())
+					filter(reflectionVisibility::isVisibleField)
 					.filter(f -> f.isFinal() || hasMutableFields)
 					.forEach(this::addFieldMethods);
 		}

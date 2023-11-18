@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchDefinitionSerializer;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
@@ -166,7 +167,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	}
 
 	protected void addTokenPart(String part) {
-		if (part == null) {
+		if (Ax.isBlank(part)) {
 			return;
 		}
 		if (tokenBuilder.length() > 0) {

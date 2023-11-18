@@ -71,4 +71,15 @@ public class MeasureSelection extends AbstractSelection<Measure>
 			return format.toString();
 		}
 	}
+
+	@Override
+	public boolean isContainedBy(Selection selection) {
+		if (selection instanceof MeasureSelection) {
+			MeasureSelection o = (MeasureSelection) selection;
+			if (o.get().contains(get())) {
+				return true;
+			}
+		}
+		return super.isContainedBy(selection);
+	}
 }

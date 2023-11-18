@@ -5,7 +5,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 
@@ -19,6 +18,7 @@ import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalHistory;
+import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalProcessPlace;
 import cc.alcina.framework.servlet.dom.ClientRemoteImpl;
 import cc.alcina.framework.servlet.dom.Environment;
@@ -62,7 +62,7 @@ public class TraversalProcessView {
 	}
 
 	public static class Ui implements RemoteUi {
-		private Page page;
+		Page page;
 
 		public static Ui get() {
 			return (Ui) Environment.get().ui;
@@ -101,7 +101,7 @@ public class TraversalProcessView {
 			historyHandler = new PlaceHistoryHandler(
 					new RegistryHistoryMapperImpl());
 			historyHandler.register(placeController, eventBus,
-					() -> Place.NOWHERE);
+					() -> new TraversalPlace());
 		}
 
 		@Override

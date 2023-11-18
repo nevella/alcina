@@ -190,7 +190,7 @@ public class StringInput extends Model.Value<String>
 	public void onChange(Change event) {
 		currentValue = elementValue();
 		setValue(currentValue);
-		event.reemitAs(this, ModelEvents.Change.class);
+		event.reemitAs(this, ModelEvents.Change.class, currentValue);
 	}
 
 	@Override

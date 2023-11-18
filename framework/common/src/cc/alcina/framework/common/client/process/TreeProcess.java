@@ -204,11 +204,6 @@ public class TreeProcess {
 					.collect(Collectors.toList());
 		}
 
-		default String treePath() {
-			return asNodeIndicies().stream().map(Object::toString)
-					.collect(Collectors.joining("."));
-		}
-
 		default List<Node> asNodePath() {
 			List<Node> result = new ArrayList<>();
 			Node cursor = this;
@@ -281,6 +276,8 @@ public class TreeProcess {
 			// TODO - if needed - add tree info
 			tree().logger.info(template, args);
 		}
+
+		String treePath();
 
 		// depth first traversal (this structure supports *either* level
 		// traversal or depth-frst)
@@ -383,6 +380,16 @@ public class TreeProcess {
 
 	static class NodeImpl implements Node {
 		private Node parent;
+
+		String treePath = null;
+
+		public String treePath() {
+			if (treePath == null) {
+				treePath = asNodeIndicies().stream().map(Object::toString)
+						.collect(Collectors.joining("."));
+			}
+			return treePath;
+		}
 
 		private List<Node> children = new ArrayList<>();
 
