@@ -18,7 +18,7 @@ public class EntityLayerUtils {
 		return Configuration.get("applicationHostName");
 	}
 
-	public static final Timer timer = new Timer("alcina-jvm-tier", true);
+	public static final Timer timer = new Timer("alcina-jvm-timer", true);
 
 	public static String getLocalHostName() {
 		try {
