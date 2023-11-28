@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Transform.Impl;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
@@ -159,6 +158,11 @@ public class BridgingValueRenderer extends DirectedRenderer {
 	/**
 	 * Applies the transformation rules to generate binding models, which will
 	 * then be bound to the form
+	 * 
+	 * Note that this system doesn't currently allow @Directed annotations with
+	 * a strategy to be applied to bean properties
+	 * (e.g. @Directed.TransformElements) - that would require yet another
+	 * transformation layer
 	 *
 	 */
 	static class ValueResolver extends ContextResolver
@@ -192,7 +196,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 					// transform IS legal, but will require another layer of
 					// resolution
 					Preconditions.checkState(contextAnnotation == null);
-					Impl impl = new Directed.Transform.Impl();
+					Directed.Transform.Impl impl = new Directed.Transform.Impl();
 					impl.withValue(RenderingModelTransform.class);
 					impl.withTransformsNull(true);
 					contextAnnotation = (A) impl;
@@ -213,7 +217,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			// valueModel
 			if (node.parent.annotationLocation == valueLocation) {
 				/*
-				 * The input model (has Field and Bindinable refs)
+				 * The input model (has Field and Bindable refs)
 				 */
 				ValueModel inputModel = (ValueModel) renderer.input.model;
 				/*

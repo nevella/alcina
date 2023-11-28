@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -51,34 +52,38 @@ public class Tables {
 		}
 	}
 
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	/**
 	 * Used in the generated gridTemplateColumns style attribute of a generated
 	 * grid
 	 *
-	 *
-	 *
 	 */
-	public @interface ColumnNames {
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface ColumnWidth {
 		public String value();
 	}
 
+	/**
+	 * Overrides individual columnwidths
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface ColumnsWidth {
+		public String value();
+	}
+
+	/**
+	 * Exclude a property from the grid
+	 */
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
-	/**
-	 * Used in the generated gridTemplateColumns style attribute of a generated
-	 * grid
-	 *
-	 *
-	 *
-	 */
-	public @interface ColumnWidth {
-		public String value();
+	public @interface Exclude {
 	}
 
 	/*
@@ -93,11 +98,11 @@ public class Tables {
 		}
 
 		@Directed(
-			tag = "multiple",
 			bindings = @Binding(
 				from = "gridTemplateColumns",
 				type = Type.STYLE_ATTRIBUTE))
-		public class IntermediateModel extends Model {
+		public class IntermediateModel extends Model
+				implements Directed.NonClassTag {
 			private String gridTemplateColumns;
 
 			private List<ColumnName> columnNames;
@@ -112,14 +117,15 @@ public class Tables {
 				gridColumnWidth = defaultWidth != null ? defaultWidth.value()
 						: "auto";
 				this.rows = rows;
+				Predicate<Property> propertyFilter = p -> p.provideRenderable()
+						&& !p.has(Exclude.class);
 				if (rows.isEmpty()) {
 					this.columnNames = new ArrayList<>();
 				} else {
 					Model template = rows.iterator().next();
 					columnNames = Reflections.at(template).properties().stream()
-							.filter(Property::provideRenderable)
-							.map(property -> {
-								Directed.Property propertyAnnotation = node
+							.filter(propertyFilter).map(property -> {
+								Directed.Property propertyAnnotation = property
 										.annotation(Directed.Property.class);
 								return propertyAnnotation != null
 										? propertyAnnotation.value()
@@ -127,14 +133,18 @@ public class Tables {
 												.deInfix(property.getName());
 							}).map(ColumnName::new)
 							.collect(Collectors.toList());
-					gridTemplateColumns = Reflections.at(template).properties()
-							.stream().filter(Property::provideRenderable)
-							.map(p -> {
-								ColumnWidth columnWidth = p
-										.annotation(ColumnWidth.class);
-								return columnWidth != null ? columnWidth.value()
-										: gridColumnWidth;
-							}).collect(Collectors.joining(" "));
+					ColumnsWidth columnsWidth = node
+							.annotation(ColumnsWidth.class);
+					gridTemplateColumns = columnsWidth != null
+							? columnsWidth.value()
+							: Reflections.at(template).properties().stream()
+									.filter(propertyFilter).map(p -> {
+										ColumnWidth columnWidth = p
+												.annotation(ColumnWidth.class);
+										return columnWidth != null
+												? columnWidth.value()
+												: gridColumnWidth;
+									}).collect(Collectors.joining(" "));
 				}
 			}
 
@@ -154,10 +164,6 @@ public class Tables {
 			@Directed
 			public List<? extends Model> getRows() {
 				return this.rows;
-			}
-
-			public void setGridColumnWidth(String gridColumnWidth) {
-				this.gridColumnWidth = gridColumnWidth;
 			}
 		}
 	}
@@ -180,7 +186,8 @@ public class Tables {
 		}
 
 		@Directed(tag = "table")
-		public static class IntermediateModel extends Model {
+		public static class IntermediateModel extends Model
+				implements Directed.NonClassTag {
 			public static IntermediateModel ofBindable(Bindable model) {
 				IntermediateModel result = new IntermediateModel();
 				List<Property> properties = Reflections.at(model).properties();

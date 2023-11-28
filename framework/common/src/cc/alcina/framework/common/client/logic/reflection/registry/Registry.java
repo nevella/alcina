@@ -579,6 +579,10 @@ public class Registry {
 				}
 				RegistryKey key = keys.get(keys.size() - 1);
 				Class superclass = key.clazz().getSuperclass();
+				// handle primitives, interfaces
+				if (superclass == null && key.clazz() != Object.class) {
+					superclass = Object.class;
+				}
 				if (superclass == null) {
 					if (ascendedFinalKey) {
 						return false;

@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
 
-public class RegistryKey {
+public class RegistryKey implements Comparable<RegistryKey> {
 	private transient Class clazz;
 
 	private String name;
@@ -12,6 +12,10 @@ public class RegistryKey {
 	private transient String simpleName;
 
 	public RegistryKey() {
+	}
+
+	public int compareTo(RegistryKey o) {
+		return name().compareTo(o.name());
 	}
 
 	public RegistryKey(Class clazz) {

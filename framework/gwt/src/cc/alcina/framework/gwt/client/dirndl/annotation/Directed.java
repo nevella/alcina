@@ -640,9 +640,6 @@ public @interface Directed {
 	 * Renders the model as two nodes, the first having tag value() - i.e. sugar
 	 * for: <code>@Directed.Multiple({@Directed(tag="value"),@Directed})</code>
 	 *
-	 *
-	 *
-	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -650,5 +647,11 @@ public @interface Directed {
 	@ClientVisible
 	public static @interface Wrap {
 		String value();
+	}
+
+	/**
+	 * Marker, the renderer should *not* use the model classname as a tag
+	 */
+	public static interface NonClassTag {
 	}
 }
