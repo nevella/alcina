@@ -33,8 +33,8 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.entity.Configuration.PropertyTree.PropertyNode;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.util.CsvCols;
-import cc.alcina.framework.entity.util.CsvCols.CsvRow;
+import cc.alcina.framework.entity.util.Csv;
+import cc.alcina.framework.entity.util.Csv.Row;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 
 /**
@@ -876,7 +876,7 @@ public class Configuration {
 			List<PropertyNode> nodes = getRoot().depthFirst();
 			nodes.stream().collect(Collectors.toList())
 					.forEach(PropertyNode::sortChildren);
-			CsvCols cols = new CsvCols("");
+			Csv cols = new Csv("");
 			nodes = getRoot().depthFirst();
 			Stream.of(Header.values()).forEach(cols::addColumn);
 			nodes.stream().forEach(node -> node.addTo(cols));
@@ -986,8 +986,8 @@ public class Configuration {
 						.collect(Collectors.joining("."));
 			}
 
-			void addTo(CsvCols cols) {
-				CsvRow row = cols.addRow();
+			void addTo(Csv cols) {
+				Row row = cols.addRow();
 				if (key == null) {
 					row.set(Header.Package, packageName());
 				} else {
