@@ -17,8 +17,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.util.CsvCols;
-import cc.alcina.framework.entity.util.CsvCols.CsvRow;
+import cc.alcina.framework.entity.util.Csv;
+import cc.alcina.framework.entity.util.Csv.Row;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
@@ -170,22 +170,22 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 
 	private void parse() {
 		{
-			CsvCols cols = CsvCols.parseCsv(propertiesCsv);
+			Csv cols = Csv.parseCsv(propertiesCsv);
 			propertyRows = cols.stream().map(PropertyRow::new)
 					.collect(Collectors.toList());
 		}
 		{
-			CsvCols cols = CsvCols.parseTsv(appSetsTsv);
+			Csv cols = Csv.parseTsv(appSetsTsv);
 			appSets = cols.stream().map(AppSets::new)
 					.collect(Collectors.toList());
 		}
 		{
-			CsvCols cols = CsvCols.parseTsv(nonStandardSetsTsv);
+			Csv cols = Csv.parseTsv(nonStandardSetsTsv);
 			nonStandardSets = cols.stream().map(NonStandardSet::new)
 					.collect(Collectors.toList());
 		}
 		{
-			CsvCols cols = CsvCols.parseTsv(setPathsTsv);
+			Csv cols = Csv.parseTsv(setPathsTsv);
 			setPaths = cols.stream().map(SetPath::new)
 					.collect(Collectors.toList());
 		}
@@ -240,7 +240,7 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 
 		List<String> sets;
 
-		AppSets(CsvRow row) {
+		AppSets(Row row) {
 			app = row.get("App");
 			sets = List.of(row.get("sets").split(" - "));
 		}
@@ -295,7 +295,7 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 
 		String set;
 
-		NonStandardSet(CsvRow row) {
+		NonStandardSet(Row row) {
 			app = row.get("App");
 			set = row.get("Non standard");
 		}
@@ -429,7 +429,7 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 
 		int rowIdx;
 
-		PropertyRow(CsvRow row) {
+		PropertyRow(Row row) {
 			TaskRefactorConfigSets2 parent = TaskRefactorConfigSets2.this;
 			this.rowIdx = parent.propertyRowIdx++;
 			String packageName = row.get(Header.Package);
@@ -477,7 +477,7 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 
 		String set;
 
-		SetPath(CsvRow row) {
+		SetPath(Row row) {
 			path = row.get("Path");
 			set = row.get("Set");
 		}

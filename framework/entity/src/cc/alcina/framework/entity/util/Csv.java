@@ -16,22 +16,21 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 
-public class CsvCols
-		implements Iterable<CsvCols.CsvRow>, Iterator<CsvCols.CsvRow> {
-	public static CsvCols parse(File file) {
-		return new CsvCols(Io.read().file(file).asString());
+public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
+	public static Csv parse(File file) {
+		return new Csv(Io.read().file(file).asString());
 	}
 
-	public static CsvCols parse(String xsv, boolean tsv) {
-		return new CsvCols(CsvUtils.parseCsv(xsv, tsv));
+	public static Csv parse(String xsv, boolean tsv) {
+		return new Csv(CsvUtils.parseCsv(xsv, tsv));
 	}
 
-	public static CsvCols parseCsv(String csv) {
-		return new CsvCols(csv);
+	public static Csv parseCsv(String csv) {
+		return new Csv(csv);
 	}
 
-	public static CsvCols parseTsv(String tsv) {
-		return new CsvCols(CsvUtils.parseCsv(tsv, true));
+	public static Csv parseTsv(String tsv) {
+		return new Csv(CsvUtils.parseCsv(tsv, true));
 	}
 
 	Map<String, Integer> colLookup = new LinkedHashMap<>();
@@ -42,7 +41,7 @@ public class CsvCols
 
 	List<List<String>> grid;
 
-	public CsvCols(List<List<String>> grid) {
+	public Csv(List<List<String>> grid) {
 		this.grid = grid;
 		if (grid.size() == 0) {
 			grid.add(new ArrayList<>());
@@ -53,7 +52,7 @@ public class CsvCols
 		reset();
 	}
 
-	public CsvCols(String csv) {
+	public Csv(String csv) {
 		this(CsvUtils.parseCsv(csv));
 	}
 
@@ -66,7 +65,7 @@ public class CsvCols
 		colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
 	}
 
-	public CsvCols.CsvRow addRow() {
+	public Csv.Row addRow() {
 		grid.add(new ArrayList<String>());
 		return next();
 	}
@@ -81,13 +80,13 @@ public class CsvCols
 	}
 
 	@Override
-	public Iterator<CsvCols.CsvRow> iterator() {
+	public Iterator<Csv.Row> iterator() {
 		return this;
 	}
 
 	@Override
-	public CsvCols.CsvRow next() {
-		return new CsvCols.CsvRow(this, idx++);
+	public Csv.Row next() {
+		return new Csv.Row(this, idx++);
 	}
 
 	public void preserveColumns(String string) {
@@ -109,11 +108,11 @@ public class CsvCols
 		idx = 1;
 	}
 
-	public Map<String, CsvCols.CsvRow> rowLookup(String columnHeader) {
-		Map<String, CsvCols.CsvRow> result = new LinkedHashMap<>();
+	public Map<String, Csv.Row> rowLookup(String columnHeader) {
+		Map<String, Csv.Row> result = new LinkedHashMap<>();
 		reset();
 		while (hasNext()) {
-			CsvCols.CsvRow row = next();
+			Csv.Row row = next();
 			result.put(row.get(columnHeader), row);
 		}
 		return result;
@@ -123,7 +122,7 @@ public class CsvCols
 		return grid.size() - 1;
 	}
 
-	public Stream<CsvCols.CsvRow> stream() {
+	public Stream<Csv.Row> stream() {
 		return StreamSupport.stream(this.spliterator(), false);
 	}
 
@@ -150,12 +149,12 @@ public class CsvCols
 		Io.write().string(toCsv()).toPath(path);
 	}
 
-	public static class CsvRow {
+	public static class Row {
 		private int rowIdx;
 
-		private CsvCols csvCols;
+		private Csv csvCols;
 
-		public CsvRow(CsvCols csvCols, int idx) {
+		public Row(Csv csvCols, int idx) {
 			this.csvCols = csvCols;
 			this.rowIdx = idx;
 		}
