@@ -167,18 +167,22 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return getPrevious().hasPrevious(eventClass);
 		}
 
-		public void setNodeEvent(NodeEvent nodeEvent) {
-			Preconditions.checkState(this.nodeEvent == null);
-			this.nodeEvent = nodeEvent;
-			nodeEvent.context = this;
-		}
-
 		void reemit() {
 			Context newContext = fromContext(this, node);
 			newContext.reemission = node;
 			ModelEvent modelEvent = (ModelEvent) nodeEvent;
 			newContext.dispatch(modelEvent.getClass(), modelEvent.getModel());
 		}
+
+		public void setNodeEvent(NodeEvent nodeEvent) {
+			Preconditions.checkState(this.nodeEvent == null);
+			this.nodeEvent = nodeEvent;
+			nodeEvent.context = this;
+		}
+	}
+
+	// Omit from Event binding
+	public interface DirectlyInvoked {
 	}
 
 	public interface Handler extends EventHandler {

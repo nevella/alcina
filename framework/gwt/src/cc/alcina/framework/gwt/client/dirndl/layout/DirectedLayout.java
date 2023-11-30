@@ -61,6 +61,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.DirectlyInvoked;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
@@ -1629,6 +1630,8 @@ public class DirectedLayout implements AlcinaProcess {
 			handlerEvents = (Map) CollectionCreators.Bootstrap
 					.createConcurrentClassMap();
 			Registry.query(NodeEvent.class).registrations()
+					.filter(clazz -> !Reflections
+							.isAssignableFrom(DirectlyInvoked.class, clazz))
 					.forEach(eventClass -> {
 						ClassReflector<? extends NodeEvent> reflector = Reflections
 								.at(eventClass);
