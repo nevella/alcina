@@ -42,6 +42,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.UIObject;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -371,6 +372,11 @@ public class Element extends Node implements ClientDomElement,
 
 	public DomRect getBoundingClientRect() {
 		return ensureJsoRemote().getBoundingClientRect();
+	}
+
+	// FIXME - dom - completablefuture
+	public void getBoundingClientRectAsync(AsyncCallback<DomRect> callback) {
+		pathrefRemote().getBoundingClientRectAsync(callback);
 	}
 
 	@Override

@@ -1072,6 +1072,8 @@ public class DirectedLayout implements AlcinaProcess {
 				parent.children.add(insertionIndex, child);
 				parent.rendered.insertChild(child.rendered, insertionIndex++);
 			}
+			parent.children.remove(this);
+			rendered.removeFromParent();
 		}
 
 		void unbind() {
@@ -1321,7 +1323,12 @@ public class DirectedLayout implements AlcinaProcess {
 				case INNER_TEXT:
 					if (value != null) {
 						if (element == null) {
-							node.setNodeValue(stringValue);
+							if (node.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
+								node.appendChild(node.getOwnerDocument()
+										.createTextNode(stringValue));
+							} else {
+								node.setNodeValue(stringValue);
+							}
 						} else {
 							element.setInnerText(stringValue);
 						}

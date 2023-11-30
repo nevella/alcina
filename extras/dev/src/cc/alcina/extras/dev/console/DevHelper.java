@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
@@ -54,7 +53,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
-import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObserver.AppDebug;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -311,9 +309,7 @@ public abstract class DevHelper {
 	}
 
 	public void initAppDebug() {
-		Optional<AppDebug> appDebug = Registry
-				.optional(ProcessObserver.AppDebug.class);
-		appDebug.ifPresent(AppDebug::attach);
+		AppDebug.register();
 	}
 
 	public void initDataFolder() {

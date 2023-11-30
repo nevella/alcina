@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.process;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -36,6 +37,11 @@ public interface ProcessObserver<T extends ProcessObservable>
 		@Override
 		public List<ProcessObserver> getObservers() {
 			return List.of();
+		}
+
+		public static void register() {
+			Registry.query(AppDebug.class).implementations()
+					.forEach(AppDebug::attach);
 		}
 	}
 

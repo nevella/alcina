@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
@@ -106,6 +107,26 @@ public class RemoteComponentProtocol {
 			public List<EventSystemMutation> eventMutations = new ArrayList<>();
 
 			public LocationMutation locationMutation;
+		}
+
+		public static class Invoke extends Message {
+			public Pathref path;
+
+			public String methodName;
+
+			public List<?> arguments;
+
+			public int id;
+
+			public List<Class> argumentTypes;
+		}
+
+		public static class InvokeResponse extends Message {
+			public int id;
+
+			public Object response;
+
+			public Exception exception;
 		}
 
 		/*

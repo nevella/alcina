@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.dom;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -14,12 +16,14 @@ import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.NodePathref;
 import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -30,6 +34,7 @@ import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
 
 /*
@@ -71,8 +76,11 @@ public class Environment {
 
 	MutationProxyImpl mutationProxy = new MutationProxyImpl();
 
+	InvokeProxyImpl invokeProxy = new InvokeProxyImpl();
+
 	Message.Mutations mutations = null;
 
+	// FIXME - romcom - use an event pump rather than a timer
 	EventCollator<Object> eventCollator;
 
 	Client client;
@@ -140,6 +148,7 @@ public class Environment {
 			document = Document.contextProvider.createFrame(RemoteType.PATHREF);
 			document.createDocumentElement("<html/>");
 			document.implAccess().pathrefRemote().mutationProxy = mutationProxy;
+			document.implAccess().pathrefRemote().invokeProxy = invokeProxy;
 			LocalDom.initalizeDetachedSync();
 			ui.init();
 		} finally {
@@ -282,6 +291,38 @@ public class Environment {
 		}
 	}
 
+	class InvokeProxyImpl implements DocumentPathref.InvokeProxy {
+		int invokeCounter = 0;
+
+		Map<Integer, AsyncCallback> callbacks = new LinkedHashMap<>();
+
+		@Override
+		public void invoke(NodePathref node, String methodName,
+				List<Class> argumentTypes, List<?> arguments,
+				AsyncCallback<?> callback) {
+			runInClientFrame(() -> {
+				Message.Invoke invoke = new Message.Invoke();
+				invoke.path = node == null ? null
+						: Pathref.forNode(node.node());
+				invoke.id = ++invokeCounter;
+				invoke.methodName = methodName;
+				invoke.argumentTypes = argumentTypes;
+				invoke.arguments = arguments;
+				callbacks.put(invoke.id, callback);
+				queue.send(invoke);
+			});
+		}
+
+		public void onInvokeResponse(InvokeResponse response) {
+			AsyncCallback callback = callbacks.remove(response.id);
+			if (response.exception == null) {
+				callback.onSuccess(response.response);
+			} else {
+				callback.onSuccess(response.exception);
+			}
+		}
+	}
+
 	class MutationProxyImpl implements DocumentPathref.MutationProxy {
 		@Override
 		public void onLocationMutation(LocationMutation locationMutation) {
@@ -314,5 +355,9 @@ public class Environment {
 			runnable.run();
 			eventCollator.eventOccurred();
 		}
+	}
+
+	public void onInvokeResponse(InvokeResponse response) {
+		invokeProxy.onInvokeResponse(response);
 	}
 }

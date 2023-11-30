@@ -712,7 +712,15 @@ public class DomDocument extends DomNode {
 			}
 			if (range.start.containingNode() == node
 					&& range.end.containingNode() == node) {
-				return node.prettyToString();
+				String markup = node.fullToString();
+				// if namespaced, return full
+				// FIXME - selection - have a 'robust pretty' that uses a
+				// variant on Element.getOuterHtml()
+				if (markup.matches("(?s).*</[a-zA-Z9-9]+:[a-zA-Z9-9]+>.*")) {
+					return markup;
+				} else {
+					return node.prettyToString();
+				}
 			} else {
 				return "";
 			}

@@ -99,4 +99,14 @@ public class MessageHandlers {
 			return false;
 		}
 	}
+
+	public static class InvokeResponseHandler extends
+			RemoteComponentProtocolServer.MessageHandlerServer<Message.InvokeResponse> {
+		@Override
+		public void handle(RemoteComponentRequest request,
+				RemoteComponentResponse response, Environment env,
+				Message.InvokeResponse message) {
+			env.onInvokeResponse(message);
+		}
+	}
 }

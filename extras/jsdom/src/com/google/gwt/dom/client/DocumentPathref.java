@@ -10,11 +10,14 @@ import org.w3c.dom.ProcessingInstruction;
 
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	Document document;
 
 	public MutationProxy mutationProxy;
+
+	public InvokeProxy invokeProxy;
 
 	// hack-ish - the element path is not necessarily determined at sink events
 	// time
@@ -750,5 +753,11 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 		void onSinkBitlessEvent(Pathref from, String eventTypeName);
 
 		void onSinkEvents(Pathref from, int eventBits);
+	}
+
+	public interface InvokeProxy {
+		void invoke(NodePathref node, String methodName,
+				List<Class> argumentTypes, List<?> arguments,
+				AsyncCallback<?> callback);
 	}
 }

@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -114,7 +115,15 @@ public interface NodeTransformer {
 		@Override
 		public boolean appliesTo(DomNode node) {
 			Directed directed = getDirected();
-			return node.tagAndClassIs(directed.tag(), directed.className());
+			String tagName = Ax.blankTo(directed.tag(),
+					DirectedRenderer.tagName(fragmentNodeType));
+			if (node.tagAndClassIs(tagName, directed.className())) {
+				return true;
+			}
+			if (node.tagIs(tagName) && directed.className().isEmpty()) {
+				return true;
+			}
+			return false;
 		}
 
 		@Override
