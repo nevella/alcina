@@ -121,6 +121,8 @@ public class RemoteComponentProtocol {
 			public List<Class> argumentTypes;
 		}
 
+		// FIXME - doc this annotation
+		@ReflectiveSerializer.Checks(ignore = true)
 		public static class InvokeResponse extends Message {
 			public int id;
 
