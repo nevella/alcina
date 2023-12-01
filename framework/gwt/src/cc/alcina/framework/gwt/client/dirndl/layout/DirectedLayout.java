@@ -1171,6 +1171,7 @@ public class DirectedLayout implements AlcinaProcess {
 				if (!isDomBinding()) {
 					Preconditions.checkState(Reflections.isAssignableFrom(
 							NodeEvent.WithoutDomBinding.class, type));
+					return;
 				}
 				domBinding = Registry.impl(DomBinding.class, type);
 				Preconditions.checkState(domBinding.getClass().getName()
