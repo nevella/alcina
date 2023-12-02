@@ -56,9 +56,11 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.Emitter;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.DirectlyInvoked;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.RendersNull;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -177,53 +179,6 @@ public class DirectedLayout implements AlcinaProcess {
 	static Logger logger = LoggerFactory.getLogger(DirectedLayout.class);
 	static {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.INFO);
-	}
-
-	static class ModelEventDispatch {
-		static void dispatchDescent(ModelEvent modelEvent) {
-			Node cursor = modelEvent.getContext().node;
-			cursor.ensureEventBinding(modelEvent.getClass())
-					.dispatchDescent(modelEvent);
-		}
-
-		static void dispatchAscent(ModelEvent modelEvent) {
-			/*
-			 * Bubble until event is handled or we've reached the top of the
-			 * node tree
-			 */
-			Node cursor = modelEvent.getContext().node;
-			while (cursor != null) {
-				cursor.fireEvent(modelEvent);
-				if (modelEvent.isHandled()) {
-					break;
-				}
-				boolean rerouted = false;
-				{
-					/*
-					 * this logic supports the DOM requirement that popups
-					 * (overlays) be outside the dom containment of the parent
-					 * (in general) - while maintining the event bubbling
-					 * relationship of a popup model to its logical model parent
-					 *
-					 */
-					if (cursor.model instanceof Model.RerouteBubbledEvents) {
-						Model rerouteTo = ((Model.RerouteBubbledEvents) cursor.model)
-								.rerouteBubbledEventsTo();
-						if (rerouteTo != null && rerouteTo instanceof HasNode) {
-							Node rerouteToNode = ((HasNode) rerouteTo)
-									.provideNode();
-							if (rerouteToNode != null) {
-								cursor = rerouteToNode;
-								rerouted = true;
-							}
-						}
-					}
-				}
-				if (!rerouted) {
-					cursor = cursor.parent;
-				}
-			}
-		}
 	}
 
 	public static void dispatchModelEvent(ModelEvent modelEvent) {
@@ -680,9 +635,10 @@ public class DirectedLayout implements AlcinaProcess {
 			if (model == null) {
 				return;
 			}
-			ReceivesEvents.ClassData classData = ReceivesEvents
+			ReceivesEmitsEvents.ClassData classData = ReceivesEmitsEvents
 					.get(model.getClass());
 			if (classData.receives.isEmpty()
+					&& classData.emitsDescendant.isEmpty()
 					&& directed.reemits().length == 0) {
 				return;
 			}
@@ -849,6 +805,37 @@ public class DirectedLayout implements AlcinaProcess {
 				children = new NotifyingList<>(new ArrayList<>());
 			}
 			return children;
+		}
+
+		NodeEventBinding ensureEventBinding(Class<? extends NodeEvent> type) {
+			Optional<NodeEventBinding> binding = eventBindings.stream()
+					.filter(eb -> eb.type == type).findFirst();
+			if (binding.isPresent()) {
+				return binding.get();
+			} else {
+				Preconditions.checkState(Reflections.isAssignableFrom(
+						ModelEvent.DescendantEvent.class, type));
+				NodeEventBinding newBinding = new NodeEventBinding(this, type);
+				eventBindings.add(newBinding);
+				return newBinding;
+			}
+		}
+
+		Emitter findEmitter(Class<? extends NodeEvent> type) {
+			/*
+			 * See signature of DescendantEvent
+			 */
+			Class<? extends Emitter> emitterType = Reflections.at(type)
+					.getGenericBounds().bounds.get(2);
+			Node cursor = this;
+			while (cursor != null) {
+				if (Reflections.isAssignableFrom(emitterType,
+						cursor.model.getClass())) {
+					return (Emitter) cursor.model;
+				}
+				cursor = cursor.parent;
+			}
+			return null;
 		}
 
 		void fireEvent(ModelEvent modelEvent) {
@@ -1459,37 +1446,6 @@ public class DirectedLayout implements AlcinaProcess {
 				bindings.forEach(PropertyBinding::unbind);
 			}
 		}
-
-		Emitter findEmitter(Class<? extends NodeEvent> type) {
-			/*
-			 * See signature of DescendantEvent
-			 */
-			Class<? extends Emitter> emitterType = Reflections.at(type)
-					.getGenericBounds().bounds.get(2);
-			Node cursor = this;
-			while (cursor != null) {
-				if (Reflections.isAssignableFrom(emitterType,
-						cursor.model.getClass())) {
-					return (Emitter) cursor.model;
-				}
-				cursor = cursor.parent;
-			}
-			return null;
-		}
-
-		NodeEventBinding ensureEventBinding(Class<? extends NodeEvent> type) {
-			Optional<NodeEventBinding> binding = eventBindings.stream()
-					.filter(eb -> eb.type == type).findFirst();
-			if (binding.isPresent()) {
-				return binding.get();
-			} else {
-				Preconditions.checkState(Reflections.isAssignableFrom(
-						ModelEvent.DescendantEvent.class, type));
-				NodeEventBinding newBinding = new NodeEventBinding(this, type);
-				eventBindings.add(newBinding);
-				return newBinding;
-			}
-		}
 	}
 
 	/**
@@ -1588,14 +1544,61 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 	}
 
-	static class ReceivesEvents {
-		static ReceivesEvents instance;
+	static class ModelEventDispatch {
+		static void dispatchAscent(ModelEvent modelEvent) {
+			/*
+			 * Bubble until event is handled or we've reached the top of the
+			 * node tree
+			 */
+			Node cursor = modelEvent.getContext().node;
+			while (cursor != null) {
+				cursor.fireEvent(modelEvent);
+				if (modelEvent.isHandled()) {
+					break;
+				}
+				boolean rerouted = false;
+				{
+					/*
+					 * this logic supports the DOM requirement that popups
+					 * (overlays) be outside the dom containment of the parent
+					 * (in general) - while maintining the event bubbling
+					 * relationship of a popup model to its logical model parent
+					 *
+					 */
+					if (cursor.model instanceof Model.RerouteBubbledEvents) {
+						Model rerouteTo = ((Model.RerouteBubbledEvents) cursor.model)
+								.rerouteBubbledEventsTo();
+						if (rerouteTo != null && rerouteTo instanceof HasNode) {
+							Node rerouteToNode = ((HasNode) rerouteTo)
+									.provideNode();
+							if (rerouteToNode != null) {
+								cursor = rerouteToNode;
+								rerouted = true;
+							}
+						}
+					}
+				}
+				if (!rerouted) {
+					cursor = cursor.parent;
+				}
+			}
+		}
+
+		static void dispatchDescent(ModelEvent modelEvent) {
+			Node cursor = modelEvent.getContext().node;
+			cursor.ensureEventBinding(modelEvent.getClass())
+					.dispatchDescent(modelEvent);
+		}
+	}
+
+	static class ReceivesEmitsEvents {
+		static ReceivesEmitsEvents instance;
 
 		static ClassData get(Class clazz) {
 			if (instance == null) {
-				synchronized (ReceivesEvents.class) {
+				synchronized (ReceivesEmitsEvents.class) {
 					if (instance == null) {
-						instance = new ReceivesEvents();
+						instance = new ReceivesEmitsEvents();
 					}
 				}
 			}
@@ -1606,12 +1609,18 @@ public class DirectedLayout implements AlcinaProcess {
 
 		Map<Class<? extends NodeEvent.Handler>, Class<? extends NodeEvent>> handlerEvents;
 
-		ReceivesEvents() {
+		Map<Class<? extends ModelEvent.Emitter>, Class<? extends ModelEvent>> emitterEvents;
+
+		ReceivesEmitsEvents() {
 			classData = CollectionCreators.Bootstrap.createConcurrentClassMap();
 			// FIXME - reflection - rebuild on registry change
 			handlerEvents = (Map) CollectionCreators.Bootstrap
 					.createConcurrentClassMap();
+			emitterEvents = (Map) CollectionCreators.Bootstrap
+					.createConcurrentClassMap();
 			Registry.query(NodeEvent.class).registrations()
+					.filter(clazz -> !Reflections
+							.isAssignableFrom(DirectlyInvoked.class, clazz))
 					.forEach(eventClass -> {
 						ClassReflector<? extends NodeEvent> reflector = Reflections
 								.at(eventClass);
@@ -1622,6 +1631,14 @@ public class DirectedLayout implements AlcinaProcess {
 										: reflector.getGenericBounds().bounds
 												.get(0);
 						handlerEvents.put(handlerClass, eventClass);
+						if (Reflections.isAssignableFrom(DescendantEvent.class,
+								eventClass)) {
+							Class<? extends ModelEvent.Emitter> emitterClass = ((DescendantEvent) reflector
+									.newInstance()).getEmitterClass();
+							reflector.getGenericBounds().bounds.get(1);
+							emitterEvents.put(emitterClass,
+									(Class<? extends ModelEvent>) eventClass);
+						}
 					});
 		}
 
@@ -1632,6 +1649,8 @@ public class DirectedLayout implements AlcinaProcess {
 		class ClassData {
 			List<Class<? extends NodeEvent>> receives = new ArrayList<>();
 
+			List<Class<? extends NodeEvent>> emitsDescendant = new ArrayList<>();
+
 			Class<?> clazz;
 
 			ClassData(Class<?> clazz) {
@@ -1639,6 +1658,9 @@ public class DirectedLayout implements AlcinaProcess {
 				Reflections.at(clazz).provideAllImplementedInterfaces()
 						.<Class<? extends NodeEvent>> map(handlerEvents::get)
 						.filter(Objects::nonNull).forEach(receives::add);
+				Reflections.at(clazz).provideAllImplementedInterfaces()
+						.<Class<? extends NodeEvent>> map(emitterEvents::get)
+						.filter(Objects::nonNull).forEach(emitsDescendant::add);
 			}
 		}
 	}

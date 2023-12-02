@@ -560,6 +560,7 @@ public class BeanFields {
 						&& obj instanceof Entity) {
 					RequiresSourceValidator rsv = (RequiresSourceValidator) v;
 					rsv.setSourceObject((Entity) obj);
+					rsv.setOnProperty(property);
 				}
 				if (v instanceof RequiresContextBindable) {
 					((RequiresContextBindable) v)

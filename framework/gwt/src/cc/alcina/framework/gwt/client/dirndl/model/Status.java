@@ -120,7 +120,6 @@ public enum Status implements ProvidesStatus {
 			return this.status;
 		}
 
-		@Directed
 		public Object getValue() {
 			return this.value;
 		}

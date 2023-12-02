@@ -86,15 +86,14 @@ public class LayoutEvents {
 	}
 
 	/**
-	 * Handlers do not need to configure binding event receipt
-	 * via @Directed(receives) - the respective Handler methods are called
-	 * directly during layout. Note that getContext() only provides the Node
-	 * corresponding to the model
+	 * The respective Handler methods are called directly during layout. Note
+	 * that getContext() only provides the Node corresponding to the model
 	 *
 	 *
 	 *
 	 */
 	public static abstract class LayoutEvent<H extends NodeEvent.Handler>
-			extends NodeEvent<H> implements NodeEvent.WithoutDomBinding {
+			extends NodeEvent<H>
+			implements NodeEvent.WithoutDomBinding, NodeEvent.DirectlyInvoked {
 	}
 }

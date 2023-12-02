@@ -395,6 +395,27 @@ public class CommonUtils {
 		return result;
 	}
 
+	public static String cssify(Object o) {
+		if (o == null) {
+			return null;
+		}
+		String s = o.toString();
+		if (CommonUtils.isNullOrEmpty(s)) {
+			return s;
+		}
+		if (s.contains("_")) {
+			return s.toLowerCase().replace('_', '-');
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(s.substring(0, 1).toLowerCase());
+		for (int i = 1; i < s.length(); i++) {
+			String c = s.substring(i, i + 1);
+			builder.append(c.toUpperCase().equals(c) ? "-" : "");
+			builder.append(c.toLowerCase());
+		}
+		return builder.toString();
+	}
+
 	public static boolean currencyEquals(double d1, double d2) {
 		return Math.abs(d1 - d2) < 0.005;
 	}
@@ -1740,6 +1761,10 @@ public class CommonUtils {
 		return sb.toString();
 	}
 
+	public static String tf(boolean b) {
+		return b ? "t" : "f";
+	}
+
 	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
 			Collection<T> c2) {
 		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
@@ -1868,6 +1893,20 @@ public class CommonUtils {
 	public static String toSimpleExceptionMessage(Throwable caught) {
 		return format("%s:%s", caught.getClass().getSimpleName(),
 				caught.getMessage());
+	}
+
+	public static String toUrlFragment(Object object) {
+		if (object == null) {
+			return "null";
+		}
+		String fragment = object.toString();
+		if (Objects.equals(fragment.toUpperCase(), fragment.toLowerCase())
+				|| fragment.contains("-") || fragment.contains("_")) {
+			fragment = fragment.toLowerCase();
+			return fragment.replace("_", "-").replace(" ", "-");
+		} else {
+			return fragment.replaceAll("[/:-?#]]", "_");
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -2424,6 +2463,10 @@ public class CommonUtils {
 
 		public Set<T> intersection;
 
+		public Stream<T> delta() {
+			return Stream.concat(firstOnly.stream(), secondOnly.stream());
+		}
+
 		public boolean isEmpty() {
 			return firstOnly.isEmpty() && secondOnly.isEmpty()
 					&& intersection.isEmpty();
@@ -2457,44 +2500,5 @@ public class CommonUtils {
 
 	enum DateAdjustmentModifier {
 		LOCAL_TZ, ADJUST_TO_TZ
-	}
-
-	public static String toUrlFragment(Object object) {
-		if (object == null) {
-			return "null";
-		}
-		String fragment = object.toString();
-		if (Objects.equals(fragment.toUpperCase(), fragment.toLowerCase())
-				|| fragment.contains("-") || fragment.contains("_")) {
-			fragment = fragment.toLowerCase();
-			return fragment.replace("_", "-").replace(" ", "-");
-		} else {
-			return fragment.replaceAll("[/:-?#]]", "_");
-		}
-	}
-
-	public static String cssify(Object o) {
-		if (o == null) {
-			return null;
-		}
-		String s = o.toString();
-		if (CommonUtils.isNullOrEmpty(s)) {
-			return s;
-		}
-		if (s.contains("_")) {
-			return s.toLowerCase().replace('_', '-');
-		}
-		StringBuilder builder = new StringBuilder();
-		builder.append(s.substring(0, 1).toLowerCase());
-		for (int i = 1; i < s.length(); i++) {
-			String c = s.substring(i, i + 1);
-			builder.append(c.toUpperCase().equals(c) ? "-" : "");
-			builder.append(c.toLowerCase());
-		}
-		return builder.toString();
-	}
-
-	public static String tf(boolean b) {
-		return b ? "t" : "f";
 	}
 }

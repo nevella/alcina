@@ -186,6 +186,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		}
 	}
 
+	// Omit from Event binding
+	public interface DirectlyInvoked {
+	}
+
 	public interface Handler extends EventHandler {
 	}
 
