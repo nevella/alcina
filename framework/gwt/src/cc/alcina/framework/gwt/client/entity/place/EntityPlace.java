@@ -4,6 +4,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -14,6 +16,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
@@ -23,6 +26,12 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 	public static EntityPlace forClass(Class clazz) {
 		return (EntityPlace) RegistryHistoryMapper.get()
 				.getPlaceByModelClass(clazz);
+	}
+
+	@Override
+	public void updateFrom(BasePlace other) {
+		Preconditions.checkArgument(other.getClass() == getClass());
+		entity = ((EntityPlace) other).entity;
 	}
 
 	public static EntityPlace forClassAndId(Class clazz, long id) {
@@ -72,6 +81,10 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 	public <E extends Entity> E provideEntity() {
 		return entity != null ? (E) entity
 				: (E) Domain.find(provideEntityClass(), id);
+	}
+
+	public boolean provideHasEntity() {
+		return entity != null;
 	}
 
 	public Class<? extends Entity> provideEntityClass() {

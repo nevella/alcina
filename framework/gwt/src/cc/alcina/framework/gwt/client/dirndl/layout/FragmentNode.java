@@ -335,6 +335,10 @@ public abstract class FragmentNode extends Model.Fields
 		public void insertAsFirstChild(FragmentNode child) {
 			provideNode().insertAsFirstChild(child);
 		}
+
+		public void strip() {
+			withMutating(() -> provideNode().strip());
+		}
 	}
 
 	// childless DOM structure - anything except ELEMENT

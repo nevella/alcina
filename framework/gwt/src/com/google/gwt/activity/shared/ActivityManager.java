@@ -28,6 +28,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
 import cc.alcina.framework.gwt.client.dirndl.activity.HasPlace;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 
 /**
  * Manages {@link Activity} objects that should be kicked off in response to
@@ -122,8 +123,12 @@ public class ActivityManager
 				PlaceUpdateable activity2 = (PlaceUpdateable) nextActivity;
 				if (activity1.canUpdate(activity2)) {
 					if (activity1 instanceof HasPlace) {
-						((HasPlace) activity1)
-								.setPlace(((HasPlace) activity2).getPlace());
+						BasePlace outgoingPlace = ((HasPlace) activity1)
+								.getPlace();
+						BasePlace incomingPlace = ((HasPlace) activity2)
+								.getPlace();
+						incomingPlace.updateFrom(outgoingPlace);
+						((HasPlace) activity1).setPlace(incomingPlace);
 						return;
 					}
 				}

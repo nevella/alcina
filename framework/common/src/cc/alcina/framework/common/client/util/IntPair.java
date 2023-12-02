@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -259,6 +260,12 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return result.i1 <= result.i2 ? result : null;
 	}
 
+	public boolean overlapsWith(IntPair other) {
+		IntPair intersection = intersection(other);
+		return intersection != null && !Objects.equals(intersection, this)
+				&& !Objects.equals(intersection, other);
+	}
+
 	public IntPair intersectionOrZero(IntPair other) {
 		IntPair result = intersection(other);
 		return result == null ? new IntPair(0, 0) : result;
@@ -266,6 +273,11 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 
 	public boolean intersectsWith(IntPair other) {
 		return intersection(other) != null;
+	}
+
+	public boolean intersectsWithNonPoint(IntPair other) {
+		IntPair result = intersection(other);
+		return result != null && !result.isPoint();
 	}
 
 	// as a possible vector in 1-space

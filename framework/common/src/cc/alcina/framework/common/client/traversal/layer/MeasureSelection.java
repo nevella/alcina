@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.IntPair;
 
 public class MeasureSelection extends AbstractSelection<Measure>
 		implements Comparable<MeasureSelection> {
@@ -81,5 +82,15 @@ public class MeasureSelection extends AbstractSelection<Measure>
 			}
 		}
 		return super.isContainedBy(selection);
+	}
+
+	public MeasureSelection truncateTo(IntPair range) {
+		throw new UnsupportedOperationException();
+	}
+
+	public interface IgnoreOverlaps {
+	}
+
+	public interface Intermediate {
 	}
 }

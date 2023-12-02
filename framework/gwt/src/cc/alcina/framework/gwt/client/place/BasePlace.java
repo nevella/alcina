@@ -113,4 +113,11 @@ public abstract class BasePlace extends Place
 	public interface PlaceNavigator {
 		void go(Place place);
 	}
+
+	/**
+	 * For copying resources which are constant when updating only parts of a
+	 * place (see EntityPlace)
+	 */
+	public void updateFrom(BasePlace outgoingPlace) {
+	}
 }

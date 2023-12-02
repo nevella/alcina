@@ -154,6 +154,18 @@ public class SelectionTraversal
 			return byLayer.getAndEnsure(layer);
 		}
 
+		/**
+		 * Return all selections matching a given type - either an exact class
+		 * match to S, or any subtype of S (if includeSubclasses is true)
+		 * 
+		 * @param <S>
+		 *            The filtering {@link Selection} subtype
+		 * @param clazz
+		 *            The filtering {@link Selection} subtype
+		 * @param includeSubclasses
+		 *            Whether to return all matching subtypes of S
+		 * @return The matching Selection instances
+		 */
 		public synchronized <S extends Selection> List<S>
 				get(Class<? extends S> clazz, boolean includeSubclasses) {
 			if (includeSubclasses) {

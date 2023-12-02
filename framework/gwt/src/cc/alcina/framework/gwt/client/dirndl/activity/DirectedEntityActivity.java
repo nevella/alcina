@@ -51,6 +51,7 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
 		Domain.async(provideDomainClass(), place.id, provideIsCreate(), e -> {
 			Runnable postCreate = () -> {
+				place.entity = e;
 				setEntity((E) e);
 				if (e == null) {
 					setEntityNotFound(true);

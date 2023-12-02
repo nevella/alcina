@@ -45,6 +45,8 @@ public class ModelBinding<T> {
 
 	boolean transformsNull;
 
+	Predicate<T> preMapPredicate;
+
 	public ModelBinding<T> withTransformsNull() {
 		this.transformsNull = true;
 		return this;
@@ -159,6 +161,10 @@ public class ModelBinding<T> {
 
 	void acceptStreamElement0(Object obj) {
 		Object o1 = supplier == null ? obj : supplier.get();
+		if (preMapPredicate != null
+				&& !((Predicate) preMapPredicate).test(o1)) {
+			return;
+		}
 		Object o2 = map == null || (o1 == null && !transformsNull) ? o1
 				: ((Function) map).apply(o1);
 		if (predicate != null && !((Predicate) predicate).test(o2)) {
@@ -180,6 +186,11 @@ public class ModelBinding<T> {
 
 	public ModelBinding<T> filter(Predicate<T> predicate) {
 		this.predicate = predicate;
+		return this;
+	}
+
+	public ModelBinding<T> preMapFilter(Predicate<T> preMapPredicate) {
+		this.preMapPredicate = preMapPredicate;
 		return this;
 	}
 

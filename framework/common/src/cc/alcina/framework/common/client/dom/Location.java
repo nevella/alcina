@@ -218,6 +218,14 @@ public class Location implements Comparable<Location> {
 			this.end = end;
 		}
 
+		public Range truncateAbsolute(int startIndex, int endIndex) {
+			Location modifiedEnd = end
+					.createRelativeLocation(endIndex - end.index, true);
+			Location modifiedStart = start
+					.createRelativeLocation(startIndex - start.index, false);
+			return new Range(modifiedStart, modifiedEnd);
+		}
+
 		public Range truncateToIndexEnd(int endIndex) {
 			Location modifiedEnd = end.createRelativeLocation(
 					endIndex - (end.index - start.index), true);

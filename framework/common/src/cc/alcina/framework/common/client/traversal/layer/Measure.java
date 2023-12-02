@@ -181,10 +181,7 @@ public class Measure extends Location.Range {
 		}
 
 		public interface Order extends Comparator<Token> {
-			/*
-			 * Undesirable, but use for dev
-			 */
-			public static class Dev extends Order.Simple {
+			public static class Base extends Order.Simple {
 				@Override
 				protected int classOrdering(Class<? extends Token> class1,
 						Class<? extends Token> class2) {
