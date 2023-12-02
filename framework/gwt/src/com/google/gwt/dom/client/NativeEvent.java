@@ -20,6 +20,7 @@ import java.util.Set;
 
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.client.JsArray;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -510,7 +511,22 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	}
 
 	public static enum Modifier {
-		META, CTRL, ALT, SHIFT
+		META, CTRL, ALT, SHIFT,
+		/*
+		 * META (osx), CTRL (other) - not emitted by getModifiers, but used as a
+		 * matcher
+		 */
+		OS_MODIFIER;
+
+		public Modifier osDependent() {
+			switch (this) {
+			case OS_MODIFIER:
+				boolean mac = Window.Navigator.getPlatform().matches("Mac.*");
+				return mac ? Modifier.META : CTRL;
+			default:
+				return this;
+			}
+		}
 	}
 
 	public Set<Modifier> getModifiers() {
