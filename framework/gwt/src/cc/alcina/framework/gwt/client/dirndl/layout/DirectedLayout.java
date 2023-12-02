@@ -1635,7 +1635,6 @@ public class DirectedLayout implements AlcinaProcess {
 								eventClass)) {
 							Class<? extends ModelEvent.Emitter> emitterClass = ((DescendantEvent) reflector
 									.newInstance()).getEmitterClass();
-							reflector.getGenericBounds().bounds.get(1);
 							emitterEvents.put(emitterClass,
 									(Class<? extends ModelEvent>) eventClass);
 						}

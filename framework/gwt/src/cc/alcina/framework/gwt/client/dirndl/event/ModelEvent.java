@@ -90,6 +90,9 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	 */
 	public abstract static class DescendantEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Emitter>
 			extends ModelEvent<T, H> {
+		public Class<E> getEmitterClass() {
+			return Reflections.at(getClass()).getGenericBounds().bounds.get(2);
+		}
 	}
 
 	// Marker interface - for descendant events, the receiver (handler) will
@@ -111,15 +114,18 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 			if (handler.isPresent()) {
 				((SimpleEventBus) Client.eventBus()).fireEventFromSource(
 						modelEvent, context.node, List.of(handler.get()));
-				return;
-			}
-			Optional<TopLevelCatchallHandler> catchallHandler = Registry
-					.optional(TopLevelCatchallHandler.class);
-			if (catchallHandler.isPresent()) {
-				catchallHandler.get().handle(modelEvent);
-				return;
+			} else {
+				Optional<TopLevelCatchallHandler> catchallHandler = Registry
+						.optional(TopLevelCatchallHandler.class);
+				if (catchallHandler.isPresent()) {
+					catchallHandler.get().handle(modelEvent);
+				}
 			}
 		}
+		modelEvent.onDispatchComplete();
+	}
+
+	protected void onDispatchComplete() {
 	}
 
 	private boolean handled;

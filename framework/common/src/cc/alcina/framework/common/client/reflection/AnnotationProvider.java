@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.reflection;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,8 +18,20 @@ public interface AnnotationProvider {
 	}
 
 	public static class LookupProvider implements AnnotationProvider {
-		public Map<Class, Annotation> annotations = CollectionCreators.Bootstrap
+		Map<Class, Annotation> annotations = CollectionCreators.Bootstrap
 				.createConcurrentClassMap();
+
+		Map<Class, List<Annotation>> repeatedAnnotations = CollectionCreators.Bootstrap
+				.createConcurrentClassMap();
+
+		public synchronized void addAnnotation(
+				Class<? extends Annotation> annotationClass,
+				Annotation annotation) {
+			annotations.put(annotationClass, annotation);
+			repeatedAnnotations
+					.computeIfAbsent(annotationClass, clazz -> new ArrayList())
+					.add(annotation);
+		}
 
 		@Override
 		public <A extends Annotation> A
@@ -29,7 +42,21 @@ public interface AnnotationProvider {
 		@Override
 		public <A extends Annotation> List<A>
 				getAnnotations(Class<A> annotationClass) {
-			throw new UnsupportedOperationException();
+			return (List<A>) repeatedAnnotations.get(annotationClass);
+		}
+	}
+
+	public static class EmptyProvider implements AnnotationProvider {
+		@Override
+		public <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass) {
+			return null;
+		}
+
+		@Override
+		public <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass) {
+			return List.of();
 		}
 	}
 }

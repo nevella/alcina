@@ -153,6 +153,12 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return cursor.gwtEvent;
 		}
 
+		/**
+		 * A dispatched event (dispatched to a model) is a copy of the bubbling
+		 * event, so the first call to getPrevious() within a handler will
+		 * return that bubbling event. Subsequent calls will return the prior
+		 * event(s) causal events
+		 */
 		public Context getPrevious() {
 			return previous;
 		}

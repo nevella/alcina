@@ -76,7 +76,7 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	public static ClassReflector<?> emptyReflector(Class clazz) {
 		return new ClassReflector<>(clazz, Collections.emptyList(),
-				Collections.emptyMap(), new AnnotationProvider.LookupProvider(),
+				Collections.emptyMap(), new AnnotationProvider.EmptyProvider(),
 				null, t -> false, Collections.emptyList(), null,
 				// may in fact be true, but unused
 				false, false);

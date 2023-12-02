@@ -471,8 +471,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			sourceWriter.print("Annotation annotation = ");
 			writeExpression(sourceWriter);
 			sourceWriter.println(";");
-			sourceWriter.println(
-					"provider.annotations.put(%s.class,annotation);",
+			sourceWriter.println("provider.addAnnotation(%s.class,annotation);",
 					reflection.getAnnotation().annotationType()
 							.getCanonicalName());
 			sourceWriter.outdent();

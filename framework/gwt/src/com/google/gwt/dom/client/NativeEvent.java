@@ -15,6 +15,9 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.client.JsArray;
 
@@ -52,6 +55,8 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * this package)
 	 */
 	public Data data = new Data();
+
+	transient Set<Modifier> modifiers;
 
 	public NativeEvent() {
 	}
@@ -502,5 +507,28 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		public native boolean getIsComposing() /*-{
       return this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.isComposing;
 		}-*/;
+	}
+
+	public static enum Modifier {
+		META, CTRL, ALT, SHIFT
+	}
+
+	public Set<Modifier> getModifiers() {
+		if (modifiers == null) {
+			modifiers = new HashSet<>();
+			if (getCtrlKey()) {
+				modifiers.add(Modifier.CTRL);
+			}
+			if (getAltKey()) {
+				modifiers.add(Modifier.ALT);
+			}
+			if (getShiftKey()) {
+				modifiers.add(Modifier.SHIFT);
+			}
+			if (getMetaKey()) {
+				modifiers.add(Modifier.META);
+			}
+		}
+		return modifiers;
 	}
 }

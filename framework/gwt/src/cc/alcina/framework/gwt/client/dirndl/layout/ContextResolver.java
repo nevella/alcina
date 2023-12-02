@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Text;
@@ -86,7 +87,7 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	public Ref<Consumer<Runnable>> dispatch() {
 		if (dispatch == null) {
 			if (parent != null) {
-				dispatch = parent.dispatch;
+				dispatch = parent.dispatch();
 			} else {
 				dispatch = new Ref<>();
 			}
@@ -138,6 +139,9 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		if (layoutNode.rendered != null) {
 			return;
 		}
+		// CLEAN - only problematic if ML is HTML-ish
+		Preconditions.checkArgument(
+				!tagName.matches("(?i)body|title|head|html|style|script"));
 		Element element = Document.get().createElement(tagName);
 		String cssClass = layoutNode.directed.className();
 		if (cssClass.length() > 0) {

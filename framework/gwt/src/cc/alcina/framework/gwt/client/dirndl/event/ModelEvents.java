@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -27,6 +28,44 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onAdd(Add event);
+		}
+	}
+
+	/**
+	 * Allow - say - child components to handle global keyboard shortcut
+	 * triggered events. The top-level component fires an event of this type,
+	 * and they receive and optionally handle it
+	 */
+	public static class TopLevelMissedEvent extends
+			DescendantEvent<ModelEvent, TopLevelMissedEvent.Handler, TopLevelMissedEvent.Emitter> {
+		public static Topic<TopLevelMissedEvent> topicNotHandled = Topic
+				.create();
+
+		boolean handled;
+
+		@Override
+		public void dispatch(TopLevelMissedEvent.Handler handler) {
+			handler.onTopLevelMissedEvent(this);
+		}
+
+		@Override
+		protected void onDispatchComplete() {
+			if (!handled) {
+				topicNotHandled.publish(this);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onTopLevelMissedEvent(TopLevelMissedEvent event);
+		}
+
+		public void handled() {
+			TopLevelMissedEvent previous = (TopLevelMissedEvent) getContext()
+					.getPrevious().getNodeEvent();
+			previous.handled = true;
 		}
 	}
 

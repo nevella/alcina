@@ -63,7 +63,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * <p>
  * FIXME - dirndl 1x1h - should these in fact be two different bindings - say a
  * base class and subclass?
- * 
+ *
  * <h3>Descendant bindings</h3>
  * <p>
  * Ascent binding/dispatch doesn't require optimisation, since the
@@ -96,46 +96,6 @@ class NodeEventBinding {
 		this.type = type;
 	}
 
-	class DescendantBindings {
-		Set<NodeEventBinding> handlers = GWT.isScript()
-				? AlcinaCollections.newUniqueSet()
-				// easier debugging
-				: new LinkedHashSet<>();
-
-		public void addHandler(NodeEventBinding descendantBinding) {
-			handlers.add(descendantBinding);
-			descendantBinding
-					.ensureDescendantBindings().ancestorEmitter = NodeEventBinding.this;
-		}
-
-		public void removeHandler(NodeEventBinding descendantBinding) {
-			handlers.remove(descendantBinding);
-		}
-
-		void unbind(NodeEventBinding nodeEventBinding) {
-			if (ancestorEmitter != null) {
-				ancestorEmitter.descendantBindings
-						.removeHandler(NodeEventBinding.this);
-			}
-		}
-
-		NodeEventBinding ancestorEmitter;
-
-		void dispatch(ModelEvent modelEvent) {
-			// it's in fact guaranteed that the handler NodeEventBinding is the
-			// right
-			// type
-			handlers.forEach(h -> h.fireEventIfType(modelEvent));
-		}
-	}
-
-	DescendantBindings ensureDescendantBindings() {
-		if (descendantBindings == null) {
-			descendantBindings = new DescendantBindings();
-		}
-		return descendantBindings;
-	}
-
 	public void onEvent(GwtEvent event) {
 		Context context = NodeEvent.Context.fromEvent(event, node);
 		fireEvent(type, context, node.getModel());
@@ -145,6 +105,55 @@ class NodeEventBinding {
 	public String toString() {
 		return Ax.format("%s :: %s", node.model.getClass().getSimpleName(),
 				type.getSimpleName());
+	}
+
+	void addDescendantBinding(NodeEventBinding descendantBinding) {
+		ensureDescendantBindings().addHandler(descendantBinding);
+	}
+
+	/*
+	 * this method contains checks that a binding exists (if the event type does
+	 * not implement WithoutDomBinding), and that the DomBinding subclass is an
+	 * inner class of the NodeEvent subclass
+	 */
+	void bind() {
+		if (isDomBinding()) {
+			domBinding = Registry.impl(DomBinding.class, type);
+			Preconditions.checkState(domBinding.getClass().getName()
+					.indexOf(type.getName()) == 0);
+			domBinding.nodeEventBinding = this;
+			if (node.rendered == null) {
+				Ax.err(node.toParentStack());
+				throw new IllegalStateException(Ax.format(
+						"No widget for model binding dom event %s - possibly delegating",
+						node.model));
+			}
+			domBinding.bind(getBindingRendered().as(Element.class), node.model,
+					true);
+		} else {
+			// model event
+			Preconditions.checkState(Reflections
+					.isAssignableFrom(NodeEvent.WithoutDomBinding.class, type));
+			if (isDescendantBinding()) {
+				ModelEvent.Emitter emitter = node.findEmitter(type);
+				if (emitter != null) {
+					((Model) emitter).provideNode().ensureEventBinding(type)
+							.addDescendantBinding(this);
+				}
+			}
+			return;
+		}
+	}
+
+	void dispatchDescent(ModelEvent modelEvent) {
+		ensureDescendantBindings().dispatch(modelEvent);
+	}
+
+	DescendantBindings ensureDescendantBindings() {
+		if (descendantBindings == null) {
+			descendantBindings = new DescendantBindings();
+		}
+		return descendantBindings;
 	}
 
 	/*
@@ -207,62 +216,6 @@ class NodeEventBinding {
 		}
 	}
 
-	void unbind() {
-		if (domBinding != null) {
-			domBinding.bind(null, null, false);
-		}
-		if (descendantBindings != null) {
-			descendantBindings.unbind(this);
-		}
-	}
-
-	/*
-	 * this method contains devmode checks that a binding exists (if the event
-	 * type does not implement WithoutDomBinding), and that the DomBinding
-	 * subclass is an inner class of the NodeEvent subclass
-	 */
-	void bind() {
-		if (isDomBinding()) {
-			domBinding = Registry.impl(DomBinding.class, type);
-			if (!GWT.isScript()) {
-				Preconditions.checkState(domBinding.getClass().getName()
-						.indexOf(type.getName()) == 0);
-			}
-			domBinding.nodeEventBinding = this;
-			if (node.rendered == null) {
-				Ax.err(node.toParentStack());
-				throw new IllegalStateException(Ax.format(
-						"No widget for model binding dom event %s - possibly delegating",
-						node.model));
-			}
-			domBinding.bind(getBindingRendered().as(Element.class), node.model,
-					true);
-		} else {
-			// model event
-			if (!GWT.isScript()) {
-				Preconditions.checkState(Reflections.isAssignableFrom(
-						NodeEvent.WithoutDomBinding.class, type));
-			}
-			if (isDescendantBinding()) {
-				ModelEvent.Emitter emitter = node.findEmitter(type);
-				if (emitter != null) {
-					((Model) emitter).provideNode().ensureEventBinding(type)
-							.addDescendantBinding(this);
-				}
-			}
-			return;
-		}
-	}
-
-	void addDescendantBinding(NodeEventBinding descendantBinding) {
-		ensureDescendantBindings().addHandler(descendantBinding);
-	}
-
-	boolean isDescendantBinding() {
-		return Reflections.isAssignableFrom(ModelEvent.DescendantEvent.class,
-				type);
-	}
-
 	void fireEventIfType(ModelEvent event) {
 		if (event.getClass() == type) {
 			Context context = NodeEvent.Context.fromContext(event.getContext(),
@@ -282,12 +235,55 @@ class NodeEventBinding {
 		return node;
 	}
 
+	boolean isDescendantBinding() {
+		return Reflections.isAssignableFrom(ModelEvent.DescendantEvent.class,
+				type);
+	}
+
 	boolean isDomBinding() {
 		return Registry.query(DomBinding.class).addKeys(type)
 				.hasImplementation();
 	}
 
-	void dispatchDescent(ModelEvent modelEvent) {
-		ensureDescendantBindings().dispatch(modelEvent);
+	void unbind() {
+		if (domBinding != null) {
+			domBinding.bind(null, null, false);
+		}
+		if (descendantBindings != null) {
+			descendantBindings.unbind(this);
+		}
+	}
+
+	class DescendantBindings {
+		Set<NodeEventBinding> handlers = GWT.isScript()
+				? AlcinaCollections.newUniqueSet()
+				// easier debugging
+				: new LinkedHashSet<>();
+
+		NodeEventBinding ancestorEmitter;
+
+		public void addHandler(NodeEventBinding descendantBinding) {
+			handlers.add(descendantBinding);
+			descendantBinding
+					.ensureDescendantBindings().ancestorEmitter = NodeEventBinding.this;
+		}
+
+		public void removeHandler(NodeEventBinding descendantBinding) {
+			handlers.remove(descendantBinding);
+		}
+
+		void dispatch(ModelEvent modelEvent) {
+			// it's in fact guaranteed that the handler NodeEventBinding is the
+			// right
+			// type
+			handlers.forEach(h -> h.fireEventIfType(modelEvent));
+		}
+
+		void unbind(NodeEventBinding nodeEventBinding) {
+			if (ancestorEmitter != null) {
+				ancestorEmitter.descendantBindings
+						.removeHandler(NodeEventBinding.this);
+			}
+		}
 	}
 }
