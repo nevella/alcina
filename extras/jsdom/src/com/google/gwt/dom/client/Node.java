@@ -28,6 +28,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 /**
@@ -602,5 +603,9 @@ public abstract class Node
 		public int size() {
 			return local().getChildren().size();
 		}
+	}
+
+	public DomNodeType getDomNodeType() {
+		return DomNodeType.fromW3cNode(this);
 	}
 }

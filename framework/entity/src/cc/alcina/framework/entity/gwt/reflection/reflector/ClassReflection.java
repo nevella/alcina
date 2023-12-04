@@ -439,7 +439,8 @@ public class ClassReflection extends ReflectionElement {
 		@Override
 		public <A extends Annotation> List<A>
 				getAnnotations(Class<A> annotationClass) {
-			return type.getAnnotations(annotationClass);
+			return (List<A>) List.of(((ProvidesJavaType) type).provideJavaType()
+					.getAnnotationsByType(annotationClass));
 		}
 	}
 

@@ -83,11 +83,15 @@ public abstract class DirectedRenderer {
 		} else {
 			if (node.model instanceof Directed.NonClassTag
 					&& node.getProperty() != null) {
-				return Ax.blankTo(tag, Ax.cssify(node.getProperty().getName()));
+				return Ax.cssify(node.getProperty().getName());
 			} else {
-				return Ax.blankTo(tag, tagName(node.model.getClass()));
+				return tagName(node.model.getClass());
 			}
 		}
+	}
+
+	public static String getTag(String directedTag, Class modelClass) {
+		return Ax.blankTo(directedTag, tagName(modelClass));
 	}
 
 	protected String getTag(Node node, String defaultTag) {
@@ -374,6 +378,10 @@ public abstract class DirectedRenderer {
 				return transformedModel;
 			}
 		}
+	}
+
+	public cc.alcina.framework.common.client.dom.DomNodeType rendersAsType() {
+		return cc.alcina.framework.common.client.dom.DomNodeType.ELEMENT;
 	}
 
 	/*

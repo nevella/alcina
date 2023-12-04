@@ -1900,6 +1900,10 @@ public class DomNode {
 		}
 	}
 
+	public DomNodeType getDomNodeType() {
+		return DomNodeType.fromW3cNode(node);
+	}
+
 	public boolean classMatches(String regex) {
 		return attr("class").matches(regex);
 	}

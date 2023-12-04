@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.dom;
 
+import java.util.List;
+
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 
@@ -73,4 +75,6 @@ public interface LocationContext {
 	String textContent(Range range);
 
 	String markupContent(Range range);
+
+	List<DomNode> getContainingNodes(int index, boolean after);
 }

@@ -11,6 +11,8 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -169,9 +171,9 @@ public class Measure extends Location.Range {
 		}
 
 		/*
-		 * Token will not be output (intermediate)
+		 * Token will suppress (cause omit from output) any contained tokens
 		 */
-		public interface NonOutput extends Token {
+		public interface NonOutputTree {
 		}
 
 		/*
@@ -181,6 +183,12 @@ public class Measure extends Location.Range {
 		}
 
 		public interface Order extends Comparator<Token> {
+			Order withIgnoreNoPossibleChildren();
+
+			default Order copy() {
+				return Reflections.newInstance(getClass());
+			}
+
 			public static class Base extends Order.Simple {
 				@Override
 				protected int classOrdering(Class<? extends Token> class1,
@@ -189,10 +197,19 @@ public class Measure extends Location.Range {
 				}
 			}
 
+			@Reflected
 			public abstract static class Simple implements Order {
+				boolean ignoreNoPossibleChildren = false;
+
+				@Override
+				public Order withIgnoreNoPossibleChildren() {
+					ignoreNoPossibleChildren = true;
+					return this;
+				}
+
 				@Override
 				public int compare(Token o1, Token o2) {
-					{
+					if (!ignoreNoPossibleChildren) {
 						int c1 = noPossibleChildrenWeight(o1);
 						int c2 = noPossibleChildrenWeight(o2);
 						if (c1 != c2) {
@@ -211,13 +228,6 @@ public class Measure extends Location.Range {
 				protected abstract int classOrdering(
 						Class<? extends Token> class1,
 						Class<? extends Token> class2);
-			}
-
-			public static class Throw implements Order {
-				@Override
-				public int compare(Token o1, Token o2) {
-					throw new UnsupportedOperationException();
-				}
 			}
 		}
 	}

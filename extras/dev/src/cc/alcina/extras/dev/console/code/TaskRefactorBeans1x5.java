@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.Reflect
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.entity.util.FsObjectCache;
@@ -337,7 +337,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 			}
 		}
 		if (hasSetters) {
-			Ax.out("Updated setters: %s", NestedNameProvider.get(type.clazz()));
+			Ax.out("Updated setters: %s", NestedName.get(type.clazz()));
 		}
 		warns.forEach(s -> Ax.out("  %s", s));
 	}
@@ -417,8 +417,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 							.annotation(Directed.class)
 							.renderer() == DirectedRenderer.TransformRenderer.class) {
 						warn(type, "non-element transform :: %s",
-								NestedNameProvider
-										.get(property.getOwningType()));
+								NestedName.get(property.getOwningType()));
 					} else {
 						transformable = true;
 					}

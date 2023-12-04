@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -263,7 +263,7 @@ public class SelectionTraversal
 
 		synchronized String
 				generateSelectionCounterPath(Class<? extends Selection> clazz) {
-			return Ax.format("%s.%s", NestedNameProvider.get(clazz),
+			return Ax.format("%s.%s", NestedName.get(clazz),
 					byClass.getAndEnsure(clazz).size());
 		}
 

@@ -1,7 +1,10 @@
 package cc.alcina.framework.common.client.dom;
 
+import java.util.List;
+
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -303,6 +306,46 @@ public class Location implements Comparable<Location> {
 		public String toString() {
 			return FormatBuilder.keyValues("start", start, "end", end, "text",
 					Ax.trimForLogging(text()));
+		}
+
+		public Range truncateToEndNode() {
+			Location modifiedStart = end
+					.createRelativeLocation(start.index - end.index, false);
+			return new Range(modifiedStart, end);
+		}
+
+		/*
+		 * Preserves start.index and end.index, but changes treeindicies to that
+		 * of the lowest/highest node with those indicies
+		 */
+		public Range toDeepestNode() {
+			List<DomNode> startContainers = start.locationContext
+					.getContainingNodes(start.index, false);
+			List<DomNode> endContainers = start.locationContext
+					.getContainingNodes(end.index, true);
+			DomNode minimal = startContainers.stream()
+					.filter(endContainers::contains).reduce(Ax.last()).get();
+			Location minimalLocation = minimal.asLocation();
+			return new Range(
+					minimalLocation.createRelativeLocation(
+							start.index - minimalLocation.index, false),
+					minimalLocation.createRelativeLocation(
+							end.index - minimalLocation.index, true));
+		}
+
+		@Property.Not
+		public boolean isWholeNode() {
+			return start.containingNode.asRange().equals(this);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Range) {
+				Range o = (Range) obj;
+				return o.start.equals(start) && o.end.equals(end);
+			} else {
+				return false;
+			}
 		}
 	}
 

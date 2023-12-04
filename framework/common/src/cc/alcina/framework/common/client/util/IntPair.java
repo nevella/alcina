@@ -397,4 +397,12 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
 		CONTAINS_END
 	}
+
+	public IntPair toStartPoint() {
+		return new IntPair(i1, i1);
+	}
+
+	public IntPair toEndPoint() {
+		return new IntPair(i2, i2);
+	}
 }

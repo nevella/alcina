@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.View;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
@@ -54,7 +54,7 @@ class Properties extends Model.Fields {
 			View view = Registry.impl(Selection.View.class,
 					selection.getClass());
 			pathSegment = view.getPathSegment(selection);
-			type = NestedNameProvider.get(selection);
+			type = NestedName.get(selection);
 			discriminator = view.getDiscriminator(selection);
 			text = view.getText(selection);
 			markup = view.getMarkup(selection);

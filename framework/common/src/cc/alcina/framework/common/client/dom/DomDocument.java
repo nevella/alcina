@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
 
 import org.w3c.dom.Document;
@@ -332,20 +333,18 @@ public class DomDocument extends DomNode {
 				boolean after) {
 			int index = location.index + offset;
 			/*
-			 * Special case, preserve existing text node if possible)
+			 * Special case, preserve existing node if possible)
 			 */
 			DomNode containingNode = location.containingNode();
-			if (containingNode.isText()) {
-				int relativeIndex = location.index
-						- byNode.get(containingNode).index;
-				int textLength = containingNode.textContent().length();
-				if (relativeIndex >= 0 && relativeIndex <= textLength) {
-					if (relativeIndex == textLength) {
-						after = true;
-					}
-					return new Location(location.treeIndex, index, after,
-							location.containingNode, this);
+			int contentLength = contentLengths.get(containingNode);
+			int relativeIndex = location.index
+					- byNode.get(containingNode).index;
+			if (relativeIndex >= 0 && relativeIndex <= contentLength) {
+				if (relativeIndex == contentLength) {
+					after = true;
 				}
+				return new Location(location.treeIndex, index, after,
+						location.containingNode, this);
 			}
 			Location test = new Location(-1, index, after);
 			Location containingLocation = getContainingLocation(test);
@@ -723,6 +722,36 @@ public class DomDocument extends DomNode {
 				}
 			} else {
 				return "";
+			}
+		}
+
+		@Override
+		public List<DomNode> getContainingNodes(int index, boolean after) {
+			List<DomNode> result = new ArrayList<>();
+			DomNode cursor = getDocumentElementNode();
+			while (true) {
+				result.add(cursor);
+				Optional<DomNode> containingChild = cursor.children.nodes()
+						.stream().filter(n -> contains(n, index, after))
+						.findFirst();
+				if (containingChild.isPresent()) {
+					cursor = containingChild.get();
+				} else {
+					break;
+				}
+			}
+			return result;
+		}
+
+		private boolean contains(DomNode n, int index, boolean after) {
+			Location location = byNode.get(n);
+			Integer length = contentLengths.get(n);
+			if (after) {
+				return location.index < index
+						&& location.index + length >= index;
+			} else {
+				return location.index <= index
+						&& location.index + length > index;
 			}
 		}
 	}

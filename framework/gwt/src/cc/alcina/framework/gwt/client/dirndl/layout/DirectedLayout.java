@@ -43,7 +43,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
@@ -1189,9 +1189,9 @@ public class DirectedLayout implements AlcinaProcess {
 				if (Ax.notBlank(binding.from())) {
 					property = Reflections.at(model).property(binding.from());
 					if (property == null) {
-						throw new IllegalArgumentException(Ax.format(
-								"No property %s for model %s", binding.from(),
-								NestedNameProvider.get(model)));
+						throw new IllegalArgumentException(
+								Ax.format("No property %s for model %s",
+										binding.from(), NestedName.get(model)));
 					}
 				}
 				return property;
@@ -1445,6 +1445,14 @@ public class DirectedLayout implements AlcinaProcess {
 			void unbind() {
 				bindings.forEach(PropertyBinding::unbind);
 			}
+		}
+
+		public Node previousSibling() {
+			if (parent == null) {
+				return null;
+			}
+			int idx = parent.children.indexOf(this);
+			return idx == 0 ? null : parent.children.get(idx - 1);
 		}
 	}
 

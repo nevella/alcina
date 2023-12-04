@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.event.Events;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Mutation;
@@ -383,7 +383,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			public String toString() {
 				FormatBuilder format = new FormatBuilder();
 				format.appendPadRight(8, type);
-				format.append(NestedNameProvider.get(model));
+				format.append(NestedName.get(model));
 				return format.toString();
 			}
 		}

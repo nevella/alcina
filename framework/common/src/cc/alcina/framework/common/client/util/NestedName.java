@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @Registration.Singleton
-public class NestedNameProvider {
+public class NestedName {
 	public static String get(Class clazz) {
 		return get().getNestedSimpleName(clazz);
 	}
@@ -17,8 +17,8 @@ public class NestedNameProvider {
 				: get().getNestedSimpleName(object.getClass());
 	}
 
-	private static NestedNameProvider get() {
-		return Registry.impl(NestedNameProvider.class);
+	private static NestedName get() {
+		return Registry.impl(NestedName.class);
 	}
 
 	public String getNestedSimpleName(Class clazz) {

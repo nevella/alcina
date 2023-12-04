@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 
 public class SelectionFilter extends Bindable.Fields
 		implements TreeSerializable {
@@ -98,8 +98,7 @@ public class SelectionFilter extends Bindable.Fields
 				if (logCount != 0) {
 					logCount--;
 					logger.info("Selection class filter: {} : {} : {}",
-							NestedNameProvider.get(selectionClass), list,
-							result);
+							NestedName.get(selectionClass), list, result);
 				}
 			}
 			return result;
@@ -108,7 +107,7 @@ public class SelectionFilter extends Bindable.Fields
 		@Override
 		public String toString() {
 			return Ax.format("Filter entry :: %s :: %s",
-					NestedNameProvider.get(selectionClass), filterRegex);
+					NestedName.get(selectionClass), filterRegex);
 		}
 
 		void prepareToFilter() {

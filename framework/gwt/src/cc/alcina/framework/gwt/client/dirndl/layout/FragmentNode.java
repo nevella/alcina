@@ -249,7 +249,7 @@ public abstract class FragmentNode extends Model.Fields
 		}
 	}
 
-	public class FragmentTree {
+	public class FragmentTree implements Iterator<FragmentNode> {
 		DomNodeTree tree;
 
 		FragmentTree(boolean fromRoot) {
@@ -265,13 +265,23 @@ public abstract class FragmentNode extends Model.Fields
 					.map(fragmentModel()::getFragmentNode);
 		}
 
-		FragmentTree reversed() {
+		public FragmentTree reversed() {
 			tree.reversed();
 			return this;
 		}
 
 		Stream<FragmentNode> stream() {
 			return tree.stream().map(fragmentModel::getFragmentNode);
+		}
+
+		@Override
+		public boolean hasNext() {
+			return tree.hasNext();
+		}
+
+		@Override
+		public FragmentNode next() {
+			return fragmentModel.getFragmentNode(tree.next());
 		}
 	}
 
@@ -338,6 +348,13 @@ public abstract class FragmentNode extends Model.Fields
 
 		public void strip() {
 			withMutating(() -> provideNode().strip());
+		}
+
+		public FragmentNode previousSibling() {
+			DirectedLayout.Node directedPreviousSibling = provideNode()
+					.previousSibling();
+			return directedPreviousSibling == null ? null
+					: (FragmentNode) directedPreviousSibling.model;
 		}
 	}
 

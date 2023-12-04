@@ -13,7 +13,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
@@ -168,8 +168,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 	@Override
 	public String toString() {
-		return Ax.format("%s :: %s", getName(),
-				NestedNameProvider.get(inputType));
+		return Ax.format("%s :: %s", getName(), NestedName.get(inputType));
 	}
 
 	public void withParent(Layer parent) {
@@ -252,7 +251,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	}
 
 	public String getName() {
-		return NestedNameProvider.get(this);
+		return NestedName.get(this);
 	}
 
 	public boolean hasReceivingLayer() {

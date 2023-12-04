@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
@@ -131,6 +132,11 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			cursor = cursor.parentSelection();
 		}
 		return selections;
+	}
+
+	default String toDebugString() {
+		return CommonUtils.joinWithNewlines(
+				ancestorSelections().collect(Collectors.toList()));
 	}
 
 	@Registration.NonGenericSubtypes(View.class)

@@ -192,6 +192,12 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	 */
 	public static class TextNode extends DirectedRenderer {
 		@Override
+		public cc.alcina.framework.common.client.dom.DomNodeType
+				rendersAsType() {
+			return cc.alcina.framework.common.client.dom.DomNodeType.TEXT;
+		}
+
+		@Override
 		protected void render(RendererInput input) {
 			String contents = input.model instanceof String
 					? input.model.toString()

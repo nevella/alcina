@@ -1,10 +1,12 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
@@ -114,7 +116,12 @@ public interface NodeTransformer {
 	public static class DirectedTransformer extends AbstractNodeTransformer {
 		@Override
 		public boolean appliesTo(DomNode node) {
+			DomNodeType domNodeType = node.getDomNodeType();
 			Directed directed = getDirected();
+			if (domNodeType != DomNodeType.ELEMENT) {
+				return Reflections.at(directed.renderer()).templateInstance()
+						.rendersAsType() == domNodeType;
+			}
 			String tagName = Ax.blankTo(directed.tag(),
 					DirectedRenderer.tagName(fragmentNodeType));
 			if (node.tagAndClassIs(tagName, directed.className())) {
@@ -129,9 +136,11 @@ public interface NodeTransformer {
 		@Override
 		public String toString() {
 			Directed directed = getDirected();
-			return Ax.format("Directed %s :: matches %s.%s",
-					fragmentNodeType.getSimpleName(), directed.tag(),
-					directed.className());
+			String classNameSuffix = Ax.isBlank(directed.className()) ? ""
+					: Ax.format(" class=\"%s\"", directed.className());
+			return Ax.format("Directed %s :: matches <%s%s>",
+					NestedName.get(fragmentNodeType), directed.tag(),
+					classNameSuffix);
 		}
 
 		@Override
