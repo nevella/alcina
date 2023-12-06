@@ -470,9 +470,8 @@ public abstract class DevHelper {
 		return cacheFile;
 	}
 
-	protected void copyTemplates() {
+	protected void copyTemplate(String nonTemplatePath) {
 		{
-			String nonTemplatePath = getNonVcsJavaTaskFilePath();
 			if (nonTemplatePath == null) {
 				// not yet configured
 				return;
@@ -489,40 +488,12 @@ public abstract class DevHelper {
 				}
 			}
 		}
-		{
-			String nonTemplatePath = getNonVcsJavaProcessObserverFilePath();
-			if (nonTemplatePath == null) {
-				return;
-			}
-			File nonTemplateFile = new File(nonTemplatePath);
-			if (!nonTemplateFile.exists()) {
-				try {
-					Ax.out("Copying template %s", nonTemplateFile.getName());
-					SEUtilities.copyFile(
-							new File(nonTemplatePath + ".template"),
-							nonTemplateFile);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-		{
-			String nonTemplatePath = getNonVcsJavaDevmodeProcessObserverFilePath();
-			if (nonTemplatePath == null) {
-				return;
-			}
-			File nonTemplateFile = new File(nonTemplatePath);
-			if (!nonTemplateFile.exists()) {
-				try {
-					Ax.out("Copying template %s", nonTemplateFile.getName());
-					SEUtilities.copyFile(
-							new File(nonTemplatePath + ".template"),
-							nonTemplateFile);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
+	}
+
+	protected void copyTemplates() {
+		copyTemplate(getNonVcsJavaTaskFilePath());
+		copyTemplate(getNonVcsJavaProcessObserverFilePath());
+		copyTemplate(getNonVcsJavaDevmodeProcessObserverFilePath());
 	}
 
 	protected TransformManager createTransformManager() {
