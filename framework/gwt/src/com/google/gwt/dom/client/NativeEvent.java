@@ -22,8 +22,10 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 
@@ -510,6 +512,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		}-*/;
 	}
 
+	@Reflected
 	public static enum Modifier {
 		META, CTRL, ALT, SHIFT,
 		/*
@@ -529,6 +532,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		}
 	}
 
+	@AlcinaTransient
 	public Set<Modifier> getModifiers() {
 		if (modifiers == null) {
 			modifiers = new HashSet<>();

@@ -36,7 +36,11 @@ public class Events {
 
 	public void pump() {
 		Preconditions.checkState(emissionStyle == EmissionStyle.MANUAL);
-		events.forEach(Runnable::run);
+		while (this.events.size() > 0) {
+			List<Runnable> passEvents = this.events;
+			this.events = new ArrayList<>();
+			passEvents.forEach(Runnable::run);
+		}
 	}
 
 	List<Runnable> events = new ArrayList<>();

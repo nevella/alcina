@@ -406,6 +406,11 @@ public @interface Directed {
 					elideDefaults);
 			return stringBuilder.toString();
 		}
+
+		public Directed withTag(String tag) {
+			this.tag = tag;
+			return this;
+		}
 	}
 
 	/**

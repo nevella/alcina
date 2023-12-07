@@ -55,6 +55,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
 public abstract class FragmentNode extends Model.Fields
 		implements FragmentNodeOps {
 	protected FragmentModel fragmentModel;
+	// @Property.Not
+	// Map<Property,String> getDirectedPropertyBindingValues(){
+	// return provideNode().propertyBindings;
+	// }
 
 	public <N extends FragmentNode> Optional<N> ancestor(Class<N> clazz) {
 		return (Optional<N>) (Optional<?>) ancestors().stream()
@@ -253,7 +257,8 @@ public abstract class FragmentNode extends Model.Fields
 		DomNodeTree tree;
 
 		FragmentTree(boolean fromRoot) {
-			this.tree = fromRoot ? fragmentModel().rootDomNode().tree()
+			fragmentModel();
+			this.tree = fromRoot ? fragmentModel.rootDomNode().tree()
 					: domNode().tree();
 			tree.setCurrentNode(domNode());
 		}
@@ -262,7 +267,7 @@ public abstract class FragmentNode extends Model.Fields
 				nextTextNode(boolean nonWhitespace) {
 			return (Optional<FragmentNode.TextNode>) (Optional<?>) tree
 					.nextTextNode(nonWhitespace)
-					.map(fragmentModel()::getFragmentNode);
+					.map(fragmentModel::getFragmentNode);
 		}
 
 		public FragmentTree reversed() {
@@ -270,7 +275,7 @@ public abstract class FragmentNode extends Model.Fields
 			return this;
 		}
 
-		Stream<FragmentNode> stream() {
+		public Stream<FragmentNode> stream() {
 			return tree.stream().map(fragmentModel::getFragmentNode);
 		}
 
@@ -360,6 +365,10 @@ public abstract class FragmentNode extends Model.Fields
 
 	// childless DOM structure - anything except ELEMENT
 	public interface Leaf {
+	}
+
+	// text DOM structure
+	public interface TextLeaf extends Leaf {
 	}
 
 	/*

@@ -156,6 +156,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		scheduleEmitMutationEvent();
 	}
 
+	/*
+	 * Note that some DOM nodes inserted by transformations (NodeBoundary
+	 * contents) will not have a corresponding FragmentNode
+	 */
 	public FragmentNode getFragmentNode(DomNode node) {
 		NodeTransformer transformer = domNodeTransformer.get(node);
 		if (transformer == null) {

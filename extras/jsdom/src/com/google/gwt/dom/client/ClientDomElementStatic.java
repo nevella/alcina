@@ -1,34 +1,12 @@
 package com.google.gwt.dom.client;
 
+import java.util.Objects;
+
 import com.google.gwt.safehtml.shared.SafeHtml;
 
-public class ClientDomElementStatic {
-	/**
-	 * Returns the index of the first occurrence of name in a space-separated
-	 * list of names, or -1 if not found.
-	 *
-	 * @param nameList
-	 *            list of space delimited names
-	 * @param name
-	 *            a non-empty string. Should be already trimmed.
-	 */
-	public static int indexOfName(String nameList, String name) {
-		int idx = nameList.indexOf(name);
-		// Calculate matching index.
-		while (idx != -1) {
-			if (idx == 0 || nameList.charAt(idx - 1) == ' ') {
-				int last = idx + name.length();
-				int lastPos = nameList.length();
-				if ((last == lastPos) || ((last < lastPos)
-						&& (nameList.charAt(last) == ' '))) {
-					break;
-				}
-			}
-			idx = nameList.indexOf(name, idx + 1);
-		}
-		return idx;
-	}
+import cc.alcina.framework.gwt.client.util.ClassNames;
 
+public class ClientDomElementStatic {
 	/**
 	 * Adds a name to this element's class property. If the name is already
 	 * present, this method has no effect.
@@ -40,20 +18,15 @@ public class ClientDomElementStatic {
 	 * @see #setClassName(String)
 	 */
 	static boolean addClassName(ClientDomElement domElement, String className) {
-		className = trimClassName(className);
-		// Get the current style string.
-		String oldClassName = domElement.getClassName();
-		int idx = indexOfName(oldClassName, className);
-		// Only add the style if it's not already present.
-		if (idx == -1) {
-			if (oldClassName.length() > 0) {
-				domElement.setClassName(oldClassName + " " + className);
-			} else {
-				domElement.setClassName(className);
-			}
+		String existingClassNames = domElement.getClassName();
+		String addResult = ClassNames.addClassName(existingClassNames,
+				className);
+		if (Objects.equals(addResult, existingClassNames)) {
+			return false;
+		} else {
+			domElement.setClassName(addResult);
 			return true;
 		}
-		return false;
 	}
 
 	static void blur(ClientDomElement domElement) {
@@ -228,7 +201,7 @@ public class ClientDomElementStatic {
 	 */
 	static boolean hasClassName(ClientDomElement domElement, String className) {
 		className = trimClassName(className);
-		int idx = indexOfName(domElement.getClassName(), className);
+		int idx = ClassNames.indexOfName(domElement.getClassName(), className);
 		return idx != -1;
 	}
 
@@ -253,30 +226,17 @@ public class ClientDomElementStatic {
 	 * @return <code>true</code> if this element had the specified class name
 	 * @see #setClassName(String)
 	 */
-	static boolean removeClassName(ClientDomElement domElement, String className) {
-		className = trimClassName(className);
-		// Get the current className string.
-		String oldClassName = domElement.getClassName();
-		int idx = indexOfName(oldClassName, className);
-		// Don't try to remove the style if it's not there.
-		if (idx != -1) {
-			// Get the leading and trailing parts, without the removed name.
-			String begin = oldClassName.substring(0, idx).trim();
-			String end = oldClassName.substring(idx + className.length())
-					.trim();
-			// Some contortions to make sure we don't leave extra spaces.
-			String newClassName;
-			if (begin.length() == 0) {
-				newClassName = end;
-			} else if (end.length() == 0) {
-				newClassName = begin;
-			} else {
-				newClassName = begin + " " + end;
-			}
-			domElement.setClassName(newClassName);
+	static boolean removeClassName(ClientDomElement domElement,
+			String className) {
+		String existingClassNames = domElement.getClassName();
+		String removeResult = ClassNames.removeClassName(existingClassNames,
+				className);
+		if (Objects.equals(removeResult, existingClassNames)) {
+			return false;
+		} else {
+			domElement.setClassName(removeResult);
 			return true;
 		}
-		return false;
 	}
 
 	/**
@@ -287,8 +247,8 @@ public class ClientDomElementStatic {
 	 * @param newClassName
 	 *            the class name to replace it
 	 */
-	static void replaceClassName(ClientDomElement domElement, String oldClassName,
-			String newClassName) {
+	static void replaceClassName(ClientDomElement domElement,
+			String oldClassName, String newClassName) {
 		domElement.removeClassName(oldClassName);
 		domElement.addClassName(newClassName);
 	}

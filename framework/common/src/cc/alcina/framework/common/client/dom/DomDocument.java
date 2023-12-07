@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -27,6 +28,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.Topic;
 
 public class DomDocument extends DomNode {
@@ -754,5 +756,15 @@ public class DomDocument extends DomNode {
 						&& location.index + length > index;
 			}
 		}
+	}
+
+	public void normaliseWhitespace() {
+		stream().filter(DomNode::isText).forEach(n -> {
+			String textContent = n.textContent();
+			String normalized = TextUtils.normalizeWhitespace(textContent);
+			if (!Objects.equals(textContent, normalized)) {
+				n.setText(normalized);
+			}
+		});
 	}
 }
