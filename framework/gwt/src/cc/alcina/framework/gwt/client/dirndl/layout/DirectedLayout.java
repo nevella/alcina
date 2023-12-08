@@ -1496,6 +1496,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 		Element asElement();
 
+		org.w3c.dom.Element asW3cElement();
+
 		int getChildCount();
 
 		int getChildIndex(Rendered after);

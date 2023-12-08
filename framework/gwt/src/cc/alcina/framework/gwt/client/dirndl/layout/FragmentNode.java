@@ -15,13 +15,19 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+
 import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -55,10 +61,21 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
 public abstract class FragmentNode extends Model.Fields
 		implements FragmentNodeOps {
 	protected FragmentModel fragmentModel;
-	// @Property.Not
-	// Map<Property,String> getDirectedPropertyBindingValues(){
-	// return provideNode().propertyBindings;
-	// }
+
+	@Property.Not
+	public StringMap getDirectedPropertyBindingValues() {
+		StringMap result = new StringMap();
+		Element w3cElement = provideNode().rendered.asW3cElement();
+		if (w3cElement != null) {
+			NamedNodeMap map = w3cElement.getAttributes();
+			int length = map.getLength();
+			for (int idx = 0; idx < length; idx++) {
+				Attr attr = (Attr) map.item(idx);
+				result.put(attr.getName(), attr.getValue());
+			}
+		}
+		return result;
+	}
 
 	public <N extends FragmentNode> Optional<N> ancestor(Class<N> clazz) {
 		return (Optional<N>) (Optional<?>) ancestors().stream()

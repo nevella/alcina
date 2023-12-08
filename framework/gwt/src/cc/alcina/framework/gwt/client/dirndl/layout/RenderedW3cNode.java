@@ -99,4 +99,10 @@ class RenderedW3cNode implements Rendered {
 			setElement(element);
 		}
 	}
+
+	@Override
+	public org.w3c.dom.Element asW3cElement() {
+		return node instanceof org.w3c.dom.Element ? (org.w3c.dom.Element) node
+				: null;
+	}
 }
