@@ -11,12 +11,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	private boolean omit;
 
 	public MeasureSelection(Selection parent, Measure measure) {
-		super(parent, measure, measure.toPathSegment());
-	}
-
-	public MeasureSelection(Selection parent, Measure measure,
-			String pathSegment) {
-		super(parent, measure, pathSegment);
+		super(parent, measure);
 	}
 
 	@Override

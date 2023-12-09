@@ -19,11 +19,23 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	public AbstractSelection(Node parentNode, T value, String pathSegment) {
 		this.value = value;
 		this.node = parentNode.add(this);
+		if (pathSegment == null) {
+			pathSegment = parentNode.tree().createUniqueSegment(this);
+		}
 		setPathSegment(pathSegment);
 	}
 
+	/*
+	 * Use this if collisions/duplicate selections are possible (pathSegment
+	 * defines equivalence). Otherwise use the constructor *without* a
+	 * pathsegment
+	 */
 	public AbstractSelection(Selection parent, T value, String pathSegment) {
 		this(parent.processNode(), value, pathSegment);
+	}
+
+	public AbstractSelection(Selection parent, T value) {
+		this(parent.processNode(), value, null);
 	}
 
 	@Override

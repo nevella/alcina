@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.traversal;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.util.NestedName;
 
 public class PlainTextDocumentSelection extends TextSelection
 		implements PlainTextSelection {
@@ -13,13 +12,12 @@ public class PlainTextDocumentSelection extends TextSelection
 
 	public PlainTextDocumentSelection(Selection parent,
 			PlainTextDocumentSelection.Loader loader, String pathSegment) {
-		super(parent, null, pathSegment);
+		super(parent, null);
 		this.loader = loader;
 	}
 
 	public PlainTextDocumentSelection(Selection parentSelection, String text) {
-		super(parentSelection, text,
-				NestedName.get(PlainTextDocumentSelection.class));
+		super(parentSelection, text);
 	}
 
 	public String getText() {

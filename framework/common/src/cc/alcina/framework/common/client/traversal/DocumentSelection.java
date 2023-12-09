@@ -16,19 +16,19 @@ public abstract class DocumentSelection extends MeasureSelection {
 
 	public DocumentSelection(AbstractUrlSelection parent,
 			DocumentSelection.Loader loader) {
-		super(parent, null, parent.get());
+		super(parent, null);
 		this.loader = loader;
 	}
 
 	public DocumentSelection(PlainTextSelection parent) {
-		super(parent, null, parent.getClass().getName());
+		super(parent, null);
 		String text = Ax.ntrim(parent.get());
 		document = DomDocument.createTextContainer(text);
 		documentToMeasure();
 	}
 
 	public DocumentSelection(Selection parent, DomDocument document) {
-		super(parent, null, parent.getClass().getName());
+		super(parent, null);
 		this.document = document;
 		documentToMeasure();
 	}

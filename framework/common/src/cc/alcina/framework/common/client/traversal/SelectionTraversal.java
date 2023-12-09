@@ -36,7 +36,6 @@ import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -261,12 +260,6 @@ public class SelectionTraversal
 			return add;
 		}
 
-		synchronized String
-				generateSelectionCounterPath(Class<? extends Selection> clazz) {
-			return Ax.format("%s.%s", NestedName.get(clazz),
-					byClass.getAndEnsure(clazz).size());
-		}
-
 		synchronized IntPair getSelectionPosition(Selection value) {
 			for (Entry<Layer, Set<Selection>> entry : byLayer.entrySet()) {
 				Set<Selection> set = entry.getValue();
@@ -277,6 +270,12 @@ public class SelectionTraversal
 				}
 			}
 			return null;
+		}
+
+		public <T extends Selection> T getSingleSelection(Class<T> clazz) {
+			List<T> selections = getSelections(clazz);
+			Preconditions.checkState(selections.size() == 1);
+			return selections.get(0);
 		}
 	}
 
@@ -524,11 +523,6 @@ public class SelectionTraversal
 		return "[Unknown position]";
 	}
 
-	public String
-			generateSelectionCounterPath(Class<? extends Selection> clazz) {
-		return state.selections.generateSelectionCounterPath(clazz);
-	}
-
 	public Executor getExecutor() {
 		return this.executor;
 	}
@@ -742,5 +736,9 @@ public class SelectionTraversal
 					? ((HasMarkup) outputContainer).provideMarkup()
 					: null;
 		}
+	}
+
+	public <T extends Selection> T getSingleSelection(Class<T> clazz) {
+		return state.selections.getSingleSelection(clazz);
 	}
 }

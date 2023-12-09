@@ -15,9 +15,11 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -31,23 +33,66 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *
  */
 public class TreeProcess {
-	private Node root;
+	Node root;
 
-	private List<Integer> levelSizes = new ArrayList<>();
+	List<Integer> levelSizes = new ArrayList<>();
 
-	private List<NodeException> processExceptions = new ArrayList<>();
+	List<NodeException> processExceptions = new ArrayList<>();
 
 	public Topic<String> positionChangedMessage = Topic.create();
 
-	private Node selected;
+	Node selected;
 
 	Logger logger;
 
-	private boolean logAsLevelledPosition;
+	boolean logAsLevelledPosition;
+
+	static class TypePathSegments {
+		Map<Class, String> typePrefix = CollectionCreators.Bootstrap
+				.createConcurrentClassMap();
+
+		Map<String, IdCounter> prefixCounters = CollectionCreators.Bootstrap
+				.createConcurrentStringMap();
+
+		IdCounter counter = new IdCounter();
+
+		String createUniqueCounterSegment(Class<? extends Object> clazz) {
+			return String.valueOf(counter.nextId());
+		}
+
+		String createUniqueTypeSegment(Class<? extends Object> clazz) {
+			String prefix = typePrefix.get(clazz);
+			if (prefix == null) {
+				synchronized (typePrefix) {
+					prefix = typePrefix.get(clazz);
+					if (prefix == null) {
+						String canonicalName = clazz.getCanonicalName();
+						List<String> parts = List
+								.of(canonicalName.split("\\."));
+						for (int idx = parts.size() - 1; idx >= 0; idx--) {
+							String test = parts.stream().skip(idx)
+									.collect(Collectors.joining("."));
+							if (!prefixCounters.containsKey(test)) {
+								prefix = test;
+								typePrefix.put(clazz, prefix);
+								prefixCounters.put(prefix, new IdCounter());
+								break;
+							}
+						}
+					}
+				}
+			}
+			return Ax.format("%s-%s", prefix,
+					prefixCounters.get(prefix).nextId());
+		}
+	}
+
+	TypePathSegments typePathSegments;
 
 	public TreeProcess(Object owner) {
 		root = new NodeImpl(this, null, owner);
 		logger = LoggerFactory.getLogger(owner.getClass());
+		typePathSegments = new TypePathSegments();
 		onEvent(Event.node_added, root, null);
 		onEvent(Event.node_selected, root, null);
 	}
@@ -359,6 +404,10 @@ public class TreeProcess {
 		default <T> T typedValue() {
 			return (T) getValue();
 		}
+	}
+
+	public String createUniqueSegment(Object object) {
+		return typePathSegments.createUniqueCounterSegment(object.getClass());
 	}
 
 	public static class NodeException extends Exception {
