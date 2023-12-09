@@ -991,7 +991,11 @@ public class DomNode {
 		}
 
 		public String toHtml() {
-			return DomEnvironment.get().toHtml(document);
+			return toHtml(true);
+		}
+
+		public String toHtml(boolean pretty) {
+			return DomEnvironment.get().toHtml(document, pretty);
 		}
 
 		public List<DomNode> trs() {

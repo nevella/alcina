@@ -56,7 +56,7 @@ public interface DomEnvironment {
 
 	public String streamNCleanForBrowserHtmlFragment(Node node);
 
-	public String toHtml(DomDocument doc);
+	public String toHtml(DomDocument doc, boolean pretty);
 
 	public String toXml(Node node);
 

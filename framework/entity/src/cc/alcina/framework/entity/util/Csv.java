@@ -185,6 +185,10 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 			if (index != null) {
 				return index;
 			}
+			index = csvCols.colLcLookup.get(key.toLowerCase().replace(' ', '_'));
+			if (index != null) {
+				return index;
+			}
 			return -1;
 		}
 

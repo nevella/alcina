@@ -118,8 +118,8 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
-	public String toHtml(DomDocument doc) {
-		String xml = doc.prettyToString();
+	public String toHtml(DomDocument doc, boolean pretty) {
+		String xml = pretty ? doc.prettyToString() : doc.fullToString();
 		xml = XmlUtils.expandEmptyElements(xml);
 		return XmlUtils.fixStyleNodeContents(xml);
 	}
