@@ -39,8 +39,8 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
  * 
  * 
  * 
- *         In general, when adding a merge field, make sure that the object's
- *         equivalentTo checks the new field
+ * In general, when adding a merge field, make sure that the object's
+ * equivalentTo checks the new field
  */
 public class SyncMerger<T> {
 	public static MergeFilter RIGHT_IS_DEFINITIVE = new MergeFilter() {
@@ -56,6 +56,16 @@ public class SyncMerger<T> {
 			return true;
 		}
 	};
+
+	public String getName() {
+		String simpleName = getClass().getSimpleName();
+		String regex = "([A-Z][a-z]+)([A-Z][a-z]+)([A-Z][a-z]+)Merger";
+		if (simpleName.matches(regex)) {
+			return simpleName.replaceFirst(regex, "$1 >> $2 :: $3");
+		} else {
+			return simpleName;
+		}
+	}
 
 	public static MergeFilter LEFT_IS_DEFINITIVE = new MergeFilter() {
 		@Override

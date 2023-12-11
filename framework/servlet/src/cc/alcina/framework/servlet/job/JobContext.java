@@ -218,12 +218,18 @@ public class JobContext {
 	}
 
 	public static void setStatusMessage(String template, Object... args) {
+		String fixedTemplate = template.contains("{}")
+				? template = template.replace("{}", "%s")
+				: template;
 		if (has()) {
 			get().maybeEnqueue(() -> get().getJob()
-					.setStatusMessage(Ax.format(template, args)));
+					.setStatusMessage(Ax.format(fixedTemplate, args)));
+			LoggerFactory.getLogger(JobContext.class).info("status message: {}",
+					Ax.format(fixedTemplate, args));
 		} else {
 			LoggerFactory.getLogger(JobContext.class).info(
-					"(no-job) status message: {}", Ax.format(template, args));
+					"(no-job) status message: {}",
+					Ax.format(fixedTemplate, args));
 		}
 	}
 
