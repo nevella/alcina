@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersister.PersistElementResult;
 
 /**
@@ -87,9 +88,15 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 		}
 		// assure 'detached to domain' (the current transaction job/status
 		// transforms )
-		Preconditions.checkState(TransformManager.get().getTransforms().stream()
-				.filter(t -> !Job.class.isAssignableFrom(t.getObjectClass()))
-				.count() == 0);
+		if (isDisallowDirectDomainTransforms()) {
+			Preconditions
+					.checkState(TransformManager.get().getTransforms().stream()
+							.filter(t -> !Job.class
+									.isAssignableFrom(t.getObjectClass()))
+							.count() == 0);
+		} else {
+			Transaction.commit();
+		}
 		beforePersistence();
 		if (shouldPersist()) {
 			this.persisterResult = localDeltaPersister.apply(logger, deltaModel,
@@ -102,6 +109,10 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 		} else {
 			logger.info(Ax.format("Not persisting:\n\t%s", deltaModel));
 		}
+	}
+
+	protected boolean isDisallowDirectDomainTransforms() {
+		return true;
 	}
 
 	protected void beforePersistence() {
