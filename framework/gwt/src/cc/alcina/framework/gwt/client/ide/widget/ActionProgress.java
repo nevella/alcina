@@ -94,8 +94,8 @@ public class ActionProgress extends Composite
 	}
 
 	private void navigateToDetail() {
-		Window.Location
-				.assign(Ax.format("/job.do?action=detail&id=%s", getId()));
+		Window.open(Ax.format("/job.do?action=detail&id=%s", getId()), "_blank",
+				"");
 	}
 
 	public ActionProgress(String id,

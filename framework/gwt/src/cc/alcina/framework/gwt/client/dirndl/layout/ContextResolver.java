@@ -140,8 +140,8 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			return;
 		}
 		// CLEAN - only problematic if ML is HTML-ish
-		Preconditions.checkArgument(
-				!tagName.matches("(?i)body|title|head|html|style|script"));
+		Preconditions.checkArgument(!tagName.toLowerCase()
+				.matches("body|title|head|html|style|script"));
 		Element element = Document.get().createElement(tagName);
 		String cssClass = layoutNode.directed.className();
 		if (cssClass.length() > 0) {

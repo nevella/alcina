@@ -24,7 +24,6 @@ import java.util.HashMap;
 
 import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.Label;
-import com.totsp.gwittir.client.ui.TextBox;
 
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
@@ -49,8 +48,8 @@ public class BoundWidgetTypeFactory {
 
 	public static final BoundWidgetProvider TEXTBOX_PROVIDER = new BoundWidgetProvider() {
 		@Override
-		public TextBox get() {
-			return new TextBox();
+		public cc.alcina.framework.gwt.client.gwittir.widget.TextBox get() {
+			return new cc.alcina.framework.gwt.client.gwittir.widget.TextBox();
 		}
 	};
 

@@ -950,6 +950,16 @@ public class TransformCommit {
 			persistenceToken.getTransformCollation().refreshFromRequest();
 			persistenceToken.getTransformCollation()
 					.removeNonPersistentTransforms();
+			if (persistenceToken.isRequestorExternalToThisJvm()) {
+				/*
+				 * FUTURE - Check if this can be removed (yes, the 'persisted'
+				 * state is different if the transform call is from a client
+				 * rather than the local jvm, but should it be? The cancelled
+				 * eviction/persistence checks are harmless, but it'd be good to
+				 * explain why they're needed)
+				 */
+				Transaction.current().clearLocalEvictionList();
+			}
 			MetricLogging.get().start("transform-commit");
 			Transaction.current().toDbPersisting();
 			DomainTransformLayerWrapper wrapper = Registry
