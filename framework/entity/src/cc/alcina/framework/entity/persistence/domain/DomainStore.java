@@ -749,7 +749,7 @@ public class DomainStore implements IDomainStore {
 				Transactions.resolve(local, ResolvedVersionState.WRITE, false);
 				if (local == null) {
 					throw new NoSuchElementException(Ax.format(
-							"Entity not found for localId: {}/{} - localId {}",
+							"Entity not found for localId: %s/%s - localId %s",
 							clazz.getSimpleName(), id, localId));
 				}
 				// The created local is the 'domain identity', so need to

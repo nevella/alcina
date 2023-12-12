@@ -1399,7 +1399,7 @@ public abstract class TransformManager
 
 	public void pushTransformsInCurrentThread(
 			Collection<DomainTransformEvent> dtes) {
-		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
+		dtes.forEach(this::addTransform);
 	}
 
 	public void register(Collection<? extends Entity> entities,
