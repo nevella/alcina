@@ -27,6 +27,8 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 
 	protected RemoteWebDriver driver;
 
+	private static Thread shutdownThread;
+
 	@Override
 	public void closeAndCleanup() {
 		HttpServletRequest req = LooseContext.get(WDManager.CONTEXT_REQUEST);
@@ -42,8 +44,16 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 		}
 	}
 
+	static synchronized void ensureShutdownCleanup() {
+		if (shutdownThread == null) {
+			shutdownThread = new Thread(() -> closeDrivers());
+			Runtime.getRuntime().addShutdownHook(shutdownThread);
+		}
+	}
+
 	@Override
 	public WebDriver getDriver() {
+		ensureShutdownCleanup();
 		HttpServletRequest req = LooseContext.get(WDManager.CONTEXT_REQUEST);
 		if (driver == null) {
 			if (req != null && Boolean.valueOf(req.getParameter("reuse"))) {

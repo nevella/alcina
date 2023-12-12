@@ -341,8 +341,8 @@ public class WDUtils {
 		return uri.replaceFirst(regex, "$1" + replace + "$3");
 	}
 
-	public static ElementQuery query() {
-		return new ElementQuery();
+	public static ElementQuery1 query() {
+		return new ElementQuery1();
 	}
 
 	public static void scrollIntoView(WebDriver driver, WebElement elt) {
@@ -612,7 +612,10 @@ public class WDUtils {
 		}
 	}
 
-	public static class ElementQuery {
+	/*
+	 * Deprecated - use the top-level ElementQuery class
+	 */
+	public static class ElementQuery1 {
 		private SearchContext context;
 
 		private By by;
@@ -670,27 +673,27 @@ public class WDUtils {
 			}
 		}
 
-		public ElementQuery withBy(By by) {
+		public ElementQuery1 withBy(By by) {
 			this.by = by;
 			return this;
 		}
 
-		public ElementQuery withCallback(TestCallback callback) {
+		public ElementQuery1 withCallback(TestCallback callback) {
 			this.callback = callback;
 			return this;
 		}
 
-		public ElementQuery withContext(SearchContext context) {
+		public ElementQuery1 withContext(SearchContext context) {
 			this.context = context;
 			return this;
 		}
 
-		public ElementQuery withRequired(boolean required) {
+		public ElementQuery1 withRequired(boolean required) {
 			this.required = required;
 			return this;
 		}
 
-		public ElementQuery withTimeout(double timeout) {
+		public ElementQuery1 withTimeout(double timeout) {
 			this.timeout = timeout;
 			return this;
 		}
