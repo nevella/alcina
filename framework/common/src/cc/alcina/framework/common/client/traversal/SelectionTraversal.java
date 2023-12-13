@@ -56,6 +56,10 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *           otherwise continue to the next layer
  *  }
  * </pre>
+ * 
+ * <p>
+ * An instance also exposes a traversal context, which can be cast to provide
+ * whole-process context support by descendant objects such as layers
  *
  */
 public class SelectionTraversal
@@ -297,6 +301,10 @@ public class SelectionTraversal
 
 		Layer rootLayer;
 
+		public <T> T typedContext(Class<T> clazz) {
+			return (T) traversalContext;
+		}
+
 		public Selections selections = new Selections();
 
 		public Layer findLayerHandlingInput(Selection value) {
@@ -496,7 +504,14 @@ public class SelectionTraversal
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	public final TraversalContext traversalContext;
+
 	public SelectionTraversal() {
+		this(null);
+	}
+
+	public SelectionTraversal(TraversalContext traversalContext) {
+		this.traversalContext = traversalContext;
 	}
 
 	@Override

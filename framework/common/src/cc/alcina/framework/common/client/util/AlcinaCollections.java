@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,6 +11,7 @@ import com.google.gwt.core.shared.GWT;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Containment;
 
 /*
  * FIXME - dirndl 1x3 - cleanup? Also move refs to CollectionCreators.Bootstrap
@@ -72,5 +74,9 @@ public class AlcinaCollections {
 				return s1.compareTo(s2);
 			}
 		};
+	}
+
+	public static Set<Containment> newLinkedHashSet() {
+		return new LinkedHashSet<>();
 	}
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
@@ -112,6 +113,10 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 	public List<Layer<?>> getChildren() {
 		return this.children;
+	}
+
+	public <S1 extends Selection> Stream<S1> getSelections(Class<S1> clazz) {
+		return state.traversalState.getSelections(clazz).stream();
 	}
 
 	@Override

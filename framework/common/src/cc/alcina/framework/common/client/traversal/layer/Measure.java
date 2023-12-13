@@ -197,6 +197,10 @@ public class Measure extends Location.Range {
 				}
 			}
 
+			public interface Has {
+				Order getOrder();
+			}
+
 			@Reflected
 			public abstract static class Simple implements Order {
 				boolean ignoreNoPossibleChildren = false;

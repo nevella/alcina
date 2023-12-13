@@ -1,0 +1,47 @@
+package cc.alcina.framework.common.client.traversal.layer;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.traversal.Layer;
+import cc.alcina.framework.common.client.traversal.layer.Measure.Token.Order;
+import cc.alcina.framework.common.client.util.Ax;
+
+/**
+ * A class which derives additional structural measure from preceding measures
+ */
+public abstract class MeasureLayer<S extends MeasureSelection>
+		extends Layer<S> {
+	protected <S1 extends MeasureSelection> Stream<S1>
+			measureSelections(Class<S1> clazz, Measure.Token token) {
+		return state.traversalState.getSelections(clazz).stream()
+				.filter(m -> m.get().token == token);
+	}
+
+	protected <S1 extends MeasureSelection> S1 measureSelection(Class<S1> clazz,
+			Measure.Token token) {
+		List<S1> list = measureSelections(clazz, token)
+				.collect(Collectors.toList());
+		Preconditions.checkState(list.size() == 1);
+		return Ax.first(list);
+	}
+
+	protected MeasureContainment measureContainment() {
+		Stream<MeasureSelection> filteredSelections = state.traversalState.selections
+				.get(MeasureSelection.class, true).stream()
+				.filter(m -> !m.isOmit()
+						&& !(m instanceof MeasureSelection.IgnoreOverlaps));
+		Order order = state.traversalState.typedContext(Order.Has.class)
+				.getOrder();
+		List<MeasureSelection> measures = filteredSelections
+				.sorted(new MeasureTreeComparator(
+						// this will also remove overlapping text nodes, so we
+						// need to relax a comparator constraint
+						order.copy().withIgnoreNoPossibleChildren()))
+				.collect(Collectors.toList());
+		return new MeasureContainment(order, measures);
+	}
+}
