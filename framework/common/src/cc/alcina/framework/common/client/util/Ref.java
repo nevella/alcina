@@ -1,10 +1,22 @@
 package cc.alcina.framework.common.client.util;
 
 public class Ref<T> {
+	public static <T> Ref<T> empty() {
+		return of(null);
+	}
+
 	public static <T> Ref<T> of(T t) {
 		Ref<T> ref = new Ref<>();
 		ref.set(t);
 		return ref;
+	}
+
+	public boolean isPresent() {
+		return t != null;
+	}
+
+	public boolean isEmpty() {
+		return t == null;
 	}
 
 	private T t;
@@ -19,6 +31,6 @@ public class Ref<T> {
 
 	@Override
 	public String toString() {
-		return Ax.format("Object ref: [%s]", t);
+		return Ax.format("Ref<%s>", t);
 	}
 }
