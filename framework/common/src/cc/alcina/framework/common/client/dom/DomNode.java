@@ -1138,6 +1138,12 @@ public class DomNode {
 			wrapper.copyAttributesFrom(DomNode.this);
 			return wrapper;
 		}
+
+		public void insertAfterThis(List<DomNode> list) {
+			List<DomNode> copy = list.stream().collect(Collectors.toList());
+			Collections.reverse(copy);
+			copy.forEach(n -> insertAfterThis(n));
+		}
 	}
 
 	public class DomNodeStyle {
