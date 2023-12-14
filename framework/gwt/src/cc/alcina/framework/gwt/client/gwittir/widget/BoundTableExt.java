@@ -368,7 +368,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	public BoundTableExt(int mask, List<Field> fields, DataProvider provider) {
-		this(mask, (Field[]) fields.toArray(), provider);
+		this(mask, (Field[]) fields.toArray(new Field[fields.size()]),
+				provider);
 	}
 
 	/**
