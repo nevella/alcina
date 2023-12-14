@@ -74,7 +74,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	@Override
 	public String toString() {
 		return Ax.format("%s :: %s", getPathSegment(),
-				get() == null ? null : Ax.trim(get().toString(), 50));
+				get() == null ? null : Ax.trim(get().toString(), 150));
 	}
 
 	static class View implements Selection.View<AbstractSelection> {

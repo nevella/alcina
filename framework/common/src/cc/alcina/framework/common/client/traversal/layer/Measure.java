@@ -148,9 +148,9 @@ public class Measure extends Location.Range {
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
 		}
-		tokenString = CommonUtils.padStringRight(tokenString, 16, ' ');
+		tokenString = CommonUtils.padStringRight(tokenString, 28, ' ');
 		String tokenData = getData() == null ? "" : getData().toString();
-		tokenData = CommonUtils.padStringRight(tokenData, 10, ' ');
+		tokenData = CommonUtils.padStringRight(tokenData, 16, ' ');
 		return Ax.format("[%s,%s]%s :: %s :: %s :: %s",
 				Ax.padLeft(start.index, 8), Ax.padLeft(end.index, 8),
 				aliasMarker, tokenString, tokenData, Ax.trimForLogging(text()));
@@ -187,14 +187,6 @@ public class Measure extends Location.Range {
 
 			default Order copy() {
 				return Reflections.newInstance(getClass());
-			}
-
-			public static class Base extends Order.Simple {
-				@Override
-				protected int classOrdering(Class<? extends Token> class1,
-						Class<? extends Token> class2) {
-					return class1.getName().compareTo(class2.getName());
-				}
 			}
 
 			public interface Has {

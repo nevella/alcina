@@ -21,13 +21,10 @@ import cc.alcina.framework.common.client.util.IntPair;
  * measureselections with overlaps
  */
 public class MeasureContainment {
-	Map<MeasureSelection, Containment> containments = AlcinaCollections
-			.newLinkedHashMap();
-
 	public class Containment {
 		public MeasureSelection selection;
 
-		List<MeasureSelection> descendants = new ArrayList<>();
+		public List<MeasureSelection> descendants = new ArrayList<>();
 
 		List<MeasureSelection> containers = new ArrayList<>();
 
@@ -37,6 +34,21 @@ public class MeasureContainment {
 
 		public boolean isContainedBy(MeasureSelection selection) {
 			return ancestors(false).anyMatch(c -> c.selection == selection);
+		}
+
+		public boolean isToken(Measure.Token token) {
+			return selection.get().token == token;
+		}
+
+		public boolean isContainedBy(Measure.Token token) {
+			return ancestors(false)
+					.anyMatch(c -> c.selection.get().token == token);
+		}
+
+		public MeasureSelection soleContained(Measure.Token token) {
+			return descendants(false)
+					.filter(c -> c.selection.get().token == token).findFirst()
+					.get().selection;
 		}
 
 		Stream<Containment> ancestors(boolean includeSelf) {
@@ -80,31 +92,14 @@ public class MeasureContainment {
 			}
 			return descendantList.stream();
 		}
-
-		public boolean isToken(Measure.Token token) {
-			return selection.get().token == token;
-		}
-
-		public boolean isContainedBy(Measure.Token token) {
-			return ancestors(false)
-					.anyMatch(c -> c.selection.get().token == token);
-		}
-
-		public MeasureSelection soleContained(Measure.Token token) {
-			return descendants(false)
-					.filter(c -> c.selection.get().token == token).findFirst()
-					.get().selection;
-		}
 	}
 
 	public class Overlap {
-		MeasureSelection s1;
+		public MeasureSelection s1;
 
-		IntPair intersection;
+		public IntPair intersection;
 
-		int length() {
-			return intersection.length();
-		}
+		public MeasureSelection s2;
 
 		Overlap(MeasureSelection s1, MeasureSelection s2) {
 			this.s1 = s1;
@@ -113,34 +108,19 @@ public class MeasureContainment {
 					.intersection(s2.get().toIntPair());
 		}
 
-		MeasureSelection s2;
-	}
-
-	List<Overlap> overlaps = new ArrayList<>();
-
-	MeasureContainment(Measure.Token.Order order,
-			List<MeasureSelection> selections) {
-		MeasureTreeComparator comparator = new MeasureTreeComparator(
-				// this will also remove overlapping text nodes, so we
-				// need to relax a comparator constraint
-				order.copy().withIgnoreNoPossibleChildren());
-		List<MeasureSelection> measures = selections.stream().sorted(comparator)
-				.collect(Collectors.toList());
-		ContainmentComputation computation = new ContainmentComputation(
-				measures);
-		computation.compute();
+		int length() {
+			return intersection.length();
+		}
 	}
 
 	class ContainmentComputation {
-		List<Overlap> overlaps = new ArrayList<>();
-
 		List<MeasureSelection> selections;
+
+		List<MeasureSelection> openSelections = new LinkedList<>();
 
 		ContainmentComputation(List<MeasureSelection> selections) {
 			this.selections = selections;
 		}
-
-		List<MeasureSelection> openSelections = new LinkedList<>();
 
 		/*
 		 * Relies on the initial ordering of the selections - an overlap being
@@ -172,7 +152,25 @@ public class MeasureContainment {
 		}
 	}
 
+	Map<MeasureSelection, Containment> containments = AlcinaCollections
+			.newLinkedHashMap();
+
+	public List<Overlap> overlaps = new ArrayList<>();
+
 	List<MeasureSelection> openSelections = new LinkedList<>();
+
+	public MeasureContainment(Measure.Token.Order order,
+			List<MeasureSelection> selections) {
+		MeasureTreeComparator comparator = new MeasureTreeComparator(
+				// this will also remove overlapping text nodes, so we
+				// need to relax a comparator constraint
+				order.copy().withIgnoreNoPossibleChildren());
+		List<MeasureSelection> measures = selections.stream().sorted(comparator)
+				.collect(Collectors.toList());
+		ContainmentComputation computation = new ContainmentComputation(
+				measures);
+		computation.compute();
+	}
 
 	public Stream<Containment> containments() {
 		return containments.values().stream();

@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
  * Models a position in an alcina dom document via [T,I,A]
@@ -169,6 +170,30 @@ public class Location implements Comparable<Location> {
 
 	public void setLocationContext(LocationContext locationSupplier) {
 		this.locationContext = locationSupplier;
+	}
+
+	public Adjust adjust() {
+		return new Adjust();
+	}
+
+	public class Adjust {
+		public Location trimToFirstNonWhitespaceCharacer() {
+			String text = containingNode().textContent();
+			int idx = 0;
+			for (; idx < text.length() - 1; idx++) {
+				if (TextUtils
+						.isWhitespaceOrEmpty(text.substring(idx, idx + 1))) {
+					// continue
+				} else {
+					break;
+				}
+			}
+			if (idx == 0) {
+				return Location.this;
+			} else {
+				return createRelativeLocation(idx, after);
+			}
+		}
 	}
 
 	@Override
