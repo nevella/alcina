@@ -10,4 +10,8 @@ public interface ProcessObservable {
 	default boolean containsRegex(String regex) {
 		return toString().matches(Ax.format("(?is).*%s.*", regex));
 	}
+
+	default void publish() {
+		ProcessObservers.publishUntyped(getClass(), () -> this);
+	}
 }

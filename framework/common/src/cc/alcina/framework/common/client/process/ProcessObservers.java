@@ -59,6 +59,15 @@ public class ProcessObservers {
 		instance.publish0(observableClass, observableSupplier);
 	}
 
+	public static void publishUntyped(
+			Class<? extends ProcessObservable> observableClass,
+			Supplier<? extends ProcessObservable> observableSupplier) {
+		if (GWT.isScript()) {
+			return;
+		}
+		publish((Class) observableClass, (Supplier) observableSupplier);
+	}
+
 	private Map<Class<? extends ProcessObservable>, Topic> perObservableTopics;
 
 	private synchronized <O extends ProcessObservable> void observe0(

@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.gwt.client.util.HasBind;
 
 /**
  * Marker interface: observes AlcinaProcess observable topics
@@ -14,9 +15,17 @@ import cc.alcina.framework.common.client.util.TopicListener;
  *
  */
 public interface ProcessObserver<T extends ProcessObservable>
-		extends TopicListener<T> {
+		extends TopicListener<T>, HasBind {
 	default Class<T> getObservableClass() {
 		return Reflections.at(this).getGenericBounds().bounds.get(0);
+	}
+
+	default void bind() {
+		ProcessObservers.observe(this, true);
+	}
+
+	default void unbind() {
+		ProcessObservers.observe(this, false);
 	}
 
 	/**
