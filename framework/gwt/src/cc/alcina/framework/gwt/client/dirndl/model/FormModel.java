@@ -97,7 +97,7 @@ public class FormModel extends Model
 
 	protected List<Link> actions = new ArrayList<>();
 
-	private FormModelState state;
+	private FormModelAttributes state;
 
 	private boolean unAttachConfirmsTransformClear = false;
 
@@ -131,7 +131,7 @@ public class FormModel extends Model
 		return this.formValidationResult;
 	}
 
-	public FormModelState getState() {
+	public FormModelAttributes getState() {
 		return this.state;
 	}
 
@@ -361,7 +361,7 @@ public class FormModel extends Model
 			AbstractContextSensitiveModelTransform<Bindable, FormModel> {
 		@Override
 		public FormModel apply(Bindable bindable) {
-			FormModelState attributes = new FormModelState();
+			FormModelAttributes attributes = new FormModelAttributes();
 			attributes.editable = true;
 			if (bindable instanceof Entity && attributes.editable) {
 				bindable = ClientTransformManager.cast()
@@ -370,8 +370,7 @@ public class FormModel extends Model
 			attributes.model = bindable;
 			attributes.adjunct = true;
 			attributes.nodeEditors = false;
-			BindableFormModelTransformer.Args args = node
-					.annotation(BindableFormModelTransformer.Args.class);
+			BeanViewModifiers args = node.annotation(BeanViewModifiers.class);
 			if (args != null) {
 				attributes.adjunct = args.adjunct();
 				attributes.nodeEditors = args.nodeEditors();
@@ -391,29 +390,6 @@ public class FormModel extends Model
 				LooseContext.pop();
 			}
 		}
-
-		@ClientVisible
-		@Retention(RetentionPolicy.RUNTIME)
-		@Documented
-		@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
-		public @interface Args {
-			/*
-			 * the rendered form changes the bound bean directly, without
-			 * save/cancel
-			 */
-			boolean adjunct() default false;
-
-			/*
-			 * the rendered form is editable
-			 */
-			boolean editable() default true;
-
-			/*
-			 * use node editors (dirndl) rather than abstractboundwidgets
-			 * (gwittir)
-			 */
-			boolean nodeEditors() default false;
-		}
 	}
 
 	/**
@@ -428,7 +404,7 @@ public class FormModel extends Model
 		@Override
 		public FormModel apply(
 				DirectedEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
-			FormModelState state = new FormModelState();
+			FormModelAttributes state = new FormModelAttributes();
 			Entity entity = activity.getEntity();
 			state.editable = activity.getPlace().action.isEditable();
 			if (entity != null && state.editable) {
@@ -591,7 +567,7 @@ public class FormModel extends Model
 		}
 	}
 
-	public static class FormModelState {
+	public static class FormModelAttributes {
 		public boolean nodeEditors;
 
 		public Bindable presentationModel;
@@ -615,9 +591,9 @@ public class FormModel extends Model
 
 	@Reflected
 	public static class FormModelTransformer extends
-			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
+			AbstractContextSensitiveModelTransform<FormModelAttributes, FormModel> {
 		@Override
-		public FormModel apply(FormModelState state) {
+		public FormModel apply(FormModelAttributes state) {
 			FormModel formModel = Registry.impl(FormModel.class);
 			formModel.state = state;
 			if (state.model == null && state.expectsModel) {
@@ -817,7 +793,7 @@ public class FormModel extends Model
 			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
 		@Override
 		public FormModel apply(PermissibleAction action) {
-			FormModelState state = new FormModelState();
+			FormModelAttributes state = new FormModelAttributes();
 			state.editable = true;
 			state.adjunct = true;
 			state.expectsModel = true;

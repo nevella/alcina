@@ -300,12 +300,12 @@ public class InferredDomEvents {
 						IntersectionObserved.BindingImpl intersectionObserved,
 						ElementJso elt) /*-{
           var callback = $entry(function(entries, observer) {
-            for ( var k in entries) {
+			for ( var k in entries) {
               intersectionObserved.@cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.IntersectionObserved.BindingImpl::fireEvent(Z)(entries[k].isIntersecting);
             }
           });
-          var scrollCursor = elt;
-          while (scrollCursor != document.body) {
+          var	 scrollCursor = elt;
+          while (scrollCursor != $doc.body) {
             var style = $wnd.getComputedStyle(scrollCursor);
             if (style.overflow == 'scroll' || style.overflowX == 'scroll'
                 || style.overflowY == 'scroll') {
@@ -313,8 +313,9 @@ public class InferredDomEvents {
             }
             scrollCursor = scrollCursor.parentElement;
           }
+		  var root = scrollCursor==$doc.body?null:scrollCursor;
           var observer = new IntersectionObserver(callback, {
-            root : scrollCursor,
+            root : root,
             //fire as soon as 1 pixel is visible
             threshold : 0.0
           });

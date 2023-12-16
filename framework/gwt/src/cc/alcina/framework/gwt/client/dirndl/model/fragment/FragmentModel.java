@@ -264,7 +264,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	void emitMutationEvent() {
 		NodeEvent.Context.fromNode(rootModel.provideNode())
 				.dispatch(ModelMutation.class, currentModelMutation.getData());
-		currentModelMutation = null;
+		currentModelMutation = new ModelMutation();
 		eventScheduled = false;
 	}
 

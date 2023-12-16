@@ -677,8 +677,22 @@ public class Registry {
 			}
 
 			void dump(String key, int depth) {
-				Ax.out("%s : %s", CommonUtils.padStringRight(key, 45, ' '),
-						value);
+				Collection coll = value instanceof Collection
+						? (Collection) value
+						: null;
+				Object firstElement = coll != null && coll.size() > 0
+						? Ax.first((Collection<T>) value)
+						: value;
+				Ax.out("%s%s : %s",
+						CommonUtils.padStringRight("", depth * 2, ' '),
+						CommonUtils.padStringRight(key, 45 - depth * 2, ' '),
+						firstElement);
+				if (coll != null) {
+					coll.stream().skip(1).forEach(v -> {
+						Ax.out("%s : %s",
+								CommonUtils.padStringRight("", 45, ' '), v);
+					});
+				}
 				map.forEach((k, v) -> v.dump(k.simpleName(), depth + 1));
 			}
 

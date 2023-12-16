@@ -22,7 +22,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.model.FormModel.BindableFormModelTransformer;
 
 @Directed(tag = "bean-editor")
 public class BeanEditor extends Model {
@@ -136,7 +135,7 @@ public class BeanEditor extends Model {
 
 	public static class NonAdjunct extends BeanEditor {
 		@Override
-		@BindableFormModelTransformer.Args(adjunct = false)
+		@BeanViewModifiers(adjunct = false)
 		public Bindable getBindable() {
 			return super.getBindable();
 		}
@@ -145,7 +144,7 @@ public class BeanEditor extends Model {
 	public static class Viewer extends BeanEditor
 			implements ModelTransform<Bindable, Viewer> {
 		@Override
-		@BindableFormModelTransformer.Args(editable = false, nodeEditors = true)
+		@BeanViewModifiers(editable = false, nodeEditors = true)
 		public Bindable getBindable() {
 			return super.getBindable();
 		}

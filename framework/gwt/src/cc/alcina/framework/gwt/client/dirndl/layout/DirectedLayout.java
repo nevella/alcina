@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.reflection.AttributeTemplate;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -563,7 +564,7 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 				children.add(insertAfter + 1, node);
 			}
-			bind(false);
+			node.bind(false);
 			return node;
 		}
 
@@ -704,7 +705,11 @@ public class DirectedLayout implements AlcinaProcess {
 			// transformation). In which case do not listen.
 			//
 			if (property.getOwningType() != parent.model.getClass()) {
-				return;
+				// make an exception for the first level of an AttributeTemplate
+				if (!Reflections.isAssignableFrom(AttributeTemplate.class,
+						property.getOwningType()) || model == parent.model) {
+					return;
+				}
 			}
 			// Also, in the case of wrapping, the parent and grandparent models
 			// (and annotation locations) are the same, so do not listen on the
@@ -1893,6 +1898,10 @@ public class DirectedLayout implements AlcinaProcess {
 		void init(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
+			if (model != null && model.getClass().getName()
+					.contains("DateWithJustYear")) {
+				int debug = 3;
+			}
 			DirectedContextResolver directedContextResolver = location
 					.getAnnotation(DirectedContextResolver.class);
 			if (directedContextResolver != null) {

@@ -1282,8 +1282,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						/*
 						 * note use of AllSubtypes.Client, not AllSubtypes
 						 */
-						registrable |= t.isAssignableFrom(
-								registrationAllSubtypesClient);
+						registrable |= registrationAllSubtypesClient
+								.isAssignableFrom(t);
 						return registrable;
 					}).collect(Collectors.toList());
 		}

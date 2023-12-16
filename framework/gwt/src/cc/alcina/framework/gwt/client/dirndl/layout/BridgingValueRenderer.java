@@ -19,6 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.DelegatingValue;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -43,7 +44,7 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
  * Croissaint.filling in a table or form, the declarative resolution (render
  * customization) comes from there, not the geneerating table/form structure.
  * This allows concise rendering customization
- *
+ * 
  * <p>
  * The dirndl sequence is ::
  * <ol>
@@ -96,9 +97,12 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		valueModel = (ValueModel) node.getModel();
 		field = valueModel.getField();
 		target = null;
-		formModel = ((FormModel.Has) node.getResolver()).getFormModel();
+		ContextResolver resolver = node.getResolver();
+		if (resolver instanceof FormModel.Has) {
+			formModel = ((FormModel.Has) resolver).getFormModel();
+		}
 		renderAsNodeEditors = editorContext.isRenderAsNodeEditors();
-		editable = formModel != null && formModel.getState().editable;
+		editable = editorContext.isEditable();
 		if (renderAsNodeEditors) {
 			renderModel();
 		} else {
@@ -139,7 +143,9 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		if (inverseConverter != null) {
 			binding.getLeft().converter = inverseConverter;
 		}
-		formModel.getState().formBinding.getChildren().add(binding);
+		if (formModel != null) {
+			formModel.getState().formBinding.getChildren().add(binding);
+		}
 		return binding;
 	}
 
@@ -200,6 +206,21 @@ public class BridgingValueRenderer extends DirectedRenderer {
 					impl.withValue(RenderingModelTransform.class);
 					impl.withTransformsNull(true);
 					contextAnnotation = (A) impl;
+				}
+			}
+			/*
+			 * This is none-too-clean (it requires knowledge that
+			 * DelegatingValue will be the transformed rendering of the bean
+			 * property/Field), but allows transferral of @Directed annotations
+			 * from the bean properties to the renderer
+			 */
+			if (clazz == Directed.class && reflector instanceof Property
+					&& ((Property) reflector)
+							.getOwningType() == DelegatingValue.class) {
+				A directAnnotation = super.contextAnnotation(
+						valueLocation.property, clazz, resolutionContext);
+				if (directAnnotation != null) {
+					contextAnnotation = directAnnotation;
 				}
 			}
 			return contextAnnotation;
