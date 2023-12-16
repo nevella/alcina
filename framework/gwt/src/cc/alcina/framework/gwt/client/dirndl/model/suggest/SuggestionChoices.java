@@ -127,9 +127,6 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		if (visible == ensure) {
 			return;
 		}
-		if (!ensure) {
-			int debug = 3;
-		}
 		NodeEvent.Context.fromNode(suggestor.provideNode())
 				.dispatch(SuggestorEvents.SuggestionsVisible.class, ensure);
 		if (ensure) {

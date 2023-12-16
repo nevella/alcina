@@ -1095,7 +1095,24 @@ public class LocalDom implements ContextFrame {
 			syncEventIdDirty = false;
 			syncing = false;
 		}
-		localMutations.fireMutations();
+		/*
+		 * REVISIT - there are a few considerations here:
+		 * 
+		 * The more general question is
+		 * "when to group events, and flush their consequents, and when to flush one-by-one"
+		 * . The latter is ... generally better, but does mean local/remote are
+		 * out of sync.
+		 * 
+		 * That said, flush() is pretty rare (pre-tree sync is the non-obvious
+		 * time it's called), so - what's below is an ok first approximation.
+		 */
+		if (get().applyToRemote) {
+			localMutations.fireMutations();
+		} else {
+			localMutations.notify(() -> {
+				// noop, just trigger a finally flush of mutations
+			});
+		}
 	}
 
 	void handleReportedException(Exception exception) {
