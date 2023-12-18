@@ -70,10 +70,7 @@ public class ElementQuery {
 		required = true;
 		if (context instanceof WebDriver) {
 			WebDriver driver = (WebDriver) context;
-			WebDriver threadDriver = drivers.get();
-			if (threadDriver == null) {
-				drivers.set(driver);
-			}
+			drivers.set(driver);
 		}
 	}
 
