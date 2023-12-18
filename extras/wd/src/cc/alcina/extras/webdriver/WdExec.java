@@ -2,6 +2,7 @@ package cc.alcina.extras.webdriver;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,6 +48,8 @@ public class WdExec {
 	private TestCallback testCallback;
 
 	private WebElement fromElement;
+
+	private boolean useScriptedClick;
 
 	public Actions actions() {
 		Actions actions = new Actions(driver);
@@ -112,8 +115,10 @@ public class WdExec {
 		return click(false);
 	}
 
+	Consumer<WebElement> theClick = WebElement::click;
+
 	public boolean click(boolean returnIfNotVisible) {
-		return performAction(returnIfNotVisible, WebElement::click);
+		return performAction(returnIfNotVisible, theClick);
 	}
 
 	public void clickLink(String linkText) {
@@ -248,6 +253,7 @@ public class WdExec {
 			Consumer<WebElement> actor) {
 		RuntimeException lastException = null;
 		int maxTries = Math.max(1, timeoutSecs * 5);
+		boolean obscuredBySelf = false;
 		for (int attempt = 0; attempt < maxTries; attempt++) {
 			WebElement elem = getElement();
 			Actions actions = new Actions(driver);
@@ -264,6 +270,21 @@ public class WdExec {
 				if (e instanceof ElementNotInteractableException) {
 					if (returnIfNotVisible) {
 						return true;
+					}
+					if (!obscuredBySelf && useScriptedClick) {
+						String selfReceivedPattern = "element click intercepted: Element (<.+?) is not clickable.+receive the click: (<.+)\n";
+						Pattern p = Pattern.compile(selfReceivedPattern);
+						Matcher m = p.matcher(e.getMessage());
+						if (m.find()) {
+							if (Objects.equals(m.group(1), m.group(2))) {
+								obscuredBySelf = true;
+								actor = elem2 -> WDUtils.executeScript(driver,
+										elem2, "arguments[0].click()");
+								// Ax.out("Obscured by self :: using scripted
+								// click");
+								continue;
+							}
+						}
 					}
 					WDUtils.scrollToCenterUsingBoundingClientRect(driver, elem);
 					sleep(200);
@@ -486,5 +507,14 @@ public class WdExec {
 			}
 			throw new TimedOutException();
 		}
+	}
+
+	/**
+	 * A workaround for shadow-dom click interceptions (by self)
+	 * 
+	 * @param useScriptedClick
+	 */
+	public void useScriptedClick(boolean useScriptedClick) {
+		this.useScriptedClick = useScriptedClick;
 	}
 }
