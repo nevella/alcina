@@ -1,11 +1,14 @@
 package cc.alcina.framework.servlet.util.transform;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -91,20 +94,42 @@ public class SerializationSignatureListener
 		case PREPARE_COMMIT:
 			TransformPersistenceToken token = event
 					.getTransformPersistenceToken();
+			token.getTransformCollation().ensureCurrent();
+			List<SetInstruction> setInstructions = new ArrayList<>();
 			for (DomainTransformEvent transform : token.getRequest()
 					.allTransforms()) {
 				if (transform
 						.getTransformType() == TransformType.CHANGE_PROPERTY_SIMPLE_VALUE) {
 					if (transform.getPropertyName().matches("(.+)Serialized")) {
-						checkApplySignature(token, transform);
+						checkApplySignature(token, transform, setInstructions);
 					}
 				}
+			}
+			if (setInstructions.size() > 0) {
+				String signature = ensureSignature();
+				token.getTransformCollation().ensureCurrent();
+				setInstructions.forEach(i -> i.serializedSignatureProperty
+						.set(i.entity, signature));
+				token.getTransformCollation().ensureCurrent();
 			}
 		}
 	}
 
+	class SetInstruction {
+		Property serializedSignatureProperty;
+
+		Entity entity;
+
+		public SetInstruction(Property serializedSignatureProperty,
+				Entity entity) {
+			this.serializedSignatureProperty = serializedSignatureProperty;
+			this.entity = entity;
+		}
+	}
+
 	private void checkApplySignature(TransformPersistenceToken token,
-			DomainTransformEvent transform) {
+			DomainTransformEvent transform,
+			List<SetInstruction> setInstructions) {
 		Class entityClass = transform.getObjectClass();
 		String propertyName = transform.getPropertyName();
 		Property property = Reflections.at(transform.getObjectClass())
@@ -125,7 +150,6 @@ public class SerializationSignatureListener
 						.at(entityClass).property(signaturePropertyName);
 				AdjunctTransformCollation collation = token
 						.getTransformCollation();
-				collation.ensureCurrent();
 				EntityCollation entityCollation = collation
 						.forLocator(transform.toObjectLocator());
 				if (entityCollation == null) {
@@ -134,10 +158,9 @@ public class SerializationSignatureListener
 					// FIXME - devex
 				} else {
 					if (!entityCollation.isDeleted()) {
-						serializedSignatureProperty.set(
-								entityCollation.getEntity(), ensureSignature());
-						collation.ensureCurrent();
-						int debug = 3;
+						setInstructions.add(
+								new SetInstruction(serializedSignatureProperty,
+										entityCollation.getEntity()));
 					}
 				}
 			}
