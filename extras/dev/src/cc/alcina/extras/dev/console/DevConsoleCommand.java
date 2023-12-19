@@ -715,7 +715,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public static class CmdHelp extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "h" };
+			return new String[] { "h", "help" };
 		}
 
 		@Override
@@ -758,7 +758,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				seen.add(cmd2);
 				String desc = cmd2.getDescription();
 				desc = desc.replace("\n", descPad);
-				System.out.format("%-20s%-50s%s\n",
+				System.out.format("%-20s%-50s %s\n",
 						CommonUtils.join(cmd2.getCommandIds(), ", "),
 						cmd2.getUsage(), desc);
 			}
