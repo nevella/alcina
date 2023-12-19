@@ -186,6 +186,10 @@ public class LocalDom implements ContextFrame {
 		localMutations.notify(runnable);
 	}
 
+	public static void flushLocalMutations() {
+		get().localMutations.fireMutations();
+	}
+
 	public static void onRelatedException(RuntimeException e) {
 		if (logParseAndMutationIssues) {
 			throw e;

@@ -241,6 +241,7 @@ public class ContentDecorator<T>
 		if (event.getContext().getPrevious().node.getModel() == chooser) {
 			decorator.toNonEditable();
 			decorator.putEntity(event.getModel());
+			decorator.positionCursorPostEntitySelection();
 		}
 	}
 

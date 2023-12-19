@@ -60,9 +60,12 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		type = Type.PROPERTY,
 		to = "contentEditable",
 		transform = Binding.DisplayFalseTrueBidi.class)
-	public boolean contentEditable = true;
+	public boolean contentEditable = false;
 
 	EntityLocator entityLocator;
+
+	@Binding(type = Type.INNER_TEXT)
+	public String content = "";
 
 	public abstract Descriptor<E> getDescriptor();
 
@@ -129,14 +132,18 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		return entityLocator != null;
 	}
 
-	void putEntity(Entity entity) {
+	public void putEntity(Entity entity) {
 		setEntityLocator(entity.toLocator());
-		FragmentNode.TextNode textNode = (TextNode) children().findFirst()
-				.get();
 		String text = getDescriptor().triggerSequence()
 				+ ((Function) getDescriptor().itemRenderer()).apply(entity);
-		textNode.setValue(text);
+		setContent(text);
+	}
+
+	void positionCursorPostEntitySelection() {
 		LocalDom.flush();
+		LocalDom.flushLocalMutations();
+		FragmentNode.TextNode textNode = (TextNode) children().findFirst()
+				.get();
 		// TODO - position cursor at the end of the mention, then allow the
 		// 'cursor validator' to move it to a correct location
 		// try positioning cursor immediately after the decorator
@@ -239,6 +246,7 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 			FragmentNode textFragment = fragmentModel
 					.getFragmentNode(splitContents);
 			DecoratorNode created = createNode();
+			created.contentEditable = true;
 			textFragment.nodes().insertBeforeThis(created);
 			created.nodes().append(textFragment);
 			LocalDom.flush();
@@ -256,5 +264,9 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		// nope, require a distinct dirndl node
 		@Directed
 		public TextNode text = new TextNode("\u200B");
+	}
+
+	public void setContent(String content) {
+		set("content", this.content, content, () -> this.content = content);
 	}
 }

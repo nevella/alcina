@@ -246,7 +246,10 @@ public abstract class FragmentNode extends Model.Fields
 	public static class FragmentRoot implements FragmentNodeOps {
 		Model rootModel;
 
-		public FragmentRoot(Model rootModel) {
+		FragmentModel fragmentModel;
+
+		public FragmentRoot(FragmentModel fragmentModel, Model rootModel) {
+			this.fragmentModel = fragmentModel;
 			this.rootModel = rootModel;
 		}
 
@@ -267,6 +270,12 @@ public abstract class FragmentNode extends Model.Fields
 		@Override
 		public void ensureComputedNodes() {
 			// noop
+		}
+
+		public void append(FragmentNode child) {
+			FragmentModel
+					.withMutating(() -> rootModel.provideNode().append(child));
+			fragmentModel.register(child);
 		}
 	}
 
@@ -313,6 +322,13 @@ public abstract class FragmentNode extends Model.Fields
 	@Transformer(NodeTransformer.GenericElement.class)
 	public static class GenericElement extends FragmentNode implements HasTag {
 		public String tag;
+
+		public GenericElement() {
+		}
+
+		public GenericElement(String tag) {
+			this.tag = tag;
+		}
 
 		@Override
 		public void copyFromExternal(FragmentNode external) {

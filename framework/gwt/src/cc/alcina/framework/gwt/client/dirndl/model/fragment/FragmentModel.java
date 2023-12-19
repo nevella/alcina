@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.w3c.dom.Node;
 
@@ -94,7 +95,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  */
 @Feature.Ref(Feature_Dirndl_FragmentModel.class)
 public class FragmentModel implements InferredDomEvents.Mutation.Handler,
-		LayoutEvents.Bind.Handler, NodeTransformer.Provider {
+		LayoutEvents.Bind.Handler, NodeTransformer.Provider, FragmentNodeOps {
 	public static void withMutating(Runnable runnable) {
 		MutationRecord.withFlag(FlagMutating.class, runnable);
 	}
@@ -118,7 +119,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	public FragmentModel(Model rootModel) {
 		this.rootModel = rootModel;
-		fragmentRoot = new FragmentRoot(rootModel);
+		fragmentRoot = new FragmentRoot(this, rootModel);
 		addDefaultModelledTypes();
 	}
 
@@ -515,5 +516,15 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	public void ensureComputedNodes(FragmentNode fragmentNode) {
+	}
+
+	@Override
+	public Stream<? extends FragmentNode> children() {
+		return fragmentRoot.children();
+	}
+
+	@Override
+	public void ensureComputedNodes() {
+		fragmentRoot.ensureComputedNodes();
 	}
 }
