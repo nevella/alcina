@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StackDebug;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.Topic;
 
 /**
@@ -988,6 +989,15 @@ public class PermissionsManager implements DomainTransformListener {
 
 		public void register(PermissionsExtensionForRule ext) {
 			perNameRules.put(ext.getRuleName(), ext);
+		}
+	}
+
+	public static void runAsUser(IUser user, ThrowingRunnable runnable) {
+		try {
+			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
+			ThrowingRunnable.asRunnable(runnable).run();
+		} finally {
+			PermissionsManager.get().popUser();
 		}
 	}
 }
