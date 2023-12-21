@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
@@ -387,7 +388,8 @@ public abstract class Model extends Bindable implements
 			bound = true;
 		}
 
-		public ModelBinding<?> from(SourcesPropertyChangeEvents source) {
+		public <T extends SourcesPropertyChangeEvents> ModelBinding<T>
+				from(T source) {
 			ModelBinding binding = new ModelBinding(this);
 			modelBindings.add(binding);
 			return binding.from(source);
@@ -408,6 +410,7 @@ public abstract class Model extends Bindable implements
 
 		public void unbind() {
 			Preconditions.checkState(bound);
+			modelBindings.forEach(ModelBinding::unbind);
 			listenerBindings.unbind();
 			binding.unbind();
 			bound = false;
@@ -473,6 +476,12 @@ public abstract class Model extends Bindable implements
 
 		Model model() {
 			return Model.this;
+		}
+
+		public <TE> ModelBinding<TE> from(Topic<TE> topic) {
+			ModelBinding binding = new ModelBinding(this);
+			modelBindings.add(binding);
+			return binding.from(topic);
 		}
 	}
 

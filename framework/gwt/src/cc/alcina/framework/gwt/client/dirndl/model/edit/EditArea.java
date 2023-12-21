@@ -32,30 +32,28 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
  * 
  *
  */
-@Directed(
-	bindings = { @Binding(type = Type.INNER_HTML, from = "value"),
-			@Binding(type = Type.PROPERTY, from = "placeholder"),
-			@Binding(
-				type = Type.PROPERTY,
-				literal = "true",
-				to = "contenteditable") },
-	emits = { ModelEvents.Input.class })
+@Directed(emits = { ModelEvents.Input.class })
 @DirectedContextResolver(FragmentResolver.class)
-public class EditArea extends Model implements FocusOnBind, HasTag,
+public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		DomEvents.Input.Handler, DomEvents.BeforeInput.Handler,
 		LayoutEvents.BeforeRender.Handler, DomEvents.Focusout.Handler,
 		InferredDomEvents.Mutation.Handler, FragmentModel.Has {
-	private String value;
+	@Binding(type = Type.INNER_HTML)
+	public String value;
 
 	private String currentValue;
 
-	private String placeholder;
+	@Binding(type = Type.PROPERTY)
+	public String placeholder;
 
-	private boolean focusOnBind;
+	public boolean focusOnBind;
 
-	private String tag = "edit";
+	public String tag = "edit";
 
 	boolean stripFontTagsOnInput = false;
+
+	@Binding(type = Type.PROPERTY, to = "contenteditable")
+	public boolean contentEditable = true;
 
 	FragmentModel fragmentModel;
 
@@ -73,18 +71,6 @@ public class EditArea extends Model implements FocusOnBind, HasTag,
 			currentValue = elementValue();
 		}
 		return this.currentValue;
-	}
-
-	public String getPlaceholder() {
-		return this.placeholder;
-	}
-
-	public String getTag() {
-		return this.tag;
-	}
-
-	public String getValue() {
-		return this.value;
 	}
 
 	@Override
@@ -152,19 +138,7 @@ public class EditArea extends Model implements FocusOnBind, HasTag,
 
 	@Override
 	public String provideTag() {
-		return getTag();
-	}
-
-	public void setFocusOnBind(boolean focusOnBind) {
-		this.focusOnBind = focusOnBind;
-	}
-
-	public void setPlaceholder(String placeholder) {
-		this.placeholder = placeholder;
-	}
-
-	public void setTag(String tag) {
-		this.tag = tag;
+		return tag;
 	}
 
 	public void setValue(String value) {

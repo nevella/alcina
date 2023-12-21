@@ -9,25 +9,27 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ref;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
+import cc.alcina.framework.gwt.client.util.HasBind;
 
 /**
  *
- * Build a binding pipeline associated with the parent model
+ * Build a binding pipeline with a lifecycle controlled by the registering model
  *
  * @param <T>
  */
 public class ModelBinding<T> {
 	Bindings bindings;
 
-	SourcesPropertyChangeEvents from;
+	SourcesPropertyChangeEvents fromPropertyChangeSource;
 
-	Object fromPropertyName;
-
-	boolean oneWay;
+	Object on;
 
 	Function<?, ?> map;
 
@@ -35,7 +37,7 @@ public class ModelBinding<T> {
 
 	Consumer<?> consumer;
 
-	RemovablePropertyChangeListener listener;
+	ListenerBinding listener;
 
 	boolean setOnInitialise = true;
 
@@ -46,6 +48,8 @@ public class ModelBinding<T> {
 	boolean transformsNull;
 
 	Predicate<T> preMapPredicate;
+
+	Topic<?> fromTopic;
 
 	public ModelBinding<T> withTransformsNull() {
 		this.transformsNull = true;
@@ -85,7 +89,7 @@ public class ModelBinding<T> {
 	 * The source of the binding property changes
 	 */
 	public ModelBinding<T> from(SourcesPropertyChangeEvents from) {
-		this.from = from;
+		this.fromPropertyChangeSource = from;
 		return this;
 	}
 
@@ -101,7 +105,7 @@ public class ModelBinding<T> {
 	 * The name of the property to bind to, or null for any property change
 	 */
 	public <P> ModelBinding<P> on(PropertyEnum fromPropertyName) {
-		this.fromPropertyName = fromPropertyName;
+		this.on = fromPropertyName;
 		return (ModelBinding<P>) this;
 	}
 
@@ -109,16 +113,8 @@ public class ModelBinding<T> {
 	 * The name of the property to bind to, or null for any property change
 	 */
 	public <P> ModelBinding<P> on(String fromPropertyName) {
-		this.fromPropertyName = fromPropertyName;
+		this.on = fromPropertyName;
 		return (ModelBinding<P>) this;
-	}
-
-	/**
-	 * Convert a bi-di bindings
-	 */
-	public ModelBinding<T> oneWay(boolean oneWay) {
-		this.oneWay = oneWay;
-		return this;
 	}
 
 	/**
@@ -174,14 +170,36 @@ public class ModelBinding<T> {
 	}
 
 	void bind() {
+		if (fromPropertyChangeSource != null) {
+			listener = bindings.addPropertyChangeListener(
+					fromPropertyChangeSource, on,
+					evt -> acceptStreamElement(on != null ? evt.getNewValue()
+							: fromPropertyChangeSource));
+		} else if (fromTopic != null) {
+			listener = fromTopic.add(t -> ((Consumer) consumer).accept(t))
+					.asBinding();
+			listener.bind();
+		} else {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	void prepare() {
-		listener = bindings.addPropertyChangeListener(from, fromPropertyName,
-				evt -> acceptStreamElement(evt.getNewValue()));
 		if (setOnInitialise) {
-			acceptStreamElement(listener.currentValue());
+			if (fromPropertyChangeSource != null) {
+				acceptStreamElement(resolvePropertyChangeValue());
+			} else if (fromTopic != null) {
+				fromTopic.fireIfPublished((Consumer) consumer);
+			} else {
+				throw new UnsupportedOperationException();
+			}
 		}
+	}
+
+	private Object resolvePropertyChangeValue() {
+		return on != null ? Reflections.at(fromPropertyChangeSource)
+				.property(on).get(fromPropertyChangeSource)
+				: fromPropertyChangeSource;
 	}
 
 	public ModelBinding<T> filter(Predicate<T> predicate) {
@@ -194,10 +212,65 @@ public class ModelBinding<T> {
 		return this;
 	}
 
-	public ModelBinding<?> withDeferred() {
+	public ModelBinding<?> withDeferredDispatch() {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleDeferred(() -> r.run()));
 		return this;
+	}
+
+	public TargetBinding to(SourcesPropertyChangeEvents to) {
+		return new TargetBinding(to);
+	}
+
+	public class TargetBinding {
+		SourcesPropertyChangeEvents to;
+
+		Object on;
+
+		TargetBinding(SourcesPropertyChangeEvents to) {
+			this.to = to;
+		}
+
+		public TargetBinding on(String on) {
+			this.on = on;
+			return this;
+		}
+
+		public TargetBinding on(PropertyEnum on) {
+			this.on = on;
+			return this;
+		}
+
+		public void oneWay() {
+			acceptLeftToRight();
+		}
+
+		private void acceptLeftToRight() {
+			accept(newValue -> Reflections.at(to).property(on).set(to,
+					newValue));
+		}
+
+		public <T2> ModelBinding<T2> bidi() {
+			acceptLeftToRight();
+			ModelBinding source = ModelBinding.this;
+			ModelBinding reverse = new ModelBinding<>(bindings);
+			reverse.fromPropertyChangeSource = to;
+			reverse.on = on;
+			TargetBinding reverseTargetBinding = reverse
+					.to(source.fromPropertyChangeSource);
+			reverseTargetBinding.on = source.on;
+			reverseTargetBinding.acceptLeftToRight();
+			return reverse;
+		}
+	}
+
+	void unbind() {
+		listener.unbind();
+	}
+
+	public <TE> ModelBinding<TE> from(Topic<TE> topic) {
+		this.fromTopic = topic;
+		return (ModelBinding<TE>) this;
 	}
 }

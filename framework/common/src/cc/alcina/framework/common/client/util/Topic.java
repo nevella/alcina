@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -238,5 +239,11 @@ public class Topic<T> {
 	public void clearPublished() {
 		wasPublished = false;
 		published = null;
+	}
+
+	public void fireIfPublished(Consumer<T> consumer) {
+		if (wasPublished) {
+			consumer.accept(published);
+		}
 	}
 }

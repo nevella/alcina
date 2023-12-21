@@ -192,6 +192,16 @@ public class ClassReflector<T> implements HasAnnotations {
 		return byName.get(name.name());
 	}
 
+	public Property property(Object stringOrPropertyEnum) {
+		if (stringOrPropertyEnum instanceof String) {
+			return property((String) stringOrPropertyEnum);
+		} else if (stringOrPropertyEnum instanceof PropertyEnum) {
+			return byName.get(((PropertyEnum) stringOrPropertyEnum).name());
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	public Property property(String name) {
 		return byName.get(name);
 	}

@@ -26,6 +26,10 @@ public interface ListenerReference {
 		};
 	}
 
+	default ListenerBinding asBinding() {
+		return asBinding(() -> this);
+	}
+
 	void remove();
 
 	void removeOnFire();
