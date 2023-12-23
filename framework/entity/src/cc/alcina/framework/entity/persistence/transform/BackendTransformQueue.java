@@ -225,6 +225,7 @@ public class BackendTransformQueue {
 		logger.info(
 				"(Backend queue)  - committing {} transforms - locators: {}",
 				pendingTransforms.size(), locators);
+		TransformManager.get().clearTransforms();
 		Transaction.endAndBeginNew();
 		ThreadlocalTransformManager.get()
 				.addTransforms(committingCollation.getAllEvents(), false);

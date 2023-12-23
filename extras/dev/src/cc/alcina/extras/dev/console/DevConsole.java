@@ -730,6 +730,7 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	public void restart() {
 		String command = props.restartCommand;
+		command = "echo \"{ \\\"command\\\": \\\"workbench.action.debug.restart\\\" }\" | websocat ws://127.0.0.1:3710";
 		if (Ax.isBlank(command)) {
 			Ax.err("Property 'restartCommand' not set");
 		} else {

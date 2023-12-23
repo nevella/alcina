@@ -20,8 +20,15 @@ import cc.alcina.framework.gwt.client.util.HasBind;
 
 /**
  *
+ * <p>
  * Build a binding pipeline with a lifecycle controlled by the registering model
  *
+ * <p>
+ * FIXME - dirndl - this could be refactored to an "event source" and an "event
+ * stream" - acceptStreamElement0 being essentially the stream part. But that
+ * would require yet more footprint for what was originally lightweight - so
+ * holding pattern
+ * 
  * @param <T>
  */
 public class ModelBinding<T> {

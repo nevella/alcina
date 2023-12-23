@@ -118,7 +118,15 @@ import cc.alcina.framework.gwt.client.util.ClassNames;
  * reflective serializer typenode/propertynode implementation), scoped to
  * resolver but by default copying from parent
  *
- *
+ * <h2>Model uniqueness</h2>
+ * <p>
+ * For a model to be assigned a Node, it must have a 1-1 correspondence with a
+ * node (i.e. not be used at multiple points in the UI). If it *is* used at
+ * multiple points, set @Directed(bindToModel=false) -- but that will prevent
+ * the model from firing/reemitting events.
+ * <p>
+ * To workaround <i>that</i> - the easiest solution is to clone the model
+ * (assuming it's invariant)
  *
  */
 /*
