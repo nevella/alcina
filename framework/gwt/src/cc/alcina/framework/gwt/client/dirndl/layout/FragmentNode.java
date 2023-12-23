@@ -48,7 +48,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
  * directly to DirectedLayout.Node mutations
  *
  *
- *
+ * <p>
+ * <b>Important</b> Because the tree structure of a FragmentModel/FragmentNode
+ * subtree is modelled by the linked Dirndl node structure, parent/child
+ * operations (appends, counts etc) will fail until the FragmentNode is attached
+ * to the parent via say nodes().append()
  */
 /*
  * FIXME - fm - *probably* want to rework mutations - better to change the dom
@@ -357,9 +361,10 @@ public abstract class FragmentNode extends Model.Fields
 	}
 
 	public class Nodes {
-		public void append(FragmentNode child) {
+		public <FN extends FragmentNode> FN append(FN child) {
 			withMutating(() -> provideNode().append(child));
 			fragmentModel().register(child);
+			return (FN) child;
 		}
 
 		public void insertAfterThis(FragmentNode fragmentNode) {
@@ -448,5 +453,10 @@ public abstract class FragmentNode extends Model.Fields
 
 	void onNotification(NotifyingList.Notification notification) {
 		fragmentModel().onChildNodesNotification(this, notification);
+	}
+
+	@Property.Not
+	public boolean isDetached() {
+		return !provideIsBound();
 	}
 }

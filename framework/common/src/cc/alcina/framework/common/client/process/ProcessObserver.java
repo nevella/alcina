@@ -59,15 +59,10 @@ public interface ProcessObserver<T extends ProcessObservable>
 	 * includes gwt app observers)
 	 *
 	 */
-	@Registration.Singleton
+	@Registration(AppDebugJvm.class)
 	public abstract static class AppDebugJvm implements HasObservers {
 		public void attach() {
 			ProcessObservers.observe(this);
-		}
-
-		@Override
-		public List<ProcessObserver> getObservers() {
-			return List.of();
 		}
 	}
 

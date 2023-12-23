@@ -155,7 +155,6 @@ public class ProcessMetric extends Model implements ProcessObservable {
 			return this.metrics;
 		}
 
-		
 		public String getSequenceId() {
 			return this.sequenceId;
 		}
