@@ -2,6 +2,9 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -9,8 +12,9 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 /*
  * Typed for serialization
  * 
- * 
+ * Serialiability is tested in the constructor
  */
+@ReflectiveSerializer.Checks(ignore = true)
 public class KeyValue<T> extends Model.All {
 	public static <T> KeyValue<T> objectValue(String key, T value) {
 		return new KeyValue(key, value);
@@ -34,6 +38,10 @@ public class KeyValue<T> extends Model.All {
 
 	KeyValue(String key, T value) {
 		this.key = Ax.isBlank(key) ? "\u00A0" : key;
+		if (value != null) {
+			Preconditions.checkState(
+					ReflectiveSerializer.isSerializable(value.getClass()));
+		}
 		this.value = value;
 	}
 

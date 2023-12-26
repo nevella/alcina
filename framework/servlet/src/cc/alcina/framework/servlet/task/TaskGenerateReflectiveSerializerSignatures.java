@@ -59,6 +59,9 @@ import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatur
  * 
  * In production environments, an exception when running this task will cancel
  * startup (since there are potential serialization issues)
+ * 
+ * Omit checks for a type with either via the Configuration package filter
+ * string or by adding ReflectiveSerializer.Checks(ignore=true) to the type
  */
 public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 	public transient ReflectiveSerializableSignatures signatures = new ReflectiveSerializableSignatures();

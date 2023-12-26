@@ -753,8 +753,10 @@ public class ReflectiveSerializer {
 
 		public static void ensureValueSerializers() {
 			if (valueSerializers == null) {
-				// don't bother with synchronization
-				Map<Class, ValueSerializer> valueSerializers = new LinkedHashMap<>();
+				// don't bother with synchronization - the map is immutable once
+				// populated, so worst case is a few copies are made on init
+				Map<Class, ValueSerializer> valueSerializers = AlcinaCollections
+						.newLinkedHashMap();
 				Registry.query(ValueSerializer.class).implementations()
 						.forEach(vs -> vs.serializesTypes().forEach(
 								t -> valueSerializers.put((Class) t, vs)));
@@ -948,7 +950,7 @@ public class ReflectiveSerializer {
 			}
 		}
 
-		protected ValueSerializer
+		static ValueSerializer
 				getValueSerializer(Class<? extends Object> valueType) {
 			ValueSerializer valueSerializer = valueSerializers.get(valueType);
 			if (valueSerializer == null) {
@@ -1195,5 +1197,9 @@ public class ReflectiveSerializer {
 				}
 			}
 		}
+	}
+
+	public static boolean isSerializable(Class type) {
+		return JsonSerialNode.getValueSerializer(type) != null;
 	}
 }

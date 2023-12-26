@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -34,6 +35,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
  */
 @Directed(emits = { ModelEvents.Input.class })
 @DirectedContextResolver(FragmentResolver.class)
+@TypeSerialization(reflectiveSerializable = false)
 public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		DomEvents.Input.Handler, DomEvents.BeforeInput.Handler,
 		LayoutEvents.BeforeRender.Handler, DomEvents.Focusout.Handler,
