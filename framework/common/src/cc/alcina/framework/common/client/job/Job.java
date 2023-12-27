@@ -101,10 +101,6 @@ public abstract class Job extends VersionableEntity<Job>
 
 	private JobResultType resultType;
 
-	private boolean stacktraceRequested;
-
-	private int retryCount;
-
 	private int performerVersionNumber;
 
 	@GwtTransient
@@ -347,10 +343,6 @@ public abstract class Job extends VersionableEntity<Job>
 		return this.resultType;
 	}
 
-	public int getRetryCount() {
-		return this.retryCount;
-	}
-
 	public Date getRunAt() {
 		return this.runAt;
 	}
@@ -408,11 +400,6 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 		return provideParent().map(job -> job.hasSelfOrAncestorTask(taskClass))
 				.orElse(false);
-	}
-
-	// not used, replaced by jobstatemessage - FIXME mvcc.jobs.2 - remove
-	public boolean isStacktraceRequested() {
-		return this.stacktraceRequested;
 	}
 
 	public boolean provideCanDeserializeTask() {
@@ -860,26 +847,12 @@ public abstract class Job extends VersionableEntity<Job>
 				resultType);
 	}
 
-	public void setRetryCount(int retryCount) {
-		int old_retryCount = this.retryCount;
-		this.retryCount = retryCount;
-		propertyChangeSupport().firePropertyChange("retryCount", old_retryCount,
-				retryCount);
-	}
-
 	public void setRunAt(Date runAt) {
 		Preconditions.checkState(runAt == null
 				|| !provideFirstInSequence().provideParent().isPresent());
 		Date old_runAt = this.runAt;
 		this.runAt = runAt;
 		propertyChangeSupport().firePropertyChange("runAt", old_runAt, runAt);
-	}
-
-	public void setStacktraceRequested(boolean stacktraceRequested) {
-		boolean old_stacktraceRequested = this.stacktraceRequested;
-		this.stacktraceRequested = stacktraceRequested;
-		propertyChangeSupport().firePropertyChange("stacktraceRequested",
-				old_stacktraceRequested, stacktraceRequested);
 	}
 
 	public void setStartTime(Date startTime) {
