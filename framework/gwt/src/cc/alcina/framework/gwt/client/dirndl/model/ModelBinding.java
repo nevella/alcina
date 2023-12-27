@@ -10,13 +10,11 @@ import com.google.gwt.core.client.Scheduler;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.ListenerBinding;
-import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
-import cc.alcina.framework.gwt.client.util.HasBind;
 
 /**
  *
@@ -28,6 +26,11 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * stream" - acceptStreamElement0 being essentially the stream part. But that
  * would require yet more footprint for what was originally lightweight - so
  * holding pattern
+ * 
+ * <p>
+ * Note - when bidi binding a data model to a UI element, the data model element
+ * should be 'from' (since the initial bind sequence is from-&gt;to then
+ * to-&gt;from)
  * 
  * @param <T>
  */
@@ -262,6 +265,7 @@ public class ModelBinding<T> {
 			acceptLeftToRight();
 			ModelBinding source = ModelBinding.this;
 			ModelBinding reverse = new ModelBinding<>(bindings);
+			bindings.modelBindings.add(reverse);
 			reverse.fromPropertyChangeSource = to;
 			reverse.on = on;
 			TargetBinding reverseTargetBinding = reverse

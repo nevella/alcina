@@ -224,6 +224,9 @@ public abstract class Model extends Bindable implements
 	 * stored in the values map
 	 *
 	 * TODO - make that a subclass,since rare
+	 * 
+	 * FIXME - dirndl - simplify to just from(SPCE/TOPIC) and
+	 * add(listenerbinding)
 	 */
 	public class Bindings {
 		private Binding binding = new Binding();

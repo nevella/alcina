@@ -992,6 +992,11 @@ public class ReflectiveSerializer {
 
 		private State state;
 
+		@Override
+		public String toString() {
+			return property.toString();
+		}
+
 		public PropertyNode(State state, Property property) {
 			this.state = state;
 			this.property = property;

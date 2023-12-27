@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.actions.PermissibleEntityAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
@@ -852,5 +853,24 @@ public class FormModel extends Model
 	 *
 	 */
 	public interface Viewer {
+	}
+
+	public static class TransformRegistrationBinding
+			implements ListenerBinding {
+		Entity entity;
+
+		public TransformRegistrationBinding(Entity entity) {
+			this.entity = entity;
+		}
+
+		@Override
+		public void bind() {
+			TransformManager.get().registerDomainObject(entity);
+		}
+
+		@Override
+		public void unbind() {
+			TransformManager.get().deregisterDomainObject(entity);
+		}
 	}
 }

@@ -15,6 +15,15 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
+/**
+ * Models a bean property, client/server
+ * 
+ * FIXME - dirndl - the current 'java transient modifier -&gt; non-property'
+ * should be removed - but that'll need a refactor task to check existing usages
+ * (replace with Proeprty.Not or AlcinaTransient as appropriate) - it's
+ * perfectly valid to have a transient property, and it's better to use private
+ * rather than transient to denote non-property via a java modifier
+ */
 public class Property implements HasAnnotations {
 	private final String name;
 
