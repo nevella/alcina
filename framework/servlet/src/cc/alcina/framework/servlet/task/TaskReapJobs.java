@@ -10,9 +10,14 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObserver;
+import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore.IgnoredLocalIdLocatorResolution;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
@@ -23,6 +28,19 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFactory;
 
 public class TaskReapJobs extends PerformerTask {
+	class IgnoredLocalIdLocatorResolutionObserver
+			implements ProcessObserver<IgnoredLocalIdLocatorResolution> {
+		@Override
+		public void topicPublished(IgnoredLocalIdLocatorResolution observable) {
+			Ax.out("IgnoredLocalIdLocatorResolution: %s %s %s %s",
+					observable.locator, currentJob.toLocator(),
+					currentJob.getTaskClassName(),
+					currentJob.getTaskSerialized());
+		}
+	}
+
+	transient Job currentJob;
+
 	@Override
 	public void run() throws Exception {
 		if (!Configuration.is("enabled")) {
@@ -30,6 +48,10 @@ public class TaskReapJobs extends PerformerTask {
 		}
 		LooseContext.setTrue(
 				ThreadlocalTransformManager.CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP);
+		LooseContext
+				.setTrue(DomainStore.CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS);
+		ProcessObservers.context()
+				.observe(new IgnoredLocalIdLocatorResolutionObserver());
 		Stream<? extends Job> jobs = JobDomain.get().getAllJobs();
 		AtomicInteger counter = new AtomicInteger(0);
 		AtomicInteger reaped = new AtomicInteger(0);
@@ -37,6 +59,7 @@ public class TaskReapJobs extends PerformerTask {
 		boolean removeAllUndeserializableJobs = Configuration
 				.is("removeAllUndeserializableJobs");
 		jobs.forEach(job -> {
+			this.currentJob = job;
 			boolean delete = false;
 			if (!job.provideCanDeserializeTask()) {
 				if (job.getState() != null

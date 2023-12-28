@@ -97,6 +97,8 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -167,6 +169,9 @@ public class DomainStore implements IDomainStore {
 
 	public static final String CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES";
+
+	public static final String CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS = DomainStore.class
+			.getName() + ".CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS";
 	static {
 		ThreadlocalTransformManager.addThreadLocalDomainTransformListener(
 				new AssociationPropagationTransformListener(
@@ -1751,6 +1756,20 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	public static class IgnoredLocalIdLocatorResolution
+			implements ProcessObservable {
+		public static void publish(EntityLocator locator) {
+			ProcessObservers.context()
+					.publish(new IgnoredLocalIdLocatorResolution(locator));
+		}
+
+		public EntityLocator locator;
+
+		IgnoredLocalIdLocatorResolution(EntityLocator locator) {
+			this.locator = locator;
+		}
+	}
+
 	class DomainStoreDomainHandler implements DomainHandler {
 		@Override
 		public <V extends Entity> void async(Class<V> clazz, long objectId,
@@ -1794,26 +1813,32 @@ public class DomainStore implements IDomainStore {
 				}
 			}
 			if (entity == null) {
-				ClientInstance clientInstance = AuthenticationPersistence.get()
-						.getClientInstance(locator.getClientInstanceId());
-				if (clientInstance == null) {
-					logger.warn(
-							"Unable to find clientinstance for local find:\n\t locator: {}"
-									+ "\n\t Current user: {}"
-									+ "\n\t Current pm instance: {}"
-									+ "\n\t Service instance: {}",
-							locator, PermissionsManager.get().getUser(),
-							PermissionsManager.get().getClientInstance(),
-							EntityLayerObjects.get()
-									.getServerAsClientInstance());
+				if (LooseContext
+						.is(CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS)) {
+					IgnoredLocalIdLocatorResolution.publish(locator);
 				} else {
-					EntityLocatorMap locatorMap = TransformCommit.get()
-							.getLocatorMapForClient(clientInstance,
-									Ax.isTest());
-					EntityLocator persistentLocator = locatorMap
-							.getForLocalId(locator.getLocalId());
-					if (persistentLocator != null) {
-						return find(persistentLocator);
+					ClientInstance clientInstance = AuthenticationPersistence
+							.get()
+							.getClientInstance(locator.getClientInstanceId());
+					if (clientInstance == null) {
+						logger.warn(
+								"Unable to find clientinstance for local find:\n\t locator: {}"
+										+ "\n\t Current user: {}"
+										+ "\n\t Current pm instance: {}"
+										+ "\n\t Service instance: {}",
+								locator, PermissionsManager.get().getUser(),
+								PermissionsManager.get().getClientInstance(),
+								EntityLayerObjects.get()
+										.getServerAsClientInstance());
+					} else {
+						EntityLocatorMap locatorMap = TransformCommit.get()
+								.getLocatorMapForClient(clientInstance,
+										Ax.isTest());
+						EntityLocator persistentLocator = locatorMap
+								.getForLocalId(locator.getLocalId());
+						if (persistentLocator != null) {
+							return find(persistentLocator);
+						}
 					}
 				}
 			}
