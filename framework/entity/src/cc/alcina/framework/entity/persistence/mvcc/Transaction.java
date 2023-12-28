@@ -782,20 +782,23 @@ public class Transaction implements Comparable<Transaction> {
 	 */
 	Transaction
 			mostRecentVisibleCommittedTransaction(MvccObjectVersions versions) {
-		if (threadCount == 1) {
+		// Defensively synchronized - this sort of logic doesn't work anyway
+		// (although a CAS would)
+		// if (threadCount == 1) {
+		// return resolvedMostRecentVisibleTransactions
+		// .computeIfAbsent(versions,
+		// v -> TransactionVersions.mostRecentCommonVisible(
+		// v.versions().keySet(),
+		// committedTransactions));
+		// } else {
+		synchronized (resolvedMostRecentVisibleTransactions) {
 			return resolvedMostRecentVisibleTransactions
 					.computeIfAbsent(versions,
 							v -> TransactionVersions.mostRecentCommonVisible(
 									v.versions().keySet(),
 									committedTransactions));
-		} else {
-			synchronized (resolvedMostRecentVisibleTransactions) {
-				return resolvedMostRecentVisibleTransactions.computeIfAbsent(
-						versions,
-						v -> TransactionVersions.mostRecentCommonVisible(
-								v.versions().keySet(), committedTransactions));
-			}
 		}
+		// }
 	}
 
 	void setId(TransactionId id) {
