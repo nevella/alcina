@@ -43,6 +43,8 @@ import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.SliceProcessor;
+import cc.alcina.framework.common.client.collections.SliceProcessor.SliceSubProcessor;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
@@ -80,6 +82,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
@@ -131,6 +134,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	public static final String CONTEXT_DISABLE_EVICTION = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_DISABLE_EVICTION";
+
+	public static final String CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP";
 
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
@@ -495,7 +501,10 @@ public class ThreadlocalTransformManager extends TransformManager {
 		if (clientInstance != null) {
 			String message = "Reconstitute entity map - clientInstance: "
 					+ clientInstance.getId();
-			// System.out.println(message);
+			if (LooseContext.is(CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP)) {
+				logger.warn(message,
+						new Exception("trace reconstitute entity map"));
+			}
 			// cp.log(message, LogMessageType.INFO.toString());
 			String dteName = PersistentImpl
 					.getImplementation(DomainTransformEventPersistent.class)
@@ -508,20 +517,36 @@ public class ThreadlocalTransformManager extends TransformManager {
 					"select dtr.id from %s dtr where dtr.clientInstance.id = ?1",
 					dtrName)).setParameter(1, clientInstance.getId())
 					.getResultList();
-			String eql = String.format(
-					"select dte.objectId, dte.objectLocalId, dte.objectClassRef.id "
-							+ "from  %s dte  "
-							+ " where dte.domainTransformRequestPersistent.id in %s "
-							+ " and dte.objectLocalId!=0 and dte.transformType = ?1",
-					dteName, EntityPersistenceHelper.toInClause(dtrIds));
-			List<Object[]> idTuples = getEntityManager().createQuery(eql)
-					.setParameter(1, TransformType.CREATE_OBJECT)
-					.getResultList();
-			for (Object[] obj : idTuples) {
-				ClassRef classRef = ClassRef.forId((long) obj[2]);
-				clientInstanceEntityMap.putToLookups(new EntityLocator(
-						classRef.getRefClass(), (Long) obj[0], (Long) obj[1]));
-			}
+			SystemoutCounter ctr = new SystemoutCounter(1, 10);
+			SliceProcessor<Long> processor = new SliceProcessor<>();
+			SliceSubProcessor<Long> sub = new SliceSubProcessor<>() {
+				@Override
+				public void process(List<Long> sublist, int startIndex) {
+					if (LooseContext.is(CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP)
+							|| startIndex > 0) {
+						logger.info("Reconstitute slice - {}/{}", startIndex,
+								dtrIds.size());
+					}
+					String eql = String.format(
+							"select dte.objectId, dte.objectLocalId, dte.objectClassRef.id "
+									+ "from  %s dte  "
+									+ " where dte.domainTransformRequestPersistent.id in %s "
+									+ " and dte.objectLocalId!=0 and dte.transformType = ?1",
+							dteName,
+							EntityPersistenceHelper.toInClause(sublist));
+					List<Object[]> idTuples = getEntityManager()
+							.createQuery(eql)
+							.setParameter(1, TransformType.CREATE_OBJECT)
+							.getResultList();
+					for (Object[] obj : idTuples) {
+						ClassRef classRef = ClassRef.forId((long) obj[2]);
+						clientInstanceEntityMap.putToLookups(
+								new EntityLocator(classRef.getRefClass(),
+										(Long) obj[0], (Long) obj[1]));
+					}
+				}
+			};
+			processor.process(dtrIds, 1000, sub);
 			MetricLogging.get().end(message);
 		}
 		return clientInstanceEntityMap;

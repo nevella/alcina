@@ -10,10 +10,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobScheduler.RetentionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
@@ -26,6 +28,8 @@ public class TaskReapJobs extends PerformerTask {
 		if (!Configuration.is("enabled")) {
 			return;
 		}
+		LooseContext.setTrue(
+				ThreadlocalTransformManager.CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP);
 		Stream<? extends Job> jobs = JobDomain.get().getAllJobs();
 		AtomicInteger counter = new AtomicInteger(0);
 		AtomicInteger reaped = new AtomicInteger(0);
@@ -60,9 +64,16 @@ public class TaskReapJobs extends PerformerTask {
 					}
 				}
 			}
+			/*
+			 * This may hit a reconstitute entity map + timeout
+			 */
 			if (delete) {
-				reaped.incrementAndGet();
-				job.delete();
+				try {
+					reaped.incrementAndGet();
+					job.delete();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			if (counter.incrementAndGet() % 100000 == 0
 					|| TransformManager.get().getTransforms().size() > 500) {
