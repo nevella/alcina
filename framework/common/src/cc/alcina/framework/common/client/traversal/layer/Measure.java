@@ -63,6 +63,7 @@ public class Measure extends Location.Range {
 
 	public Measure(Location start, Location end, Token token) {
 		super(start, end);
+		Preconditions.checkNotNull(token);
 		this.token = token;
 	}
 

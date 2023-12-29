@@ -59,9 +59,16 @@ public abstract class DocumentSelection extends MeasureSelection {
 	private Measure documentToMeasure() {
 		Location.Range documentRange = document.getLocationRange();
 		Measure measure = new Measure(documentRange.start, documentRange.end,
-				null);
+				DocumentToken.TYPE);
 		set(measure);
 		return measure;
+	}
+
+	public static class DocumentToken implements Measure.Token {
+		public static DocumentToken TYPE = new DocumentToken();
+
+		private DocumentToken() {
+		}
 	}
 
 	@Override
