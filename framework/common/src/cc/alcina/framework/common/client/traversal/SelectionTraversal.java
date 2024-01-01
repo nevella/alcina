@@ -625,8 +625,8 @@ public class SelectionTraversal
 	static IdCounter counter = new IdCounter();
 
 	public void traverse() {
-		id = Ax.format("%s.%s", ClientInstance.self().getId(),
-				counter.nextId());
+		id = Ax.format("%s.%s", ClientInstance.self() == null ? 0
+				: ClientInstance.self().getId(), counter.nextId());
 		state.layerTraversal = new DepthFirstTraversal<Layer>(state.rootLayer,
 				Layer::getChildren);
 		/*

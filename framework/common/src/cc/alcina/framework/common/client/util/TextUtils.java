@@ -19,6 +19,8 @@ public class TextUtils {
 	// keep in sync with normaliseWhitespaceOpt;
 	public static final String WS_PATTERN_STR = "(?:[\\u0009\\u000A\\u000B\\u000C\\u000D\\u0020\\u00A0\\u0085\\u2000\\u2001\\u2002\\u2003])";
 
+	public static final String NON_LINE_WS_PATTERN_STR = "(?:[\\u0009\\u000B\\u000C\\u0020\\u00A0\\u0085\\u2000\\u2001\\u2002\\u2003])";
+
 	public static final RegExp WS_PATTERN = RegExp.compile(WS_PATTERN_STR + "+",
 			"g");
 

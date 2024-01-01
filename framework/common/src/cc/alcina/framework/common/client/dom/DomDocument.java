@@ -381,6 +381,13 @@ public class DomDocument extends DomNode {
 			Location baseLocation = byNode.get(node);
 			Location parentLocation = byNode.get(node.parent());
 			boolean nodeTraversalRequired = false;
+			if (direction == RelativeDirection.CURRENT_NODE_END) {
+				Preconditions.checkArgument(targetAfter);
+				Integer length = contentLengths.get(node);
+				targetIndex = baseLocation.index + length;
+				return new Location(targetTreeIndex, targetIndex, targetAfter,
+						node, this);
+			}
 			if (node.isText()) {
 				int relativeIndex = location.index - baseLocation.index;
 				switch (direction) {

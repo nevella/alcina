@@ -87,6 +87,12 @@ public abstract class DocumentSelection extends MeasureSelection {
 			extends Layer<I> {
 		private Function<I, O> transform;
 
+		/*
+		 * Only for subtypes that generate documents imperatively
+		 */
+		public TransformLayer() {
+		}
+
 		public TransformLayer(Function<I, O> transform) {
 			this.transform = transform;
 		}

@@ -4,18 +4,27 @@ import java.util.Optional;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.LayerParser.InputState;
+import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 
+/*
+ * A measure token augmented for use by the layer parser
+ */
 public interface MatchingToken extends Token {
-	Measure match(InputState state);
+	Measure match(ParserState state);
 
-	Selection select(InputState state, Measure measure);
+	/*
+	 * Only used by single token parsers
+	 */
+	default Selection select(ParserState state, Measure measure) {
+		throw new UnsupportedOperationException();
+	}
+
 	public static abstract class SingleMatch implements MatchingToken {
 		private Optional<DomNode> match;
 
 		@Override
-		public Measure match(InputState state) {
+		public Measure match(ParserState state) {
 			if (match == null) {
 				DomNode document = state.getDocument().get().containingNode();
 				this.match = getMatch(document);

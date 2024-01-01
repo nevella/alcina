@@ -165,8 +165,19 @@ public class Measure extends Location.Range {
 	 */
 	public interface Token {
 		/*
-		 * Parser instruction - parser should traverse node-by-node when
-		 * matching tokens of this type
+		 * Parser instruction - parser should traverse node-by-node (rather than
+		 * node-boundary-by-node-boundary, a denser traversal) when matching
+		 * tokens of this type
+		 * 
+		 * FIXME - actually node-traversal types are currently:
+		 * 
+		 * NEXT/PREVIOUS LOCATION (should be NEXT_NON_CONTAINED etc) -
+		 * implemented, default (least dense)
+		 * 
+		 * NEXT_DOMNODE_START/PREVIOUS_DOM_NODE_START - node start by node start
+		 * 
+		 * NEXT_CONTAINED_LOCATION/PREVIOUS_CONTAINED - boundary by boundary
+		 * (densest)
 		 */
 		public interface NodeTraversalToken extends Token {
 		}

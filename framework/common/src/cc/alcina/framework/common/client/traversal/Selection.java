@@ -49,6 +49,17 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return null;
 	}
 
+	default <V> V ancestorImplementing(Class<V> clazz) {
+		Selection cursor = this;
+		while (cursor != null) {
+			if (Reflections.isAssignableFrom(clazz, cursor.getClass())) {
+				return (V) cursor;
+			}
+			cursor = cursor.parentSelection();
+		}
+		return null;
+	}
+
 	default Stream<Selection> ancestorSelections() {
 		return processNode().asNodePath().stream()
 				.filter(n -> n.hasValueClass(Selection.class))

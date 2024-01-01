@@ -3,13 +3,16 @@ package cc.alcina.framework.common.client.traversal.layer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cc.alcina.framework.common.client.traversal.layer.LayerParser.InputState;
+import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 
+/**
+ * Matches the inputstate inputcontent against a regex. Currently jdk only
+ */
 public class MeasureMatcher {
-	private InputState inputState;
+	private ParserState inputState;
 
-	public MeasureMatcher(InputState inputState) {
+	public MeasureMatcher(ParserState inputState) {
 		this.inputState = inputState;
 	}
 
