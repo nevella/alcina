@@ -68,6 +68,10 @@ public class LayerParser {
 		return parserState.outputs;
 	}
 
+	public List<BranchingParser.Branch> getSentences() {
+		return parserState.sentenceBranches;
+	}
+
 	public MeasureSelection getSelection() {
 		return this.selection;
 	}
@@ -135,15 +139,21 @@ public class LayerParser {
 
 		List<Measure> matches = new ArrayList<>();
 
+		List<BranchingParser.Branch> sentenceBranches = new ArrayList<>();
+
 		// TODO - parsers can directly call select(), so use of this is
 		// essentially optional (use iff post-match collation logic is required)
 		List<Measure> outputs = new ArrayList<>();
 
-		private String inputContent = null;
-
 		XpathMatches xpathMatches = null;
 
 		Multimap<Measure.Token, List<Measure>> matchesByToken = new Multimap<>();
+
+		CharSequenceArray baseContent = null;
+
+		CharSequenceArray locationContent = null;
+
+		Location locationContentLocation = null;
 
 		public ParserState(Measure input) {
 			this.input = input;
@@ -173,7 +183,7 @@ public class LayerParser {
 					end = matches.get(matchesIdx).start;
 				}
 				Measure segment = input.subMeasure(start.index, end.index,
-						token);
+						token, false);
 				if (segment.provideIsPoint()) {
 					// empty
 				} else {
@@ -218,8 +228,18 @@ public class LayerParser {
 					.anyMatch(sel -> sel.get().token == token);
 		}
 
-		public String inputContent() {
-			return inputContent;
+		public CharSequence inputContent() {
+			if (baseContent == null) {
+				char[] charArray = input.text().toCharArray();
+				baseContent = new CharSequenceArray(charArray, 0,
+						charArray.length);
+			}
+			if (locationContentLocation != location) {
+				locationContentLocation = location;
+				locationContent = (CharSequenceArray) baseContent.subSequence(
+						getOffsetInInput(), baseContent.array.length);
+			}
+			return locationContent;
 		}
 
 		public boolean isAtEnd(Measure match) {
@@ -244,7 +264,7 @@ public class LayerParser {
 		}
 
 		public DomNode node() {
-			return location.containingNode();
+			return location.containingNode;
 		}
 
 		@Override
@@ -256,8 +276,8 @@ public class LayerParser {
 				+ "\nCurrent - nd: %s - %s"
 				+ "\nMatches: %s",
 				Ax.ntrim(Ax.trim(input.toString(), 50)), getOffsetInInput(),
-				Ax.ntrim(Ax.trim(inputContent, 50)), location,
-				Ax.ntrim(Ax.trim(location.containingNode().toString(), 50)), matches);
+				Ax.ntrim(Ax.trim(inputContent().toString(), 50)), location,
+				Ax.ntrim(Ax.trim(location.containingNode.toString(), 50)), matches);
 			// @formatter:on
 		}
 
@@ -271,7 +291,6 @@ public class LayerParser {
 
 		void onBeforeTokenMatch() {
 			bestMatch = null;
-			inputContent = input.text().substring(getOffsetInInput());
 		}
 
 		/*
@@ -391,9 +410,19 @@ public class LayerParser {
 
 			XpathMatches(String xpath) {
 				this.xpath = xpath;
-				DomNode node = input.start.containingNode();
+				DomNode node = input.start.containingNode;
 				List<DomNode> nodes = node.xpath(xpath).nodes();
 				itr = nodes.iterator();
+			}
+		}
+
+		Measure match(Location location, BranchToken token) {
+			Location restoreTo = this.location;
+			try {
+				this.location = location;
+				return token.match(this);
+			} finally {
+				this.location = restoreTo;
 			}
 		}
 	}

@@ -31,8 +31,8 @@ public interface LocationContext {
 			}
 			return 0;
 		}
-		DomNode n1 = l1.containingNode();
-		DomNode n2 = l2.containingNode();
+		DomNode n1 = l1.containingNode;
+		DomNode n2 = l2.containingNode;
 		if (n1.isAncestorOf(n2)) {
 			{
 				// for a given character, end is always after start (at any

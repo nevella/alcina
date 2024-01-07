@@ -20,9 +20,13 @@ public abstract class DocumentSelection extends MeasureSelection {
 		this.loader = loader;
 	}
 
-	public DocumentSelection(PlainTextSelection parent) {
+	public DocumentSelection(PlainTextSelection parent,
+			boolean normaliseWhitespace) {
 		super(parent, null);
-		String text = Ax.ntrim(parent.get());
+		String text = parent.get();
+		if (normaliseWhitespace) {
+			text = Ax.ntrim(text);
+		}
 		document = DomDocument.createTextContainer(text);
 		documentToMeasure();
 	}

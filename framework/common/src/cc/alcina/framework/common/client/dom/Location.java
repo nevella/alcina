@@ -38,10 +38,19 @@ mutation of parent.children.offset (only required if the child is not at the end
 'After' is computable via location.parent.children lookup - if 'containingNode' == location.parent.children[offset].node, then
  the location is at the start of the node, otherwise at the end (FIXME - doc - show a worked example)
 
+ Note that because indicies in a text node are controlled by the index (not treeindex) field, 'before' and 'after' are identical, 
+ so Locations in a text node created with after == true and normalised to after == false
 
 
+(bf1) El1                                                                                   (af1)
+	(bf2)  E2                                           (af2)  (bf4) E4 (af4)  (bf5) E5 (af5)
+			(bf3.0) T3:'a'                                (af3)
+					  (b/af3.1)'b' (b/af3.2)
 
- *
+Traversal is the 'tree' of bf/afs (before/after) shown above. before/after is ire
+
+
+ *FIXME - ser - make most fields final
  * @formatter:on
  */
 public class Location implements Comparable<Location> {
@@ -66,7 +75,7 @@ public class Location implements Comparable<Location> {
 	 */
 	public boolean after;
 
-	transient DomNode containingNode;
+	public transient DomNode containingNode;
 
 	transient LocationContext locationContext;
 
@@ -78,9 +87,15 @@ public class Location implements Comparable<Location> {
 			DomNode containingNode, LocationContext locationContext) {
 		this.treeIndex = treeIndex;
 		this.index = index;
+		this.locationContext = locationContext;
+		if (containingNode == null) {
+			containingNode = locationContext.getContainingNode(this);
+		}
+		if (containingNode.isText()) {
+			after = false;
+		}
 		this.after = after;
 		this.containingNode = containingNode;
-		this.locationContext = locationContext;
 	}
 
 	/**
@@ -114,13 +129,6 @@ public class Location implements Comparable<Location> {
 			Location l2 = o;
 			return locationContext.compare(l1, l2);
 		}
-	}
-
-	public DomNode containingNode() {
-		if (containingNode == null) {
-			containingNode = locationContext.getContainingNode(this);
-		}
-		return containingNode;
 	}
 
 	public Content content() {
@@ -178,7 +186,7 @@ public class Location implements Comparable<Location> {
 
 	public class Adjust {
 		public Location trimToFirstNonWhitespaceCharacer() {
-			String text = containingNode().textContent();
+			String text = containingNode.textContent();
 			int idx = 0;
 			for (; idx < text.length() - 1; idx++) {
 				if (TextUtils
@@ -199,9 +207,9 @@ public class Location implements Comparable<Location> {
 	@Override
 	public String toString() {
 		String nodeName = containingNode == null ? ""
-				: " - " + containingNode.name();
-		return Ax.format("[node:%s - txt:%s - %s%s]", treeIndex, index,
-				after ? ">" : "<", nodeName);
+				: Ax.format(" <%s>", containingNode.name());
+		String dir = after ? ">" : "<";
+		return Ax.format("%s [%s,%s]%s", dir, treeIndex, index, nodeName);
 	}
 
 	// Feature group class for content access
@@ -211,7 +219,7 @@ public class Location implements Comparable<Location> {
 		 * null if the relative offsets are out of bounds (of the text node)
 		 */
 		public String relativeString(int startOffset, int endOffset) {
-			DomNode node = Location.this.containingNode();
+			DomNode node = Location.this.containingNode;
 			Preconditions.checkState(node.isText());
 			String textContent = node.textContent();
 			int end = textContent.length();
@@ -291,7 +299,7 @@ public class Location implements Comparable<Location> {
 
 		// FIXME - selection - throw if start.node != end.node?
 		public DomNode containingNode() {
-			return start.containingNode();
+			return start.containingNode;
 		}
 
 		public boolean contains(Range o) {
@@ -378,5 +386,19 @@ public class Location implements Comparable<Location> {
 		NEXT_LOCATION, NEXT_DOMNODE_START, PREVIOUS_LOCATION,
 		PREVIOUS_DOMNODE_START, CURRENT_NODE_END, NEXT_CONTAINED_LOCATION,
 		PREVIOUS_CONTAINED_LOCATION
+	}
+
+	public Location toTextLocation(boolean toTextLocations) {
+		if (!toTextLocations) {
+			return this;
+		}
+		if (containingNode.isText()) {
+			return this;
+		}
+		DomNode text = Ax
+				.last(locationContext.getContainingNodes(index, after));
+		Preconditions.checkState(text.isText());
+		return new Location(text.asLocation().treeIndex, index, after, text,
+				locationContext);
 	}
 }

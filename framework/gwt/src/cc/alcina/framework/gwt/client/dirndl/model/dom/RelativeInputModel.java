@@ -78,10 +78,9 @@ public class RelativeInputModel {
 		return this.focusOffset;
 	}
 
-	public Optional<DomNode>
-			getFocusNodePartiallySelectedAncestor(Predicate<DomNode> predicate) {
-		Optional<DomNode> ancestor = focusNode().ancestors()
-				.match(predicate);
+	public Optional<DomNode> getFocusNodePartiallySelectedAncestor(
+			Predicate<DomNode> predicate) {
+		Optional<DomNode> ancestor = focusNode().ancestors().match(predicate);
 		if (ancestor.isEmpty()) {
 			return Optional.empty();
 		}
@@ -130,19 +129,22 @@ public class RelativeInputModel {
 			}
 		}
 		if (modifiedAnchorLocation != null) {
-			selection.collapse(
-					modifiedAnchorLocation.containingNode().gwtNode()
-							.implAccess().jsoRemote(),
-					modifiedAnchorLocation.indexInNode());
+			selection
+					.collapse(
+							modifiedAnchorLocation.containingNode.gwtNode()
+									.implAccess().jsoRemote(),
+							modifiedAnchorLocation.indexInNode());
 			Location extendTo = modifiedFocusLocation != null
 					? modifiedFocusLocation
 					: focusLocation;
-			selection.extend(extendTo.containingNode().gwtNode().implAccess()
-					.jsoRemote(), extendTo.indexInNode());
+			selection.extend(
+					extendTo.containingNode.gwtNode().implAccess().jsoRemote(),
+					extendTo.indexInNode());
 		} else if (modifiedFocusLocation != null) {
 			Location extendTo = modifiedFocusLocation;
-			selection.extend(extendTo.containingNode().gwtNode().implAccess()
-					.jsoRemote(), extendTo.indexInNode());
+			selection.extend(
+					extendTo.containingNode.gwtNode().implAccess().jsoRemote(),
+					extendTo.indexInNode());
 		}
 	}
 
@@ -177,7 +179,7 @@ public class RelativeInputModel {
 		if (!location.after) {
 			return location;
 		}
-		DomNode containingNode = location.containingNode();
+		DomNode containingNode = location.containingNode;
 		DomNodeTree tree = containingNode.tree();
 		DomNode cursor = containingNode.children.lastNode();
 		tree.setCurrentNode(cursor);

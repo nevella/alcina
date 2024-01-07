@@ -17,7 +17,7 @@ public class DocumentLayer extends Layer<NormalisationLayer.NormalisedText> {
 
 	static class Document extends DocumentSelection {
 		public Document(PlainTextSelection parent) {
-			super(parent);
+			super(parent, false);
 		}
 	}
 }

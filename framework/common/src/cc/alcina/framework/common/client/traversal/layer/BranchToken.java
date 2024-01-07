@@ -1,18 +1,18 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import com.google.common.base.Preconditions;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TextUtils;
 
-public interface BranchToken extends MatchingToken {
+public interface BranchToken extends MatchingToken, BranchGroupMember {
 	default Group getGroup() {
 		return null;
 	}
@@ -22,7 +22,12 @@ public interface BranchToken extends MatchingToken {
 		throw new UnsupportedOperationException("Unimplemented method 'match'");
 	}
 
-	public static class Group {
+	/*
+	 * Either a logical group (a logical combination of leaf groups) or a leaf
+	 * group - matching exactly one token
+	 * 
+	 */
+	public static class Group implements BranchGroupMember {
 		int min = 1;
 
 		int max = 1;
@@ -33,55 +38,156 @@ public interface BranchToken extends MatchingToken {
 
 		BranchToken token;
 
-		Group(BranchToken token) {
+		Quantifier quantifier = Quantifier.GREEDY;
+
+		/*
+		 * initially unsupported (except for leaf tokens)
+		 */
+		boolean negated;
+
+		private Group(List<Group> groups) {
+			this.groups = groups;
+		}
+
+		private Group(BranchToken token) {
 			this.token = token;
 		}
 
-		Index index() {
-			return new Index(this, 0);
+		@Override
+		public String toString() {
+			if (groups.isEmpty()) {
+				return token.toString();
+			}
+			StringBuilder builder = new StringBuilder();
+			builder.append('(');
+			if (token != null && groups.size() > 0
+					&& (groups.size() > 1 || groups.get(0).token != token)) {
+				builder.append('<');
+				builder.append(token);
+				builder.append('>');
+			}
+			String connector = order == Order.SEQUENCE ? "," : "|";
+			for (int idx = 0; idx < groups.size(); idx++) {
+				if (idx != 0) {
+					builder.append(connector);
+				}
+				builder.append(groups.get(idx));
+			}
+			builder.append(')');
+			String countIndicator = "";
+			if (min == 1 && max == 1) {
+			} else if (min == 0 && max == 1) {
+				countIndicator = "?";
+			} else if (min == 0 && max == Integer.MAX_VALUE) {
+				countIndicator = "*";
+			} else if (min == 1 && max == Integer.MAX_VALUE) {
+				countIndicator = "+";
+			} else {
+				countIndicator = Ax.format("{%s,%s}", min == 0 ? "" : min,
+						max == Integer.MAX_VALUE ? "" : max);
+			}
+			builder.append(countIndicator);
+			String quantifierIndicator = "";
+			switch (quantifier) {
+			case GREEDY:
+				break;
+			case POSSESSIVE:
+				quantifierIndicator = "+";
+				break;
+			case RELUCTANT:
+				quantifierIndicator = "?";
+				break;
+			}
+			builder.append(quantifierIndicator);
+			return builder.toString();
 		}
 
-		/*
-		 * Position in a group for matching. Invariant
-		 */
-		static class Index {
-			/*
-			 * the position in the parent group .groups array
-			 */
-			int position = -1;
-
-			Group group;
-
-			boolean complete;
-
-			boolean continuable;
-
-			Index(Group group, int position) {
-				this.group = group;
-				this.position = position;
+		public int getTermCount() {
+			if (groups.isEmpty()) {
+				return 1;
+			} else {
+				return order == Order.SEQUENCE ? groups.size() : 1;
 			}
+		}
 
-			List<Group.Index> computeValidSuccessors() {
-				switch (group.order) {
-				case SEQUENCE:
-					Preconditions.checkState(position < group.groups.size());
-					return List.of(atIndex(position++));
-				case ANY:
-					return IntStream.of(0, group.groups.size())
-							.mapToObj(this::atIndex)
-							.collect(Collectors.toList());
-				default:
-					throw new UnsupportedOperationException();
+		public boolean isComplex() {
+			return groups.size() > 0;
+		}
+
+		Stream<BranchToken> primitiveTokens() {
+			if (isPrimitive()) {
+				return Stream.of(token);
+			}
+			Stream<BranchToken> result = Stream.empty();
+			for (Group group : groups) {
+				result = Stream.concat(result, group.primitiveTokens());
+			}
+			return result;
+		}
+
+		boolean isPrimitive() {
+			return groups.size() == 0;
+		}
+
+		public static Group of(BranchGroupMember... members) {
+			List<Group> memberGroups = Arrays.stream(members).map(m -> {
+				if (m instanceof Group) {
+					return (Group) m;
+				} else {
+					BranchToken token = (BranchToken) m;
+					Group group = token.getGroup();
+					if (group == null) {
+						group = Group.primitive(token);
+					}
+					group.token = token;
+					return group;
 				}
+			}).collect(Collectors.toList());
+			Group result = new Group(memberGroups);
+			if (members.length == 1 && members[0] instanceof BranchToken) {
+				result.token = (BranchToken) members[0];
 			}
+			return result;
+		}
 
-			Index atIndex(int newPosition) {
-				return new Index(group, newPosition);
-			}
+		private static Group primitive(BranchToken token) {
+			return new Group(token);
+		}
 
-			public boolean isLeaf() {
-				return group.groups.isEmpty();
-			}
+		public Group withNegated() {
+			this.negated = true;
+			return this;
+		}
+
+		public Group withOrderAny() {
+			this.order = Order.ANY;
+			return this;
+		}
+
+		public Group withMatchesOneToAny() {
+			this.max = Integer.MAX_VALUE;
+			return this;
+		}
+
+		public Group withMatchesZeroToAny() {
+			this.min = 0;
+			this.max = Integer.MAX_VALUE;
+			return this;
+		}
+
+		public Group withMatchesZeroOrOne() {
+			this.min = 0;
+			return this;
+		}
+
+		public Group withMin(int min) {
+			this.min = min;
+			return this;
+		}
+
+		public Group withMax(int max) {
+			this.max = max;
+			return this;
 		}
 	}
 
@@ -89,9 +195,13 @@ public interface BranchToken extends MatchingToken {
 		SEQUENCE, ANY
 	}
 
+	enum Quantifier {
+		POSSESSIVE, RELUCTANT, GREEDY
+	}
+
 	public enum Standard implements BranchToken {
 		LINE_SEPARATOR {
-			private Pattern PATTERN = Pattern.compile("\n|\\z",
+			private Pattern PATTERN = Pattern.compile("\n",
 					Pattern.CASE_INSENSITIVE);
 
 			@Override
@@ -116,6 +226,31 @@ public interface BranchToken extends MatchingToken {
 			@Override
 			public Measure match(ParserState state) {
 				return state.matcher().match(this, PATTERN);
+			}
+		},
+		DIGITS {
+			private Pattern PATTERN = Pattern.compile("\\d+");
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.matcher().match(this, PATTERN);
+			}
+		},
+		ANY_TEXT {
+			private Pattern PATTERN = Pattern.compile(".+");
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.matcher().match(this, PATTERN);
+			}
+		},
+		/*
+		 * Matches nothing, models anonymous groups in the branch parser result
+		 */
+		ANON {
+			@Override
+			public Measure match(ParserState state) {
+				return null;
 			}
 		};
 

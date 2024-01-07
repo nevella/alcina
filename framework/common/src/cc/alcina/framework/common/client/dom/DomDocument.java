@@ -337,7 +337,7 @@ public class DomDocument extends DomNode {
 			/*
 			 * Special case, preserve existing node if possible)
 			 */
-			DomNode containingNode = location.containingNode();
+			DomNode containingNode = location.containingNode;
 			int contentLength = contentLengths.get(containingNode);
 			int relativeIndex = location.index
 					- byNode.get(containingNode).index;
@@ -363,18 +363,9 @@ public class DomDocument extends DomNode {
 		public Location getRelativeLocation(Location location,
 				RelativeDirection direction) {
 			/*
-			 * @formatter:off
-			 *
-			 * (bf1) El1                                                                           (af1)
-			 *       (bf2)  E2                                (af2)  (bf4) E4 (af4)  (bf5) E5 (af5)
-			 *              (bf3) T3                     (af3)
-			 *                    (bf3.0)  'a' 'b' (af3.1)
-			 *
-			 * @formatter:on
-			 *
-			 * Traversal is the 'tree' of bf/afs (before/after) shown above
+			 * See Location for a visual explanation of traversal
 			 */
-			DomNode node = location.containingNode();
+			DomNode node = location.containingNode;
 			int targetTreeIndex = location.treeIndex;
 			int targetIndex = location.index;
 			boolean targetAfter = !location.after;
@@ -438,7 +429,7 @@ public class DomDocument extends DomNode {
 							// last, ascend
 							targetTreeIndex = parentLocation != null
 									? parentLocation.treeIndex
-									: -1;
+									: 0;
 							targetAfter = true;
 						} else {
 							targetTreeIndex = byNode.get(nextSibling).treeIndex;
@@ -450,7 +441,7 @@ public class DomDocument extends DomNode {
 							// last, ascend
 							targetTreeIndex = parentLocation != null
 									? parentLocation.treeIndex
-									: -1;
+									: 0;
 						} else {
 							targetTreeIndex = byNode
 									.get(nextLogicalNode).treeIndex;
@@ -467,7 +458,7 @@ public class DomDocument extends DomNode {
 							// last, ascend
 							targetTreeIndex = parentLocation != null
 									? parentLocation.treeIndex
-									: -1;
+									: 0;
 							targetAfter = false;
 						} else {
 							targetTreeIndex = byNode
@@ -718,8 +709,8 @@ public class DomDocument extends DomNode {
 			if (node.isText()) {
 				return range.text();
 			}
-			if (range.start.containingNode() == node
-					&& range.end.containingNode() == node) {
+			if (range.start.containingNode == node
+					&& range.end.containingNode == node) {
 				String markup = node.fullToString();
 				// if namespaced, return full
 				// FIXME - selection - have a 'robust pretty' that uses a

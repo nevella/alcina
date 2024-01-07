@@ -6,6 +6,4 @@ public abstract class BranchingParserPeer extends LayerParserPeer {
 	public BranchingParserPeer(SelectionTraversal traversal) {
 		super(traversal);
 	}
-
-	public abstract boolean isSentence(BranchToken token);
 }

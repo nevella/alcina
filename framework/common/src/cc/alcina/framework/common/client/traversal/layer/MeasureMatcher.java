@@ -10,19 +10,20 @@ import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
  * Matches the inputstate inputcontent against a regex. Currently jdk only
  */
 public class MeasureMatcher {
-	private ParserState inputState;
+	private ParserState parserState;
 
-	public MeasureMatcher(ParserState inputState) {
-		this.inputState = inputState;
+	public MeasureMatcher(ParserState parserState) {
+		this.parserState = parserState;
 	}
 
 	public Measure match(Token token, Pattern pattern) {
-		String text = inputState.inputContent();
+		CharSequence text = parserState.inputContent();
 		Matcher matcher = pattern.matcher(text);
 		if (matcher.find()) {
-			return inputState.input.subMeasure(
-					inputState.getOffsetInInput() + matcher.start(),
-					inputState.getOffsetInInput() + matcher.end(), token);
+			return parserState.input.subMeasure(
+					parserState.getOffsetInInput() + matcher.start(),
+					parserState.getOffsetInInput() + matcher.end(), token,
+					true);
 		} else {
 			return null;
 		}

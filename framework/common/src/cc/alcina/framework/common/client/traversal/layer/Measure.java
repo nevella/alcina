@@ -40,6 +40,8 @@ import cc.alcina.framework.common.client.util.IdCounter;
  * Anyways, I was tired of slice.
  */
 public class Measure extends Location.Range {
+	public static final Object NEGATED_MATCH = new Object();
+
 	public static Measure fromNode(DomNode node, Token token) {
 		return fromRange(node.asRange(), token);
 	}
@@ -133,10 +135,13 @@ public class Measure extends Location.Range {
 		this.data = data;
 	}
 
-	public Measure subMeasure(int start, int end, Token token) {
-		Location subStart = this.start.createRelativeLocation(start, false);
-		Location subEnd = this.end.createRelativeLocation(-(length() - end),
-				true);
+	public Measure subMeasure(int start, int end, Token token,
+			boolean toTextLocations) {
+		Location subStart = this.start.createRelativeLocation(start, false)
+				.toTextLocation(toTextLocations);
+		Location subEnd = this.end
+				.createRelativeLocation(-(length() - end), true)
+				.toTextLocation(toTextLocations);
 		Measure subMeasure = new Measure(subStart, subEnd, token);
 		subMeasure.parent = this;
 		return subMeasure;
@@ -144,7 +149,15 @@ public class Measure extends Location.Range {
 
 	@Override
 	public String toString() {
-		String aliasMarker = aliasedFrom != null ? " (alias)" : "";
+		String tokenString = token.toString();
+		if (tokenString.contains(token.getClass().getName())) {
+			tokenString = token.getClass().getSimpleName();
+		}
+		return Ax.format("%s-%s :: %s", start.index, end.index, tokenString);
+	}
+
+	public String toDebugString() {
+		String aliasMarker = aliasedFrom != null ? ":: (alias)" : "";
 		String tokenString = token.toString();
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();

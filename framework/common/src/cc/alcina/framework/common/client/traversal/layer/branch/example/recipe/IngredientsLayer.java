@@ -37,10 +37,5 @@ class IngredientsLayer extends Layer<DocumentLayer.Document> {
 		public boolean isUseBranchingParser() {
 			return true;
 		}
-
-		@Override
-		public boolean isSentence(BranchToken token) {
-			return true;
-		}
 	}
 }
