@@ -1,7 +1,7 @@
-package cc.alcina.framework.common.client.traversal.layer.branch.example.recipe;
+package cc.alcina.framework.servlet.example.traversal.recipe;
 
 import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.common.client.traversal.layer.branch.example.recipe.RecipeParser.RecipeText;
+import cc.alcina.framework.servlet.example.traversal.recipe.RecipeParser.RecipeText;
 
 /*
  * Passes the input selection to the child sequence, on completion converts
