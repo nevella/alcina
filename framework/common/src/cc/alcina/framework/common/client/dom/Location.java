@@ -71,7 +71,7 @@ public class Location implements Comparable<Location> {
 	 *
 	 */
 	/***
-	 * The location is *after* the resolved node
+	 * The location is *after* (immediately after the end of) the containingNode
 	 */
 	public boolean after;
 
@@ -172,8 +172,20 @@ public class Location implements Comparable<Location> {
 		return compareTo(other) < 0;
 	}
 
+	public enum TextTraversal {
+		NO_CHANGE, NEXT_CHARACTER, EXIT_NODE, TO_START_OF_NODE,
+		// will throw if traversing a text node
+		UNDEFINED
+	}
+
 	public Location relativeLocation(RelativeDirection direction) {
-		return locationContext.getRelativeLocation(this, direction);
+		return relativeLocation(direction, TextTraversal.UNDEFINED);
+	}
+
+	public Location relativeLocation(RelativeDirection direction,
+			TextTraversal textTraversal) {
+		return locationContext.getRelativeLocation(this, direction,
+				textTraversal);
 	}
 
 	public void setLocationContext(LocationContext locationSupplier) {
@@ -400,5 +412,9 @@ public class Location implements Comparable<Location> {
 		Preconditions.checkState(text.isText());
 		return new Location(text.asLocation().treeIndex, index, after, text,
 				locationContext);
+	}
+
+	public boolean isAtNodeStart() {
+		return containingNode.asLocation().index == index;
 	}
 }

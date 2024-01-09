@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
@@ -34,13 +36,17 @@ import cc.alcina.framework.common.client.util.Multimap;
 public class LayerParser {
 	ParserState parserState;
 
+	public ParserState getParserState() {
+		return parserState;
+	}
+
 	MeasureSelection selection;
 
 	LayerParserPeer parserPeer;
 
-	private CustomState customState;
+	CustomState customState;
 
-	private boolean forwardsTraversalOrder = true;
+	boolean forwardsTraversalOrder = true;
 
 	public LayerParser(MeasureSelection selection, LayerParserPeer parserPeer) {
 		this.selection = selection;
@@ -131,6 +137,17 @@ public class LayerParser {
 
 		Location location;
 
+		Measure match(MatchingToken token) {
+			boolean atEndBoundary = forwardsTraversalOrder ? location.after
+					: !location.after;
+			if (location.containingNode.isText()) {
+				// text traversal is only at start location
+			} else if (atEndBoundary != token.isMatchesEndBoundary()) {
+				return null;
+			}
+			return token.match(this);
+		}
+
 		public Location getLocation() {
 			return location;
 		}
@@ -140,6 +157,10 @@ public class LayerParser {
 		List<Measure> matches = new ArrayList<>();
 
 		List<BranchingParser.Branch> sentenceBranches = new ArrayList<>();
+
+		public List<BranchingParser.Branch> getSentenceBranches() {
+			return sentenceBranches;
+		}
 
 		// TODO - parsers can directly call select(), so use of this is
 		// essentially optional (use iff post-match collation logic is required)
@@ -154,6 +175,8 @@ public class LayerParser {
 		CharSequenceArray locationContent = null;
 
 		Location locationContentLocation = null;
+
+		public boolean finished;
 
 		public ParserState(Measure input) {
 			this.input = input;
@@ -307,6 +330,7 @@ public class LayerParser {
 					: input.end.relativeLocation(
 							RelativeDirection.PREVIOUS_DOMNODE_START);
 			ParserEnvironment env = new ParserEnvironment();
+			parserPeer.parser = LayerParser.this;
 			if (parserPeer.isUseBranchingParser()) {
 				new BranchingParser(LayerParser.this).parse(env);
 			} else {
@@ -333,7 +357,7 @@ public class LayerParser {
 					bestMatch.addToParent();
 					matches.add(bestMatch);
 					matchesByToken.add(bestMatch.token, bestMatch);
-					location = env.successorFollowingMatch.get();
+					location = env.successorFollowingMatch.apply(bestMatch);
 				} else {
 					location = env.successorFollowingNoMatch.get();
 				}
@@ -345,7 +369,7 @@ public class LayerParser {
 
 			Predicate<Measure> isBetterMatch;
 
-			Supplier<Location> successorFollowingMatch;
+			Function<Measure, Location> successorFollowingMatch;
 
 			Supplier<Location> successorFollowingNoMatch;
 
@@ -361,7 +385,9 @@ public class LayerParser {
 						.collect(Collectors.toList());
 				Preconditions.checkState(traversalTokens.isEmpty()
 						|| traversalTokens.size() == parserPeer.tokens.size());
-				traverseUntilFound = traversalTokens.size() > 0;
+				// FIXME - st.p - tokens should cache match
+				traverseUntilFound = traversalTokens.size() > 0
+						|| parserPeer instanceof BranchingParserPeer;
 				Preconditions.checkState(
 						traverseUntilFound || forwardsTraversalOrder);
 				isBetterMatch = forwardsTraversalOrder
@@ -369,32 +395,42 @@ public class LayerParser {
 								|| bestMatch.start.isAfter(measure.start)
 						: measure -> bestMatch == null
 								|| bestMatch.end.isBefore(measure.end);
-				successorFollowingMatch = () -> {
+				successorFollowingMatch = match -> {
 					// FIXME - if only a partial node match, advance to the end
 					// of
 					// the partial rather than to the next node
 					if (traverseUntilFound) {
 						if (forwardsTraversalOrder) {
-							return bestMatch.end.relativeLocation(
-									RelativeDirection.NEXT_DOMNODE_START);
+							return match.end.relativeLocation(
+									RelativeDirection.NEXT_LOCATION,
+									TextTraversal.NO_CHANGE);
 						} else {
-							return bestMatch.start.relativeLocation(
-									RelativeDirection.PREVIOUS_DOMNODE_START);
+							return match.start.relativeLocation(
+									RelativeDirection.PREVIOUS_LOCATION,
+									TextTraversal.TO_START_OF_NODE);
 						}
 					} else {
 						if (forwardsTraversalOrder) {
-							return bestMatch.end.relativeLocation(
+							return match.end.relativeLocation(
 									RelativeDirection.NEXT_LOCATION);
 						} else {
 							throw new UnsupportedOperationException();
 						}
 					}
 				};
-				successorFollowingNoMatch = () -> forwardsTraversalOrder
-						? location.relativeLocation(
-								RelativeDirection.NEXT_DOMNODE_START)
-						: location.relativeLocation(
-								RelativeDirection.PREVIOUS_DOMNODE_START);
+				successorFollowingNoMatch = () -> {
+					if (forwardsTraversalOrder) {
+						boolean nextCharacter = location != null
+								&& location.containingNode.isText();
+						return location.relativeLocation(
+								RelativeDirection.NEXT_LOCATION,
+								TextTraversal.NEXT_CHARACTER);
+					} else {
+						return location.relativeLocation(
+								RelativeDirection.PREVIOUS_LOCATION,
+								TextTraversal.TO_START_OF_NODE);
+					}
+				};
 				boundary = forwardsTraversalOrder ? input.end : input.start;
 				afterTraversalBoundary = () -> forwardsTraversalOrder
 						? location.compareTo(boundary) >= 0
@@ -420,7 +456,7 @@ public class LayerParser {
 			Location restoreTo = this.location;
 			try {
 				this.location = location;
-				return token.match(this);
+				return match(token);
 			} finally {
 				this.location = restoreTo;
 			}

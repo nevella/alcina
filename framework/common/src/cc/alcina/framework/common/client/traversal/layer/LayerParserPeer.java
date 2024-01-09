@@ -19,6 +19,8 @@ public abstract class LayerParserPeer {
 
 	protected Predicate<Location> filter = null;
 
+	protected LayerParser parser;
+
 	public LayerParserPeer(SelectionTraversal traversal) {
 		this.traversal = traversal;
 		this.layer = traversal.currentLayer();

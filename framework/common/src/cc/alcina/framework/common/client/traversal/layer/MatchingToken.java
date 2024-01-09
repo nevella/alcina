@@ -14,6 +14,15 @@ public interface MatchingToken extends Token {
 	Measure match(ParserState state);
 
 	/*
+	 * By default non-text end boundary locations are ignored for this token
+	 * (when forwards traversing, that's after - when backwards traversing,
+	 * that's !after)
+	 */
+	default boolean isMatchesEndBoundary() {
+		return false;
+	}
+
+	/*
 	 * Only used by single token parsers
 	 */
 	default Selection select(ParserState state, Measure measure) {

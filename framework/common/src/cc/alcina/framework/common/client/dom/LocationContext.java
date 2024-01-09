@@ -4,6 +4,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 
 public interface LocationContext {
 	default int compare(Location l1, Location l2) {
@@ -69,8 +70,8 @@ public interface LocationContext {
 
 	DomNode getContainingNode(Location location);
 
-	Location getRelativeLocation(Location location,
-			RelativeDirection direction);
+	Location getRelativeLocation(Location location, RelativeDirection direction,
+			TextTraversal textTraversal);
 
 	String textContent(Range range);
 

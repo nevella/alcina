@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParser;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
-import cc.alcina.framework.common.client.util.Ax;
 
 class IngredientLayer extends Layer<IngredientsLayer.RawIngredientSelection> {
 	@Override
@@ -23,9 +22,6 @@ class IngredientLayer extends Layer<IngredientsLayer.RawIngredientSelection> {
 				state.traversalState.getTraversal());
 		LayerParser layerParser = new LayerParser(selection, parserPeer);
 		layerParser.parse();
-		layerParser.getSentences().stream()
-				.map(BranchingParser.Branch::toStructuredString)
-				.forEach(Ax::out);
 		layerParser.getSentences().stream()
 				.map(branch -> new IngredientSelection(selection, branch))
 				.forEach(this::select);

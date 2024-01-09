@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -359,9 +360,13 @@ public class DomDocument extends DomNode {
 			return getContainingLocation(test).containingNode;
 		}
 
+		/**
+		 * Implementation for text is a little complicated, because "next"
+		 * depends on the caller to a degree
+		 */
 		@Override
 		public Location getRelativeLocation(Location location,
-				RelativeDirection direction) {
+				RelativeDirection direction, TextTraversal textTraversal) {
 			/*
 			 * See Location for a visual explanation of traversal
 			 */
@@ -383,27 +388,27 @@ public class DomDocument extends DomNode {
 				int relativeIndex = location.index - baseLocation.index;
 				switch (direction) {
 				case NEXT_LOCATION: {
-					if (location.after) {
-						if (relativeIndex == node.textContent().length()) {
-							nodeTraversalRequired = true;
-						} else {
-							targetIndex++;
-						}
+					if (relativeIndex == node.textContent().length()) {
+						nodeTraversalRequired = true;
 					} else {
-						// just switching from before->after
+						switch (textTraversal) {
+						case NEXT_CHARACTER:
+							targetIndex++;
+							break;
+						case NO_CHANGE:
+							break;
+						case EXIT_NODE:
+							nodeTraversalRequired = true;
+							break;
+						default:
+							throw new UnsupportedOperationException();
+						}
 					}
 					break;
 				}
 				case PREVIOUS_LOCATION: {
-					if (location.after) {
-						// just switching from after->before
-					} else {
-						if (relativeIndex == 0) {
-							nodeTraversalRequired = true;
-						} else {
-							targetIndex--;
-						}
-					}
+					// reversed traversal does not currently match partial nodes
+					nodeTraversalRequired = true;
 					break;
 				}
 				case PREVIOUS_DOMNODE_START: {
@@ -421,6 +426,7 @@ public class DomDocument extends DomNode {
 				nodeTraversalRequired = true;
 			}
 			if (nodeTraversalRequired) {
+				targetIndex = -1;
 				switch (direction) {
 				case NEXT_LOCATION: {
 					if (location.after) {
@@ -435,16 +441,17 @@ public class DomDocument extends DomNode {
 							targetTreeIndex = byNode.get(nextSibling).treeIndex;
 						}
 					} else {
-						DomNode nextLogicalNode = node.relative()
-								.nextLogicalNode();
-						if (nextLogicalNode == null) {
-							// last, ascend
+						// descend or go to next sibling
+						DomNode next = node.children.firstNode();
+						next = next != null ? next
+								: node.relative().nextLogicalNode();
+						if (next == null) {
+							// top, ascend
 							targetTreeIndex = parentLocation != null
 									? parentLocation.treeIndex
 									: 0;
 						} else {
-							targetTreeIndex = byNode
-									.get(nextLogicalNode).treeIndex;
+							targetTreeIndex = byNode.get(next).treeIndex;
 							targetAfter = false;
 						}
 					}
@@ -480,7 +487,6 @@ public class DomDocument extends DomNode {
 					// if at start, go to previous logical node - if at end, go
 					// to last descendant
 					targetAfter = false;
-					targetIndex = -1;
 					if (!location.after) {
 						targetTreeIndex--;
 					} else {
@@ -500,7 +506,6 @@ public class DomDocument extends DomNode {
 					// end, go
 					// next logical node from last descendant
 					targetAfter = false;
-					targetIndex = -1;
 					if (!location.after) {
 						targetTreeIndex++;
 					} else {
@@ -522,7 +527,15 @@ public class DomDocument extends DomNode {
 			}
 			DomNode containingNode = byTreeIndex.get(targetTreeIndex);
 			if (targetIndex == -1) {
-				return byNode.get(containingNode);
+				Location nodeLocation = containingNode.asLocation();
+				targetIndex = nodeLocation.index;
+				if (targetAfter) {
+					if (containingNode.isText()
+							&& textTraversal == TextTraversal.TO_START_OF_NODE) {
+					} else {
+						targetIndex += contentLengths.get(containingNode);
+					}
+				}
 			}
 			return new Location(targetTreeIndex, targetIndex, targetAfter,
 					containingNode, this);
@@ -612,8 +625,9 @@ public class DomDocument extends DomNode {
 			} else {
 				end = asLocation(domNode).clone();
 				end.index += contentLengths.get(domNode);
+				// only for non-text (text locations do not use after)
+				end.after = true;
 			}
-			end.after = true;
 			return new Location.Range(start, end);
 		}
 

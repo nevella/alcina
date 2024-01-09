@@ -7,11 +7,15 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TextUtils;
 
+/**
+ * A BranchToken must either return non-nul from getGroup() or override match()
+ */
 public interface BranchToken extends MatchingToken, BranchGroupMember {
 	default Group getGroup() {
 		return null;
@@ -19,12 +23,15 @@ public interface BranchToken extends MatchingToken, BranchGroupMember {
 
 	@Override
 	default Measure match(ParserState state) {
-		throw new UnsupportedOperationException("Unimplemented method 'match'");
+		throw new UnsupportedOperationException("See BranchToken constraints");
 	}
 
 	/*
 	 * Either a logical group (a logical combination of leaf groups) or a leaf
 	 * group - matching exactly one token
+	 * 
+	 * Note that group instances should not be reused for a given parser - token
+	 * reuse is fine, since token.getGroup() is cloned
 	 * 
 	 */
 	public static class Group implements BranchGroupMember {
@@ -40,10 +47,26 @@ public interface BranchToken extends MatchingToken, BranchGroupMember {
 
 		Quantifier quantifier = Quantifier.GREEDY;
 
+		protected Group clone() {
+			Group result = new Group();
+			result.min = min;
+			result.max = max;
+			result.order = order;
+			result.token = token;
+			result.quantifier = quantifier;
+			result.groups = groups.stream().map(Group::clone)
+					.collect(Collectors.toList());
+			return result;
+		}
+
 		/*
 		 * initially unsupported (except for leaf tokens)
 		 */
 		boolean negated;
+
+		// clone constructor
+		private Group() {
+		}
 
 		private Group(List<Group> groups) {
 			this.groups = groups;
@@ -138,6 +161,8 @@ public interface BranchToken extends MatchingToken, BranchGroupMember {
 					Group group = token.getGroup();
 					if (group == null) {
 						group = Group.primitive(token);
+					} else {
+						group = group.clone();
 					}
 					group.token = token;
 					return group;
@@ -251,6 +276,23 @@ public interface BranchToken extends MatchingToken, BranchGroupMember {
 			@Override
 			public Measure match(ParserState state) {
 				return null;
+			}
+		},
+		WHITESPACE_NODE {
+			@Override
+			public Measure match(ParserState state) {
+				Location location = state.getLocation();
+				if (location.isAtNodeStart() && location.containingNode
+						.isWhitespaceOrEmptyTextContent()) {
+					return Measure.fromNode(location.containingNode, this);
+				} else {
+					return null;
+				}
+			}
+		},
+		OPTIONAL_WHITESPACE_NODES {
+			public Group getGroup() {
+				return Group.of(WHITESPACE_NODE).withMatchesZeroToAny();
 			}
 		};
 
