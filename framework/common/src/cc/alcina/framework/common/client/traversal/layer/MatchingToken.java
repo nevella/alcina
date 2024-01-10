@@ -3,6 +3,8 @@ package cc.alcina.framework.common.client.traversal.layer;
 import java.util.Optional;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
@@ -18,8 +20,16 @@ public interface MatchingToken extends Token {
 	 * (when forwards traversing, that's after - when backwards traversing,
 	 * that's !after)
 	 */
-	default boolean isMatchesEndBoundary() {
-		return false;
+	default MatchesBoundary matchesBoundary() {
+		return MatchesBoundary.START;
+	}
+
+	public enum MatchesBoundary {
+		START, END, ANY
+	}
+
+	default Measure measure(Location start, Location end) {
+		return Measure.fromRange(new Range(start, end), this);
 	}
 
 	/*

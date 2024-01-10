@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -74,7 +75,16 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	@Override
 	public String toString() {
 		return Ax.format("%s :: %s", getPathSegment(),
-				get() == null ? null : Ax.trim(get().toString(), 150));
+				get() == null ? null : Ax.trim(contentsToString(), 150));
+	}
+
+	protected String contentsToString() {
+		T t = get();
+		if (t instanceof DomNode) {
+			return "[DomNode]";
+		} else {
+			return t.toString();
+		}
 	}
 
 	static class View implements Selection.View<AbstractSelection> {

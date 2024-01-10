@@ -94,6 +94,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.CommonUtils.YearResolver;
@@ -1736,13 +1737,16 @@ public class SEUtilities {
 		value = NestedName.class,
 		priority = Priority.PREFERRED_LIBRARY)
 	public static class NestedNameProviderJvm extends NestedName {
+		Map<Class, String> map = CollectionCreators.Bootstrap
+				.createConcurrentClassMap();
+
 		public static NestedName get() {
 			return Registry.impl(NestedName.class);
 		}
 
 		@Override
 		public String getNestedSimpleName(Class clazz) {
-			return SEUtilities.getNestedSimpleName(clazz);
+			return map.computeIfAbsent(clazz, SEUtilities::getNestedSimpleName);
 		}
 	}
 

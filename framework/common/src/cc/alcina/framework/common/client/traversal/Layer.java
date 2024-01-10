@@ -74,7 +74,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	public Collection<S> computeInputs() {
 		if (inputsFromLayer != null) {
 			return (Collection<S>) state.traversalState.selections
-					.byLayer(inputsFromLayer);
+					.byLayer(inputsFromLayer).keySet();
 		} else {
 			return state.traversalState.selections.get(inputType, false);
 		}

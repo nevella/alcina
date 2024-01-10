@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
- * A BranchToken must either return non-nul from getGroup() or override match()
+ * A BranchToken must either return non-null from getGroup() or override match()
  */
 public interface BranchToken extends MatchingToken, BranchGroupMember {
 	default Group getGroup() {

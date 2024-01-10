@@ -110,20 +110,20 @@ public class LayerParser {
 
 	public LayerParser withCustomState(CustomState customState) {
 		this.customState = customState;
-		customState.parser = this;
+		customState.setParser(this);
 		return this;
 	}
 
 	public abstract static class CustomState {
-		protected LayerParser parser;
+		public ParserState parserState;
 
-		public ParserState inputState() {
-			return parser.parserState;
+		public void setParser(LayerParser layerParser) {
+			parserState = layerParser.parserState;
 		}
 
 		@Override
 		public String toString() {
-			return inputState().toString();
+			return parserState.toString();
 		}
 	}
 
@@ -140,10 +140,22 @@ public class LayerParser {
 		Measure match(MatchingToken token) {
 			boolean atEndBoundary = forwardsTraversalOrder ? location.after
 					: !location.after;
-			if (location.containingNode.isText()) {
-				// text traversal is only at start location
-			} else if (atEndBoundary != token.isMatchesEndBoundary()) {
-				return null;
+			// text traversal is only at start location
+			if (!location.containingNode.isText()) {
+				switch (token.matchesBoundary()) {
+				case ANY:
+					break;
+				case START:
+					if (atEndBoundary) {
+						return null;
+					}
+					break;
+				case END:
+					if (!atEndBoundary) {
+						return null;
+					}
+					break;
+				}
 			}
 			return token.match(this);
 		}
@@ -359,7 +371,7 @@ public class LayerParser {
 					matchesByToken.add(bestMatch.token, bestMatch);
 					location = env.successorFollowingMatch.apply(bestMatch);
 				} else {
-					location = env.successorFollowingNoMatch.get();
+					location = env.successorFollowingNoMatch.get(null);
 				}
 			}
 		}
@@ -371,13 +383,31 @@ public class LayerParser {
 
 			Function<Measure, Location> successorFollowingMatch;
 
-			Supplier<Location> successorFollowingNoMatch;
+			SuccessorFollowingNoMatch successorFollowingNoMatch;
 
 			Location boundary;
 
 			Supplier<Boolean> afterTraversalBoundary;
 
 			Supplier<Boolean> atTraversalBoundary;
+
+			class SuccessorFollowingNoMatch {
+				Location get(Location nextLookaheadTokenMatch) {
+					if (forwardsTraversalOrder) {
+						boolean nextCharacter = location != null
+								&& location.containingNode.isText();
+						return location.relativeLocation(
+								RelativeDirection.NEXT_LOCATION,
+								nextLookaheadTokenMatch == null
+										? TextTraversal.EXIT_NODE
+										: TextTraversal.NEXT_CHARACTER);
+					} else {
+						return location.relativeLocation(
+								RelativeDirection.PREVIOUS_LOCATION,
+								TextTraversal.TO_START_OF_NODE);
+					}
+				}
+			}
 
 			ParserEnvironment() {
 				List<MatchingToken> traversalTokens = parserPeer.tokens.stream()
@@ -401,9 +431,14 @@ public class LayerParser {
 					// the partial rather than to the next node
 					if (traverseUntilFound) {
 						if (forwardsTraversalOrder) {
+							// if a text node was matched but no text, the node
+							// is being matched as a whole, so exit
+							TextTraversal textTraversal = match.provideIsPoint()
+									? TextTraversal.EXIT_NODE
+									: TextTraversal.NO_CHANGE;
 							return match.end.relativeLocation(
 									RelativeDirection.NEXT_LOCATION,
-									TextTraversal.NO_CHANGE);
+									textTraversal);
 						} else {
 							return match.start.relativeLocation(
 									RelativeDirection.PREVIOUS_LOCATION,
@@ -418,19 +453,7 @@ public class LayerParser {
 						}
 					}
 				};
-				successorFollowingNoMatch = () -> {
-					if (forwardsTraversalOrder) {
-						boolean nextCharacter = location != null
-								&& location.containingNode.isText();
-						return location.relativeLocation(
-								RelativeDirection.NEXT_LOCATION,
-								TextTraversal.NEXT_CHARACTER);
-					} else {
-						return location.relativeLocation(
-								RelativeDirection.PREVIOUS_LOCATION,
-								TextTraversal.TO_START_OF_NODE);
-					}
-				};
+				successorFollowingNoMatch = new SuccessorFollowingNoMatch();
 				boundary = forwardsTraversalOrder ? input.end : input.start;
 				afterTraversalBoundary = () -> forwardsTraversalOrder
 						? location.compareTo(boundary) >= 0

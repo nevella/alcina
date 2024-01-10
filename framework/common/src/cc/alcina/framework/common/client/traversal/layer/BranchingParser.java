@@ -107,6 +107,8 @@ public class BranchingParser {
 
 		Branch bestMatch;
 
+		Location nextLookaheadTokenMatch;
+
 		void evaluateBranches() {
 			logger.debug("Evaluating at location {}", parserState.location);
 			matchedSentenceBranches.clear();
@@ -127,10 +129,15 @@ public class BranchingParser {
 			}
 		}
 
-		Location computeFirstMatchedLocation() {
-			return primitiveTokens.stream().map(parserState::match)
-					.filter(Objects::nonNull).sorted().findFirst()
-					.map(m -> m.start).orElse(null);
+		void computeFirstMatchedLocation() {
+			nextLookaheadTokenMatch = primitiveTokens.stream()
+					.map(parserState::match).filter(Objects::nonNull).sorted()
+					.findFirst().map(m -> m.start).orElse(null);
+		}
+
+		void onBeforeTokenMatch() {
+			parserState.onBeforeTokenMatch();
+			nextLookaheadTokenMatch = null;
 		}
 	}
 
@@ -544,20 +551,23 @@ public class BranchingParser {
 		computeInvariants();
 		while (parserState.location != null && !env.afterTraversalBoundary.get()
 				&& !parserState.finished) {
-			parserState.onBeforeTokenMatch();
+			state.onBeforeTokenMatch();
 			if (peer.filter == null || peer.filter.test(parserState.location)) {
-				/*
-				 * Move the location/cursor to this match iff it's an offset
-				 * within the current text node
-				 * 
-				 * 
-				 */
 				if (layerParser.forwardsTraversalOrder) {
-					Location firstMatchedLocation = state
-							.computeFirstMatchedLocation();
-					if (firstMatchedLocation != null
-							&& firstMatchedLocation.treeIndex == parserState.location.treeIndex) {
-						parserState.location = firstMatchedLocation;
+					state.computeFirstMatchedLocation();
+					if (state.nextLookaheadTokenMatch != null) {
+						/*
+						 * Move the location/cursor to this match iff it's an
+						 * offset within the current text node. If there is such
+						 * a match, post-branch evaluation movement changes - to
+						 * be 'go to next char' rather than 'go to next
+						 * location'
+						 */
+						if (state.nextLookaheadTokenMatch.treeIndex == parserState.location.treeIndex) {
+							parserState.location = state.nextLookaheadTokenMatch;
+						} else {
+							state.nextLookaheadTokenMatch = null;
+						}
 					}
 				}
 				state.evaluateBranches();
@@ -578,7 +588,8 @@ public class BranchingParser {
 			} else {
 				// FIXME - st.b - always true
 				if (env.traverseUntilFound) {
-					parserState.location = env.successorFollowingNoMatch.get();
+					parserState.location = env.successorFollowingNoMatch
+							.get(state.nextLookaheadTokenMatch);
 				} else {
 					parserState.location = env.boundary;
 				}

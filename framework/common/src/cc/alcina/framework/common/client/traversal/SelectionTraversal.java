@@ -139,22 +139,22 @@ public class SelectionTraversal
 	public class Selections {
 		Selection rootSelection;
 
-		private Multiset<Class<? extends Selection>, Set<Selection>> byClass = new Multiset<>();
+		Multiset<Class<? extends Selection>, Set<Selection>> byClass = new Multiset<>();
 
-		private Multiset<Layer, Set<Selection>> byLayer = new Multiset<>();
+		Map<Layer, Map<Selection, Integer>> byLayer = AlcinaCollections
+				.newLinkedHashMap();
 
 		// layer/segment
-		private MultikeyMap<Selection> byLayerSegments = new UnsortedMultikeyMap<>(
-				2);
+		MultikeyMap<Selection> byLayerSegments = new UnsortedMultikeyMap<>(2);
 
 		// class/segment
-		private MultikeyMap<Selection> byClassSegments = new UnsortedMultikeyMap<>(
-				2);
+		MultikeyMap<Selection> byClassSegments = new UnsortedMultikeyMap<>(2);
 
 		int size;
 
-		public Set<Selection> byLayer(Layer layer) {
-			return byLayer.getAndEnsure(layer);
+		public Map<Selection, Integer> byLayer(Layer layer) {
+			return byLayer.computeIfAbsent(layer,
+					l -> AlcinaCollections.newLinkedHashMap());
 		}
 
 		/**
@@ -246,7 +246,8 @@ public class SelectionTraversal
 			if (rootSelection == null) {
 				rootSelection = selection;
 			}
-			byLayer.add(currentLayer(), selection);
+			Map<Selection, Integer> byCurrentLayer = byLayer(currentLayer());
+			byCurrentLayer.put(selection, byCurrentLayer.size());
 			byLayerSegments.put(currentLayer(), selection.getPathSegment(),
 					selection);
 			boolean add = true;
@@ -265,12 +266,12 @@ public class SelectionTraversal
 		}
 
 		synchronized IntPair getSelectionPosition(Selection value) {
-			for (Entry<Layer, Set<Selection>> entry : byLayer.entrySet()) {
-				Set<Selection> set = entry.getValue();
-				if (set.contains(value)) {
-					return new IntPair(
-							CommonUtils.indexOf(set.iterator(), value) + 1,
-							set.size());
+			for (Entry<Layer, Map<Selection, Integer>> entry : byLayer
+					.entrySet()) {
+				Map<Selection, Integer> layerSelections = entry.getValue();
+				if (layerSelections.containsKey(value)) {
+					return new IntPair(layerSelections.get(value) + 1,
+							layerSelections.size());
 				}
 			}
 			return null;
@@ -429,7 +430,7 @@ public class SelectionTraversal
 		}
 
 		Collection<Selection> getSelections(Layer layer) {
-			return selections.byLayer(layer);
+			return selections.byLayer(layer).keySet();
 		}
 	}
 
