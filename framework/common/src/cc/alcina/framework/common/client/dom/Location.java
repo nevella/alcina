@@ -309,6 +309,22 @@ public class Location implements Comparable<Location> {
 			return 0;
 		}
 
+		public int compareToEarlierEndEarlier(Range o) {
+			{
+				int cmp = start.compareTo(o.start, false);
+				if (cmp != 0) {
+					return cmp;
+				}
+			}
+			{
+				int cmp = end.compareTo(o.end, false);
+				if (cmp != 0) {
+					return cmp;
+				}
+			}
+			return 0;
+		}
+
 		// FIXME - selection - throw if start.node != end.node?
 		public DomNode containingNode() {
 			return start.containingNode;
@@ -390,6 +406,18 @@ public class Location implements Comparable<Location> {
 				return o.start.equals(start) && o.end.equals(end);
 			} else {
 				return false;
+			}
+		}
+
+		/**
+		 * Create a range from start-end, or end-start if end is before start
+		 */
+		public static Range fromPossiblyReversedEndpoints(Range range1,
+				Range range2) {
+			if (range1.compareToEarlierEndEarlier(range2) <= 0) {
+				return new Range(range1.start, range2.end);
+			} else {
+				return new Range(range2.start, range1.end);
 			}
 		}
 	}

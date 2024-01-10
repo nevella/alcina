@@ -63,9 +63,9 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return false;
 	}
 
-	public static boolean isContinuous(List<IntPair> matchedRanges) {
-		IntPair union = unionOf(matchedRanges);
-		return provideUncovered(matchedRanges, union).isEmpty();
+	public static boolean isContinuous(List<IntPair> pairs) {
+		IntPair union = unionOf(pairs);
+		return provideUncovered(pairs, union).isEmpty();
 	}
 
 	public static IntPair of(int i1, int i2) {

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 
 /**
@@ -23,6 +24,32 @@ import cc.alcina.framework.common.client.util.IntPair;
 public class MeasureContainment {
 	public class Containment {
 		public MeasureSelection selection;
+
+		// generate a list of contained ranges derived from parent
+		// non-intersection [union of children]. It will be unsorted. It will
+		// not contain ranges corresponding to containment children
+		public Stream<IntPair> toNonChildRanges() {
+			IntPair self = selection.get().toIntPair();
+			if (descendants.isEmpty()) {
+				return Stream.of(self);
+			}
+			List<IntPair> childPairs = descendants.stream()
+					.filter(this::isImmediateChild)
+					.map(d -> d.get().toIntPair()).collect(Collectors.toList());
+			IntPair childCoverage = new IntPair(Ax.first(childPairs).i1,
+					Ax.last(childPairs).i2);
+			List<IntPair> uncoveredInChildArea = IntPair
+					.provideUncovered(childPairs, childCoverage);
+			List<IntPair> uncoveredExChildArea = IntPair
+					.provideUncovered(List.of(childCoverage), self);
+			return Stream.concat(uncoveredExChildArea.stream(),
+					uncoveredInChildArea.stream());
+		}
+
+		boolean isImmediateChild(MeasureSelection selection) {
+			return containments.get(selection).ancestors(false).findFirst()
+					.orElse(null) == this;
+		}
 
 		public List<MeasureSelection> descendants = new ArrayList<>();
 

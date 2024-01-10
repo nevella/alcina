@@ -1063,6 +1063,11 @@ public class CommonUtils {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
 
+	public static Class getComparableType(Object o) {
+		Class<? extends Object> clazz = o.getClass();
+		return isEnumSubclass(clazz) ? clazz.getSuperclass() : clazz;
+	}
+
 	@SuppressWarnings("deprecation")
 	public static boolean isInCurrentMonth(Date date) {
 		if (date == null) {

@@ -239,7 +239,8 @@ public class Measure extends Location.Range {
 						// NoPossibleChildren tokens can't overlap
 						Preconditions.checkState(c1 == 0);
 					}
-					return classOrdering(o1.getClass(), o2.getClass());
+					return classOrdering(CommonUtils.getComparableType(o1),
+							CommonUtils.getComparableType(o2));
 				}
 
 				private int noPossibleChildrenWeight(Token o) {

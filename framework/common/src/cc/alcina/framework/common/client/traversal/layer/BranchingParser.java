@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState.ParserEnvironment;
@@ -429,27 +430,33 @@ public class BranchingParser {
 				 * generate the containing mesaure by traversing to the start of
 				 * the group repetition to determine the start + end measures
 				 */
-				Location start = null;
-				Location end = null;
+				Range start = null;
+				Range end = null;
 				Branch cursor = this;
 				do {
 					cursor = cursor.predecessor;
 					if (cursor.match != null && end == null) {
-						end = cursor.match.end;
+						end = cursor.match;
+						// root tokens will only have one child
+						if (parent == null) {
+							start = cursor.match;
+							break;
+						}
 					}
 					if ((cursor.group == group && cursor.indexInGroup == 0)
 							|| cursor.predecessor == null) {
 						if (end == null) {
-							end = cursor.location;
+							end = new Range(cursor.location, cursor.location);
 						}
 						if (cursor.predecessor == null && parent != null) {
 							start = end;
 						} else {
-							start = cursor.location;
+							start = new Range(cursor.location, cursor.location);
 						}
 					}
 				} while (start == null);
-				Location.Range range = new Location.Range(start, end);
+				Location.Range range = Location.Range
+						.fromPossiblyReversedEndpoints(start, end);
 				match = Measure.fromRange(range, matchToken);
 				if (parent == null) {
 					logger.info("Emitted sentence match : {}", match);
