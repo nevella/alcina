@@ -250,6 +250,10 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 			this.traversalState = traversalState;
 		}
 
+		public SelectionTraversal getTraversal() {
+			return traversalState.getTraversal();
+		}
+
 		void select(Selection selection) {
 			traversalState.select(selection);
 		}
@@ -265,5 +269,8 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 	public String getFilterName() {
 		return getClass().getName();
+	}
+
+	protected void onAfterProcess(Selection selection) {
 	}
 }

@@ -370,8 +370,15 @@ public class BranchingParser {
 		}
 
 		public Stream<Measure> measures() {
-			return stream().filter(e -> !e.isNegated() && e.match != null)
-					.map(e -> e.match);
+			if (branchEntry.size() == 3) {
+				// simple branches (single-token) will match twice, the
+				// parent group and the primitive child. So dedupe (custom
+				// handling)
+				return Stream.of(root).map(e -> e.match);
+			} else {
+				return stream().filter(e -> !e.isNegated() && e.match != null)
+						.distinct().map(e -> e.match);
+			}
 		}
 
 		public Measure measure(Token token) {
@@ -739,7 +746,6 @@ public class BranchingParser {
 				parserState.matches.add(parserState.bestMatch);
 				parserState.matchesByToken.add(parserState.bestMatch.token,
 						parserState.bestMatch);
-				parserState.outputs.add(parserState.bestMatch);
 				parserState.sentenceBranches.add(state.bestMatch);
 				parserState.location = env.successorFollowingMatch
 						.apply(parserState.bestMatch);

@@ -13,16 +13,18 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
-import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
- * * A measure token augmented for use by the layer parser
+ * A measure token augmented for use by the layer parser
  * 
  * A BranchToken must either return non-null from getGroup() or override match()
+ * 
+ * Tokens must be unique to a given parser - so either use enums, singleton
+ * instances or some other guarantee
  */
 public interface BranchToken extends Token, BranchGroupMember {
 	/*
@@ -40,32 +42,6 @@ public interface BranchToken extends Token, BranchGroupMember {
 
 	default Measure measure(Location start, Location end) {
 		return Measure.fromRange(new Range(start, end), this);
-	}
-
-	/*
-	 * Only used by single token parsers
-	 */
-	default Selection select(ParserState state, Measure measure) {
-		throw new UnsupportedOperationException();
-	}
-
-	public static abstract class SingleMatch implements BranchToken {
-		private Optional<DomNode> match;
-
-		@Override
-		public Measure match(ParserState state) {
-			if (match == null) {
-				DomNode document = state.getDocument().get().containingNode();
-				this.match = getMatch(document);
-			}
-			if (match.isPresent() && state.contains(match.get().asLocation())) {
-				return Measure.fromNode(match.get(), this);
-			} else {
-				return null;
-			}
-		}
-
-		protected abstract Optional<DomNode> getMatch(DomNode document);
 	}
 
 	default Group getGroup() {
@@ -353,10 +329,5 @@ public interface BranchToken extends Token, BranchGroupMember {
 				return Group.of(WHITESPACE_NODE).withMatchesZeroToAny();
 			}
 		};
-
-		@Override
-		public Selection select(ParserState state, Measure measure) {
-			throw new UnsupportedOperationException();
-		}
 	}
 }

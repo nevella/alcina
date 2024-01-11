@@ -1,13 +1,12 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
@@ -17,7 +16,6 @@ import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token.NodeTraversalToken;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -63,17 +61,6 @@ public class LayerParser {
 		return selection.get().containingNode();
 	}
 
-	public List<Measure> getOutputs() {
-		// very temp, assuming only one sequence per
-		// inputState.outputs = inputState.outputs;
-		// if multiple distinct parseable areas (inputStates), this method would
-		// need to return the collated outputs
-		//
-		// note also (see below) that inputState.outputs may be bypassed,
-		// depending on collation requirements
-		return parserState.outputs;
-	}
-
 	public List<BranchingParser.Branch> getSentences() {
 		return parserState.sentenceBranches;
 	}
@@ -95,13 +82,6 @@ public class LayerParser {
 	 */
 	public void parse() {
 		parserState.parse();
-	}
-
-	public void selectMatches() {
-		parserState.matches.stream()
-				.map(measure -> ((BranchToken) measure.token)
-						.select(parserState, measure))
-				.filter(Objects::nonNull).forEach(parserPeer.layer::select);
 	}
 
 	public void setForwardsTraversalOrder(boolean forwardsTraversalOrder) {
@@ -132,6 +112,8 @@ public class LayerParser {
 	 */
 	public class ParserState {
 		MeasureMatcher measureMatcher = new MeasureMatcher(this);
+
+		XpathMatcher xpathMatcher = new XpathMatcher(this);
 
 		public Measure input;
 
@@ -173,12 +155,6 @@ public class LayerParser {
 		public List<BranchingParser.Branch> getSentenceBranches() {
 			return sentenceBranches;
 		}
-
-		// TODO - parsers can directly call select(), so use of this is
-		// essentially optional (use iff post-match collation logic is required)
-		List<Measure> outputs = new ArrayList<>();
-
-		XpathMatches xpathMatches = null;
 
 		Multimap<Measure.Token, List<Measure>> matchesByToken = new Multimap<>();
 
@@ -262,14 +238,8 @@ public class LayerParser {
 			return measureMatcher;
 		}
 
-		public Measure nextXpathMatch(String xpath, Token token) {
-			XpathMatches matches = ensureMatches(xpath);
-			if (matches.itr.hasNext()) {
-				DomNode node = matches.itr.next();
-				return Measure.fromNode(node, token);
-			} else {
-				return null;
-			}
+		public XpathMatcher xpathMatcher() {
+			return xpathMatcher;
 		}
 
 		public DomNode node() {
@@ -288,14 +258,6 @@ public class LayerParser {
 				Ax.ntrim(Ax.trim(inputContent().toString(), 50)), location,
 				Ax.ntrim(Ax.trim(location.containingNode.toString(), 50)), matches);
 			// @formatter:on
-		}
-
-		private XpathMatches ensureMatches(String xpath) {
-			if (xpathMatches == null
-					|| !Objects.equals(xpathMatches.xpath, xpath)) {
-				xpathMatches = new XpathMatches(xpath);
-			}
-			return xpathMatches;
 		}
 
 		void onBeforeTokenMatch() {
@@ -388,19 +350,6 @@ public class LayerParser {
 			}
 		}
 
-		class XpathMatches {
-			String xpath;
-
-			Iterator<DomNode> itr;
-
-			XpathMatches(String xpath) {
-				this.xpath = xpath;
-				DomNode node = input.start.containingNode;
-				List<DomNode> nodes = node.xpath(xpath).nodes();
-				itr = nodes.iterator();
-			}
-		}
-
 		Measure match(Location location, BranchToken token) {
 			Location restoreTo = this.location;
 			try {
@@ -409,6 +358,20 @@ public class LayerParser {
 			} finally {
 				this.location = restoreTo;
 			}
+		}
+	}
+
+	public Stream<Measure> getMatches() {
+		return getSentences().stream().flatMap(b -> b.toResult().measures());
+	}
+
+	public ParserResults getParserResults() {
+		return new ParserResults();
+	}
+
+	public class ParserResults {
+		public Stream<Measure> getMatches() {
+			return LayerParser.this.getMatches();
 		}
 	}
 }

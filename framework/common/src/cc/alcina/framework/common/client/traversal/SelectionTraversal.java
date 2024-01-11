@@ -693,7 +693,7 @@ public class SelectionTraversal
 			}
 			try {
 				beforeSelectionProcessed.publish(selection);
-				((Layer) layer).process(selection);
+				layer.process(selection);
 			} catch (Exception e) {
 				selectionExceptions.put(selection, e);
 				selection.processNode().onException(e);
@@ -701,6 +701,8 @@ public class SelectionTraversal
 						.publish(new SelectionException(selection, e));
 				logger.warn(Ax.format("Selection exception :: %s",
 						Ax.trimForLogging(selection)), e);
+			} finally {
+				layer.onAfterProcess(selection);
 			}
 		} finally {
 			exitSelectionContext(selection);

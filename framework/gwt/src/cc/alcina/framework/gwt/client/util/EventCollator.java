@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.util;
 
+import java.util.function.Consumer;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
@@ -31,7 +33,7 @@ public class EventCollator<T> {
 					firstEventOccurred = 0;
 				}
 				try {
-					action.run();
+					action.accept(EventCollator.this);
 				} catch (Throwable t) {
 					t.printStackTrace();
 				}
@@ -47,7 +49,7 @@ public class EventCollator<T> {
 
 	private final long waitToPerformAction;
 
-	private final Runnable action;
+	private final Consumer<EventCollator<T>> action;
 
 	private final TimerWrapperProvider timerWrapperProvider;
 
@@ -55,12 +57,19 @@ public class EventCollator<T> {
 
 	private TimerWrapper timer = null;
 
-	public EventCollator(long waitToPerformAction, Runnable action) {
+	public EventCollator(long waitToPerformAction, Runnable runnable) {
+		this(waitToPerformAction, collator -> runnable.run(),
+				Registry.impl(TimerWrapperProvider.class));
+	}
+
+	public EventCollator(long waitToPerformAction,
+			Consumer<EventCollator<T>> action) {
 		this(waitToPerformAction, action,
 				Registry.impl(TimerWrapperProvider.class));
 	}
 
-	public EventCollator(long waitToPerformAction, Runnable action,
+	public EventCollator(long waitToPerformAction,
+			Consumer<EventCollator<T>> action,
 			TimerWrapperProvider timerWrapperProvider) {
 		this.waitToPerformAction = waitToPerformAction;
 		this.action = action;

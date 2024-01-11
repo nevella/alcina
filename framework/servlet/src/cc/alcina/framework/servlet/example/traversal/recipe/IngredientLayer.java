@@ -18,8 +18,7 @@ class IngredientLayer extends Layer<IngredientsLayer.RawIngredientSelection> {
 	@Override
 	public void process(IngredientsLayer.RawIngredientSelection selection)
 			throws Exception {
-		ParserPeer parserPeer = new ParserPeer(
-				state.traversalState.getTraversal());
+		ParserPeer parserPeer = new ParserPeer(state.getTraversal());
 		LayerParser layerParser = new LayerParser(selection, parserPeer);
 		layerParser.parse();
 		layerParser.getSentences().stream()

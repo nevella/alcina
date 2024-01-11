@@ -35,7 +35,9 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
@@ -221,16 +223,24 @@ public class JobContext {
 		String fixedTemplate = template.contains("{}")
 				? template = template.replace("{}", "%s")
 				: template;
+		String message = Ax.format(fixedTemplate, args);
 		if (has()) {
-			get().maybeEnqueue(() -> get().getJob()
-					.setStatusMessage(Ax.format(fixedTemplate, args)));
-			LoggerFactory.getLogger(JobContext.class).info("status message: {}",
-					Ax.format(fixedTemplate, args));
+			get().maybeEnqueue(() -> get().getJob().setStatusMessage(message));
+			get().fireDebounced(() -> LoggerFactory.getLogger(JobContext.class)
+					.info("status message: {}", message));
 		} else {
-			LoggerFactory.getLogger(JobContext.class).info(
-					"(no-job) status message: {}",
-					Ax.format(fixedTemplate, args));
+			LoggerFactory.getLogger(JobContext.class)
+					.info("(no-job) status message: {}", message);
 		}
+	}
+
+	private EventCollator<Runnable> debouncer = new EventCollator<Runnable>(10,
+			collator -> AlcinaChildRunnable
+					.runInTransaction(() -> collator.getLastObject().run()))
+							.withMaxDelayFromFirstEvent(1000);
+
+	private void fireDebounced(Runnable runnable) {
+		debouncer.eventOccurred(runnable);
 	}
 
 	public static void warn(String template, Exception ex) {

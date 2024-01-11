@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 
-public abstract class LayerParserPeer {
+public class LayerParserPeer {
 	protected SelectionTraversal traversal;
 
 	protected Layer layer;
@@ -21,9 +21,11 @@ public abstract class LayerParserPeer {
 
 	protected LayerParser parser;
 
-	public LayerParserPeer(SelectionTraversal traversal) {
+	public LayerParserPeer(SelectionTraversal traversal,
+			BranchToken... tokens) {
 		this.traversal = traversal;
 		this.layer = traversal.currentLayer();
+		add(tokens);
 	}
 
 	protected void add(BranchToken... tokens) {

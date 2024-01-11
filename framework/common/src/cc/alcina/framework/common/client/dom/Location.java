@@ -158,7 +158,7 @@ public class Location implements Comparable<Location> {
 
 	@Override
 	public int hashCode() {
-		return treeIndex ^ index;
+		return treeIndex ^ index ^ (after?1:0);
 	}
 
 	public int indexInNode() {

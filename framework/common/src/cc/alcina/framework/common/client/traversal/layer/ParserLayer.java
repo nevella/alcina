@@ -2,17 +2,27 @@ package cc.alcina.framework.common.client.traversal.layer;
 
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserResults;
 
-public abstract class ParserLayer<S extends Selection> extends Layer<S> {
-	protected void onBeforeDetach(LayerParser layerParser) {
-	}
+/**
+ * This class requires that the generated selection(s) derive all needed info
+ * from the DOM on construction, since the DOM references will be removed
+ * 
+ * Use this class when traversing a website, for single-document multiple-layer
+ * parsing generally don't since measures would be reused after dom detach
+ */
+public abstract class ParserLayer<S extends MeasureSelection> extends Layer<S> {
+	protected abstract LayerParserPeer createParserPeer(S selection);
 
-	protected void parse(MeasureSelection selection, LayerParserPeer peer) {
-		LayerParser layerParser = new LayerParser(selection, peer);
+	@Override
+	public void process(S selection) throws Exception {
+		LayerParser layerParser = new LayerParser(selection,
+				createParserPeer(selection));
 		layerParser.parse();
-		layerParser.selectMatches();
-		onBeforeDetach(layerParser);
-		// remove dom document refs (allow gc)
+		processParserResults(selection, layerParser.getParserResults());
 		layerParser.detachMeasures();
 	}
+
+	protected abstract void processParserResults(S selection,
+			ParserResults parserResults);
 }
