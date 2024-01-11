@@ -99,7 +99,7 @@ public class LayerParser {
 
 	public void selectMatches() {
 		parserState.matches.stream()
-				.map(measure -> ((MatchingToken) measure.token)
+				.map(measure -> ((BranchToken) measure.token)
 						.select(parserState, measure))
 				.filter(Objects::nonNull).forEach(parserPeer.layer::select);
 	}
@@ -137,7 +137,7 @@ public class LayerParser {
 
 		Location location;
 
-		Measure match(MatchingToken token) {
+		Measure match(BranchToken token) {
 			boolean atEndBoundary = forwardsTraversalOrder ? location.after
 					: !location.after;
 			// text traversal is only at start location
@@ -205,32 +205,6 @@ public class LayerParser {
 
 		public <C extends CustomState> C customState() {
 			return (C) customState;
-		}
-
-		public void emitUnmatchedSegmentsAs(Token token) {
-			Location start = input.start;
-			Location end = null;
-			int matchesIdx = 0;
-			while (start.isBefore(input.end)) {
-				if (matchesIdx == matches.size()) {
-					end = input.end;
-				} else {
-					end = matches.get(matchesIdx).start;
-				}
-				Measure segment = input.subMeasure(start.index, end.index,
-						token, false);
-				if (segment.provideIsPoint()) {
-					// empty
-				} else {
-					outputs.add(segment);
-				}
-				if (matchesIdx == matches.size()) {
-					start = input.end;
-				} else {
-					start = matches.get(matchesIdx).end;
-					matchesIdx++;
-				}
-			}
 		}
 
 		public DocumentSelection getDocument() {
@@ -343,42 +317,11 @@ public class LayerParser {
 							RelativeDirection.PREVIOUS_DOMNODE_START);
 			ParserEnvironment env = new ParserEnvironment();
 			parserPeer.parser = LayerParser.this;
-			if (parserPeer.isUseBranchingParser()) {
-				new BranchingParser(LayerParser.this).parse(env);
-			} else {
-				linearParse(env);
-			}
+			new BranchingParser(LayerParser.this).parse(env);
 			parserPeer.onSequenceComplete(parserState);
 		}
 
-		void linearParse(ParserEnvironment env) {
-			while (location != null && !env.afterTraversalBoundary.get()) {
-				onBeforeTokenMatch();
-				if (parserPeer.filter == null
-						|| parserPeer.filter.test(location)) {
-					for (MatchingToken token : parserPeer.tokens) {
-						Measure measure = token.match(parserState);
-						if (measure != null) {
-							if (env.isBetterMatch.test(measure)) {
-								bestMatch = measure;
-							}
-						}
-					}
-				}
-				if (bestMatch != null) {
-					bestMatch.addToParent();
-					matches.add(bestMatch);
-					matchesByToken.add(bestMatch.token, bestMatch);
-					location = env.successorFollowingMatch.apply(bestMatch);
-				} else {
-					location = env.successorFollowingNoMatch.get(null);
-				}
-			}
-		}
-
 		class ParserEnvironment {
-			boolean traverseUntilFound;
-
 			Predicate<Measure> isBetterMatch;
 
 			Function<Measure, Location> successorFollowingMatch;
@@ -410,47 +353,30 @@ public class LayerParser {
 			}
 
 			ParserEnvironment() {
-				List<MatchingToken> traversalTokens = parserPeer.tokens.stream()
+				List<BranchToken> traversalTokens = parserPeer.tokens.stream()
 						.filter(t -> t instanceof NodeTraversalToken)
 						.collect(Collectors.toList());
 				Preconditions.checkState(traversalTokens.isEmpty()
 						|| traversalTokens.size() == parserPeer.tokens.size());
-				// FIXME - st.p - tokens should cache match
-				traverseUntilFound = traversalTokens.size() > 0
-						|| parserPeer instanceof BranchingParserPeer;
-				Preconditions.checkState(
-						traverseUntilFound || forwardsTraversalOrder);
 				isBetterMatch = forwardsTraversalOrder
 						? measure -> bestMatch == null
 								|| bestMatch.start.isAfter(measure.start)
 						: measure -> bestMatch == null
 								|| bestMatch.end.isBefore(measure.end);
 				successorFollowingMatch = match -> {
-					// FIXME - if only a partial node match, advance to the end
-					// of
-					// the partial rather than to the next node
-					if (traverseUntilFound) {
-						if (forwardsTraversalOrder) {
-							// if a text node was matched but no text, the node
-							// is being matched as a whole, so exit
-							TextTraversal textTraversal = match.provideIsPoint()
-									? TextTraversal.EXIT_NODE
-									: TextTraversal.NO_CHANGE;
-							return match.end.relativeLocation(
-									RelativeDirection.NEXT_LOCATION,
-									textTraversal);
-						} else {
-							return match.start.relativeLocation(
-									RelativeDirection.PREVIOUS_LOCATION,
-									TextTraversal.TO_START_OF_NODE);
-						}
+					if (forwardsTraversalOrder) {
+						// if a text node was matched but only a point in the
+						// node (so no characters, just the node), the node
+						// is being matched as a whole, so exit
+						TextTraversal textTraversal = match.provideIsPoint()
+								? TextTraversal.EXIT_NODE
+								: TextTraversal.NO_CHANGE;
+						return match.end.relativeLocation(
+								RelativeDirection.NEXT_LOCATION, textTraversal);
 					} else {
-						if (forwardsTraversalOrder) {
-							return match.end.relativeLocation(
-									RelativeDirection.NEXT_LOCATION);
-						} else {
-							throw new UnsupportedOperationException();
-						}
+						return match.start.relativeLocation(
+								RelativeDirection.PREVIOUS_LOCATION,
+								TextTraversal.TO_START_OF_NODE);
 					}
 				};
 				successorFollowingNoMatch = new SuccessorFollowingNoMatch();

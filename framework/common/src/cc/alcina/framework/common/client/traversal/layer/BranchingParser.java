@@ -1,14 +1,12 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -22,6 +20,7 @@ import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState.ParserEnvironment;
+import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -80,7 +79,7 @@ public class BranchingParser {
 
 	ParserEnvironment env;
 
-	BranchingParserPeer peer;
+	LayerParserPeer peer;
 
 	LayerParser layerParser;
 
@@ -91,7 +90,7 @@ public class BranchingParser {
 	BranchingParser(LayerParser layerParser) {
 		this.layerParser = layerParser;
 		parserState = layerParser.parserState;
-		peer = (BranchingParserPeer) layerParser.parserPeer;
+		peer = (LayerParserPeer) layerParser.parserPeer;
 	}
 
 	List<Group> sentenceGroups;
@@ -165,79 +164,240 @@ public class BranchingParser {
 		}
 	}
 
-	public static class StructuredResult
-			implements Comparable<StructuredResult> {
-		public StructuredResult parent;
+	public static class Result implements Comparable<Result> {
+		public Result parent;
 
-		StructuredResult(Branch branch) {
-			this.branch = branch;
+		Map<BranchLocation, Entry> branchEntry = AlcinaCollections.newHashMap();
+
+		Map<Group, Integer> groupIndicies = AlcinaCollections.newHashMap();
+
+		Entry root;
+
+		Branch branch;
+
+		public class Entry {
+			public BranchLocation branchLocation;
+
+			Entry(BranchLocation branchLocation) {
+				this.branchLocation = branchLocation;
+			}
+
+			public Entry parent;
+
+			public List<Entry> children = new LinkedList<>();
+
+			List<Entry> children() {
+				return children;
+			}
+
+			public Measure match;
+
+			@Override
+			public String toString() {
+				return Ax.format("%s - %s children - %s", branchLocation,
+						children.size(), match);
+			}
+
+			public int depth() {
+				return branchLocation.depth();
+			}
+
+			public boolean isNegated() {
+				return branchLocation.group().negated;
+			}
 		}
 
-		public Branch branch;
+		public class BranchLocation {
+			List<LevelLocation> locations = new ArrayList<>();
 
-		List<StructuredResult> children = new ArrayList<>();
+			Group group() {
+				return Ax.last(locations).group;
+			}
 
-		static StructuredResult ensure(Branch branch,
-				Map<Branch, StructuredResult> lookup) {
-			return lookup.computeIfAbsent(branch, StructuredResult::new);
-		}
+			public int depth() {
+				return locations.size() - 1;
+			}
 
-		public void ensureParent(Map<Branch, StructuredResult> lookup) {
-			if (branch.parent != null) {
-				if (parent == null) {
-					parent = ensure(branch.parent, lookup);
+			class LevelLocation {
+				Group group;
+
+				int indexInGroup;
+
+				int repetitionIndex;
+
+				@Override
+				public int hashCode() {
+					return Objects.hash(group, indexInGroup, repetitionIndex);
 				}
-				parent.children.add(this);
+
+				LevelLocation(Branch branch, int repetitionIndexOffset) {
+					group = branch.group;
+					indexInGroup = branch.indexInGroup;
+					repetitionIndex = branch.repetitionIndex
+							+ repetitionIndexOffset;
+				}
+
+				@Override
+				public boolean equals(Object obj) {
+					if (obj instanceof LevelLocation) {
+						LevelLocation o = (LevelLocation) obj;
+						return Ax.equals(group, o.group, indexInGroup,
+								o.indexInGroup, repetitionIndex,
+								o.repetitionIndex);
+					} else {
+						return false;
+					}
+				}
+
+				@Override
+				public String toString() {
+					return Ax.format("[%s,%s,%s]", groupIndex(group),
+							repetitionIndex, indexInGroup);
+				}
+			}
+
+			int hash = 0;
+
+			BranchLocation(Branch branch, int repetitionIndexOffset) {
+				Branch cursor = branch;
+				while (cursor != null) {
+					locations.add(
+							new LevelLocation(cursor, repetitionIndexOffset));
+					repetitionIndexOffset = 0;
+					cursor = cursor.parent;
+				}
+				Collections.reverse(locations);
+			}
+
+			int groupIndex(Group group) {
+				return groupIndicies.computeIfAbsent(group,
+						g -> groupIndicies.size());
+			}
+
+			@Override
+			public int hashCode() {
+				if (hash == 0) {
+					hash = locations.hashCode();
+					if (hash == 0) {
+						hash = -1;
+					}
+				}
+				return hash;
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof BranchLocation) {
+					BranchLocation o = (BranchLocation) obj;
+					return locations.equals(o.locations);
+				} else {
+					return false;
+				}
+			}
+
+			@Override
+			public String toString() {
+				return locations.toString();
 			}
 		}
 
-		List<StructuredResult> getSortedChildren() {
-			return children.stream().sorted().collect(Collectors.toList());
+		Result(Branch branch) {
+			this.branch = branch;
+			populate();
+			stream().filter(r -> r.match == null).forEach(r -> {
+				if (r.children.isEmpty()) {
+					// zero-length anon group, ignore
+				} else {
+					Entry first = r.children.stream()
+							.filter(r2 -> r2.match != null).findFirst()
+							.orElse(null);
+					if (first == null) {
+						// TODO - repeated application of this process may work?
+					} else {
+						Entry last = r.children.stream()
+								.filter(r2 -> r2.match != null)
+								.reduce(Ax.last()).orElse(null);
+						Range range = Range.fromPossiblyReversedEndpoints(
+								first.match, last.match);
+						r.match = Measure.fromRange(range,
+								BranchToken.Standard.ANON);
+					}
+				}
+			});
 		}
 
-		class Measures {
-			Map<Group, Measure> groupMeasure = new LinkedHashMap<>();
-
-			DepthFirstTraversal<StructuredResult> traversal;
-
-			Stream<StructuredResult> stream;
-
-			Measures() {
-				Set<Group> visitedGroups = new LinkedHashSet<>();
-				traversal = new DepthFirstTraversal<>(StructuredResult.this,
-						StructuredResult::getSortedChildren);
-				traversal.stream().filter(r -> r.branch.match != null).forEach(
-						r -> groupMeasure.put(r.branch.group, r.branch.match));
-				traversal = new DepthFirstTraversal<>(StructuredResult.this,
-						StructuredResult::getSortedChildren);
-				stream = traversal.stream()
-						// the root will not have a matching measure
-						.skip(1)
-						//
-						.filter(r -> visitedGroups.add(r.branch.group));
+		void populate() {
+			Branch cursor = branch;
+			while (true) {
+				Entry entry = ensureEntry(cursor);
+				cursor = cursor.predecessor;
+				if (cursor == null) {
+					root = entry;
+					break;
+				}
 			}
 		}
 
-		public Stream<Measure> getTokenMeasures() {
-			Measures measures = new Measures();
-			return measures.stream
-					.map(r -> measures.groupMeasure.get(r.branch.group));
+		Entry ensureEntry0(Branch cursor, int repetitionIndexOffset) {
+			BranchLocation branchLocation = new BranchLocation(cursor,
+					repetitionIndexOffset);
+			return branchEntry.computeIfAbsent(branchLocation, Entry::new);
+		}
+
+		Entry ensureEntry(Branch cursor) {
+			Entry entry = ensureEntry0(cursor, 0);
+			if (cursor.match != null) {
+				// if cursor is at repetitionIndex zero, it will be a leaf, so
+				// the match applies to it,
+				// otherwise to the repetition index predecessor
+				if (cursor.repetitionIndex == 0) {
+					entry.match = cursor.match;
+				} else {
+					Entry matchRecipient = ensureEntry0(cursor, -1);
+					Preconditions.checkState(matchRecipient.match == null);
+					matchRecipient.match = cursor.match;
+				}
+			}
+			if (cursor.parent != null && entry.parent == null) {
+				entry.parent = ensureEntry0(cursor.parent, 0);
+				entry.parent.children.add(0, entry);
+			}
+			return entry;
+		}
+
+		public Stream<Entry> stream() {
+			return new DepthFirstTraversal<>(root, Entry::children).stream();
+		}
+
+		public Stream<Measure> measures() {
+			return stream().filter(e -> !e.isNegated() && e.match != null)
+					.map(e -> e.match);
+		}
+
+		public Measure measure(Token token) {
+			List<Measure> list = measures(token).collect(Collectors.toList());
+			Preconditions.checkState(list.size() < 2);
+			return Ax.first(list);
+		}
+
+		public Stream<Measure> measures(Token token) {
+			return measures().filter(m -> m.token == token);
 		}
 
 		public String toStructuredString() {
-			Measures measures = new Measures();
 			FormatBuilder builder = new FormatBuilder();
-			measures.stream.forEach(r -> {
+			stream().filter(r -> r.match != null).forEach(r -> {
 				builder.indent((r.depth() - 1) * 2);
-				Measure measure = measures.groupMeasure.get(r.branch.group);
-				builder.line("%s", measure);
+				Measure measure = r.match;
+				String negated = r.isNegated() ? "!" : "";
+				builder.line("%s%s", negated, measure);
 			});
 			return builder.toString();
 		}
 
 		int depth() {
 			int depth = 0;
-			StructuredResult cursor = this;
+			Result cursor = this;
 			while (cursor.parent != null) {
 				cursor = cursor.parent;
 				depth++;
@@ -246,7 +406,7 @@ public class BranchingParser {
 		}
 
 		@Override
-		public int compareTo(StructuredResult o) {
+		public int compareTo(Result o) {
 			Branch b1 = branch;
 			Branch b2 = o.branch;
 			Preconditions.checkArgument(b1.group == b2.group);
@@ -269,17 +429,8 @@ public class BranchingParser {
 		// immutable
 		public Branch parent;
 
-		public StructuredResult toStructuredResult() {
-			Branch cursor = this;
-			Map<Branch, StructuredResult> lookup = AlcinaCollections
-					.newHashMap();
-			StructuredResult result = null;
-			do {
-				result = StructuredResult.ensure(cursor, lookup);
-				result.ensureParent(lookup);
-				cursor = cursor.predecessor;
-			} while (cursor != null);
-			return result;
+		public Result toResult() {
+			return new Result(this);
 		}
 
 		Branch predecessor;
@@ -307,7 +458,7 @@ public class BranchingParser {
 			this.location = location;
 		}
 
-		BranchToken getMatchingToken() {
+		BranchToken getBranchToken() {
 			return group.token;
 		}
 
@@ -323,10 +474,7 @@ public class BranchingParser {
 
 		void onTokenMatched(Measure match) {
 			this.match = match;
-			logger.debug("Matched: {}", match);
-			if (match.toString().contains("DATE")) {
-				int debug = 3;
-			}
+			logger.debug("Matched: {}{}", group.negated ? "!" : "", match);
 			parent.onChildSatisfied(this);
 		}
 
@@ -377,13 +525,20 @@ public class BranchingParser {
 		public String toString() {
 			String leafMatch = match != null ? Ax.format(" %s", match) : "";
 			String dir = backtracking ? "<" : ">";
-			return Ax.format("%s %s [%s][%s]%s", dir, group, indexInGroup,
-					repetitionIndex, leafMatch);
+			return Ax.format("%s %s [%s][%s]%s", dir, group, repetitionIndex,
+					indexInGroup, leafMatch);
 		}
 
 		void enter() {
-			if (backtracking) {
-				int debug = 3;
+			if (backtracking && indexInGroup != 0) {
+				// always backtrack to the start of the group.
+				Branch cursor = this;
+				do {
+					cursor = cursor.predecessor;
+				} while (cursor.indexInGroup != 0 || cursor.group != group);
+				cursor.backtracking = true;
+				state.edgeBranches.add(cursor);
+				return;
 			}
 			if (!isComplete()) {
 				// try descent or token match
@@ -410,11 +565,16 @@ public class BranchingParser {
 								location);
 					}
 					if (group.negated) {
-						if (matchesLocation || match == null) {
+						if (matchesLocation) {
 							onTokenNotMatched();
 						} else {
+							Location end = match == null ? env.boundary
+									: match.start;
 							Location.Range range = new Location.Range(location,
-									match.start);
+									end);
+							// ensure end is the deepest node
+							range = range.toDeepestNodes();
+							range = new Location.Range(location, range.end);
 							Measure negatedMatch = Measure.fromRange(range,
 									group.token);
 							negatedMatch.setData(Measure.NEGATED_MATCH);
@@ -576,7 +736,6 @@ public class BranchingParser {
 			 * Location advancement is more complex with partial matches
 			 */
 			if (parserState.bestMatch != null) {
-				parserState.bestMatch.addToParent();
 				parserState.matches.add(parserState.bestMatch);
 				parserState.matchesByToken.add(parserState.bestMatch.token,
 						parserState.bestMatch);
@@ -586,13 +745,8 @@ public class BranchingParser {
 						.apply(parserState.bestMatch);
 				peer.onTokenMatched();
 			} else {
-				// FIXME - st.b - always true
-				if (env.traverseUntilFound) {
-					parserState.location = env.successorFollowingNoMatch
-							.get(state.nextLookaheadTokenMatch);
-				} else {
-					parserState.location = env.boundary;
-				}
+				parserState.location = env.successorFollowingNoMatch
+						.get(state.nextLookaheadTokenMatch);
 			}
 		}
 	}

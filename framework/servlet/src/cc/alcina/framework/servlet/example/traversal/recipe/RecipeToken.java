@@ -2,11 +2,11 @@ package cc.alcina.framework.servlet.example.traversal.recipe;
 
 import java.util.regex.Pattern;
 
+import cc.alcina.framework.common.client.traversal.layer.BranchToken;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
-import cc.alcina.framework.common.client.traversal.layer.MatchingToken;
 import cc.alcina.framework.common.client.traversal.layer.Measure;
 
-public enum RecipeToken implements MatchingToken {
+public enum RecipeToken implements BranchToken {
 	INGREDIENT {
 		@Override
 		public Measure match(ParserState state) {

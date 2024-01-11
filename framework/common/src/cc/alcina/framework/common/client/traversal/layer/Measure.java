@@ -1,10 +1,6 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
@@ -22,10 +18,10 @@ import cc.alcina.framework.common.client.util.IdCounter;
 /**
  * A Measure models a defined section of a {@link DomDocument} via one or more
  * containing {@Layer} instances, with additional semantic information (token)
- * and structure (children/parent).
  *
- * Measures form a tree structure, and are the model used for traversal and
- * modelling of documents.
+ * 
+ * Measures often have a containment relationship - and thus a tree structure,
+ * and are the model used for traversal and modelling of documents.
  *
  * 
  *
@@ -57,22 +53,12 @@ public class Measure extends Location.Range {
 	 */
 	private Object data;
 
-	private Measure parent;
-
-	private List<Measure> children = new ArrayList<>();
-
 	private Measure aliasedFrom;
 
 	public Measure(Location start, Location end, Token token) {
 		super(start, end);
 		Preconditions.checkNotNull(token);
 		this.token = token;
-	}
-
-	public void addToParent() {
-		if (parent != null) {
-			parent.children.add(this);
-		}
 	}
 
 	public Measure alias() {
@@ -84,15 +70,6 @@ public class Measure extends Location.Range {
 
 	public Selection asSelection(Selection parent) {
 		return new MeasureSelection(parent, this);
-	}
-
-	public Measure childMeasure(Token... tokens) {
-		return childMeasures(tokens).findFirst().orElse(null);
-	}
-
-	public Stream<Measure> childMeasures(Token... tokens) {
-		List<Token> list = Arrays.asList(tokens);
-		return children.stream().filter(m -> list.contains(m.token));
 	}
 
 	/**
@@ -127,10 +104,6 @@ public class Measure extends Location.Range {
 		return this.data;
 	}
 
-	public Measure getParent() {
-		return this.parent;
-	}
-
 	public void setData(Object data) {
 		this.data = data;
 	}
@@ -143,7 +116,6 @@ public class Measure extends Location.Range {
 				.createRelativeLocation(-(length() - end), true)
 				.toTextLocation(toTextLocations);
 		Measure subMeasure = new Measure(subStart, subEnd, token);
-		subMeasure.parent = this;
 		return subMeasure;
 	}
 

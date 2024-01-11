@@ -15,7 +15,7 @@ public abstract class LayerParserPeer {
 
 	protected Layer layer;
 
-	List<MatchingToken> tokens = new ArrayList<>();
+	List<BranchToken> tokens = new ArrayList<>();
 
 	protected Predicate<Location> filter = null;
 
@@ -26,14 +26,13 @@ public abstract class LayerParserPeer {
 		this.layer = traversal.currentLayer();
 	}
 
-	protected void add(MatchingToken... tokens) {
+	protected void add(BranchToken... tokens) {
 		Arrays.stream(tokens).forEach(this.tokens::add);
 	}
 
 	public void onSequenceComplete(ParserState inputState) {
 	}
 
-	public boolean isUseBranchingParser() {
-		return false;
+	public void onTokenMatched() {
 	}
 }

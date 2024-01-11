@@ -3,25 +3,75 @@ package cc.alcina.framework.common.client.traversal.layer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
+import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
+ * * A measure token augmented for use by the layer parser
+ * 
  * A BranchToken must either return non-null from getGroup() or override match()
  */
-public interface BranchToken extends MatchingToken, BranchGroupMember {
+public interface BranchToken extends Token, BranchGroupMember {
+	/*
+	 * By default non-text end boundary locations are ignored for this token
+	 * (when forwards traversing, that's after - when backwards traversing,
+	 * that's !after)
+	 */
+	default MatchesBoundary matchesBoundary() {
+		return MatchesBoundary.START;
+	}
+
+	public enum MatchesBoundary {
+		START, END, ANY
+	}
+
+	default Measure measure(Location start, Location end) {
+		return Measure.fromRange(new Range(start, end), this);
+	}
+
+	/*
+	 * Only used by single token parsers
+	 */
+	default Selection select(ParserState state, Measure measure) {
+		throw new UnsupportedOperationException();
+	}
+
+	public static abstract class SingleMatch implements BranchToken {
+		private Optional<DomNode> match;
+
+		@Override
+		public Measure match(ParserState state) {
+			if (match == null) {
+				DomNode document = state.getDocument().get().containingNode();
+				this.match = getMatch(document);
+			}
+			if (match.isPresent() && state.contains(match.get().asLocation())) {
+				return Measure.fromNode(match.get(), this);
+			} else {
+				return null;
+			}
+		}
+
+		protected abstract Optional<DomNode> getMatch(DomNode document);
+	}
+
 	default Group getGroup() {
 		return null;
 	}
 
-	@Override
 	default Measure match(ParserState state) {
 		throw new UnsupportedOperationException("See BranchToken constraints");
 	}
@@ -54,6 +104,7 @@ public interface BranchToken extends MatchingToken, BranchGroupMember {
 			result.order = order;
 			result.token = token;
 			result.quantifier = quantifier;
+			result.negated = negated;
 			result.groups = groups.stream().map(Group::clone)
 					.collect(Collectors.toList());
 			return result;
@@ -78,10 +129,14 @@ public interface BranchToken extends MatchingToken, BranchGroupMember {
 
 		@Override
 		public String toString() {
-			if (groups.isEmpty()) {
-				return token.toString();
-			}
 			StringBuilder builder = new StringBuilder();
+			if (groups.isEmpty()) {
+				if (negated) {
+					builder.append("!");
+				}
+				builder.append(token.toString());
+				return builder.toString();
+			}
 			builder.append('(');
 			if (token != null && groups.size() > 0
 					&& (groups.size() > 1 || groups.get(0).token != token)) {
@@ -179,8 +234,11 @@ public interface BranchToken extends MatchingToken, BranchGroupMember {
 			return new Group(token);
 		}
 
+		// this negates the contained primitive group
 		public Group withNegated() {
-			this.negated = true;
+			Preconditions.checkState(
+					groups.size() == 1 && groups.get(0).isPrimitive());
+			groups.get(0).negated = true;
 			return this;
 		}
 

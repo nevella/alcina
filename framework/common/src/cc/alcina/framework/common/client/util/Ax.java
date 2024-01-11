@@ -293,4 +293,8 @@ public class Ax {
 			listIterator.remove();
 		}
 	}
+
+	public static boolean equals(Object... objects) {
+		return CommonUtils.equals(objects);
+	}
 }

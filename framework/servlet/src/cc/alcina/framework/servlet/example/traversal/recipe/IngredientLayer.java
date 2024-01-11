@@ -8,9 +8,9 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
-import cc.alcina.framework.common.client.traversal.layer.BranchingParserPeer;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
+import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
 import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 
@@ -38,15 +38,10 @@ class IngredientLayer extends Layer<IngredientsLayer.RawIngredientSelection> {
 		}
 	}
 
-	static class ParserPeer extends BranchingParserPeer {
+	static class ParserPeer extends LayerParserPeer {
 		public ParserPeer(SelectionTraversal selectionTraversal) {
 			super(selectionTraversal);
 			add(Token.INGREDIENT);
-		}
-
-		@Override
-		public boolean isUseBranchingParser() {
-			return true;
 		}
 	}
 

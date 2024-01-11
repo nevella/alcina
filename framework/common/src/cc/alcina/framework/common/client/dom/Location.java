@@ -38,14 +38,15 @@ mutation of parent.children.offset (only required if the child is not at the end
 'After' is computable via location.parent.children lookup - if 'containingNode' == location.parent.children[offset].node, then
  the location is at the start of the node, otherwise at the end (FIXME - doc - show a worked example)
 
- Note that because indicies in a text node are controlled by the index (not treeindex) field, 'before' and 'after' are identical, 
- so Locations in a text node created with after == true and normalised to after == false
+ Note that because indicies in a text node are controlled by the index (not treeindex) field, 'before' and 'after' is not a 
+ useful distinction, so Locations in a text node created with after == true and normalised to after == false, and 
+ the serialized (tostring) form of a text location has no before/after info
 
 
 (bf1) El1                                                                                   (af1)
 	(bf2)  E2                                           (af2)  (bf4) E4 (af4)  (bf5) E5 (af5)
-			(bf3.0) T3:'a'                                (af3)
-					  (b/af3.1)'b' (b/af3.2)
+			(bf3.0) T3:'a'                      (af3)
+					  (3.1)'b' (3.2)
 
 Traversal is the 'tree' of bf/afs (before/after) shown above. before/after is ire
 
@@ -218,10 +219,11 @@ public class Location implements Comparable<Location> {
 
 	@Override
 	public String toString() {
-		String nodeName = containingNode == null ? ""
-				: Ax.format(" <%s>", containingNode.name());
-		String dir = after ? ">" : "<";
-		return Ax.format("%s [%s,%s]%s", dir, treeIndex, index, nodeName);
+		String nodeName = containingNode.isText()
+				? Ax.format("'%s'", Ax.trim(containingNode.textContent(), 25))
+				: Ax.format("<%s>", containingNode.name());
+		String dir = containingNode.isText() ? "" : after ? ",>" : ",<";
+		return Ax.format("%s,%s%s %s", treeIndex, index, dir, nodeName);
 	}
 
 	// Feature group class for content access
@@ -379,19 +381,19 @@ public class Location implements Comparable<Location> {
 		 * Preserves start.index and end.index, but changes treeindicies to that
 		 * of the lowest/highest node with those indicies
 		 */
-		public Range toDeepestNode() {
+		public Range toDeepestNodes() {
 			List<DomNode> startContainers = start.locationContext
-					.getContainingNodes(start.index, false);
+					.getContainingNodes(start.index, start.after);
 			List<DomNode> endContainers = start.locationContext
-					.getContainingNodes(end.index, true);
+					.getContainingNodes(end.index, end.after);
 			DomNode minimal = startContainers.stream()
 					.filter(endContainers::contains).reduce(Ax.last()).get();
 			Location minimalLocation = minimal.asLocation();
 			return new Range(
 					minimalLocation.createRelativeLocation(
-							start.index - minimalLocation.index, false),
+							start.index - minimalLocation.index, start.after),
 					minimalLocation.createRelativeLocation(
-							end.index - minimalLocation.index, true));
+							end.index - minimalLocation.index, end.after));
 		}
 
 		@Property.Not

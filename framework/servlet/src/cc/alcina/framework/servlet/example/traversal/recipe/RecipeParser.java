@@ -60,9 +60,9 @@ public class RecipeParser {
 		List<IngredientSelection> ingredients = traversal
 				.getSelections(IngredientLayer.IngredientSelection.class);
 		Ax.out("%s ingredients", ingredients.size());
-		ingredients.forEach(i -> Ax.out(
-				"==========================================\n%s\n",
-				i.getBranch().toStructuredResult().toStructuredString()));
+		ingredients.forEach(
+				i -> Ax.out("==========================================\n%s\n",
+						i.getBranch().toResult().toStructuredString()));
 	}
 
 	private void parse(String text) {
