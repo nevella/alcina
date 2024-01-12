@@ -63,7 +63,7 @@ class LayerSelections extends Model.All {
 				View view = selection.view();
 				pathSegment = view.getPathSegment(selection);
 				text = view.getText(selection);
-				text = Ax.ntrim(Ax.trim(text, 100));
+				text = text == null ? "[gc]" : Ax.ntrim(Ax.trim(text, 100));
 				selectionType = Page.traversalPlace().selectionType(selection);
 			}
 

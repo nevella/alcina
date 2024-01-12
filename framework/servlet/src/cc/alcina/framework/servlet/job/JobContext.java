@@ -234,10 +234,12 @@ public class JobContext {
 		}
 	}
 
-	private EventCollator<Runnable> debouncer = new EventCollator<Runnable>(10,
+	private EventCollator<Runnable> debouncer = new EventCollator<Runnable>(
+			1000,
 			collator -> AlcinaChildRunnable
 					.runInTransaction(() -> collator.getLastObject().run()))
-							.withMaxDelayFromFirstEvent(1000);
+							.withMaxDelayFromFirstEvent(100)
+							.withMaxDelayFromFirstCollatedEvent(1000);
 
 	private void fireDebounced(Runnable runnable) {
 		debouncer.eventOccurred(runnable);

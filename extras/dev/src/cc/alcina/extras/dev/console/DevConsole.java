@@ -13,6 +13,7 @@ import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -224,6 +225,10 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	CountDownLatch currentCommandLatch;
 
+	protected String getLogFilePrefix() {
+		return getClass().getSimpleName().toLowerCase();
+	}
+
 	public DevConsole(String[] args) {
 		if (args.length == 0) {
 			String propertyArgs = System.getProperty("DevConsole.args");
@@ -231,8 +236,17 @@ public abstract class DevConsole implements ClipboardOwner {
 				args = propertyArgs.split(";");
 			}
 		}
+		File consoleOutputFile = new File(
+				Ax.format("/tmp/log/console/%s.log", getLogFilePrefix()));
+		consoleOutputFile.delete();
+		consoleOutputFile.getParentFile().mkdirs();
 		String loggingPropertiesPath = null;
 		try {
+			consoleOutputFile.createNewFile();
+			devOut.s2 = new PrintStream(new FileOutputStream(consoleOutputFile),
+					true);
+			devErr.s2 = new PrintStream(new FileOutputStream(consoleOutputFile),
+					true);
 			InputStream s1 = DevConsole.class
 					.getResourceAsStream("logging.properties");
 			// will be a bufferedinputstream wrapping a fileinputstream

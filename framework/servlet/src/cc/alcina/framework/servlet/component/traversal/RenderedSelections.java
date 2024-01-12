@@ -25,13 +25,16 @@ class RenderedSelections extends Model.Fields {
 		this.page = page;
 		this.heading = new Heading(input ? "Input" : "Output");
 		String markup = page.history.traversal.getDocumentMarkup(input);
-		DomDocument doc = Io.read().string(markup).asDomDocument();
-		doc.stream().filter(n -> n.tagIsOneOf("meta", "link", "style", "head"))
-				.collect(Collectors.toList())
-				.forEach(DomNode::removeFromParent);
-		DomNode body = doc.html().body();
-		markup = body != null ? body.fullToString()
-				: doc.getDocumentElementNode().fullToString();
-		htmlModel = new HtmlModel(markup);
+		if (markup != null) {
+			DomDocument doc = Io.read().string(markup).asDomDocument();
+			doc.stream()
+					.filter(n -> n.tagIsOneOf("meta", "link", "style", "head"))
+					.collect(Collectors.toList())
+					.forEach(DomNode::removeFromParent);
+			DomNode body = doc.html().body();
+			markup = body != null ? body.fullToString()
+					: doc.getDocumentElementNode().fullToString();
+			htmlModel = new HtmlModel(markup);
+		}
 	}
 }

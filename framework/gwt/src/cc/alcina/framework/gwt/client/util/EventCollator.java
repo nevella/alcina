@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.client.util;
 
 import java.util.function.Consumer;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
@@ -18,19 +20,25 @@ public class EventCollator<T> {
 
 	private T lastObject;
 
+	private int collationActionsInvoked;
+
 	private Runnable checkCallback = new Runnable() {
 		@Override
 		public void run() {
 			long time = System.currentTimeMillis();
+			long maxDelay = collationActionsInvoked == 0
+					? maxDelayFromFirstEvent
+					: maxDelayFromFirstCollatedEvent;
 			if (time - lastEventOccurred >= waitToPerformAction
-					|| (maxDelayFromFirstEvent != 0 && (time
-							- firstEventOccurred >= maxDelayFromFirstEvent))) {
+					|| (maxDelay != 0
+							&& (time - firstEventOccurred >= maxDelay))) {
 				synchronized (this) {
 					if (timer != null) {
 						timer.cancel();
 						timer = null;
 					}
 					firstEventOccurred = 0;
+					collationActionsInvoked++;
 				}
 				try {
 					action.accept(EventCollator.this);
@@ -53,7 +61,13 @@ public class EventCollator<T> {
 
 	private final TimerWrapperProvider timerWrapperProvider;
 
+	// the delay before the (first) collation action call from the first event
+	// received by this collator
 	private long maxDelayFromFirstEvent;
+
+	// the delay before the collation action call from the first event received
+	// in the current collation. defaults to maxDelayFromFirstEvent
+	private long maxDelayFromFirstCollatedEvent;
 
 	private TimerWrapper timer = null;
 
@@ -117,6 +131,17 @@ public class EventCollator<T> {
 	public EventCollator
 			withMaxDelayFromFirstEvent(long maxDelayFromFirstEvent) {
 		this.maxDelayFromFirstEvent = maxDelayFromFirstEvent;
+		if (this.maxDelayFromFirstCollatedEvent == 0) {
+			this.maxDelayFromFirstCollatedEvent = maxDelayFromFirstEvent;
+		}
+		return this;
+	}
+
+	public EventCollator withMaxDelayFromFirstCollatedEvent(
+			long maxDelayFromFirstCollatedEvent) {
+		Preconditions.checkArgument(
+				maxDelayFromFirstCollatedEvent >= maxDelayFromFirstEvent);
+		this.maxDelayFromFirstCollatedEvent = maxDelayFromFirstCollatedEvent;
 		return this;
 	}
 }
