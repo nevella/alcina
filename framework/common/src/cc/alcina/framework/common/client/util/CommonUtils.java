@@ -125,16 +125,6 @@ public class CommonUtils {
 					Void.class)
 			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
-	public static class Paths {
-		public static String ensureSlashTerminated(String path) {
-			return path.endsWith("/") ? path : path + "/";
-		}
-
-		public static String sanitizeForUnixPaths(String fileName) {
-			return fileName.replaceAll("[:]", "").replaceAll("[ ]", "_");
-		}
-	}
-
 	public static void addIfNotNull(List l, Object o) {
 		if (o != null) {
 			l.add(o);
@@ -2175,12 +2165,26 @@ public class CommonUtils {
 		String generate();
 	}
 
+	public static class Paths {
+		public static String ensureSlashTerminated(String path) {
+			return path.endsWith("/") ? path : path + "/";
+		}
+
+		public static String sanitizeForUnixPaths(String fileName) {
+			return fileName.replaceAll("[:]", "").replaceAll("[ ]", "_");
+		}
+	}
+
 	public static class ThreeWaySetResult<T> {
 		public Set<T> firstOnly;
 
 		public Set<T> secondOnly;
 
 		public Set<T> intersection;
+
+		public Stream<T> delta() {
+			return Stream.concat(firstOnly.stream(), secondOnly.stream());
+		}
 
 		public boolean isEmpty() {
 			return firstOnly.isEmpty() && secondOnly.isEmpty()

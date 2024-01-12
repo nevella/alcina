@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -22,12 +24,12 @@ public class CsvCols
 		return new CsvCols(ResourceUtilities.read(file));
 	}
 
+	public static CsvCols parse(String xsv, boolean tsv) {
+		return new CsvCols(CsvUtils.parseCsv(xsv, tsv));
+	}
+
 	public static CsvCols parseCsv(String csv) {
 		return new CsvCols(csv);
-	}
-	
-	public static CsvCols parse(String xsv,boolean tsv) {
-		return new CsvCols(CsvUtils.parseCsv(xsv, tsv));
 	}
 
 	public static CsvCols parseTsv(String tsv) {
@@ -62,8 +64,10 @@ public class CsvCols
 	}
 
 	public void addColumn(String string) {
+		Preconditions.checkState(!colLookup.containsKey(string));
 		colLookup.put(string, colLookup.size());
 		colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
+		grid.forEach(list -> list.add(""));
 	}
 
 	public CsvCols.CsvRow addRow() {
@@ -135,6 +139,10 @@ public class CsvCols
 		return CsvUtils.headerValuesToCsv(
 				colLookup.keySet().stream().collect(Collectors.toList()),
 				grid.subList(1, grid.size()), quoteHeaders).toString();
+	}
+
+	public void write(String path) {
+		ResourceUtilities.write(toCsv(), path);
 	}
 
 	public static class CsvRow {
@@ -212,9 +220,5 @@ public class CsvCols
 			}
 			return -1;
 		}
-	}
-
-	public void write(String path) {
-		ResourceUtilities.write(toCsv(), path);
 	}
 }
