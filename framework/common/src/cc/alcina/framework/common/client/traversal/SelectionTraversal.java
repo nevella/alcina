@@ -578,7 +578,6 @@ public class SelectionTraversal
 			while (cursor != null) {
 				String pathSegment = cursor.getPathSegment();
 				Preconditions.checkState(Ax.notBlank(pathSegment));
-				Ax.out("ps: %s", pathSegment);
 				selectionTypeSegments.add(cursor.getClass(), pathSegment);
 				cursor = cursor.parentSelection();
 			}

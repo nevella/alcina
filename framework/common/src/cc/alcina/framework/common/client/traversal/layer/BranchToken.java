@@ -3,19 +3,18 @@ package cc.alcina.framework.common.client.traversal.layer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
@@ -49,7 +48,9 @@ public interface BranchToken extends Token, BranchGroupMember {
 	}
 
 	default Measure match(ParserState state) {
-		throw new UnsupportedOperationException("See BranchToken constraints");
+		throw new UnsupportedOperationException(
+				Ax.format("%s - %s - see BranchToken constraints",
+						NestedName.get(this), toString()));
 	}
 
 	/*
