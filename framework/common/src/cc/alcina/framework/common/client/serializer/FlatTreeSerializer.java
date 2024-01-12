@@ -1464,7 +1464,7 @@ public class FlatTreeSerializer {
 					&& value.getClass().getComponentType() == byte.class) {
 				return Base64.encodeBytes((byte[]) value);
 			} else if (value instanceof Class) {
-				return ((Class) value).getCanonicalName();
+				return ((Class) value).getName();
 			} else if (value instanceof BasePlace) {
 				return ((BasePlace) value).toTokenString();
 			} else {

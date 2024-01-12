@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserResults;
 
 /**
@@ -10,6 +9,7 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserResul
  * 
  * Use this class when traversing a website, for single-document multiple-layer
  * parsing generally don't since measures would be reused after dom detach
+ * 
  */
 public abstract class ParserLayer<S extends MeasureSelection> extends Layer<S> {
 	protected abstract LayerParserPeer createParserPeer(S selection);

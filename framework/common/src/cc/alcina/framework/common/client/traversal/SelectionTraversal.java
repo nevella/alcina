@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -571,28 +572,24 @@ public class SelectionTraversal
 
 	public SelectionFilter provideExceptionSelectionFilter() {
 		SelectionFilter filter = new SelectionFilter();
-		// FIXME - switch to layers
+		Multimap<Class<? extends Selection>, List<String>> selectionTypeSegments = new Multimap<>();
+		selectionExceptions.keySet().forEach(selection -> {
+			Selection cursor = selection;
+			while (cursor != null) {
+				String pathSegment = cursor.getPathSegment();
+				Preconditions.checkState(Ax.notBlank(pathSegment));
+				Ax.out("ps: %s", pathSegment);
+				selectionTypeSegments.add(cursor.getClass(), pathSegment);
+				cursor = cursor.parentSelection();
+			}
+		});
+		selectionTypeSegments.forEach((k, v) -> {
+			String pathSegmentRegex = Ax.format("^(%s)$",
+					v.stream().distinct().map(CommonUtils::escapeRegex)
+							.collect(Collectors.joining("|")));
+			filter.addLayerFilter(k, pathSegmentRegex);
+		});
 		return filter;
-		// }
-		// Multimap<Layer, List<String>> generationSegments = new
-		// Multimap<>();
-		// selectionExceptions.keySet().forEach(selection -> {
-		// Selection cursor = selection;
-		// while (cursor != null) {
-		// Layer generation = computeSubmittedLayer(cursor);
-		// String pathSegment = cursor.getPathSegment();
-		// Preconditions.checkState(Ax.notBlank(pathSegment));
-		// generationSegments.add(generation, pathSegment);
-		// cursor = cursor.parentSelection();
-		// }
-		// });
-		// generationSegments.forEach((k, v) -> {
-		// String pathSegmentRegex = Ax.format("^(%s)$",
-		// v.stream().distinct().map(CommonUtils::escapeRegex)
-		// .collect(Collectors.joining("|")));
-		// filter.addLayerFilter(k.toString(), pathSegmentRegex);
-		// });
-		// return filter;
 	}
 
 	public void select(Selection selection) {

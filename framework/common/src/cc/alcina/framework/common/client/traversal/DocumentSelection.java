@@ -16,7 +16,7 @@ public abstract class DocumentSelection extends MeasureSelection {
 
 	public DocumentSelection(AbstractUrlSelection parent,
 			DocumentSelection.Loader loader) {
-		super(parent, null);
+		super(parent, null, Ax.format("url2doc:%s", parent.getPathSegment()));
 		this.loader = loader;
 	}
 
