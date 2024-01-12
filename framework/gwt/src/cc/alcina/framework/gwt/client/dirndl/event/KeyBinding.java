@@ -72,8 +72,8 @@ public @interface KeyBinding {
 					Set<Modifier> modifiers, String key) {
 				if (contexts.isEmpty() || contexts.stream()
 						.anyMatch(ctx -> contexts.contains(ctx))) {
-					return modifiers.equals(this.modifiers)
-							&& key.equalsIgnoreCase(binding.key());
+					return key.equalsIgnoreCase(binding.key())
+							&& modifiers.equals(this.modifiers);
 				} else {
 					return false;
 				}

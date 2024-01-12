@@ -146,6 +146,7 @@ public interface Feature extends Registration.AllSubtypes {
 		@interface Refs {
 			Tag.Ref[] value();
 		}
+
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
