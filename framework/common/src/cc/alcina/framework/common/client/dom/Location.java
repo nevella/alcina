@@ -226,6 +226,11 @@ public class Location implements Comparable<Location> {
 		return Ax.format("%s,%s%s %s", treeIndex, index, dir, nodeName);
 	}
 
+	public String toLocationString() {
+		String dir = containingNode.isText() ? "" : after ? ",>" : ",<";
+		return Ax.format("%s,%s%s", treeIndex, index, dir);
+	}
+
 	// Feature group class for content access
 	public class Content {
 		/**
@@ -411,6 +416,11 @@ public class Location implements Comparable<Location> {
 			}
 		}
 
+		@Override
+		public int hashCode() {
+			return start.hashCode() ^ end.hashCode();
+		}
+
 		/**
 		 * Create a range from start-end, or end-start if end is before start
 		 */
@@ -445,6 +455,18 @@ public class Location implements Comparable<Location> {
 	}
 
 	public boolean isAtNodeStart() {
-		return containingNode.asLocation().index == index;
+		return getTextOffsetInNode() == 0;
+	}
+
+	@Property.Not
+	public int getTextOffsetInNode() {
+		return index - containingNode.asLocation().index;
+	}
+
+	public Location toEndOfTextLocation() {
+		Preconditions.checkState(containingNode.isText());
+		return new Location(treeIndex,
+				index + containingNode.textContent().length(), false,
+				containingNode, locationContext);
 	}
 }

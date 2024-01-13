@@ -370,6 +370,7 @@ public class DomNode {
 		return node.getNodeName();
 	}
 
+	/** Note that this is case-sensitive, tagIs() is case-insensitive */
 	public boolean nameIs(String name) {
 		return name().equals(name);
 	}
@@ -487,6 +488,7 @@ public class DomNode {
 		return tagIs(tagName) && classIs(className);
 	}
 
+	/** Note that this is case-insensitive, nameIs() is case-sensitive */
 	public boolean tagIs(String tagName) {
 		return isElement()
 				&& w3cElement().getTagName().equalsIgnoreCase(tagName)

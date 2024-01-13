@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.Comparator;
+import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
@@ -55,6 +56,23 @@ public class Measure extends Location.Range {
 
 	private Measure aliasedFrom;
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), token.hashCode(), data,
+				aliasedFrom);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Measure) {
+			Measure o = (Measure) obj;
+			return Ax.equals(start, o.start, end, o.end, token, o.token, data,
+					o.data, aliasedFrom, o.aliasedFrom);
+		} else {
+			return super.equals(obj);
+		}
+	}
+
 	public Measure(Location start, Location end, Token token) {
 		super(start, end);
 		Preconditions.checkNotNull(token);
@@ -108,13 +126,19 @@ public class Measure extends Location.Range {
 		this.data = data;
 	}
 
-	public Measure subMeasure(int start, int end, Token token,
+	/*
+	 * start and end are _text_ (index) offsets relative to the start of this
+	 * measure
+	 */
+	public Measure subMeasure(int startOffset, int endOffset, Token token,
 			boolean toTextLocations) {
-		Location subStart = this.start.createRelativeLocation(start, false)
+		Location subStart = this.start
+				.createRelativeLocation(startOffset, false)
 				.toTextLocation(toTextLocations);
-		Location subEnd = this.end
-				.createRelativeLocation(-(length() - end), true)
-				.toTextLocation(toTextLocations);
+		Location subEnd = endOffset == length()
+				? this.end.toTextLocation(toTextLocations)
+				: this.start.createRelativeLocation(endOffset, false)
+						.toTextLocation(toTextLocations);
 		Measure subMeasure = new Measure(subStart, subEnd, token);
 		return subMeasure;
 	}
@@ -125,7 +149,13 @@ public class Measure extends Location.Range {
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
 		}
-		return Ax.format("%s-%s :: %s", start.index, end.index, tokenString);
+		if (start.treeIndex == end.treeIndex && start.containingNode.isText()) {
+			return Ax.format("%s-%s :: %s", start.index, end.index,
+					tokenString);
+		} else {
+			return Ax.format("%s-%s :: %s", start.toLocationString(),
+					end.toLocationString(), tokenString);
+		}
 	}
 
 	public String toDebugString() {

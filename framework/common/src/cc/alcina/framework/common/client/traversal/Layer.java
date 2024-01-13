@@ -242,6 +242,8 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 		public int iterationCount;
 
+		public boolean traversalCancelled;
+
 		public boolean complete;
 
 		Set<S> submitted = new LinkedHashSet<>();

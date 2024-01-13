@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 
 public class LayerParserPeer {
@@ -35,6 +36,6 @@ public class LayerParserPeer {
 	public void onSequenceComplete(ParserState inputState) {
 	}
 
-	public void onTokenMatched() {
+	public void onSentenceMatched(Branch bestMatch) {
 	}
 }

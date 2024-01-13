@@ -681,6 +681,9 @@ public class SelectionTraversal
 		try {
 			Layer layer = currentLayer();
 			enterSelectionContext(selection);
+			if (layer.state.traversalCancelled) {
+				return;
+			}
 			selection.processNode().select(null, this);
 			if (!layer.testFilter(selection) || !testLayerFilter(selection)) {
 				// skip processing if, for instance, the traversal has hit max

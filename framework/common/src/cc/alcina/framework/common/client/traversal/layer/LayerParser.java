@@ -377,6 +377,10 @@ public class LayerParser {
 		return this;
 	}
 
+	public CustomState getCustomState() {
+		return customState;
+	}
+
 	public Stream<Measure> getMatches() {
 		return getSentences().stream().flatMap(b -> b.toResult().measures());
 	}
