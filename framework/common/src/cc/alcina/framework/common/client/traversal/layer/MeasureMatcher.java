@@ -12,9 +12,12 @@ import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Pair;
 
 /**
  * Matches the inputstate inputcontent against a regex. Currently jdk only
@@ -24,7 +27,9 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  */
 public class MeasureMatcher {
 	public enum MatchesEmphasisTypes {
-		NON_EMPHASIS, EMPHASIS, BOTH, // only match the current type, not all
+		NON_EMPHASIS, EMPHASIS, BOTH,
+		// only match the current type, not all -
+		// and match all of it
 		SINGLE
 	}
 
@@ -45,6 +50,14 @@ public class MeasureMatcher {
 
 		boolean lookaheadCaching = true;
 
+		Object patternDiscriminator;
+
+		Object key;
+
+		boolean permitUnequalOptions;
+
+		boolean requiresWholeExtentMatch;
+
 		Options(Token token, Pattern pattern) {
 			this.token = token;
 			this.pattern = pattern;
@@ -61,24 +74,50 @@ public class MeasureMatcher {
 			return this;
 		}
 
+		public Options
+				withRequiresWholeExtentMatch(boolean requiresWholeExtentMatch) {
+			this.requiresWholeExtentMatch = requiresWholeExtentMatch;
+			return this;
+		}
+
+		public Options withPatternDiscriminator(Object patternDiscriminator) {
+			this.patternDiscriminator = patternDiscriminator;
+			return this;
+		}
+
 		public Measure match() {
+			if (key == null) {
+				if (patternDiscriminator == null) {
+					key = token;
+				} else {
+					key = Pair.of(token, patternDiscriminator);
+				}
+			}
 			LocationMatcher matcher = matchers
-					.computeIfAbsent(token, LocationMatcher::new)
+					.computeIfAbsent(key, k -> new LocationMatcher(token))
 					.withOptions(this);
 			return matcher.match();
 		}
+
 		@Override
 		public boolean equals(Object obj) {
-			if(obj instanceof Options){
-				Options o=(Options) obj;
-				return pattern==o.pattern&&matchesEmphasisTypes==o.matchesEmphasisTypes&&lookaheadCaching==o.lookaheadCaching;
-			}else{
+			if (obj instanceof Options) {
+				Options o = (Options) obj;
+				return pattern == o.pattern
+						&& matchesEmphasisTypes == o.matchesEmphasisTypes
+						&& lookaheadCaching == o.lookaheadCaching;
+			} else {
 				return false;
 			}
 		}
+
+		public Options withPermitUnequalOptions(boolean permitUnequalOptions) {
+			this.permitUnequalOptions = permitUnequalOptions;
+			return this;
+		}
 	}
 
-	class LocationMatcher {
+	public class LocationMatcher {
 		Location matchedFrom;
 
 		Location invalidateAt;
@@ -91,16 +130,21 @@ public class MeasureMatcher {
 
 		Token token;
 
+		private boolean invalidated;
+
 		LocationMatcher(Token token) {
 			this.token = token;
 		}
 
 		LocationMatcher withOptions(Options options) {
-			if (this.options == null) {
+			if (this.options == null || (options.permitUnequalOptions
+					&& !Objects.equals(options, this.options))) {
 				this.options = options;
-				if (options.matchesEmphasisTypes != MatchesEmphasisTypes.BOTH) {
+				if (options.matchesEmphasisTypes != MatchesEmphasisTypes.BOTH
+						&& emphasisOracle == null) {
 					emphasisOracle = Registry.impl(EmphasisOracle.class);
 				}
+				invalidated = true;
 			} else {
 				Preconditions
 						.checkArgument(Objects.equals(this.options, options));
@@ -109,23 +153,32 @@ public class MeasureMatcher {
 		}
 
 		Measure match() {
-			boolean invalidate = !options.lookaheadCaching;
-			if(!invalidate){
-			if (matchedFrom != null) {
-				if (match != null
-						&& match.start.isBefore(parserState.location)) {
-					// cursor has passed this match, invalidate
-					invalidate = true;
+			if (parserState.location.index == parserState.input.end.index) {
+				return null;
+			}
+			invalidated |= !options.lookaheadCaching;
+			if (!invalidated) {
+				if (matchedFrom != null) {
+					if (match != null
+							&& match.start.isBefore(parserState.location)) {
+						// cursor has passed this match, invalidate
+						invalidated = true;
+					}
+					if (matchedFrom.isAfter(parserState.location)) {
+						// backtracking. fixme - this (results at location x)
+						// shd be cached
+						invalidated = true;
+					}
+				}
+				if (Objects.equals(parserState.location, invalidateAt)) {
+					invalidated = true;
 				}
 			}
-			if (Objects.equals(parserState.location, invalidateAt)) {
-				invalidate = true;
-			}
-		}
-			if (invalidate) {
+			if (invalidated) {
 				matchedFrom = null;
 				match = null;
 				invalidateAt = null;
+				invalidated = false;
 			}
 			if (matchedFrom == null) {
 				matchedFrom = parserState.location;
@@ -135,6 +188,7 @@ public class MeasureMatcher {
 					text = parserState.inputContent();
 					break;
 				case SINGLE:
+				case EMPHASIS:
 					Location.Range currentStyleRange = computeCurrentStyleRange();
 					text = parserState.inputContent(currentStyleRange);
 					invalidateAt = currentStyleRange.end
@@ -143,20 +197,50 @@ public class MeasureMatcher {
 				default:
 					throw new UnsupportedOperationException();
 				}
+				switch (options.matchesEmphasisTypes) {
+				case EMPHASIS:
+					if (!isInEmphasisRange()) {
+						return null;
+					}
+					break;
+				case NON_EMPHASIS:
+					if (isInEmphasisRange()) {
+						return null;
+					}
+					break;
+				}
 				Matcher matcher = options.pattern.matcher(text);
-				if (matcher.find()) {
-					match = parserState.input.subMeasure(
-							parserState.getOffsetInInput() + matcher.start(),
-							parserState.getOffsetInInput() + matcher.end(),
+				long preMatch = System.nanoTime();
+				boolean found = matcher.find();
+				long postMatch = System.nanoTime();
+				ProcessObservers.publish(MatchStat.class,
+						() -> new MatchStat(postMatch - preMatch));
+				if (found) {
+					int startOffset = parserState.getOffsetInInput()
+							+ matcher.start();
+					int endOffset = parserState.getOffsetInInput()
+							+ matcher.end();
+					match = parserState.input.subMeasure(startOffset, endOffset,
 							token, true);
+					boolean matchesWholeExtent = matcher.start() == 0
+							&& matcher.end() == text.length();
+					if (options.requiresWholeExtentMatch
+							&& !matchesWholeExtent) {
+						match = null;
+					}
 				}
 			}
 			return match;
 		}
 
-		private Range computeCurrentStyleRange() {
+		boolean isInEmphasisRange() {
 			Location start = parserState.location;
-			boolean isEmphasis = emphasisOracle.isEmphasis(start);
+			return emphasisOracle.isEmphasis(start);
+		}
+
+		Range computeCurrentStyleRange() {
+			boolean isEmphasis = isInEmphasisRange();
+			Location start = parserState.location;
 			Location cursor = start;
 			while (cursor.compareTo(parserState.input.end) < 0) {
 				Location next = cursor.relativeLocation(
@@ -170,11 +254,28 @@ public class MeasureMatcher {
 			}
 			return new Range(start, cursor);
 		}
+
+		public class MatchStat implements ProcessObservable {
+			public MeasureMatcher getMatcher() {
+				return MeasureMatcher.this;
+			}
+
+			MatchStat(long nanos) {
+				this.nanos = nanos;
+			}
+
+			public long nanos;
+
+			public Token getToken() {
+				return token;
+			}
+		}
 	}
 
 	private ParserState parserState;
 
-	Map<Token, LocationMatcher> matchers = AlcinaCollections.newLinkedHashMap();
+	Map<Object, LocationMatcher> matchers = AlcinaCollections
+			.newLinkedHashMap();
 
 	public MeasureMatcher(ParserState parserState) {
 		this.parserState = parserState;

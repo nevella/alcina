@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ProcessContextProvider;
 import cc.alcina.framework.common.client.process.ProcessObservable;
-import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
@@ -41,7 +40,6 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RenderObservable;
 
 /**
  * A generalised engine for rule-based transformation.
@@ -89,6 +87,9 @@ public class SelectionTraversal
 			return currentLayer().getClass().getName() + "::"
 					+ currentLayer().toString();
 		}
+	}
+
+	public class TraversalComplete implements ProcessObservable {
 	}
 
 	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
@@ -665,6 +666,8 @@ public class SelectionTraversal
 			ProcessObservers.publish(LayerExit.class, () -> new LayerExit());
 		}
 		topicTraversalComplete.publish(this);
+		ProcessObservers.publish(TraversalComplete.class,
+				() -> new TraversalComplete());
 	}
 
 	public Layer<?> currentLayer() {

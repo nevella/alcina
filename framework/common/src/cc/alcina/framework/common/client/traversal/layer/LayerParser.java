@@ -16,11 +16,9 @@ import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
-import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token.NodeTraversalToken;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -45,6 +43,15 @@ public class LayerParser {
 			parserState = layerParser.parserState;
 		}
 
+		/*
+		 * This is a hook for complex tokens which require current branch state
+		 * to determine a match - prefer, if possible, token arrangements
+		 * (groups) and multiple tokens
+		 */
+		public Branch getEvaluatingBranch() {
+			return parserState.branchingParser.state.evaluatingBranch;
+		}
+
 		@Override
 		public String toString() {
 			return parserState.toString();
@@ -57,15 +64,17 @@ public class LayerParser {
 	public class ParserState {
 		class ParserEnvironment {
 			class SuccessorFollowingNoMatch {
-				Location get(Location nextLookaheadTokenMatch) {
+				Location get(
+						BranchingParser.State.LookaheadMatches lookaheadMatches) {
 					if (forwardsTraversalOrder) {
-						boolean nextCharacter = location != null
-								&& location.containingNode.isText();
-						return location.relativeLocation(
-								RelativeDirection.NEXT_LOCATION,
-								nextLookaheadTokenMatch == null
-										? TextTraversal.EXIT_NODE
-										: TextTraversal.NEXT_CHARACTER);
+						Location nextLocationAfterNoMatch = lookaheadMatches == null
+								? null
+								: lookaheadMatches.nextLocationAfterNoMatch;
+						return nextLocationAfterNoMatch == null
+								? location.relativeLocation(
+										RelativeDirection.NEXT_LOCATION,
+										TextTraversal.EXIT_NODE)
+								: nextLocationAfterNoMatch;
 					} else {
 						return location.relativeLocation(
 								RelativeDirection.PREVIOUS_LOCATION,
@@ -206,6 +215,8 @@ public class LayerParser {
 		Map<Range, CharSequence> inputSubSequences = AlcinaCollections
 				.newLinkedHashMap();
 
+		BranchingParser branchingParser;
+
 		public CharSequence inputContent(Range range) {
 			if (baseContent == null) {
 				char[] charArray = input.text().toCharArray();
@@ -297,7 +308,8 @@ public class LayerParser {
 							RelativeDirection.PREVIOUS_DOMNODE_START);
 			ParserEnvironment env = new ParserEnvironment();
 			parserPeer.parser = LayerParser.this;
-			new BranchingParser(LayerParser.this).parse(env);
+			parserState.branchingParser = new BranchingParser(LayerParser.this);
+			parserState.branchingParser.parse(env);
 			parserPeer.onSequenceComplete(parserState);
 		}
 

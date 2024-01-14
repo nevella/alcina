@@ -469,4 +469,12 @@ public class Location implements Comparable<Location> {
 				index + containingNode.textContent().length(), false,
 				containingNode, locationContext);
 	}
+
+	public boolean isAtNodeEnd() {
+		return getTextOffsetInNode() == containingNode.textContent().length();
+	}
+
+	public boolean isTextNode() {
+		return containingNode.isText();
+	}
 }

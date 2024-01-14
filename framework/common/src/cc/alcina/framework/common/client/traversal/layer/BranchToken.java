@@ -35,6 +35,13 @@ public interface BranchToken extends Token, BranchGroupMember {
 		return MatchesBoundary.START;
 	}
 
+	/**
+	 * This (primitive) token can begin a match
+	 */
+	default boolean isInitial() {
+		return true;
+	}
+
 	public enum MatchesBoundary {
 		START, END, ANY
 	}
@@ -250,8 +257,8 @@ public interface BranchToken extends Token, BranchGroupMember {
 			return this;
 		}
 
-		public static Group optional(BranchGroupMember member) {
-			return of(member).withMatchesZeroOrOne();
+		public static Group optional(BranchGroupMember... members) {
+			return of(members).withMatchesZeroOrOne();
 		}
 
 		public static Group oneOf(BranchGroupMember... members) {

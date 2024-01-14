@@ -50,6 +50,10 @@ public class Measure extends Location.Range {
 
 	public final Token token;
 
+	public Token getToken() {
+		return token;
+	}
+
 	/**
 	 * Additional match information
 	 */

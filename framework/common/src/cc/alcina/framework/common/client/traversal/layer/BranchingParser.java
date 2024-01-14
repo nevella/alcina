@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,6 +18,8 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
@@ -25,6 +28,7 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Comparators;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
@@ -126,6 +130,8 @@ public class BranchingParser {
 
 	List<BranchToken> primitiveTokens;
 
+	List<BranchToken> primitiveInitialTokens;
+
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	class State {
@@ -135,7 +141,9 @@ public class BranchingParser {
 
 		Branch bestMatch;
 
-		Location nextLookaheadTokenMatch;
+		Branch evaluatingBranch;
+
+		LookaheadMatches lookaheadMatches;
 
 		void evaluateBranches() {
 			logger.debug("Evaluating at location {}", parserState.location);
@@ -149,7 +157,9 @@ public class BranchingParser {
 				Branch branch = edgeBranches.remove(0);
 				logger.debug("Entering branch {} at {}", branch,
 						branch.location);
+				evaluatingBranch = branch;
 				branch.enter();
+				evaluatingBranch = null;
 			}
 			bestMatch = matchedSentenceBranches.stream()
 					.sorted(new BranchOrdering()).findFirst().orElse(null);
@@ -159,14 +169,58 @@ public class BranchingParser {
 		}
 
 		void computeFirstMatchedLocation() {
-			nextLookaheadTokenMatch = primitiveTokens.stream()
-					.map(parserState::match).filter(Objects::nonNull).sorted()
-					.findFirst().map(m -> m.start).orElse(null);
+			lookaheadMatches = new LookaheadMatches();
 		}
 
 		void onBeforeTokenMatch() {
 			parserState.onBeforeTokenMatch();
-			nextLookaheadTokenMatch = null;
+			lookaheadMatches = null;
+		}
+
+		class LookaheadMatches {
+			List<Measure> matches;
+
+			Measure next;
+
+			// if this is null, use standard next location test
+			Location nextLocationAfterNoMatch;
+
+			LookaheadMatches() {
+				matches = primitiveInitialTokens.stream()
+						.map(parserState::match).filter(Objects::nonNull)
+						.sorted().toList();
+				next = Ax.first(matches);
+				if (next != null) {
+					Location after = nextLocationAfterNoMatch();
+					if (after.equals(parserState.location)
+							|| after.treeIndex != parserState.location.treeIndex) {
+						after = null;
+					} else {
+						if (after.isAtNodeEnd() && after.isTextNode()) {
+							after = after.relativeLocation(
+									RelativeDirection.NEXT_LOCATION,
+									TextTraversal.EXIT_NODE);
+						}
+					}
+					nextLocationAfterNoMatch = after;
+				}
+			}
+
+			Location nextLocationAfterNoMatch() {
+				// return min :(end of(measures which start at location)) -
+				// (start of (measures which start after location))
+				Location endOfStartingAtCurrentLocation = matches.stream()
+						.filter(m -> m.start.equals(next.start)).map(m -> m.end)
+						.findFirst().get();
+				Optional<Location> startOfStartingAfterCurrentLocation = matches
+						.stream().filter(m -> m.start.isAfter(next.start))
+						.map(m -> m.start).findFirst();
+				return startOfStartingAfterCurrentLocation
+						.map(s -> Comparators.min(
+								endOfStartingAtCurrentLocation,
+								startOfStartingAfterCurrentLocation.get()))
+						.orElse(endOfStartingAtCurrentLocation);
+			}
 		}
 	}
 
@@ -470,7 +524,7 @@ public class BranchingParser {
 
 		Branch predecessor;
 
-		Location location;
+		public Location location;
 
 		Group group;
 
@@ -567,23 +621,6 @@ public class BranchingParser {
 		void enter() {
 			ProcessObservers.publish(BeforeBranchEntry.class,
 					() -> new BeforeBranchEntry(this));
-			if (backtracking) {
-				if (indexInGroup != 0) {
-					// always backtrack to the start of the group.
-					Branch cursor = this;
-					do {
-						cursor = cursor.predecessor;
-					} while (cursor.indexInGroup != 0 || cursor.group != group);
-					cursor.backtracking = true;
-					state.edgeBranches.add(cursor);
-					return;
-				}
-				if (repetitionIndex < group.min && !isSatisfied()
-						&& parent != null) {
-					parent.onChildNotSatisfied(this);
-					return;
-				}
-			}
 			if (!isComplete()) {
 				// try descent or token match
 				if (group.isComplex()) {
@@ -681,6 +718,26 @@ public class BranchingParser {
 				} else {
 					parent.onChildSatisfied(this);
 				}
+			} else {
+				if (backtracking) {
+					// backtrack to the last child of the previous entry in
+					// the group
+					Branch cursor = this;
+					while (true) {
+						cursor = cursor.predecessor;
+						if (cursor == null) {
+							// backtracking finished
+							break;
+						} else if (cursor == parent) {
+							parent.onChildNotSatisfied(this);
+							break;
+						} else if (!cursor.backtracking) {
+							cursor.backtracking = true;
+							state.edgeBranches.add(cursor);
+							break;
+						}
+					}
+				}
 			}
 		}
 
@@ -766,6 +823,17 @@ public class BranchingParser {
 			}
 			return matches.stream().filter(Objects::nonNull).distinct();
 		}
+
+		public Measure getLastMeasure() {
+			Branch cursor = this;
+			while (cursor != null) {
+				if (cursor.match != null) {
+					return cursor.match;
+				}
+				cursor = cursor.predecessor;
+			}
+			return null;
+		}
 	}
 
 	// similar to LayerParser.linearParse -- but *dissimilar* enough to not try
@@ -780,7 +848,8 @@ public class BranchingParser {
 			if (peer.filter == null || peer.filter.test(parserState.location)) {
 				if (layerParser.forwardsTraversalOrder) {
 					state.computeFirstMatchedLocation();
-					if (state.nextLookaheadTokenMatch != null) {
+					Measure next = state.lookaheadMatches.next;
+					if (next != null) {
 						/*
 						 * Move the location/cursor to this match iff it's an
 						 * offset within the current text node. If there is such
@@ -788,10 +857,10 @@ public class BranchingParser {
 						 * be 'go to next char' rather than 'go to next
 						 * location'
 						 */
-						if (state.nextLookaheadTokenMatch.treeIndex == parserState.location.treeIndex) {
-							parserState.location = state.nextLookaheadTokenMatch;
+						if (next.start.treeIndex == parserState.location.treeIndex) {
+							parserState.location = next.start;
 						} else {
-							state.nextLookaheadTokenMatch = null;
+							state.lookaheadMatches.nextLocationAfterNoMatch = null;
 						}
 					}
 				}
@@ -810,7 +879,7 @@ public class BranchingParser {
 				peer.onSentenceMatched(state.bestMatch);
 			} else {
 				parserState.location = env.successorFollowingNoMatch
-						.get(state.nextLookaheadTokenMatch);
+						.get(state.lookaheadMatches);
 			}
 		}
 	}
@@ -823,5 +892,8 @@ public class BranchingParser {
 		primitiveTokens = sentenceGroups.stream()
 				.flatMap(Group::primitiveTokens).distinct()
 				.collect(Collectors.toList());
+		primitiveInitialTokens = sentenceGroups.stream()
+				.flatMap(Group::primitiveTokens).distinct()
+				.filter(BranchToken::isInitial).collect(Collectors.toList());
 	}
 }
