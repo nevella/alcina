@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IdCounter;
+import cc.alcina.framework.common.client.util.NestedName;
 
 // FIXME - selection - Measure extends HasSelection? or hasParentSelection?
 /**
@@ -179,6 +180,15 @@ public class Measure extends Location.Range {
 	 *
 	 */
 	public interface Token {
+		/**
+		 * This will be overridden if the token is an enum
+		 * 
+		 * @return the name
+		 */
+		default String name() {
+			return NestedName.get(this);
+		}
+
 		/*
 		 * Parser instruction - parser should traverse node-by-node (rather than
 		 * node-boundary-by-node-boundary, a denser traversal) when matching
