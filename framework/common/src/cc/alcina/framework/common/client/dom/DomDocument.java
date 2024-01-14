@@ -343,7 +343,7 @@ public class DomDocument extends DomNode {
 			int relativeIndex = location.index
 					- byNode.get(containingNode).index;
 			if (relativeIndex >= 0 && relativeIndex <= contentLength) {
-				if (relativeIndex == contentLength) {
+				if (relativeIndex == contentLength && contentLength != 0) {
 					after = true;
 				}
 				return new Location(location.treeIndex, index, after,
@@ -399,6 +399,10 @@ public class DomDocument extends DomNode {
 							break;
 						case EXIT_NODE:
 							nodeTraversalRequired = true;
+							break;
+						case TO_END_OF_NODE:
+							targetIndex = baseLocation.index
+									+ node.textContent().length();
 							break;
 						default:
 							throw new UnsupportedOperationException();

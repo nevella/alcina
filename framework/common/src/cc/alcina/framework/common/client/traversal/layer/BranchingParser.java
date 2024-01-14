@@ -17,6 +17,8 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState.ParserEnvironment;
@@ -93,6 +95,33 @@ public class BranchingParser {
 		peer = (LayerParserPeer) layerParser.parserPeer;
 	}
 
+	public class BeforeTokenMatch implements ProcessObservable {
+		public Branch branch;
+
+		public Token token;
+
+		public BeforeTokenMatch(Branch branch, Token token) {
+			this.branch = branch;
+			this.token = token;
+		}
+
+		public ParserState getParserState() {
+			return parserState;
+		}
+	}
+
+	public class BeforeBranchEntry implements ProcessObservable {
+		public Branch branch;
+
+		public BeforeBranchEntry(Branch branch) {
+			this.branch = branch;
+		}
+
+		public ParserState getParserState() {
+			return parserState;
+		}
+	}
+
 	List<Group> sentenceGroups;
 
 	List<BranchToken> primitiveTokens;
@@ -110,6 +139,7 @@ public class BranchingParser {
 
 		void evaluateBranches() {
 			logger.debug("Evaluating at location {}", parserState.location);
+			logger.debug("Text at location {}", parserState.inputContent());
 			matchedSentenceBranches.clear();
 			List<Branch> sentenceBranches = sentenceGroups.stream()
 					.map(group -> new Branch(group, parserState.location))
@@ -535,15 +565,24 @@ public class BranchingParser {
 		}
 
 		void enter() {
-			if (backtracking && indexInGroup != 0) {
-				// always backtrack to the start of the group.
-				Branch cursor = this;
-				do {
-					cursor = cursor.predecessor;
-				} while (cursor.indexInGroup != 0 || cursor.group != group);
-				cursor.backtracking = true;
-				state.edgeBranches.add(cursor);
-				return;
+			ProcessObservers.publish(BeforeBranchEntry.class,
+					() -> new BeforeBranchEntry(this));
+			if (backtracking) {
+				if (indexInGroup != 0) {
+					// always backtrack to the start of the group.
+					Branch cursor = this;
+					do {
+						cursor = cursor.predecessor;
+					} while (cursor.indexInGroup != 0 || cursor.group != group);
+					cursor.backtracking = true;
+					state.edgeBranches.add(cursor);
+					return;
+				}
+				if (repetitionIndex < group.min && !isSatisfied()
+						&& parent != null) {
+					parent.onChildNotSatisfied(this);
+					return;
+				}
 			}
 			if (!isComplete()) {
 				// try descent or token match
@@ -560,6 +599,8 @@ public class BranchingParser {
 						break;
 					}
 				} else {
+					ProcessObservers.publish(BeforeTokenMatch.class,
+							() -> new BeforeTokenMatch(this, group.token));
 					Measure match = parserState.match(location, group.token);
 					boolean matchesLocation = false;
 					if (match != null) {
@@ -627,9 +668,13 @@ public class BranchingParser {
 						}
 					}
 				} while (start == null);
-				Location.Range range = Location.Range
-						.fromPossiblyReversedEndpoints(start, end);
-				match = Measure.fromRange(range, matchToken);
+				// only match on rep > 0 (zero will satisfy a zero-or-more
+				// group, but won't have a match)
+				if (repetitionIndex != 0) {
+					Location.Range range = Location.Range
+							.fromPossiblyReversedEndpoints(start, end);
+					match = Measure.fromRange(range, matchToken);
+				}
 				if (parent == null) {
 					logger.info("Emitted sentence match : {}", match);
 					state.matchedSentenceBranches.add(this);
@@ -705,6 +750,21 @@ public class BranchingParser {
 			default:
 				throw new UnsupportedOperationException();
 			}
+		}
+
+		/**
+		 * Used by process observer debuggers
+		 * 
+		 * @return prior matches, determined by walking the predecessor chain
+		 */
+		public Stream<Measure> priorMatches() {
+			List<Measure> matches = new ArrayList<>();
+			Branch cursor = this;
+			while (cursor != null) {
+				matches.add(cursor.match);
+				cursor = cursor.predecessor;
+			}
+			return matches.stream().filter(Objects::nonNull).distinct();
 		}
 	}
 

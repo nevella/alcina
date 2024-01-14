@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -12,11 +13,16 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
+import cc.alcina.framework.common.client.traversal.Layer;
+import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token.NodeTraversalToken;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 
@@ -134,10 +140,6 @@ public class LayerParser {
 
 		CharSequenceArray baseContent = null;
 
-		CharSequenceArray locationContent = null;
-
-		Location locationContentLocation = null;
-
 		public boolean finished;
 
 		DocumentMatcher documentMatcher = new DocumentMatcher(this);
@@ -198,17 +200,22 @@ public class LayerParser {
 		}
 
 		public CharSequence inputContent() {
+			return inputContent(new Range(location, input.end));
+		}
+
+		Map<Range, CharSequence> inputSubSequences = AlcinaCollections
+				.newLinkedHashMap();
+
+		public CharSequence inputContent(Range range) {
 			if (baseContent == null) {
 				char[] charArray = input.text().toCharArray();
 				baseContent = new CharSequenceArray(charArray, 0,
 						charArray.length);
 			}
-			if (locationContentLocation != location) {
-				locationContentLocation = location;
-				locationContent = (CharSequenceArray) baseContent.subSequence(
-						getOffsetInInput(), baseContent.array.length);
-			}
-			return locationContent;
+			return inputSubSequences.computeIfAbsent(range,
+					r -> baseContent.subSequence(
+							r.start.index - input.start.index,
+							r.end.index - input.start.index));
 		}
 
 		public boolean isAtEnd(Measure match) {

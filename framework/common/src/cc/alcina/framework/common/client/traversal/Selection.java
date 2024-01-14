@@ -76,7 +76,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 	/**
 	 * This method (and teardown exitContext) should generally only operate on
-	 * context properties - see
+	 * context properties
 	 */
 	default void enterContext() {
 	}

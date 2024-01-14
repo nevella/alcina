@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ProcessContextProvider;
 import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
@@ -40,6 +41,7 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RenderObservable;
 
 /**
  * A generalised engine for rule-based transformation.
@@ -53,7 +55,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * 		for each l
  *          for all inputs appropriate to l (computedInputs)
  *              for each input, produce new selections 
- *          if new inputs are generated for a previous layer, rewind to that layer
+ *          if new inputs are generated for a previous layer, repeat for that layer
  *           otherwise continue to the next layer
  *  }
  * </pre>
@@ -677,6 +679,43 @@ public class SelectionTraversal
 		selection.ancestorSelections().forEach(Selection::exitContext);
 	}
 
+	/**
+	 * Usage: this example uses the selection observer to activate a layer
+	 * parser observer when the selection string matches the 'observe-foo'
+	 *
+	 * <code>
+	 * <pre>
+	
+	class SelectionObserver implements
+	ProcessObserver<SelectionTraversal.BeforeLayerSelection> {
+	@Override
+	public void topicPublished(BeforeLayerSelection message) {
+	if(message.layer.getClass()==ParserLayer.class&&message.selection.get().toString().contains("observe-foo")){
+		companionLayerParserObserver.active=true;
+	}else{
+		companionLayerParserObserver.active=false;
+	}
+	}
+	}
+	
+	 * </pre>
+	 *</code>
+	 *
+	 *
+	 *
+	 *
+	 */
+	public static class BeforeLayerSelection implements ProcessObservable {
+		public Layer layer;
+
+		public Selection selection;
+
+		public BeforeLayerSelection(Layer layer, Selection selection) {
+			this.layer = layer;
+			this.selection = selection;
+		}
+	}
+
 	private void processSelection(Selection selection) {
 		try {
 			Layer layer = currentLayer();
@@ -692,6 +731,8 @@ public class SelectionTraversal
 			}
 			try {
 				beforeSelectionProcessed.publish(selection);
+				ProcessObservers.publish(BeforeLayerSelection.class,
+						() -> new BeforeLayerSelection(layer, selection));
 				layer.process(selection);
 			} catch (Exception e) {
 				selectionExceptions.put(selection, e);

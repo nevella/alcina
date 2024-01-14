@@ -249,6 +249,14 @@ public interface BranchToken extends Token, BranchGroupMember {
 			this.max = max;
 			return this;
 		}
+
+		public static Group optional(BranchGroupMember member) {
+			return of(member).withMatchesZeroOrOne();
+		}
+
+		public static Group oneOf(BranchGroupMember... members) {
+			return of(members).withOrderAny();
+		}
 	}
 
 	enum Order {

@@ -316,6 +316,11 @@ public class Configuration {
 			return this;
 		}
 
+		/**
+		 * This sets the contex property, not the configuration property. TODO -
+		 * should probably *not* do this
+		 * 
+		 */
 		public void set(String value) {
 			LooseContext.set(toString(), value);
 		}

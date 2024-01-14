@@ -174,7 +174,7 @@ public class Location implements Comparable<Location> {
 	}
 
 	public enum TextTraversal {
-		NO_CHANGE, NEXT_CHARACTER, EXIT_NODE, TO_START_OF_NODE,
+		NO_CHANGE, NEXT_CHARACTER, EXIT_NODE, TO_START_OF_NODE, TO_END_OF_NODE,
 		// will throw if traversing a text node
 		UNDEFINED
 	}
