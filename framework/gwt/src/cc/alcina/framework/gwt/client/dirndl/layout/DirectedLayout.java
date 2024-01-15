@@ -667,6 +667,7 @@ public class DirectedLayout implements AlcinaProcess {
 				eventBindings.removeIf(NodeEventBinding::isDomBinding);
 			}
 			eventBindings.forEach(NodeEventBinding::bind);
+			classData.emitsDescendant.forEach(this::ensureEventBinding);
 		}
 
 		private void bindModel(boolean modelToRendered) {

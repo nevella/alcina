@@ -30,7 +30,10 @@ public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 		NativeEvent nativeEvent = event.getNativeEvent();
 		String type = nativeEvent.getType();
 		boolean altKey = nativeEvent.getAltKey();
+		boolean metaKey = nativeEvent.getMetaKey();
+		boolean ctrlKey = nativeEvent.getCtrlKey();
 		boolean shiftKey = nativeEvent.getShiftKey();
+		boolean fireWithinInput = altKey || metaKey || ctrlKey;
 		int keyCode = nativeEvent.getKeyCode();
 		int charCode = nativeEvent.getCharCode();
 		EventTarget eventTarget = nativeEvent.getEventTarget();
@@ -38,7 +41,7 @@ public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 		case "keypress":
 		case "keydown":
 		case "keyup":
-			if (Element.is(eventTarget)) {
+			if (Element.is(eventTarget) && !fireWithinInput) {
 				try {
 					Element elem = Element.as(eventTarget);
 					String name = elem.getTagName();
