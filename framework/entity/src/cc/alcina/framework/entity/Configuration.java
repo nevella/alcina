@@ -71,6 +71,16 @@ boolean enabled = Configuration.is(Foo.class,"enabled");
 
 
  * </pre></code>
+ * 
+ * <h3>Notes</h3>
+ * <p>
+ * Log levels (key <code>log.level.mypackage.Foo=INFO</code>) should not go in
+ * package configuration.properties files, since those files are only loaded
+ * lazily, on the first Configuration.get(clazz) call where clazz is in the
+ * package.
+ * 
+ * <p>
+ * Instead, set defaults in an app-level configuration properties file
  */
 public class Configuration {
 	public final static Properties properties = new Properties();

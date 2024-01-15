@@ -19,7 +19,7 @@ public enum RecipeToken implements BranchToken {
 		public Measure match(ParserState state) {
 			Pattern pattern = Pattern.compile("(Judgment|Reasons|Decision) of",
 					Pattern.CASE_INSENSITIVE);
-			return state.matcher().match(this, pattern);
+			return state.patternMatcher().match(this, pattern);
 		}
 	},
 	NAME {
@@ -28,7 +28,7 @@ public enum RecipeToken implements BranchToken {
 			Pattern pattern = Pattern.compile(
 					"The Honourable|Honourable|(?:His|Her) Honour|a Master of the Supreme Court",
 					Pattern.CASE_INSENSITIVE);
-			return state.matcher().match(this, pattern);
+			return state.patternMatcher().match(this, pattern);
 		}
 	};
 }

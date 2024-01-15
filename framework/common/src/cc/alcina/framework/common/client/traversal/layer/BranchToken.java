@@ -281,7 +281,7 @@ public interface BranchToken extends Token, BranchGroupMember {
 
 			@Override
 			public Measure match(ParserState state) {
-				return state.matcher().match(this, PATTERN);
+				return state.patternMatcher().match(this, PATTERN);
 			}
 		},
 		LINE {
@@ -290,7 +290,7 @@ public interface BranchToken extends Token, BranchGroupMember {
 
 			@Override
 			public Measure match(ParserState state) {
-				return state.matcher().match(this, PATTERN);
+				return state.patternMatcher().match(this, PATTERN);
 			}
 		},
 		WHITESPACE {
@@ -300,7 +300,7 @@ public interface BranchToken extends Token, BranchGroupMember {
 
 			@Override
 			public Measure match(ParserState state) {
-				return state.matcher().match(this, PATTERN);
+				return state.patternMatcher().match(this, PATTERN);
 			}
 		},
 		DIGITS {
@@ -308,7 +308,7 @@ public interface BranchToken extends Token, BranchGroupMember {
 
 			@Override
 			public Measure match(ParserState state) {
-				return state.matcher().match(this, PATTERN);
+				return state.patternMatcher().match(this, PATTERN);
 			}
 		},
 		ANY_TEXT {
@@ -316,7 +316,7 @@ public interface BranchToken extends Token, BranchGroupMember {
 
 			@Override
 			public Measure match(ParserState state) {
-				return state.matcher().match(this, PATTERN);
+				return state.patternMatcher().match(this, PATTERN);
 			}
 		},
 		/*

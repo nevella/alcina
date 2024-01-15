@@ -134,10 +134,11 @@ class NodeEventBinding {
 			// model event
 			Preconditions.checkState(Reflections
 					.isAssignableFrom(NodeEvent.WithoutDomBinding.class, type));
-			if (isDescendantBinding()) {
+			if (isDescendantBinding(type)) {
+				//find emitter attached to a parent node which emits events of Type type
 				ModelEvent.Emitter emitter = node.findEmitter(type);
 				if (emitter != null) {
-					((Model) emitter).provideNode().ensureEventBinding(type)
+					((Model) emitter).provideNode().getEventBinding(type)
 							.addDescendantBinding(this);
 				}
 			}
@@ -235,9 +236,9 @@ class NodeEventBinding {
 		return node;
 	}
 
-	boolean isDescendantBinding() {
+	static boolean isDescendantBinding(Class<? extends NodeEvent> clazz) {
 		return Reflections.isAssignableFrom(ModelEvent.DescendantEvent.class,
-				type);
+				clazz);
 	}
 
 	boolean isDomBinding() {

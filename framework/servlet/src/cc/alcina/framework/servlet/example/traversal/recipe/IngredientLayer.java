@@ -56,7 +56,7 @@ class IngredientLayer extends Layer<IngredientsLayer.RawIngredientSelection> {
 
 			@Override
 			public Measure match(ParserState state) {
-				return state.matcher().match(this, PATTERN);
+				return state.patternMatcher().match(this, PATTERN);
 			}
 		},
 		COMESTIBLE {

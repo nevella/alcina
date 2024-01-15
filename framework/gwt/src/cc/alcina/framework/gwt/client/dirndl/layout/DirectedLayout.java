@@ -667,7 +667,7 @@ public class DirectedLayout implements AlcinaProcess {
 				eventBindings.removeIf(NodeEventBinding::isDomBinding);
 			}
 			eventBindings.forEach(NodeEventBinding::bind);
-			classData.emitsDescendant.forEach(this::ensureEventBinding);
+			classData.emitsDescendant.forEach(this::addDescentEventBinding);
 		}
 
 		private void bindModel(boolean modelToRendered) {
@@ -822,18 +822,18 @@ public class DirectedLayout implements AlcinaProcess {
 			return children;
 		}
 
-		NodeEventBinding ensureEventBinding(Class<? extends NodeEvent> type) {
-			Optional<NodeEventBinding> binding = eventBindings.stream()
-					.filter(eb -> eb.type == type).findFirst();
-			if (binding.isPresent()) {
-				return binding.get();
-			} else {
-				Preconditions.checkState(Reflections.isAssignableFrom(
-						ModelEvent.DescendantEvent.class, type));
-				NodeEventBinding newBinding = new NodeEventBinding(this, type);
-				eventBindings.add(newBinding);
-				return newBinding;
-			}
+		NodeEventBinding getEventBinding(Class<? extends NodeEvent> type) {
+			return eventBindings.stream().filter(eb -> eb.type == type)
+					.findFirst().get();
+		}
+
+		NodeEventBinding
+				addDescentEventBinding(Class<? extends NodeEvent> type) {
+			Preconditions
+					.checkArgument(NodeEventBinding.isDescendantBinding(type));
+			NodeEventBinding newBinding = new NodeEventBinding(this, type);
+			eventBindings.add(newBinding);
+			return newBinding;
 		}
 
 		Emitter findEmitter(Class<? extends NodeEvent> type) {
@@ -1639,7 +1639,7 @@ public class DirectedLayout implements AlcinaProcess {
 
 		static void dispatchDescent(ModelEvent modelEvent) {
 			Node cursor = modelEvent.getContext().node;
-			cursor.ensureEventBinding(modelEvent.getClass())
+			cursor.getEventBinding(modelEvent.getClass())
 					.dispatchDescent(modelEvent);
 		}
 	}

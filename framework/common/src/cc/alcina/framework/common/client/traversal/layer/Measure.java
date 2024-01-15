@@ -127,6 +127,10 @@ public class Measure extends Location.Range {
 		return this.data;
 	}
 
+	public <T> T typedData() {
+		return (T) getData();
+	}
+
 	public void setData(Object data) {
 		this.data = data;
 	}

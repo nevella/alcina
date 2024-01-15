@@ -147,7 +147,7 @@ public class BranchingParser {
 
 		void evaluateBranches() {
 			logger.debug("Evaluating at location {}", parserState.location);
-			logger.debug("Text at location {}", parserState.inputContent());
+			logger.debug("Text at location: {}", parserState.inputContent());
 			matchedSentenceBranches.clear();
 			List<Branch> sentenceBranches = sentenceGroups.stream()
 					.map(group -> new Branch(group, parserState.location))

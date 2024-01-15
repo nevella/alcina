@@ -14,7 +14,10 @@ import java.text.CharacterIterator;
  * @author Timothy Prinzing
  * 
  *         NR - copied from javax.swing.text.Segment, renamed to
- *         CharSequenceArray
+ *         CharSequenceArray. Note that the "immutable even though" should be
+ *         tightened.
+ * 
+ *         Note that equals and hashcode are different to String behaviour
  */
 public class CharSequenceArray
 		implements Cloneable, CharacterIterator, CharSequence {
@@ -46,6 +49,21 @@ public class CharSequenceArray
 	 */
 	public CharSequenceArray() {
 		this(null, 0, 0);
+	}
+
+	@Override
+	public int hashCode() {
+		return array.hashCode() ^ offset ^ count;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof CharSequenceArray) {
+			CharSequenceArray o = (CharSequenceArray) obj;
+			return array == o.array && offset == o.offset && count == o.count;
+		} else {
+			return false;
+		}
 	}
 
 	/**

@@ -131,7 +131,9 @@ public class LayerParser {
 			}
 		}
 
-		MeasureMatcher measureMatcher = new MeasureMatcher(this);
+		TrieMatcher trieMatcher = new TrieMatcher(this);
+
+		PatternMatcher patternMatcher = new PatternMatcher(this);
 
 		XpathMatcher xpathMatcher = new XpathMatcher(this);
 
@@ -236,8 +238,12 @@ public class LayerParser {
 			return match.end.index == input.end.index;
 		}
 
-		public MeasureMatcher matcher() {
-			return measureMatcher;
+		public PatternMatcher patternMatcher() {
+			return patternMatcher;
+		}
+
+		public TrieMatcher trieMatcher() {
+			return trieMatcher;
 		}
 
 		public XpathMatcher xpathMatcher() {
@@ -303,14 +309,25 @@ public class LayerParser {
 		 *
 		 */
 		void parse() {
-			this.location = forwardsTraversalOrder ? input.start
-					: input.end.relativeLocation(
-							RelativeDirection.PREVIOUS_DOMNODE_START);
-			ParserEnvironment env = new ParserEnvironment();
-			parserPeer.parser = LayerParser.this;
-			parserState.branchingParser = new BranchingParser(LayerParser.this);
-			parserState.branchingParser.parse(env);
-			parserPeer.onSequenceComplete(parserState);
+			try {
+				registerMatchers(true);
+				this.location = forwardsTraversalOrder ? input.start
+						: input.end.relativeLocation(
+								RelativeDirection.PREVIOUS_DOMNODE_START);
+				ParserEnvironment env = new ParserEnvironment();
+				parserPeer.parser = LayerParser.this;
+				parserState.branchingParser = new BranchingParser(
+						LayerParser.this);
+				parserState.branchingParser.parse(env);
+				parserPeer.onSequenceComplete(parserState);
+			} finally {
+				registerMatchers(false);
+			}
+		}
+
+		void registerMatchers(boolean register) {
+			patternMatcher.register(register);
+			trieMatcher.register(register);
 		}
 
 		Measure match(Location location, BranchToken token) {
