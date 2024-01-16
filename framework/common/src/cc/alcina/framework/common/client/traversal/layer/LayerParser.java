@@ -36,11 +36,20 @@ import cc.alcina.framework.common.client.util.Multimap;
  * text-based
  */
 public class LayerParser {
-	public abstract static class CustomState {
+	public abstract static class ExtendedState {
 		public ParserState parserState;
 
 		public void setParser(LayerParser layerParser) {
 			parserState = layerParser.parserState;
+		}
+
+		// convenience method
+		public Location getLocation() {
+			return parserState.getLocation();
+		}
+
+		public DomNode domNode() {
+			return getLocation().containingNode;
 		}
 
 		/*
@@ -176,8 +185,8 @@ public class LayerParser {
 			return location.isBefore(other);
 		}
 
-		public <C extends CustomState> C customState() {
-			return (C) customState;
+		public <C extends ExtendedState> C extendedState() {
+			return (C) extendedState;
 		}
 
 		public DocumentSelection getDocument() {
@@ -357,7 +366,7 @@ public class LayerParser {
 
 	LayerParserPeer parserPeer;
 
-	CustomState customState;
+	ExtendedState extendedState;
 
 	boolean forwardsTraversalOrder = true;
 
@@ -407,14 +416,14 @@ public class LayerParser {
 		this.forwardsTraversalOrder = forwardsTraversalOrder;
 	}
 
-	public LayerParser withCustomState(CustomState customState) {
-		this.customState = customState;
-		customState.setParser(this);
+	public LayerParser withExtendedState(ExtendedState extendedState) {
+		extendedState.setParser(this);
+		this.extendedState = extendedState;
 		return this;
 	}
 
-	public CustomState getCustomState() {
-		return customState;
+	public ExtendedState getExtendedState() {
+		return extendedState;
 	}
 
 	public Stream<Measure> getMatches() {

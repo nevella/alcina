@@ -1,6 +1,9 @@
 package cc.alcina.framework.common.client.dom;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import com.google.common.base.Preconditions;
 
@@ -271,6 +274,36 @@ public class Location implements Comparable<Location> {
 			}
 			this.start = start;
 			this.end = end;
+		}
+
+		/*
+		 * Returns a stream of locations in the range
+		 */
+		public Stream<Location> stream() {
+			Iterable<Location> iterable = () -> new Itr();
+			return StreamSupport.stream(iterable.spliterator(), false);
+		}
+
+		class Itr implements Iterator<Location> {
+			Location cursor;
+
+			Itr() {
+				this.cursor = start;
+			}
+
+			@Override
+			public boolean hasNext() {
+				return cursor != null && cursor.compareTo(end) <= 0;
+			}
+
+			@Override
+			public Location next() {
+				Location next = cursor;
+				cursor = cursor.relativeLocation(
+						RelativeDirection.NEXT_LOCATION,
+						TextTraversal.EXIT_NODE);
+				return next;
+			}
 		}
 
 		public Range truncateAbsolute(int startIndex, int endIndex) {

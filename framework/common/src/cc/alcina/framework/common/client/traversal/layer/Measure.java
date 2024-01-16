@@ -54,6 +54,10 @@ public class Measure extends Location.Range {
 		return token;
 	}
 
+	public void log() {
+		Ax.out("%s %s", toString(), Ax.trimForLogging(text()));
+	}
+
 	/**
 	 * Additional match information
 	 */

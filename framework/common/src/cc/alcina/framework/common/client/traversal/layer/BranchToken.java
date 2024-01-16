@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
@@ -48,6 +49,14 @@ public interface BranchToken extends Token, BranchGroupMember {
 
 	default Measure measure(Location start, Location end) {
 		return Measure.fromRange(new Range(start, end), this);
+	}
+
+	default Measure measure(DomNode node) {
+		return Measure.fromRange(node.asRange(), this);
+	}
+
+	default Measure pointMeasure(LayerParser.ExtendedState state) {
+		return measure(state.getLocation(), state.getLocation());
 	}
 
 	default Group getGroup() {

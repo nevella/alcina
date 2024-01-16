@@ -199,8 +199,9 @@ public abstract class LookaheadMatcher<C> {
 				case EMPHASIS:
 					Location.Range currentStyleRange = computeCurrentStyleRange();
 					text = parserState.inputContent(currentStyleRange);
-					invalidateAt = currentStyleRange.end
-							.relativeLocation(RelativeDirection.NEXT_LOCATION);
+					invalidateAt = currentStyleRange.end.relativeLocation(
+							RelativeDirection.NEXT_LOCATION,
+							TextTraversal.EXIT_NODE);
 					break;
 				default:
 					throw new UnsupportedOperationException();
