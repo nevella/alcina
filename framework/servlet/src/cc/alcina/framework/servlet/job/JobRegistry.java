@@ -182,6 +182,27 @@ public class JobRegistry {
 
 	public static final int MAX_CAUSE_LENGTH = 240;
 
+	static void awaitLatch(CountDownLatch latch) throws InterruptedException {
+		long timeout = Configuration.getLong("jobAllocatorSequenceTimeout");
+		if (!latch.await(timeout, TimeUnit.SECONDS)) {
+			throw new IllegalStateException("Latch timed out - %s seconds");
+		}
+	}
+
+	private static void checkAnnotatedPermissions(Object o) {
+		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
+		if (annotation != null) {
+			if (!PermissionsManager.get().isPermitted(o,
+					new AnnotatedPermissible(annotation.customPermission()))) {
+				RuntimeException e = new RuntimeException(
+						"Permission denied for action " + o);
+				EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
+						"Domain transform permissions exception", e);
+				throw e;
+			}
+		}
+	}
+
 	public static Builder createBuilder() {
 		return new Builder();
 	}
@@ -238,20 +259,6 @@ public class JobRegistry {
 				JobDomain.DefaultConsistencyPriorities._default);
 	}
 
-	private static void checkAnnotatedPermissions(Object o) {
-		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
-		if (annotation != null) {
-			if (!PermissionsManager.get().isPermitted(o,
-					new AnnotatedPermissible(annotation.customPermission()))) {
-				RuntimeException e = new RuntimeException(
-						"Permission denied for action " + o);
-				EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
-						"Domain transform permissions exception", e);
-				throw e;
-			}
-		}
-	}
-
 	public Topic<Job> topicJobComplete = Topic.create();
 
 	private ConcurrentHashMap<Job, InMemoryResult> inMemoryResults = new ConcurrentHashMap<>();
@@ -282,6 +289,48 @@ public class JobRegistry {
 	// Directly acquire a resource (not via TaskPerformer.getResources)
 	public void acquireResource(Job forJob, JobResource resource) {
 		acquireResources(forJob, Collections.singletonList(resource));
+	}
+
+	private void acquireResources(Job forJob, List<JobResource> resources) {
+		List<JobResource> acquired = jobResources.getOrDefault(forJob,
+				new ArrayList<>());
+		for (JobResource resource : resources) {
+			/*
+			 * attempt to acquire from antecedent
+			 */
+			Optional<JobResource> antecedentAcquired = getAcquiredResource(
+					forJob, resource);
+			ProcessState processState = forJob.ensureProcessState();
+			ResourceRecord record = processState.addResourceRecord(resource);
+			if (antecedentAcquired.isPresent()) {
+				record.setAcquired(true);
+				record.setAcquiredFromAntecedent(true);
+				forJob.persistProcessState();
+				Transaction.commit();
+			} else {
+				forJob.persistProcessState();
+				Transaction.commit();
+				MethodContext.instance().withExecuteOutsideTransaction(true)
+						.run(resource::acquire);
+				try {
+					// ensure lazy (process state) field.
+					forJob = forJob.domain().ensurePopulated();
+					forJob.ensureProcessState().provideRecord(record)
+							.setAcquired(true);
+					forJob.persistProcessState();
+					Transaction.commit();
+					acquired.add(resource);
+				} catch (Exception e) {
+					logger.error("Exception acquiring resource for job {}: {}",
+							resource.getPath(), e);
+					resource.release();
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+		if (acquired.size() > 0) {
+			jobResources.put(forJob, acquired);
+		}
 	}
 
 	public Job await(Job job) throws InterruptedException {
@@ -349,6 +398,13 @@ public class JobRegistry {
 		return jobRef.get();
 	}
 
+	<JR extends JobResource> Optional<JR> getAcquiredResource(Job forJob,
+			JR resource) {
+		return forJob.provideSelfAndAntecedents()
+				.map(j -> getResource(j, resource, forJob))
+				.filter(Objects::nonNull).findFirst();
+	}
+
 	public Stream<? extends Job> getActiveConsistencyJobs() {
 		return scheduler.aMoreDesirableSituation.getActiveJobs();
 	}
@@ -381,6 +437,10 @@ public class JobRegistry {
 				.filter(AllocationQueue::hasActive)
 				.map(AllocationQueue::asQueueStat).sorted(Comparator
 						.comparing(stat -> -stat.startTime.getTime()));
+	}
+
+	JobContext getContext(Job job) {
+		return activeJobs.get(job);
 	}
 
 	public JobEnvironment getEnvironment() {
@@ -428,10 +488,51 @@ public class JobRegistry {
 				.map(Thread::getName).orElse(null);
 	}
 
+	<JR extends JobResource> JR getResource(Job acquiredByJob, JR matching,
+			Job forJob) {
+		List<JobResource> resources = jobResources.get(acquiredByJob);
+		if (resources != null) {
+			Optional<JR> resource = resources.stream()
+					.filter(r -> r.equals(matching)).map(r -> (JR) r)
+					.findFirst();
+			if (resource.isPresent()) {
+				if (acquiredByJob.provideIsSibling(forJob)
+						&& resource.get().isSharedWithSubsequents()) {
+					return resource.get();
+				}
+				if (resource.get().isSharedWithChildren()) {
+					return resource.get();
+				}
+			}
+		}
+		return null;
+	}
+
 	public Object getResourceOwner() {
 		return JobContext.has()
 				? JobContext.get().getJob().provideFirstInSequence()
 				: Thread.currentThread();
+	}
+
+	protected TaskPerformer getTaskPerformer(Job job) {
+		Task task = job.getTask();
+		TaskPerformer performer = null;
+		if (task instanceof TaskPerformer) {
+			performer = (TaskPerformer) task;
+		} else {
+			Optional<TaskPerformer> o_performer = Registry
+					.optional(TaskPerformer.class, task.getClass());
+			if (o_performer.isPresent()) {
+				performer = o_performer.get();
+			} else {
+				performer = new MissingPerformerPerformer();
+			}
+		}
+		if (performer instanceof HasRoutingPerformer) {
+			performer = ((HasRoutingPerformer) performer).routingPerformer()
+					.route(performer);
+		}
+		return performer;
 	}
 
 	public List<Job> getThreadData(Job job) {
@@ -498,96 +599,60 @@ public class JobRegistry {
 		}
 	}
 
-	public void processOrphans() {
-		// manual because auto-scheduling generally disabled for dev
-		// server/consoles
-		Preconditions.checkState(Ax.isTest());
-		scheduler.processOrphans();
-	}
-
-	public void setEnvironment(JobEnvironment environment) {
-		this.environment = environment;
-	}
-
-	// for tooling
-	public void startNonPersistentJobContext(Task task) {
-		Job job = Reflections
-				.newInstance(PersistentImpl.getImplementation(Job.class));
-		job.setId(consoleJobIdCounter.decrementAndGet());
-		job.setState(JobState.PENDING);
-		job.setTask(task);
-		TaskPerformer performer = getTaskPerformer(job);
-		JobContext jobContext = new JobContext(job, performer, null, null);
-		jobContext.start();
-		jobContext.beginLogBuffer();
-	}
-
-	public void stopService() {
-		stopped = true;
-		scheduler.stopService();
-	}
-
-	public void wakeupScheduler() {
-		scheduler.fireWakeup();
-	}
-
-	public Object withJobMetadataLock(Job job, Runnable runnable) {
-		return withJobMetadataLock(job.toLocator().toRecoverableNumericString(),
-				runnable);
-	}
-
-	public Object withJobMetadataLock(String path, Runnable runnable) {
-		if (runnable == null) {
-			return null;
-		}
+	/*
+	 * Jobs are always run in new (or job-only) threads
+	 *
+	 * FIXME - mvcc.jobs.1a - launcherthreadstate should go away
+	 */
+	void performJob(Job job, boolean queueJobPersistence,
+			LauncherThreadState launcherThreadState,
+			ExecutorServiceProvider executorServiceProvider,
+			ExecutorService executorService) {
 		try {
-			Object lock = jobExecutors.allocationLock(path, true);
-			runnable.run();
-			return lock;
-		} finally {
-			jobExecutors.allocationLock(path, false);
-		}
-	}
-
-	private void acquireResources(Job forJob, List<JobResource> resources) {
-		List<JobResource> acquired = jobResources.getOrDefault(forJob,
-				new ArrayList<>());
-		for (JobResource resource : resources) {
-			/*
-			 * attempt to acquire from antecedent
-			 */
-			Optional<JobResource> antecedentAcquired = getAcquiredResource(
-					forJob, resource);
-			ProcessState processState = forJob.ensureProcessState();
-			ResourceRecord record = processState.addResourceRecord(resource);
-			if (antecedentAcquired.isPresent()) {
-				record.setAcquired(true);
-				record.setAcquiredFromAntecedent(true);
-				forJob.persistProcessState();
-				Transaction.commit();
-			} else {
-				forJob.persistProcessState();
-				Transaction.commit();
-				MethodContext.instance().withExecuteOutsideTransaction(true)
-						.run(resource::acquire);
+			if (environment.isInTransactionMultipleTxEnvironment()) {
+				logger.warn(
+						"DEVEX::0 - JobRegistry.performJobInTx - begin with open transaction "
+								+ " - {}\nuncommitted transforms:\n{}",
+						job, TransformManager.get().getTransforms());
 				try {
-					// ensure lazy (process state) field.
-					forJob = forJob.domain().ensurePopulated();
-					forJob.ensureProcessState().provideRecord(record)
-							.setAcquired(true);
-					forJob.persistProcessState();
 					Transaction.commit();
-					acquired.add(resource);
 				} catch (Exception e) {
-					logger.error("Exception acquiring resource for job {}: {}",
-							resource.getPath(), e);
-					resource.release();
-					throw new WrappedRuntimeException(e);
+					logger.warn("DEVEX::0 - JobRegistry.performJob", e);
+					e.printStackTrace();
 				}
+				Transaction.ensureEnded();
 			}
-		}
-		if (acquired.size() > 0) {
-			jobResources.put(forJob, acquired);
+			LooseContext.push();
+			LooseContext.set(
+					ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
+					EntityLayerObjects.get().getServerAsClientInstance());
+			DomainTransformPersistenceEvents
+					.setLocalCommitTimeout(120 * TimeConstants.ONE_SECOND_MS);
+			Thread.currentThread().setContextClassLoader(
+					launcherThreadState.contextClassLoader);
+			launcherThreadState.copyContext
+					.forEach((k, v) -> LooseContext.set(k, v));
+			TransactionEnvironment.get().begin();
+			environment.prepareUserContext(job);
+			performJob0(job, queueJobPersistence, launcherThreadState);
+			logger.info("Job complete - {}", job);
+		} catch (RuntimeException e) {
+			if (stopped) {
+				// app shutdown - various services will not be available -
+				// ignore
+			} else {
+				// will generally be close to the top of a thread - so log, even
+				// if there's logging higher
+				logger.warn(Ax.format("DEVEX::0 - JobRegistry.performJob - %s",
+						job), e);
+				e.printStackTrace();
+			}
+		} finally {
+			PermissionsManager.get().popUser();
+			TransactionEnvironment.get().end();
+			LooseContext.pop();
+			LooseContext.confirmDepth(0);
+			executorServiceProvider.onServiceComplete(executorService);
 		}
 	}
 
@@ -693,6 +758,13 @@ public class JobRegistry {
 		}
 	}
 
+	public void processOrphans() {
+		// manual because auto-scheduling generally disabled for dev
+		// server/consoles
+		Preconditions.checkState(Ax.isTest());
+		scheduler.processOrphans();
+	}
+
 	private void releaseResources(Job job, boolean inSequenceRelease) {
 		List<JobResource> resources = jobResources.get(job);
 		if (resources != null) {
@@ -723,6 +795,32 @@ public class JobRegistry {
 		}
 	}
 
+	public void setEnvironment(JobEnvironment environment) {
+		this.environment = environment;
+	}
+
+	// for tooling
+	public void startNonPersistentJobContext(Task task) {
+		Job job = Reflections
+				.newInstance(PersistentImpl.getImplementation(Job.class));
+		job.setId(consoleJobIdCounter.decrementAndGet());
+		job.setState(JobState.PENDING);
+		job.setTask(task);
+		TaskPerformer performer = getTaskPerformer(job);
+		JobContext jobContext = new JobContext(job, performer, null, null);
+		jobContext.start();
+		jobContext.beginLogBuffer();
+	}
+
+	public void stopService() {
+		stopped = true;
+		scheduler.stopService();
+	}
+
+	protected boolean trackInternalMetrics() {
+		return Configuration.is("trackInternalMetrics");
+	}
+
 	private void updateThreadData(JobStateMessage message) {
 		logger.info("Checking thread data for job {}", message.getJob());
 		JobContext context = activeJobs.get(message.getJob());
@@ -732,6 +830,10 @@ public class JobRegistry {
 			context.updateProcessState(processState);
 			message.persistProcessState();
 		}
+	}
+
+	public void wakeupScheduler() {
+		scheduler.fireWakeup();
 	}
 
 	private void withDomain(boolean deferMetadataPersistence,
@@ -748,116 +850,21 @@ public class JobRegistry {
 		}
 	}
 
-	protected TaskPerformer getTaskPerformer(Job job) {
-		Task task = job.getTask();
-		TaskPerformer performer = null;
-		if (task instanceof TaskPerformer) {
-			performer = (TaskPerformer) task;
-		} else {
-			Optional<TaskPerformer> o_performer = Registry
-					.optional(TaskPerformer.class, task.getClass());
-			if (o_performer.isPresent()) {
-				performer = o_performer.get();
-			} else {
-				performer = new MissingPerformerPerformer();
-			}
+	public Object withJobMetadataLock(Job job, Runnable runnable) {
+		return withJobMetadataLock(job.toLocator().toRecoverableNumericString(),
+				runnable);
+	}
+
+	public Object withJobMetadataLock(String path, Runnable runnable) {
+		if (runnable == null) {
+			return null;
 		}
-		if (performer instanceof HasRoutingPerformer) {
-			performer = ((HasRoutingPerformer) performer).routingPerformer()
-					.route(performer);
-		}
-		return performer;
-	}
-
-	protected boolean trackInternalMetrics() {
-		return Configuration.is("trackInternalMetrics");
-	}
-
-	<JR extends JobResource> Optional<JR> getAcquiredResource(Job forJob,
-			JR resource) {
-		return forJob.provideSelfAndAntecedents()
-				.map(j -> getResource(j, resource, forJob))
-				.filter(Objects::nonNull).findFirst();
-	}
-
-	JobContext getContext(Job job) {
-		return activeJobs.get(job);
-	}
-
-	<JR extends JobResource> JR getResource(Job acquiredByJob, JR matching,
-			Job forJob) {
-		List<JobResource> resources = jobResources.get(acquiredByJob);
-		if (resources != null) {
-			Optional<JR> resource = resources.stream()
-					.filter(r -> r.equals(matching)).map(r -> (JR) r)
-					.findFirst();
-			if (resource.isPresent()) {
-				if (acquiredByJob.provideIsSibling(forJob)
-						&& resource.get().isSharedWithSubsequents()) {
-					return resource.get();
-				}
-				if (resource.get().isSharedWithChildren()) {
-					return resource.get();
-				}
-			}
-		}
-		return null;
-	}
-
-	/*
-	 * Jobs are always run in new (or job-only) threads
-	 *
-	 * FIXME - mvcc.jobs.1a - launcherthreadstate should go away
-	 */
-	void performJob(Job job, boolean queueJobPersistence,
-			LauncherThreadState launcherThreadState,
-			ExecutorServiceProvider executorServiceProvider,
-			ExecutorService executorService) {
 		try {
-			if (environment.isInTransactionMultipleTxEnvironment()) {
-				logger.warn(
-						"DEVEX::0 - JobRegistry.performJobInTx - begin with open transaction "
-								+ " - {}\nuncommitted transforms:\n{}",
-						job, TransformManager.get().getTransforms());
-				try {
-					Transaction.commit();
-				} catch (Exception e) {
-					logger.warn("DEVEX::0 - JobRegistry.performJob", e);
-					e.printStackTrace();
-				}
-				Transaction.ensureEnded();
-			}
-			LooseContext.push();
-			LooseContext.set(
-					ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
-					EntityLayerObjects.get().getServerAsClientInstance());
-			DomainTransformPersistenceEvents
-					.setLocalCommitTimeout(120 * TimeConstants.ONE_SECOND_MS);
-			Thread.currentThread().setContextClassLoader(
-					launcherThreadState.contextClassLoader);
-			launcherThreadState.copyContext
-					.forEach((k, v) -> LooseContext.set(k, v));
-			TransactionEnvironment.get().begin();
-			environment.prepareUserContext(job);
-			performJob0(job, queueJobPersistence, launcherThreadState);
-			logger.info("Job complete - {}", job);
-		} catch (RuntimeException e) {
-			if (stopped) {
-				// app shutdown - various services will not be available -
-				// ignore
-			} else {
-				// will generally be close to the top of a thread - so log, even
-				// if there's logging higher
-				logger.warn(Ax.format("DEVEX::0 - JobRegistry.performJob - %s",
-						job), e);
-				e.printStackTrace();
-			}
+			Object lock = jobExecutors.allocationLock(path, true);
+			runnable.run();
+			return lock;
 		} finally {
-			PermissionsManager.get().popUser();
-			TransactionEnvironment.get().end();
-			LooseContext.pop();
-			LooseContext.confirmDepth(0);
-			executorServiceProvider.onServiceComplete(executorService);
+			jobExecutors.allocationLock(path, false);
 		}
 	}
 
@@ -1109,71 +1116,6 @@ public class JobRegistry {
 		}
 	}
 
-	public static class FutureStat {
-		public String taskName;
-
-		public Date runAt;
-
-		public long jobId;
-
-		FutureStat(Job job) {
-			taskName = job.getTaskClassName();
-			runAt = job.getRunAt();
-			jobId = job.getId();
-		}
-	}
-
-	@Registration(JobExecutors.class)
-	public static class JobExecutorsSingle implements JobExecutors {
-		@Override
-		public void addScheduledJobExecutorChangeConsumer(
-				Consumer<Boolean> consumer) {
-		}
-
-		@Override
-		public Object allocationLock(String path, boolean acquire) {
-			return new Object();
-		}
-
-		@Override
-		public List<ClientInstance> getActiveServers() {
-			return Arrays.asList(
-					EntityLayerObjects.get().getServerAsClientInstance());
-		}
-
-		@Override
-		public boolean isCurrentScheduledJobExecutor() {
-			return true;
-		}
-
-		@Override
-		public boolean isHighestBuildNumberInCluster() {
-			return true;
-		}
-	}
-
-	public enum LogCreation {
-		NONE, JOB, STACK
-	}
-
-	@Registration.Singleton(Task.Performer.class)
-	public static class Performer implements Task.Performer {
-		@Override
-		public Job ensurePending(Task task) {
-			return get().ensureScheduled(task, true);
-		}
-
-		@Override
-		public Job perform(Task task) {
-			return get().perform(task);
-		}
-
-		@Override
-		public Job schedule(Task task) {
-			return createBuilder().withTask(task).create();
-		}
-	}
-
 	static class ContextAwaiter {
 		CountDownLatch latch = new CountDownLatch(1);
 
@@ -1236,6 +1178,20 @@ public class JobRegistry {
 		}
 	}
 
+	public static class FutureStat {
+		public String taskName;
+
+		public Date runAt;
+
+		public long jobId;
+
+		FutureStat(Job job) {
+			taskName = job.getTaskClassName();
+			runAt = job.getRunAt();
+			jobId = job.getId();
+		}
+	}
+
 	static class InMemoryResult {
 		String result;
 
@@ -1248,6 +1204,35 @@ public class JobRegistry {
 
 		void record() {
 			get().inMemoryResults.put(job, this);
+		}
+	}
+
+	@Registration(JobExecutors.class)
+	public static class JobExecutorsSingle implements JobExecutors {
+		@Override
+		public void addScheduledJobExecutorChangeConsumer(
+				Consumer<Boolean> consumer) {
+		}
+
+		@Override
+		public Object allocationLock(String path, boolean acquire) {
+			return new Object();
+		}
+
+		@Override
+		public List<ClientInstance> getActiveServers() {
+			return Arrays.asList(
+					EntityLayerObjects.get().getServerAsClientInstance());
+		}
+
+		@Override
+		public boolean isCurrentScheduledJobExecutor() {
+			return true;
+		}
+
+		@Override
+		public boolean isHighestBuildNumberInCluster() {
+			return true;
 		}
 	}
 
@@ -1280,11 +1265,33 @@ public class JobRegistry {
 		}
 	}
 
+	public enum LogCreation {
+		NONE, JOB, STACK
+	}
+
 	static class MissingPerformerPerformer implements TaskPerformer {
 		@Override
 		public void performAction(Task task) throws Exception {
 			throw new Exception(Ax.format("No performer found for task %s",
 					task.getClass().getName()));
+		}
+	}
+
+	@Registration.Singleton(Task.Performer.class)
+	public static class Performer implements Task.Performer {
+		@Override
+		public Job ensurePending(Task task) {
+			return get().ensureScheduled(task, true);
+		}
+
+		@Override
+		public Job perform(Task task) {
+			return get().perform(task);
+		}
+
+		@Override
+		public Job schedule(Task task) {
+			return createBuilder().withTask(task).create();
 		}
 	}
 

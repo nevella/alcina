@@ -145,6 +145,10 @@ public class JobContext {
 		return get() != null;
 	}
 
+	static boolean ignoreResource(JobResource resource) {
+		return LooseContext.is(CONTEXT_IGNORE_RESOURCES);
+	}
+
 	public static void info(String template, Object... args) {
 		if (get() == null) {
 			String message = Ax.format(template.replace("{}", "%s"), args);
@@ -243,10 +247,6 @@ public class JobContext {
 		}
 	}
 
-	static boolean ignoreResource(JobResource resource) {
-		return LooseContext.is(CONTEXT_IGNORE_RESOURCES);
-	}
-
 	private boolean enqueueProgressOnBackend;
 
 	private TaskPerformer performer;
@@ -305,6 +305,116 @@ public class JobContext {
 		allocator.awaitChildCompletion(this);
 	}
 
+	void awaitSequenceCompletion() {
+		TransactionEnvironment.get().ensureEnded();
+		try {
+			JobRegistry.awaitLatch(endedLatch);
+		} catch (Exception e) {
+			logger.warn("DEVEX-0 -- job sequence timeout/interruption", e);
+		}
+		allocator.awaitSequenceCompletion();
+		TransactionEnvironment.get().begin();
+	}
+
+	void beginLogBuffer() {
+		Registry.impl(PerThreadLogging.class).beginBuffer();
+	}
+
+	void checkCancelled0(boolean ignoreSelf) {
+		Job cursor = job;
+		if (ignoreSelf) {
+			Optional<Job> parent = cursor.provideFirstInSequence()
+					.provideParent();
+			if (parent.isPresent()) {
+				cursor = parent.get();
+			} else {
+				return;
+			}
+		}
+		while (true) {
+			if (cursor.provideIsComplete()) {
+				info("Job cancelled");
+				throw new CancelledException("Job cancelled");
+			}
+			Optional<Job> parent = cursor.provideFirstInSequence()
+					.provideParent();
+			if (parent.isPresent()) {
+				cursor = parent.get();
+			} else {
+				return;
+			}
+		}
+	}
+
+	void clearRefs() {
+		performer = null;
+		// not allocator - it's a circular reference anyway, and required for
+		// awaitSequenceCompletion
+		// allocator = null;
+		thread = null;
+	}
+
+	private ProgressBuilder createProgressBuilder() {
+		return new ProgressBuilder();
+	}
+
+	String describeTask(Task task, String msg) {
+		msg += "Clazz: " + task.getClass().getName() + "\n";
+		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
+		msg += "\nParameters: \n";
+		try {
+			msg += new JacksonJsonObjectSerializer().withIdRefs()
+					.withMaxLength(1000000).serializeNoThrow(task);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+		return msg;
+	}
+
+	void end() {
+		if (performer.endInLockedSection()) {
+			/*
+			 * per task class lock
+			 */
+			JobRegistry.get().withJobMetadataLock(job.getTaskClassName(),
+					this::end0);
+		} else {
+			end0();
+		}
+	}
+
+	private void end0() {
+		Transaction.ensureBegun();
+		if (noHttpContext) {
+			if (JobRegistry.get().environment.isTrackMetrics()) {
+				InternalMetrics.get().endTracker(performer);
+			}
+		}
+		if (job.provideIsNotComplete()) {
+			// occurs just before end, since possibly on a different thread
+			// log = Registry.impl(PerThreadLogging.class).endBuffer();
+			int maxChars = LooseContext
+					.<Integer> optional(CONTEXT_LOG_MAX_CHARS).orElse(5000000);
+			log = CommonUtils.trimToWsChars(log, maxChars, true);
+			job.setLog(log);
+			if (job.provideRelatedSequential().stream().filter(j -> j != job)
+					.anyMatch(Job::provideIsNotComplete)) {
+				job.setState(JobState.COMPLETED);
+				allocator.ensureStarted();
+			} else {
+				job.setState(JobState.SEQUENCE_COMPLETE);
+			}
+			job.setEndTime(new Date());
+			if (job.getResultType() == null) {
+				job.setResultType(JobResultType.OK);
+			}
+			logger.info("Job complete - {} - {} - {} ms", job, job.getEndTime(),
+					job.getEndTime().getTime() - job.getStartTime().getTime());
+		}
+		persistMetadata();
+		endedLatch.countDown();
+	}
+
 	public void endLogBuffer() {
 		if (job.provideIsNotComplete()) {
 			log = Registry.impl(PerThreadLogging.class).endBuffer();
@@ -350,6 +460,14 @@ public class JobContext {
 		getJob().setCompletion(completion);
 	}
 
+	private void maybeEnqueue(Runnable runnable) {
+		if (enqueueProgressOnBackend) {
+			TransformCommit.get().enqueueBackendTransform(runnable);
+		} else {
+			runnable.run();
+		}
+	}
+
 	public void onJobException(Exception e) {
 		Transaction.ensureEnded();
 		Transaction.begin();
@@ -362,6 +480,28 @@ public class JobContext {
 		e.printStackTrace();
 	}
 
+	protected void persistMetadata() {
+		if (performer.deferMetadataPersistence(job)) {
+			TransformCommit.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME);
+		} else {
+			/*
+			 * Because of possible collisions with stacktrace?
+			 */
+			TransactionEnvironment.get().commitWithBackoff();
+		}
+	}
+
+	void persistStart() {
+		if (job.provideIsNotComplete()) {
+			// Threading - guaranteed that this is sole mutating thread (for
+			// job)
+			job.setStartTime(new Date());
+			job.setState(JobState.PROCESSING);
+			job.setPerformerVersionNumber(performer.getVersionNumber());
+			persistMetadata();
+		}
+	}
+
 	public void recordLargeInMemoryResult(String largeSerializedResult) {
 		new JobRegistry.InMemoryResult(largeSerializedResult, getJob())
 				.record();
@@ -371,12 +511,40 @@ public class JobContext {
 		LooseContext.remove(CONTEXT_CURRENT);
 	}
 
+	void restoreThreadName() {
+		if (threadStartName != null) {
+			Thread.currentThread().setName(threadStartName);
+		}
+	}
+
 	public void setItemCount(int itemCount) {
 		this.itemCount = itemCount;
 	}
 
 	public void setItemsCompleted(int itemsCompleted) {
 		this.itemsCompleted = itemsCompleted;
+	}
+
+	void start() {
+		LooseContext.set(CONTEXT_CURRENT, this);
+		thread = Thread.currentThread();
+		threadStartName = thread.getName();
+		if (job.provideIsNotComplete()) {
+			String contextThreadName = Ax.format("%s::%s::%s",
+					job.provideTaskClass().getSimpleName(), job.getId(),
+					threadStartName);
+			thread.setName(contextThreadName);
+		}
+		if (noHttpContext) {
+			ActionPerformerTrackMetrics filter = Registry
+					.impl(ActionPerformerTrackMetrics.class);
+			if (JobRegistry.get().environment.isTrackMetrics()) {
+				InternalMetrics.get().startTracker(performer,
+						() -> describeTask(job.getTask(), ""),
+						InternalMetricTypeAlcina.service,
+						performer.getClass().getSimpleName(), filter);
+			}
+		}
 	}
 
 	public void toAwaitingChildren() {
@@ -401,174 +569,6 @@ public class JobContext {
 		if (thread != null) {
 			processState.setThreadName(thread.getName());
 			processState.setStackTrace(SEUtilities.getFullStacktrace(thread));
-		}
-	}
-
-	private ProgressBuilder createProgressBuilder() {
-		return new ProgressBuilder();
-	}
-
-	private void end0() {
-		Transaction.ensureBegun();
-		if (noHttpContext) {
-			if (JobRegistry.get().environment.isTrackMetrics()) {
-				InternalMetrics.get().endTracker(performer);
-			}
-		}
-		if (job.provideIsNotComplete()) {
-			// occurs just before end, since possibly on a different thread
-			// log = Registry.impl(PerThreadLogging.class).endBuffer();
-			int maxChars = LooseContext
-					.<Integer> optional(CONTEXT_LOG_MAX_CHARS).orElse(5000000);
-			log = CommonUtils.trimToWsChars(log, maxChars, true);
-			job.setLog(log);
-			if (job.provideRelatedSequential().stream().filter(j -> j != job)
-					.anyMatch(Job::provideIsNotComplete)) {
-				job.setState(JobState.COMPLETED);
-				allocator.ensureStarted();
-			} else {
-				job.setState(JobState.SEQUENCE_COMPLETE);
-			}
-			job.setEndTime(new Date());
-			if (job.getResultType() == null) {
-				job.setResultType(JobResultType.OK);
-			}
-			logger.info("Job complete - {} - {} - {} ms", job, job.getEndTime(),
-					job.getEndTime().getTime() - job.getStartTime().getTime());
-		}
-		persistMetadata();
-		endedLatch.countDown();
-	}
-
-	private void maybeEnqueue(Runnable runnable) {
-		if (enqueueProgressOnBackend) {
-			TransformCommit.get().enqueueBackendTransform(runnable);
-		} else {
-			runnable.run();
-		}
-	}
-
-	protected void persistMetadata() {
-		if (performer.deferMetadataPersistence(job)) {
-			TransformCommit.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME);
-		} else {
-			/*
-			 * Because of possible collisions with stacktrace?
-			 */
-			TransactionEnvironment.get().commitWithBackoff();
-		}
-	}
-
-	void awaitSequenceCompletion() {
-		TransactionEnvironment.get().ensureEnded();
-		try {
-			endedLatch.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		allocator.awaitSequenceCompletion();
-		TransactionEnvironment.get().begin();
-	}
-
-	void beginLogBuffer() {
-		Registry.impl(PerThreadLogging.class).beginBuffer();
-	}
-
-	void checkCancelled0(boolean ignoreSelf) {
-		Job cursor = job;
-		if (ignoreSelf) {
-			Optional<Job> parent = cursor.provideFirstInSequence()
-					.provideParent();
-			if (parent.isPresent()) {
-				cursor = parent.get();
-			} else {
-				return;
-			}
-		}
-		while (true) {
-			if (cursor.provideIsComplete()) {
-				info("Job cancelled");
-				throw new CancelledException("Job cancelled");
-			}
-			Optional<Job> parent = cursor.provideFirstInSequence()
-					.provideParent();
-			if (parent.isPresent()) {
-				cursor = parent.get();
-			} else {
-				return;
-			}
-		}
-	}
-
-	void clearRefs() {
-		performer = null;
-		// not allocator - it's a circular reference anyway, and required for
-		// awaitSequenceCompletion
-		// allocator = null;
-		thread = null;
-	}
-
-	String describeTask(Task task, String msg) {
-		msg += "Clazz: " + task.getClass().getName() + "\n";
-		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
-		msg += "\nParameters: \n";
-		try {
-			msg += new JacksonJsonObjectSerializer().withIdRefs()
-					.withMaxLength(1000000).serializeNoThrow(task);
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-		return msg;
-	}
-
-	void end() {
-		if (performer.endInLockedSection()) {
-			/*
-			 * per task class lock
-			 */
-			JobRegistry.get().withJobMetadataLock(job.getTaskClassName(),
-					this::end0);
-		} else {
-			end0();
-		}
-	}
-
-	void persistStart() {
-		if (job.provideIsNotComplete()) {
-			// Threading - guaranteed that this is sole mutating thread (for
-			// job)
-			job.setStartTime(new Date());
-			job.setState(JobState.PROCESSING);
-			job.setPerformerVersionNumber(performer.getVersionNumber());
-			persistMetadata();
-		}
-	}
-
-	void restoreThreadName() {
-		if (threadStartName != null) {
-			Thread.currentThread().setName(threadStartName);
-		}
-	}
-
-	void start() {
-		LooseContext.set(CONTEXT_CURRENT, this);
-		thread = Thread.currentThread();
-		threadStartName = thread.getName();
-		if (job.provideIsNotComplete()) {
-			String contextThreadName = Ax.format("%s::%s::%s",
-					job.provideTaskClass().getSimpleName(), job.getId(),
-					threadStartName);
-			thread.setName(contextThreadName);
-		}
-		if (noHttpContext) {
-			ActionPerformerTrackMetrics filter = Registry
-					.impl(ActionPerformerTrackMetrics.class);
-			if (JobRegistry.get().environment.isTrackMetrics()) {
-				InternalMetrics.get().startTracker(performer,
-						() -> describeTask(job.getTask(), ""),
-						InternalMetricTypeAlcina.service,
-						performer.getClass().getSimpleName(), filter);
-			}
 		}
 	}
 
