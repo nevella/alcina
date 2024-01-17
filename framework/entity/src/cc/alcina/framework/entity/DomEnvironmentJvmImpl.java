@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 @Registration.Singleton(
 	value = DomEnvironment.class,
@@ -50,6 +51,7 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	@Override
 	public String log(DomNode xmlNode, boolean pretty) {
 		try {
+			LooseContext.pushWithTrue(XmlUtils.CONTEXT_MUTE_XML_SAX_EXCEPTIONS);
 			if (pretty) {
 				XmlUtils.logToFilePretty(xmlNode.w3cNode());
 			} else {
@@ -63,6 +65,8 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 			} catch (Exception e1) {
 				throw new WrappedRuntimeException(e);
 			}
+		} finally {
+			LooseContext.pop();
 		}
 	}
 
