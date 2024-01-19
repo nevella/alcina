@@ -65,6 +65,7 @@ public class PathrefDom {
 	public Environment register(RemoteUi ui, Credentials credentials) {
 		Environment environment = new Environment(ui, credentials);
 		environments.put(credentials.id, environment);
+		ui.setEnvironment(environment);
 		return environment;
 	}
 

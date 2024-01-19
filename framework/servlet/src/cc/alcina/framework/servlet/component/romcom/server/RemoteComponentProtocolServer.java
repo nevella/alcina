@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
@@ -95,7 +96,8 @@ public class RemoteComponentProtocolServer {
 						+ "by a newer access to this component. \n\nPlease use the newer client, "
 						+ "or refresh to switch rendering to this client";
 			}
-			return new InvalidClientException(message, action);
+			return new InvalidClientException(message, action,
+					NestedName.get(uiType));
 		}
 
 		URL getResourceUrl(String warRelativePart) {
@@ -204,7 +206,18 @@ public class RemoteComponentProtocolServer {
 						}
 					} catch (Exception e) {
 						if (e instanceof ProtocolException) {
-							Ax.simpleExceptionOut(e);
+							boolean handled = false;
+							if (e instanceof InvalidClientException) {
+								InvalidClientException clex = (InvalidClientException) e;
+								if (clex.action == Action.REFRESH) {
+									Ax.out("Refreshing remotecomponent '%s' ",
+											clex.uiType);
+									handled = true;
+								}
+							}
+							if (!handled) {
+								Ax.simpleExceptionOut(e);
+							}
 						} else {
 							e.printStackTrace();
 						}

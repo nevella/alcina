@@ -24,7 +24,7 @@ class RenderedSelections extends Model.Fields {
 	RenderedSelections(Page page, boolean input) {
 		this.page = page;
 		this.heading = new Heading(input ? "Input" : "Output");
-		String markup = page.history.traversal.getDocumentMarkup(input);
+		String markup = page.history.observable.getDocumentMarkup(input);
 		if (markup != null) {
 			DomDocument doc = Io.read().string(markup).asDomDocument();
 			doc.stream()

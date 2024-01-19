@@ -166,6 +166,10 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		}
 	}
 
+	/*
+	 * a range is before another if it starts before, or if starts are equal and
+	 * it ends before the other
+	 */
 	@Override
 	public int compareTo(IntPair ip) {
 		return i1 < ip.i1 ? -1

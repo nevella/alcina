@@ -182,5 +182,8 @@ public interface Feature extends Registration.AllSubtypes {
 		public interface Ui_implementation extends Type{}
 
 		public interface Ui_support extends Type{}
+
+		public interface Backend_model extends Type{}
+		public interface Backend_report extends Type{}
 	}
 }

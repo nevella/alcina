@@ -52,10 +52,10 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			if (selection == null && !selectionFromPathAttempted) {
 				if (path != null
 						&& TraversalProcessView.Ui.get().getHistory() != null
-						&& TraversalProcessView.Ui.get().getHistory().traversal
+						&& TraversalProcessView.Ui.get().getHistory().observable
 								.getRootSelection() != null) {
 					selection = (Selection) TraversalProcessView.Ui.get()
-							.getHistory().traversal.getRootSelection()
+							.getHistory().observable.getRootSelection()
 									.processNode().nodeForTreePath(path)
 									.map(Node::getValue).orElse(null);
 					selectionFromPathAttempted = true;

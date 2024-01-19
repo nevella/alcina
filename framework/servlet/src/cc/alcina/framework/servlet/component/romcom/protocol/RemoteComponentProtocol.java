@@ -33,12 +33,16 @@ public class RemoteComponentProtocol {
 			implements ProtocolException {
 		public Action action;
 
+		public transient String uiType;
+
 		public InvalidClientException() {
 		}
 
-		public InvalidClientException(String message, Action action) {
+		public InvalidClientException(String message, Action action,
+				String uiType) {
 			super(message);
 			this.action = action;
+			this.uiType = uiType;
 		}
 
 		@AlcinaTransient

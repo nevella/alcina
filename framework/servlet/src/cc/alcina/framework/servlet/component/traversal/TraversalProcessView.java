@@ -12,12 +12,13 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
-import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalHistory;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalProcessPlace;
 import cc.alcina.framework.servlet.dom.ClientRemoteImpl;
@@ -64,6 +65,16 @@ public class TraversalProcessView {
 	public static class Ui implements RemoteUi {
 		Page page;
 
+		Environment environment;
+
+		public Environment getEnvironment() {
+			return environment;
+		}
+
+		public void setEnvironment(Environment environment) {
+			this.environment = environment;
+		}
+
 		public static Ui get() {
 			return (Ui) Environment.get().ui;
 		}
@@ -90,7 +101,8 @@ public class TraversalProcessView {
 					.appendToRoot();
 		}
 
-		public TraversalHistory getHistory() {
+		public RemoteComponentObservables<SelectionTraversal>.ObservableHistory
+				getHistory() {
 			return page.history;
 		}
 	}

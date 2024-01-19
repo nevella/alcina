@@ -35,7 +35,7 @@ class SelectionLayers extends Model.Fields {
 		if (page.history == null) {
 			return;
 		}
-		traversal = page.history.traversal;
+		traversal = page.history.observable;
 		DepthFirstTraversal<Layer> renderTraversal = new DepthFirstTraversal<Layer>(
 				traversal.getRootLayer(), Layer::getChildren, false);
 		List<LayerSelections> layers = renderTraversal.stream()

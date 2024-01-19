@@ -180,6 +180,7 @@ public class Environment {
 		if (!Objects.equals(session.auth, credentials.auth)) {
 			throw new RemoteComponentProtocol.InvalidAuthenticationException();
 		}
+		connectedClientUid = session.id;
 		if (validateClientInstanceUid) {
 			// FIXME - romcom - throw various exceptions if expired etc - see
 			// package javadoc

@@ -6,6 +6,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -19,8 +20,9 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableHistory;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
-import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalHistory;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 
@@ -37,7 +39,7 @@ class Page extends Model.All implements
 
 		Header() {
 			bindings().from(Page.this).on(Property.history)
-					.typed(TraversalHistory.class).map(this::computeName)
+					.typed(ObservableHistory.class).map(this::computeName)
 					.accept(this::setName);
 		}
 
@@ -45,10 +47,10 @@ class Page extends Model.All implements
 			set("name", this.name, name, () -> this.name = name);
 		}
 
-		String computeName(TraversalHistory history) {
+		String computeName(ObservableHistory history) {
 			FormatBuilder format = new FormatBuilder().separator(" - ");
 			format.append(TraversalProcessView.Ui.get().getMainCaption());
-			format.appendIfNonNull(history, TraversalHistory::displayName);
+			format.appendIfNonNull(history, ObservableHistory::displayName);
 			return format.toString();
 		}
 
@@ -80,7 +82,7 @@ class Page extends Model.All implements
 	RenderedSelections output;
 
 	@Directed.Exclude
-	TraversalHistory history;
+	RemoteComponentObservables<SelectionTraversal>.ObservableHistory history;
 
 	@Directed.Exclude
 	TraversalPlace place;
@@ -163,7 +165,8 @@ class Page extends Model.All implements
 		place.<TraversalPlace> copy().withSelection(event.getModel()).go();
 	}
 
-	void setHistory(TraversalHistory history) {
+	void setHistory(
+			RemoteComponentObservables<SelectionTraversal>.ObservableHistory history) {
 		set(Property.history, this.history, history,
 				() -> this.history = history);
 	}

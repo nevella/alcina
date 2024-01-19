@@ -67,6 +67,16 @@ public class FeatureTree {
 			return (Ui) Environment.get().ui;
 		}
 
+		Environment environment;
+
+		public Environment getEnvironment() {
+			return environment;
+		}
+
+		public void setEnvironment(Environment environment) {
+			this.environment = environment;
+		}
+
 		@Override
 		public Client createClient() {
 			return new ClientImpl();
