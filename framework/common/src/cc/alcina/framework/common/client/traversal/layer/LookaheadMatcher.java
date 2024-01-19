@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -206,6 +207,7 @@ public abstract class LookaheadMatcher<C> {
 				default:
 					throw new UnsupportedOperationException();
 				}
+				text = TextUtils.normalizeSpaces(text.toString());
 				switch (options.matchesEmphasisTypes) {
 				case EMPHASIS:
 					if (!isInEmphasisRange()) {
