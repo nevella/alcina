@@ -164,6 +164,14 @@ public class Location implements Comparable<Location> {
 		return treeIndex ^ index ^ (after ? 1 : 0);
 	}
 
+	public String getSubsequentText() {
+		return getSubsequentText(100);
+	}
+
+	public String getSubsequentText(int chars) {
+		return locationContext.getSubsequentText(this, chars);
+	}
+
 	public int indexInNode() {
 		return index - containingNode.asLocation().index;
 	}
@@ -223,7 +231,7 @@ public class Location implements Comparable<Location> {
 	@Override
 	public String toString() {
 		String nodeName = containingNode.isText()
-				? Ax.format("'%s'", Ax.trim(containingNode.textContent(), 25))
+				? Ax.format("'%s'", getSubsequentText(30))
 				: Ax.format("<%s>", containingNode.name());
 		String dir = containingNode.isText() ? "" : after ? ",>" : ",<";
 		return Ax.format("%s,%s%s %s", treeIndex, index, dir, nodeName);

@@ -78,4 +78,6 @@ public interface LocationContext {
 	String markupContent(Range range);
 
 	List<DomNode> getContainingNodes(int index, boolean after);
+
+	String getSubsequentText(Location location, int chars);
 }

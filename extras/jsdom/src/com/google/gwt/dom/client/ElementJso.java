@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,114 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class ElementJso extends NodeJso implements ClientDomElement {
+	static class ContiguousTextNodes {
+		NodeJso previous;
+
+		NodeJso node;
+
+		int idx;
+
+		ContiguousTextNodes(int idx, NodeJso previous, NodeJso node) {
+			this.idx = idx;
+			this.previous = previous;
+			this.node = node;
+		}
+
+		void applyToLocal() {
+		}
+	}
+
+	static class ElementJsoIndex extends JavaScriptObject {
+		protected ElementJsoIndex() {
+		}
+
+		public final String getString() {
+			FormatBuilder fb = new FormatBuilder();
+			fb.line("Element remote:\n===========");
+			fb.line("Indicies (lowest first):\n%s", stringIndicies());
+			fb.line("Ancestors (lowest first):\n%s", ancestors());
+			fb.line("Root:\n%s",
+					root() != null ? root().getTagNameRemote() : "null");
+			fb.line("Debug data:\n%s", debugData());
+			fb.line("\nDebug log:\n%s", debugLog());
+			return fb.toString();
+		}
+
+		final native JsArray ancestors()/*-{
+      return this.ancestors;
+		}-*/;
+
+		final native String debugData()/*-{
+      return this.debugData.join("\n\n");
+		}-*/;
+
+		final native String debugLog()/*-{
+      return this.debugLog;
+		}-*/;
+
+		final native ElementJso hasNode()/*-{
+      return this.hasNode;
+		}-*/;
+
+		final boolean hasRemoteDefined() {
+			for (Boolean value : remoteDefined()) {
+				if (value) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		final List<Integer> indicies() {
+			return commaSeparatedIntsToList(stringIndicies());
+		}
+
+		final native JsArrayInteger jsIndicies()/*-{
+      return this.indicies;
+		}-*/;
+
+		final native JsArrayInteger jsSizes()/*-{
+      return this.sizes;
+		}-*/;
+
+		final List<Boolean> remoteDefined() {
+			return commaSeparatedBoolsToList(stringRemoteDefined());
+		}
+
+		final native ElementJso root()/*-{
+      return this.root;
+		}-*/;
+
+		final List<Integer> sizes() {
+			return commaSeparatedIntsToList(stringSizes());
+		}
+
+		final native String stringIndicies()/*-{
+      return this.indicies.join(",");
+		}-*/;
+
+		final native String stringRemoteDefined()/*-{
+      return this.remoteDefined.join(",");
+		}-*/;
+
+		final native String stringSizes()/*-{
+      return this.sizes.join(",");
+		}-*/;
+	}
+
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to an
+	 * {@link Element}. A <code>null</code> object will cause this method to
+	 * return <code>false</code>.
+	 *
+	 *
+	 */
+	static class RemoteCache {
+		boolean lastIsResult;
+
+		JavaScriptObject lastIs;
+	}
+
 	/*
 	 * Non-private for access from bytecode generated (ElementJso$)
 	 */
@@ -61,28 +170,6 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		return (node != null) && (node.getNodeType() == Node.ELEMENT_NODE);
 	}
 
-	private static boolean isRemote(JavaScriptObject o) {
-		if (NodeJso.is(o)) {
-			return ((NodeJso) o).getNodeType() == Node.ELEMENT_NODE;
-		}
-		return false;
-	}
-
-	/**
-	 * Fast helper method to convert small doubles to 32-bit int.
-	 *
-	 * <p>
-	 * Note: you should be aware that this uses JavaScript rounding and thus
-	 * does NOT provide the same semantics as
-	 * <code>int b = (int) someDouble;</code>. In particular, if x is outside
-	 * the range [-2^31,2^31), then toInt32(x) would return a value equivalent
-	 * to x modulo 2^32, whereas (int) x would evaluate to either MIN_INT or
-	 * MAX_INT.
-	 */
-	private static native int toInt32(double val) /*-{
-    return val | 0;
-	}-*/;
-
 	/**
 	 * Assert that the given {@link Node} is an {@link Element} and
 	 * automatically typecast it.
@@ -115,6 +202,28 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	static String trimClassName(String className) {
 		return ClientDomElement.trimClassName(className);
 	}
+
+	private static boolean isRemote(JavaScriptObject o) {
+		if (NodeJso.is(o)) {
+			return ((NodeJso) o).getNodeType() == Node.ELEMENT_NODE;
+		}
+		return false;
+	}
+
+	/**
+	 * Fast helper method to convert small doubles to 32-bit int.
+	 *
+	 * <p>
+	 * Note: you should be aware that this uses JavaScript rounding and thus
+	 * does NOT provide the same semantics as
+	 * <code>int b = (int) someDouble;</code>. In particular, if x is outside
+	 * the range [-2^31,2^31), then toInt32(x) would return a value equivalent
+	 * to x modulo 2^32, whereas (int) x would evaluate to either MIN_INT or
+	 * MAX_INT.
+	 */
+	private static native int toInt32(double val) /*-{
+    return val | 0;
+	}-*/;
 
 	protected ElementJso() {
 	}
@@ -455,17 +564,10 @@ public class ElementJso extends NodeJso implements ClientDomElement {
     return this[name];
 	}-*/;
 
-	/**
-	 * Gets a property from this element.
-	 *
-	 * @param name
-	 *            the name of the property to be retrieved
-	 * @return the property value
-	 */
 	@Override
-	public final native String getPropertyString(String name) /*-{
-    return (this[name] == null) ? null : String(this[name]);
-	}-*/;
+	public final String getPropertyString(String name) {
+		return getPropertyString0(jsoPropertyName(name));
+	}
 
 	/**
 	 * The height of the scroll view of an element.
@@ -743,10 +845,9 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	 *            the new property value
 	 */
 	@Override
-	public final native void setPropertyString(String name, String value) /*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
-    this[name] = value;
-	}-*/;
+	public final void setPropertyString(String name, String value) {
+		setPropertyString0(jsoPropertyName(name), value);
+	}
 
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
@@ -803,65 +904,14 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		ClientDomElementStatic.toggleClassName(this, className);
 	}
 
-	private final native JsArrayString getAttributeList()/*-{
-    var result = [];
-    var attrs = this.attributes;
-    for (var i = 0; i < attrs.length; i++) {
-      result.push(attrs[i].name);
-      result.push(attrs[i].value);
-    }
-    return result;
+	final native void setPropertyString0(String name, String value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
+    this[name] = value;
 	}-*/;
 
-	/**
-	 * Returns a NodeList of all descendant Elements with a given tag name, in
-	 * the order in which they are encountered in a preorder traversal of this
-	 * Element tree.
-	 *
-	 * @param name
-	 *            The name of the tag to match on. The special value "*" matches
-	 *            all tags
-	 * @return A list of matching Element nodes
-	 */
-	private final native NodeListJso<Element> getElementsByTagName0(String name) /*-{
-    return this.getElementsByTagName(name);
-	}-*/;
-
-	private final native double getSubPixelClientHeight() /*-{
-    return this.clientHeight;
-	}-*/;
-
-	private final native double getSubPixelClientWidth() /*-{
-    return this.clientWidth;
-	}-*/;
-
-	private final native double getSubPixelOffsetHeight() /*-{
-    return this.offsetHeight || 0;
-	}-*/;
-
-	private final native double getSubPixelOffsetLeft() /*-{
-    return this.offsetLeft || 0;
-	}-*/;
-
-	private final native double getSubPixelOffsetTop() /*-{
-    return this.offsetTop || 0;
-	}-*/;
-
-	private final native double getSubPixelOffsetWidth() /*-{
-    return this.offsetWidth || 0;
-	}-*/;
-
-	private final native double getSubPixelScrollHeight() /*-{
-    return this.scrollHeight || 0;
-	}-*/;
-
-	private final native double getSubPixelScrollTop() /*-{
-    return this.scrollTop || 0;
-	}-*/;
-
-	private final native double getSubPixelScrollWidth() /*-{
-    return this.scrollWidth || 0;
-	}-*/;
+	final String jsoPropertyName(String name) {
+		return Objects.equals(name, "class") ? "className" : name;
+	}
 
 	/**
 	 * Explicitly build html by traversing with javascript (cos we can't trust
@@ -1149,111 +1199,74 @@ public class ElementJso extends NodeJso implements ClientDomElement {
     this.parentElement.removeChild(this);
 	}-*/;
 
-	static class ContiguousTextNodes {
-		NodeJso previous;
+	/**
+	 * Gets a property from this element.
+	 *
+	 * @param name
+	 *            the name of the property to be retrieved
+	 * @return the property value
+	 */
+	private final native String getPropertyString0(String name) /*-{
+    return (this[name] == null) ? null : String(this[name]);
+	}-*/;
 
-		NodeJso node;
-
-		int idx;
-
-		ContiguousTextNodes(int idx, NodeJso previous, NodeJso node) {
-			this.idx = idx;
-			this.previous = previous;
-			this.node = node;
-		}
-
-		void applyToLocal() {
-		}
-	}
-
-	static class ElementJsoIndex extends JavaScriptObject {
-		protected ElementJsoIndex() {
-		}
-
-		public final String getString() {
-			FormatBuilder fb = new FormatBuilder();
-			fb.line("Element remote:\n===========");
-			fb.line("Indicies (lowest first):\n%s", stringIndicies());
-			fb.line("Ancestors (lowest first):\n%s", ancestors());
-			fb.line("Root:\n%s",
-					root() != null ? root().getTagNameRemote() : "null");
-			fb.line("Debug data:\n%s", debugData());
-			fb.line("\nDebug log:\n%s", debugLog());
-			return fb.toString();
-		}
-
-		final native JsArray ancestors()/*-{
-      return this.ancestors;
-		}-*/;
-
-		final native String debugData()/*-{
-      return this.debugData.join("\n\n");
-		}-*/;
-
-		final native String debugLog()/*-{
-      return this.debugLog;
-		}-*/;
-
-		final native ElementJso hasNode()/*-{
-      return this.hasNode;
-		}-*/;
-
-		final boolean hasRemoteDefined() {
-			for (Boolean value : remoteDefined()) {
-				if (value) {
-					return true;
-				}
-			}
-			return false;
-		}
-
-		final List<Integer> indicies() {
-			return commaSeparatedIntsToList(stringIndicies());
-		}
-
-		final native JsArrayInteger jsIndicies()/*-{
-      return this.indicies;
-		}-*/;
-
-		final native JsArrayInteger jsSizes()/*-{
-      return this.sizes;
-		}-*/;
-
-		final List<Boolean> remoteDefined() {
-			return commaSeparatedBoolsToList(stringRemoteDefined());
-		}
-
-		final native ElementJso root()/*-{
-      return this.root;
-		}-*/;
-
-		final List<Integer> sizes() {
-			return commaSeparatedIntsToList(stringSizes());
-		}
-
-		final native String stringIndicies()/*-{
-      return this.indicies.join(",");
-		}-*/;
-
-		final native String stringRemoteDefined()/*-{
-      return this.remoteDefined.join(",");
-		}-*/;
-
-		final native String stringSizes()/*-{
-      return this.sizes.join(",");
-		}-*/;
-	}
+	private final native JsArrayString getAttributeList()/*-{
+    var result = [];
+    var attrs = this.attributes;
+    for (var i = 0; i < attrs.length; i++) {
+      result.push(attrs[i].name);
+      result.push(attrs[i].value);
+    }
+    return result;
+	}-*/;
 
 	/**
-	 * Determines whether the given {@link JavaScriptObject} can be cast to an
-	 * {@link Element}. A <code>null</code> object will cause this method to
-	 * return <code>false</code>.
+	 * Returns a NodeList of all descendant Elements with a given tag name, in
+	 * the order in which they are encountered in a preorder traversal of this
+	 * Element tree.
 	 *
-	 *
+	 * @param name
+	 *            The name of the tag to match on. The special value "*" matches
+	 *            all tags
+	 * @return A list of matching Element nodes
 	 */
-	static class RemoteCache {
-		boolean lastIsResult;
+	private final native NodeListJso<Element> getElementsByTagName0(String name) /*-{
+    return this.getElementsByTagName(name);
+	}-*/;
 
-		JavaScriptObject lastIs;
-	}
+	private final native double getSubPixelClientHeight() /*-{
+    return this.clientHeight;
+	}-*/;
+
+	private final native double getSubPixelClientWidth() /*-{
+    return this.clientWidth;
+	}-*/;
+
+	private final native double getSubPixelOffsetHeight() /*-{
+    return this.offsetHeight || 0;
+	}-*/;
+
+	private final native double getSubPixelOffsetLeft() /*-{
+    return this.offsetLeft || 0;
+	}-*/;
+
+	private final native double getSubPixelOffsetTop() /*-{
+    return this.offsetTop || 0;
+	}-*/;
+
+	private final native double getSubPixelOffsetWidth() /*-{
+    return this.offsetWidth || 0;
+	}-*/;
+
+	private final native double getSubPixelScrollHeight() /*-{
+    return this.scrollHeight || 0;
+	}-*/;
+
+	private final native double getSubPixelScrollTop() /*-{
+    return this.scrollTop || 0;
+	}-*/;
+
+	private final native double getSubPixelScrollWidth() /*-{
+    return this.scrollWidth || 0;
+	}-*/;
 }

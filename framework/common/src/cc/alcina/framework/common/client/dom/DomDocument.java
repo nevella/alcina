@@ -773,6 +773,11 @@ public class DomDocument extends DomNode {
 						&& location.index + length > index;
 			}
 		}
+
+		@Override
+		public String getSubsequentText(Location location, int chars) {
+			return contents.substring(location.index, Math.min(contents.length(),location.index + chars));
+		}
 	}
 
 	public void normaliseWhitespace() {

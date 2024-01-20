@@ -59,6 +59,8 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 		public MatchTest.Result lastMatch;
 
 		public InputMapper inputMapper = new InputMapper.ToString();
+
+		public boolean tryToExtend = false;
 	}
 
 	public interface InputMapper {
@@ -100,6 +102,10 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 					MatchCondition condition) {
 				// todo - this can be optimised by customising the trie - ditto
 				// the lcase conversion
+				//
+				// ditto the end whitespace trimming. the reason we don't just
+				// get longest match early on is performance - e.g. a 3-char
+				// match may be huge (think 'the')
 				String toMatch = condition.inputMapper.mapInput(sequence);
 				SortedMap<String, Set> longestPrefixMap = null;
 				int len = 2;
@@ -112,26 +118,40 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 						break;
 					}
 				}
-				int f_len = len - 1;
-				if (longestPrefixMap != null) {
-					Entry<String, Set> entry = longestPrefixMap.entrySet()
-							.stream().filter(e -> e.getKey().length() == f_len)
-							.findFirst().orElse(null);
-					if (entry != null) {
-						Object bestMatch = condition.disambiguator
-								.getBestMatch(entry.getValue());
-						if (bestMatch != null) {
-							String key = entry.getKey();
-							// test expand to mark ", " as captured. todo -
-							// abstract (actually - mark as complete segment
-							// match although it isn't quite)
+				if (longestPrefixMap == null) {
+					return null;
+				}
+				Entry<String, Set> longestEntry = null;
+				for (; len >= 2; len--) {
+					SortedMap<String, Set> prefixMap = condition.trie
+							.prefixMap(toMatch.subSequence(0, len).toString());
+					if (prefixMap != null && prefixMap.size() > 0) {
+						int test = len;
+						Entry<String, Set> entry = prefixMap.entrySet().stream()
+								.filter(e -> e.getKey().length() == test)
+								.findFirst().orElse(null);
+						if (entry != null) {
+							longestEntry = entry;
+							break;
+						}
+					}
+				}
+				if (longestEntry != null) {
+					Object bestMatch = condition.disambiguator
+							.getBestMatch(longestEntry.getValue());
+					if (bestMatch != null) {
+						String key = longestEntry.getKey();
+						// test expand to mark ", " as captured. todo -
+						// abstract (actually - mark as complete segment
+						// match although it isn't quite)
+						if (condition.tryToExtend) {
 							String sequenceTerminator = sequence.subSequence(
 									key.length(), sequence.length()).toString();
 							if (sequenceTerminator.matches("[, ]+")) {
 								key = sequence.toString();
 							}
-							return new MatchTest.Result(key, bestMatch);
 						}
+						return new MatchTest.Result(key, bestMatch);
 					}
 				}
 				return null;
@@ -190,18 +210,26 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 			match.setData(longestMatch.value);
 		}
 
+		// this could be better expressed - but the trie can match at the start
+		// of the string, or after a non-word char ('(', space etc ). if not,
+		// it'll be in state canStart=false
 		public MatchResultImpl(LocationMatcher locationMatcher,
 				CharSequence text) {
 			int idx = 0;
 			MatchCondition condition = locationMatcher.options.condition;
 			int length = text.length();
+			boolean canStart = true;
 			for (; idx < length; idx++) {
 				char c = text.charAt(idx);
 				if (condition.startBoundaryTest.isNonStart(c)) {
+					canStart = true;
 					continue;
 				}
-				longestMatch = condition
-						.getLongestMatch(text.subSequence(idx, length));
+				if (canStart) {
+					longestMatch = condition
+							.getLongestMatch(text.subSequence(idx, length));
+					canStart = false;
+				}
 				if (longestMatch != null) {
 					start = idx;
 					end = idx + longestMatch.key.length();

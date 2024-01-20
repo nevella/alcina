@@ -215,4 +215,8 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	// Marker interface - otherwise a Registry-supplied DomBinding is expected
 	public interface WithoutDomBinding {
 	}
+
+	public Object sourceModel() {
+		return context.getPrevious().node.getModel();
+	}
 }

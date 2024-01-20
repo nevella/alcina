@@ -67,6 +67,14 @@ public abstract class LookaheadMatcher<C> {
 
 		boolean permitUnequalOptions;
 
+		boolean matchesNormalisedToLowerCase;
+
+		public Options withMatchesNormalisedToLowerCase(
+				boolean matchesNormalisedToLowerCase) {
+			this.matchesNormalisedToLowerCase = matchesNormalisedToLowerCase;
+			return this;
+		}
+
 		boolean requiresWholeExtentMatch;
 
 		Options(Token token, C condition) {
@@ -191,15 +199,16 @@ public abstract class LookaheadMatcher<C> {
 			}
 			if (matchedFrom == null) {
 				matchedFrom = parserState.location;
-				CharSequence text = null;
+				String text = null;
 				switch (options.matchesEmphasisTypes) {
 				case BOTH:
-					text = parserState.inputContent();
+					text = parserState.inputContent().toString();
 					break;
 				case SINGLE:
 				case EMPHASIS:
 					Location.Range currentStyleRange = computeCurrentStyleRange();
-					text = parserState.inputContent(currentStyleRange);
+					text = parserState.inputContent(currentStyleRange)
+							.toString();
 					invalidateAt = currentStyleRange.end.relativeLocation(
 							RelativeDirection.NEXT_LOCATION,
 							TextTraversal.EXIT_NODE);
@@ -208,6 +217,9 @@ public abstract class LookaheadMatcher<C> {
 					throw new UnsupportedOperationException();
 				}
 				text = TextUtils.normalizeSpaces(text.toString());
+				if (options.matchesNormalisedToLowerCase) {
+					text = text.toLowerCase();
+				}
 				switch (options.matchesEmphasisTypes) {
 				case EMPHASIS:
 					if (!isInEmphasisRange()) {
