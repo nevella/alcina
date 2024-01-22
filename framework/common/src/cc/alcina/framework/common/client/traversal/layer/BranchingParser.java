@@ -147,7 +147,8 @@ public class BranchingParser {
 
 		void evaluateBranches() {
 			logger.debug("Evaluating at location {}", parserState.location);
-			logger.debug("Text at location: {}", parserState.inputContent());
+			logger.debug("Text at location: {}",
+					Ax.trim(parserState.inputContent().toString(), 400));
 			matchedSentenceBranches.clear();
 			List<Branch> sentenceBranches = sentenceGroups.stream()
 					.map(group -> new Branch(group, parserState.location))
@@ -643,9 +644,16 @@ public class BranchingParser {
 					if (match != null) {
 						boolean testMeasureEnd = !layerParser.forwardsTraversalOrder
 								&& !location.containingNode.isText();
-						matchesLocation = Objects.equals(
-								testMeasureEnd ? match.end : match.start,
-								location);
+						/*
+						 * This is a little tricky. For the purposes of
+						 * continuation of a branch (match), just check indexes
+						 * are contiguous. Otherwise node containment will cause
+						 * contiguous _text_ runs to not be continuous - and
+						 * thus fail the sequence
+						 */
+						matchesLocation = Objects
+								.equals(testMeasureEnd ? match.end.index
+										: match.start.index, location.index);
 					}
 					if (group.negated) {
 						if (matchesLocation) {
@@ -674,8 +682,22 @@ public class BranchingParser {
 			}
 			// never true for a primitive branch
 			if (isSatisfied()) {
-				BranchToken matchToken = group.token != null ? group.token
-						: BranchToken.Standard.ANON;
+				BranchToken matchToken = group.token;
+				if (matchToken == null) {
+					// state.location movement (advance) behaviour will change
+					// depending on whether the group is a primitive child
+					// container and the primitive child is non-dom
+					matchToken = BranchToken.Standard.ANON;
+					if (predecessor != null && predecessor.parent != null
+							&& predecessor.parent.group == group
+							&& predecessor.predecessor.group == group
+							&& predecessor.match != null) {
+						// it's a sole-child, check the match
+						if (predecessor.match.token.isNonDomToken()) {
+							matchToken = BranchToken.Standard.ANON_NON_DOM;
+						}
+					}
+				}
 				/*
 				 * generate the containing mesaure by traversing to the start of
 				 * the group repetition to determine the start + end measures
@@ -874,6 +896,7 @@ public class BranchingParser {
 				parserState.matchesByToken.add(parserState.bestMatch.token,
 						parserState.bestMatch);
 				parserState.sentenceBranches.add(state.bestMatch);
+				parserState.topicSentenceMatched.signal();
 				parserState.location = env.successorFollowingMatch
 						.apply(parserState.bestMatch);
 				peer.onSentenceMatched(state.bestMatch);

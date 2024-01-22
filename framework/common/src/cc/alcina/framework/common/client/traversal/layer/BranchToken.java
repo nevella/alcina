@@ -90,7 +90,7 @@ public interface BranchToken extends Token, BranchGroupMember {
 
 		Quantifier quantifier = Quantifier.GREEDY;
 
-		protected Group clone() {
+		public Group clone() {
 			Group result = new Group();
 			result.min = min;
 			result.max = max;
@@ -335,6 +335,20 @@ public interface BranchToken extends Token, BranchGroupMember {
 			@Override
 			public Measure match(ParserState state) {
 				return null;
+			}
+		}, /*
+			 * specialised matcher for non-dom primitive containers, which
+			 * changes cursor advance behaviour
+			 */
+		ANON_NON_DOM {
+			@Override
+			public Measure match(ParserState state) {
+				return null;
+			}
+
+			@Override
+			public boolean isNonDomToken() {
+				return true;
 			}
 		},
 		WHITESPACE_NODE {

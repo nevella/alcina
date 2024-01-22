@@ -10,6 +10,9 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -35,6 +38,8 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	protected Layer inputsFromLayer;
 
 	protected Layer inputsToLayer;
+
+	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	public void inputsFromLayer(Layer inputsFromLayer) {
 		this.inputsFromLayer = inputsFromLayer;

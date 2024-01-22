@@ -340,7 +340,7 @@ public class DomDocument extends DomNode {
 			 */
 			DomNode containingNode = location.containingNode;
 			int contentLength = contentLengths.get(containingNode);
-			int relativeIndex = location.index
+			int relativeIndex = location.index + offset
 					- byNode.get(containingNode).index;
 			if (relativeIndex >= 0 && relativeIndex <= contentLength) {
 				if (relativeIndex == contentLength && contentLength != 0) {
@@ -349,7 +349,7 @@ public class DomDocument extends DomNode {
 				return new Location(location.treeIndex, index, after,
 						location.containingNode, this);
 			}
-			Location test = new Location(-1, index, after);
+			Location test = new Location(-1, index, after, null, this);
 			Location containingLocation = getContainingLocation(test);
 			return new Location(containingLocation.treeIndex, index,
 					location.after, containingLocation.containingNode, this);
@@ -641,16 +641,16 @@ public class DomDocument extends DomNode {
 				DomNode node = byTreeIndex.get(test.treeIndex);
 				return byNode.get(node);
 			}
-			int index = -1;
 			// searches for the lowest text node containing location
-			index = Arrays.binarySearch(locations, test,
+			int treeIndex = Arrays.binarySearch(locations, test,
 					new IndexOnlyComparator());
-			if (index < 0) {
-				// may be contained in the last text node, check
+			if (treeIndex < 0) {
+				// search from -treeIndex (which will be minimal node with
+				// index>text.index) backwards)
 				Location lastTextNode = null;
-				int idx = locations.length - 1;
-				for (; idx >= 0; idx--) {
-					Location location = locations[idx];
+				treeIndex = -treeIndex;
+				for (; treeIndex >= 0; treeIndex--) {
+					Location location = locations[treeIndex];
 					if (location.containingNode.isText()) {
 						lastTextNode = location;
 						break;
@@ -658,15 +658,14 @@ public class DomDocument extends DomNode {
 				}
 				if (lastTextNode != null) {
 					String content = lastTextNode.containingNode.textContent();
-					if (lastTextNode.index + content.length() >= test.index) {
-						index = idx;
-					}
+					Preconditions.checkState(lastTextNode.index
+							+ content.length() >= test.index);
 				}
-				if (index == -1) {
+				if (treeIndex == -1) {
 					throw new UnsupportedOperationException();
 				}
 			}
-			int cursor = index;
+			int cursor = treeIndex;
 			if (test.after) {
 				// there's no non-empty text node ending at index 0
 				Preconditions.checkArgument(test.index != 0);
@@ -675,7 +674,7 @@ public class DomDocument extends DomNode {
 					// will loop until found.index < test.index (which will
 					// be the text node that ends at test.index)
 					if (found.index < test.index) {
-						index = cursor;
+						treeIndex = cursor;
 						break;
 					} else {
 						cursor--;
@@ -691,18 +690,18 @@ public class DomDocument extends DomNode {
 					// be the node immediately following the containing text
 					// node)
 					if (found.index > test.index) {
-						index = cursor - 1;
+						treeIndex = cursor - 1;
 						break;
 					} else {
 						cursor++;
 					}
 				}
 				// edge case, last text node
-				if (index == -1) {
-					index = locations.length - 1;
+				if (treeIndex == -1) {
+					treeIndex = locations.length - 1;
 				}
 			}
-			return locations[index];
+			return locations[treeIndex];
 		}
 
 		Location.Range getDocumentRange() {
@@ -776,7 +775,8 @@ public class DomDocument extends DomNode {
 
 		@Override
 		public String getSubsequentText(Location location, int chars) {
-			return contents.substring(location.index, Math.min(contents.length(),location.index + chars));
+			return contents.substring(location.index,
+					Math.min(contents.length(), location.index + chars));
 		}
 	}
 

@@ -586,7 +586,7 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	}
 
 	public void flushSinkEventsQueue() {
-		sinkEventsQueue.forEach(Runnable::run);
+		sinkEventsQueue.stream().toList().forEach(Runnable::run);
 		sinkEventsQueue.clear();
 	}
 

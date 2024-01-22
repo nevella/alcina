@@ -55,7 +55,7 @@ public class Measure extends Location.Range {
 	}
 
 	public void log() {
-		Ax.out("%s %s", toString(), Ax.trimForLogging(text()));
+		Ax.out("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
 	}
 
 	/**
@@ -147,11 +147,14 @@ public class Measure extends Location.Range {
 			boolean toTextLocations) {
 		Location subStart = this.start
 				.createRelativeLocation(startOffset, false)
-				.toTextLocation(toTextLocations);
+				.toTextLocation(toTextLocations).toStartTextLocationIfAtEnd();
 		Location subEnd = endOffset == length()
 				? this.end.toTextLocation(toTextLocations)
-				: this.start.createRelativeLocation(endOffset, false)
-						.toTextLocation(toTextLocations);
+				: this.start.createRelativeLocation(endOffset, false);
+		if (startOffset != endOffset) {
+			subEnd = subEnd.toTextLocation(toTextLocations)
+					.toEndTextLocationIfAtStart();
+		}
 		Measure subMeasure = new Measure(subStart, subEnd, token);
 		return subMeasure;
 	}
@@ -169,6 +172,10 @@ public class Measure extends Location.Range {
 			return Ax.format("%s-%s :: %s", start.toLocationString(),
 					end.toLocationString(), tokenString);
 		}
+	}
+
+	public String toTextString() {
+		return Ax.format("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
 	}
 
 	public String toDebugString() {
@@ -275,6 +282,24 @@ public class Measure extends Location.Range {
 						Class<? extends Token> class1,
 						Class<? extends Token> class2);
 			}
+		}
+
+		/*
+		 * For transport measures where the token is unused
+		 */
+		public static class Generic implements Measure.Token {
+			public static final Generic TYPE = new Generic();
+
+			Generic() {
+			}
+		}
+
+		/*
+		 * Logical boundary tokens are non-dom - when matched, they do not move
+		 * the match cursor forward
+		 */
+		default boolean isNonDomToken() {
+			return false;
 		}
 	}
 

@@ -27,8 +27,6 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * C represents the condition type, such as Patttern
  */
 public abstract class LookaheadMatcher<C> {
-	public static Topic<Void> topicInvalidateAll = Topic.create();
-
 	public enum MatchesEmphasisTypes {
 		NON_EMPHASIS, EMPHASIS, BOTH,
 		// only match the current type, not all -
@@ -38,16 +36,6 @@ public abstract class LookaheadMatcher<C> {
 
 	public interface EmphasisOracle {
 		boolean isEmphasis(Location location);
-	}
-
-	TopicListener<Void> invalidationListener;
-
-	public void register(boolean register) {
-		topicInvalidateAll.delta(invalidationListener, register);
-	}
-
-	void invalidate(Void p) {
-		matchers.values().forEach(LocationMatcher::invalidate);
 	}
 
 	/*
@@ -69,17 +57,19 @@ public abstract class LookaheadMatcher<C> {
 
 		boolean matchesNormalisedToLowerCase;
 
-		public Options withMatchesNormalisedToLowerCase(
-				boolean matchesNormalisedToLowerCase) {
-			this.matchesNormalisedToLowerCase = matchesNormalisedToLowerCase;
-			return this;
-		}
-
 		boolean requiresWholeExtentMatch;
+
+		boolean matchesNormalisedQuotes = true;
 
 		Options(Token token, C condition) {
 			this.token = token;
 			this.condition = condition;
+		}
+
+		public Options withMatchesNormalisedToLowerCase(
+				boolean matchesNormalisedToLowerCase) {
+			this.matchesNormalisedToLowerCase = matchesNormalisedToLowerCase;
+			return this;
 		}
 
 		public Options withMatchesEmphasisTypes(
@@ -88,6 +78,8 @@ public abstract class LookaheadMatcher<C> {
 			return this;
 		}
 
+		// fixme - cit.v2 - check uses of this - they may be expressed better
+		// with token boundary conditions (rather than regex)
 		public Options withLookaheadCaching(boolean lookaheadCaching) {
 			this.lookaheadCaching = lookaheadCaching;
 			return this;
@@ -96,6 +88,12 @@ public abstract class LookaheadMatcher<C> {
 		public Options
 				withRequiresWholeExtentMatch(boolean requiresWholeExtentMatch) {
 			this.requiresWholeExtentMatch = requiresWholeExtentMatch;
+			return this;
+		}
+
+		public Options
+				withMatchesNormalisedQuotes(boolean matchesNormalisedQuotes) {
+			this.matchesNormalisedQuotes = matchesNormalisedQuotes;
 			return this;
 		}
 
@@ -125,6 +123,22 @@ public abstract class LookaheadMatcher<C> {
 	}
 
 	public class LocationMatcher {
+		public class MatchStat implements ProcessObservable {
+			public long nanos;
+
+			MatchStat(long nanos) {
+				this.nanos = nanos;
+			}
+
+			public LookaheadMatcher getMatcher() {
+				return LookaheadMatcher.this;
+			}
+
+			public Token getToken() {
+				return token;
+			}
+		}
+
 		Location matchedFrom;
 
 		Location invalidateAt;
@@ -143,13 +157,13 @@ public abstract class LookaheadMatcher<C> {
 
 		Map<CharSequence, Measure> textMeasure = new LinkedHashMap<>();
 
+		LocationMatcher(Token token) {
+			this.token = token;
+		}
+
 		void invalidate() {
 			currentMatchInvalidated = true;
 			textMeasureInvalidated = true;
-		}
-
-		LocationMatcher(Token token) {
-			this.token = token;
 		}
 
 		LocationMatcher withOptions(Options options) {
@@ -220,6 +234,9 @@ public abstract class LookaheadMatcher<C> {
 				if (options.matchesNormalisedToLowerCase) {
 					text = text.toLowerCase();
 				}
+				if (options.matchesNormalisedQuotes) {
+					text = text.replaceAll("[\u0060\u00B4\u2018\u2019]", "'");
+				}
 				switch (options.matchesEmphasisTypes) {
 				case EMPHASIS:
 					if (!isInEmphasisRange()) {
@@ -239,30 +256,6 @@ public abstract class LookaheadMatcher<C> {
 				}
 				match = textMeasure.computeIfAbsent(text,
 						this::getMeasureMatchingText);
-			}
-			return match;
-		}
-
-		private Measure getMeasureMatchingText(CharSequence text) {
-			Measure match = null;
-			long preMatch = System.nanoTime();
-			MatchResult matchResult = matchText(this, text);
-			long postMatch = System.nanoTime();
-			ProcessObservers.publish(MatchStat.class,
-					() -> new MatchStat(postMatch - preMatch));
-			if (matchResult.found()) {
-				int startOffset = parserState.getOffsetInInput()
-						+ matchResult.start();
-				int endOffset = parserState.getOffsetInInput()
-						+ matchResult.end();
-				match = parserState.input.subMeasure(startOffset, endOffset,
-						token, true);
-				matchResult.populateMeasureData(match);
-				boolean matchesWholeExtent = matchResult.start() == 0
-						&& matchResult.end() == text.length();
-				if (options.requiresWholeExtentMatch && !matchesWholeExtent) {
-					match = null;
-				}
 			}
 			return match;
 		}
@@ -289,25 +282,37 @@ public abstract class LookaheadMatcher<C> {
 			return new Range(start, cursor);
 		}
 
-		public class MatchStat implements ProcessObservable {
-			public LookaheadMatcher getMatcher() {
-				return LookaheadMatcher.this;
+		private Measure getMeasureMatchingText(CharSequence text) {
+			Measure match = null;
+			long preMatch = System.nanoTime();
+			MatchResult matchResult = matchText(this, text);
+			long postMatch = System.nanoTime();
+			ProcessObservers.publish(MatchStat.class,
+					() -> new MatchStat(postMatch - preMatch));
+			if (matchResult.found()) {
+				int startOffset = parserState.getOffsetInInput()
+						+ matchResult.start();
+				int endOffset = parserState.getOffsetInInput()
+						+ matchResult.end();
+				match = parserState.input.subMeasure(startOffset, endOffset,
+						token, true);
+				matchResult.populateMeasureData(match);
+				boolean matchesWholeExtent = false;
+				if (matchResult.start() == 0
+						&& matchResult.end() == text.length()) {
+					matchesWholeExtent = true;
+				}
+				if (matchResult.start() == 1
+						&& matchResult.end() == text.length()) {
+					matchesWholeExtent = text.charAt(0) == ' ';
+				}
+				if (options.requiresWholeExtentMatch && !matchesWholeExtent) {
+					match = null;
+				}
 			}
-
-			MatchStat(long nanos) {
-				this.nanos = nanos;
-			}
-
-			public long nanos;
-
-			public Token getToken() {
-				return token;
-			}
+			return match;
 		}
 	}
-
-	protected abstract MatchResult matchText(LocationMatcher locationMatcher,
-			CharSequence text);
 
 	public interface MatchResult {
 		boolean found();
@@ -320,6 +325,10 @@ public abstract class LookaheadMatcher<C> {
 		int end();
 	}
 
+	public static Topic<Void> topicInvalidateAll = Topic.create();
+
+	TopicListener<Void> invalidationListener;
+
 	private ParserState parserState;
 
 	Map<Token, LocationMatcher> matchers = AlcinaCollections.newLinkedHashMap();
@@ -327,6 +336,11 @@ public abstract class LookaheadMatcher<C> {
 	public LookaheadMatcher(ParserState parserState) {
 		this.parserState = parserState;
 		this.invalidationListener = this::invalidate;
+		parserState.topicSentenceMatched.add(this.invalidationListener);
+	}
+
+	public void register(boolean register) {
+		topicInvalidateAll.delta(invalidationListener, register);
 	}
 
 	public Measure match(Token token, C condition) {
@@ -335,5 +349,12 @@ public abstract class LookaheadMatcher<C> {
 
 	public Options options(Token token, C condition) {
 		return new Options(token, condition);
+	}
+
+	protected abstract MatchResult matchText(LocationMatcher locationMatcher,
+			CharSequence text);
+
+	void invalidate(Void p) {
+		matchers.values().forEach(LocationMatcher::invalidate);
 	}
 }

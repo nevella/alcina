@@ -23,6 +23,10 @@ import cc.alcina.framework.common.client.util.trie.Trie;
  * - check not ambiguous
  * - repeat until matched
  * </pre>
+ * 
+ * TODO - fix - or at least 'extension' - in the case of "must match whole
+ * format section" - e.g. when an italic range starts with a space or ends with
+ * a '.'
  */
 public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 	public TrieMatcher(ParserState parserState) {
@@ -147,7 +151,7 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 						if (condition.tryToExtend) {
 							String sequenceTerminator = sequence.subSequence(
 									key.length(), sequence.length()).toString();
-							if (sequenceTerminator.matches("[, ]+")) {
+							if (sequenceTerminator.matches("[., ]+")) {
 								key = sequence.toString();
 							}
 						}

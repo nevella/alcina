@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.traversal.layer.Measure.Token.NodeTrave
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.Topic;
 
 /**
  * <p>
@@ -79,11 +80,14 @@ public class LayerParser {
 						Location nextLocationAfterNoMatch = lookaheadMatches == null
 								? null
 								: lookaheadMatches.nextLocationAfterNoMatch;
-						return nextLocationAfterNoMatch == null
-								? location.relativeLocation(
-										RelativeDirection.NEXT_LOCATION,
-										TextTraversal.EXIT_NODE)
-								: nextLocationAfterNoMatch;
+						if (nextLocationAfterNoMatch == null
+								|| !location.isTextNode()) {
+							return location.relativeLocation(
+									RelativeDirection.NEXT_LOCATION,
+									TextTraversal.EXIT_NODE);
+						} else {
+							return nextLocationAfterNoMatch;
+						}
 					} else {
 						return location.relativeLocation(
 								RelativeDirection.PREVIOUS_LOCATION,
@@ -117,6 +121,12 @@ public class LayerParser {
 								|| bestMatch.end.isBefore(measure.end);
 				successorFollowingMatch = match -> {
 					if (forwardsTraversalOrder) {
+						if (match.provideIsPoint()
+								&& match.token.isNonDomToken()) {
+							// the match was a zero-width match, remain at the
+							// location
+							return match.end;
+						}
 						// if a text node was matched but only a point in the
 						// node (so no characters, just the node), the node
 						// is being matched as a whole, so exit
@@ -139,6 +149,8 @@ public class LayerParser {
 				atTraversalBoundary = () -> location.compareTo(boundary) == 0;
 			}
 		}
+
+		Topic<Void> topicSentenceMatched = Topic.create();
 
 		TrieMatcher trieMatcher = new TrieMatcher(this);
 
@@ -163,6 +175,11 @@ public class LayerParser {
 		public boolean finished;
 
 		DocumentMatcher documentMatcher = new DocumentMatcher(this);
+
+		Map<Range, CharSequence> inputSubSequences = AlcinaCollections
+				.newLinkedHashMap();
+
+		BranchingParser branchingParser;
 
 		public ParserState(Measure input) {
 			this.input = input;
@@ -222,11 +239,6 @@ public class LayerParser {
 		public CharSequence inputContent() {
 			return inputContent(new Range(location, input.end));
 		}
-
-		Map<Range, CharSequence> inputSubSequences = AlcinaCollections
-				.newLinkedHashMap();
-
-		BranchingParser branchingParser;
 
 		public CharSequence inputContent(Range range) {
 			if (baseContent == null) {
