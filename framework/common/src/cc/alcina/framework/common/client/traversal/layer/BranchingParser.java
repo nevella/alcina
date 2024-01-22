@@ -735,7 +735,8 @@ public class BranchingParser {
 					match = Measure.fromRange(range, matchToken);
 				}
 				if (parent == null) {
-					logger.info("Emitted sentence match : {}", match);
+					logger.info("Emitted sentence match : {} - '{}'", match,
+							toResult().root.match.toTextString());
 					state.matchedSentenceBranches.add(this);
 				} else {
 					parent.onChildSatisfied(this);
