@@ -1,8 +1,6 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedMap;
 
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.TrieMatcher.MatchCondition;
@@ -101,6 +99,53 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 				MatchCondition matchCondition);
 
 		public static class TrieTest implements MatchTest {
+			static String removeTrailingPunctuation(String key) {
+				if (key.length() == 0) {
+					return key;
+				}
+				char c = key.charAt(key.length() - 1);
+				switch (c) {
+				case '.':
+				case ',':
+				case ';':
+				case ':':
+				case '-':
+				case '\u2013':
+				case '\u2014':
+					return key.substring(0, key.length() - 1);
+				default:
+					return key;
+				}
+			}
+
+			public static String closestCommonContainedInTrie(
+					Trie<String, ?> trie, String key) {
+				key = removeTrailingPunctuation(key);
+				String match = trie.selectKey(key);
+				if (match == null) {
+					return null;
+				}
+				if (key.startsWith(match)) {
+					return match;
+				}
+				int lastIndexOf = -1;
+				/*
+				 * the trimming logic here and at the start of the method ensure
+				 * we go back looking for correct commonalities. We can't just
+				 * use 'non-word' characters because that would include brackets
+				 * - and (WA) etc terminators are crucial for legislation
+				 * matching.
+				 */
+				while ((lastIndexOf = match.lastIndexOf(' ')) != -1) {
+					match = match.substring(0, lastIndexOf);
+					match = removeTrailingPunctuation(match);
+					if (trie.containsKey(match) && key.startsWith(match)) {
+						return match;
+					}
+				}
+				return null;
+			}
+
 			@Override
 			public MatchTest.Result getLongestMatch(CharSequence sequence,
 					MatchCondition condition) {
@@ -111,51 +156,28 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 				// get longest match early on is performance - e.g. a 3-char
 				// match may be huge (think 'the')
 				String toMatch = condition.inputMapper.mapInput(sequence);
-				SortedMap<String, Set> longestPrefixMap = null;
-				int len = 2;
-				for (; len < sequence.length(); len++) {
-					SortedMap<String, Set> prefixMap = condition.trie
-							.prefixMap(toMatch.subSequence(0, len).toString());
-					if (prefixMap != null && prefixMap.size() > 0) {
-						longestPrefixMap = prefixMap;
-					} else {
-						break;
-					}
-				}
-				if (longestPrefixMap == null) {
-					return null;
-				}
-				Entry<String, Set> longestEntry = null;
-				for (; len >= 2; len--) {
-					SortedMap<String, Set> prefixMap = condition.trie
-							.prefixMap(toMatch.subSequence(0, len).toString());
-					if (prefixMap != null && prefixMap.size() > 0) {
-						int test = len;
-						Entry<String, Set> entry = prefixMap.entrySet().stream()
-								.filter(e -> e.getKey().length() == test)
-								.findFirst().orElse(null);
-						if (entry != null) {
-							longestEntry = entry;
-							break;
-						}
-					}
-				}
-				if (longestEntry != null) {
-					Object bestMatch = condition.disambiguator
-							.getBestMatch(longestEntry.getValue());
-					if (bestMatch != null) {
-						String key = longestEntry.getKey();
-						// test expand to mark ", " as captured. todo -
-						// abstract (actually - mark as complete segment
-						// match although it isn't quite)
-						if (condition.tryToExtend) {
-							String sequenceTerminator = sequence.subSequence(
-									key.length(), sequence.length()).toString();
-							if (sequenceTerminator.matches("[., ]+")) {
-								key = sequence.toString();
+				String key = closestCommonContainedInTrie(condition.trie,
+						toMatch);
+				if (key != null) {
+					Set value = condition.trie.get(key);
+					if (value != null) {
+						Object bestMatch = condition.disambiguator
+								.getBestMatch(value);
+						if (bestMatch != null) {
+							// test expand to mark ", " as captured. todo -
+							// abstract (actually - mark as complete segment
+							// match although it isn't quite)
+							if (condition.tryToExtend) {
+								String sequenceTerminator = sequence
+										.subSequence(key.length(),
+												sequence.length())
+										.toString();
+								if (sequenceTerminator.matches("[., ]+")) {
+									key = sequence.toString();
+								}
 							}
+							return new MatchTest.Result(key, bestMatch);
 						}
-						return new MatchTest.Result(key, bestMatch);
 					}
 				}
 				return null;

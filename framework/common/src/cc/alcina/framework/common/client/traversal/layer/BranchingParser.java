@@ -735,7 +735,7 @@ public class BranchingParser {
 					match = Measure.fromRange(range, matchToken);
 				}
 				if (parent == null) {
-					logger.info("Emitted sentence match : {} - '{}'", match,
+					logger.debug("Emitted sentence match : {} - '{}'", match,
 							toResult().root.match.toTextString());
 					state.matchedSentenceBranches.add(this);
 				} else {
@@ -912,7 +912,7 @@ public class BranchingParser {
 		rootTokens = (List) layerParser.parserPeer.tokens;
 		sentenceGroups = rootTokens.stream().map(Group::of)
 				.collect(Collectors.toList());
-		sentenceGroups.forEach(g -> logger.info("sentence group: {}", g));
+		sentenceGroups.forEach(g -> logger.debug("sentence group: {}", g));
 		primitiveTokens = sentenceGroups.stream()
 				.flatMap(Group::primitiveTokens).distinct()
 				.collect(Collectors.toList());
