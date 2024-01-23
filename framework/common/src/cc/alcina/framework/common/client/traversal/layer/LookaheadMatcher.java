@@ -235,6 +235,7 @@ public abstract class LookaheadMatcher<C> {
 					text = text.toLowerCase();
 				}
 				if (options.matchesNormalisedQuotes) {
+					// FIXME -- optimise
 					text = text.replaceAll("[\u0060\u00B4\u2018\u2019]", "'");
 				}
 				switch (options.matchesEmphasisTypes) {
