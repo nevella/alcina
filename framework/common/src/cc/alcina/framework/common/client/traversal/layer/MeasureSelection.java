@@ -3,8 +3,10 @@ package cc.alcina.framework.common.client.traversal.layer;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.NestedName;
 
 public class MeasureSelection extends AbstractSelection<Measure>
 		implements Comparable<MeasureSelection> {
@@ -85,6 +87,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	}
 
 	public MeasureSelection truncateTo(IntPair range) {
+		Ax.err("Attempting to truncate %s to %s", NestedName.get(this), range);
 		throw new UnsupportedOperationException();
 	}
 
