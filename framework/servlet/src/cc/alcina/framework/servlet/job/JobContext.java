@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -224,13 +225,21 @@ public class JobContext {
 				? template = template.replace("{}", "%s")
 				: template;
 		String message = Ax.format(fixedTemplate, args);
+		setStatusMessage(() -> message);
+	}
+
+	public static void setStatusMessage(Supplier<String> messageSupplier) {
 		if (has()) {
-			get().maybeEnqueue(() -> get().getJob().setStatusMessage(message));
-			get().fireDebounced(() -> LoggerFactory.getLogger(JobContext.class)
-					.info("status message: {}", message));
+			get().fireDebounced(() -> {
+				String message = messageSupplier.get();
+				get().maybeEnqueue(
+						() -> get().getJob().setStatusMessage(message));
+				LoggerFactory.getLogger(JobContext.class)
+						.info("status message: {}", message);
+			});
 		} else {
 			LoggerFactory.getLogger(JobContext.class)
-					.info("(no-job) status message: {}", message);
+					.info("(no-job) status message: {}", messageSupplier.get());
 		}
 	}
 
@@ -239,7 +248,8 @@ public class JobContext {
 			collator -> AlcinaChildRunnable
 					.runInTransaction(() -> collator.getLastObject().run()))
 							.withMaxDelayFromFirstEvent(100)
-							.withMaxDelayFromFirstCollatedEvent(1000);
+							.withMaxDelayFromFirstCollatedEvent(1000)
+							.withRunOnCurrentThread(true);
 
 	private void fireDebounced(Runnable runnable) {
 		debouncer.eventOccurred(runnable);
@@ -434,6 +444,7 @@ public class JobContext {
 			}
 		}
 		if (job.provideIsNotComplete()) {
+			debouncer.cancel();
 			// occurs just before end, since possibly on a different thread
 			// log = Registry.impl(PerThreadLogging.class).endBuffer();
 			int maxChars = LooseContext

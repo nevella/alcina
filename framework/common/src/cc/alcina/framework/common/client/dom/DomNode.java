@@ -891,9 +891,19 @@ public class DomNode {
 					.reduce((n1, n2) -> n2).orElse(null);
 		}
 
+		List<DomNode> nodes;
+
 		public List<DomNode> nodes() {
-			return DomEnvironment.nodeListToList(node.getChildNodes()).stream()
+			if (this.nodes != null) {
+				return this.nodes;
+			}
+			List<DomNode> nodes = DomEnvironment
+					.nodeListToList(node.getChildNodes()).stream()
 					.map(document::nodeFor).collect(Collectors.toList());
+			if (document.isReadonly()) {
+				this.nodes = nodes;
+			}
+			return nodes;
 		}
 
 		public boolean noElements() {

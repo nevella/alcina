@@ -224,6 +224,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			NodeTransformer transformer = createNodeTransformer(domNode);
 			transformer.setLayoutNode(node.provideNode());
 			registerTransformer(domNode, transformer);
+			node.onFragmentRegistration();
 		}
 		node.children().forEach(this::register);
 	}

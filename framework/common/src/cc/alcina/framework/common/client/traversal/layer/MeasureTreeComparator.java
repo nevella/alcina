@@ -4,6 +4,7 @@ import java.util.Comparator;
 
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token.Order;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class MeasureTreeComparator implements Comparator<MeasureSelection> {
 	private Order order;
@@ -35,6 +36,7 @@ public class MeasureTreeComparator implements Comparator<MeasureSelection> {
 				return cmp;
 			}
 		}
-		throw new IllegalStateException("Unable to order output measures");
+		throw new IllegalStateException(Ax
+				.format("Unable to order output measures: %s <=> %s", o1, o2));
 	}
 }

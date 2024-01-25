@@ -52,7 +52,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
  * <b>Important</b> Because the tree structure of a FragmentModel/FragmentNode
  * subtree is modelled by the linked Dirndl node structure, parent/child
  * operations (appends, counts etc) will fail until the FragmentNode is attached
- * to the parent via say nodes().append()
+ * to the parent via say nodes().append(). Creation of FragmentNode trees should
+ * go: (1) create node (2) in that node's onFragmentRegistration, add children
+ * via nodes().append(xxx)
  */
 /*
  * FIXME - fm - *probably* want to rework mutations - better to change the dom
@@ -458,5 +460,12 @@ public abstract class FragmentNode extends Model.Fields
 	@Property.Not
 	public boolean isDetached() {
 		return !provideIsBound();
+	}
+
+	/**
+	 * Allow subclasses to populate children *in a node context*. This is the
+	 * way that fragment nodes should construct their own subtrees
+	 */
+	public void onFragmentRegistration() {
 	}
 }

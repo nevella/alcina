@@ -297,4 +297,8 @@ public class Ax {
 	public static boolean equals(Object... objects) {
 		return CommonUtils.equals(objects);
 	}
+
+	public static void stringBytes(String s) {
+		CommonUtils.dumpStringBytes(s);
+	}
 }

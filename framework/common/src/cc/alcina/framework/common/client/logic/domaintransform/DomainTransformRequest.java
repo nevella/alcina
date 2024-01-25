@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
@@ -46,6 +47,53 @@ import cc.alcina.framework.common.client.util.IntPair;
  */
 @Bean
 public class DomainTransformRequest implements Serializable {
+	public static class DomainTransformRequestChunkUuid {
+		public static DomainTransformRequestChunkUuid
+				deserialize(String string) {
+			if (string == null) {
+				return null;
+			}
+			DomainTransformRequestChunkUuid result = new DomainTransformRequestChunkUuid();
+			RegExp regExp = RegExp.compile("(.+?)::(\\d+)::(\\d+)::(\\d+)");
+			MatchResult matchResult = regExp.exec(string);
+			if (matchResult == null) {
+				result.uuid = string;
+			} else {
+				result.uuid = matchResult.getGroup(1);
+				result.firstTransformIndex = Integer
+						.parseInt(matchResult.getGroup(2));
+				result.lastTransformIndex = Integer
+						.parseInt(matchResult.getGroup(3));
+				result.totalTransformCount = Integer
+						.parseInt(matchResult.getGroup(4));
+			}
+			return result;
+		}
+
+		public String uuid;
+
+		public int firstTransformIndex;
+
+		public int lastTransformIndex;
+
+		public int totalTransformCount;
+
+		public void fromRange(IntPair range, int totalTransformCount) {
+			firstTransformIndex = range.i1;
+			lastTransformIndex = range.i2;
+			this.totalTransformCount = totalTransformCount;
+		}
+
+		public String serialize() {
+			if (totalTransformCount == 0) {
+				return uuid;
+			} else {
+				return Ax.format("%s::%s::%s::%s", uuid, firstTransformIndex,
+						lastTransformIndex, totalTransformCount);
+			}
+		}
+	}
+
 	public static List<DomainTransformEvent>
 			allEvents(Collection<? extends DomainTransformRequest> requests) {
 		List<DomainTransformEvent> result = new ArrayList<DomainTransformEvent>();
@@ -250,6 +298,15 @@ public class DomainTransformRequest implements Serializable {
 		}
 	}
 
+	public void removeTransforms(Set<DomainTransformEvent> remove) {
+		for (DomainTransformRequest rq : allRequests()) {
+			List<DomainTransformEvent> filtered = rq.getEvents().stream()
+					.filter(e -> !remove.contains(e))
+					.collect(Collectors.toList());
+			rq.setEvents(filtered);
+		}
+	}
+
 	public void removeTransformsForObject(Entity object) {
 		for (DomainTransformRequest rq : allRequests()) {
 			for (Iterator<DomainTransformEvent> itr = rq.getEvents()
@@ -329,53 +386,6 @@ public class DomainTransformRequest implements Serializable {
 	public void updateTransformCommitType(CommitType commitType, boolean deep) {
 		for (DomainTransformEvent dte : deep ? allTransforms() : getEvents()) {
 			dte.setCommitType(commitType);
-		}
-	}
-
-	public static class DomainTransformRequestChunkUuid {
-		public static DomainTransformRequestChunkUuid
-				deserialize(String string) {
-			if (string == null) {
-				return null;
-			}
-			DomainTransformRequestChunkUuid result = new DomainTransformRequestChunkUuid();
-			RegExp regExp = RegExp.compile("(.+?)::(\\d+)::(\\d+)::(\\d+)");
-			MatchResult matchResult = regExp.exec(string);
-			if (matchResult == null) {
-				result.uuid = string;
-			} else {
-				result.uuid = matchResult.getGroup(1);
-				result.firstTransformIndex = Integer
-						.parseInt(matchResult.getGroup(2));
-				result.lastTransformIndex = Integer
-						.parseInt(matchResult.getGroup(3));
-				result.totalTransformCount = Integer
-						.parseInt(matchResult.getGroup(4));
-			}
-			return result;
-		}
-
-		public String uuid;
-
-		public int firstTransformIndex;
-
-		public int lastTransformIndex;
-
-		public int totalTransformCount;
-
-		public void fromRange(IntPair range, int totalTransformCount) {
-			firstTransformIndex = range.i1;
-			lastTransformIndex = range.i2;
-			this.totalTransformCount = totalTransformCount;
-		}
-
-		public String serialize() {
-			if (totalTransformCount == 0) {
-				return uuid;
-			} else {
-				return Ax.format("%s::%s::%s::%s", uuid, firstTransformIndex,
-						lastTransformIndex, totalTransformCount);
-			}
 		}
 	}
 }

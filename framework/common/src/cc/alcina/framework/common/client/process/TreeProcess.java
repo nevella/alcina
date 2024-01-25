@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,7 +40,7 @@ public class TreeProcess {
 
 	List<NodeException> processExceptions = new ArrayList<>();
 
-	public Topic<String> positionChangedMessage = Topic.create();
+	public Topic<Supplier<String>> positionChangedMessage = Topic.create();
 
 	Node selected;
 
@@ -135,15 +136,16 @@ public class TreeProcess {
 			break;
 		case node_selected: {
 			selected = node;
-			String positionMessage = null;
+			Supplier<String> positionMessage = null;
 			if (processContextProvider == null || logAsLevelledPosition) {
 				if (logAsLevelledPosition) {
-					positionMessage = levlledPosition(node);
+					positionMessage = () -> levlledPosition(node);
 				} else {
-					positionMessage = flatPosition(node);
+					positionMessage = () -> flatPosition(node);
 				}
 			} else {
-				positionMessage = processContextProvider.flatPosition(node);
+				positionMessage = () -> processContextProvider
+						.flatPosition(node);
 			}
 			positionChangedMessage.publish(positionMessage);
 		}

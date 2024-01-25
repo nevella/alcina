@@ -2506,4 +2506,46 @@ public class CommonUtils {
 	enum DateAdjustmentModifier {
 		LOCAL_TZ, ADJUST_TO_TZ
 	}
+
+	public static void dumpStringBytes(String s) {
+		try {
+			dumpBytes(s.getBytes("UTF-16"), 8);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static void dumpBytes(byte[] bs, int width) {
+		dumpBytes(bs, width, true);
+	}
+
+	public static void dumpBytes(byte[] bs, int width, boolean indexAsHex) {
+		StringBuilder bd = new StringBuilder();
+		int len = bs.length;
+		for (int i = 0; i < len; i += width) {
+			bd.append(CommonUtils.padStringLeft(
+					(indexAsHex ? Integer.toHexString(i) : String.valueOf(i)),
+					8, '0'));
+			bd.append(":  ");
+			for (int j = 0; j < width; j++) {
+				boolean in = j + i < len;
+				// int rather than byte so we can unsign
+				int b = in ? bs[i + j] : 0;
+				if (b < 0) {
+					b += 256;
+				}
+				bd.append(in ? CommonUtils.padStringLeft(Integer.toHexString(b),
+						2, '0') : "  ");
+				bd.append("  ");
+			}
+			for (int j = 0; j < width; j++) {
+				boolean in = j + i < len;
+				char c = in ? (char) bs[i + j] : ' ';
+				c = c < '\u0020' || c >= '\u007F' ? '.' : c;
+				bd.append(c);
+			}
+			bd.append('\n');
+		}
+		System.out.println(bd.toString());
+	}
 }

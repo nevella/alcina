@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.util.IntPair;
  * measureselections with overlaps
  */
 public class MeasureContainment {
-	public class Containment {
+	public class Containment implements Comparable<Containment> {
 		public MeasureSelection selection;
 
 		// generate a list of contained ranges derived from parent
@@ -96,7 +96,7 @@ public class MeasureContainment {
 					pending.add(ancestorContainment);
 				});
 			}
-			return ancestorList.stream();
+			return ancestorList.stream().sorted();
 		}
 
 		Stream<Containment> descendants(boolean includeSelf) {
@@ -117,7 +117,17 @@ public class MeasureContainment {
 					pending.add(descendantContainment);
 				});
 			}
-			return descendantList.stream();
+			return descendantList.stream().sorted();
+		}
+
+		/*
+		 * ordered from lowest in containment hierarchy to highest
+		 */
+		@Override
+		public int compareTo(Containment o) {
+			// return the reverse of the measure comparison (containing before
+			// contained)
+			return -(selection.get().compareTo(o.selection.get()));
 		}
 	}
 

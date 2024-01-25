@@ -41,7 +41,11 @@ public class EventCollator<T> {
 					collationActionsInvoked++;
 				}
 				try {
-					action.accept(EventCollator.this);
+					synchronized (finishedMonitor) {
+						if (!finished) {
+							action.accept(EventCollator.this);
+						}
+					}
 				} catch (Throwable t) {
 					t.printStackTrace();
 				}
@@ -71,6 +75,12 @@ public class EventCollator<T> {
 
 	private TimerWrapper timer = null;
 
+	private boolean finished = false;
+
+	private Object finishedMonitor = new Object();
+
+	boolean runOnCurrentThread;
+
 	public EventCollator(long waitToPerformAction, Runnable runnable) {
 		this(waitToPerformAction, collator -> runnable.run(),
 				Registry.impl(TimerWrapperProvider.class));
@@ -95,6 +105,12 @@ public class EventCollator<T> {
 			timer.cancel();
 			timer = null;
 		}
+		synchronized (finishedMonitor) {
+			finished = true;
+			if (firstEventOccurred != 0) {
+				action.accept(this);
+			}
+		}
 	}
 
 	public T getFirstObject() {
@@ -111,9 +127,13 @@ public class EventCollator<T> {
 			if (firstEventOccurred == 0) {
 				firstEventOccurred = lastEventOccurred;
 			}
-			if (timer == null && timerWrapperProvider != null) {
-				timer = timerWrapperProvider.getTimer(checkCallback);
-				timer.scheduleRepeating(waitToPerformAction / 2);
+			if (runOnCurrentThread) {
+				checkCallback.run();
+			} else {
+				if (timer == null && timerWrapperProvider != null) {
+					timer = timerWrapperProvider.getTimer(checkCallback);
+					timer.scheduleRepeating(waitToPerformAction / 2);
+				}
 			}
 		}
 	}
@@ -142,6 +162,11 @@ public class EventCollator<T> {
 		Preconditions.checkArgument(
 				maxDelayFromFirstCollatedEvent >= maxDelayFromFirstEvent);
 		this.maxDelayFromFirstCollatedEvent = maxDelayFromFirstCollatedEvent;
+		return this;
+	}
+
+	public EventCollator<T> withRunOnCurrentThread(boolean runOnCurrentThread) {
+		this.runOnCurrentThread = runOnCurrentThread;
 		return this;
 	}
 }

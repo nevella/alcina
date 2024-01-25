@@ -94,6 +94,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	public interface IgnoreOverlaps {
 	}
 
+	// Not intended for final output
 	public interface Intermediate {
 	}
 }
