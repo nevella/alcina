@@ -1,6 +1,8 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.traversal.layer.Measure.Token.Order;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -131,6 +134,35 @@ public class MeasureContainment {
 		}
 	}
 
+	/*
+	 * This can be optimised - with a tree descent of an immutable containments
+	 * structure.
+	 */
+	public static class ContainmentMap<T extends MeasureSelection> {
+		Collection<T> selections;
+
+		Order order;
+
+		public ContainmentMap(Measure.Token.Order order,
+				Collection<T> selections) {
+			this.order = order;
+			this.selections = selections;
+		}
+
+		public T getLowestContainingMeasure(MeasureSelection contained,
+				boolean includeSelf) {
+			List<MeasureSelection> list = selections.stream()
+					.collect(Collectors.toList());
+			list.add(contained);
+			Collections.sort(list);
+			MeasureContainment containments = new MeasureContainment(order,
+					list);
+			Containment containment = containments.containments.get(contained);
+			return (T) containment.ancestors(includeSelf).findFirst()
+					.get().selection;
+		}
+	}
+
 	public class Overlap {
 		public MeasureSelection s1;
 
@@ -197,7 +229,7 @@ public class MeasureContainment {
 	List<MeasureSelection> openSelections = new LinkedList<>();
 
 	public MeasureContainment(Measure.Token.Order order,
-			List<MeasureSelection> selections) {
+			Collection<MeasureSelection> selections) {
 		MeasureTreeComparator comparator = new MeasureTreeComparator(
 				// this will also remove overlapping text nodes, so we
 				// need to relax a comparator constraint

@@ -346,12 +346,29 @@ public class Location implements Comparable<Location> {
 
 	public transient DomNode containingNode;
 
-	transient LocationContext locationContext;
+	public transient LocationContext locationContext;
 
 	public Location(int treeIndex, int index, boolean after) {
 		this(treeIndex, index, after, null, null);
 	}
 
+	/**
+	 * Constructs a representation location in a document
+	 * 
+	 * 
+	 * @param treeIndex
+	 *            the depth-first traversal encounter index of the dom node. Can
+	 *            by -1, in which case it will be the encounter index of the
+	 *            text node containing the text at param index
+	 * @param index
+	 *            the index in the document text of the location
+	 * @param after
+	 *            at the end of the dom node at treeIndex
+	 * @param containingNode
+	 *            the containing node
+	 * @param locationContext
+	 *            used to resolve domnodes from treeIndex/index
+	 */
 	public Location(int treeIndex, int index, boolean after,
 			DomNode containingNode, LocationContext locationContext) {
 		this.treeIndex = treeIndex;
@@ -457,10 +474,6 @@ public class Location implements Comparable<Location> {
 			TextTraversal textTraversal) {
 		return locationContext.getRelativeLocation(this, direction,
 				textTraversal);
-	}
-
-	public void setLocationContext(LocationContext locationSupplier) {
-		this.locationContext = locationSupplier;
 	}
 
 	public Adjust adjust() {

@@ -485,7 +485,11 @@ public class ElementLocal extends NodeLocal
 				try {
 					new HtmlParser().parse(builder.toString(), element, false);
 				} catch (Exception e) {
-					html = LocalDom.safeParseByBrowser(html);
+					if (Document.get().remote instanceof NodeJso) {
+						html = LocalDom.safeParseByBrowser(html);
+					} else {
+						html = "<div>(Unparseable html)</div>";
+					}
 					builder = new StringBuilder();
 					idx = outerHtml.indexOf("</");
 					builder.append(outerHtml.substring(0, idx));

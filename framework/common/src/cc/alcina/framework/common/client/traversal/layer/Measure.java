@@ -233,6 +233,15 @@ public class Measure extends Location.Range {
 		}
 
 		/*
+		 * Containment is generally based on a linear ordering. But tokens which
+		 * can correspond to measures with recursive containment should
+		 * implement this interface and allow appropriate containments
+		 */
+		public interface AllowsContainment {
+			boolean allowsContainment(Token otherToken);
+		}
+
+		/*
 		 * Used in output containment ordering
 		 */
 		public interface NoPossibleChildren extends Token {

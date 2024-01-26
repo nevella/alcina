@@ -80,4 +80,10 @@ public interface LocationContext {
 	List<DomNode> getContainingNodes(int index, boolean after);
 
 	String getSubsequentText(Location location, int chars);
+
+	default String textContent(int from, int to) {
+		Location start = new Location(-1, from, false, null, this);
+		Location end = new Location(-1, to, true, null, this);
+		return new Range(start, end).text();
+	}
 }

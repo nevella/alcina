@@ -2,17 +2,19 @@ package cc.alcina.framework.common.client.dom;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Stack;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.ranges.DocumentRange;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -648,10 +650,14 @@ public class DomDocument extends DomNode {
 				// search from -treeIndex (which will be minimal node with
 				// index>text.index) backwards)
 				Location lastTextNode = null;
-				treeIndex = -treeIndex;
+				treeIndex = -treeIndex - 1;
+				if (treeIndex == locations.length) {
+					treeIndex--;
+				}
 				for (; treeIndex >= 0; treeIndex--) {
 					Location location = locations[treeIndex];
-					if (location.containingNode.isText()) {
+					if (location.containingNode.isText()
+							&& location.index <= test.index) {
 						lastTextNode = location;
 						break;
 					}
@@ -739,38 +745,55 @@ public class DomDocument extends DomNode {
 					return node.prettyToString();
 				}
 			} else {
-				return "";
+				org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) domDoc())
+						.createRange();
+				if (range.start.containingNode.isText()) {
+					w3cRange.setStart(range.start.containingNode.node,
+							range.start.indexInNode());
+				} else {
+					w3cRange.setStartBefore(range.start.containingNode.node);
+				}
+				if (range.end.containingNode.isText()) {
+					w3cRange.setEnd(range.end.containingNode.node,
+							range.end.indexInNode());
+				} else {
+					w3cRange.setEndAfter(range.end.containingNode.node);
+				}
+				DocumentFragment fragment = w3cRange.cloneContents();
+				Element fragmentContainer = domDoc()
+						.createElement("fragment-container");
+				fragmentContainer.appendChild(fragment);
+				return DomNode.from(fragmentContainer).fullToString();
 			}
 		}
 
+		/*
+		 * This is fairly optimal, O(log(n))
+		 */
 		@Override
 		public List<DomNode> getContainingNodes(int index, boolean after) {
 			List<DomNode> result = new ArrayList<>();
-			DomNode cursor = getDocumentElementNode();
-			while (true) {
+			Location start = byNode.get(getDocumentElementNode());
+			while (!start.isTextNode()) {
+				start = start.relativeLocation(RelativeDirection.NEXT_LOCATION);
+			}
+			Location test = start.createRelativeLocation(index, after);
+			Location containingLocation = test;
+			while (!containingLocation.isTextNode()) {
+				containingLocation = containingLocation
+						.relativeLocation(RelativeDirection.NEXT_LOCATION);
+			}
+			Preconditions.checkState(containingLocation.index >= index
+					&& containingLocation.index <= index
+							+ containingLocation.containingNode.textContent()
+									.length());
+			DomNode cursor = containingLocation.containingNode;
+			do {
 				result.add(cursor);
-				Optional<DomNode> containingChild = cursor.children.nodes()
-						.stream().filter(n -> contains(n, index, after))
-						.findFirst();
-				if (containingChild.isPresent()) {
-					cursor = containingChild.get();
-				} else {
-					break;
-				}
-			}
+				cursor = cursor.parent();
+			} while (cursor.isElement());
+			Collections.reverse(result);
 			return result;
-		}
-
-		private boolean contains(DomNode n, int index, boolean after) {
-			Location location = byNode.get(n);
-			Integer length = contentLengths.get(n);
-			if (after) {
-				return location.index < index
-						&& location.index + length >= index;
-			} else {
-				return location.index <= index
-						&& location.index + length > index;
-			}
 		}
 
 		@Override
