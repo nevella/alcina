@@ -206,4 +206,11 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	default View view() {
 		return Registry.impl(Selection.View.class, getClass());
 	}
+
+	/*
+	 * A marker, selections of this type cannot be select once used as the
+	 * inputs of a lyer
+	 */
+	public interface ImmutableInput {
+	}
 }

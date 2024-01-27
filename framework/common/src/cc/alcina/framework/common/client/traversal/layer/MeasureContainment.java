@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.traversal.layer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -130,36 +131,101 @@ public class MeasureContainment {
 		public int compareTo(Containment o) {
 			// return the reverse of the measure comparison (containing before
 			// contained)
-			return -(selection.get().compareTo(o.selection.get()));
+			int cmp = selection.get().compareTo(o.selection.get());
+			if (cmp == 0) {
+				// ensure order is stable, if ranges are equal (earlier contains
+				// later)
+				cmp = selection.ensureSegmentCounter()
+						- o.selection.ensureSegmentCounter();
+			}
+			return -cmp;
+		}
+
+		/*
+		 * A cache of immediate children, ordered by start (since guaranteed no
+		 * overlaps)
+		 */
+		List<MeasureSelection> immediateChildren;
+
+		public Containment
+				getImmediateChildContaining(MeasureSelection contained) {
+			if (descendants.isEmpty()) {
+				return null;
+			}
+			MeasureSelection containing = null;
+			ensureImmediateChildren();
+			int index = Collections.binarySearch(immediateChildren, contained,
+					Comparator.naturalOrder());
+			if (index >= 0) {
+				containing = immediateChildren.get(index);
+			} else {
+				int test = -index - 1;
+				if (test > 0) {
+					test = test - 1;
+				}
+				containing = immediateChildren.get(test);
+			}
+			if (!containing.get().contains(contained.get())) {
+				containing = null;
+			}
+			return containments.get(containing);
+		}
+
+		void ensureImmediateChildren() {
+			if (immediateChildren == null) {
+				immediateChildren = descendants.stream()
+						.filter(this::isImmediateChild).sorted().toList();
+				if (descendants.size() > 0 && immediateChildren.isEmpty()) {
+					List<Containment> list = containments
+							.get(descendants.get(0)).ancestors(false).toList();
+					List<Containment> list2 = containments
+							.get(descendants.get(1)).ancestors(false).toList();
+					int debug = 3;
+				}
+			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Containment: %s", selection);
 		}
 	}
 
-	/*
-	 * This can be optimised - with a tree descent of an immutable containments
-	 * structure.
-	 */
 	public static class ContainmentMap<T extends MeasureSelection> {
-		Collection<T> selections;
-
 		Order order;
+
+		MeasureContainment containment;
 
 		public ContainmentMap(Measure.Token.Order order,
 				Collection<T> selections) {
 			this.order = order;
-			this.selections = selections;
+			this.containment = new MeasureContainment(order, selections);
 		}
 
+		/**
+		 * Return the most specific container for contained. Note that the map
+		 * inputs may be nested
+		 * 
+		 * @param contained
+		 *            the contained measure
+		 * @param includeSelf
+		 *            accept 'contained' as a result
+		 * @return the lowest containing measure
+		 */
 		public T getLowestContainingMeasure(MeasureSelection contained,
 				boolean includeSelf) {
-			List<MeasureSelection> list = selections.stream()
-					.collect(Collectors.toList());
-			list.add(contained);
-			Collections.sort(list);
-			MeasureContainment containments = new MeasureContainment(order,
-					list);
-			Containment containment = containments.containments.get(contained);
-			return (T) containment.ancestors(includeSelf).findFirst()
-					.get().selection;
+			Containment cursor = containment.root;
+			while (true) {
+				Containment next = cursor
+						.getImmediateChildContaining(contained);
+				if (next == null
+						|| (next.selection == contained && !includeSelf)) {
+					T result = (T) cursor.selection;
+					return result;
+				} else {
+					cursor = next;
+				}
+			}
 		}
 	}
 
@@ -228,8 +294,10 @@ public class MeasureContainment {
 
 	List<MeasureSelection> openSelections = new LinkedList<>();
 
+	Containment root;
+
 	public MeasureContainment(Measure.Token.Order order,
-			Collection<MeasureSelection> selections) {
+			Collection<? extends MeasureSelection> selections) {
 		MeasureTreeComparator comparator = new MeasureTreeComparator(
 				// this will also remove overlapping text nodes, so we
 				// need to relax a comparator constraint
@@ -239,6 +307,7 @@ public class MeasureContainment {
 		ContainmentComputation computation = new ContainmentComputation(
 				measures);
 		computation.compute();
+		root = containments.values().iterator().next();
 	}
 
 	public Stream<Containment> containments() {

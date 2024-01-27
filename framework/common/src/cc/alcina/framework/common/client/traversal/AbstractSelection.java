@@ -18,6 +18,15 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	private List<String> filterableSegments = new ArrayList<>();
 
+	private int segmentCounter = -1;
+
+	public int ensureSegmentCounter() {
+		if (segmentCounter == -1) {
+			segmentCounter = Integer.parseInt(pathSegment);
+		}
+		return segmentCounter;
+	}
+
 	public AbstractSelection(Node parentNode, T value, String pathSegment) {
 		this.value = value;
 		this.node = parentNode.add(this);

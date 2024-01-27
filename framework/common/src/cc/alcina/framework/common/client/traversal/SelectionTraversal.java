@@ -375,23 +375,34 @@ public class SelectionTraversal
 
 		/*
 		 * handles groups of layers which receive the same input type, tracking
-		 * their dirty state (for rewind)
+		 * their dirty state (for rewind). If more than one layer receives type
+		 * X, all such layers must have a sibling or ancestor/descendant
+		 * relationship with other layers receiving type X
 		 */
 		class SelectionLayers {
+			boolean immutableInput;
+
 			void add(Layer layer) {
 				if (layers.containsKey(layer)) {
 					return;
 				}
-				Preconditions.checkState(layers.isEmpty() || layers.keySet()
-						.stream().anyMatch(l -> layer.parent == l
-								|| layer.parent == l.parent));
+				this.immutableInput = Reflections.isAssignableFrom(
+						Selection.ImmutableInput.class, layer.inputType);
+				if (!immutableInput) {
+					Preconditions.checkState(layers.isEmpty() || layers.keySet()
+							.stream().anyMatch(l -> layer.parent == l
+									|| layer.parent == l.parent));
+				}
 				LayerSelections layerSelections = new LayerSelections(layer);
 				layers.put(layer, layerSelections);
 				selectionsByLayer.put(layer, layerSelections);
 			}
 
 			void onSelectionAdded(Selection selection) {
-				layers.values().forEach(ls -> ls.dirty = true);
+				if (immutableInput) {
+				} else {
+					layers.values().forEach(ls -> ls.dirty = true);
+				}
 			}
 
 			Map<Layer, LayerSelections> layers = new LinkedHashMap<>();
