@@ -301,4 +301,10 @@ public class Ax {
 	public static void stringBytes(String s) {
 		CommonUtils.dumpStringBytes(s);
 	}
+
+	public static String firstLine(String string) {
+		string = blankToEmpty(string);
+		int newlineIdx = string.indexOf("\n");
+		return newlineIdx == -1 ? string : string.substring(0, newlineIdx);
+	}
 }

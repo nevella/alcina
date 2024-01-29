@@ -1,19 +1,20 @@
 @use '../../theme/theme'
 @use '../../theme/color'
+@use '../multi/base'
 
 /*
   copied from suggestor FIXME actions should be split out into buttons
 
     TODO - move some/most to dropdown
   */
-$box-shadow-bottom: 0 16px 24px 2px rgb(0 0 0 / 9%), 0 6px 30px 5px rgb(0 0 0 / 2%), 0 8px 10px -5px rgb(0 0 0 / 1%)
+
 
 @mixin dropdown()
   background: white
   user-select: none
   padding: 1rem 0
   border: solid 1px #ccc
-  box-shadow: $box-shadow-bottom
+  box-shadow: base.$box-shadow-bottom
 
 
 @mixin dropdown-list()

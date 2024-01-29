@@ -199,8 +199,14 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			if (clazz == Directed.Transform.class) {
 				// assume this is not circular
 				if (reflector == valueLocation.property) {
-					// transform IS legal, but will require another layer of
-					// resolution
+					/*
+					 * FUTURE - allow a Directed.Transform annotation on the
+					 * bean property (currently disallowed)
+					 * 
+					 * It will require another layer of resolution. For the
+					 * moment, redefine the bean (and transform in the bean
+					 * initialiser)
+					 */
 					Preconditions.checkState(contextAnnotation == null);
 					Directed.Transform.Impl impl = new Directed.Transform.Impl();
 					impl.withValue(RenderingModelTransform.class);

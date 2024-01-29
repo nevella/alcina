@@ -1,0 +1,37 @@
+@use '../multi/base'
+
+@mixin content
+  cursor: pointer
+
+@mixin expanded
+  display: block
+  padding: 2rem
+  background: white
+  border: solid 1px #aaa
+  box-shadow: base.$box-shadow-bottom
+
+  > *
+    border: solid 1px #dde
+    padding: 2rem 1rem
+    display: block
+    width: 70vw
+    max-height: 50vh
+    min-height: 10rem
+    overflow: scroll
+
+@mixin log
+  white-space: pre
+  font-family: 'Courier New'
+  color: #000
+
+@mixin expanded-overlay
+  body expandable
+    @include content
+    
+  overlay 
+    > expanded
+      @include expanded
+
+      > log
+        @include log
+

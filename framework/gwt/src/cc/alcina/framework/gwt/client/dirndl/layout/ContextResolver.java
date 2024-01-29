@@ -1,12 +1,19 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
@@ -24,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -244,6 +252,62 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	 */
 	Property resolveDirectedProperty(Property property) {
 		return resolveDirectedProperty0(property);
+	}
+
+	protected Map<Class<? extends ContextService>, Optional<? extends ContextService>> services = AlcinaCollections
+			.newUnqiueMap();
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.TYPE)
+	@Inherited
+	public @interface ServiceRegistration {
+		Class<? extends ContextService> value();
+	}
+
+	public interface ContextService<T extends ContextService> {
+		void register(ContextResolver resolver);
+
+		default Class<T> registration() {
+			return (Class<T>) Reflections.at(this)
+					.annotation(ServiceRegistration.class).value();
+		}
+
+		@Reflected
+		public static abstract class Base<T extends ContextService>
+				implements ContextService<T> {
+			ContextResolver resolver;
+
+			@Override
+			public void register(ContextResolver resolver) {
+				this.resolver = resolver;
+				resolver.register(this);
+			}
+
+			protected Optional<T> ancestorService() {
+				return resolver.parent == null ? Optional.empty()
+						: resolver.parent.getService(registration());
+			}
+		}
+	}
+
+	public <T extends ContextService> Optional<T>
+			getService(Class<T> serviceType) {
+		Optional<T> service = (Optional<T>) services.get(serviceType);
+		if (service != null) {
+		} else {
+			if (parent != null) {
+				service = parent.getService(serviceType);
+			} else {
+				service = Optional.empty();
+			}
+			services.put(serviceType, service);
+		}
+		return service;
+	}
+
+	protected void register(ContextService service) {
+		services.put(service.registration(), Optional.of(service));
 	}
 
 	/**

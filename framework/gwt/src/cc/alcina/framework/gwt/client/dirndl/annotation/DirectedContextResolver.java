@@ -13,6 +13,10 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 
+/**
+ * TODO - dirndl. It would be useful to allow multiple resolvers at a point, and
+ * to make all resolver behaviours delegating-to-parent by default
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })

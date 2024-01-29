@@ -560,4 +560,8 @@ public class ModelEvents {
 
 		void setVisible(boolean visible);
 	}
+
+	public interface FilterContentsElement {
+		boolean matchesFilter(String filterString);
+	}
 }

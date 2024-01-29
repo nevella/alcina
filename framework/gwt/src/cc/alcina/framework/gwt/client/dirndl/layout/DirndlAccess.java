@@ -17,7 +17,7 @@ public class DirndlAccess {
 			Class<T> clazz = (Class<T>) descendant.getClass();
 			Node cursor = sourceNode;
 			while (cursor != null) {
-				if (cursor.model.getClass() == clazz) {
+				if (cursor.model != null && cursor.model.getClass() == clazz) {
 					return cursor.getModel();
 				}
 				cursor = cursor.parent;

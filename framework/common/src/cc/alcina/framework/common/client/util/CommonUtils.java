@@ -2548,4 +2548,22 @@ public class CommonUtils {
 		}
 		System.out.println(bd.toString());
 	}
+
+	public static String shortenPath(String path, int maxLength) {
+		if (path.length() < maxLength) {
+			return path;
+		}
+		String preName = path.replaceFirst("(.+)/(.+)", "$1");
+		String name = preName.contains("/")
+				? path.replaceFirst("(.+)/(.+)", "$2")
+				: "";
+		if (name.length() > maxLength / 2) {
+			name = name.substring(name.length() - maxLength / 2);
+		}
+		String ellipsis = "...";
+		int preMaxLength = maxLength - name.length() - ellipsis.length();
+		return Ax.format("%s%s/%s",
+				preName.substring(0, Math.min(preName.length(), preMaxLength)),
+				ellipsis, name);
+	}
 }
