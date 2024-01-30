@@ -79,6 +79,14 @@ public class ModelBinding<T> {
 	}
 
 	/**
+	 * add a terminal runnable (i.e. the actual action performer) to the end of
+	 * the pipeline
+	 */
+	public void signal(Runnable runnable) {
+		this.consumer = t -> runnable.run();
+	}
+
+	/**
 	 * When the change occurs, rather than pipe the event/change, pipe the
 	 * object from <code>supplier</code>
 	 */

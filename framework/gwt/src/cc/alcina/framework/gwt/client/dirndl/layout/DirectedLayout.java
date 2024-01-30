@@ -397,6 +397,10 @@ public class DirectedLayout implements AlcinaProcess {
 		public Node getRoot() {
 			return root;
 		}
+
+		public void remove() {
+			DirectedLayout.this.remove();
+		}
 	}
 
 	/**

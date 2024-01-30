@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.transform;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -199,6 +200,11 @@ public class AdjunctTransformCollation extends TransformCollation {
 			removeTransformsFromRequest(remove);
 			refreshFromRequest();
 		}
+	}
+
+	@Override
+	public void removeTransformFromRequest(DomainTransformEvent event) {
+		removeTransformsFromRequest(Collections.singleton(event));
 	}
 
 	public void removeTransformsFromRequest(Set<DomainTransformEvent> remove) {

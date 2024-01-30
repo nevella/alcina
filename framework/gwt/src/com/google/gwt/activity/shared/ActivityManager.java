@@ -37,6 +37,26 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
  */
 public class ActivityManager
 		implements PlaceChangeEvent.Handler, PlaceChangeRequestEvent.Handler {
+	/**
+	 * Wraps our real display to prevent an Activity from taking it over if it
+	 * is not the currentActivity.
+	 */
+	private class ProtectedDisplay implements AcceptsOneWidget {
+		private final Activity activity;
+
+		ProtectedDisplay(Activity activity) {
+			this.activity = activity;
+		}
+
+		@Override
+		public void setWidget(IsWidget view) {
+			if (this.activity == ActivityManager.this.currentActivity) {
+				startingNext = false;
+				showWidget(view);
+			}
+		}
+	}
+
 	public static final Activity NULL_ACTIVITY = new AbstractActivity() {
 		@Override
 		public void start(AcceptsOneWidget panel,
@@ -76,6 +96,10 @@ public class ActivityManager
 		this.mapper = mapper;
 		this.eventBus = eventBus;
 		this.stopperedEventBus = new ResettableEventBus(eventBus);
+	}
+
+	public void reset() {
+		currentActivity = NULL_ACTIVITY;
 	}
 
 	/**
@@ -215,6 +239,9 @@ public class ActivityManager
 		}
 	}
 
+	protected void onStart() {
+	}
+
 	private Activity getNextActivity(PlaceChangeEvent event) {
 		if (display == null) {
 			/*
@@ -287,29 +314,6 @@ public class ActivityManager
 			if (handlerRegistration != null) {
 				handlerRegistration.removeHandler();
 				handlerRegistration = null;
-			}
-		}
-	}
-
-	protected void onStart() {
-	}
-
-	/**
-	 * Wraps our real display to prevent an Activity from taking it over if it
-	 * is not the currentActivity.
-	 */
-	private class ProtectedDisplay implements AcceptsOneWidget {
-		private final Activity activity;
-
-		ProtectedDisplay(Activity activity) {
-			this.activity = activity;
-		}
-
-		@Override
-		public void setWidget(IsWidget view) {
-			if (this.activity == ActivityManager.this.currentActivity) {
-				startingNext = false;
-				showWidget(view);
 			}
 		}
 	}

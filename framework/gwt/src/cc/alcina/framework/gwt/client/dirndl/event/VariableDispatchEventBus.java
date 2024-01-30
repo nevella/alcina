@@ -50,6 +50,8 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 
 		Runnable runnable;
 
+		boolean deferred;
+
 		public void dispatch() {
 			Preconditions.checkState(topic != null ^ runnable != null);
 			if (distinct) {
@@ -57,7 +59,11 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 					return;
 				}
 			}
-			Scheduler.get().scheduleFinally(this::dispatchSync);
+			if (deferred) {
+				Scheduler.get().scheduleDeferred(this::dispatchSync);
+			} else {
+				Scheduler.get().scheduleFinally(this::dispatchSync);
+			}
 		}
 
 		/**
@@ -81,6 +87,11 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 
 		public QueuedEvent distinct() {
 			distinct = true;
+			return this;
+		}
+
+		public QueuedEvent deferred() {
+			deferred = true;
 			return this;
 		}
 
