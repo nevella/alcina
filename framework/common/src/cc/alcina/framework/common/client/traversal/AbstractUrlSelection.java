@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.traversal;
 
 import cc.alcina.framework.common.client.util.HasUrl;
+import cc.alcina.framework.common.client.util.VmEnvironment;
 
 public abstract class AbstractUrlSelection extends AbstractSelection<String>
 		implements HasUrl {
@@ -21,5 +22,9 @@ public abstract class AbstractUrlSelection extends AbstractSelection<String>
 	@Override
 	public String toString() {
 		return get();
+	}
+
+	public void open() {
+		VmEnvironment.BrowserAccess.get().openUrl(provideUrl());
 	}
 }
