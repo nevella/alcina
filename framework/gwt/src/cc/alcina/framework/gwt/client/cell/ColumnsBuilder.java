@@ -419,7 +419,8 @@ public class ColumnsBuilder<T> {
 				} else if (cellProvider instanceof BoundWidgetProviderTextBox) {
 					editInfo.cell = new PropertyTextCell();
 				} else {
-					throw new UnsupportedOperationException();
+					editInfo.cell = new PropertyTextCell();
+					// throw new UnsupportedOperationException();
 				}
 			}
 			editInfo.fieldUpdater = fieldUpdater != null ? fieldUpdater
