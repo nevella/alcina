@@ -388,7 +388,8 @@ public abstract class FragmentNode extends Model.Fields
 		}
 
 		public void insertAsFirstChild(FragmentNode child) {
-			provideNode().insertAsFirstChild(child);
+			withMutating(() -> provideNode().insertAsFirstChild(child));
+			fragmentModel().register(child);
 		}
 
 		public void strip() {
@@ -400,6 +401,11 @@ public abstract class FragmentNode extends Model.Fields
 					.previousSibling();
 			return directedPreviousSibling == null ? null
 					: (FragmentNode) directedPreviousSibling.model;
+		}
+
+		public void removeFromParent() {
+			withMutating(() -> provideParentNode()
+					.removeChildNode(FragmentNode.this));
 		}
 	}
 

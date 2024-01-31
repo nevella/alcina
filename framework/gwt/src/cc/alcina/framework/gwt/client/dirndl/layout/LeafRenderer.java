@@ -5,7 +5,9 @@ import java.util.Date;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
 
+import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.HasStringValue;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -192,9 +194,8 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	 */
 	public static class TextNode extends DirectedRenderer {
 		@Override
-		public cc.alcina.framework.common.client.dom.DomNodeType
-				rendersAsType() {
-			return cc.alcina.framework.common.client.dom.DomNodeType.TEXT;
+		public DomNodeType rendersAsType() {
+			return DomNodeType.TEXT;
 		}
 
 		@Override
@@ -203,6 +204,24 @@ public abstract class LeafRenderer extends DirectedRenderer {
 					? input.model.toString()
 					: "";
 			input.resolver.renderText(input.node, contents);
+		}
+	}
+
+	/**
+	 * Renders the input model as a DOM processing instruction node. Requires
+	 * the input model implement HasStringValue
+	 */
+	public static class ProcessingInstructionNode extends DirectedRenderer {
+		@Override
+		public DomNodeType rendersAsType() {
+			return DomNodeType.PROCESSING_INSTRUCTION;
+		}
+
+		@Override
+		protected void render(RendererInput input) {
+			String contents = ((HasStringValue) input.model).getStringValue();
+			input.resolver.renderNode(input.node, rendersAsType(),
+					input.soleDirected().tag(), contents);
 		}
 	}
 }

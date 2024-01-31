@@ -16,7 +16,7 @@ public class MeasureTreeComparator implements Comparator<MeasureSelection> {
 	@Override
 	public int compare(MeasureSelection o1, MeasureSelection o2) {
 		{
-			int cmp = o1.get().compareTo(o2.get(), true);
+			int cmp = o1.get().compareTo(o2.get(), false);
 			if (cmp != 0) {
 				return cmp;
 			}

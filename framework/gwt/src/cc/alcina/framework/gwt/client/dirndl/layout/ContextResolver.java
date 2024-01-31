@@ -19,10 +19,12 @@ import java.util.function.Consumer;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.ProcessingInstruction;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -156,6 +158,22 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			element.addStyleName(cssClass);
 		}
 		layoutNode.rendered = new RenderedW3cNode(element);
+	}
+
+	public void renderNode(DirectedLayout.Node layoutNode, DomNodeType nodeType,
+			String tagName, String contents) {
+		if (layoutNode.rendered != null) {
+			return;
+		}
+		switch (nodeType) {
+		case PROCESSING_INSTRUCTION:
+			ProcessingInstruction processingInstruction = Document.get()
+					.createProcessingInstruction(tagName, contents);
+			layoutNode.rendered = new RenderedW3cNode(processingInstruction);
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public void renderText(Node layoutNode, String contents) {
