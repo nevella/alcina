@@ -257,6 +257,10 @@ public class Location implements Comparable<Location> {
 			return textContent;
 		}
 
+		public String ntc() {
+			return Ax.ntrim(textContent);
+		}
+
 		public String markup() {
 			return start.locationContext.markupContent(this);
 		}

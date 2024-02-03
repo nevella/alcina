@@ -2,9 +2,12 @@ package cc.alcina.framework.servlet.job;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
@@ -148,17 +151,36 @@ public class JobContext {
 		return get() != null;
 	}
 
-	public static void info(String template, Object... args) {
-		if (get() == null) {
-			String message = Ax.format(template.replace("{}", "%s"), args);
+	Set<String> publishedMessages = Collections
+			.synchronizedSet(new LinkedHashSet<>());
+
+	public static void infoOnce(String template, Object... args) {
+		info0(true, template, args);
+	}
+
+	static void info0(boolean once, String template, Object... args) {
+		String message = Ax.format(template.replace("{}", "%s"), args);
+		if (has()) {
+			if (once && !get().isFirstTimeMessage(message)) {
+				// duplicate
+			} else {
+				get().getLogger().info(template, args);
+			}
+		} else {
 			if (LooseContext.is(CONTEXT_KNOWN_OUTSIDE_JOB)) {
 				Ax.out(message);
 			} else {
 				Ax.out("Called JobContext.info() outside job - %s", message);
 			}
-		} else {
-			get().getLogger().info(template, args);
 		}
+	}
+
+	boolean isFirstTimeMessage(String message) {
+		return publishedMessages.add(message);
+	}
+
+	public static void info(String template, Object... args) {
+		info0(false, template, args);
 	}
 
 	public static void jobException(Exception e) {

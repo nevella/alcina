@@ -28,13 +28,18 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	}
 
 	public AbstractSelection(Node parentNode, T value, String pathSegment) {
-		Preconditions.checkNotNull(value);
+		if (!(this instanceof HasNullValue)) {
+			Preconditions.checkNotNull(value);
+		}
 		this.value = value;
 		this.node = parentNode.add(this);
 		if (pathSegment == null) {
 			pathSegment = parentNode.tree().createUniqueSegment(this);
 		}
 		setPathSegment(pathSegment);
+	}
+
+	public interface HasNullValue {
 	}
 
 	/*
