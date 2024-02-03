@@ -1,7 +1,18 @@
+@use '../../dirndl/multi/base'
+
 @mixin contents
   display: block
   grid-area: props
   overflow: scroll
+
+  > choices
+    width: 100%
+    justify-content: center
+    margin: 1rem 0
+    @include base.horizontal-choices
+
+    > choice
+      text-transform: lowercase
 
   bean-editor
     padding: 1rem

@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JType;
 
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
@@ -25,4 +26,6 @@ public interface ClientReflectionFilter {
 			String emitMessage) throws UnableToCompleteException;
 
 	void updateReachableTypes(List<JClassType> types);
+
+	boolean isVisibleType(JType type);
 }

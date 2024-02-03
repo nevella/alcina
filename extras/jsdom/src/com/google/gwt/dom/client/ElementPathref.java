@@ -1,9 +1,9 @@
 package com.google.gwt.dom.client;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
@@ -21,6 +21,29 @@ import cc.alcina.framework.common.client.util.Ax;
  */
 public class ElementPathref extends NodePathref implements ClientDomElement {
 	String valueProperty;
+
+	public class Async {
+		public void getBoundingClientRect(AsyncCallback<DomRect> callback) {
+			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
+					ElementPathref.this, "getBoundingClientRect", null, null,
+					callback);
+		}
+
+		public void getScrollTop(AsyncCallback<Integer> callback) {
+			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
+					ElementPathref.this, "getScrollTop", null, null, callback);
+		}
+
+		public void setScrollTop(AsyncCallback<Void> callback, int top) {
+			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
+					ElementPathref.this, "setScrollTop", List.of(Integer.class),
+					List.of(top), callback);
+		}
+	}
+
+	Async async() {
+		return new Async();
+	}
 
 	ElementPathref(Node node) {
 		super(node);
@@ -65,11 +88,6 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	@Override
 	public void ensureId() {
 		throw new UnsupportedOperationException();
-	}
-
-	public void getBoundingClientRectAsync(AsyncCallback<DomRect> callback) {
-		getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(this,
-				"getBoundingClientRect", null, null, callback);
 	}
 
 	@Override
@@ -252,7 +270,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 				return ((ClientDomElement) node()).getAttribute("value");
 			}
 		} else {
-			throw new UnsupportedOperationException();
+			return getAttribute(name);
 		}
 	}
 
@@ -318,8 +336,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public int indexInParentChildren() {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new UnsupportedOperationException();
 	}
 
 	public void putElement(Element element) {
@@ -433,8 +450,12 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public void setPropertyString(String name, String value) {
-		Preconditions.checkArgument(Objects.equals(name, "value"));
-		this.valueProperty = value;
+		if (Objects.equals(name, "value")) {
+			this.valueProperty = value;
+		} else {
+			// almost all other properties are attributes
+			setAttribute(name, value);
+		}
 	}
 
 	@Override

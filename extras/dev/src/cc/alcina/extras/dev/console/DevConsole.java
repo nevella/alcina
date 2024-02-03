@@ -908,6 +908,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		return true;
 	}
 
+	@SuppressWarnings("resource")
 	protected void init() throws Exception {
 		instance = this;
 		Registry.Internals

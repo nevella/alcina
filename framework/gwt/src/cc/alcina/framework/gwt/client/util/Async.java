@@ -168,4 +168,8 @@ public class Async {
 			}
 		}
 	}
+
+	public static AsyncCallback<Void> nullCallback() {
+		return new AsyncCallbackNull();
+	}
 }

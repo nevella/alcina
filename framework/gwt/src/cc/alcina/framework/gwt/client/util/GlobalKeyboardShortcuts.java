@@ -23,6 +23,32 @@ public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 		}
 	}
 
+	public static boolean eventFiredFromInputish(EventTarget eventTarget) {
+		try {
+			Element elem = Element.as(eventTarget);
+			String name = elem.getTagName();
+			switch (name.toLowerCase()) {
+			case "input":
+			case "checkbox":
+			case "select":
+			case "textarea":
+				return true;
+			}
+			if (elem.asDomNode().ancestors().orSelf()
+					.has(a -> a.has("contenteditable"))) {
+				return true;
+			}
+		} catch (Exception e) {
+			// if under webdriver, possibly event source has already
+			// been
+			// removed
+			// FIXME - dirndl 1x3 - narrow the catch [devex, dirndl
+			// exception if not WD][via topic]
+			Ax.simpleExceptionOut(e);
+		}
+		return false;
+	}
+
 	@Override
 	public void onPreviewNativeEvent(NativePreviewEvent event) {
 		// FIXME - just the nativeEvent, since LocalDom caches all the
@@ -42,27 +68,8 @@ public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 		case "keydown":
 		case "keyup":
 			if (Element.is(eventTarget) && !fireWithinInput) {
-				try {
-					Element elem = Element.as(eventTarget);
-					String name = elem.getTagName();
-					switch (name.toLowerCase()) {
-					case "input":
-					case "checkbox":
-					case "select":
-					case "textarea":
-						return;
-					}
-					if (elem.asDomNode().ancestors().orSelf()
-							.has(a -> a.has("contenteditable"))) {
-						return;
-					}
-				} catch (Exception e) {
-					// if under webdriver, possibly event source has already
-					// been
-					// removed
-					// FIXME - dirndl 1x3 - narrow the catch [devex, dirndl
-					// exception if not WD][via topic]
-					Ax.simpleExceptionOut(e);
+				if (eventFiredFromInputish(eventTarget)) {
+					return;
 				}
 			}
 			break;

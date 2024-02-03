@@ -1499,7 +1499,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		@Override
 		public boolean isVisibleType(JType type) {
-			return ClassReflection.has((JClassType) type, Bean.class);
+			return filter.isVisibleType(type);
 		}
 	}
 }

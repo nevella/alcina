@@ -18,8 +18,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
+
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
 
 /*
@@ -272,5 +276,26 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	protected void init0() {
 		// Overriden by generated subclasses
+	}
+
+	public Object invoke(Object bean, String methodName,
+			List<Class> argumentTypes, List<?> arguments) {
+		String beanRegex = "(get|set|is)(.)(.+)";
+		RegExp regExp = RegExp.compile(beanRegex);
+		MatchResult matchResult = regExp.exec(methodName);
+		if (matchResult == null) {
+			throw new IllegalArgumentException(
+					Ax.format("Not bean method format: %s", methodName));
+		}
+		boolean get = !matchResult.getGroup(1).equals("set");
+		String propertyName = Ax.format("%s%s",
+				matchResult.getGroup(2).toLowerCase(), matchResult.getGroup(3));
+		Property property = property(propertyName);
+		if (get) {
+			return property.get(bean);
+		} else {
+			property.set(bean, arguments.get(0));
+			return null;
+		}
 	}
 }

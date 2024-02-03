@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -11,6 +12,9 @@ import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.View;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -72,13 +76,7 @@ class LayerSelections extends Model.All {
 				DomEvent domEvent = (DomEvent) event.getContext()
 						.getOriginatingGwtEvent();
 				NativeEvent nativeEvent = domEvent.getNativeEvent();
-				TraversalPlace.SelectionType selectionType = SelectionType.DESCENT;
-				if (nativeEvent.getMetaKey()) {
-					selectionType = SelectionType.VIEW;
-				}
-				if (nativeEvent.getAltKey()) {
-					selectionType = SelectionType.CONTAINMENT;
-				}
+				TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
 				SelectionPath selectionPath = new TraversalPlace.SelectionPath();
 				selectionPath.selection = selection;
 				selectionPath.path = selection.processNode().treePath();
@@ -90,9 +88,21 @@ class LayerSelections extends Model.All {
 
 		List<Object> selections;
 
+		private boolean parallel;
+
+		private LooseContextInstance snapshot;
+
 		SelectionsArea() {
-			selections = selectionLayers.traversal.getSelections(layer).stream()
-					.filter(this::test).limit(5).map(SelectionArea::new)
+			Stream<Selection> stream = selectionLayers.traversal
+					.getSelections(layer).stream();
+			parallel = Configuration.is(LayerSelections.class, "parallelTest");
+			snapshot = LooseContext.getContext().snapshot();
+			if (parallel) {
+				stream.parallel();
+			}
+			List<Selection> filtered = stream.filter(this::test).limit(5)
+					.toList();
+			selections = filtered.stream().map(SelectionArea::new)
 					.collect(Collectors.toList());
 			empty = selections.isEmpty();
 			for (int idx = selections.size(); idx < 5; idx++) {
@@ -101,7 +111,17 @@ class LayerSelections extends Model.All {
 		}
 
 		boolean test(Selection selection) {
-			return Page.traversalPlace().test(selection);
+			if (parallel) {
+				try {
+					LooseContext.push();
+					LooseContext.putSnapshotProperties(snapshot);
+					return Page.traversalPlace().test(selection);
+				} finally {
+					LooseContext.pop();
+				}
+			} else {
+				return Page.traversalPlace().test(selection);
+			}
 		}
 	}
 

@@ -13,6 +13,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
@@ -124,6 +125,27 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			}
 			// FIXME - remcon - prettier?
 			Window.alert(clientMessage);
+		}
+	}
+
+	public static class InvokeHandler
+			extends ProtocolMessageHandlerClient<Message.Invoke> {
+		@Override
+		public void handle(RemoteComponentResponse response,
+				Message.Invoke message) {
+			Element elem = (Element) message.path.node();
+			Message.InvokeResponse responseMessage = new Message.InvokeResponse();
+			responseMessage.id = message.id;
+			try {
+				Object result = Reflections.at(elem).invoke(elem,
+						message.methodName, message.argumentTypes,
+						message.arguments);
+				responseMessage.response = result;
+			} catch (Exception e) {
+				e.printStackTrace();
+				responseMessage.exception = e;
+			}
+			ClientRpc.send(responseMessage);
 		}
 	}
 }

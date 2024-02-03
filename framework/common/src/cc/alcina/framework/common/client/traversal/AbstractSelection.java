@@ -28,6 +28,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	}
 
 	public AbstractSelection(Node parentNode, T value, String pathSegment) {
+		Preconditions.checkNotNull(value);
 		this.value = value;
 		this.node = parentNode.add(this);
 		if (pathSegment == null) {

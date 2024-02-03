@@ -34,9 +34,8 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		return 0;
 	}
 
-	public boolean contains(MeasureSelection o, Token.Order order,
-			boolean indexOnly) {
-		return get().contains(o.get(), order, indexOnly);
+	public boolean contains(MeasureSelection o, Token.Order order) {
+		return get().contains(o.get(), order);
 	}
 
 	/*
@@ -96,5 +95,11 @@ public class MeasureSelection extends AbstractSelection<Measure>
 
 	// Not intended for final output
 	public interface Intermediate {
+	}
+
+	@Override
+	public String toDebugString() {
+		return Ax.format("%s :: %s :: %s", super.toString(), get().getData(),
+				Ax.ntrim(get().text(), 40));
 	}
 }

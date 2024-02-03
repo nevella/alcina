@@ -11,6 +11,7 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JType;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ReflectionModule;
 import cc.alcina.framework.common.client.util.Ax;
@@ -136,5 +137,10 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 				.forEach(e -> e.getValue()
 						.forEach(t -> assignments.addType(t, e.getKey())));
 		return assignments;
+	}
+
+	@Override
+	public boolean isVisibleType(JType type) {
+		return peer.isVisibleType(type);
 	}
 }
