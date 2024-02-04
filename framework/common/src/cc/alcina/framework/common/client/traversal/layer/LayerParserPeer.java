@@ -38,4 +38,8 @@ public class LayerParserPeer {
 
 	public void onSentenceMatched(Branch bestMatch) {
 	}
+
+	public boolean confirmSentenceBranch(Branch branch) {
+		return true;
+	}
 }

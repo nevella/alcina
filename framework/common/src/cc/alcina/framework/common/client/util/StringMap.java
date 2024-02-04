@@ -432,4 +432,8 @@ public class StringMap extends LinkedHashMap<String, String> {
 			return sb.toString();
 		}
 	}
+
+	public int getInt(String key) {
+		return Integer.parseInt(get(key));
+	}
 }

@@ -370,6 +370,15 @@ public class LayerParser {
 		public <LPP extends LayerParserPeer> LPP getParserPeer() {
 			return (LPP) parserPeer;
 		}
+
+		public Stream<Measure> getSentenceMeasures() {
+			return getParserState().getSentenceBranches().stream()
+					.map(b -> b.toResult().rootMeasure());
+		}
+
+		public Stream<Branch> getSentenceBranches() {
+			return getParserState().getSentenceBranches().stream();
+		}
 	}
 
 	ParserState parserState;

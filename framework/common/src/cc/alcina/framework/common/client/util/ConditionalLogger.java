@@ -16,7 +16,12 @@ public class ConditionalLogger {
 
 	public void debug(String format, Supplier<Object> supplier) {
 		if (test.get()) {
-			logger.debug(format, supplier.get());
+			Object arg = supplier.get();
+			if (arg != null && arg.getClass().isArray()) {
+				logger.debug(format, (Object[]) arg);
+			} else {
+				logger.debug(format, arg);
+			}
 		}
 	}
 }

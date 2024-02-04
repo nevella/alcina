@@ -306,7 +306,7 @@ public class SelectionTraversal
 
 		Layer rootLayer;
 
-		public <T> T typedContext(Class<T> clazz) {
+		public <T> T context(Class<T> clazz) {
 			return (T) traversalContext;
 		}
 

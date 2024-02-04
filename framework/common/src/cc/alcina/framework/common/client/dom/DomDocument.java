@@ -801,6 +801,18 @@ public class DomDocument extends DomNode {
 			return contents.substring(location.index,
 					Math.min(contents.length(), location.index + chars));
 		}
+
+		@Override
+		public int toValidIndex(int idx) {
+			ensureByLookups();
+			if (idx < 0) {
+				return 0;
+			}
+			if (idx > contents.length()) {
+				idx = contents.length();
+			}
+			return idx;
+		}
 	}
 
 	public void normaliseWhitespace() {
