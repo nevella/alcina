@@ -188,6 +188,10 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return contains(other) && i1 < other.i1 && i2 > other.i2;
 	}
 
+	public boolean containsExAtLeastOneBoundary(IntPair other) {
+		return contains(other) && (i1 < other.i1 || i2 > other.i2);
+	}
+
 	public boolean containsExEnd(int i) {
 		return i >= i1 && i < i2;
 	}

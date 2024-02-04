@@ -278,6 +278,11 @@ public class MeasureContainment {
 		int length() {
 			return intersection.length();
 		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Overlap :: %s :: %s :: %s", intersection, s1, s2);
+		}
 	}
 
 	class ContainmentComputation {
@@ -290,8 +295,11 @@ public class MeasureContainment {
 		}
 
 		/*
-		 * Relies on the initial ordering of the selections - an overlap being
-		 * [A,B] :: [C,D] where A<C, B>C,B<D
+		 * Overlap computation relies on the initial ordering of the selections
+		 * - an overlap being [A,B] :: [C,D] where A<C, B>C,B<D
+		 * 
+		 * Note that openSelections will not always be in strict containment
+		 * order
 		 */
 		void compute() {
 			for (MeasureSelection cursor : selections) {
@@ -302,11 +310,15 @@ public class MeasureContainment {
 					MeasureSelection open = openItr.next();
 					IntPair openRange = open.get().toIntPair();
 					IntPair cursorRange = cursor.get().toIntPair();
+					Containment openContainment = containments.get(open);
 					if (openRange.contains(cursorRange)) {
 						containment.containers.add(open);
-						containments.get(open).descendants.add(cursor);
-					}
-					if (cursorRange.intersectsWithNonPoint(openRange)) {
+						openContainment.descendants.add(cursor);
+					} else if (cursorRange
+							.containsExAtLeastOneBoundary(openRange)) {
+						containment.descendants.add(open);
+						openContainment.containers.add(cursor);
+					} else if (cursorRange.intersectsWithNonPoint(openRange)) {
 						if (cursorRange.overlapsWith(openRange)) {
 							overlaps.add(new Overlap(open, cursor));
 						}
@@ -339,7 +351,8 @@ public class MeasureContainment {
 		ContainmentComputation computation = new ContainmentComputation(
 				measures);
 		computation.compute();
-		root = containments.values().iterator().next();
+		root = containments.values().stream().filter(c -> c.parent() == null)
+				.findFirst().get();
 	}
 
 	public Stream<Containment> containments() {

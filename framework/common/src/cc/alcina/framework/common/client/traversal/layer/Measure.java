@@ -170,7 +170,7 @@ public class Measure extends Location.Range {
 			return Ax.format("%s-%s :: %s", start.index, end.index,
 					tokenString);
 		} else {
-			return Ax.format("%s-%s :: %s", start.toLocationString(),
+			return Ax.format("[%s =>  %s] :: %s", start.toLocationString(),
 					end.toLocationString(), tokenString);
 		}
 	}
