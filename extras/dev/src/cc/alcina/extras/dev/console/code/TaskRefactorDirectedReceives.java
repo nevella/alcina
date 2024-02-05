@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
@@ -74,7 +74,7 @@ public class TaskRefactorDirectedReceives extends PerformerTask {
 	}
 
 	void remove(UnitType type) {
-		Ax.out("Removing receives: %s", NestedNameProvider.get(type.clazz()));
+		Ax.out("Removing receives: %s", NestedName.get(type.clazz()));
 		type.dirty();
 		MemberValuePair receviesPair = null;
 		type.getDeclaration().stream()

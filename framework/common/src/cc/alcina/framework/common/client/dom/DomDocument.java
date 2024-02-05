@@ -2,22 +2,28 @@ package cc.alcina.framework.common.client.dom;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Stack;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.ranges.DocumentRange;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -25,6 +31,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.Topic;
 
 public class DomDocument extends DomNode {
@@ -331,22 +338,20 @@ public class DomDocument extends DomNode {
 				boolean after) {
 			int index = location.index + offset;
 			/*
-			 * Special case, preserve existing text node if possible)
+			 * Special case, preserve existing node if possible)
 			 */
-			DomNode containingNode = location.containingNode();
-			if (containingNode.isText()) {
-				int relativeIndex = location.index
-						- byNode.get(containingNode).index;
-				int textLength = containingNode.textContent().length();
-				if (relativeIndex >= 0 && relativeIndex <= textLength) {
-					if (relativeIndex == textLength) {
-						after = true;
-					}
-					return new Location(location.treeIndex, index, after,
-							location.containingNode, this);
+			DomNode containingNode = location.containingNode;
+			int contentLength = contentLengths.get(containingNode);
+			int relativeIndex = location.index + offset
+					- byNode.get(containingNode).index;
+			if (relativeIndex >= 0 && relativeIndex <= contentLength) {
+				if (relativeIndex == contentLength && contentLength != 0) {
+					after = true;
 				}
+				return new Location(location.treeIndex, index, after,
+						location.containingNode, this);
 			}
-			Location test = new Location(-1, index, after);
+			Location test = new Location(-1, index, after, null, this);
 			Location containingLocation = getContainingLocation(test);
 			return new Location(containingLocation.treeIndex, index,
 					location.after, containingLocation.containingNode, this);
@@ -357,53 +362,59 @@ public class DomDocument extends DomNode {
 			return getContainingLocation(test).containingNode;
 		}
 
+		/**
+		 * Implementation for text is a little complicated, because "next"
+		 * depends on the caller to a degree
+		 */
 		@Override
 		public Location getRelativeLocation(Location location,
-				RelativeDirection direction) {
+				RelativeDirection direction, TextTraversal textTraversal) {
 			/*
-			 * @formatter:off
-			 *
-			 * (bf1) El1                                                                           (af1)
-			 *       (bf2)  E2                                (af2)  (bf4) E4 (af4)  (bf5) E5 (af5)
-			 *              (bf3) T3                     (af3)
-			 *                    (bf3.0)  'a' 'b' (af3.1)
-			 *
-			 * @formatter:on
-			 *
-			 * Traversal is the 'tree' of bf/afs (before/after) shown above
+			 * See Location for a visual explanation of traversal
 			 */
-			DomNode node = location.containingNode();
+			DomNode node = location.containingNode;
 			int targetTreeIndex = location.treeIndex;
 			int targetIndex = location.index;
 			boolean targetAfter = !location.after;
 			Location baseLocation = byNode.get(node);
 			Location parentLocation = byNode.get(node.parent());
 			boolean nodeTraversalRequired = false;
+			if (direction == RelativeDirection.CURRENT_NODE_END) {
+				Preconditions.checkArgument(targetAfter);
+				Integer length = contentLengths.get(node);
+				targetIndex = baseLocation.index + length;
+				return new Location(targetTreeIndex, targetIndex, targetAfter,
+						node, this);
+			}
 			if (node.isText()) {
 				int relativeIndex = location.index - baseLocation.index;
 				switch (direction) {
 				case NEXT_LOCATION: {
-					if (location.after) {
-						if (relativeIndex == node.textContent().length()) {
-							nodeTraversalRequired = true;
-						} else {
-							targetIndex++;
-						}
+					if (relativeIndex == node.textContent().length()) {
+						nodeTraversalRequired = true;
 					} else {
-						// just switching from before->after
+						switch (textTraversal) {
+						case NEXT_CHARACTER:
+							targetIndex++;
+							break;
+						case NO_CHANGE:
+							break;
+						case EXIT_NODE:
+							nodeTraversalRequired = true;
+							break;
+						case TO_END_OF_NODE:
+							targetIndex = baseLocation.index
+									+ node.textContent().length();
+							break;
+						default:
+							throw new UnsupportedOperationException();
+						}
 					}
 					break;
 				}
 				case PREVIOUS_LOCATION: {
-					if (location.after) {
-						// just switching from after->before
-					} else {
-						if (relativeIndex == 0) {
-							nodeTraversalRequired = true;
-						} else {
-							targetIndex--;
-						}
-					}
+					// reversed traversal does not currently match partial nodes
+					nodeTraversalRequired = true;
 					break;
 				}
 				case PREVIOUS_DOMNODE_START: {
@@ -421,6 +432,7 @@ public class DomDocument extends DomNode {
 				nodeTraversalRequired = true;
 			}
 			if (nodeTraversalRequired) {
+				targetIndex = -1;
 				switch (direction) {
 				case NEXT_LOCATION: {
 					if (location.after) {
@@ -429,22 +441,23 @@ public class DomDocument extends DomNode {
 							// last, ascend
 							targetTreeIndex = parentLocation != null
 									? parentLocation.treeIndex
-									: -1;
+									: 0;
 							targetAfter = true;
 						} else {
 							targetTreeIndex = byNode.get(nextSibling).treeIndex;
 						}
 					} else {
-						DomNode nextLogicalNode = node.relative()
-								.nextLogicalNode();
-						if (nextLogicalNode == null) {
-							// last, ascend
+						// descend or go to next sibling
+						DomNode next = node.children.firstNode();
+						next = next != null ? next
+								: node.relative().nextLogicalNode();
+						if (next == null) {
+							// top, ascend
 							targetTreeIndex = parentLocation != null
 									? parentLocation.treeIndex
-									: -1;
+									: 0;
 						} else {
-							targetTreeIndex = byNode
-									.get(nextLogicalNode).treeIndex;
+							targetTreeIndex = byNode.get(next).treeIndex;
 							targetAfter = false;
 						}
 					}
@@ -458,7 +471,7 @@ public class DomDocument extends DomNode {
 							// last, ascend
 							targetTreeIndex = parentLocation != null
 									? parentLocation.treeIndex
-									: -1;
+									: 0;
 							targetAfter = false;
 						} else {
 							targetTreeIndex = byNode
@@ -480,7 +493,6 @@ public class DomDocument extends DomNode {
 					// if at start, go to previous logical node - if at end, go
 					// to last descendant
 					targetAfter = false;
-					targetIndex = -1;
 					if (!location.after) {
 						targetTreeIndex--;
 					} else {
@@ -500,7 +512,6 @@ public class DomDocument extends DomNode {
 					// end, go
 					// next logical node from last descendant
 					targetAfter = false;
-					targetIndex = -1;
 					if (!location.after) {
 						targetTreeIndex++;
 					} else {
@@ -522,7 +533,15 @@ public class DomDocument extends DomNode {
 			}
 			DomNode containingNode = byTreeIndex.get(targetTreeIndex);
 			if (targetIndex == -1) {
-				return byNode.get(containingNode);
+				Location nodeLocation = containingNode.asLocation();
+				targetIndex = nodeLocation.index;
+				if (targetAfter) {
+					if (containingNode.isText()
+							&& textTraversal == TextTraversal.TO_START_OF_NODE) {
+					} else {
+						targetIndex += contentLengths.get(containingNode);
+					}
+				}
 			}
 			return new Location(targetTreeIndex, targetIndex, targetAfter,
 					containingNode, this);
@@ -612,8 +631,9 @@ public class DomDocument extends DomNode {
 			} else {
 				end = asLocation(domNode).clone();
 				end.index += contentLengths.get(domNode);
+				// only for non-text (text locations do not use after)
+				end.after = true;
 			}
-			end.after = true;
 			return new Location.Range(start, end);
 		}
 
@@ -623,32 +643,35 @@ public class DomDocument extends DomNode {
 				DomNode node = byTreeIndex.get(test.treeIndex);
 				return byNode.get(node);
 			}
-			int index = -1;
 			// searches for the lowest text node containing location
-			index = Arrays.binarySearch(locations, test,
+			int treeIndex = Arrays.binarySearch(locations, test,
 					new IndexOnlyComparator());
-			if (index < 0) {
-				// may be contained in the last text node, check
+			if (treeIndex < 0) {
+				// search from -treeIndex (which will be minimal node with
+				// index>text.index) backwards)
 				Location lastTextNode = null;
-				int idx = locations.length - 1;
-				for (; idx >= 0; idx--) {
-					Location location = locations[idx];
-					if (location.containingNode.isText()) {
+				treeIndex = -treeIndex - 1;
+				if (treeIndex == locations.length) {
+					treeIndex--;
+				}
+				for (; treeIndex >= 0; treeIndex--) {
+					Location location = locations[treeIndex];
+					if (location.containingNode.isText()
+							&& location.index <= test.index) {
 						lastTextNode = location;
 						break;
 					}
 				}
 				if (lastTextNode != null) {
 					String content = lastTextNode.containingNode.textContent();
-					if (lastTextNode.index + content.length() >= test.index) {
-						index = idx;
-					}
+					Preconditions.checkState(lastTextNode.index
+							+ content.length() >= test.index);
 				}
-				if (index == -1) {
+				if (treeIndex == -1) {
 					throw new UnsupportedOperationException();
 				}
 			}
-			int cursor = index;
+			int cursor = treeIndex;
 			if (test.after) {
 				// there's no non-empty text node ending at index 0
 				Preconditions.checkArgument(test.index != 0);
@@ -657,7 +680,7 @@ public class DomDocument extends DomNode {
 					// will loop until found.index < test.index (which will
 					// be the text node that ends at test.index)
 					if (found.index < test.index) {
-						index = cursor;
+						treeIndex = cursor;
 						break;
 					} else {
 						cursor--;
@@ -673,18 +696,18 @@ public class DomDocument extends DomNode {
 					// be the node immediately following the containing text
 					// node)
 					if (found.index > test.index) {
-						index = cursor - 1;
+						treeIndex = cursor - 1;
 						break;
 					} else {
 						cursor++;
 					}
 				}
 				// edge case, last text node
-				if (index == -1) {
-					index = locations.length - 1;
+				if (treeIndex == -1) {
+					treeIndex = locations.length - 1;
 				}
 			}
-			return locations[index];
+			return locations[treeIndex];
 		}
 
 		Location.Range getDocumentRange() {
@@ -702,5 +725,91 @@ public class DomDocument extends DomNode {
 				return compareIndexOnly(l1, l2);
 			}
 		}
+
+		@Override
+		public String markupContent(Range range) {
+			DomNode node = range.containingNode();
+			if (node.isText()) {
+				return range.text();
+			}
+			if (range.start.containingNode == node
+					&& range.end.containingNode == node) {
+				String markup = node.fullToString();
+				// if namespaced, return full
+				// FIXME - selection - have a 'robust pretty' that uses a
+				// variant on Element.getOuterHtml()
+				if (markup.matches(
+						"(?s).*(</[a-zA-Z9-9]+:[a-zA-Z9-9]+>|&nbsp;).*")) {
+					return markup;
+				} else {
+					return node.prettyToString();
+				}
+			} else {
+				org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) domDoc())
+						.createRange();
+				if (range.start.containingNode.isText()) {
+					w3cRange.setStart(range.start.containingNode.node,
+							range.start.indexInNode());
+				} else {
+					w3cRange.setStartBefore(range.start.containingNode.node);
+				}
+				if (range.end.containingNode.isText()) {
+					w3cRange.setEnd(range.end.containingNode.node,
+							range.end.indexInNode());
+				} else {
+					w3cRange.setEndAfter(range.end.containingNode.node);
+				}
+				DocumentFragment fragment = w3cRange.cloneContents();
+				Element fragmentContainer = domDoc()
+						.createElement("fragment-container");
+				fragmentContainer.appendChild(fragment);
+				return DomNode.from(fragmentContainer).fullToString();
+			}
+		}
+
+		/*
+		 * This is fairly optimal, O(log(n))
+		 */
+		@Override
+		public List<DomNode> getContainingNodes(int index, boolean after) {
+			List<DomNode> result = new ArrayList<>();
+			Location start = byNode.get(getDocumentElementNode());
+			while (!start.isTextNode()) {
+				start = start.relativeLocation(RelativeDirection.NEXT_LOCATION);
+			}
+			Location test = start.createRelativeLocation(index, after);
+			Location containingLocation = test;
+			while (!containingLocation.isTextNode()) {
+				containingLocation = containingLocation
+						.relativeLocation(RelativeDirection.NEXT_LOCATION);
+			}
+			Preconditions.checkState(containingLocation.index >= index
+					&& containingLocation.index <= index
+							+ containingLocation.containingNode.textContent()
+									.length());
+			DomNode cursor = containingLocation.containingNode;
+			do {
+				result.add(cursor);
+				cursor = cursor.parent();
+			} while (cursor.isElement());
+			Collections.reverse(result);
+			return result;
+		}
+
+		@Override
+		public String getSubsequentText(Location location, int chars) {
+			return contents.substring(location.index,
+					Math.min(contents.length(), location.index + chars));
+		}
+	}
+
+	public void normaliseWhitespace() {
+		stream().filter(DomNode::isText).forEach(n -> {
+			String textContent = n.textContent();
+			String normalized = TextUtils.normalizeWhitespace(textContent);
+			if (!Objects.equals(textContent, normalized)) {
+				n.setText(normalized);
+			}
+		});
 	}
 }

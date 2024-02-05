@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -62,9 +63,9 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return false;
 	}
 
-	public static boolean isContinuous(List<IntPair> matchedRanges) {
-		IntPair union = unionOf(matchedRanges);
-		return provideUncovered(matchedRanges, union).isEmpty();
+	public static boolean isContinuous(List<IntPair> pairs) {
+		IntPair union = unionOf(pairs);
+		return provideUncovered(pairs, union).isEmpty();
 	}
 
 	public static IntPair of(int i1, int i2) {
@@ -165,6 +166,10 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		}
 	}
 
+	/*
+	 * a range is before another if it starts before, or if starts are equal and
+	 * it ends before the other
+	 */
 	@Override
 	public int compareTo(IntPair ip) {
 		return i1 < ip.i1 ? -1
@@ -259,6 +264,12 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return result.i1 <= result.i2 ? result : null;
 	}
 
+	public boolean overlapsWith(IntPair other) {
+		IntPair intersection = intersection(other);
+		return intersection != null && !Objects.equals(intersection, this)
+				&& !Objects.equals(intersection, other);
+	}
+
 	public IntPair intersectionOrZero(IntPair other) {
 		IntPair result = intersection(other);
 		return result == null ? new IntPair(0, 0) : result;
@@ -266,6 +277,11 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 
 	public boolean intersectsWith(IntPair other) {
 		return intersection(other) != null;
+	}
+
+	public boolean intersectsWithNonPoint(IntPair other) {
+		IntPair result = intersection(other);
+		return result != null && !result.isPoint();
 	}
 
 	// as a possible vector in 1-space
@@ -384,5 +400,13 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 	public static enum IntPairRelation {
 		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
 		CONTAINS_END
+	}
+
+	public IntPair toStartPoint() {
+		return new IntPair(i1, i1);
+	}
+
+	public IntPair toEndPoint() {
+		return new IntPair(i2, i2);
 	}
 }

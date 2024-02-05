@@ -1,0 +1,400 @@
+bean-editor {
+  padding: 1em 2em;
+  line-height: 2em;
+  padding-bottom: 1px;
+  display: block;
+  /* FIXME - 2022 - either move to per-app style of theme - 
+  * */
+}
+bean-editor.vertical-validation {
+  line-height: 2.6rem;
+}
+bean-editor.vertical-validation > form > section > form-element > value > validation-feedback > message {
+  top: 0.1rem;
+  left: 1rem;
+  line-height: 1;
+}
+bean-editor.horizontal-validation > form > section > form-element > value {
+  display: flex;
+  flex-direction: row;
+}
+bean-editor.horizontal-validation > form > section > form-element > value > validation-feedback > message {
+  left: 1rem;
+  white-space: nowrap;
+}
+bean-editor.bordered {
+  margin: 1em 0;
+  border-top: solid 1px #ccc;
+  border: none;
+  background-color: #f9f9f9;
+}
+bean-editor:empty {
+  display: none;
+}
+bean-editor.not-first {
+  padding-top: 0;
+}
+bean-editor.no-labels form label {
+  display: none;
+}
+bean-editor.single-line {
+  display: inline-block;
+  flex: 1;
+  min-width: auto;
+  width: 100%;
+}
+bean-editor.single-line form {
+  display: flex;
+}
+bean-editor.single-line form section {
+  display: inline-block;
+  flex: 1;
+}
+bean-editor.single-line form section form-element,
+bean-editor.single-line form section select {
+  display: inline-block;
+}
+bean-editor.single-line form section form-element {
+  padding-right: 1rem;
+}
+bean-editor.single-line form actions {
+  display: inline-block;
+  margin: 0;
+}
+bean-editor.wide form input,
+bean-editor.wide form select,
+bean-editor.wide form textarea {
+  line-height: 1.4em;
+  padding-left: 0.5em;
+  padding-top: 4px;
+  border: solid 1px #ddd;
+  font-size: 15px;
+  font-family: "Helvetica Neue", Arial;
+}
+bean-editor.wide form input:focus,
+bean-editor.wide form select:focus,
+bean-editor.wide form textarea:focus {
+  border-color: transparent;
+  box-shadow: #5299e3 0 0 3px;
+}
+bean-editor.wide form select {
+  padding-top: 2px;
+  box-sizing: content-box;
+  padding-right: 2px;
+}
+bean-editor.wide form textarea {
+  padding-top: 1px;
+}
+bean-editor.wide form input,
+bean-editor.wide form select,
+bean-editor.wide form textarea {
+  width: 20em;
+}
+bean-editor.wide form div.ol-select {
+  display: inline-block;
+}
+bean-editor.grid > form {
+  display: block;
+}
+bean-editor.grid > form > section {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  row-gap: 0.5rem;
+}
+bean-editor.grid > form > section > div, bean-editor.grid > form > section form-element {
+  display: contents;
+}
+bean-editor.grid > form > section > div > label, bean-editor.grid > form > section form-element > label {
+  white-space: nowrap;
+  padding-right: 2em;
+}
+bean-editor.over-only > form input:not(:hover):not(:focus), bean-editor.over-only > form input[readonly],
+bean-editor.over-only > form select:not(:hover):not(:focus),
+bean-editor.over-only > form select[readonly],
+bean-editor.over-only > form textarea:not(:hover):not(:focus),
+bean-editor.over-only > form textarea[readonly] {
+  background: none;
+  border: solid 1px transparent;
+  -webkit-appearance: none;
+}
+bean-editor.over-only > form input:not(:hover):not(:focus)[type=checkbox], bean-editor.over-only > form input[readonly][type=checkbox],
+bean-editor.over-only > form select:not(:hover):not(:focus)[type=checkbox],
+bean-editor.over-only > form select[readonly][type=checkbox],
+bean-editor.over-only > form textarea:not(:hover):not(:focus)[type=checkbox],
+bean-editor.over-only > form textarea[readonly][type=checkbox] {
+  background: initial;
+  border: initial;
+  -webkit-appearance: auto;
+  width: initial;
+}
+bean-editor.over-only > form input[type=checkbox],
+bean-editor.over-only > form select[type=checkbox],
+bean-editor.over-only > form textarea[type=checkbox] {
+  width: initial;
+}
+bean-editor.over-only > form input,
+bean-editor.over-only > form select,
+bean-editor.over-only > form textarea {
+  line-height: 1.4em;
+  padding-left: 0.5em;
+  padding-top: 4px;
+  border: solid 1px #ddd;
+  font-size: 15px;
+  font-family: "Helvetica Neue", Arial;
+}
+bean-editor.over-only > form input:focus,
+bean-editor.over-only > form select:focus,
+bean-editor.over-only > form textarea:focus {
+  border-color: transparent;
+  box-shadow: #5299e3 0 0 3px;
+}
+bean-editor.over-only > form select {
+  padding-top: 2px;
+  box-sizing: content-box;
+  padding-right: 2px;
+}
+bean-editor.over-only > form textarea {
+  padding-top: 1px;
+}
+bean-editor.tight {
+  padding: 0.5rem 1rem;
+}
+bean-editor.tight form-element {
+  line-height: 1.3em;
+}
+bean-editor.tight form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 100px;
+}
+bean-editor.tight180 {
+  padding: 0.5rem 1rem;
+}
+bean-editor.tight180 form-element {
+  line-height: 1.3em;
+}
+bean-editor.tight180 form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 180px;
+}
+bean-editor.tight230 {
+  padding: 0.25rem 0.5rem;
+}
+bean-editor.tight230 form-element {
+  line-height: 1.3em;
+}
+bean-editor.tight230 form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 230px;
+}
+bean-editor[inert] > form {
+  opacity: 0.7;
+}
+bean-editor > header {
+  font-weight: 500;
+  padding-bottom: 0.2em;
+  padding-left: 3px;
+}
+bean-editor > description {
+  line-height: 1.3rem;
+  display: block;
+}
+bean-editor > description:not(:empty) {
+  margin-bottom: 1rem;
+}
+bean-editor > form > section > form-element {
+  display: block;
+}
+bean-editor > form > section > form-element[invalid] select, bean-editor > form > section > form-element[invalid] input {
+  border-color: #FF5030;
+}
+bean-editor > form > section > form-element > value {
+  position: relative;
+}
+bean-editor > form > section > form-element > value > validation-feedback {
+  display: block;
+  position: relative;
+  color: #FF5030;
+}
+bean-editor > form > section > form-element > value > validation-feedback > message {
+  position: absolute;
+  font-size: 90%;
+}
+bean-editor > form > actions {
+  margin: 1em;
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+}
+bean-editor > form > actions > * {
+  display: inline-block;
+  line-height: 1.5rem;
+  padding: 0 0.5em;
+}
+bean-editor > form > actions.right {
+  justify-content: flex-end;
+}
+bean-editor > form > form-validation {
+  display: block;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  color: #FF5030;
+  margin-top: 2rem;
+}
+
+/* will always have single-line bean-editor, pad label until we work out baseline alignment
+ * */
+edit-value > label {
+  padding-top: 2px;
+}
+edit-value:not(.dirty) actions {
+  visibility: hidden;
+}
+edit-value section > div {
+  width: 100%;
+}
+edit-value input,
+edit-value textarea {
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Arial;
+  font-size: 16px;
+}
+
+body > page {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto;
+  grid-template-areas: "header header header header" "layers layers layers props" "input input output output";
+  grid-template-rows: 50px 1fr 260px;
+  height: 100vh;
+  width: 100vw;
+  background: #ccc;
+  gap: 1px;
+}
+body > page > * {
+  min-height: 0;
+  background: white;
+  position: relative;
+}
+body > page > * > heading {
+  margin-bottom: 0.2rem;
+  height: 2rem;
+  display: flex;
+  padding-left: 1rem;
+  align-items: center;
+  background: #e8e8e8;
+  border-bottom: solid 1px #aaa;
+  width: 100%;
+  box-sizing: border-box;
+}
+body > page > header {
+  display: flex;
+  background-color: #ff8fa2;
+  color: white;
+  align-items: center;
+  justify-content: center;
+  line-height: 100%;
+  font-size: 120%;
+  grid-area: header;
+}
+body > page > layers {
+  display: block;
+  grid-area: layers;
+}
+body > page > layers > layers {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 18rem 1fr 1fr 1fr 1fr 1fr;
+  overflow: scroll;
+  background: #f7f7f7;
+  max-height: calc(100% - 2.2rem);
+}
+body > page > layers > layers > layer-selections {
+  display: contents;
+}
+body > page > layers > layers > layer-selections .bordered-area {
+  border: solid 1px #ccc;
+  padding: 0.5rem;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+  min-height: 3rem;
+}
+body > page > layers > layers > layer-selections[empty=true] .bordered-area {
+  min-height: 1rem;
+}
+body > page > layers > layers > layer-selections > name-area {
+  display: block;
+  background: #f7fffe;
+}
+body > page > layers > layers > layer-selections > name-area > * {
+  display: inline-block;
+  padding-right: 1rem;
+}
+body > page > layers > layers > layer-selections > selections-area {
+  display: contents;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=VIEW] {
+  background: #fdd;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=CONTAINMENT] {
+  background: #dfd;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=DESCENT] {
+  background: #ddf;
+}
+body > page > properties {
+  display: block;
+  grid-area: props;
+  overflow: scroll;
+}
+body > page > properties bean-editor {
+  padding: 1rem;
+  box-sizing: border-box;
+  line-height: 1.2em;
+}
+body > page > properties bean-editor value {
+  display: block;
+}
+body > page > properties bean-editor form-element {
+  padding-bottom: 1rem;
+}
+body > page > properties bean-editor label {
+  display: block;
+  color: #666;
+  padding-bottom: 0.3rem;
+}
+body > page > properties bean-editor form-element[name=markup] > value > value {
+  max-width: 100%;
+  overflow: scroll;
+  white-space: pre;
+  font-family: "Courier New", couriter, monospace;
+}
+body > page > selections {
+  display: block;
+}
+body > page > selections > html-model {
+  display: block;
+  padding: 0 0.5em;
+  max-height: calc(100% - 2.2rem);
+  overflow: scroll;
+}
+body > page > selections.input {
+  grid-area: input;
+}
+body > page > selections.output {
+  grid-area: output;
+}

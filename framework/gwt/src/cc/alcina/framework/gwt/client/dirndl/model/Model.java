@@ -1,7 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.beans.PropertyChangeEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
@@ -20,6 +24,7 @@ import cc.alcina.framework.common.client.csobjects.HasChanges;
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.ListenerBindings;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -31,7 +36,9 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
@@ -144,8 +151,8 @@ public abstract class Model extends Bindable implements
 	}
 
 	/**
-	 * Subclasses should call super.onBeforeRender at the *end* of their
-	 * handling
+	 * Subclasses should call super.onBeforeRender at the *end* of their binding
+	 * setup (generally at the end of the method)
 	 */
 	@Override
 	public void onBeforeRender(BeforeRender event) {
@@ -208,11 +215,18 @@ public abstract class Model extends Bindable implements
 		return node;
 	}
 
+	@Directed.AllProperties
+	public static abstract class All extends Fields {
+	}
+
 	/*
 	 * This class supports 'fieldless' mode, where the property values are
 	 * stored in the values map
 	 *
 	 * TODO - make that a subclass,since rare
+	 * 
+	 * FIXME - dirndl - simplify to just from(SPCE/TOPIC) and
+	 * add(listenerbinding)
 	 */
 	public class Bindings {
 		private Binding binding = new Binding();
@@ -236,20 +250,23 @@ public abstract class Model extends Bindable implements
 
 		private boolean bound;
 
-		public void add(Object leftPropertyName, Converter leftToRightConverter,
+		public List<ModelBinding> modelBindings = new ArrayList<>();
+
+		public Binding add(Object leftPropertyName,
+				Converter leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
 				Converter rightToLeftConverter) {
 			SourcesPropertyChangeEvents left = getSource();
-			add(left, leftPropertyName, leftToRightConverter, right,
+			return add(left, leftPropertyName, leftToRightConverter, right,
 					rightPropertyName, rightToLeftConverter);
 		}
 
-		public void add(Object leftPropertyName,
+		public Binding add(Object leftPropertyName,
 				SourcesPropertyChangeEvents right, Object rightPropertyName) {
-			add(leftPropertyName, null, right, rightPropertyName, null);
+			return add(leftPropertyName, null, right, rightPropertyName, null);
 		}
 
-		public void add(SourcesPropertyChangeEvents left,
+		public Binding add(SourcesPropertyChangeEvents left,
 				Object leftPropertyName, Converter leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
 				Converter rightToLeftConverter) {
@@ -263,6 +280,7 @@ public abstract class Model extends Bindable implements
 					.onRightProperty(rightPropertyNameString)
 					.convertRightWith(rightToLeftConverter).toBinding();
 			binding.getChildren().add(child);
+			return child;
 		}
 
 		public void add(SourcesPropertyChangeEvents left,
@@ -271,6 +289,21 @@ public abstract class Model extends Bindable implements
 			add(left, leftPropertyName, null, right, rightPropertyName, null);
 		}
 
+		public void addBinding(Binding childBinding) {
+			binding.getChildren().add(childBinding);
+		}
+
+		/**
+		 * Add a ListenerBinding (often a RemovablePropertyChangeListener which
+		 * fires on a model property change) e.g:
+		 *
+		 * <pre>
+		 * <code>
+		 * bindings().addListener(new RemovablePropertyChangeListener(
+		 * this, "value", e -> select.setSelectedValue(value)));
+		 * </code>
+		 * </pre>
+		 */
 		public void addListener(ListenerBinding listenerBinding) {
 			listenerBindings.add(listenerBinding);
 		}
@@ -301,6 +334,32 @@ public abstract class Model extends Bindable implements
 					rightPropertyName, rightToLeftConverter);
 		}
 
+		/**
+		 * Add a consumer-form property change listener
+		 *
+		 * @return
+		 */
+		public RemovablePropertyChangeListener addPropertyChangeListener(
+				SourcesPropertyChangeEvents bean, Object propertyName,
+				Consumer<PropertyChangeEvent> consumer) {
+			RemovablePropertyChangeListener listener = new RemovablePropertyChangeListener(
+					bean, propertyName, e -> consumer.accept(e));
+			addListener(listener);
+			return listener;
+		}
+
+		/**
+		 * Add a property change listener which does not inspect the event
+		 *
+		 * @return
+		 */
+		public RemovablePropertyChangeListener addPropertyChangeListener(
+				SourcesPropertyChangeEvents bean, Object propertyName,
+				Runnable runnable) {
+			return addPropertyChangeListener(bean, propertyName,
+					evt -> runnable.run());
+		}
+
 		public void addRegistration(
 				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
 			listenerBindings.add(asBinding(handlerRegistrationSupplier));
@@ -328,7 +387,15 @@ public abstract class Model extends Bindable implements
 			Preconditions.checkState(!bound);
 			binding.bind();
 			listenerBindings.bind();
+			modelBindings.forEach(ModelBinding::bind);
 			bound = true;
+		}
+
+		public <T extends SourcesPropertyChangeEvents> ModelBinding<T>
+				from(T source) {
+			ModelBinding binding = new ModelBinding(this);
+			modelBindings.add(binding);
+			return binding.from(source);
 		}
 
 		public boolean isFieldless() {
@@ -341,10 +408,12 @@ public abstract class Model extends Bindable implements
 
 		public void setLeft() {
 			binding.setLeft();
+			modelBindings.forEach(ModelBinding::prepare);
 		}
 
 		public void unbind() {
 			Preconditions.checkState(bound);
+			modelBindings.forEach(ModelBinding::unbind);
 			listenerBindings.unbind();
 			binding.unbind();
 			bound = false;
@@ -407,6 +476,16 @@ public abstract class Model extends Bindable implements
 				return new MapBackedProperty(property);
 			}
 		}
+
+		Model model() {
+			return Model.this;
+		}
+
+		public <TE> ModelBinding<TE> from(Topic<TE> topic) {
+			ModelBinding binding = new ModelBinding(this);
+			modelBindings.add(binding);
+			return binding.from(topic);
+		}
 	}
 
 	@Bean(PropertySource.FIELDS)
@@ -428,7 +507,14 @@ public abstract class Model extends Bindable implements
 		}
 	}
 
+	public interface Has {
+		Model provideModel();
+	}
+
 	public interface RerouteBubbledEvents {
 		Model rerouteBubbledEventsTo();
+	}
+
+	public abstract static class Value<T> extends Model implements HasValue<T> {
 	}
 }

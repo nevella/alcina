@@ -1,11 +1,13 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
@@ -28,12 +30,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 		type = Type.PROPERTY,
 		to = "type",
 		literal = "checkbox"),
-	
-emits = { ModelEvents.Change.class })
-public class CheckboxInput extends Model implements DomEvents.Change.Handler {
+	emits = { ModelEvents.Change.class })
+@Registration({ Model.Value.class, FormModel.Editor.class, Boolean.class })
+public class CheckboxInput extends Model.Value<Boolean>
+		implements DomEvents.Change.Handler {
 	public static final transient String VALUE = "value";
 
-	private boolean value;
+	private Boolean value;
 
 	public CheckboxInput() {
 	}
@@ -42,8 +45,9 @@ public class CheckboxInput extends Model implements DomEvents.Change.Handler {
 		setValue(value);
 	}
 
+	@Override
 	@Binding(type = Type.PROPERTY, to = "checked")
-	public boolean isValue() {
+	public Boolean getValue() {
 		return this.value;
 	}
 
@@ -53,7 +57,8 @@ public class CheckboxInput extends Model implements DomEvents.Change.Handler {
 		event.reemitAs(this, ModelEvents.Change.class);
 	}
 
-	public void setValue(boolean value) {
+	@Override
+	public void setValue(Boolean value) {
 		set(VALUE, this.value, value, () -> this.value = value);
 	}
 

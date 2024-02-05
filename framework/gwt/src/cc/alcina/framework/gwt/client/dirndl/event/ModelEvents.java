@@ -1,6 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 
 /**
  * <p>
@@ -28,6 +31,65 @@ public class ModelEvents {
 		}
 	}
 
+	/**
+	 * Allow - say - child components to handle global keyboard shortcut
+	 * triggered events. The top-level component fires an event of this type,
+	 * and they receive and optionally handle it
+	 */
+	public static class TopLevelMissedEvent extends
+			DescendantEvent<ModelEvent, TopLevelMissedEvent.Handler, TopLevelMissedEvent.Emitter> {
+		public static Topic<TopLevelMissedEvent> topicNotHandled = Topic
+				.create();
+
+		boolean handled;
+
+		@Override
+		public void dispatch(TopLevelMissedEvent.Handler handler) {
+			handler.onTopLevelMissedEvent(this);
+		}
+
+		@Override
+		protected void onDispatchComplete() {
+			if (!handled) {
+				topicNotHandled.publish(this);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onTopLevelMissedEvent(TopLevelMissedEvent event);
+		}
+
+		public void handled() {
+			TopLevelMissedEvent previous = (TopLevelMissedEvent) getContext()
+					.getPrevious().getNodeEvent();
+			previous.handled = true;
+		}
+	}
+
+	public static class FilterContents extends
+			DescendantEvent<Object, FilterContents.Handler, FilterContents.Emitter> {
+		@Override
+		public void dispatch(FilterContents.Handler handler) {
+			handler.onFilterContents(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFilterContents(FilterContents event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public String provideFilterValue() {
+			ModelEvents.Input triggeringInput = getContext()
+					.getPreviousEvent(ModelEvents.Input.class);
+			return triggeringInput.getCurrentValue();
+		}
+	}
+
 	public static class Back extends ModelEvent<Object, Back.Handler> {
 		@Override
 		public void dispatch(Back.Handler handler) {
@@ -40,7 +102,8 @@ public class ModelEvents {
 	}
 
 	public static class BeforeClosed
-			extends ModelEvent<Object, BeforeClosed.Handler> {
+			extends ModelEvent<Object, BeforeClosed.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(BeforeClosed.Handler handler) {
 			handler.onBeforeClosed(this);
@@ -62,7 +125,8 @@ public class ModelEvents {
 	 *
 	 */
 	public static class BeforeSelectionChangedDispatch
-			extends ModelEvent<Object, BeforeSelectionChangedDispatch.Handler> {
+			extends ModelEvent<Object, BeforeSelectionChangedDispatch.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(BeforeSelectionChangedDispatch.Handler handler) {
 			handler.onBeforeSelectionChanged(this);
@@ -119,7 +183,8 @@ public class ModelEvents {
 	 * event
 	 *
 	 */
-	public static class Close extends ModelEvent<Object, Close.Handler> {
+	public static class Close extends ModelEvent<Object, Close.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Close.Handler handler) {
 			handler.onClose(this);
@@ -130,7 +195,8 @@ public class ModelEvents {
 		}
 	}
 
-	public static class Closed extends ModelEvent<Object, Closed.Handler> {
+	public static class Closed extends ModelEvent<Object, Closed.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Closed.Handler handler) {
 			handler.onClosed(this);
@@ -308,7 +374,8 @@ public class ModelEvents {
 		}
 	}
 
-	public static class Opened extends ModelEvent<Object, Opened.Handler> {
+	public static class Opened extends ModelEvent<Object, Opened.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Opened.Handler handler) {
 			handler.onOpened(this);
@@ -364,12 +431,19 @@ public class ModelEvents {
 	}
 
 	/**
+	 * <p>
 	 * Emitted by single-item selection sources, such as {@code Choices.Single}
+	 *
+	 * <p>
+	 * Note that the most common use (by {@link Choices}) sets the model to be
+	 * the new *choice/choies* - so most of the time {@link SelectionChanged} is
+	 * a better event to listen for
 	 *
 	 *
 	 *
 	 */
-	public static class Selected extends ModelEvent<Object, Selected.Handler> {
+	public static class Selected extends ModelEvent<Object, Selected.Handler>
+			implements NoHandlerRequired {
 		@Override
 		public void dispatch(Selected.Handler handler) {
 			handler.onSelected(this);
@@ -381,10 +455,16 @@ public class ModelEvents {
 	}
 
 	/**
+	 * <p>
 	 * Emitted by multiple-item and single-item selection sources, such as
 	 * {@code Choices.Multiple}, {@code Choices.Single}) .
 	 *
+	 * <p>
 	 * Not to be confused with the selectionchange DOM event
+	 *
+	 * <p>
+	 * Note that the most common use (by {@link Choices}) sets the model to be
+	 * the new *value/values*
 	 *
 	 *
 	 *
@@ -467,5 +547,21 @@ public class ModelEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onView(View event);
 		}
+	}
+
+	public interface FilterContentsFilterable extends FilterContents.Handler {
+		@Override
+		default void onFilterContents(FilterContents event) {
+			String filterValue = event.provideFilterValue();
+			setVisible(matchesFilter(filterValue));
+		}
+
+		boolean matchesFilter(String filterString);
+
+		void setVisible(boolean visible);
+	}
+
+	public interface FilterContentsElement {
+		boolean matchesFilter(String filterString);
 	}
 }

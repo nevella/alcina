@@ -116,6 +116,10 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return domain.entrySet();
 	}
 
+	public void evictCreatedLocal(Entity e) {
+		createdLocals.remove(e.getLocalId());
+	}
+
 	public <T> List<T> fieldValues(Class<? extends Entity> clazz,
 			String propertyName) {
 		throw new UnsupportedOperationException();

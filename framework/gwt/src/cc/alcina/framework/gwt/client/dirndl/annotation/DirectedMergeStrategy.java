@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.annotation;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
@@ -63,9 +62,6 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 
 	protected List<Directed> atHasAnnotations(HasAnnotations reflector,
 			Resolver resolver) {
-		if (reflector.toString().contains("LoginPageUsername")) {
-			int debug = 3;
-		}
 		List<Directed> result = new ArrayList<>();
 		Directed directed = resolver.contextAnnotation(reflector,
 				Directed.class, Resolver.ResolutionContext.Strategy);
@@ -77,6 +73,9 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 				Directed.Delegating.class, Resolver.ResolutionContext.Strategy);
 		Directed.Transform transform = resolver.contextAnnotation(reflector,
 				Directed.Transform.class, Resolver.ResolutionContext.Strategy);
+		Directed.TransformElements transformElements = resolver
+				.contextAnnotation(reflector, Directed.TransformElements.class,
+						Resolver.ResolutionContext.Strategy);
 		if (directed != null) {
 			Preconditions.checkState(
 					wrap == null && multiple == null && delegating == null);
@@ -113,24 +112,30 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		if (delegating != null) {
 			result.add(new Delegating());
 		}
-		if (transform != null && result.isEmpty()) {
-			Directed.Impl impl = new Directed.Impl();
-			/*
-			 * if collection property, render the collection normally (the
-			 * transform will be applied to the collection elements), otherwise
-			 * use the transform renderer)
-			 */
-			boolean isCollection = reflector instanceof Property
-					&& Reflections.isAssignableFrom(Collection.class,
-							((Property) reflector).getType());
-			if (isCollection) {
-				impl.setRenderer(DirectedRenderer.ModelClass.class);
-			} else {
+		if (transform != null) {
+			if (result.isEmpty()) {
+				Directed.Impl impl = new Directed.Impl();
 				impl.setRenderer(DirectedRenderer.TransformRenderer.class);
+				result.add(impl);
+			} else {
+				Directed last = Ax.last(result);
+				if (last.renderer() != DirectedRenderer.TransformRenderer.class) {
+					Impl impl = new Directed.Impl(last);
+					result.remove(last);
+					impl.setRenderer(DirectedRenderer.TransformRenderer.class);
+					result.add(impl);
+				}
 			}
-			impl.setBindToModel(transform.bindToModel());
-			impl.setBindDomEvents(transform.bindDomEvents());
-			result.add(impl);
+		}
+		if (transformElements != null) {
+			/*
+			 * Not as complex as Transform - only modifies
+			 * DirectedRender.Collection behaviour, not the renderer itself
+			 */
+			if (result.isEmpty()) {
+				Directed.Impl impl = new Directed.Impl();
+				result.add(impl);
+			}
 		}
 		if (result.isEmpty() && reflector instanceof Property) {
 			Class declaringType = ((Property) reflector).getDeclaringType();
@@ -142,7 +147,9 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 				Directed.Exclude exclude = resolver.contextAnnotation(reflector,
 						Directed.Exclude.class,
 						Resolver.ResolutionContext.Strategy);
-				if (exclude == null) {
+				Binding binding = resolver.contextAnnotation(reflector,
+						Binding.class, Resolver.ResolutionContext.Strategy);
+				if (exclude == null && binding == null) {
 					result.add(new Directed.Impl());
 				}
 			}

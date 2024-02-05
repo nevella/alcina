@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.entity.util.CsvCols;
+import cc.alcina.framework.entity.util.Csv;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.CommonRemoteServletProvider;
 import cc.alcina.framework.servlet.publication.ContentModelHandler;
@@ -163,7 +163,7 @@ public class BasicGridPublisher {
 				results.htmlContent = fb.toString();
 			} else if (deliveryModel
 					.provideTargetFormat() == FormatConversionTarget.CSV) {
-				CsvCols csvCols = new CsvCols((List) exporter.getCellList());
+				Csv csvCols = new Csv((List) exporter.getCellList());
 				results.bytes = csvCols.toCsv()
 						.getBytes(StandardCharsets.UTF_8);
 			} else if (deliveryModel

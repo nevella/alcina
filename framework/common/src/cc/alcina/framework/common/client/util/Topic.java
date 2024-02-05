@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -23,6 +24,15 @@ public class Topic<T> {
 	private Publisher publisher;
 
 	private boolean wasPublished;
+
+	private boolean retainPublished;
+
+	public <V> Topic<V> withRetainPublished(boolean retainPublished) {
+		this.retainPublished = retainPublished;
+		return (Topic<V>) this;
+	}
+
+	private T published;
 
 	private Topic() {
 		publisher = new Publisher();
@@ -59,6 +69,9 @@ public class Topic<T> {
 	public void publish(T t) {
 		publisher.publishTopic(t);
 		wasPublished = true;
+		if (retainPublished) {
+			published = t;
+		}
 	}
 
 	public void remove(TopicListener<T> listener) {
@@ -83,11 +96,13 @@ public class Topic<T> {
 			boolean fireIfWasPublished) {
 		delta(listener, true);
 		if (wasPublished && fireIfWasPublished) {
-			// note - we don't keep a ref to the last published object -
-			// this assumes the caller knows how to get it. Useful for
-			// adding async one-off listeners when the event may have
-			// already occurred
-			listener.topicPublished(null);
+			/*
+			 * note - unless retainpublished is set, we don't keep a ref to the
+			 * last published object - this assumes the caller knows how to get
+			 * it. Useful for adding async one-off listeners when the event may
+			 * have already occurred
+			 */
+			listener.topicPublished(published);
 		}
 		return new Topic.Reference(this, listener);
 	}
@@ -125,9 +140,10 @@ public class Topic<T> {
 	 * Thread-safe (lookup is copy-on-write, mutation is synchronized)
 	 */
 	public static class Publisher {
-		// use a list - the listener may be added/removed multiple times
-		// (although
-		// that's probably not what's wanted)
+		/*
+		 * use a list - the listener may be added/removed multiple times
+		 * (although that's probably not what's wanted)
+		 */
 		private List<TopicListener> lookup;
 
 		public void addListener(TopicListener listener) {
@@ -213,6 +229,21 @@ public class Topic<T> {
 				}
 			};
 			topic.add(wrapper);
+		}
+	}
+
+	public T getPublished() {
+		return published;
+	}
+
+	public void clearPublished() {
+		wasPublished = false;
+		published = null;
+	}
+
+	public void fireIfPublished(Consumer<T> consumer) {
+		if (wasPublished) {
+			consumer.accept(published);
 		}
 	}
 }

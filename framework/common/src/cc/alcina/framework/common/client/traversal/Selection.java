@@ -3,14 +3,19 @@ package cc.alcina.framework.common.client.traversal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.traversal.SelectionTraversal.Generation;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
  * An example of "side composition" - selections form a tree, but the tree
@@ -44,6 +49,17 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return null;
 	}
 
+	default <V> V ancestorImplementing(Class<V> clazz) {
+		Selection cursor = this;
+		while (cursor != null) {
+			if (Reflections.isAssignableFrom(clazz, cursor.getClass())) {
+				return (V) cursor;
+			}
+			cursor = cursor.parentSelection();
+		}
+		return null;
+	}
+
 	default Stream<Selection> ancestorSelections() {
 		return processNode().asNodePath().stream()
 				.filter(n -> n.hasValueClass(Selection.class))
@@ -54,9 +70,13 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return (ST) get();
 	}
 
+	public interface Has {
+		Selection provideSelection();
+	}
+
 	/**
 	 * This method (and teardown exitContext) should generally only operate on
-	 * context properties - see
+	 * context properties
 	 */
 	default void enterContext() {
 	}
@@ -74,15 +94,25 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return segments.stream().collect(Collectors.joining("/"));
 	}
 
+	default Selection root() {
+		Selection cursor = this;
+		for (;;) {
+			Selection parent = cursor.parentSelection();
+			if (parent == null) {
+				return this;
+			}
+			cursor = parent;
+		}
+	}
+
 	default List<String> getFilterableSegments() {
 		return Collections.singletonList(getPathSegment());
 	};
 
-	default void onDuplicatePathSelection(Generation generation,
-			Selection selection) {
+	default void onDuplicatePathSelection(Layer layer, Selection selection) {
 		throw new IllegalArgumentException(
 				Ax.format("Duplicate selection path: %s :: %s",
-						selection.getPathSegment(), generation));
+						selection.getPathSegment(), layer));
 	};
 
 	default Selection parentSelection() {
@@ -113,5 +143,74 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			cursor = cursor.parentSelection();
 		}
 		return selections;
+	}
+
+	default String toDebugString() {
+		return CommonUtils.joinWithNewlines(
+				ancestorSelections().collect(Collectors.toList()));
+	}
+
+	@Registration.NonGenericSubtypes(View.class)
+	public interface View<S extends Selection>
+			extends Registration.AllSubtypes {
+		default String getPathSegment(S selection) {
+			return selection.getPathSegment();
+		}
+
+		default String getText(S selection) {
+			return selection.get().toString();
+		}
+
+		default String getDiscriminator(S selection) {
+			return "";
+		}
+
+		default String getMarkup(S selection) {
+			return "";
+		}
+	}
+
+	@Property.Not
+	default boolean isContainedBy(Selection selection) {
+		return selection.isSelfOrAncestor(this);
+	}
+
+	default boolean hasDescendantRelation(Selection selection) {
+		return selection.isSelfOrAncestor(this)
+				|| this.isSelfOrAncestor(selection);
+	}
+
+	default boolean hasContainmentRelation(Selection selection) {
+		return selection.isContainedBy(this) || this.isContainedBy(selection);
+	}
+
+	@Property.Not
+	default boolean isSelfOrAncestor(Selection selection) {
+		Selection cursor = selection;
+		while (cursor != null) {
+			if (Objects.equals(cursor.processNode().treePath(),
+					processNode().treePath())) {
+				return true;
+			}
+			cursor = cursor.parentSelection();
+		}
+		return false;
+	}
+
+	default boolean matchesText(String textFilter) {
+		View view = view();
+		return SearchUtils.containsIgnoreCase(textFilter, view.getText(this),
+				view.getDiscriminator(this));
+	}
+
+	default View view() {
+		return Registry.impl(Selection.View.class, getClass());
+	}
+
+	/*
+	 * A marker, selections of this type cannot be select once used as the
+	 * inputs of a lyer
+	 */
+	public interface ImmutableInput {
 	}
 }

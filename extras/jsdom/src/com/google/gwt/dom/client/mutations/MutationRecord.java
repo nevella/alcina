@@ -37,8 +37,8 @@ public class MutationRecord {
 	static final transient String CONTEXT_FLAGS = MutationRecord.class.getName()
 			+ ".CONTEXT_FLAGS";
 
-	public static void deltaFlag(String flag, boolean add) {
-		List<String> flags = LooseContext.get(CONTEXT_FLAGS);
+	public static void deltaFlag(Class<? extends Flag> flag, boolean add) {
+		List<Class<? extends Flag>> flags = LooseContext.get(CONTEXT_FLAGS);
 		// copy-on-write
 		flags = flags == null ? null : new ArrayList<>(flags);
 		if (add) {
@@ -60,6 +60,14 @@ public class MutationRecord {
 		}
 	}
 
+	public static MutationRecord generateDocumentInsert(String markup) {
+		MutationRecord creationRecord = new MutationRecord();
+		creationRecord.type = Type.childList;
+		// note - no parent
+		creationRecord.newValue = markup;
+		return creationRecord;
+	}
+
 	/**
 	 * Creates a list of mutations which would recreate the (shallow) node
 	 *
@@ -69,18 +77,27 @@ public class MutationRecord {
 	public static void generateInsertMutations(Node node,
 			List<MutationRecord> records) {
 		Element parentElement = node.getParentElement();
-		if (parentElement != null) {
-			MutationRecord record = new MutationRecord();
-			record.target = MutationNode.pathref(parentElement);
-			record.type = Type.childList;
-			record.addedNodes.add(MutationNode.pathref(node));
-			Node previousSibling = node.getPreviousSibling();
-			if (previousSibling != null) {
-				record.previousSibling = MutationNode.pathref(previousSibling);
-			}
-			records.add(record);
+		MutationRecord creationRecord = null;
+		if (parentElement != null
+				|| hasContextFlag(FlagTransportMarkupTree.class)) {
+			creationRecord = new MutationRecord();
 		} else {
 			// node is the root, just send attr mods
+		}
+		if (creationRecord != null) {
+			creationRecord.target = MutationNode.pathref(parentElement);
+			creationRecord.type = Type.childList;
+			creationRecord.addedNodes.add(MutationNode.pathref(node));
+			Node previousSibling = node.getPreviousSibling();
+			if (previousSibling != null) {
+				creationRecord.previousSibling = MutationNode
+						.pathref(previousSibling);
+			}
+			if (hasContextFlag(FlagTransportMarkupTree.class)
+					&& node.getNodeType() == Node.ELEMENT_NODE) {
+				creationRecord.newValue = ((Element) node).getOuterHtml();
+			}
+			records.add(creationRecord);
 		}
 		switch (node.getNodeType()) {
 		case Node.ELEMENT_NODE: {
@@ -123,12 +140,35 @@ public class MutationRecord {
 		return record;
 	}
 
+	public static void runWithFlag(Class<? extends Flag> flag,
+			Runnable runnable) {
+	}
+
+	public static void withFlag(Class<? extends Flag> flag, Runnable runnable) {
+		try {
+			LooseContext.push();
+			MutationRecord.deltaFlag(flag, true);
+			runnable.run();
+		} finally {
+			MutationRecord.deltaFlag(flag, false);
+			LooseContext.pop();
+		}
+	}
+
+	static boolean hasContextFlag(Class<? extends Flag> flag) {
+		List<Class<? extends Flag>> flags = LooseContext.get(CONTEXT_FLAGS);
+		return flags != null && flags.contains(flag);
+	}
+
 	transient MutationRecordJso jso;
 
 	public List<MutationNode> addedNodes = new ArrayList<>();
 
 	public List<MutationNode> removedNodes = new ArrayList<>();
 
+	/*
+	 * Will be null (special case) if this mutation replaces the document
+	 */
 	public MutationNode target;
 
 	public MutationNode previousSibling;
@@ -144,11 +184,20 @@ public class MutationRecord {
 
 	transient SyncMutations sync;
 
+	/**
+	 * If this is an element, the type = childList is and flag
+	 * FlagTransportMarkupTree is set this will be the previous outerXml of the
+	 * node
+	 */
 	public String oldValue;
 
+	/**
+	 * If this is an element and flag FlagTransportMarkupTree is set this will
+	 * be the outerXml of the node
+	 */
 	public String newValue;
 
-	public transient List<String> flags;
+	public transient List<Class<? extends Flag>> flags;
 
 	// for serialization
 	public MutationRecord() {
@@ -201,7 +250,7 @@ public class MutationRecord {
 		}
 	}
 
-	public boolean hasFlag(String flag) {
+	public boolean hasFlag(Class<? extends Flag> flag) {
 		return flags != null && flags.contains(flag);
 	}
 
@@ -320,6 +369,12 @@ public class MutationRecord {
 
 	MutationNode mutationNode(NodeJso nodeJso) {
 		return sync.mutationNode(nodeJso);
+	}
+
+	public interface Flag {
+	}
+
+	public interface FlagTransportMarkupTree extends Flag {
 	}
 
 	@Reflected

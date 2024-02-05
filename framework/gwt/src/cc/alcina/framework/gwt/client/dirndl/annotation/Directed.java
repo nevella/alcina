@@ -4,17 +4,22 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -51,6 +56,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 			Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 	mergeStrategy = DirectedMergeStrategy.class)
 @ClientVisible
+@Repeatable(Directed.Multiple.class)
 public @interface Directed {
 	/**
 	 * only false in exceptional cases (such where a concrete class with dom
@@ -116,6 +122,7 @@ public @interface Directed {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target(ElementType.TYPE)
+	@Inherited
 	@ClientVisible
 	public static @interface AllProperties {
 	}
@@ -148,17 +155,33 @@ public @interface Directed {
 	public static @interface Exclude {
 	}
 
+	/**
+	 *
+	 * FIXME - for consistency, all Impl annotation reifications should have
+	 * similar (auto-generated) hashcode/equals methods
+	 *
+	 *
+	 */
 	public static class Impl implements Directed {
 		public static final Binding[] EMPTY_BINDINGS_ARRAY = new Binding[0];
 
 		public static final Directed DEFAULT_INSTANCE = new Directed.Impl();
 
+		public static boolean areEqual(Directed d1, Directed d2) {
+			return CommonUtils.equals(d1.bindDomEvents(), d2.bindDomEvents(),
+					d1.bindings(), d2.bindings(), d1.bindToModel(),
+					d2.bindToModel(), d1.className(), d2.className(),
+					d1.emits(), d2.emits(), d1.merge(), d2.merge(),
+					d1.reemits(), d2.reemits(), d1.renderer(), d2.renderer(),
+					d1.tag(), d2.tag());
+		}
+
+		public static boolean provideIsDefault(Directed directed) {
+			return areEqual(directed, DEFAULT_INSTANCE);
+		}
+
 		public static Impl wrap(Directed directed) {
-			if (directed instanceof Impl) {
-				return (Impl) directed;
-			} else {
-				return new Impl(directed);
-			}
+			return new Impl(directed);
 		}
 
 		private Binding[] bindings = EMPTY_BINDINGS_ARRAY;
@@ -171,7 +194,7 @@ public @interface Directed {
 
 		private boolean bindDomEvents = true;
 
-		private String cssClass = "";
+		private String className = "";
 
 		private String tag = "";
 
@@ -187,7 +210,7 @@ public @interface Directed {
 			emits = directed.emits();
 			reemits = directed.reemits();
 			merge = directed.merge();
-			cssClass = directed.className();
+			className = directed.className();
 			tag = directed.tag();
 			renderer = directed.renderer();
 			bindToModel = directed.bindToModel();
@@ -216,12 +239,27 @@ public @interface Directed {
 
 		@Override
 		public String className() {
-			return cssClass;
+			return className;
 		}
 
 		@Override
 		public Class<? extends NodeEvent>[] emits() {
 			return emits;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Directed) {
+				return areEqual(this, (Directed) obj);
+			} else {
+				return super.equals(obj);
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(bindings, emits, reemits, merge, className, tag,
+					renderer, bindToModel, bindDomEvents);
 		}
 
 		@Override
@@ -232,7 +270,7 @@ public @interface Directed {
 		public Impl mergeParent(Directed parent) {
 			Impl merged = new Impl();
 			merged.bindings = mergeAttribute(parent, Directed::bindings);
-			merged.cssClass = mergeAttribute(parent, Directed::className);
+			merged.className = mergeAttribute(parent, Directed::className);
 			merged.emits = mergeAttribute(parent, Directed::emits);
 			merged.merge = mergeAttribute(parent, Directed::merge);
 			merged.reemits = mergeAttribute(parent, Directed::reemits);
@@ -266,8 +304,8 @@ public @interface Directed {
 			this.bindToModel = bindToModel;
 		}
 
-		public void setCssClass(String cssClass) {
-			this.cssClass = cssClass;
+		public void setClassName(String cssClass) {
+			this.className = cssClass;
 		}
 
 		public void setEmits(Class[] emits) {
@@ -302,6 +340,16 @@ public @interface Directed {
 
 		public String toStringElideDefaults() {
 			return toString(true);
+		}
+
+		public Impl withBindDomEvents(boolean bindDomEvents) {
+			this.bindDomEvents = bindDomEvents;
+			return this;
+		}
+
+		public Impl withBindToModel(boolean bindToModel) {
+			this.bindToModel = bindToModel;
+			return this;
 		}
 
 		private String __stringValue(Object o) {
@@ -358,6 +406,11 @@ public @interface Directed {
 					elideDefaults);
 			return stringBuilder.toString();
 		}
+
+		public Directed withTag(String tag) {
+			this.tag = tag;
+			return this;
+		}
 	}
 
 	/**
@@ -387,50 +440,47 @@ public @interface Directed {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target(ElementType.METHOD)
+	@Target({ ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Property {
-		String name();
+		String value();
 	}
 
+	/**
+	 * Where a renderer has a default tag, such as SPAN, use it (rather than the
+	 * property name)
+	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target(ElementType.TYPE)
 	@ClientVisible
 	@Inherited
-	public @interface PropertyNameTags {
+	public @interface HtmlDefaultTags {
+	}
+
+	/*
+	 * WIP - force rendering of null models (for grids and tables, as a blank
+	 * element)
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	@ClientVisible
+	@Inherited
+	public @interface RenderNull {
 	}
 
 	/**
 	 * <p>
-	 * This annotation causes differently depending on which of the two possible
-	 * contexts it occurs in.
+	 * This annotation causes causes the generation of a new Node with model B
+	 * transformed from incoming Node model A via the ModelTransform function A
+	 * -&gt; B.
+	 *
 	 *
 	 * <p>
-	 * If the DirectedRenderer is {@link DirectedRenderer.Transform}, it causes
-	 * the generation of a new Node with model B transformed from incoming Node
-	 * model A via the ModelTransform function A -&gt; B.
-	 *
-	 * <p>
-	 * If the DirectedRenderer is {@link DirectedRenderer.Collection}, it causes
-	 * the generation of multiple Node&lt;B&gt; - one per element &lt;A&gt; of
-	 * the Collection model (there's no real virtue in having x ->
-	 * Collection&lt;A&gt; -> Collection &lt;B&gt;, so this flattening makes
-	 * sense). FIXME dirndl 1x1h - cookbook examples
-	 *
-	 * <p>
-	 * In the absence of a @Directed annotation on the same code element, the
-	 * following renderer will be used, depending on the model value:-
-	 *
-	 * <ul>
-	 * <li>Type: collection - use DirectedRenderer.Collection, apply to elements
-	 * <li>Type: non-collection - use DirectedRenderer.Transform, apply to model
-	 * </ul>
-	 *
-	 * <p>
-	 * Note that a Transform can be specified and applied only once per model
-	 * property
-	 *
+	 * In the absence of a @Directed annotation on the same code element, a
+	 * DirectedRenderer.TransformRenderer will be used to render the Directed
+	 * input
 	 *
 	 *
 	 */
@@ -438,18 +488,11 @@ public @interface Directed {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
-	/*
-	 * This allows resolution during render of the Transform.value property
-	 */
 	@Resolution(
 		inheritance = { Inheritance.CLASS, Inheritance.INTERFACE,
 				Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 		mergeStrategy = Transform.MergeStrategy.class)
 	@interface Transform {
-		boolean bindDomEvents() default true;
-
-		boolean bindToModel() default true;
-
 		boolean transformsNull() default false;
 
 		Class<? extends ModelTransform> value();
@@ -457,25 +500,11 @@ public @interface Directed {
 		public static class Impl implements Directed.Transform {
 			private boolean transformsNull;
 
-			private boolean bindToModel = true;
-
-			private boolean bindDomEvents = true;
-
 			private Class<? extends ModelTransform> value;
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
 				return Directed.Transform.class;
-			}
-
-			@Override
-			public boolean bindDomEvents() {
-				return this.bindDomEvents;
-			}
-
-			@Override
-			public boolean bindToModel() {
-				return this.bindToModel;
 			}
 
 			@Override
@@ -486,16 +515,6 @@ public @interface Directed {
 			@Override
 			public Class<? extends ModelTransform> value() {
 				return value;
-			}
-
-			public Impl withBindDomEvents(boolean bindDomEvents) {
-				this.bindDomEvents = bindDomEvents;
-				return this;
-			}
-
-			public Impl withBindToModel(boolean bindToModel) {
-				this.bindToModel = bindToModel;
-				return this;
 			}
 
 			public Impl withTransformsNull(boolean transformsNull) {
@@ -512,6 +531,112 @@ public @interface Directed {
 		@Reflected
 		public static class MergeStrategy extends
 				AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOrClass<Transform> {
+			@Override
+			protected List<Transform> atClass(Class<Transform> annotationClass,
+					ClassReflector<?> reflector,
+					ClassReflector<?> resolvingReflector, Resolver resolver) {
+				Transform annotation = resolver.contextAnnotation(reflector,
+						Directed.Transform.class,
+						Resolver.ResolutionContext.Strategy);
+				// FIXME - dirndl - util method
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
+			}
+
+			// FIXME - dirndl - should this go to the parent?
+			@Override
+			protected List<Transform> atProperty(
+					Class<Transform> annotationClass,
+					cc.alcina.framework.common.client.reflection.Property property,
+					Resolver resolver) {
+				Transform annotation = resolver.contextAnnotation(property,
+						Directed.Transform.class,
+						Resolver.ResolutionContext.Strategy);
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
+			}
+		}
+	}
+
+	/**
+	 * <p>
+	 * This annotation occurs only on properties whose type is a subtype of
+	 * {@link java.util.Collection}, and causes the generation of multiple
+	 * Node&lt;B&gt; - one per element &lt;A&gt; of the Collection modelFIXME
+	 * dirndl 1x1h - cookbook examples
+	 *
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	@Resolution(
+		inheritance = { Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
+		mergeStrategy = TransformElements.MergeStrategy.class)
+	@interface TransformElements {
+		boolean transformsNull() default false;
+
+		Class<? extends ModelTransform> value();
+
+		public static class Impl implements Directed.TransformElements {
+			private boolean transformsNull;
+
+			private Class<? extends ModelTransform> value;
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Directed.TransformElements.class;
+			}
+
+			@Override
+			public boolean transformsNull() {
+				return transformsNull;
+			}
+
+			@Override
+			public Class<? extends ModelTransform> value() {
+				return value;
+			}
+
+			public Impl withTransformsNull(boolean transformsNull) {
+				this.transformsNull = transformsNull;
+				return this;
+			}
+
+			public Impl withValue(Class<? extends ModelTransform> value) {
+				this.value = value;
+				return this;
+			}
+		}
+
+		@Reflected
+		public static class MergeStrategy extends
+				AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOrClass<TransformElements> {
+			@Override
+			protected List<TransformElements> atClass(
+					Class<TransformElements> annotationClass,
+					ClassReflector<?> reflector,
+					ClassReflector<?> resolvingReflector, Resolver resolver) {
+				TransformElements annotation = resolver.contextAnnotation(
+						reflector, Directed.TransformElements.class,
+						Resolver.ResolutionContext.Strategy);
+				// FIXME - dirndl - util method
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
+			}
+
+			// FIXME - dirndl - should this go to the parent?
+			@Override
+			protected List<TransformElements> atProperty(
+					Class<TransformElements> annotationClass,
+					cc.alcina.framework.common.client.reflection.Property property,
+					Resolver resolver) {
+				TransformElements annotation = resolver.contextAnnotation(
+						property, Directed.TransformElements.class,
+						Resolver.ResolutionContext.Strategy);
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
+			}
 		}
 	}
 
@@ -520,9 +645,6 @@ public @interface Directed {
 	 * Renders the model as two nodes, the first having tag value() - i.e. sugar
 	 * for: <code>@Directed.Multiple({@Directed(tag="value"),@Directed})</code>
 	 *
-	 *
-	 *
-	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -530,5 +652,11 @@ public @interface Directed {
 	@ClientVisible
 	public static @interface Wrap {
 		String value();
+	}
+
+	/**
+	 * Marker, the renderer should *not* use the model classname as a tag
+	 */
+	public static interface NonClassTag {
 	}
 }

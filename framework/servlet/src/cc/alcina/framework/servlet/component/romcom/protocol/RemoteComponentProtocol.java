@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
@@ -32,12 +33,16 @@ public class RemoteComponentProtocol {
 			implements ProtocolException {
 		public Action action;
 
+		public transient String uiType;
+
 		public InvalidClientException() {
 		}
 
-		public InvalidClientException(String message, Action action) {
+		public InvalidClientException(String message, Action action,
+				String uiType) {
 			super(message);
 			this.action = action;
+			this.uiType = uiType;
 		}
 
 		@AlcinaTransient
@@ -106,6 +111,28 @@ public class RemoteComponentProtocol {
 			public List<EventSystemMutation> eventMutations = new ArrayList<>();
 
 			public LocationMutation locationMutation;
+		}
+
+		public static class Invoke extends Message {
+			public Pathref path;
+
+			public String methodName;
+
+			public List<?> arguments;
+
+			public int id;
+
+			public List<Class> argumentTypes;
+		}
+
+		// FIXME - doc this annotation
+		@ReflectiveSerializer.Checks(ignore = true)
+		public static class InvokeResponse extends Message {
+			public int id;
+
+			public Object response;
+
+			public Exception exception;
 		}
 
 		/*

@@ -61,6 +61,12 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	private String suggestedFileName = "";
 
+	public void ensureSuggestedFilename(String filename) {
+		if (Ax.isBlank(getSuggestedFileName())) {
+			setSuggestedFileName(filename);
+		}
+	}
+
 	private String emailSubject = "";
 
 	private String emailSubjectForRequestor = null;

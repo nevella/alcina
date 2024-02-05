@@ -8,7 +8,10 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.IntersectionObserved;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
@@ -17,24 +20,43 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.KeyboardSelectNode;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeToggleButtonClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.PaginatorVisible;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.SelectNode;
+import cc.alcina.framework.gwt.client.dirndl.model.TreePath.Walker;
 
 @Directed(
 	className = "tree",
-	bindings = { @Binding(from = "rootHidden", type = Type.CSS_CLASS) },
+	bindings = {
+			// receive keyevents when focussed
+			@Binding(to = "tabIndex", literal = "-1", type = Type.PROPERTY) },
 	emits = SelectionChanged.class)
 public class Tree<TN extends TreeNode<TN>> extends Model
 		implements NodeLabelClicked.Handler, NodeToggleButtonClicked.Handler,
-		PaginatorVisible.Handler {
+		TreeEvents.SelectNode.Handler, TreeEvents.KeyboardSelectNode.Handler,
+		PaginatorVisible.Handler, KeyboardNavigation.Navigation.Handler,
+		// routes keydown events to the keyboardNavigation and
+		DomEvents.KeyDown.Handler {
 	private boolean rootHidden;
 
 	private TN root;
 
 	protected TN selectedNodeModel;
 
+	protected TN keyboardSelectedNodeModel;
+
 	private Paginator paginator;
+
+	KeyboardNavigation keyboardNavigation;
+
+	boolean commitAfterKeyboardNavigation;
+
+	public void attachKeyboardNavigation() {
+		keyboardNavigation = new KeyboardNavigation(this)
+				.withEmitLeftRightEvents(true);
+	}
 
 	@Directed
 	public Paginator getPaginator() {
@@ -46,23 +68,46 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		return this.root;
 	}
 
+	public boolean isCommitAfterKeyboardNavigation() {
+		return this.commitAfterKeyboardNavigation;
+	}
+
+	@Binding(type = Type.CSS_CLASS)
 	public boolean isRootHidden() {
 		return this.rootHidden;
 	}
 
 	@Override
-	public void onNodeLabelClicked(NodeLabelClicked event) {
-		TN model = event.getModel();
-		if (selectedNodeModel != null) {
-			selectedNodeModel.setSelected(false);
+	public void onKeyboardSelectNode(KeyboardSelectNode event) {
+		keyboardSelectModel((ModelEvent) event);
+	}
+
+	@Override
+	public void onKeyDown(KeyDown event) {
+		if (keyboardNavigation != null) {
+			keyboardNavigation.onKeyDown(event);
 		}
-		selectedNodeModel = model;
-		selectedNodeModel.setSelected(true);
-		event.reemitAs(this, SelectionChanged.class, model);
+	}
+
+	@Override
+	public void onNavigation(Navigation event) {
+		if (keyboardSelectedNodeModel != null) {
+			if (keyboardSelectedNodeModel instanceof KeyboardNavigation.Navigation.Handler) {
+				((KeyboardNavigation.Navigation.Handler) keyboardSelectedNodeModel)
+						.onNavigation(event);
+			}
+		}
+	}
+
+	@Override
+	public void onNodeLabelClicked(NodeLabelClicked event) {
+		focusTree();
+		selectNode((ModelEvent) event);
 	}
 
 	@Override
 	public void onNodeToggleButtonClicked(NodeToggleButtonClicked event) {
+		focusTree();
 		TN model = event.getModel();
 		model.setOpen(!model.isOpen());
 		if (model.isOpen() && !model.populated) {
@@ -74,6 +119,16 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	@Override
 	public void onPaginatorVisible(PaginatorVisible event) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void onSelectNode(SelectNode event) {
+		selectNode((ModelEvent) event);
+	}
+
+	public void setCommitAfterKeyboardNavigation(
+			boolean commitAfterKeyboardNavigation) {
+		this.commitAfterKeyboardNavigation = commitAfterKeyboardNavigation;
 	}
 
 	public void setPaginator(Paginator paginator) {
@@ -100,6 +155,39 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		throw new UnsupportedOperationException();
 	}
 
+	void focusTree() {
+		provideElement().focus();
+	}
+
+	void keyboardSelectModel(ModelEvent<TN, ?> event) {
+		TN model = event.getModel();
+		if (model == keyboardSelectedNodeModel) {
+			return;
+		}
+		if (keyboardSelectedNodeModel != null) {
+			keyboardSelectedNodeModel.setKeyboardSelected(false);
+		}
+		if (selectedNodeModel != null) {
+			selectedNodeModel.setSelected(false);
+		}
+		keyboardSelectedNodeModel = model;
+		keyboardSelectedNodeModel.setKeyboardSelected(true);
+		if (commitAfterKeyboardNavigation) {
+			selectNode(event);
+		}
+	}
+
+	void selectNode(ModelEvent<TN, ?> event) {
+		keyboardSelectModel(event);
+		TN model = event.getModel();
+		if (selectedNodeModel != null) {
+			selectedNodeModel.setSelected(false);
+		}
+		selectedNodeModel = model;
+		selectedNodeModel.setSelected(true);
+		event.reemitAs(this, SelectionChanged.class, model);
+	}
+
 	/**
 	 * Note that subclasses should *not* call the no-args constructor
 	 *
@@ -114,7 +202,8 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	 *
 	 */
 	public abstract static class AbstractPathNode<PN extends AbstractPathNode>
-			extends TreeNode<PN> {
+			extends TreeNode<PN>
+			implements KeyboardNavigation.Navigation.Handler {
 		protected TreePath<PN> treePath;
 
 		/**
@@ -134,6 +223,9 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			if (parent == null) {
 				treePath = TreePath.absolutePath(path);
 			} else {
+				if (!path.contains(".")) {
+					path = parent.treePath.childPath(path);
+				}
 				treePath = parent.treePath.ensurePath(path);
 				if (addToParentChildren) {
 					parent.getChildren().add(this);
@@ -144,6 +236,60 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 		public TreePath<PN> getTreePath() {
 			return this.treePath;
+		}
+
+		@Override
+		public void onNavigation(Navigation event) {
+			TreePath keyboardSelect = null;
+			Walker<PN> walker = treePath.walker();
+			switch (event.getModel()) {
+			case COMMIT:
+				event.reemitAs(this, TreeEvents.SelectNode.class, this);
+				break;
+			case RIGHT:
+				if (!isOpen()) {
+					setOpen(true);
+				} else {
+					keyboardSelect = walker.next();
+				}
+				break;
+			case LEFT:
+				if (isOpen()) {
+					setOpen(false);
+				} else {
+					keyboardSelect = treePath.getParent();
+				}
+				break;
+			case UP:
+				while (walker.previous() != null) {
+					if (walker.current().provideIsVisible()) {
+						keyboardSelect = walker.current;
+						break;
+					}
+				}
+				break;
+			case DOWN:
+				while (walker.next() != null) {
+					if (walker.current().provideIsVisible()) {
+						keyboardSelect = walker.current;
+						break;
+					}
+				}
+				break;
+			}
+			if (keyboardSelect != null) {
+				event.reemitAs(this, TreeEvents.KeyboardSelectNode.class,
+						keyboardSelect.getValue());
+			}
+		}
+
+		public boolean provideIsVisible() {
+			PN parent = getParent();
+			if (parent == null) {
+				return true;
+			} else {
+				return parent.isOpen();
+			}
 		}
 
 		public void putTree(Tree tree) {
@@ -249,6 +395,18 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 		private boolean selected;
 
+		private boolean keyboardSelected;
+
+		public int depth() {
+			int depth = 0;
+			TreeNode cursor = this;
+			while (cursor.getParent() != null) {
+				depth++;
+				cursor = cursor.getParent();
+			}
+			return depth;
+		}
+
 		@Directed.Wrap("nodes")
 		public List<TreeNode<NM>> getChildren() {
 			return this.children;
@@ -261,6 +419,11 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 		public NM getParent() {
 			return this.parent;
+		}
+
+		@Binding(type = Type.CSS_CLASS)
+		public boolean isKeyboardSelected() {
+			return this.keyboardSelected;
 		}
 
 		@Binding(type = Type.CSS_CLASS)
@@ -293,14 +456,17 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 					children);
 		}
 
+		public void setKeyboardSelected(boolean keyboardSelected) {
+			set("keyboardSelected", this.keyboardSelected, keyboardSelected,
+					() -> this.keyboardSelected = keyboardSelected);
+		}
+
 		public void setLeaf(boolean leaf) {
 			this.leaf = leaf;
 		}
 
 		public void setOpen(boolean open) {
-			boolean old_open = this.open;
-			this.open = open;
-			propertyChangeSupport().firePropertyChange("open", old_open, open);
+			set("open", this.open, open, () -> this.open = open);
 		}
 
 		public void setParent(NM parent) {
@@ -308,10 +474,8 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 
 		public void setSelected(boolean selected) {
-			boolean old_selected = this.selected;
-			this.selected = selected;
-			propertyChangeSupport().firePropertyChange("selected", old_selected,
-					selected);
+			set("selected", this.selected, selected,
+					() -> this.selected = selected);
 		}
 
 		public void sortChildren() {
@@ -354,17 +518,11 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			}
 
 			public void setLabel(Object label) {
-				Object old_label = this.label;
-				this.label = label;
-				propertyChangeSupport().firePropertyChange("label", old_label,
-						label);
+				set("label", this.label, label, () -> this.label = label);
 			}
 
 			public void setTitle(String title) {
-				String old_title = this.title;
-				this.title = title;
-				propertyChangeSupport().firePropertyChange("title", old_title,
-						title);
+				set("title", this.title, title, () -> this.title = title);
 			}
 		}
 

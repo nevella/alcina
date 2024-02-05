@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
@@ -54,7 +53,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
-import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObserver.AppDebug;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -85,7 +83,9 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
+import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import elemental.json.impl.JsonUtil;
 
 @SuppressWarnings("deprecation")
@@ -309,9 +309,7 @@ public abstract class DevHelper {
 	}
 
 	public void initAppDebug() {
-		Optional<AppDebug> appDebug = Registry
-				.optional(ProcessObserver.AppDebug.class);
-		appDebug.ifPresent(AppDebug::attach);
+		AppDebug.register();
 	}
 
 	public void initDataFolder() {
@@ -432,19 +430,10 @@ public abstract class DevHelper {
 		AlcinaTopics.jobCompletion.add(jobCompletionLister);
 	}
 
-	public DevHelper solidTestEnv() {
-		solidTestEnvFirstHalf();
-		solidTestEnvSecondHalf();
-		return this;
+	void initLifecycleServices() {
+		AppLifecycleServletBase
+				.initLifecycleServiceClasses(LifecycleService.AlsoDev.class);
 	}
-
-	public void solidTestEnvFirstHalf() {
-		loadDefaultLoggingProperties();
-		loadConfig();
-		initLightweightServices();
-	}
-
-	public abstract DevHelper solidTestEnvSecondHalf();
 
 	public void writeObject(Object obj) {
 		writeObject(obj, obj.getClass().getSimpleName());
@@ -481,9 +470,8 @@ public abstract class DevHelper {
 		return cacheFile;
 	}
 
-	protected void copyTemplates() {
+	protected void copyTemplate(String nonTemplatePath) {
 		{
-			String nonTemplatePath = getNonVcsJavaTaskFilePath();
 			if (nonTemplatePath == null) {
 				// not yet configured
 				return;
@@ -500,40 +488,12 @@ public abstract class DevHelper {
 				}
 			}
 		}
-		{
-			String nonTemplatePath = getNonVcsJavaProcessObserverFilePath();
-			if (nonTemplatePath == null) {
-				return;
-			}
-			File nonTemplateFile = new File(nonTemplatePath);
-			if (!nonTemplateFile.exists()) {
-				try {
-					Ax.out("Copying template %s", nonTemplateFile.getName());
-					SEUtilities.copyFile(
-							new File(nonTemplatePath + ".template"),
-							nonTemplateFile);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-		{
-			String nonTemplatePath = getNonVcsJavaDevmodeProcessObserverFilePath();
-			if (nonTemplatePath == null) {
-				return;
-			}
-			File nonTemplateFile = new File(nonTemplatePath);
-			if (!nonTemplateFile.exists()) {
-				try {
-					Ax.out("Copying template %s", nonTemplateFile.getName());
-					SEUtilities.copyFile(
-							new File(nonTemplatePath + ".template"),
-							nonTemplateFile);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
+	}
+
+	protected void copyTemplates() {
+		copyTemplate(getNonVcsJavaTaskFilePath());
+		copyTemplate(getNonVcsJavaProcessObserverFilePath());
+		copyTemplate(getNonVcsJavaDevmodeProcessObserverFilePath());
 	}
 
 	protected TransformManager createTransformManager() {

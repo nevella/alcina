@@ -18,6 +18,7 @@ import javax.persistence.Transient;
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
@@ -42,6 +43,8 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
@@ -49,7 +52,6 @@ import cc.alcina.framework.common.client.util.HasEquivalenceString;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @MappedSuperclass
 @ObjectPermissions(
@@ -98,10 +100,6 @@ public abstract class Job extends VersionableEntity<Job>
 	private double completion;
 
 	private JobResultType resultType;
-
-	private boolean stacktraceRequested;
-
-	private int retryCount;
 
 	private int performerVersionNumber;
 
@@ -255,18 +253,6 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 	}
 
-	public ProcessState ensureProcessState() {
-		// looks like at least JDK17 instruction reordering breaks this (second
-		// getter can return null), unless
-		// synchronized
-		synchronized (domainIdentity()) {
-			if (getProcessState() == null) {
-				setProcessState(new ProcessState());
-			}
-		}
-		return getProcessState();
-	}
-
 	public String getCause() {
 		return this.cause;
 	}
@@ -357,10 +343,6 @@ public abstract class Job extends VersionableEntity<Job>
 		return this.resultType;
 	}
 
-	public int getRetryCount() {
-		return this.retryCount;
-	}
-
 	public Date getRunAt() {
 		return this.runAt;
 	}
@@ -418,16 +400,6 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 		return provideParent().map(job -> job.hasSelfOrAncestorTask(taskClass))
 				.orElse(false);
-	}
-
-	// not used, replaced by jobstatemessage - FIXME mvcc.jobs.2 - remove
-	public boolean isStacktraceRequested() {
-		return this.stacktraceRequested;
-	}
-
-	public void persistProcessState() {
-		ProcessState state = ensureProcessState();
-		setProcessStateSerialized(TransformManager.serialize(state));
 	}
 
 	public boolean provideCanDeserializeTask() {
@@ -875,26 +847,12 @@ public abstract class Job extends VersionableEntity<Job>
 				resultType);
 	}
 
-	public void setRetryCount(int retryCount) {
-		int old_retryCount = this.retryCount;
-		this.retryCount = retryCount;
-		propertyChangeSupport().firePropertyChange("retryCount", old_retryCount,
-				retryCount);
-	}
-
 	public void setRunAt(Date runAt) {
 		Preconditions.checkState(runAt == null
 				|| !provideFirstInSequence().provideParent().isPresent());
 		Date old_runAt = this.runAt;
 		this.runAt = runAt;
 		propertyChangeSupport().firePropertyChange("runAt", old_runAt, runAt);
-	}
-
-	public void setStacktraceRequested(boolean stacktraceRequested) {
-		boolean old_stacktraceRequested = this.stacktraceRequested;
-		this.stacktraceRequested = stacktraceRequested;
-		propertyChangeSupport().firePropertyChange("stacktraceRequested",
-				old_stacktraceRequested, stacktraceRequested);
 	}
 
 	public void setStartTime(Date startTime) {
@@ -1090,7 +1048,8 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 	}
 
-	public static class ProcessState extends Model {
+	public static class ProcessState extends Bindable
+			implements TreeSerializable {
 		private List<ResourceRecord> resources = new ArrayList<>();
 
 		private String threadName;
@@ -1107,6 +1066,11 @@ public abstract class Job extends VersionableEntity<Job>
 			record.setPath(resource.getPath());
 			resources.add(record);
 			return record;
+		}
+
+		@Override
+		public ProcessState clone() {
+			return FlatTreeSerializer.clone(this);
 		}
 
 		public String getAllocatorThreadName() {
@@ -1158,15 +1122,15 @@ public abstract class Job extends VersionableEntity<Job>
 		state, resultType
 	}
 
-	public static class ResourceRecord extends Model
-			implements HasEquivalenceString<ResourceRecord> {
+	public static class ResourceRecord extends Bindable
+			implements HasEquivalenceString<ResourceRecord>, TreeSerializable {
 		private boolean acquiredFromAntecedent;
 
 		private boolean acquired;
 
 		private String className;
 
-		private String path;
+		private String path = "";
 
 		@Override
 		public String equivalenceString() {

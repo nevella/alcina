@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StackDebug;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.Topic;
 
 /**
@@ -227,7 +228,7 @@ public class PermissionsManager implements DomainTransformListener {
 			return false;
 		} else {
 			return PermissionsManager.get().checkEffectivePropertyPermission(op,
-					null, object, true);
+					null, object, false);
 		}
 	}
 
@@ -433,9 +434,10 @@ public class PermissionsManager implements DomainTransformListener {
 			// define read/write better than
 			// property defaults
 			return true;
+		} else {
+			pp = pp == null ? getDefaultPropertyPermissions() : pp;
+			return isPermitted(bean, read ? pp.read() : pp.write());
 		}
-		pp = pp == null ? getDefaultPropertyPermissions() : pp;
-		return isPermitted(bean, read ? pp.read() : pp.write());
 	}
 
 	public boolean checkReadable(Class<?> clazz, String propertyName,
@@ -936,7 +938,7 @@ public class PermissionsManager implements DomainTransformListener {
 	 * 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 	 * 		</code>
 	 *
-	 * 
+	 *
 	 */
 	public static class RegistryPermissionsExtension
 			implements PermissionsExtension {
@@ -987,6 +989,15 @@ public class PermissionsManager implements DomainTransformListener {
 
 		public void register(PermissionsExtensionForRule ext) {
 			perNameRules.put(ext.getRuleName(), ext);
+		}
+	}
+
+	public static void runAsUser(IUser user, ThrowingRunnable runnable) {
+		try {
+			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
+			ThrowingRunnable.asRunnable(runnable).run();
+		} finally {
+			PermissionsManager.get().popUser();
 		}
 	}
 }

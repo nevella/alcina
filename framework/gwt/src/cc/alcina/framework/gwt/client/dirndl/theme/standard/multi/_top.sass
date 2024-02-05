@@ -15,6 +15,7 @@ page
   display: flex
   height: 100vh
   flex-direction: column
+
   > header 
     display: flex
     height: theme.$header-height
@@ -22,7 +23,9 @@ page
     background-color: theme.$header-background-color
     padding: 0 theme.$header-side-padding
     flex-shrink: 0
-    > title-area 
+    align-items: center
+
+    > heading-area 
       text-align: center
       margin: auto 0
       padding-bottom: theme.$header-title-bottom-adjust
@@ -30,22 +33,25 @@ page
       font-family: theme.$header-font-stack
       flex-grow: 1
       height: 100%
+
     > left,
     > right 
       min-width: theme.$header-side-cmp-min-width
-      > *:not(:first-child) 
-        padding-left: 1rem
+
     > right 
       display: flex
+      gap: 1rem
       justify-content: flex-end
+      
     button,
-    > title-area,
+    > heading-area,
     div.ol-dropdown.-ol-open > :nth-child(2) 
       font-family: theme.$header-font-stack
       color: theme.$header-title-color
+
     div.ol-dropdown.-ol-open > :nth-child(2) 
       background-color: theme.$header-background-color
-    align-items: center
+    
   > footer 
     display: flex
     height: theme.$footer-height
@@ -53,14 +59,18 @@ page
     font-size: theme.$footer-font-size
     flex-shrink: 0
     align-items: center
+
     p 
       width: theme.$footer-copyright-width
       box-sizing: border-box
+
     nav 
       flex-grow: 1
+
     p,
     ul 
       margin: 0
+      
     > nav ul,
     > ul 
       @include base.horizontal-list("-")

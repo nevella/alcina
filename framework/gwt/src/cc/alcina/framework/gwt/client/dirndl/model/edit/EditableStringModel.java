@@ -26,7 +26,7 @@ public class EditableStringModel extends Model {
 	}
 
 	@Display
-	@Validator(validator = NotBlankValidator.class)
+	@Validator(NotBlankValidator.class)
 	@Custom(
 		customiserClass = TextAreaCustomiser.class,
 		parameters = {
@@ -57,7 +57,7 @@ public class EditableStringModel extends Model {
 
 		@Override
 		@Display
-		@Validator(validator = NotBlankValidator.class)
+		@Validator(NotBlankValidator.class)
 		public String getString() {
 			return super.getString();
 		}

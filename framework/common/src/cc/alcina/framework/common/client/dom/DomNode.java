@@ -370,6 +370,7 @@ public class DomNode {
 		return node.getNodeName();
 	}
 
+	/** Note that this is case-sensitive, tagIs() is case-insensitive */
 	public boolean nameIs(String name) {
 		return name().equals(name);
 	}
@@ -487,6 +488,7 @@ public class DomNode {
 		return tagIs(tagName) && classIs(className);
 	}
 
+	/** Note that this is case-insensitive, nameIs() is case-sensitive */
 	public boolean tagIs(String tagName) {
 		return isElement()
 				&& w3cElement().getTagName().equalsIgnoreCase(tagName)
@@ -889,9 +891,19 @@ public class DomNode {
 					.reduce((n1, n2) -> n2).orElse(null);
 		}
 
+		List<DomNode> nodes;
+
 		public List<DomNode> nodes() {
-			return DomEnvironment.nodeListToList(node.getChildNodes()).stream()
+			if (this.nodes != null) {
+				return this.nodes;
+			}
+			List<DomNode> nodes = DomEnvironment
+					.nodeListToList(node.getChildNodes()).stream()
 					.map(document::nodeFor).collect(Collectors.toList());
+			if (document.isReadonly()) {
+				this.nodes = nodes;
+			}
+			return nodes;
 		}
 
 		public boolean noElements() {
@@ -991,7 +1003,11 @@ public class DomNode {
 		}
 
 		public String toHtml() {
-			return DomEnvironment.get().toHtml(document);
+			return toHtml(true);
+		}
+
+		public String toHtml(boolean pretty) {
+			return DomEnvironment.get().toHtml(document, pretty);
 		}
 
 		public List<DomNode> trs() {
@@ -1133,6 +1149,12 @@ public class DomNode {
 			wrapper.children.append(DomNode.this);
 			wrapper.copyAttributesFrom(DomNode.this);
 			return wrapper;
+		}
+
+		public void insertAfterThis(List<DomNode> list) {
+			List<DomNode> copy = list.stream().collect(Collectors.toList());
+			Collections.reverse(copy);
+			copy.forEach(n -> insertAfterThis(n));
 		}
 	}
 
@@ -1898,5 +1920,13 @@ public class DomNode {
 
 			boolean valid = false;
 		}
+	}
+
+	public DomNodeType getDomNodeType() {
+		return DomNodeType.fromW3cNode(node);
+	}
+
+	public boolean classMatches(String regex) {
+		return attr("class").matches(regex);
 	}
 }

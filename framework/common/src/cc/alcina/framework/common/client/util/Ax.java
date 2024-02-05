@@ -60,18 +60,8 @@ public class Ax {
 				.collect(Collectors.joining(", "));
 	}
 
-	public static String cssify(String s) {
-		if (CommonUtils.isNullOrEmpty(s)) {
-			return s;
-		}
-		StringBuilder builder = new StringBuilder();
-		builder.append(s.substring(0, 1).toLowerCase());
-		for (int i = 1; i < s.length(); i++) {
-			String c = s.substring(i, i + 1);
-			builder.append(c.toUpperCase().equals(c) ? "-" : "");
-			builder.append(c.toLowerCase());
-		}
-		return builder.toString();
+	public static String cssify(Object o) {
+		return CommonUtils.cssify(o);
 	}
 
 	public static String dateSlash(Date date) {
@@ -302,5 +292,19 @@ public class Ax {
 		public void remove() {
 			listIterator.remove();
 		}
+	}
+
+	public static boolean equals(Object... objects) {
+		return CommonUtils.equals(objects);
+	}
+
+	public static void stringBytes(String s) {
+		CommonUtils.dumpStringBytes(s);
+	}
+
+	public static String firstLine(String string) {
+		string = blankToEmpty(string);
+		int newlineIdx = string.indexOf("\n");
+		return newlineIdx == -1 ? string : string.substring(0, newlineIdx);
 	}
 }

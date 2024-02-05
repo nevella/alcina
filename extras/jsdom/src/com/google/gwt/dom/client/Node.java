@@ -28,6 +28,8 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeType;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 /**
  * The Node interface is the primary datatype for the entire Document Object
@@ -35,6 +37,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
  * implementing the Node interface expose methods for dealing with children, not
  * all objects implementing the Node interface may have children.
  */
+@Reflected
 public abstract class Node
 		implements JavascriptObjectEquivalent, ClientDomNode, org.w3c.dom.Node {
 	/**
@@ -600,5 +603,9 @@ public abstract class Node
 		public int size() {
 			return local().getChildren().size();
 		}
+	}
+
+	public DomNodeType getDomNodeType() {
+		return DomNodeType.fromW3cNode(this);
 	}
 }

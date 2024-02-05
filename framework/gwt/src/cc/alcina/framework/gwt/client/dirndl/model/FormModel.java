@@ -11,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
@@ -26,7 +25,8 @@ import com.google.gwt.user.client.ui.Focusable;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+import com.totsp.gwittir.client.validator.ValidationException;
+import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -35,6 +35,8 @@ import cc.alcina.framework.common.client.actions.PermissibleEntityAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.ListenerBinding;
+import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
@@ -43,7 +45,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Action;
-import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
+import cc.alcina.framework.common.client.logic.reflection.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -51,9 +53,13 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
@@ -61,11 +67,15 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.BeanValidationChange;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.BeanValidationChange.Data;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.PropertyValidationChange;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
@@ -74,19 +84,27 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 @Directed
 @Registration(FormModel.class)
 public class FormModel extends Model
-		implements DomEvents.Submit.Handler, DomEvents.KeyDown.Handler,
-		ModelEvents.Cancel.Handler, ModelEvents.Submit.Handler {
+		implements NodeEditorContext, DomEvents.Submit.Handler,
+		DomEvents.KeyDown.Handler, ModelEvents.Cancel.Handler,
+		ModelEvents.Submit.Handler, FormEvents.BeanValidationChange.Handler,
+		FormEvents.PropertyValidationChange.Handler {
 	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
+
+	public static void installFeedbackProvider() {
+		ValidationFeedback.Support.DEFAULT_PROVIDER = new ValidationFeedbackProvider();
+	}
 
 	protected List<FormElement> elements = new ArrayList<>();
 
 	protected List<Link> actions = new ArrayList<>();
 
-	private FormModelState state;
+	private FormModelAttributes state;
 
 	private boolean unAttachConfirmsTransformClear = false;
 
 	private boolean submitTextBoxesOnEnter = false;
+
+	private Model formValidationResult;
 
 	private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
 		CommitToStorageTransformListener.get().flush();
@@ -110,12 +128,60 @@ public class FormModel extends Model
 		return this.elements;
 	}
 
-	public FormModelState getState() {
+	public Model getFormValidationResult() {
+		return this.formValidationResult;
+	}
+
+	public FormModelAttributes getState() {
 		return this.state;
+	}
+
+	@Override
+	public boolean isEditable() {
+		return state.editable;
+	}
+
+	@Override
+	public boolean isRenderAsNodeEditors() {
+		return state.nodeEditors;
 	}
 
 	public boolean isSubmitTextBoxesOnEnter() {
 		return this.submitTextBoxesOnEnter;
+	}
+
+	@Override
+	public void onBeanValidationChange(BeanValidationChange event) {
+		setFormValidationResult(null);
+		Data data = event.getModel();
+		switch (data.state) {
+		case ASYNC_VALIDATING:
+		case VALIDATING:
+			return;
+		case INVALID:
+			setFormValidationResult(
+					new FormValidationModel(data.exceptionMessage));
+			return;
+		}// VALID - handle success
+		if (getState().model instanceof Entity) {
+			// FIXME - adjunct
+			ClientTransformManager.cast()
+					.promoteToDomainObject(getState().model);
+			CommitToStorageTransformListener
+					.flushAndRunWithFirstCreationConsumer(
+							this::onEditComittedRemote);
+		}
+		if (Client.currentPlace() instanceof EntityPlace) {
+		} else if (Client.currentPlace() instanceof CategoryNamePlace) {
+			CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
+					.currentPlace();
+			DefaultPermissibleActionHandler.handleAction(null,
+					categoryNamePlace.ensureAction(), provideNode());
+		}
+		// now bubble the originating submit event (post validation)
+		if (data.originatingEvent != null) {
+			data.originatingEvent.bubble();
+		}
 	}
 
 	@Override
@@ -208,6 +274,11 @@ public class FormModel extends Model
 		}
 	}
 
+	@Override
+	public void onPropertyValidationChange(PropertyValidationChange event) {
+		setFormValidationResult(null);
+	}
+
 	// the dom 'Submit' event - fired for instance by <submit> elements
 	@Override
 	public void onSubmit(DomEvents.Submit event) {
@@ -219,6 +290,12 @@ public class FormModel extends Model
 	@Override
 	public void onSubmit(ModelEvents.Submit event) {
 		submit(event);
+	}
+
+	public void setFormValidationResult(Model formValidationResult) {
+		set("formValidationResult", this.formValidationResult,
+				formValidationResult,
+				() -> this.formValidationResult = formValidationResult);
 	}
 
 	public void setSubmitTextBoxesOnEnter(boolean submitTextBoxesOnEnter) {
@@ -255,11 +332,18 @@ public class FormModel extends Model
 		if (focus.isPresent()) {
 			Node childWithModel = event.getContext().node
 					.childWithModel(m -> m != null && m instanceof ValueModel
-							&& m == focus.get().getValue());
+							&& m == focus.get().provideValueModel());
 			((Focusable) childWithModel.getRendered()).setFocus(true);
 		}
 		// FIXME - dirndl 1x2 - this should be an annotation on the field,
 		//
+	}
+
+	void onValidationStateChange(ModelEvent event,
+			FormValidation formValidation, FormValidation.State state) {
+		Data data = new FormEvents.BeanValidationChange.Data(event, state,
+				formValidation.beanValidationExceptionMessage);
+		emitEvent(FormEvents.BeanValidationChange.class, data);
 	}
 
 	/*
@@ -267,57 +351,53 @@ public class FormModel extends Model
 	 * validation is complete
 	 */
 	void submit(ModelEvent event) {
-		Consumer<Void> onValid = o -> {
-			if (getState().model instanceof Entity) {
-				// FIXME - adjunct
-				ClientTransformManager.cast()
-						.promoteToDomainObject(getState().model);
-				CommitToStorageTransformListener
-						.flushAndRunWithFirstCreationConsumer(
-								this::onEditComittedRemote);
-			}
-			if (Client.currentPlace() instanceof EntityPlace) {
-			} else if (Client.currentPlace() instanceof CategoryNamePlace) {
-				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
-						.currentPlace();
-				DefaultPermissibleActionHandler.handleAction(null,
-						categoryNamePlace.ensureAction(), provideNode());
-			}
-			if (event != null) {
-				event.getContext().bubble();
-			}
-		};
-		new FormValidation().validate(onValid, getState().formBinding);
+		FormValidation formValidation = new FormValidation();
+		TopicListener<FormValidation.State> onValid = state -> onValidationStateChange(
+				event, formValidation, state);
+		formValidation.validate(onValid, getState().formBinding,
+				getState().model);
 	}
 
 	public static class BindableFormModelTransformer extends
 			AbstractContextSensitiveModelTransform<Bindable, FormModel> {
 		@Override
 		public FormModel apply(Bindable bindable) {
-			FormModelState state = new FormModelState();
-			state.editable = true;
-			if (bindable instanceof Entity && state.editable) {
+			FormModelAttributes attributes = new FormModelAttributes();
+			attributes.editable = true;
+			if (bindable instanceof Entity && attributes.editable) {
 				bindable = ClientTransformManager.cast()
 						.ensureEditable((Entity) bindable);
 			}
-			state.model = bindable;
-			state.adjunct = true;
-			BindableFormModelTransformer.Args args = node
-					.annotation(BindableFormModelTransformer.Args.class);
+			attributes.model = bindable;
+			attributes.adjunct = true;
+			attributes.nodeEditors = false;
+			BeanViewModifiers args = node.annotation(BeanViewModifiers.class);
 			if (args != null) {
-				state.adjunct = args.adjunct();
+				attributes.adjunct = args.adjunct();
+				attributes.nodeEditors = args.nodeEditors();
+				attributes.editable = args.editable();
 			}
-			return new FormModelTransformer().withContextNode(node)
-					.apply(state);
+			try {
+				LooseContext.push();
+				// FIXME - dirndl - cleanup GwittirBridge calling (use a
+				// builder)
+				if (attributes.nodeEditors) {
+					LooseContext.setTrue(
+							BeanFields.CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS);
+				}
+				return new FormModelTransformer().withContextNode(node)
+						.apply(attributes);
+			} finally {
+				LooseContext.pop();
+			}
 		}
+	}
 
-		@ClientVisible
-		@Retention(RetentionPolicy.RUNTIME)
-		@Documented
-		@Target({ ElementType.TYPE, ElementType.METHOD })
-		public @interface Args {
-			boolean adjunct() default false;
-		}
+	/**
+	 * Marker interface for edtiors of a type
+	 *
+	 */
+	public interface Editor {
 	}
 
 	public static class EntityTransformer extends
@@ -325,7 +405,7 @@ public class FormModel extends Model
 		@Override
 		public FormModel apply(
 				DirectedEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
-			FormModelState state = new FormModelState();
+			FormModelAttributes state = new FormModelAttributes();
 			Entity entity = activity.getEntity();
 			state.editable = activity.getPlace().action.isEditable();
 			if (entity != null && state.editable) {
@@ -339,10 +419,63 @@ public class FormModel extends Model
 		}
 	}
 
-	public static class FormElement extends Model {
-		protected LabelModel label;
+	public static class Feedback extends ValidationFeedback.Provider.Builder
+			implements ValidationFeedback, Model.Has {
+		FeedbackModel model;
 
-		protected FormValueModel value;
+		Feedback() {
+			model = new FeedbackModel();
+		}
+
+		@Override
+		public ValidationFeedback createFeedback() {
+			return this;
+		}
+
+		@Override
+		public void handleException(Object source,
+				ValidationException exception) {
+			model.setMessage(exception.getMessage());
+		}
+
+		@Override
+		public Model provideModel() {
+			return model;
+		}
+
+		@Override
+		public void resolve(Object source) {
+			model.setMessage(null);
+		}
+
+		@Directed(
+			tag = "validation-feedback",
+			emits = FormEvents.PropertyValidationChange.class)
+		public class FeedbackModel extends Model.Fields {
+			@Directed
+			String message;
+
+			public FeedbackModel() {
+				bindings().addListener(new RemovablePropertyChangeListener(this,
+						"message",
+						e -> emitEvent(
+								FormEvents.PropertyValidationChange.class,
+								message == null)));
+			}
+
+			public void setMessage(String message) {
+				set("message", this.message, message,
+						() -> this.message = message);
+			}
+		}
+	}
+
+	@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
+	public static class FormElement extends Model.Fields
+			implements FormEvents.PropertyValidationChange.Handler {
+		public static transient String PREFIX = "";
+
+		private LabelModel label;
 
 		protected Field field;
 
@@ -350,18 +483,28 @@ public class FormModel extends Model
 
 		private boolean focusOnAttach;
 
+		private ValueContainer valueContainer;
+
+		boolean invalid;
+
 		public FormElement() {
 		}
 
 		public FormElement(Field field, Bindable bindable) {
 			this.field = field;
 			this.bindable = bindable;
-			this.label = Registry.impl(LabelModel.class).withFormElement(this);
-			this.value = new FormValueModel(this);
+			ContextResolver resolver = (ContextResolver) field.getResolver();
+			this.label = resolver.impl(LabelModel.class).withFormElement(this);
+			valueContainer = new ValueContainer();
+			valueContainer.value = new FormValueModel(this);
+			ValidationFeedback feedback = field.getFeedback();
+			if (feedback instanceof Model.Has) {
+				valueContainer.feedback = ((Model.Has) feedback).provideModel();
+			}
 		}
 
 		public String getElementName() {
-			return Ax.format("_dl_form_%s", field.getPropertyName());
+			return Ax.format("%s%s", PREFIX, field.getPropertyName());
 		}
 
 		public Field getField() {
@@ -374,20 +517,60 @@ public class FormModel extends Model
 		}
 
 		@Directed
-		public FormValueModel getValue() {
-			return this.value;
+		public ValueContainer getValueContainer() {
+			return this.valueContainer;
 		}
 
 		public boolean isFocusOnAttach() {
 			return this.focusOnAttach;
 		}
 
+		@cc.alcina.framework.gwt.client.dirndl.annotation.Binding(
+			type = Type.PROPERTY)
+		public boolean isInvalid() {
+			return this.invalid;
+		}
+
+		@Override
+		public void onPropertyValidationChange(
+				FormEvents.PropertyValidationChange event) {
+			setInvalid(!event.isValid());
+			event.getContext().bubble();
+		}
+
+		public FormValueModel provideValueModel() {
+			return valueContainer.value;
+		}
+
 		public void setFocusOnAttach(boolean focusOnAttach) {
 			this.focusOnAttach = focusOnAttach;
 		}
+
+		public void setInvalid(boolean invalid) {
+			set("invalid", this.invalid, invalid, () -> this.invalid = invalid);
+		}
+
+		@Directed(tag = "value")
+		public static class ValueContainer extends Model {
+			private FormValueModel value;
+
+			private Model feedback;
+
+			@Directed
+			public Model getFeedback() {
+				return this.feedback;
+			}
+
+			@Directed
+			public FormValueModel getValue() {
+				return this.value;
+			}
+		}
 	}
 
-	public static class FormModelState {
+	public static class FormModelAttributes {
+		public boolean nodeEditors;
+
 		public Bindable presentationModel;
 
 		public boolean expectsModel;
@@ -409,22 +592,22 @@ public class FormModel extends Model
 
 	@Reflected
 	public static class FormModelTransformer extends
-			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
+			AbstractContextSensitiveModelTransform<FormModelAttributes, FormModel> {
 		@Override
-		public FormModel apply(FormModelState state) {
+		public FormModel apply(FormModelAttributes state) {
 			FormModel formModel = Registry.impl(FormModel.class);
 			formModel.state = state;
 			if (state.model == null && state.expectsModel) {
 				return formModel;
 			}
 			Args args = node.annotation(Args.class);
+			// FIXME - dirndl - put these as methods on the Resolver
 			ActionsModulator actionsModulator = args != null
 					? Reflections.newInstance(args.actionsModulator())
 					: new ActionsModulator();
 			FieldModulator fieldModulator = args != null
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
-			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			ModalResolver resolver = ModalResolver.single(node,
 					!state.editable);
 			resolver.setFormModel(formModel);
@@ -439,10 +622,15 @@ public class FormModel extends Model
 				}
 			}
 			if (state.presentationModel != null) {
-				List<Field> fields = GwittirBridge.get()
-						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-								state.presentationModel, factory,
-								state.editable, state.adjunct, resolver);
+				ValidationFeedback.Provider validationFeedbackProvider = state.nodeEditors
+						? new ValidationFeedbackProvider()
+						: null;
+				List<Field> fields = BeanFields.query()
+						.forBean(state.presentationModel).withResolver(resolver)
+						.withValidationFeedbackProvider(
+								validationFeedbackProvider)
+						.asEditable(state.editable)
+						.asAdjunctEditor(state.adjunct).listFields();
 				fields.stream()
 						.filter(field -> fieldModulator
 								.accept(state.presentationModel, field))
@@ -528,6 +716,16 @@ public class FormModel extends Model
 		}
 	}
 
+	@Directed(tag = "form-validation")
+	public static class FormValidationModel extends Model.Fields {
+		@Directed
+		public String message;
+
+		public FormValidationModel(String message) {
+			this.message = message;
+		}
+	}
+
 	public static class FormValueModel extends Model implements ValueModel {
 		protected FormElement formElement;
 
@@ -582,7 +780,13 @@ public class FormModel extends Model
 		}
 	}
 
-	public static class ModelEventContext {
+	/**
+	 *
+	 * The bean properties will be rendered via Dirndl model transforms (as
+	 * Editor models), rather than (legacy) AbstractBoundWidgets
+	 *
+	 */
+	public @interface NodeEditors {
 	}
 
 	@Reflected
@@ -590,7 +794,7 @@ public class FormModel extends Model
 			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
 		@Override
 		public FormModel apply(PermissibleAction action) {
-			FormModelState state = new FormModelState();
+			FormModelAttributes state = new FormModelAttributes();
 			state.editable = true;
 			state.adjunct = true;
 			state.expectsModel = true;
@@ -628,11 +832,45 @@ public class FormModel extends Model
 		}
 	}
 
+	public static class ValidationFeedbackProvider
+			implements ValidationFeedback.Provider {
+		@Override
+		public Builder builder() {
+			return new Feedback();
+		}
+	}
+
 	public interface ValueModel {
 		Bindable getBindable();
 
 		Field getField();
 
 		String getGroupName();
+	}
+
+	/**
+	 * Marker interface for viewers of a type
+	 *
+	 */
+	public interface Viewer {
+	}
+
+	public static class TransformRegistrationBinding
+			implements ListenerBinding {
+		Entity entity;
+
+		public TransformRegistrationBinding(Entity entity) {
+			this.entity = entity;
+		}
+
+		@Override
+		public void bind() {
+			TransformManager.get().registerDomainObject(entity);
+		}
+
+		@Override
+		public void unbind() {
+			TransformManager.get().deregisterDomainObject(entity);
+		}
 	}
 }

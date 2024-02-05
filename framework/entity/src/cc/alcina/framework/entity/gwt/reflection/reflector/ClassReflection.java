@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JConstructor;
@@ -33,6 +34,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ClassUtil;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
@@ -53,6 +55,11 @@ public class ClassReflection extends ReflectionElement {
 					.getAnnotation(NonClientRegistryPointType.class) == null;
 		}
 	};
+
+	@Override
+	public String toString() {
+		return Ax.format("Reflection: %s", type);
+	}
 
 	public static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
@@ -150,6 +157,14 @@ public class ClassReflection extends ReflectionElement {
 			computeTypeBounds(ProvidesTypeBounds providesJavacTypeBounds) {
 		return (List<JClassType>) (List<?>) providesJavacTypeBounds
 				.provideTypeBounds(type);
+	}
+
+	public Stream<Class> getAnnotationAttributeTypes() {
+		return Stream.concat(
+				annotationReflections.stream().flatMap(
+						AnnotationReflection::getAnnotationAttributeTypes),
+				propertyReflections.values().stream().flatMap(
+						PropertyReflection::getAnnotationAttributeTypes));
 	}
 
 	public List<AnnotationReflection> getAnnotationReflections() {
@@ -322,8 +337,7 @@ public class ClassReflection extends ReflectionElement {
 			// non-transient, non-private, non-static and immutable unless
 			// Bean.Fields. Note that this includes superclass fields (including
 			// package- and protected-)
-					filter(f -> !f.isTransient() && !f.isPrivate()
-							&& !f.isStatic())
+					filter(reflectionVisibility::isVisibleField)
 					.filter(f -> f.isFinal() || hasMutableFields)
 					.forEach(this::addFieldMethods);
 		}
@@ -425,7 +439,8 @@ public class ClassReflection extends ReflectionElement {
 		@Override
 		public <A extends Annotation> List<A>
 				getAnnotations(Class<A> annotationClass) {
-			return type.getAnnotations(annotationClass);
+			return (List<A>) List.of(((ProvidesJavaType) type).provideJavaType()
+					.getAnnotationsByType(annotationClass));
 		}
 	}
 

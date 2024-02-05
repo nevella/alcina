@@ -33,8 +33,8 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.entity.Configuration.PropertyTree.PropertyNode;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.util.CsvCols;
-import cc.alcina.framework.entity.util.CsvCols.CsvRow;
+import cc.alcina.framework.entity.util.Csv;
+import cc.alcina.framework.entity.util.Csv.Row;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 
 /**
@@ -71,6 +71,16 @@ boolean enabled = Configuration.is(Foo.class,"enabled");
 
 
  * </pre></code>
+ * 
+ * <h3>Notes</h3>
+ * <p>
+ * Log levels (key <code>log.level.mypackage.Foo=INFO</code>) should not go in
+ * package configuration.properties files, since those files are only loaded
+ * lazily, on the first Configuration.get(clazz) call where clazz is in the
+ * package.
+ * 
+ * <p>
+ * Instead, set defaults in an app-level configuration properties file
  */
 public class Configuration {
 	public final static Properties properties = new Properties();
@@ -316,6 +326,11 @@ public class Configuration {
 			return this;
 		}
 
+		/**
+		 * This sets the contex property, not the configuration property. TODO -
+		 * should probably *not* do this
+		 * 
+		 */
 		public void set(String value) {
 			LooseContext.set(toString(), value);
 		}
@@ -876,7 +891,7 @@ public class Configuration {
 			List<PropertyNode> nodes = getRoot().depthFirst();
 			nodes.stream().collect(Collectors.toList())
 					.forEach(PropertyNode::sortChildren);
-			CsvCols cols = new CsvCols("");
+			Csv cols = new Csv("");
 			nodes = getRoot().depthFirst();
 			Stream.of(Header.values()).forEach(cols::addColumn);
 			nodes.stream().forEach(node -> node.addTo(cols));
@@ -986,8 +1001,8 @@ public class Configuration {
 						.collect(Collectors.joining("."));
 			}
 
-			void addTo(CsvCols cols) {
-				CsvRow row = cols.addRow();
+			void addTo(Csv cols) {
+				Row row = cols.addRow();
 				if (key == null) {
 					row.set(Header.Package, packageName());
 				} else {

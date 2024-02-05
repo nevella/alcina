@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -42,6 +43,8 @@ import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.SliceProcessor;
+import cc.alcina.framework.common.client.collections.SliceProcessor.SliceSubProcessor;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
@@ -79,10 +82,13 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -126,6 +132,12 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public static final String CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS";
 
+	public static final String CONTEXT_DISABLE_EVICTION = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_DISABLE_EVICTION";
+
+	public static final String CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP";
+
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
@@ -151,6 +163,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	public static final Topic<Thread> topicTransformManagerWasReset = Topic
 			.create();
+
+	public static Predicate<Entity> permitEviction = e -> true;
 
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
@@ -305,6 +319,39 @@ public class ThreadlocalTransformManager extends TransformManager {
 		super.deregisterDomainObject(entity);
 	}
 
+	/*
+	 * At the end of a transaction, evict created locals that were never
+	 * persisted (to not leak)
+	 */
+	public void evictNonPromotedLocals(List<Entity> createdLocals) {
+		if (LooseContext.is(CONTEXT_DISABLE_EVICTION)) {
+			return;
+		}
+		DomainStore store = DomainStore.writableStore();
+		createdLocals.forEach(e -> {
+			if (!e.domain().wasPersisted()) {
+				Class entityClass = e.entityClass();
+				if (store.isCached(entityClass)) {
+					if (permitEviction.test(e)) {
+						boolean logEvictions = Configuration.is("logEvictions");
+						if (logEvictions) {
+							logger.info("Evicting: {}", e.toLocator());
+						}
+						store.getCache().evictCreatedLocal(e);
+					} else {
+						logger.warn("Invalid eviction: {}", e);
+						logger.warn("Invalid eviction: ", new Exception());
+						if (EntityLayerUtils.isTestOrTestServer()) {
+							throw new RuntimeException();
+						}
+					}
+				}
+			} else {
+				// retain
+			}
+		});
+	}
+
 	public void flush() {
 		flush(new ArrayList<>());
 	}
@@ -454,7 +501,10 @@ public class ThreadlocalTransformManager extends TransformManager {
 		if (clientInstance != null) {
 			String message = "Reconstitute entity map - clientInstance: "
 					+ clientInstance.getId();
-			// System.out.println(message);
+			if (LooseContext.is(CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP)) {
+				logger.warn(message,
+						new Exception("trace reconstitute entity map"));
+			}
 			// cp.log(message, LogMessageType.INFO.toString());
 			String dteName = PersistentImpl
 					.getImplementation(DomainTransformEventPersistent.class)
@@ -467,20 +517,36 @@ public class ThreadlocalTransformManager extends TransformManager {
 					"select dtr.id from %s dtr where dtr.clientInstance.id = ?1",
 					dtrName)).setParameter(1, clientInstance.getId())
 					.getResultList();
-			String eql = String.format(
-					"select dte.objectId, dte.objectLocalId, dte.objectClassRef.id "
-							+ "from  %s dte  "
-							+ " where dte.domainTransformRequestPersistent.id in %s "
-							+ " and dte.objectLocalId!=0 and dte.transformType = ?1",
-					dteName, EntityPersistenceHelper.toInClause(dtrIds));
-			List<Object[]> idTuples = getEntityManager().createQuery(eql)
-					.setParameter(1, TransformType.CREATE_OBJECT)
-					.getResultList();
-			for (Object[] obj : idTuples) {
-				ClassRef classRef = ClassRef.forId((long) obj[2]);
-				clientInstanceEntityMap.putToLookups(new EntityLocator(
-						classRef.getRefClass(), (Long) obj[0], (Long) obj[1]));
-			}
+			SystemoutCounter ctr = new SystemoutCounter(1, 10);
+			SliceProcessor<Long> processor = new SliceProcessor<>();
+			SliceSubProcessor<Long> sub = new SliceSubProcessor<>() {
+				@Override
+				public void process(List<Long> sublist, int startIndex) {
+					if (LooseContext.is(CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP)
+							|| startIndex > 0) {
+						logger.info("Reconstitute slice - {}/{}", startIndex,
+								dtrIds.size());
+					}
+					String eql = String.format(
+							"select dte.objectId, dte.objectLocalId, dte.objectClassRef.id "
+									+ "from  %s dte  "
+									+ " where dte.domainTransformRequestPersistent.id in %s "
+									+ " and dte.objectLocalId!=0 and dte.transformType = ?1",
+							dteName,
+							EntityPersistenceHelper.toInClause(sublist));
+					List<Object[]> idTuples = getEntityManager()
+							.createQuery(eql)
+							.setParameter(1, TransformType.CREATE_OBJECT)
+							.getResultList();
+					for (Object[] obj : idTuples) {
+						ClassRef classRef = ClassRef.forId((long) obj[2]);
+						clientInstanceEntityMap.putToLookups(
+								new EntityLocator(classRef.getRefClass(),
+										(Long) obj[0], (Long) obj[1]));
+					}
+				}
+			};
+			processor.process(dtrIds, 1000, sub);
 			MetricLogging.get().end(message);
 		}
 		return clientInstanceEntityMap;

@@ -301,7 +301,7 @@ public class Registry {
 
 		public Stream<V> implementations() {
 			return (Stream) registrations.stream(this)
-					.map(this::checkNonSingleton);
+					.map(this::checkNonSingleton).filter(Objects::nonNull);
 		}
 
 		public Optional<V> optional() {
@@ -355,7 +355,8 @@ public class Registry {
 
 		V checkNonSingleton(Class<? extends V> clazz) {
 			Preconditions.checkArgument(!singletons.contains(clazz));
-			return Reflections.newInstance(clazz);
+			return Reflections.at(clazz).isAbstract() ? null
+					: Reflections.newInstance(clazz);
 		}
 
 		Query<V> subQuery(Class<? extends V> subKey) {
@@ -578,6 +579,10 @@ public class Registry {
 				}
 				RegistryKey key = keys.get(keys.size() - 1);
 				Class superclass = key.clazz().getSuperclass();
+				// handle primitives, interfaces
+				if (superclass == null && key.clazz() != Object.class) {
+					superclass = Object.class;
+				}
 				if (superclass == null) {
 					if (ascendedFinalKey) {
 						return false;
@@ -672,8 +677,22 @@ public class Registry {
 			}
 
 			void dump(String key, int depth) {
-				Ax.out("%s : %s", CommonUtils.padStringRight(key, 45, ' '),
-						value);
+				Collection coll = value instanceof Collection
+						? (Collection) value
+						: null;
+				Object firstElement = coll != null && coll.size() > 0
+						? Ax.first((Collection<T>) value)
+						: value;
+				Ax.out("%s%s : %s",
+						CommonUtils.padStringRight("", depth * 2, ' '),
+						CommonUtils.padStringRight(key, 45 - depth * 2, ' '),
+						firstElement);
+				if (coll != null) {
+					coll.stream().skip(1).forEach(v -> {
+						Ax.out("%s : %s",
+								CommonUtils.padStringRight("", 45, ' '), v);
+					});
+				}
 				map.forEach((k, v) -> v.dump(k.simpleName(), depth + 1));
 			}
 

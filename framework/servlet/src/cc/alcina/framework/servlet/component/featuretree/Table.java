@@ -68,7 +68,6 @@ class Table extends Model.Fields {
 	}
 
 	@Directed(tag = "td")
-	@Directed.PropertyNameTags
 	class FeatureCell extends Model.Fields {
 		@Directed
 		String featureName;
@@ -86,7 +85,6 @@ class Table extends Model.Fields {
 	}
 
 	@Directed
-	@Directed.PropertyNameTags
 	class ReleaseColumn extends Model.Fields {
 		Class<? extends Feature.ReleaseVersion> version;
 

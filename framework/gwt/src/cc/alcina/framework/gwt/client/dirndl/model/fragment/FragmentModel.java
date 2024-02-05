@@ -6,22 +6,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.w3c.dom.Node;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
+import cc.alcina.framework.common.client.collections.NotifyingList;
+import cc.alcina.framework.common.client.collections.NotifyingList.Notification;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.gwt.client.dirndl.event.Events;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Mutation;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
@@ -31,6 +33,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.FragmentRoot;
+import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNodeOps;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.FragmentRootTransformer;
 
@@ -92,19 +95,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  */
 @Feature.Ref(Feature_Dirndl_FragmentModel.class)
 public class FragmentModel implements InferredDomEvents.Mutation.Handler,
-		LayoutEvents.Bind.Handler, NodeTransformer.Provider {
-	static final String FLAG_MUTATING = FragmentModel.class.getName()
-			+ ".FLAG_MUTATING";
-
+		LayoutEvents.Bind.Handler, NodeTransformer.Provider, FragmentNodeOps {
 	public static void withMutating(Runnable runnable) {
-		try {
-			LooseContext.push();
-			MutationRecord.deltaFlag(FLAG_MUTATING, true);
-			runnable.run();
-		} finally {
-			MutationRecord.deltaFlag(FLAG_MUTATING, false);
-			LooseContext.pop();
-		}
+		MutationRecord.withFlag(FlagMutating.class, runnable);
 	}
 
 	Model rootModel;
@@ -118,8 +111,6 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	boolean eventScheduled;
 
-	boolean emitMutationEvents = true;
-
 	TransformerMatcher transformerMatcher = new TransformerMatcher(this);
 
 	List<NodeTransformer> matchingTransformers;
@@ -128,7 +119,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	public FragmentModel(Model rootModel) {
 		this.rootModel = rootModel;
-		fragmentRoot = new FragmentRoot(rootModel);
+		fragmentRoot = new FragmentRoot(this, rootModel);
 		addDefaultModelledTypes();
 	}
 
@@ -166,6 +157,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		scheduleEmitMutationEvent();
 	}
 
+	/*
+	 * Note that some DOM nodes inserted by transformations (NodeBoundary
+	 * contents) will not have a corresponding FragmentNode
+	 */
 	public FragmentNode getFragmentNode(DomNode node) {
 		NodeTransformer transformer = domNodeTransformer.get(node);
 		if (transformer == null) {
@@ -183,10 +178,6 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		return this.fragmentRoot;
 	}
 
-	public boolean isEmitMutationEvents() {
-		return this.emitMutationEvents;
-	}
-
 	@Override
 	public void onBind(Bind event) {
 		/*
@@ -194,6 +185,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		 */
 		if (event.isBound()) {
 			domToModel();
+			fragmentRoot.addNotificationHandler(this::onNotification);
 		}
 	}
 
@@ -203,7 +195,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		// sketch
 		// collate - changes by node
 		for (MutationRecord record : event.records) {
-			if (record.hasFlag(FLAG_MUTATING)) {
+			if (record.hasFlag(FlagMutating.class)) {
 				continue;
 			}
 			Node w3cNode = record.target.w3cNode;
@@ -232,6 +224,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			NodeTransformer transformer = createNodeTransformer(domNode);
 			transformer.setLayoutNode(node.provideNode());
 			registerTransformer(domNode, transformer);
+			node.onFragmentRegistration();
 		}
 		node.children().forEach(this::register);
 	}
@@ -240,13 +233,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		return rootModel.provideElement().asDomNode();
 	}
 
-	public void setEmitMutationEvents(boolean emitMutationEvents) {
-		this.emitMutationEvents = emitMutationEvents;
-	}
-
 	protected void addDefaultModelledTypes() {
 		addModelled(List.of(FragmentNode.TextNode.class,
-				FragmentNode.Generic.class));
+				FragmentNode.GenericElement.class,
+				FragmentNode.GenericProcessingInstruction.class,
+				FragmentNode.GenericComment.class));
 	}
 
 	void addDescent(DomNode node) {
@@ -262,9 +253,6 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				 */
 				transformer = parentTransformer.createChildTransformer(n);
 				transformer.apply(parentTransformer.getLayoutNode());
-				currentModelMutation.addEntry(
-						transformer.getLayoutNode().getModel(),
-						ModelMutation.Type.ADD);
 				registerTransformer(n, transformer);
 			}
 		});
@@ -278,13 +266,17 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	void emitMutationEvent() {
 		NodeEvent.Context.fromNode(rootModel.provideNode())
 				.dispatch(ModelMutation.class, currentModelMutation.getData());
-		currentModelMutation = null;
+		currentModelMutation = new ModelMutation();
 		eventScheduled = false;
 	}
 
 	NodeTransformer registerTransformer(DomNode n,
 			NodeTransformer transformer) {
 		return domNodeTransformer.put(n, transformer);
+	}
+
+	void onNotification(NotifyingList.Notification notification) {
+		onChildNodesNotification(fragmentRoot, notification);
 	}
 
 	void removeDescent(DomNode node) {
@@ -296,26 +288,21 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			return;
 		}
 		traversal.forEach(n -> {
+			// FIXME - fm - possibly do this via removal listen (or FN unbind)
 			NodeTransformer transformer = deregisterTransformer(n);
-			if (transformer != null) {
-				currentModelMutation.addEntry(
-						transformer.getLayoutNode().getModel(),
-						ModelMutation.Type.REMOVE);
-			}
 		});
 		topTransformer.getLayoutNode().remove(false);
 	}
 
 	void scheduleEmitMutationEvent() {
-		if (!emitMutationEvents) {
-			return;
-		}
 		if (eventScheduled) {
 			return;
 		}
-		Scheduler.get().scheduleFinally(() -> emitMutationEvent());
+		events.queue(() -> emitMutationEvent());
 		eventScheduled = true;
 	}
+
+	public final Events events = new Events();
 
 	public interface Has {
 		FragmentModel provideFragmentModel();
@@ -332,8 +319,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			getData().fragmentModel = fragmentModel;
 		}
 
-		public void addEntry(Model model, Type type) {
-			getData().entries.add(new Entry(model, type));
+		public void addEntry(FragmentNodeOps parent, Model model, Type type) {
+			getData().add(new Entry(parent, model, type));
 		}
 
 		@Override
@@ -354,6 +341,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			Map<Node, UpdateRecord> updateRecords = AlcinaCollections
 					.newUnqiueMap();
 
+			Set<Model> modifiedOrChildrenModified = AlcinaCollections
+					.newUniqueSet();
+
 			public List<Entry> entries = new ArrayList<>();
 
 			FragmentModel fragmentModel;
@@ -364,6 +354,22 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				format.appendIfNotBlank(entries);
 				return format.toString();
 			}
+
+			public void add(Entry entry) {
+				entries.add(entry);
+			}
+
+			public Set<FragmentNodeOps> provideAffectedFragmentNodes() {
+				Set<FragmentNodeOps> result = new LinkedHashSet<>();
+				entries.forEach(e -> {
+					result.add(e.parent);
+					Model m = e.model;
+					if (m instanceof FragmentNode) {
+						result.add((FragmentNode) m);
+					}
+				});
+				return result;
+			}
 		}
 
 		public static class Entry {
@@ -371,7 +377,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 			public Type type;
 
-			Entry(Model model, Type type) {
+			public FragmentNodeOps parent;
+
+			Entry(FragmentNodeOps parent, Model model, Type type) {
+				this.parent = parent;
 				this.model = model;
 				this.type = type;
 			}
@@ -380,7 +389,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			public String toString() {
 				FormatBuilder format = new FormatBuilder();
 				format.appendPadRight(8, type);
-				format.append(NestedNameProvider.get(model));
+				format.append(NestedName.get(model));
 				return format.toString();
 			}
 		}
@@ -392,6 +401,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		public enum Type {
 			ADD, REMOVE, CHANGE
 		}
+	}
+
+	interface FlagMutating extends MutationRecord.Flag {
 	}
 
 	class MinimalAncestorSet {
@@ -430,6 +442,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		}
 	}
 
+	/*
+	 * Models the mutations applied to a DOM node, and transforms per-Node
+	 * mutations to FragmentNode mutations
+	 */
 	class UpdateRecord {
 		Node node;
 
@@ -461,7 +477,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			}
 			/*
 			 * Due to the possibility of 'add, then move to a wrapping node'
-			 * mutation combinations exist, only
+			 * mutation combinations exist, hence this reduction (remove later
+			 * removed ops) code
 			 */
 			MinimalAncestorSet adds = new MinimalAncestorSet();
 			MinimalAncestorSet removes = new MinimalAncestorSet();
@@ -481,5 +498,34 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			removes.nodes.stream().map(DomNode::from)
 					.forEach(FragmentModel.this::removeDescent);
 		}
+	}
+
+	public FragmentNode copyExternal(FragmentNode external) {
+		FragmentNode copy = Reflections.newInstance(external.getClass());
+		copy.copyFromExternal(external);
+		return copy;
+	}
+
+	public void onChildNodesNotification(FragmentNodeOps parent,
+			Notification notification) {
+		if (notification.postMutation) {
+			currentModelMutation.addEntry(parent,
+					((DirectedLayout.Node) notification.delta).getModel(),
+					notification.add ? ModelMutation.Type.ADD
+							: ModelMutation.Type.REMOVE);
+		}
+	}
+
+	public void ensureComputedNodes(FragmentNode fragmentNode) {
+	}
+
+	@Override
+	public Stream<? extends FragmentNode> children() {
+		return fragmentRoot.children();
+	}
+
+	@Override
+	public void ensureComputedNodes() {
+		fragmentRoot.ensureComputedNodes();
 	}
 }

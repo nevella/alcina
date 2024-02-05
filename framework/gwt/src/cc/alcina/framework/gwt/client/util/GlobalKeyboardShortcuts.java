@@ -30,34 +30,41 @@ public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 		NativeEvent nativeEvent = event.getNativeEvent();
 		String type = nativeEvent.getType();
 		boolean altKey = nativeEvent.getAltKey();
+		boolean metaKey = nativeEvent.getMetaKey();
+		boolean ctrlKey = nativeEvent.getCtrlKey();
 		boolean shiftKey = nativeEvent.getShiftKey();
+		boolean fireWithinInput = altKey || metaKey || ctrlKey;
 		int keyCode = nativeEvent.getKeyCode();
 		int charCode = nativeEvent.getCharCode();
 		EventTarget eventTarget = nativeEvent.getEventTarget();
-		if (Element.is(eventTarget)) {
-			try {
-				Element as = Element.as(eventTarget);
-				String name = as.getTagName();
-				switch (name.toLowerCase()) {
-				case "input":
-				case "checkbox":
-				case "select":
-				case "textarea":
-					// TODO - richtext?
-					return;
-				}
-			} catch (Exception e) {
-				// if under webdriver, possibly event source has already been
-				// removed
-				// FIXME - dirndl 1x3 - narrow the catch [devex, dirndl
-				// exception if not WD][via topic]
-				Ax.simpleExceptionOut(e);
-			}
-		}
 		switch (type) {
 		case "keypress":
 		case "keydown":
 		case "keyup":
+			if (Element.is(eventTarget) && !fireWithinInput) {
+				try {
+					Element elem = Element.as(eventTarget);
+					String name = elem.getTagName();
+					switch (name.toLowerCase()) {
+					case "input":
+					case "checkbox":
+					case "select":
+					case "textarea":
+						return;
+					}
+					if (elem.asDomNode().ancestors().orSelf()
+							.has(a -> a.has("contenteditable"))) {
+						return;
+					}
+				} catch (Exception e) {
+					// if under webdriver, possibly event source has already
+					// been
+					// removed
+					// FIXME - dirndl 1x3 - narrow the catch [devex, dirndl
+					// exception if not WD][via topic]
+					Ax.simpleExceptionOut(e);
+				}
+			}
 			break;
 		default:
 			return;

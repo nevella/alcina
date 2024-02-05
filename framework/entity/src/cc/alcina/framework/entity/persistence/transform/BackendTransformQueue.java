@@ -159,6 +159,7 @@ public class BackendTransformQueue {
 			String queueName) {
 		long now = System.currentTimeMillis();
 		events.add(new Event(transforms, normaliseQueueName(queueName), now));
+		removeFromLocalEviction(transforms);
 		return transforms.size();
 	}
 
@@ -168,6 +169,7 @@ public class BackendTransformQueue {
 			TransformManager.get()
 					.addDomainTransformListener(collectingListener);
 			runnable.run();
+			List<DomainTransformEvent> transforms = collectingListener.transforms;
 			collectingListener.transforms
 					.forEach(TransformManager.get()::removeTransform);
 			return enqueue(collectingListener.transforms, queueName);
@@ -223,6 +225,7 @@ public class BackendTransformQueue {
 		logger.info(
 				"(Backend queue)  - committing {} transforms - locators: {}",
 				pendingTransforms.size(), locators);
+		TransformManager.get().clearTransforms();
 		Transaction.endAndBeginNew();
 		ThreadlocalTransformManager.get()
 				.addTransforms(committingCollation.getAllEvents(), false);
@@ -248,6 +251,13 @@ public class BackendTransformQueue {
 		// stream) is just a spurious commit() event which causes an commit noop
 		return queues.values().stream().map(q -> q.computeDelay(now))
 				.min(Comparator.naturalOrder()).orElse(Long.MAX_VALUE);
+	}
+
+	void removeFromLocalEviction(List<DomainTransformEvent> transforms) {
+		transforms.stream()
+				.filter(DomainTransformEvent::provideIsCreationTransform)
+				.map(DomainTransformEvent::getSource).distinct()
+				.forEach(Transaction.current()::removeFromLocalEviction);
 	}
 
 	private static class CollectingListener implements DomainTransformListener {

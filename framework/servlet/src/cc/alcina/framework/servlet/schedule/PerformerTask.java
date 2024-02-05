@@ -8,9 +8,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.actions.SelfPerformer;
 
 /**
- * A base task which is its own performer
- * 
- * 
+ * A base task which is its own performer. It (and all subclasses) will be
+ * annoted with @Bean(PropertySource.FIELDS), and subclass Beans 1.0 properties
+ * migrated to fields
+ *
+ *
  *
  */
 public abstract class PerformerTask implements SelfPerformer {

@@ -25,7 +25,7 @@ public abstract class SyncDispatcher<E extends SyncEndpointModel, I extends Sync
 
 	protected void applyDelta() throws Exception {
 		deltaApplicator.apply(null, syncDispatchToken.getObjectSetDeltaModel(),
-				Collections.emptyList());
+				Collections.emptyList(), null);
 	}
 
 	protected void getDelta() throws Exception {

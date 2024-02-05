@@ -1,5 +1,8 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Comparator;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,6 +11,7 @@ import com.google.gwt.core.shared.GWT;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Containment;
 
 /*
  * FIXME - dirndl 1x3 - cleanup? Also move refs to CollectionCreators.Bootstrap
@@ -43,5 +47,36 @@ public class AlcinaCollections {
 	// currently no GWT implementation - but will use es6 WeakMap
 	public static <K, V> Map<K, V> newWeakMap() {
 		return Registry.impl(CollectionCreators.WeakMapCreator.class).create();
+	}
+
+	public static <V> Comparator<V> caseInsensitiveToStringOrder() {
+		return new Comparator() {
+			IdentityHashMap<Object, String> map = new IdentityHashMap<>();
+
+			@Override
+			public int compare(Object o1, Object o2) {
+				String s1 = o1 == null ? null
+						: map.computeIfAbsent(o1,
+								o -> o.toString().toLowerCase());
+				String s2 = o2 == null ? null
+						: map.computeIfAbsent(o2,
+								o -> o.toString().toLowerCase());
+				if (s1 == null) {
+					if (s2 == null) {
+						return 0;
+					} else {
+						return -1;
+					}
+				}
+				if (s2 == null) {
+					return 1;
+				}
+				return s1.compareTo(s2);
+			}
+		};
+	}
+
+	public static Set<Containment> newLinkedHashSet() {
+		return new LinkedHashSet<>();
 	}
 }

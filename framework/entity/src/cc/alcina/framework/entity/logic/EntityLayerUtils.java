@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.logic;
 
+import java.util.Timer;
 import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -16,6 +17,8 @@ public class EntityLayerUtils {
 	public static String getApplicationHostName() {
 		return Configuration.get("applicationHostName");
 	}
+
+	public static final Timer timer = new Timer("alcina-jvm-timer", true);
 
 	public static String getLocalHostName() {
 		try {

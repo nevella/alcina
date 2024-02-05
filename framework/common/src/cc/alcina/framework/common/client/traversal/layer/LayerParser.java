@@ -1,116 +1,162 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
+import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token.NodeTraversalToken;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.Topic;
 
+/**
+ * <p>
+ * A token-based layer processor which emits selections based on matches to a
+ * set of tokens.
+ * 
+ * <p>
+ * Initially, this follows TokenParser quite closely. One goal is to allow
+ * declarative token construction/definition - a la token grammars such as BNLF,
+ * Antlr etc - but without the restriction that token matching be purely
+ * text-based
+ */
 public class LayerParser {
-	InputState inputState;
+	public abstract static class ExtendedState {
+		public ParserState parserState;
 
-	MeasureSelection selection;
+		public void setParser(LayerParser layerParser) {
+			parserState = layerParser.parserState;
+		}
 
-	private LayerParserPeer parserPeer;
+		// convenience method
+		public Location getLocation() {
+			return parserState.getLocation();
+		}
 
-	private CustomState customState;
+		public DomNode domNode() {
+			return getLocation().containingNode;
+		}
 
-	private boolean forwardsTraversalOrder = true;
-
-	public LayerParser(MeasureSelection selection, LayerParserPeer parserPeer) {
-		this.selection = selection;
-		this.parserPeer = parserPeer;
-		inputState = new InputState(selection.get());
-	}
-
-	public void detachMeasures() {
-		selection.get().detach();
-		inputState.matches.forEach(Measure::detach);
-	}
-
-	public DomNode getContainerNode() {
-		return selection.get().containingNode();
-	}
-
-	public List<Measure> getOutputs() {
-		// very temp, assuming only one sequence per
-		// inputState.outputs = inputState.outputs;
-		// if multiple distinct parseable areas (inputStates), this method would
-		// need to return the collated outputs
-		//
-		// note also (see below) that inputState.outputs may be bypassed,
-		// depending on collation requirements
-		return inputState.outputs;
-	}
-
-	public MeasureSelection getSelection() {
-		return this.selection;
-	}
-
-	public boolean hadMatches() {
-		return inputState.matches.size() > 0;
-	}
-
-	public boolean isForwardsTraversalOrder() {
-		return this.forwardsTraversalOrder;
-	}
-
-	/*
-	 * FIXME - upa - changes - this is self contained, just talks to layer
-	 */
-	public void parse() {
-		inputState.parse();
-	}
-
-	public void selectMatches() {
-		inputState.matches.stream()
-				.map(measure -> ((MatchingToken) measure.token)
-						.select(inputState, measure))
-				.filter(Objects::nonNull).forEach(parserPeer.traversal::select);
-	}
-
-	public void setForwardsTraversalOrder(boolean forwardsTraversalOrder) {
-		this.forwardsTraversalOrder = forwardsTraversalOrder;
-	}
-
-	public LayerParser withCustomState(CustomState customState) {
-		this.customState = customState;
-		customState.parser = this;
-		return this;
-	}
-
-	public abstract static class CustomState {
-		LayerParser parser;
-
-		public InputState inputState() {
-			return parser.inputState;
+		/*
+		 * This is a hook for complex tokens which require current branch state
+		 * to determine a match - prefer, if possible, token arrangements
+		 * (groups) and multiple tokens
+		 */
+		public Branch getEvaluatingBranch() {
+			return parserState.branchingParser.state.evaluatingBranch;
 		}
 
 		@Override
 		public String toString() {
-			return inputState().toString();
+			return parserState.toString();
 		}
 	}
 
 	/*
 	 * Corresponds to a ParserContext in (preceding approach) TokenParser
 	 */
-	public class InputState {
-		MeasureMatcher measureMatcher = new MeasureMatcher(this);
+	public class ParserState {
+		class ParserEnvironment {
+			class SuccessorFollowingNoMatch {
+				Location get(
+						BranchingParser.State.LookaheadMatches lookaheadMatches) {
+					if (forwardsTraversalOrder) {
+						Location nextLocationAfterNoMatch = lookaheadMatches == null
+								? null
+								: lookaheadMatches.nextLocationAfterNoMatch;
+						if (nextLocationAfterNoMatch == null
+								|| !location.isTextNode()) {
+							return location.relativeLocation(
+									RelativeDirection.NEXT_LOCATION,
+									TextTraversal.EXIT_NODE);
+						} else {
+							return nextLocationAfterNoMatch;
+						}
+					} else {
+						return location.relativeLocation(
+								RelativeDirection.PREVIOUS_LOCATION,
+								TextTraversal.TO_START_OF_NODE);
+					}
+				}
+			}
+
+			Predicate<Measure> isBetterMatch;
+
+			Function<Measure, Location> successorFollowingMatch;
+
+			SuccessorFollowingNoMatch successorFollowingNoMatch;
+
+			Location boundary;
+
+			Supplier<Boolean> afterTraversalBoundary;
+
+			Supplier<Boolean> atTraversalBoundary;
+
+			ParserEnvironment() {
+				List<BranchToken> traversalTokens = parserPeer.tokens.stream()
+						.filter(t -> t instanceof NodeTraversalToken)
+						.collect(Collectors.toList());
+				Preconditions.checkState(traversalTokens.isEmpty()
+						|| traversalTokens.size() == parserPeer.tokens.size());
+				isBetterMatch = forwardsTraversalOrder
+						? measure -> bestMatch == null
+								|| bestMatch.start.isAfter(measure.start)
+						: measure -> bestMatch == null
+								|| bestMatch.end.isBefore(measure.end);
+				successorFollowingMatch = match -> {
+					if (forwardsTraversalOrder) {
+						if (match.provideIsPoint()
+								&& match.token.isNonDomToken()) {
+							// the match was a zero-width match, remain at the
+							// location
+							return match.end;
+						}
+						// if a text node was matched but only a point in the
+						// node (so no characters, just the node), the node
+						// is being matched as a whole, so exit
+						TextTraversal textTraversal = match.provideIsPoint()
+								? TextTraversal.EXIT_NODE
+								: TextTraversal.NO_CHANGE;
+						return match.end.relativeLocation(
+								RelativeDirection.NEXT_LOCATION, textTraversal);
+					} else {
+						return match.start.relativeLocation(
+								RelativeDirection.PREVIOUS_LOCATION,
+								TextTraversal.TO_START_OF_NODE);
+					}
+				};
+				successorFollowingNoMatch = new SuccessorFollowingNoMatch();
+				boundary = forwardsTraversalOrder ? input.end : input.start;
+				afterTraversalBoundary = () -> forwardsTraversalOrder
+						? location.compareTo(boundary) >= 0
+						: location.compareTo(boundary) <= 0;
+				atTraversalBoundary = () -> location.compareTo(boundary) == 0;
+			}
+		}
+
+		Topic<Void> topicSentenceMatched = Topic.create();
+
+		TrieMatcher trieMatcher = new TrieMatcher(this);
+
+		PatternMatcher patternMatcher = new PatternMatcher(this);
+
+		XpathMatcher xpathMatcher = new XpathMatcher(this);
 
 		public Measure input;
 
@@ -120,18 +166,31 @@ public class LayerParser {
 
 		List<Measure> matches = new ArrayList<>();
 
-		// TODO - parsers can directly call select(), so use of this is
-		// essentially optional (use iff post-match collation logic is required)
-		List<Measure> outputs = new ArrayList<>();
-
-		private String inputContent = null;
-
-		XpathMatches xpathMatches = null;
+		List<BranchingParser.Branch> sentenceBranches = new ArrayList<>();
 
 		Multimap<Measure.Token, List<Measure>> matchesByToken = new Multimap<>();
 
-		public InputState(Measure input) {
+		CharSequenceArray baseContent = null;
+
+		public boolean finished;
+
+		DocumentMatcher documentMatcher = new DocumentMatcher(this);
+
+		Map<Range, CharSequence> inputSubSequences = AlcinaCollections
+				.newLinkedHashMap();
+
+		BranchingParser branchingParser;
+
+		public ParserState(Measure input) {
 			this.input = input;
+		}
+
+		public Location getLocation() {
+			return location;
+		}
+
+		public List<BranchingParser.Branch> getSentenceBranches() {
+			return sentenceBranches;
 		}
 
 		public String absoluteHref(String relativeHref) {
@@ -143,34 +202,8 @@ public class LayerParser {
 			return location.isBefore(other);
 		}
 
-		public <C extends CustomState> C customState() {
-			return (C) customState;
-		}
-
-		public void emitUnmatchedSegmentsAs(Token token) {
-			Location start = input.start;
-			Location end = null;
-			int matchesIdx = 0;
-			while (start.isBefore(input.end)) {
-				if (matchesIdx == matches.size()) {
-					end = input.end;
-				} else {
-					end = matches.get(matchesIdx).start;
-				}
-				Measure segment = input.subMeasure(start.index, end.index,
-						token);
-				if (segment.provideIsPoint()) {
-					// empty
-				} else {
-					outputs.add(segment);
-				}
-				if (matchesIdx == matches.size()) {
-					start = input.end;
-				} else {
-					start = matches.get(matchesIdx).end;
-					matchesIdx++;
-				}
-			}
+		public <C extends ExtendedState> C extendedState() {
+			return (C) extendedState;
 		}
 
 		public DocumentSelection getDocument() {
@@ -203,8 +236,20 @@ public class LayerParser {
 					.anyMatch(sel -> sel.get().token == token);
 		}
 
-		public String inputContent() {
-			return inputContent;
+		public CharSequence inputContent() {
+			return inputContent(new Range(location, input.end));
+		}
+
+		public CharSequence inputContent(Range range) {
+			if (baseContent == null) {
+				char[] charArray = input.text().toCharArray();
+				baseContent = new CharSequenceArray(charArray, 0,
+						charArray.length);
+			}
+			return inputSubSequences.computeIfAbsent(range,
+					r -> baseContent.subSequence(
+							r.start.index - input.start.index,
+							r.end.index - input.start.index));
 		}
 
 		public boolean isAtEnd(Measure match) {
@@ -214,22 +259,20 @@ public class LayerParser {
 			return match.end.index == input.end.index;
 		}
 
-		public MeasureMatcher matcher() {
-			return measureMatcher;
+		public PatternMatcher patternMatcher() {
+			return patternMatcher;
 		}
 
-		public Measure nextXpathMatch(String xpath, Token token) {
-			XpathMatches matches = ensureMatches(xpath);
-			if (matches.itr.hasNext()) {
-				DomNode node = matches.itr.next();
-				return Measure.fromNode(node, token);
-			} else {
-				return null;
-			}
+		public TrieMatcher trieMatcher() {
+			return trieMatcher;
+		}
+
+		public XpathMatcher xpathMatcher() {
+			return xpathMatcher;
 		}
 
 		public DomNode node() {
-			return location.containingNode();
+			return location.containingNode;
 		}
 
 		@Override
@@ -241,22 +284,40 @@ public class LayerParser {
 				+ "\nCurrent - nd: %s - %s"
 				+ "\nMatches: %s",
 				Ax.ntrim(Ax.trim(input.toString(), 50)), getOffsetInInput(),
-				Ax.ntrim(Ax.trim(inputContent, 50)), location,
-				Ax.ntrim(Ax.trim(location.containingNode().toString(), 50)), matches);
+				Ax.ntrim(Ax.trim(inputContent().toString(), 50)), location,
+				Ax.ntrim(Ax.trim(location.containingNode.toString(), 50)), matches);
 			// @formatter:on
 		}
 
-		private XpathMatches ensureMatches(String xpath) {
-			if (xpathMatches == null
-					|| !Objects.equals(xpathMatches.xpath, xpath)) {
-				xpathMatches = new XpathMatches(xpath);
+		public DocumentMatcher documentMatcher() {
+			return documentMatcher;
+		}
+
+		Measure match(BranchToken token) {
+			boolean atEndBoundary = forwardsTraversalOrder ? location.after
+					: !location.after;
+			// text traversal is only at start location
+			if (!location.containingNode.isText()) {
+				switch (token.matchesBoundary()) {
+				case ANY:
+					break;
+				case START:
+					if (atEndBoundary) {
+						return null;
+					}
+					break;
+				case END:
+					if (!atEndBoundary) {
+						return null;
+					}
+					break;
+				}
 			}
-			return xpathMatches;
+			return token.match(this);
 		}
 
 		void onBeforeTokenMatch() {
 			bestMatch = null;
-			inputContent = input.text().substring(getOffsetInInput());
 		}
 
 		/*
@@ -269,91 +330,119 @@ public class LayerParser {
 		 *
 		 */
 		void parse() {
-			this.location = forwardsTraversalOrder ? input.start
-					: input.end.relativeLocation(
-							RelativeDirection.PREVIOUS_DOMNODE_START);
-			List<MatchingToken> traversalTokens = parserPeer.tokens.stream()
-					.filter(t -> t instanceof NodeTraversalToken)
-					.collect(Collectors.toList());
-			Preconditions.checkState(traversalTokens.isEmpty()
-					|| traversalTokens.size() == parserPeer.tokens.size());
-			boolean traverseUntilFound = traversalTokens.size() > 0;
-			Preconditions
-					.checkState(traverseUntilFound || forwardsTraversalOrder);
-			/*
-			 * Wrap logic that's dependent on traversal direction in lambdas for
-			 * clarity
-			 */
-			Predicate<Measure> isBetterMatch = forwardsTraversalOrder
-					? measure -> bestMatch == null
-							|| bestMatch.start.isAfter(measure.start)
-					: measure -> bestMatch == null
-							|| bestMatch.end.isBefore(measure.end);
-			Supplier<Location> successorFollowingMatch = () -> {
-				if (traverseUntilFound) {
-					if (forwardsTraversalOrder) {
-						return bestMatch.end.relativeLocation(
-								RelativeDirection.NEXT_DOMNODE_START);
-					} else {
-						return bestMatch.start.relativeLocation(
+			try {
+				registerMatchers(true);
+				this.location = forwardsTraversalOrder ? input.start
+						: input.end.relativeLocation(
 								RelativeDirection.PREVIOUS_DOMNODE_START);
-					}
-				} else {
-					if (forwardsTraversalOrder) {
-						return bestMatch.end.relativeLocation(
-								RelativeDirection.NEXT_LOCATION);
-					} else {
-						throw new UnsupportedOperationException();
-					}
-				}
-			};
-			Supplier<Location> successorFollowingNoMatch = () -> forwardsTraversalOrder
-					? location.relativeLocation(
-							RelativeDirection.NEXT_DOMNODE_START)
-					: location.relativeLocation(
-							RelativeDirection.PREVIOUS_DOMNODE_START);
-			Location boundary = forwardsTraversalOrder ? input.end
-					: input.start;
-			Supplier<Boolean> afterTraversalBoundary = () -> forwardsTraversalOrder
-					? location.compareTo(boundary) >= 0
-					: location.compareTo(boundary) <= 0;
-			while (location != null && !afterTraversalBoundary.get()) {
-				onBeforeTokenMatch();
-				for (MatchingToken token : parserPeer.tokens) {
-					Measure measure = token.match(inputState);
-					if (measure != null) {
-						if (isBetterMatch.test(measure)) {
-							bestMatch = measure;
-						}
-					}
-				}
-				if (bestMatch != null) {
-					bestMatch.addToParent();
-					matches.add(bestMatch);
-					matchesByToken.add(bestMatch.token, bestMatch);
-					location = successorFollowingMatch.get();
-				} else {
-					if (traverseUntilFound) {
-						location = successorFollowingNoMatch.get();
-					} else {
-						location = boundary;
-					}
-				}
-			}
-			parserPeer.onSequenceComplete(inputState);
-		}
-
-		class XpathMatches {
-			String xpath;
-
-			Iterator<DomNode> itr;
-
-			XpathMatches(String xpath) {
-				this.xpath = xpath;
-				DomNode node = input.start.containingNode();
-				List<DomNode> nodes = node.xpath(xpath).nodes();
-				itr = nodes.iterator();
+				ParserEnvironment env = new ParserEnvironment();
+				parserPeer.parser = LayerParser.this;
+				parserState.branchingParser = new BranchingParser(
+						LayerParser.this);
+				parserState.branchingParser.parse(env);
+				parserPeer.onSequenceComplete(parserState);
+			} finally {
+				registerMatchers(false);
 			}
 		}
+
+		void registerMatchers(boolean register) {
+			patternMatcher.register(register);
+			trieMatcher.register(register);
+		}
+
+		Measure match(Location location, BranchToken token) {
+			Location restoreTo = this.location;
+			try {
+				this.location = location;
+				return match(token);
+			} finally {
+				this.location = restoreTo;
+			}
+		}
+	}
+
+	public class ParserResults {
+		public Stream<Measure> getMatches() {
+			return LayerParser.this.getMatches();
+		}
+
+		public <LPP extends LayerParserPeer> LPP getParserPeer() {
+			return (LPP) parserPeer;
+		}
+	}
+
+	ParserState parserState;
+
+	MeasureSelection selection;
+
+	LayerParserPeer parserPeer;
+
+	ExtendedState extendedState;
+
+	boolean forwardsTraversalOrder = true;
+
+	public LayerParser(MeasureSelection selection, LayerParserPeer parserPeer) {
+		this.selection = selection;
+		this.parserPeer = parserPeer;
+		parserState = new ParserState(selection.get());
+	}
+
+	public ParserState getParserState() {
+		return parserState;
+	}
+
+	public void detachMeasures() {
+		selection.get().detach();
+		parserState.matches.forEach(Measure::detach);
+	}
+
+	public DomNode getContainerNode() {
+		return selection.get().containingNode();
+	}
+
+	public List<BranchingParser.Branch> getSentences() {
+		return parserState.sentenceBranches;
+	}
+
+	public MeasureSelection getSelection() {
+		return this.selection;
+	}
+
+	public boolean hadMatches() {
+		return parserState.matches.size() > 0;
+	}
+
+	public boolean isForwardsTraversalOrder() {
+		return this.forwardsTraversalOrder;
+	}
+
+	/*
+	 * FIXME - upa - changes - this is self contained, just talks to layer
+	 */
+	public void parse() {
+		parserState.parse();
+	}
+
+	public void setForwardsTraversalOrder(boolean forwardsTraversalOrder) {
+		this.forwardsTraversalOrder = forwardsTraversalOrder;
+	}
+
+	public LayerParser withExtendedState(ExtendedState extendedState) {
+		extendedState.setParser(this);
+		this.extendedState = extendedState;
+		return this;
+	}
+
+	public ExtendedState getExtendedState() {
+		return extendedState;
+	}
+
+	public Stream<Measure> getMatches() {
+		return getSentences().stream().flatMap(b -> b.toResult().measures());
+	}
+
+	public ParserResults getParserResults() {
+		return new ParserResults();
 	}
 }

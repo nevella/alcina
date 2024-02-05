@@ -1,20 +1,41 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
+import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.LayerParser.InputState;
+import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
+import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 
-public abstract class LayerParserPeer {
+public class LayerParserPeer {
 	protected SelectionTraversal traversal;
 
-	public List<MatchingToken> tokens = new ArrayList<>();
+	protected Layer layer;
 
-	public LayerParserPeer(SelectionTraversal traversal) {
+	List<BranchToken> tokens = new ArrayList<>();
+
+	protected Predicate<Location> filter = null;
+
+	protected LayerParser parser;
+
+	public LayerParserPeer(SelectionTraversal traversal,
+			BranchToken... tokens) {
 		this.traversal = traversal;
+		this.layer = traversal.currentLayer();
+		add(tokens);
 	}
 
-	public void onSequenceComplete(InputState inputState) {
+	protected void add(BranchToken... tokens) {
+		Arrays.stream(tokens).forEach(this.tokens::add);
+	}
+
+	public void onSequenceComplete(ParserState inputState) {
+	}
+
+	public void onSentenceMatched(Branch bestMatch) {
 	}
 }

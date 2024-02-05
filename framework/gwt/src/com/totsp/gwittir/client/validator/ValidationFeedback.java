@@ -21,7 +21,7 @@ package com.totsp.gwittir.client.validator;
 
 /**
  * TODO this needs a .resolve() method
- * 
+ *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
@@ -29,4 +29,34 @@ public interface ValidationFeedback {
 	public void handleException(Object source, ValidationException exception);
 
 	public void resolve(Object source);
+
+	public static interface Provider {
+		public abstract Builder builder();
+
+		public abstract class Builder {
+			protected Direction direction;
+
+			protected String propertyName;
+
+			public abstract ValidationFeedback createFeedback();
+
+			public Builder displayDirection(Direction direction) {
+				this.direction = direction;
+				return this;
+			}
+
+			public Builder forPropertyName(String propertyName) {
+				this.propertyName = propertyName;
+				return this;
+			}
+		}
+
+		public enum Direction {
+			TOP, RIGHT, BOTTOM, LEFT
+		}
+	}
+
+	public static class Support {
+		public static Provider DEFAULT_PROVIDER;
+	}
 }

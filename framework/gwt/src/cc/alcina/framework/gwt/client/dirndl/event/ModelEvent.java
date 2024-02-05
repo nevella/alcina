@@ -20,6 +20,23 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 
 /**
+ * <p>
+ * A ModelEvent is a logical event in terms of the abstract UI model - a
+ * correctly modelled Dirndl app will use dozens of different model event types
+ * to reflect the meaning of user interactions, and to respond to those
+ * meanings.
+ * 
+ * <p>
+ * An example: a link with text "Add" will emit a DOM click event when clicked,
+ * this should be translated to a ModelEvent.Add (via @Directed.reemits()) model
+ * event and *that* model event should be logically handled - possibly several
+ * layers higher in the UI stack. FIXME give a demo app example
+ * 
+ * <p>
+ * The Dirndl event model heavily favours "translate DOM events to model events
+ * early" - and handle _semantic_ (aka ModelEvent) events rather than direct DOM
+ * events.
+ * 
  * <h2>Gotchas</h2>
  * <p>
  * Event reemission: if a model reeemits an event (say it receives a Selected
@@ -44,6 +61,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
  * usage note: there are many ways to reemit or emit an event from code -
  * preferred are the fluent ones ({@code DirectedLayout.Node.dispatch_, {@code
  * NodeEvent.reemitAs})
+ * 
+ * <p>
+ * TODO - descendant event
  *
  *
  * @param <T>
@@ -65,6 +85,21 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		}
 	}
 
+	/**
+	 * The event should be routed to descendant nodes, rather than ancestors
+	 */
+	public abstract static class DescendantEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Emitter>
+			extends ModelEvent<T, H> {
+		public Class<E> getEmitterClass() {
+			return Reflections.at(getClass()).getGenericBounds().bounds.get(2);
+		}
+	}
+
+	// Marker interface - for descendant events, the receiver (handler) will
+	// bind to the nearest ancestor with this type
+	public interface Emitter {
+	}
+
 	// Although this is the one 'dispatch' call, access it via context (since
 	// context is always required)
 	static void dispatch(Context context, Class<? extends ModelEvent> type,
@@ -79,15 +114,18 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 			if (handler.isPresent()) {
 				((SimpleEventBus) Client.eventBus()).fireEventFromSource(
 						modelEvent, context.node, List.of(handler.get()));
-				return;
-			}
-			Optional<TopLevelCatchallHandler> catchallHandler = Registry
-					.optional(TopLevelCatchallHandler.class);
-			if (catchallHandler.isPresent()) {
-				catchallHandler.get().handle(modelEvent);
-				return;
+			} else {
+				Optional<TopLevelCatchallHandler> catchallHandler = Registry
+						.optional(TopLevelCatchallHandler.class);
+				if (catchallHandler.isPresent()) {
+					catchallHandler.get().handle(modelEvent);
+				}
 			}
 		}
+		modelEvent.onDispatchComplete();
+	}
+
+	protected void onDispatchComplete() {
 	}
 
 	private boolean handled;

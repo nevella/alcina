@@ -1,10 +1,12 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -39,6 +41,22 @@ public class W3CResolver extends ContextResolver {
 		}
 		Text text = document.domDoc().createTextNode(contents);
 		layoutNode.rendered = new RenderedW3cNode(text);
+	}
+
+	public void renderNode(DirectedLayout.Node layoutNode, DomNodeType nodeType,
+			String tagName, String contents) {
+		if (layoutNode.rendered != null) {
+			return;
+		}
+		switch (nodeType) {
+		case PROCESSING_INSTRUCTION:
+			ProcessingInstruction processingInstruction = document.domDoc()
+					.createProcessingInstruction(tagName, contents);
+			layoutNode.rendered = new RenderedW3cNode(processingInstruction);
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public static class Linking extends W3CResolver {

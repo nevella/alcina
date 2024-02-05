@@ -12,4 +12,10 @@ public abstract class LifecycleService {
 
 	public void onApplicationStartup() {
 	}
+
+	/**
+	 * Will also be started in the dev console
+	 */
+	public static abstract class AlsoDev extends LifecycleService {
+	}
 }

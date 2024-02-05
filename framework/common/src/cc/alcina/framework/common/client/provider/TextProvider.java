@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
@@ -70,7 +71,8 @@ public class TextProvider {
 
 	public String getLabelText(AnnotationLocation location) {
 		Display display = location.getAnnotation(Display.class);
-		String rawName = display == null ? location.property.getName()
+		String rawName = display == null
+				? CommonUtils.deInfix(location.property.getName())
 				: Display.Support.name(location.property, display);
 		return rawName;
 	}

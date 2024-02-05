@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -45,6 +47,11 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 
 	public SearchOrders<T> addEntityOrder() {
 		addOrder(new IdOrder(), true);
+		return this;
+	}
+
+	public SearchOrders<T> addModificationDateDescOrder() {
+		addOrder(new ModifiicationDateOrder(), false);
 		return this;
 	}
 
@@ -237,6 +244,18 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		@Override
 		public Long apply(H t) {
 			return t.getId();
+		}
+	}
+
+	@Reflected
+	public static class ModifiicationDateOrder<V extends VersionableEntity>
+			extends SearchOrder<V, Date> {
+		public ModifiicationDateOrder() {
+		}
+
+		@Override
+		public Date apply(V v) {
+			return v.getLastModificationDate();
 		}
 	}
 

@@ -1,19 +1,30 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.ProcessingInstruction;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -22,8 +33,12 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 
@@ -61,18 +76,33 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
  *
  */
 @Reflected
-public class ContextResolver extends AnnotationLocation.Resolver {
+public class ContextResolver extends AnnotationLocation.Resolver
+		implements LayoutEvents.BeforeRender.Handler {
 	protected ContextResolver parent;
 
 	protected DirectedLayout layout;
 
 	Object rootModel;
 
-	DefaultAnnotationResolver annotationResolver = new DefaultAnnotationResolver();
+	protected DefaultAnnotationResolver annotationResolver;
 
-	BindingsCache bindingsCache = new BindingsCache();
+	protected BindingsCache bindingsCache;
 
 	public ContextResolver() {
+		initCaches();
+	}
+
+	protected Ref<Consumer<Runnable>> dispatch = null;
+
+	public Ref<Consumer<Runnable>> dispatch() {
+		if (dispatch == null) {
+			if (parent != null) {
+				dispatch = parent.dispatch();
+			} else {
+				dispatch = new Ref<>();
+			}
+		}
+		return dispatch;
 	}
 
 	public void appendToRoot(Rendered rendered) {
@@ -85,6 +115,10 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	public <T> T getRootModel() {
 		return (T) this.rootModel;
+	}
+
+	public <T> T impl(Class<T> clazz) {
+		return Registry.impl(clazz);
 	}
 
 	/**
@@ -106,16 +140,40 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		}
 	}
 
+	@Override
+	public void onBeforeRender(BeforeRender event) {
+		// generally, setup child bindings for complex structures
+	}
+
 	public void renderElement(DirectedLayout.Node layoutNode, String tagName) {
 		if (layoutNode.rendered != null) {
 			return;
 		}
+		// CLEAN - only problematic if ML is HTML-ish
+		Preconditions.checkArgument(!tagName.toLowerCase()
+				.matches("body|title|head|html|style|script"));
 		Element element = Document.get().createElement(tagName);
 		String cssClass = layoutNode.directed.className();
 		if (cssClass.length() > 0) {
 			element.addStyleName(cssClass);
 		}
 		layoutNode.rendered = new RenderedW3cNode(element);
+	}
+
+	public void renderNode(DirectedLayout.Node layoutNode, DomNodeType nodeType,
+			String tagName, String contents) {
+		if (layoutNode.rendered != null) {
+			return;
+		}
+		switch (nodeType) {
+		case PROCESSING_INSTRUCTION:
+			ProcessingInstruction processingInstruction = Document.get()
+					.createProcessingInstruction(tagName, contents);
+			layoutNode.rendered = new RenderedW3cNode(processingInstruction);
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public void renderText(Node layoutNode, String contents) {
@@ -145,6 +203,11 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	protected void init(DirectedLayout.Node node) {
 		init(node.getResolver(), node.parent.resolver.layout,
 				this.rootModel = node.getModel());
+	}
+
+	protected void initCaches() {
+		annotationResolver = new DefaultAnnotationResolver();
+		bindingsCache = new BindingsCache();
 	}
 
 	@Override
@@ -183,8 +246,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 	 * </pre></code>
 	 */
-	protected <A extends Annotation> Class
-			resolveLocationClass(AnnotationLocation location) {
+	protected Class resolveLocationClass(AnnotationLocation location) {
 		return location.classLocation;
 	}
 
@@ -203,11 +265,67 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	 * This method is sometimes simpler for controlling the annotations exposed
 	 * than {@link #resolveAnnotations0}, since it returns a property that will
 	 * be used to evaluate *all* annotations at a node. Implementations are only
-	 * reachable from {@link DirectedRenderer.GeneratesPropertyInputs} via the
-	 * package/protected access route
+	 * reachable from {@link DirectedRenderer.GeneratesPropertyInputs} and
+	 * {@link BridgingValueRenderer}via the package/protected access route
 	 */
 	Property resolveDirectedProperty(Property property) {
 		return resolveDirectedProperty0(property);
+	}
+
+	protected Map<Class<? extends ContextService>, Optional<? extends ContextService>> services = AlcinaCollections
+			.newUnqiueMap();
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.TYPE)
+	@Inherited
+	public @interface ServiceRegistration {
+		Class<? extends ContextService> value();
+	}
+
+	public interface ContextService<T extends ContextService> {
+		void register(ContextResolver resolver);
+
+		default Class<T> registration() {
+			return (Class<T>) Reflections.at(this)
+					.annotation(ServiceRegistration.class).value();
+		}
+
+		@Reflected
+		public static abstract class Base<T extends ContextService>
+				implements ContextService<T> {
+			ContextResolver resolver;
+
+			@Override
+			public void register(ContextResolver resolver) {
+				this.resolver = resolver;
+				resolver.register(this);
+			}
+
+			protected Optional<T> ancestorService() {
+				return resolver.parent == null ? Optional.empty()
+						: resolver.parent.getService(registration());
+			}
+		}
+	}
+
+	public <T extends ContextService> Optional<T>
+			getService(Class<T> serviceType) {
+		Optional<T> service = (Optional<T>) services.get(serviceType);
+		if (service != null) {
+		} else {
+			if (parent != null) {
+				service = parent.getService(serviceType);
+			} else {
+				service = Optional.empty();
+			}
+			services.put(serviceType, service);
+		}
+		return service;
+	}
+
+	protected void register(ContextService service) {
+		services.put(service.registration(), Optional.of(service));
 	}
 
 	/**
@@ -244,14 +362,17 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		List<Binding> computeBindings(Key key) {
 			List<Binding> result = new ArrayList<>();
 			Arrays.asList(key.directed.bindings()).forEach(result::add);
-			ClassReflector<? extends Object> reflector = Reflections
-					.at(key.clazz);
+			Class<? extends Object> clazz = key.clazz;
+			ClassReflector<? extends Object> reflector = Reflections.at(clazz);
 			if (reflector != null) {
-				reflector.properties().stream()
-						.filter(p -> p.has(Binding.class))
-						.map(p -> Binding.Impl.propertyBinding(p,
-								p.annotation(Binding.class)))
-						.forEach(result::add);
+				reflector.properties().stream().forEach(p -> {
+					AnnotationLocation location = new AnnotationLocation(clazz,
+							p, ContextResolver.this);
+					Binding binding = location.getAnnotation(Binding.class);
+					if (binding != null) {
+						result.add(Binding.Impl.propertyBinding(p, binding));
+					}
+				});
 			}
 			return result;
 		}

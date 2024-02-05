@@ -94,17 +94,19 @@ import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.CommonUtils.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
- *
+ * FIXME - dirndl - remove all property descriptor code (use
+ * ClassReflector.properties)
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class SEUtilities {
@@ -1732,16 +1734,19 @@ public class SEUtilities {
 	}
 
 	@Registration.Singleton(
-		value = NestedNameProvider.class,
+		value = NestedName.class,
 		priority = Priority.PREFERRED_LIBRARY)
-	public static class NestedNameProviderJvm extends NestedNameProvider {
-		public static NestedNameProvider get() {
-			return Registry.impl(NestedNameProvider.class);
+	public static class NestedNameProviderJvm extends NestedName {
+		Map<Class, String> map = CollectionCreators.Bootstrap
+				.createConcurrentClassMap();
+
+		public static NestedName get() {
+			return Registry.impl(NestedName.class);
 		}
 
 		@Override
 		public String getNestedSimpleName(Class clazz) {
-			return SEUtilities.getNestedSimpleName(clazz);
+			return map.computeIfAbsent(clazz, SEUtilities::getNestedSimpleName);
 		}
 	}
 

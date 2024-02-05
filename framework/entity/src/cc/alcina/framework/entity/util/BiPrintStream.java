@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Locale;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.AlcinaConstants;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -268,11 +269,18 @@ public class BiPrintStream extends PrintStream {
 	}
 
 	private void debugPrint(Object obj) {
-		if (debugMarker != null) {
+		if (debugMarker != null && obj != null) {
 			String s = String.valueOf(obj);
-			if (s != null
-					&& (s.matches(debugMarker) || s.contains(debugMarker))) {
-				int debug = 4;
+			if (s != null) {
+				boolean match = s.contains(debugMarker);
+				try {
+					match |= s.matches(debugMarker);
+				} catch (Exception e) {
+					throw WrappedRuntimeException.wrap(e);
+				}
+				if (match) {
+					int debug = 4;
+				}
 			}
 		}
 	}

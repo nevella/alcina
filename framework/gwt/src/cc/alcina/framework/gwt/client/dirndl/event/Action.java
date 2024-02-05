@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 
 import java.util.Objects;
 
+import com.google.gwt.user.client.Event;
+
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -10,6 +12,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagClass;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -69,9 +72,8 @@ public abstract class Action<T> implements Permissible {
 	@Directed(
 		tag = "action",
 		bindings = @Binding(from = "title", type = Binding.Type.PROPERTY))
-	@Directed.PropertyNameTags
 	public static class ActionArea extends Model
-			implements DomEvents.Click.Handler {
+			implements DomEvents.MouseDown.Handler, DomEvents.Click.Handler {
 		private final TagClass icon;
 
 		private final String label;
@@ -105,6 +107,11 @@ public abstract class Action<T> implements Permissible {
 		public void onClick(Click event) {
 			WidgetUtils.squelchCurrentEvent();
 			event.reemitAs(this, ActionEvent.class, action);
+		}
+
+		@Override
+		public void onMouseDown(MouseDown event) {
+			Event.getCurrentEvent().preventDefault();
 		}
 	}
 

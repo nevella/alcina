@@ -31,7 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * changed') should be fired asynchronously since they're not a translation,
  * rather an effect.
  *
- * 
+ *
  *
  */
 public class VariableDispatchEventBus extends SimpleEventBus {
@@ -50,6 +50,8 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 
 		Runnable runnable;
 
+		boolean deferred;
+
 		public void dispatch() {
 			Preconditions.checkState(topic != null ^ runnable != null);
 			if (distinct) {
@@ -57,7 +59,11 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 					return;
 				}
 			}
-			Scheduler.get().scheduleFinally(this::dispatchSync);
+			if (deferred) {
+				Scheduler.get().scheduleDeferred(this::dispatchSync);
+			} else {
+				Scheduler.get().scheduleFinally(this::dispatchSync);
+			}
 		}
 
 		/**
@@ -69,8 +75,23 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 					.dispatch(clazz, null)).dispatch();
 		}
 
+		/**
+		 * Sugar for a commonn emission pattern. Note that it is *not*
+		 * distinct()
+		 */
+		public void dispatchModelEvent(Node node,
+				Class<? extends ModelEvent> clazz, Object model) {
+			lambda(() -> NodeEvent.Context.fromNode(node).dispatch(clazz,
+					model)).dispatch();
+		}
+
 		public QueuedEvent distinct() {
 			distinct = true;
+			return this;
+		}
+
+		public QueuedEvent deferred() {
+			deferred = true;
 			return this;
 		}
 

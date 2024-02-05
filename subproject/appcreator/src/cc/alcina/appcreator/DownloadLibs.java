@@ -1,7 +1,6 @@
 package cc.alcina.appcreator;
 
 import java.io.File;
-import java.io.InputStream;
 import java.net.URL;
 
 import org.apache.tools.ant.BuildException;
@@ -10,10 +9,8 @@ import org.apache.tools.ant.taskdefs.Expand;
 import org.apache.tools.ant.taskdefs.Get;
 import org.apache.tools.ant.taskdefs.Mkdir;
 import org.apache.tools.ant.taskdefs.Move;
-import org.apache.tools.ant.taskdefs.Pack;
 import org.apache.tools.ant.types.PatternSet;
 import org.apache.tools.ant.types.PatternSet.NameEntry;
-import org.apache.tools.ant.util.FileUtils;
 
 public class DownloadLibs extends Task {
 	private DownloadableFileList downloadableFileList;
@@ -62,8 +59,8 @@ public class DownloadLibs extends Task {
 				}
 				if (!downloadFile.exists()) {
 					log("Downloading " + PackageUtils.fileOf(targetPath));
-					File tmpFile = new File(PackageUtils.translatePath(tmpDir
-							+ "/" + downloadFile.getName()));
+					File tmpFile = new File(PackageUtils.translatePath(
+							tmpDir + "/" + downloadFile.getName()));
 					clearTmpDir();
 					get.setDest(tmpFile);
 					String libsLocalPath = getProject().getProperty(
@@ -91,8 +88,8 @@ public class DownloadLibs extends Task {
 						move.setTofile(downloadFile);
 						move.setTaskName("move");
 						move.execute();
-						if (!PackageUtils.isNullOrEmpty(downloadableFile
-								.getTocUrl())) {
+						if (!PackageUtils
+								.isNullOrEmpty(downloadableFile.getTocUrl())) {
 							log("*** File download implies acceptance of Terms and Conditions at "
 									+ downloadableFile.getTocUrl());
 						}
@@ -112,8 +109,8 @@ public class DownloadLibs extends Task {
 					expand.setTaskName("expand");
 					PatternSet patternSet = new PatternSet();
 					NameEntry nameEntry = patternSet.createInclude();
-					nameEntry.setName("**/"
-							+ downloadableFile.getExtractFileName());
+					nameEntry.setName(
+							"**/" + downloadableFile.getExtractFileName());
 					expand.addPatternset(patternSet);
 					expand.execute();
 					Move move = new Move();

@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.dom;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -14,12 +16,14 @@ import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.NodePathref;
 import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -30,6 +34,7 @@ import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
 
 /*
@@ -71,8 +76,11 @@ public class Environment {
 
 	MutationProxyImpl mutationProxy = new MutationProxyImpl();
 
+	InvokeProxyImpl invokeProxy = new InvokeProxyImpl();
+
 	Message.Mutations mutations = null;
 
+	// FIXME - romcom - use an event pump rather than a timer
 	EventCollator<Object> eventCollator;
 
 	Client client;
@@ -123,17 +131,6 @@ public class Environment {
 		runInClientFrame(runnable);
 	}
 
-	// see class doc re sync
-	synchronized void emitMutations() {
-		if (mutations != null) {
-			runInClientFrame(() -> {
-				Document.get().pathrefRemote().flushSinkEventsQueue();
-				queue.send(mutations);
-				mutations = null;
-			});
-		}
-	}
-
 	public void initialiseClient(RemoteComponentProtocol.Session session) {
 		if (queue == null) {
 			startQueue();
@@ -149,8 +146,9 @@ public class Environment {
 			client.getPlaceController();
 			client.setupPlaceMapping();
 			document = Document.contextProvider.createFrame(RemoteType.PATHREF);
-			document.createDocumentElement("html");
+			document.createDocumentElement("<html/>");
 			document.implAccess().pathrefRemote().mutationProxy = mutationProxy;
+			document.implAccess().pathrefRemote().invokeProxy = invokeProxy;
 			LocalDom.initalizeDetachedSync();
 			ui.init();
 		} finally {
@@ -162,11 +160,6 @@ public class Environment {
 		return client != null;
 	}
 
-	void onHistoryChange(ValueChangeEvent<String> event) {
-		mutationProxy.onLocationMutation(
-				Message.Mutations.ofLocation().locationMutation);
-	}
-
 	public synchronized void
 			registerRemoteMessageConsumer(Consumer<Message> consumer) {
 		queue.registerConsumer(consumer);
@@ -174,6 +167,36 @@ public class Environment {
 
 	public void renderInitialUi() {
 		runInClientFrame(() -> ui.render());
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("env::%s [%s/%s]", uid, credentials.id,
+				credentials.auth);
+	}
+
+	public void validateSession(RemoteComponentProtocol.Session session,
+			boolean validateClientInstanceUid) throws Exception {
+		if (!Objects.equals(session.auth, credentials.auth)) {
+			throw new RemoteComponentProtocol.InvalidAuthenticationException();
+		}
+		connectedClientUid = session.id;
+		if (validateClientInstanceUid) {
+			// FIXME - romcom - throw various exceptions if expired etc - see
+			// package javadoc
+			// if (!Objects.equals(session.clientInstanceUid,
+			// connectedClientUid)) {
+			// if (connectedClientUid == null) {
+			// logger.warn(
+			// "Call against new (dev) server with no connected client : {}",
+			// session.clientInstanceUid);
+			// } else {
+			// logger.warn("Expired client (tab) : {}",
+			// session.clientInstanceUid);
+			// }
+			// throw new InvalidClientUidException();
+			// }
+		}
 	}
 
 	private void runInClientFrame(Runnable runnable) {
@@ -203,33 +226,20 @@ public class Environment {
 		thread.start();
 	}
 
-	@Override
-	public String toString() {
-		return Ax.format("env::%s [%s/%s]", uid, credentials.id,
-				credentials.auth);
+	// see class doc re sync
+	synchronized void emitMutations() {
+		if (mutations != null) {
+			runInClientFrame(() -> {
+				Document.get().pathrefRemote().flushSinkEventsQueue();
+				queue.send(mutations);
+				mutations = null;
+			});
+		}
 	}
 
-	public void validateSession(RemoteComponentProtocol.Session session,
-			boolean validateClientInstanceUid) throws Exception {
-		if (!Objects.equals(session.auth, credentials.auth)) {
-			throw new RemoteComponentProtocol.InvalidAuthenticationException();
-		}
-		if (validateClientInstanceUid) {
-			// FIXME - romcom - throw various exceptions if expired etc - see
-			// package javadoc
-			// if (!Objects.equals(session.clientInstanceUid,
-			// connectedClientUid)) {
-			// if (connectedClientUid == null) {
-			// logger.warn(
-			// "Call against new (dev) server with no connected client : {}",
-			// session.clientInstanceUid);
-			// } else {
-			// logger.warn("Expired client (tab) : {}",
-			// session.clientInstanceUid);
-			// }
-			// throw new InvalidClientUidException();
-			// }
-		}
+	void onHistoryChange(ValueChangeEvent<String> event) {
+		mutationProxy.onLocationMutation(
+				Message.Mutations.ofLocation().locationMutation);
 	}
 
 	class ClientProtocolMessageQueue implements Runnable {
@@ -282,6 +292,38 @@ public class Environment {
 		}
 	}
 
+	class InvokeProxyImpl implements DocumentPathref.InvokeProxy {
+		int invokeCounter = 0;
+
+		Map<Integer, AsyncCallback> callbacks = new LinkedHashMap<>();
+
+		@Override
+		public void invoke(NodePathref node, String methodName,
+				List<Class> argumentTypes, List<?> arguments,
+				AsyncCallback<?> callback) {
+			runInClientFrame(() -> {
+				Message.Invoke invoke = new Message.Invoke();
+				invoke.path = node == null ? null
+						: Pathref.forNode(node.node());
+				invoke.id = ++invokeCounter;
+				invoke.methodName = methodName;
+				invoke.argumentTypes = argumentTypes;
+				invoke.arguments = arguments;
+				callbacks.put(invoke.id, callback);
+				queue.send(invoke);
+			});
+		}
+
+		public void onInvokeResponse(InvokeResponse response) {
+			AsyncCallback callback = callbacks.remove(response.id);
+			if (response.exception == null) {
+				callback.onSuccess(response.response);
+			} else {
+				callback.onSuccess(response.exception);
+			}
+		}
+	}
+
 	class MutationProxyImpl implements DocumentPathref.MutationProxy {
 		@Override
 		public void onLocationMutation(LocationMutation locationMutation) {
@@ -314,5 +356,9 @@ public class Environment {
 			runnable.run();
 			eventCollator.eventOccurred();
 		}
+	}
+
+	public void onInvokeResponse(InvokeResponse response) {
+		invokeProxy.onInvokeResponse(response);
 	}
 }

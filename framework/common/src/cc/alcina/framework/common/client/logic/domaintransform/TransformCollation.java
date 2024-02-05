@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -192,6 +193,14 @@ public class TransformCollation {
 
 	public void setPerClass(MultikeyMap<EntityCollation> perClass) {
 		this.perClass = perClass;
+	}
+
+	public String toStatisticsString() {
+		ensureLookups();
+		CountingMap<String> statistics = new CountingMap<>();
+		perClass.keySet().forEach(k -> statistics
+				.add(((Class) k).getSimpleName(), perClass.items(k).size()));
+		return statistics.toLinkedHashMap(true).entrySet().toString();
 	}
 
 	protected void ensureLookups() {

@@ -2,6 +2,8 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.function.Supplier;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 
 public interface ListenerReference {
@@ -13,6 +15,7 @@ public interface ListenerReference {
 			@Override
 			public void bind() {
 				reference = listenerReferenceSupplier.get();
+				Preconditions.checkState(reference != null);
 			}
 
 			@Override
@@ -21,6 +24,10 @@ public interface ListenerReference {
 				reference = null;
 			}
 		};
+	}
+
+	default ListenerBinding asBinding() {
+		return asBinding(() -> this);
 	}
 
 	void remove();

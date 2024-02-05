@@ -1,10 +1,12 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +20,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.TransactionId;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
@@ -387,6 +390,8 @@ public class Transaction implements Comparable<Transaction> {
 
 	private DomainTransformCommitPosition commitPosition;
 
+	List<Entity> createdLocalsForEviction = new ArrayList<>();
+
 	/**
 	 * Rare case, when a map should be purely transactional for iterator/remove
 	 * reasons - during warmup, set this to true while populating
@@ -401,6 +406,10 @@ public class Transaction implements Comparable<Transaction> {
 		Transactions.get().initialiseTransaction(this,
 				copyVisibleTransactionsFrom);
 		logger.debug("Created tx: {}", this);
+	}
+
+	public void clearLocalEvictionList() {
+		createdLocalsForEviction.clear();
 	}
 
 	@Override
@@ -433,6 +442,9 @@ public class Transaction implements Comparable<Transaction> {
 		if (!isBaseTransaction()) {
 			MvccObjectVersions<T> versions = MvccObjectVersions
 					.createEntityVersions(t, this, true);
+		}
+		if (t.domain().isLocal()) {
+			createdLocalsForEviction.add(t);
 		}
 		return t;
 	}
@@ -518,6 +530,14 @@ public class Transaction implements Comparable<Transaction> {
 
 	public long provideAge() {
 		return System.currentTimeMillis() - startTime;
+	}
+
+	/**
+	 * For when an entity will be committed, but on a different (say backend
+	 * queue) thread
+	 */
+	public void removeFromLocalEviction(Entity entity) {
+		createdLocalsForEviction.remove(entity);
 	}
 
 	/**
@@ -667,6 +687,7 @@ public class Transaction implements Comparable<Transaction> {
 		if (transformManager == null) {
 			return;
 		}
+		Set<DomainTransformEvent> transforms = transformManager.getTransforms();
 		switch (endPhase) {
 		case TO_DB_PERSISTED:
 		case TO_DB_ABORTED:
@@ -683,16 +704,16 @@ public class Transaction implements Comparable<Transaction> {
 			// transactions - we can end up here if an exception is thrown on
 			// postProcess()
 			if (AppPersistenceBase.isTestServer()) {
-				throw new MvccException(Ax.format(
-						"Ending on invalid phase: %s %s transforms", endPhase,
-						transformManager.getTransforms().size()));
+				throw new MvccException(
+						Ax.format("Ending on invalid phase: %s %s transforms",
+								endPhase, transforms.size()));
 			} else {
 				logger.warn("Ending transaction on invalid phase: {}",
 						endPhase);
 			}
 		}
 		if (isWriteable()) {
-			if (transformManager.getTransforms().size() == 0) {
+			if (transforms.size() == 0) {
 			} else {
 				// FIXME - mvcc.5 - mvcc exception (after cleanup)
 				switch (endPhase) {
@@ -702,7 +723,11 @@ public class Transaction implements Comparable<Transaction> {
 				default:
 					logger.warn(
 							"Ending transaction with uncommitted transforms: {} {}",
-							endPhase, transformManager.getTransforms().size());
+							endPhase, transforms.size());
+					if (Ax.isTest()) {
+						throw new RuntimeException(Ax.format(
+								"Uncommitted transforms\n\n%s", transforms));
+					}
 					break;
 				}
 			}
@@ -720,6 +745,11 @@ public class Transaction implements Comparable<Transaction> {
 					ThreadlocalTransformManager.cast().resetTltmNonCommitalTx();
 					break;
 				default:
+					if (createdLocalsForEviction.size() > 0) {
+						ThreadlocalTransformManager.cast()
+								.evictNonPromotedLocals(
+										createdLocalsForEviction);
+					}
 					ThreadlocalTransformManager.cast().resetTltm(null);
 					break;
 				}
@@ -752,20 +782,23 @@ public class Transaction implements Comparable<Transaction> {
 	 */
 	Transaction
 			mostRecentVisibleCommittedTransaction(MvccObjectVersions versions) {
-		if (threadCount == 1) {
+		// Defensively synchronized - this sort of logic doesn't work anyway
+		// (although a CAS would)
+		// if (threadCount == 1) {
+		// return resolvedMostRecentVisibleTransactions
+		// .computeIfAbsent(versions,
+		// v -> TransactionVersions.mostRecentCommonVisible(
+		// v.versions().keySet(),
+		// committedTransactions));
+		// } else {
+		synchronized (resolvedMostRecentVisibleTransactions) {
 			return resolvedMostRecentVisibleTransactions
 					.computeIfAbsent(versions,
 							v -> TransactionVersions.mostRecentCommonVisible(
 									v.versions().keySet(),
 									committedTransactions));
-		} else {
-			synchronized (resolvedMostRecentVisibleTransactions) {
-				return resolvedMostRecentVisibleTransactions.computeIfAbsent(
-						versions,
-						v -> TransactionVersions.mostRecentCommonVisible(
-								v.versions().keySet(), committedTransactions));
-			}
 		}
+		// }
 	}
 
 	void setId(TransactionId id) {

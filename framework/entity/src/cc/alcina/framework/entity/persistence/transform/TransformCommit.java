@@ -86,7 +86,7 @@ import cc.alcina.framework.entity.util.ProcessLogFolder;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 
 /**
- * 
+ *
  */
 @Registration.Singleton
 public class TransformCommit {
@@ -416,9 +416,6 @@ public class TransformCommit {
 
 	public static DomainTransformLayerWrapper commitTransforms(String tag,
 			boolean asRoot, boolean returnResponse) {
-		if (tag == null) {
-			tag = DomainTransformRequestTagProvider.get().getTag();
-		}
 		int cleared = TransformManager.get().removeCreateDeleteTransforms();
 		if (cleared != 0) {
 			logger.trace("Cleared {} created/deleted transforms", cleared);
@@ -735,6 +732,9 @@ public class TransformCommit {
 		if (tag == null && Configuration.is("tagTransformsWithThreadName")) {
 			tag = Thread.currentThread().getName();
 		}
+		if (tag == null) {
+			tag = DomainTransformRequestTagProvider.get().getTag();
+		}
 		request.setTag(tag);
 		request.setRequestId(requestId);
 		for (DomainTransformEvent dte : transforms) {
@@ -769,6 +769,7 @@ public class TransformCommit {
 
 	private void commitLocalTranformInChunks0(int maxTransformChunkSize)
 			throws Exception {
+		Transaction.current().clearLocalEvictionList();
 		CommitClientInstanceContext commitClientInstanceContext = LooseContext
 				.get(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT);
 		ClientInstance fromInstance = AuthenticationPersistence.get()
@@ -949,6 +950,16 @@ public class TransformCommit {
 			persistenceToken.getTransformCollation().refreshFromRequest();
 			persistenceToken.getTransformCollation()
 					.removeNonPersistentTransforms();
+			if (persistenceToken.isRequestorExternalToThisJvm()) {
+				/*
+				 * FUTURE - Check if this can be removed (yes, the 'persisted'
+				 * state is different if the transform call is from a client
+				 * rather than the local jvm, but should it be? The cancelled
+				 * eviction/persistence checks are harmless, but it'd be good to
+				 * explain why they're needed)
+				 */
+				Transaction.current().clearLocalEvictionList();
+			}
 			MetricLogging.get().start("transform-commit");
 			Transaction.current().toDbPersisting();
 			DomainTransformLayerWrapper wrapper = Registry

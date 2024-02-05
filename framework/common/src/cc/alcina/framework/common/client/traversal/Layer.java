@@ -8,56 +8,81 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * <p>
  * Models one layer of the traversal process tree.
  *
- * <p>
- * FIXME - traversal - e.g.
- *
- * <p>
- * FIXME - move 'tokens' to ParserLayer
- *
- *
- *
  *
  */
-public abstract class Layer<S extends Selection> implements
-		SelectionTraversal.Generation, Selector<S, Selection>, Iterable<S> {
-	public final Name name;
-
+public abstract class Layer<S extends Selection> implements Iterable<S> {
 	List<Layer<?>> children = new ArrayList<>();
 
-	Layer parent;
+	Layer<?> parent;
 
 	protected State state;
 
-	public final Signature signature;
+	protected Class<S> inputType;
 
-	public Layer(Class<S> input, Class<? extends Selection>... outputs) {
-		this(null, input, outputs);
+	protected Layer inputsFromLayer;
+
+	protected Layer inputsToLayer;
+
+	protected Logger logger = LoggerFactory.getLogger(getClass());
+
+	public void inputsFromLayer(Layer inputsFromLayer) {
+		this.inputsFromLayer = inputsFromLayer;
 	}
 
-	public Layer(Name name, Class<S> input,
-			Class<? extends Selection>... outputs) {
-		this.name = name != null ? name : Name.fromClass(getClass());
-		signature = new Signature(input, outputs);
+	public void inputsFromPreviousSiblingLayer() {
+		Layer<?> fromLayer = parent.children.get(parent.children.size() - 2);
+		this.inputsFromLayer = fromLayer;
+		fromLayer.inputsToLayer = this;
+	}
+
+	public Layer() {
+		List<Class> bounds = Reflections.at(getClass())
+				.getGenericBounds().bounds;
+		if (bounds.size() > 0) {
+			inputType = bounds.get(0);
+		}
 	}
 
 	public void addChild(Layer child) {
+		child.ensureChildren();
 		child.parent = this;
 		children.add(child);
+		if (child instanceof InputsFromPreviousSibling) {
+			child.inputsFromPreviousSiblingLayer();
+		}
+	}
+
+	/**
+	 * Normally child layers are populated during the constructor, this allows a
+	 * builder pattern to specify attributes of the layer before child
+	 * population
+	 */
+	public void ensureChildren() {
 	}
 
 	public Collection<S> computeInputs() {
-		return state.traversalState.selections.get(signature.input, false);
+		if (inputsFromLayer != null) {
+			return (Collection<S>) state.traversalState.selections
+					.byLayer(inputsFromLayer).keySet();
+		} else {
+			return state.traversalState.selections.get(inputType, false);
+		}
 	}
 
 	public int depth() {
@@ -75,7 +100,7 @@ public abstract class Layer<S extends Selection> implements
 		layers.push(this);
 		while (layers.size() > 0) {
 			Layer<?> layer = layers.pop();
-			if (layer.signature.input == clazz) {
+			if (layer.inputType == clazz) {
 				return layer;
 			}
 			layer.getChildren().forEach(layers::push);
@@ -95,9 +120,14 @@ public abstract class Layer<S extends Selection> implements
 		return this.children;
 	}
 
+	public <S1 extends Selection> Stream<S1> getSelections(Class<S1> clazz) {
+		return state.traversalState.getSelections(clazz).stream();
+	}
+
 	@Override
 	public Iterator<S> iterator() {
-		return computeInputs().iterator();
+		Collection<S> computeInputs = computeInputs();
+		return computeInputs.iterator();
 	}
 
 	public String layerPath() {
@@ -116,9 +146,7 @@ public abstract class Layer<S extends Selection> implements
 		state = new State(traversalState);
 	}
 
-	@Override
-	public void process(SelectionTraversal traversal, S selection)
-			throws Exception {
+	public void process(S selection) throws Exception {
 		// if this layer processes no inputs, its children must
 		Preconditions.checkState(children.size() > 0);
 	}
@@ -150,7 +178,7 @@ public abstract class Layer<S extends Selection> implements
 
 	@Override
 	public String toString() {
-		return Ax.format("%s :: %s", name, signature);
+		return Ax.format("%s :: %s", getName(), NestedName.get(inputType));
 	}
 
 	public void withParent(Layer parent) {
@@ -186,8 +214,8 @@ public abstract class Layer<S extends Selection> implements
 		state.iterationSubmitted = 0;
 	}
 
-	protected void select(Selection selection) {
-		state.traversalState.select(selection);
+	public void select(Selection selection) {
+		state.select(selection);
 	}
 
 	protected <T extends Selection> T selection(Class<T> clazz) {
@@ -212,58 +240,14 @@ public abstract class Layer<S extends Selection> implements
 	public interface MatchesAreOutputs {
 	}
 
-	public interface Name {
-		public static Name fromClass(Class clazz) {
-			return new NameFromClass(clazz);
-		}
-
-		String name();
-
-		static final class NameFromClass implements Name {
-			private final Class clazz;
-
-			NameFromClass(Class clazz) {
-				this.clazz = clazz;
-			}
-
-			@Override
-			public String name() {
-				return this.clazz.getName();
-			}
-
-			@Override
-			public String toString() {
-				return NestedNameProvider.get(this.clazz)
-						.replaceFirst("(.+)Layer$", "$1");
-			}
-		}
-	}
-
-	public class Signature {
-		public final Class<S> input;
-
-		public final List<Class<? extends Selection>> outputs;
-
-		public Signature(Class<S> input,
-				Class<? extends Selection>... outputs) {
-			this.input = input;
-			this.outputs = List.of(outputs);
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s => %s", NestedNameProvider.get(input),
-					outputs.stream().map(NestedNameProvider::get)
-							.collect(Collectors.toList()));
-		}
-	}
-
 	public class State {
 		public SelectionTraversal.State traversalState;
 
 		public int iterationSubmitted;
 
 		public int iterationCount;
+
+		public boolean traversalCancelled;
 
 		public boolean complete;
 
@@ -272,5 +256,28 @@ public abstract class Layer<S extends Selection> implements
 		public State(SelectionTraversal.State traversalState) {
 			this.traversalState = traversalState;
 		}
+
+		public SelectionTraversal getTraversal() {
+			return traversalState.getTraversal();
+		}
+
+		void select(Selection selection) {
+			traversalState.select(selection);
+		}
+	}
+
+	public String getName() {
+		return NestedName.get(this);
+	}
+
+	public boolean hasReceivingLayer() {
+		return inputsToLayer != null;
+	}
+
+	public String getFilterName() {
+		return getClass().getName();
+	}
+
+	protected void onAfterProcess(Selection selection) {
 	}
 }

@@ -563,6 +563,7 @@ public class TreePath<T> extends Model
 							return current;
 						} else {
 							current = current.getParent();
+							return current;
 						}
 					}
 				}

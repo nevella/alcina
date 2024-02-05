@@ -16,8 +16,8 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.HtmlDefaultTags;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.PropertyNameTags;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
@@ -51,7 +51,7 @@ public abstract class DirectedRenderer {
 		}
 	}
 
-	protected String getTag(Node node, String defaultTag) {
+	public static String defaultGetTag(Node node, String defaultTag) {
 		String tag = null;
 		/*
 		 * Only apply HasTag (tag from model) to the last (deepest) node for the
@@ -67,14 +67,35 @@ public abstract class DirectedRenderer {
 		if (Ax.notBlank(tag)) {
 			return tag;
 		}
-		if (node.parent != null && node.parent.has(PropertyNameTags.class)
-				&& node.getProperty().getName() != null) {
-			return Ax.cssify(node.getProperty().getName());
-		}
+		// for models which have default tags (leaf models such as String,
+		// Boolean, Enum), compute the tag
+		// - property name by default, but optionally SPAN etc
+		//
+		// for models without default tags (e.g. Model subclasses), always use
+		// the tag name unless the model implements Directed.NonClassTag
 		if (Ax.notBlank(defaultTag)) {
-			return defaultTag;
+			if ((node.parent != null && node.parent.has(HtmlDefaultTags.class))
+					|| node.getProperty() == null) {
+				return defaultTag;
+			} else {
+				return Ax.cssify(node.getProperty().getName());
+			}
+		} else {
+			if (node.model instanceof Directed.NonClassTag
+					&& node.getProperty() != null) {
+				return Ax.cssify(node.getProperty().getName());
+			} else {
+				return tagName(node.model.getClass());
+			}
 		}
-		return Ax.blankTo(tag, tagName(node.model.getClass()));
+	}
+
+	public static String getTag(String directedTag, Class modelClass) {
+		return Ax.blankTo(directedTag, tagName(modelClass));
+	}
+
+	protected String getTag(Node node, String defaultTag) {
+		return defaultGetTag(node, defaultTag);
 	}
 
 	protected abstract void render(DirectedLayout.RendererInput input);
@@ -116,7 +137,7 @@ public abstract class DirectedRenderer {
 					.checkArgument(input.model instanceof java.util.Collection);
 			// zero widgets for the container, generates input per child
 			((java.util.Collection) input.model).forEach(model -> {
-				Object transformedModel = transformModel(input, model);
+				Object transformedModel = transformModel(input, model, true);
 				// the @Directed for the collection element is merge (the input
 				// @Directed :: the element's merged hierarchy @Directed)
 				AnnotationLocation location = input.location
@@ -154,8 +175,8 @@ public abstract class DirectedRenderer {
 				location.resolutionState.resolvedPropertyAnnotations = Arrays
 						.asList(input.soleDirected());
 				// inelegant, but works to avoid double-transform
-				location.resolutionState.addConsumed(
-						input.location.getAnnotation(Directed.Transform.class));
+				location.resolutionState.addConsumed(input.location
+						.getAnnotation(Directed.TransformElements.class));
 				input.enqueueInput(input.resolver, transformedModel, location,
 						// force resolution
 						null, input.node);
@@ -193,48 +214,6 @@ public abstract class DirectedRenderer {
 		}
 	}
 
-	interface GeneratesPropertyInputs {
-		default void generatePropertyInputs(RendererInput input) {
-			for (Property property : Reflections.at((input.model))
-					.properties()) {
-				Property directedProperty = input.resolver
-						.resolveDirectedProperty(property);
-				if (directedProperty != null) {
-					Object childModel = property.get(input.model);
-					// add input even if childModel==null
-					Class locationType = childModel == null ? void.class
-							: childModel.getClass();
-					input.enqueueInput(input.resolver, childModel,
-							new AnnotationLocation(locationType,
-									directedProperty, input.resolver),
-							null, input.node);
-				}
-			}
-		}
-	}
-
-	interface GeneratesTransformModel {
-		default Object transformModel(RendererInput input, Object model) {
-			Directed.Transform transform = input.location
-					.getAnnotation(Directed.Transform.class);
-			if (transform == null) {
-				return model;
-			}
-			if (model == null && !transform.transformsNull()) {
-				// null output
-				return null;
-			}
-			ModelTransform modelTransform = (ModelTransform) Reflections
-					.newInstance(transform.value());
-			if (modelTransform instanceof ContextSensitiveTransform) {
-				((ContextSensitiveTransform) modelTransform)
-						.withContextNode(input.node);
-			}
-			Object transformedModel = modelTransform.apply(model);
-			return transformedModel;
-		}
-	}
-
 	/*
 	 * Indicates that the annotation/resolution chain does not define a
 	 * renderer. Fall back on the model class
@@ -269,10 +248,13 @@ public abstract class DirectedRenderer {
 	 *
 	 */
 	public static class TransformRenderer extends DirectedRenderer
-			implements GeneratesTransformModel {
+			implements GeneratesTransformModel, RendersNull {
 		@Override
 		protected void render(RendererInput input) {
-			Object transformedModel = transformModel(input, input.model);
+			Object transformedModel = transformModel(input, input.model, false);
+			if (transformedModel == null) {
+				return;
+			}
 			AnnotationLocation location = input.location
 					.copyWithClassLocationOf(transformedModel);
 			// FIXME - dirndl 1x1g - *definitely* optimise. Possibly
@@ -295,11 +277,13 @@ public abstract class DirectedRenderer {
 			//
 			// will merge to transformed
 			//
-			// note the special case when input.model == transformedModel
+			// note the special case when input.model == transformedModel -
+			// assumes current directed.bindToModel=false
 			Impl descendantResolvedPropertyAnnotation = Directed.Impl
 					.wrap(input.soleDirected());
 			descendantResolvedPropertyAnnotation.setRenderer(ModelClass.class);
 			if (transformedModel == input.model) {
+				descendantResolvedPropertyAnnotation.setBindToModel(true);
 				// preserve all other attributes
 			} else {
 				Preconditions.checkArgument(descendantResolvedPropertyAnnotation
@@ -332,5 +316,77 @@ public abstract class DirectedRenderer {
 			Widget model = (Widget) input.model;
 			input.resolver.linkRenderedObject(input.node, input.model);
 		}
+	}
+
+	interface GeneratesPropertyInputs {
+		default void generatePropertyInputs(RendererInput input) {
+			for (Property property : Reflections.at((input.model))
+					.properties()) {
+				Property directedProperty = input.resolver
+						.resolveDirectedProperty(property);
+				if (directedProperty != null) {
+					Object childModel = property.get(input.model);
+					// add input even if childModel==null
+					Class locationType = childModel == null ? void.class
+							: childModel.getClass();
+					input.enqueueInput(input.resolver, childModel,
+							new AnnotationLocation(locationType,
+									directedProperty, input.resolver),
+							null, input.node);
+				}
+			}
+		}
+	}
+
+	interface GeneratesTransformModel {
+		default Object transformModel(RendererInput input, Object model,
+				boolean collectionElements) {
+			Directed.Transform transform = collectionElements ? null
+					: input.location.getAnnotation(Directed.Transform.class);
+			Directed.TransformElements transformElements = collectionElements
+					? input.location
+							.getAnnotation(Directed.TransformElements.class)
+					: null;
+			if (transform == null && transformElements == null) {
+				return model;
+			}
+			if (transform != null) {
+				if (model == null && !transform.transformsNull()) {
+					// null output
+					return null;
+				}
+				ModelTransform modelTransform = (ModelTransform) Reflections
+						.newInstance(transform.value());
+				if (modelTransform instanceof ContextSensitiveTransform) {
+					((ContextSensitiveTransform) modelTransform)
+							.withContextNode(input.node);
+				}
+				Object transformedModel = modelTransform.apply(model);
+				return transformedModel;
+			} else {
+				if (model == null && !transformElements.transformsNull()) {
+					// null output
+					return null;
+				}
+				ModelTransform modelTransform = (ModelTransform) Reflections
+						.newInstance(transformElements.value());
+				if (modelTransform instanceof ContextSensitiveTransform) {
+					((ContextSensitiveTransform) modelTransform)
+							.withContextNode(input.node);
+				}
+				Object transformedModel = modelTransform.apply(model);
+				return transformedModel;
+			}
+		}
+	}
+
+	public cc.alcina.framework.common.client.dom.DomNodeType rendersAsType() {
+		return cc.alcina.framework.common.client.dom.DomNodeType.ELEMENT;
+	}
+
+	/*
+	 * Renderer will attempt to render null
+	 */
+	interface RendersNull {
 	}
 }

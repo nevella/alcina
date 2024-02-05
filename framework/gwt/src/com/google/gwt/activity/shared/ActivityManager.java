@@ -28,6 +28,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
 import cc.alcina.framework.gwt.client.dirndl.activity.HasPlace;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 
 /**
  * Manages {@link Activity} objects that should be kicked off in response to
@@ -36,6 +37,26 @@ import cc.alcina.framework.gwt.client.dirndl.activity.HasPlace;
  */
 public class ActivityManager
 		implements PlaceChangeEvent.Handler, PlaceChangeRequestEvent.Handler {
+	/**
+	 * Wraps our real display to prevent an Activity from taking it over if it
+	 * is not the currentActivity.
+	 */
+	private class ProtectedDisplay implements AcceptsOneWidget {
+		private final Activity activity;
+
+		ProtectedDisplay(Activity activity) {
+			this.activity = activity;
+		}
+
+		@Override
+		public void setWidget(IsWidget view) {
+			if (this.activity == ActivityManager.this.currentActivity) {
+				startingNext = false;
+				showWidget(view);
+			}
+		}
+	}
+
 	public static final Activity NULL_ACTIVITY = new AbstractActivity() {
 		@Override
 		public void start(AcceptsOneWidget panel,
@@ -77,6 +98,10 @@ public class ActivityManager
 		this.stopperedEventBus = new ResettableEventBus(eventBus);
 	}
 
+	public void reset() {
+		currentActivity = NULL_ACTIVITY;
+	}
+
 	/**
 	 * Returns an event bus which is in use by the currently running activity.
 	 * <p>
@@ -116,14 +141,18 @@ public class ActivityManager
 			if (currentActivity.equals(nextActivity)) {
 				return;
 			}
-			if (currentActivity instanceof HasSameWidgetActivity
-					&& nextActivity instanceof HasSameWidgetActivity) {
-				HasSameWidgetActivity activity1 = (HasSameWidgetActivity) currentActivity;
-				HasSameWidgetActivity activity2 = (HasSameWidgetActivity) nextActivity;
-				if (activity1.isSameWigetAs(activity2)) {
+			if (currentActivity instanceof PlaceUpdateable
+					&& nextActivity instanceof PlaceUpdateable) {
+				PlaceUpdateable activity1 = (PlaceUpdateable) currentActivity;
+				PlaceUpdateable activity2 = (PlaceUpdateable) nextActivity;
+				if (activity1.canUpdate(activity2)) {
 					if (activity1 instanceof HasPlace) {
-						((HasPlace) activity1)
-								.setPlace(((HasPlace) activity2).getPlace());
+						BasePlace outgoingPlace = ((HasPlace) activity1)
+								.getPlace();
+						BasePlace incomingPlace = ((HasPlace) activity2)
+								.getPlace();
+						incomingPlace.updateFrom(outgoingPlace);
+						((HasPlace) activity1).setPlace(incomingPlace);
 						return;
 					}
 				}
@@ -139,11 +168,11 @@ public class ActivityManager
 		} else if (!currentActivity.equals(NULL_ACTIVITY)) {
 			boolean removeCurrentWidget = true;
 			if (currentActivity != null
-					&& currentActivity instanceof HasSameWidgetActivity
-					&& nextActivity instanceof HasSameWidgetActivity) {
-				HasSameWidgetActivity activity1 = (HasSameWidgetActivity) currentActivity;
-				HasSameWidgetActivity activity2 = (HasSameWidgetActivity) nextActivity;
-				if (activity1.isSameWigetAs(activity2)) {
+					&& currentActivity instanceof PlaceUpdateable
+					&& nextActivity instanceof PlaceUpdateable) {
+				PlaceUpdateable activity1 = (PlaceUpdateable) currentActivity;
+				PlaceUpdateable activity2 = (PlaceUpdateable) nextActivity;
+				if (activity1.canUpdate(activity2)) {
 					removeCurrentWidget = false;
 				}
 			}
@@ -208,6 +237,9 @@ public class ActivityManager
 		if (wasActive != willBeActive) {
 			updateHandlers(willBeActive);
 		}
+	}
+
+	protected void onStart() {
 	}
 
 	private Activity getNextActivity(PlaceChangeEvent event) {
@@ -282,29 +314,6 @@ public class ActivityManager
 			if (handlerRegistration != null) {
 				handlerRegistration.removeHandler();
 				handlerRegistration = null;
-			}
-		}
-	}
-
-	protected void onStart() {
-	}
-
-	/**
-	 * Wraps our real display to prevent an Activity from taking it over if it
-	 * is not the currentActivity.
-	 */
-	private class ProtectedDisplay implements AcceptsOneWidget {
-		private final Activity activity;
-
-		ProtectedDisplay(Activity activity) {
-			this.activity = activity;
-		}
-
-		@Override
-		public void setWidget(IsWidget view) {
-			if (this.activity == ActivityManager.this.currentActivity) {
-				startingNext = false;
-				showWidget(view);
 			}
 		}
 	}

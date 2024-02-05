@@ -89,7 +89,7 @@ import cc.alcina.framework.common.client.util.SortedMultikeyMap;
  * FIXME - reflection - clean up all threadlocal instance access (correctly name
  * the singleton/provider, cleanup on alcinaparallel exit(
  *
- * 
+ *
  */
 // unchecked because reflection is always going to involve a lot of
 // casting...alas
@@ -291,6 +291,11 @@ public abstract class TransformManager
 		factoryInstance = tm;
 	}
 
+	/**
+	 * This code ensures (with {@link #replaceWithCreatedLocalObjectHash} that a
+	 * persistent entity has the same hashcode as the original hash of the
+	 * created local object that was promoted to that entity, if any
+	 */
 	public static void registerLocalObjectPromotion(Entity entity) {
 		if (createdLocalAndPromoted == null) {
 			synchronized (TransformManager.class) {
@@ -1394,7 +1399,7 @@ public abstract class TransformManager
 
 	public void pushTransformsInCurrentThread(
 			Collection<DomainTransformEvent> dtes) {
-		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
+		dtes.forEach(this::addTransform);
 	}
 
 	public void register(Collection<? extends Entity> entities,

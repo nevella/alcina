@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -51,14 +51,14 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.table.DataProvider;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent;
@@ -87,9 +87,9 @@ public class FastROBoundTable extends BoundTableExt {
 
 	private Object selectedObject = null;
 
-	public FastROBoundTable(int mask, BoundWidgetTypeFactory factory,
-			Field[] fields, DataProvider provider) {
-		super(mask, factory, fields, provider);
+	public FastROBoundTable(int mask, Field[] fields,
+			DataProvider provider) {
+		super(mask, fields, provider);
 	}
 
 	public boolean checkEditable(SourcesPropertyChangeEvents target,
@@ -352,8 +352,8 @@ public class FastROBoundTable extends BoundTableExt {
 				editableColumns.put(i++, false);
 			}
 			for (Field f : columns) {
-				editableColumns.put(i++, GwittirBridge.get().isFieldEditable(
-						tableObjectClass, f.getPropertyName()));
+				editableColumns.put(i++, Display.Support
+						.isEditable(tableObjectClass, f.getPropertyName()));
 			}
 		}
 
@@ -452,8 +452,9 @@ public class FastROBoundTable extends BoundTableExt {
 				startColumn++;
 			}
 			Field col = columns[rowCol.col - startColumn];
-			final Field field = GwittirBridge.get().getField(target.getClass(),
-					col.getPropertyName(), true, false);
+			final Field field = BeanFields.query().forClass(target.getClass())
+					.forPropertyName(col.getPropertyName()).asEditable(true)
+					.asAdjunctEditor(false).getField();
 			if (!checkEditable(target, field)) {
 				return;
 			}

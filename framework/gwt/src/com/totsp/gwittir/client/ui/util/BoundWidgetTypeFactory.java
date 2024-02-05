@@ -19,19 +19,26 @@
  */
 package com.totsp.gwittir.client.ui.util;
 
+import java.util.Date;
 import java.util.HashMap;
 
 import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.Label;
-import com.totsp.gwittir.client.ui.TextBox;
+
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
+import cc.alcina.framework.gwt.client.gwittir.widget.DateBox.DateBoxProvider;
 
 /**
  * DOCUMENT ME!
- * 
+ *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
 public class BoundWidgetTypeFactory {
+	public static final transient String CONTEXT_WITH_ENUM_NULL = BoundWidgetTypeFactory.class
+			.getName() + ".CONTEXT_WITH_ENUM_NULL";
+
 	public static final BoundWidgetProvider CHECKBOX_PROVIDER = new BoundWidgetProvider() {
 		@Override
 		public Checkbox get() {
@@ -41,8 +48,8 @@ public class BoundWidgetTypeFactory {
 
 	public static final BoundWidgetProvider TEXTBOX_PROVIDER = new BoundWidgetProvider() {
 		@Override
-		public TextBox get() {
-			return new TextBox();
+		public cc.alcina.framework.gwt.client.gwittir.widget.TextBox get() {
+			return new cc.alcina.framework.gwt.client.gwittir.widget.TextBox();
 		}
 	};
 
@@ -57,27 +64,18 @@ public class BoundWidgetTypeFactory {
 
 	/** Creates a new instance of BoundWidgetTypeFactory */
 	public BoundWidgetTypeFactory() {
-		this(true);
-	}
-
-	public BoundWidgetTypeFactory(boolean defaults) {
-		super();
-		if (defaults) {
-			registry.put(Boolean.class,
-					BoundWidgetTypeFactory.CHECKBOX_PROVIDER);
-			registry.put(boolean.class,
-					BoundWidgetTypeFactory.CHECKBOX_PROVIDER);
-			registry.put(String.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-			registry.put(Integer.class,
-					BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-			registry.put(int.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-			registry.put(Long.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-			registry.put(long.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-			registry.put(Float.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-			registry.put(float.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-			registry.put(Double.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-			registry.put(double.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
-		}
+		registry.put(Boolean.class, BoundWidgetTypeFactory.CHECKBOX_PROVIDER);
+		registry.put(boolean.class, BoundWidgetTypeFactory.CHECKBOX_PROVIDER);
+		registry.put(String.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+		registry.put(Integer.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+		registry.put(int.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+		registry.put(Long.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+		registry.put(long.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+		registry.put(Float.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+		registry.put(float.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+		registry.put(Double.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+		registry.put(double.class, BoundWidgetTypeFactory.TEXTBOX_PROVIDER);
+		registry.put(Date.class, new DateBoxProvider());
 	}
 
 	public void add(Class<?> type, BoundWidgetProvider provider) {
@@ -85,6 +83,10 @@ public class BoundWidgetTypeFactory {
 	}
 
 	public BoundWidgetProvider getWidgetProvider(Class<?> type) {
+		if (type.isEnum()) {
+			return new ListBoxEnumProvider((Class<? extends Enum>) type,
+					LooseContext.is(CONTEXT_WITH_ENUM_NULL));
+		}
 		return registry.get(type);
 	}
 }

@@ -31,6 +31,10 @@ public class FileInput extends Widget
 		return addDomHandler(handler, ChangeEvent.getType());
 	}
 
+	public void clear() {
+		inputElement.setValue(null);
+	}
+
 	public Html5File[] getFiles() {
 		JsArray<Html5File> files = impl.getFiles(inputElement);
 		Html5File[] result = new Html5File[files.length()];
@@ -40,6 +44,7 @@ public class FileInput extends Widget
 		return result;
 	}
 
+	@Override
 	public String getName() {
 		return inputElement.getName();
 	}
@@ -53,6 +58,12 @@ public class FileInput extends Widget
 		return !inputElement.isDisabled();
 	}
 
+	public void setAccept(String accept) {
+		if (Ax.notBlank(accept)) {
+			inputElement.setAccept(accept);
+		}
+	}
+
 	public void setAllowMultipleFiles(boolean allow) {
 		impl.setAllowMultipleFiles(inputElement, allow);
 	}
@@ -62,6 +73,7 @@ public class FileInput extends Widget
 		inputElement.setDisabled(!enabled);
 	}
 
+	@Override
 	public void setName(String name) {
 		inputElement.setName(name);
 	}
@@ -72,11 +84,12 @@ public class FileInput extends Widget
 
 	private static class FileInputImpl {
 		public native JsArray<Html5File> getFiles(InputElement inputElement) /*-{
-													var remote = inputElement.@com.google.gwt.dom.client.Element::jsoRemote()();
-													return remote.value && remote.value!=""?
-													[{fileName: remote.value, fileSize: -1}]:
-													[];
-													}-*/;
+      var remote = inputElement.@com.google.gwt.dom.client.Element::jsoRemote()();
+      return remote.value && remote.value != "" ? [ {
+        fileName : remote.value,
+        fileSize : -1
+      } ] : [];
+		}-*/;
 
 		public boolean isAllowMultipleFiles(InputElement inputElement) {
 			return false;
@@ -94,9 +107,9 @@ public class FileInput extends Widget
 	private static class FileInputImplHtml5 extends FileInputImpl {
 		@Override
 		public native JsArray<Html5File> getFiles(InputElement inputElement) /*-{
-													var remote = inputElement.@com.google.gwt.dom.client.Element::jsoRemote()();
-													return remote.files;
-													}-*/;
+      var remote = inputElement.@com.google.gwt.dom.client.Element::jsoRemote()();
+      return remote.files;
+		}-*/;
 
 		@Override
 		public boolean isAllowMultipleFiles(InputElement inputElement) {
@@ -116,16 +129,6 @@ public class FileInput extends Widget
 		@Override
 		public boolean supportsFileAPI() {
 			return true;
-		}
-	}
-
-	public void clear() {
-		inputElement.setValue(null);
-	}
-
-	public void setAccept(String accept) {
-		if (Ax.notBlank(accept)) {
-			inputElement.setAccept(accept);
 		}
 	}
 }

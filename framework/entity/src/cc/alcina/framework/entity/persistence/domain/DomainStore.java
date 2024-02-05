@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -96,6 +97,8 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -103,7 +106,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.Configuration;
@@ -144,10 +147,9 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
  * ConcurrentLinkedQueue??
  * </p>
  *
- * 
  *
- *         FIXME - mvcc.5 - don't add listeners during postprocess
- *         (optimisation)
+ *
+ * FIXME - mvcc.5 - don't add listeners during postprocess (optimisation)
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomainStore implements IDomainStore {
@@ -167,6 +169,9 @@ public class DomainStore implements IDomainStore {
 
 	public static final String CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES";
+
+	public static final String CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS = DomainStore.class
+			.getName() + ".CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS";
 	static {
 		ThreadlocalTransformManager.addThreadLocalDomainTransformListener(
 				new AssociationPropagationTransformListener(
@@ -747,7 +752,11 @@ public class DomainStore implements IDomainStore {
 				// said fanciness is needed
 				Entity local = cache.getCreatedLocals().get(localId);
 				Transactions.resolve(local, ResolvedVersionState.WRITE, false);
-				Preconditions.checkState(local != null);
+				if (local == null) {
+					throw new NoSuchElementException(Ax.format(
+							"Entity not found for localId: %s/%s - localId %s",
+							clazz.getSimpleName(), id, localId));
+				}
 				// The created local is the 'domain identity', so need to
 				// preserve it but revert
 				// its field values before transforming
@@ -886,6 +895,7 @@ public class DomainStore implements IDomainStore {
 		StringBuilder warnBuilder = new StringBuilder();
 		long postProcessStart = 0;
 		DomainStoreHealth health = getHealth();
+		DomainTransformEvent currentTransform = null;
 		try {
 			LooseContext.pushWithTrue(
 					TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
@@ -925,6 +935,7 @@ public class DomainStore implements IDomainStore {
 			// filtered.removeIf(collation::isCreatedAndDeleted);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
 			for (DomainTransformEventPersistent transform : filtered) {
+				currentTransform = transform;
 				postProcessTransform = transform;
 				// remove from indicies before first change - and only if
 				// preexisting object
@@ -1005,7 +1016,12 @@ public class DomainStore implements IDomainStore {
 			topicBeforeDomainCommitted().publish(persistenceEvent);
 			Transaction.current()
 					.toDomainCommitted(persistenceEvent.getPosition());
+			if (Configuration.is("logPostProcessStats")) {
+				logger.info(collation.toStatisticsString());
+			}
 		} catch (Exception e) {
+			logger.warn(
+					Ax.format("exception transform: \n%s", currentTransform));
 			logger.warn("post process exception - pre final", e);
 			Transaction.current().toDomainAborted();
 			causes.add(e);
@@ -1401,8 +1417,9 @@ public class DomainStore implements IDomainStore {
 										.isDomainVersion(v);
 			}
 
+			@Override
 			public <V extends Entity> boolean isMvccObject(V v) {
-				return v == null ? false 
+				return v == null ? false
 						: MvccObject.class.isAssignableFrom(v.getClass());
 			};
 
@@ -1489,8 +1506,7 @@ public class DomainStore implements IDomainStore {
 		 * the context and serial arguments
 		 */
 		public <T> T call(Callable<T> callable,
-				ObjectWrapper<Stream<? extends Entity>> streamRef,
-				boolean parallel) {
+				Ref<Stream<? extends Entity>> streamRef, boolean parallel) {
 			boolean runInPool = false;
 			parallel &= !LooseContext.is(CONTEXT_SERIAL_QUERY);
 			if (parallel) {
@@ -1740,6 +1756,20 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	public static class IgnoredLocalIdLocatorResolution
+			implements ProcessObservable {
+		public static void publish(EntityLocator locator) {
+			ProcessObservers.context()
+					.publish(new IgnoredLocalIdLocatorResolution(locator));
+		}
+
+		public EntityLocator locator;
+
+		IgnoredLocalIdLocatorResolution(EntityLocator locator) {
+			this.locator = locator;
+		}
+	}
+
 	class DomainStoreDomainHandler implements DomainHandler {
 		@Override
 		public <V extends Entity> void async(Class<V> clazz, long objectId,
@@ -1783,26 +1813,32 @@ public class DomainStore implements IDomainStore {
 				}
 			}
 			if (entity == null) {
-				ClientInstance clientInstance = AuthenticationPersistence.get()
-						.getClientInstance(locator.getClientInstanceId());
-				if (clientInstance == null) {
-					logger.warn(
-							"Unable to find clientinstance for local find:\n\t locator: {}"
-									+ "\n\t Current user: {}"
-									+ "\n\t Current pm instance: {}"
-									+ "\n\t Service instance: {}",
-							locator, PermissionsManager.get().getUser(),
-							PermissionsManager.get().getClientInstance(),
-							EntityLayerObjects.get()
-									.getServerAsClientInstance());
+				if (LooseContext
+						.is(CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS)) {
+					IgnoredLocalIdLocatorResolution.publish(locator);
 				} else {
-					EntityLocatorMap locatorMap = TransformCommit.get()
-							.getLocatorMapForClient(clientInstance,
-									Ax.isTest());
-					EntityLocator persistentLocator = locatorMap
-							.getForLocalId(locator.getLocalId());
-					if (persistentLocator != null) {
-						return find(persistentLocator);
+					ClientInstance clientInstance = AuthenticationPersistence
+							.get()
+							.getClientInstance(locator.getClientInstanceId());
+					if (clientInstance == null) {
+						logger.warn(
+								"Unable to find clientinstance for local find:\n\t locator: {}"
+										+ "\n\t Current user: {}"
+										+ "\n\t Current pm instance: {}"
+										+ "\n\t Service instance: {}",
+								locator, PermissionsManager.get().getUser(),
+								PermissionsManager.get().getClientInstance(),
+								EntityLayerObjects.get()
+										.getServerAsClientInstance());
+					} else {
+						EntityLocatorMap locatorMap = TransformCommit.get()
+								.getLocatorMapForClient(clientInstance,
+										Ax.isTest());
+						EntityLocator persistentLocator = locatorMap
+								.getForLocalId(locator.getLocalId());
+						if (persistentLocator != null) {
+							return find(persistentLocator);
+						}
 					}
 				}
 			}
@@ -1829,8 +1865,9 @@ public class DomainStore implements IDomainStore {
 			return isRawValue(v);
 		}
 
+		@Override
 		public <V extends Entity> boolean isMvccObject(V v) {
-			return v == null ? false 
+			return v == null ? false
 					: MvccObject.class.isAssignableFrom(v.getClass());
 		};
 

@@ -67,6 +67,16 @@ public class FeatureTree {
 			return (Ui) Environment.get().ui;
 		}
 
+		Environment environment;
+
+		public Environment getEnvironment() {
+			return environment;
+		}
+
+		public void setEnvironment(Environment environment) {
+			this.environment = environment;
+		}
+
 		@Override
 		public Client createClient() {
 			return new ClientImpl();
@@ -84,7 +94,8 @@ public class FeatureTree {
 		public void render() {
 			injectCss("res/css/styles.css");
 			Client.get().initAppHistory();
-			new DirectedLayout().render(new Page()).appendToRoot();
+			new DirectedLayout().render(new Page()).getRendered()
+					.appendToRoot();
 		}
 	}
 

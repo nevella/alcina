@@ -116,7 +116,7 @@ import elemental.json.impl.JsonUtil;
  * <p>
  * FIXME - dirndl 1x1f - use a ringbuffer (and fix ringbuffer rotation)
  *
- * 
+ *
  */
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
@@ -333,13 +333,13 @@ public class ReflectiveSerializer {
 	 *
 	 * Information for edge-case serialization checks
 	 *
-	 * 
+	 *
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	public @interface Checks {
 		boolean hasReflectedSubtypes() default false;
 
@@ -753,8 +753,10 @@ public class ReflectiveSerializer {
 
 		public static void ensureValueSerializers() {
 			if (valueSerializers == null) {
-				// don't bother with synchronization
-				Map<Class, ValueSerializer> valueSerializers = new LinkedHashMap<>();
+				// don't bother with synchronization - the map is immutable once
+				// populated, so worst case is a few copies are made on init
+				Map<Class, ValueSerializer> valueSerializers = AlcinaCollections
+						.newLinkedHashMap();
 				Registry.query(ValueSerializer.class).implementations()
 						.forEach(vs -> vs.serializesTypes().forEach(
 								t -> valueSerializers.put((Class) t, vs)));
@@ -948,7 +950,7 @@ public class ReflectiveSerializer {
 			}
 		}
 
-		protected ValueSerializer
+		static ValueSerializer
 				getValueSerializer(Class<? extends Object> valueType) {
 			ValueSerializer valueSerializer = valueSerializers.get(valueType);
 			if (valueSerializer == null) {
@@ -989,6 +991,11 @@ public class ReflectiveSerializer {
 		PropertySerialization propertySerialization;
 
 		private State state;
+
+		@Override
+		public String toString() {
+			return property.toString();
+		}
 
 		public PropertyNode(State state, Property property) {
 			this.state = state;
@@ -1195,5 +1202,9 @@ public class ReflectiveSerializer {
 				}
 			}
 		}
+	}
+
+	public static boolean isSerializable(Class type) {
+		return JsonSerialNode.getValueSerializer(type) != null;
 	}
 }

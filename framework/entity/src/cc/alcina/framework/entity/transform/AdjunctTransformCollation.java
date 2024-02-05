@@ -1,5 +1,8 @@
 package cc.alcina.framework.entity.transform;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -174,11 +177,11 @@ public class AdjunctTransformCollation extends TransformCollation {
 	public void removeNonPersistentTransforms0() {
 		ensureLookups();
 		AtomicBoolean modified = new AtomicBoolean();
+		Set<DomainTransformEvent> remove = new LinkedHashSet<>();
 		allEntityCollations().forEach(ec -> {
 			if (ec.isCreatedAndDeleted()) {
-				ec.getTransforms().forEach(this::removeTransformFromRequest);
-				ec.getValueTransforms()
-						.forEach(this::removeTransformFromRequest);
+				ec.getTransforms().forEach(remove::add);
+				ec.getValueTransforms().forEach(remove::add);
 				modified.set(true);
 			} else {
 				ec.ensureByPropertyName().values().forEach(list -> {
@@ -186,7 +189,7 @@ public class AdjunctTransformCollation extends TransformCollation {
 						DomainTransformEvent transform = list.get(idx);
 						if (transform.getTransformType()
 								.isNotCollectionTransform()) {
-							removeTransformFromRequest(transform);
+							remove.add(transform);
 							modified.set(true);
 						}
 					}
@@ -194,13 +197,18 @@ public class AdjunctTransformCollation extends TransformCollation {
 			}
 		});
 		if (modified.get()) {
+			removeTransformsFromRequest(remove);
 			refreshFromRequest();
 		}
 	}
 
 	@Override
 	public void removeTransformFromRequest(DomainTransformEvent event) {
+		removeTransformsFromRequest(Collections.singleton(event));
+	}
+
+	public void removeTransformsFromRequest(Set<DomainTransformEvent> remove) {
 		Preconditions.checkState(token.getTransformResult() == null);
-		token.getRequest().removeTransform(event);
+		token.getRequest().removeTransforms(remove);
 	}
 }

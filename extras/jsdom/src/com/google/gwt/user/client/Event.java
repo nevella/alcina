@@ -1,12 +1,12 @@
 /*
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -225,7 +225,7 @@ public class Event extends NativeEvent {
 	 * are fired to their listeners. Note that the event preview will receive
 	 * <u>all </u> events, including those received due to bubbling, whereas
 	 * normal event handlers only receive explicitly sunk events.
-	 * 
+	 *
 	 * @param preview
 	 *            the event preview to be added to the stack.
 	 * @deprecated replaced by
@@ -243,13 +243,13 @@ public class Event extends NativeEvent {
 	 * <u>all</u> native events, including those received due to bubbling,
 	 * whereas normal event handlers only receive explicitly sunk events.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Unlike other event handlers, {@link NativePreviewHandler} are fired in
 	 * the reverse order that they are added, such that the last
 	 * {@link NativePreviewEvent} that was added is the first to be fired.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Please note that nondeterministic behavior will result if more than one
 	 * GWT application registers preview handlers. See <a href=
@@ -276,7 +276,7 @@ public class Event extends NativeEvent {
 
 	/**
 	 * Converts the {@link NativeEvent} to Event. This is always safe.
-	 * 
+	 *
 	 * @param event
 	 *            the event to downcast
 	 */
@@ -286,7 +286,7 @@ public class Event extends NativeEvent {
 
 	/**
 	 * Fire a {@link NativePreviewEvent} for the native event.
-	 * 
+	 *
 	 * @param nativeEvent
 	 *            the native event
 	 * @return true to fire the event normally, false to cancel the event
@@ -299,7 +299,7 @@ public class Event extends NativeEvent {
 	 * Gets the current event that is being fired. The current event is only
 	 * available within the lifetime of the onBrowserEvent function. Once the
 	 * onBrowserEvent method returns, the current event is reset to null.
-	 * 
+	 *
 	 * @return the current event
 	 */
 	public static Event getCurrentEvent() {
@@ -309,7 +309,7 @@ public class Event extends NativeEvent {
 	/**
 	 * Gets the {@link EventListener} that will receive events for the given
 	 * element. Only one such listener may exist for a single element.
-	 * 
+	 *
 	 * @param elem
 	 *            the element whose listener is to be set
 	 * @return the element's event listener
@@ -320,7 +320,7 @@ public class Event extends NativeEvent {
 
 	/**
 	 * Gets the current set of events sunk by a given element.
-	 * 
+	 *
 	 * @param elem
 	 *            the element whose events are to be retrieved
 	 * @return a bitfield describing the events sunk on this element (its
@@ -332,7 +332,7 @@ public class Event extends NativeEvent {
 
 	/**
 	 * Gets the enumerated type of this event given a valid event type name.
-	 * 
+	 *
 	 * @param typeName
 	 *            the typeName to be tested
 	 * @return the event's enumerated type, or -1 if not defined
@@ -344,7 +344,7 @@ public class Event extends NativeEvent {
 	/**
 	 * Releases mouse capture on the given element. Calling this method has no
 	 * effect if the element does not currently have mouse capture.
-	 * 
+	 *
 	 * @param elem
 	 *            the element to release capture
 	 * @see #setCapture(Element)
@@ -356,7 +356,7 @@ public class Event extends NativeEvent {
 	/**
 	 * Removes an element from the preview stack. This element will no longer
 	 * capture events, though any preview underneath it will begin to do so.
-	 * 
+	 *
 	 * @param preview
 	 *            the event preview to be removed from the stack
 	 * @deprecated use {@link HandlerRegistration} returned from
@@ -371,7 +371,7 @@ public class Event extends NativeEvent {
 	 * Sets mouse-capture on the given element. This element will directly
 	 * receive all mouse events until {@link #releaseCapture(Element)} is called
 	 * on it.
-	 * 
+	 *
 	 * @param elem
 	 *            the element on which to set mouse capture
 	 */
@@ -382,7 +382,7 @@ public class Event extends NativeEvent {
 	/**
 	 * Sets the {@link EventListener} to receive events for the given element.
 	 * Only one such listener may exist for a single element.
-	 * 
+	 *
 	 * @param elem
 	 *            the element whose listener is to be set
 	 * @param listener
@@ -396,7 +396,7 @@ public class Event extends NativeEvent {
 	 * Sets the current set of events sunk by a given element. These events will
 	 * be fired to the nearest {@link EventListener} specified on any of the
 	 * element's parents.
-	 * 
+	 *
 	 * @param elem
 	 *            the element whose events are to be retrieved
 	 * @param eventBits
@@ -418,7 +418,7 @@ public class Event extends NativeEvent {
 	/**
 	 * Cancels bubbling for the given event. This will stop the event from being
 	 * propagated to parent elements.
-	 * 
+	 *
 	 * @param cancel
 	 *            <code>true</code> to cancel bubbling
 	 * @deprecated use {@link NativeEvent#stopPropagation()} instead
@@ -431,7 +431,7 @@ public class Event extends NativeEvent {
 	/**
 	 * Gets the current target element of this event. This is the element whose
 	 * listener fired last, not the element which fired the event initially.
-	 * 
+	 *
 	 * @return the event's current target element
 	 * @deprecated use {@link NativeEvent#getCurrentEventTarget()} instead
 	 */
@@ -443,7 +443,7 @@ public class Event extends NativeEvent {
 	/**
 	 * Gets the element from which the mouse pointer was moved (only valid for
 	 * {@link Event#ONMOUSEOVER}).
-	 * 
+	 *
 	 * @deprecated use {@link NativeEvent#getRelatedEventTarget()} instead
 	 * @return the element from which the mouse pointer was moved
 	 */
@@ -454,7 +454,7 @@ public class Event extends NativeEvent {
 
 	/**
 	 * Gets the related target for this event.
-	 * 
+	 *
 	 * @return the related target
 	 * @deprecated use {@link NativeEvent#getRelatedEventTarget()} instead
 	 */
@@ -465,7 +465,7 @@ public class Event extends NativeEvent {
 
 	/**
 	 * Gets the key-repeat state of this event.
-	 * 
+	 *
 	 * @return <code>true</code> if this key event was an auto-repeat
 	 * @deprecated not supported on all browsers
 	 */
@@ -476,7 +476,7 @@ public class Event extends NativeEvent {
 
 	/**
 	 * Returns the element that was the actual target of the given event.
-	 * 
+	 *
 	 * @return the target element
 	 * @deprecated use {@link NativeEvent#getEventTarget()} instead
 	 */
@@ -488,7 +488,7 @@ public class Event extends NativeEvent {
 	/**
 	 * Gets the element to which the mouse pointer was moved (only valid for
 	 * {@link Event#ONMOUSEOUT}).
-	 * 
+	 *
 	 * @deprecated use {@link NativeEvent#getRelatedEventTarget()} instead
 	 * @return the element to which the mouse pointer was moved
 	 */
@@ -500,7 +500,7 @@ public class Event extends NativeEvent {
 	/**
 	 * Gets the enumerated type of this event, as defined by {@link #ONCLICK},
 	 * {@link #ONMOUSEDOWN}, and so forth.
-	 * 
+	 *
 	 * @return the event's enumerated type
 	 */
 	public final int getTypeInt() {
@@ -524,7 +524,7 @@ public class Event extends NativeEvent {
 
 		/**
 		 * Gets the type associated with this event.
-		 * 
+		 *
 		 * @return returns the handler type
 		 */
 		public static Type<NativePreviewHandler> getType() {
@@ -536,7 +536,7 @@ public class Event extends NativeEvent {
 
 		/**
 		 * Fire a {@link NativePreviewEvent} for the native event.
-		 * 
+		 *
 		 * @param handlers
 		 *            the {@link HandlerManager}
 		 * @param nativeEvent
@@ -596,7 +596,7 @@ public class Event extends NativeEvent {
 		/**
 		 * Cancel the native event and prevent it from firing. Note that the
 		 * event can still fire if another handler calls {@link #consume()}.
-		 * 
+		 *
 		 * Classes overriding this method should still call super.cancel().
 		 */
 		public void cancel() {
@@ -628,7 +628,7 @@ public class Event extends NativeEvent {
 		/**
 		 * Gets the type int corresponding to the native event that triggered
 		 * this preview.
-		 * 
+		 *
 		 * @return the type int associated with this native event
 		 */
 		public final int getTypeInt() {
@@ -638,7 +638,7 @@ public class Event extends NativeEvent {
 		/**
 		 * Has the event already been canceled? Note that {@link #isConsumed()}
 		 * will still return true if the native event has also been consumed.
-		 * 
+		 *
 		 * @return true if the event has been canceled
 		 * @see #cancel()
 		 */
@@ -649,7 +649,7 @@ public class Event extends NativeEvent {
 		/**
 		 * Has the native event been consumed? Note that {@link #isCanceled()}
 		 * will still return true if the native event has also been canceled.
-		 * 
+		 *
 		 * @return true if the event has been consumed
 		 * @see #consume()
 		 */
@@ -659,7 +659,7 @@ public class Event extends NativeEvent {
 
 		/**
 		 * Is the current handler the first to preview this event?
-		 * 
+		 *
 		 * @return true if the current handler is the first to preview the event
 		 */
 		public boolean isFirstHandler() {
@@ -668,7 +668,7 @@ public class Event extends NativeEvent {
 
 		/**
 		 * Set the native event.
-		 * 
+		 *
 		 * @param nativeEvent
 		 *            the native {@link Event} being previewed.
 		 */
@@ -698,7 +698,7 @@ public class Event extends NativeEvent {
 	public static interface NativePreviewHandler extends EventHandler {
 		/**
 		 * Called when {@link NativePreviewEvent} is fired.
-		 * 
+		 *
 		 * @param event
 		 *            the {@link NativePreviewEvent} that was fired
 		 */

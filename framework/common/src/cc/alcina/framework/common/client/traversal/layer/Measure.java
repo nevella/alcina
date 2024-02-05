@@ -1,28 +1,29 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Stream;
+import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.IdCounter;
+import cc.alcina.framework.common.client.util.NestedName;
 
 // FIXME - selection - Measure extends HasSelection? or hasParentSelection?
 /**
  * A Measure models a defined section of a {@link DomDocument} via one or more
  * containing {@Layer} instances, with additional semantic information (token)
- * and structure (children/parent).
  *
- * Measures form a tree structure, and are the model used for traversal and
- * modelling of documents.
+ * 
+ * Measures often have a containment relationship - and thus a tree structure,
+ * and are the model used for traversal and modelling of documents.
  *
  * 
  *
@@ -37,33 +38,54 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * Anyways, I was tired of slice.
  */
 public class Measure extends Location.Range {
+	public static final Object NEGATED_MATCH = new Object();
+
 	public static Measure fromNode(DomNode node, Token token) {
-		Location.Range range = node.asRange();
+		return fromRange(node.asRange(), token);
+	}
+
+	public static Measure fromRange(Location.Range range, Token token) {
 		return new Measure(range.start, range.end, token);
 	}
 
 	public final Token token;
+
+	public Token getToken() {
+		return token;
+	}
+
+	public void log() {
+		Ax.out("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
+	}
 
 	/**
 	 * Additional match information
 	 */
 	private Object data;
 
-	private Measure parent;
-
-	private List<Measure> children = new ArrayList<>();
-
 	private Measure aliasedFrom;
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), token.hashCode(), data,
+				aliasedFrom);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Measure) {
+			Measure o = (Measure) obj;
+			return Ax.equals(start, o.start, end, o.end, token, o.token, data,
+					o.data, aliasedFrom, o.aliasedFrom);
+		} else {
+			return super.equals(obj);
+		}
+	}
 
 	public Measure(Location start, Location end, Token token) {
 		super(start, end);
+		Preconditions.checkNotNull(token);
 		this.token = token;
-	}
-
-	public void addToParent() {
-		if (parent != null) {
-			parent.children.add(this);
-		}
 	}
 
 	public Measure alias() {
@@ -75,15 +97,6 @@ public class Measure extends Location.Range {
 
 	public Selection asSelection(Selection parent) {
 		return new MeasureSelection(parent, this);
-	}
-
-	public Measure childMeasure(Token... tokens) {
-		return childMeasures(tokens).findFirst().orElse(null);
-	}
-
-	public Stream<Measure> childMeasures(Token... tokens) {
-		List<Token> list = Arrays.asList(tokens);
-		return children.stream().filter(m -> list.contains(m.token));
 	}
 
 	/**
@@ -118,33 +131,62 @@ public class Measure extends Location.Range {
 		return this.data;
 	}
 
-	public Measure getParent() {
-		return this.parent;
+	public <T> T typedData() {
+		return (T) getData();
 	}
 
 	public void setData(Object data) {
 		this.data = data;
 	}
 
-	public Measure subMeasure(int start, int end, Token token) {
-		Location subStart = this.start.createRelativeLocation(start, false);
-		Location subEnd = this.end.createRelativeLocation(-(length() - end),
-				true);
+	/*
+	 * start and end are _text_ (index) offsets relative to the start of this
+	 * measure
+	 */
+	public Measure subMeasure(int startOffset, int endOffset, Token token,
+			boolean toTextLocations) {
+		Location subStart = this.start
+				.createRelativeLocation(startOffset, false)
+				.toTextLocation(toTextLocations).toStartTextLocationIfAtEnd();
+		Location subEnd = endOffset == length()
+				? this.end.toTextLocation(toTextLocations)
+				: this.start.createRelativeLocation(endOffset, false);
+		if (startOffset != endOffset) {
+			subEnd = subEnd.toTextLocation(toTextLocations)
+					.toEndTextLocationIfAtStart();
+		}
 		Measure subMeasure = new Measure(subStart, subEnd, token);
-		subMeasure.parent = this;
 		return subMeasure;
 	}
 
 	@Override
 	public String toString() {
-		String aliasMarker = aliasedFrom != null ? " (alias)" : "";
 		String tokenString = token.toString();
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
 		}
-		tokenString = CommonUtils.padStringRight(tokenString, 16, ' ');
+		if (start.treeIndex == end.treeIndex && start.containingNode.isText()) {
+			return Ax.format("%s-%s :: %s", start.index, end.index,
+					tokenString);
+		} else {
+			return Ax.format("%s-%s :: %s", start.toLocationString(),
+					end.toLocationString(), tokenString);
+		}
+	}
+
+	public String toTextString() {
+		return Ax.format("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
+	}
+
+	public String toDebugString() {
+		String aliasMarker = aliasedFrom != null ? ":: (alias)" : "";
+		String tokenString = token.toString();
+		if (tokenString.contains(token.getClass().getName())) {
+			tokenString = token.getClass().getSimpleName();
+		}
+		tokenString = CommonUtils.padStringRight(tokenString, 28, ' ');
 		String tokenData = getData() == null ? "" : getData().toString();
-		tokenData = CommonUtils.padStringRight(tokenData, 10, ' ');
+		tokenData = CommonUtils.padStringRight(tokenData, 16, ' ');
 		return Ax.format("[%s,%s]%s :: %s :: %s :: %s",
 				Ax.padLeft(start.index, 8), Ax.padLeft(end.index, 8),
 				aliasMarker, tokenString, tokenData, Ax.trimForLogging(text()));
@@ -157,17 +199,46 @@ public class Measure extends Location.Range {
 	 *
 	 */
 	public interface Token {
+		/**
+		 * This will be overridden if the token is an enum
+		 * 
+		 * @return the name
+		 */
+		default String name() {
+			return NestedName.get(this);
+		}
+
 		/*
-		 * Parser instruction - parser should traverse node-by-node when
-		 * matching tokens of this type
+		 * Parser instruction - parser should traverse node-by-node (rather than
+		 * node-boundary-by-node-boundary, a denser traversal) when matching
+		 * tokens of this type
+		 * 
+		 * FIXME - actually node-traversal types are currently:
+		 * 
+		 * NEXT/PREVIOUS LOCATION (should be NEXT_NON_CONTAINED etc) -
+		 * implemented, default (least dense)
+		 * 
+		 * NEXT_DOMNODE_START/PREVIOUS_DOM_NODE_START - node start by node start
+		 * 
+		 * NEXT_CONTAINED_LOCATION/PREVIOUS_CONTAINED - boundary by boundary
+		 * (densest)
 		 */
 		public interface NodeTraversalToken extends Token {
 		}
 
 		/*
-		 * Token will not be output (intermediate)
+		 * Token will suppress (cause omit from output) any contained tokens
 		 */
-		public interface NonOutput extends Token {
+		public interface NonOutputTree {
+		}
+
+		/*
+		 * Containment is generally based on a linear ordering. But tokens which
+		 * can correspond to measures with recursive containment should
+		 * implement this interface and allow appropriate containments
+		 */
+		public interface AllowsContainment {
+			boolean allowsContainment(Token otherToken);
 		}
 
 		/*
@@ -177,21 +248,29 @@ public class Measure extends Location.Range {
 		}
 
 		public interface Order extends Comparator<Token> {
-			/*
-			 * Undesirable, but use for dev
-			 */
-			public static class Dev extends Order.Simple {
-				@Override
-				protected int classOrdering(Class<? extends Token> class1,
-						Class<? extends Token> class2) {
-					return class1.getName().compareTo(class2.getName());
-				}
+			Order withIgnoreNoPossibleChildren();
+
+			default Order copy() {
+				return Reflections.newInstance(getClass());
 			}
 
+			public interface Has {
+				Order getOrder();
+			}
+
+			@Reflected
 			public abstract static class Simple implements Order {
+				boolean ignoreNoPossibleChildren = false;
+
+				@Override
+				public Order withIgnoreNoPossibleChildren() {
+					ignoreNoPossibleChildren = true;
+					return this;
+				}
+
 				@Override
 				public int compare(Token o1, Token o2) {
-					{
+					if (!ignoreNoPossibleChildren) {
 						int c1 = noPossibleChildrenWeight(o1);
 						int c2 = noPossibleChildrenWeight(o2);
 						if (c1 != c2) {
@@ -200,7 +279,8 @@ public class Measure extends Location.Range {
 						// NoPossibleChildren tokens can't overlap
 						Preconditions.checkState(c1 == 0);
 					}
-					return classOrdering(o1.getClass(), o2.getClass());
+					return classOrdering(CommonUtils.getComparableType(o1),
+							CommonUtils.getComparableType(o2));
 				}
 
 				private int noPossibleChildrenWeight(Token o) {
@@ -211,13 +291,35 @@ public class Measure extends Location.Range {
 						Class<? extends Token> class1,
 						Class<? extends Token> class2);
 			}
+		}
 
-			public static class Throw implements Order {
-				@Override
-				public int compare(Token o1, Token o2) {
-					throw new UnsupportedOperationException();
-				}
+		/*
+		 * For transport measures where the token is unused
+		 */
+		public static class Generic implements Measure.Token {
+			public static final Generic TYPE = new Generic();
+
+			Generic() {
 			}
 		}
+
+		/*
+		 * Logical boundary tokens are non-dom - when matched, they do not move
+		 * the match cursor forward
+		 */
+		default boolean isNonDomToken() {
+			return false;
+		}
+	}
+
+	static IdCounter counter = new IdCounter(false);
+
+	public String toPathSegment() {
+		String tokenString = token.toString();
+		if (tokenString.contains(token.getClass().getName())) {
+			tokenString = token.getClass().getSimpleName();
+		}
+		return Ax.format("[%s,%s] %s #%s", Ax.padLeft(start.index, 8),
+				Ax.padLeft(end.index, 8), tokenString, counter.nextId());
 	}
 }

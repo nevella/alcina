@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Function;
@@ -29,6 +30,9 @@ import cc.alcina.framework.common.client.util.Topic;
  * This does *not* throw ConcurrentModificationExceptions if traversing
  * forwards, but will if traversing lastFirst
  *
+ * <p>
+ * This does *not* generate a new iterator when iterator() is called multiple
+ * times
  *
  *
  * @param <T>
@@ -184,6 +188,27 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 				}
 			}
 			return depth;
+		}
+	}
+
+	/*
+	 * Will only work with a structure which is not modified after init
+	 */
+	public void setNext(T t) {
+		current = null;
+		next = new TraversalNode(root);
+		iteratorConsumed = false;
+		for (;;) {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			if (next.value == t) {
+				if (current != null) {
+					current.modifiedSinceLastNext = false;
+				}
+				break;
+			}
+			next();
 		}
 	}
 }

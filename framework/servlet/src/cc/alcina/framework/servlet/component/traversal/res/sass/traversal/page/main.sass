@@ -1,0 +1,75 @@
+@use '../../theme/theme'
+@use '../../dirndl/multi/base'
+@use '../../dirndl/multi/form'
+@use '../cmp/layer-selections'
+@use '../cmp/properties'
+
+body
+  margin: 0
+  font-family: theme.$font-stack
+  font-size: 16px
+
+body > page
+  display: grid
+  grid-template-columns: 1fr 1fr 1fr 1fr
+  grid-template-rows: auto
+  grid-template-areas:  "header header header header"     "layers layers layers props"    "input input output output"
+  grid-template-rows: 50px 1fr 260px
+  height: 100vh
+  width: 100vw
+  background: #ccc
+  gap: 1px
+
+  > *
+    min-height: 0
+    background: white
+    position: relative
+
+    > heading
+      margin-bottom: 0.2rem
+      height: 2.0rem
+      display: flex
+      padding-left: 1rem
+      align-items: center
+      background: #e8e8e8
+      border-bottom: solid 1px #aaa
+      width: 100%
+      box-sizing: border-box
+
+  > header
+    display: flex
+    background-color: hsl(350 100% 78% / 1)
+    color: white
+    align-items: center
+    justify-content: center
+    line-height: 100%
+    font-size: 120%
+    grid-area: header
+
+  > layers
+    @include layer-selections.contents
+
+  > properties
+    @include properties.contents
+    
+  > selections
+    display: block
+
+    > html-model
+      display: block
+      padding: 0 0.5em
+      max-height: calc(100% - 2.2rem)
+      overflow: scroll
+
+    &.input
+      grid-area: input
+
+    &.output
+      grid-area: output
+
+
+
+
+
+
+

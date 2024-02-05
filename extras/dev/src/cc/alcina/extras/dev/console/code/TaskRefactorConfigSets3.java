@@ -10,8 +10,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.Io.ReadOp.MapType;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.util.CsvCols;
-import cc.alcina.framework.entity.util.CsvCols.CsvRow;
+import cc.alcina.framework.entity.util.Csv;
+import cc.alcina.framework.entity.util.Csv.Row;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 /**
@@ -65,7 +65,7 @@ public class TaskRefactorConfigSets3 extends PerformerTask {
 	public void run() throws Exception {
 		StringMap keysByPackage = new StringMap();
 		{
-			CsvCols cols = CsvCols.parseCsv(propertiesCsv);
+			Csv cols = Csv.parseCsv(propertiesCsv);
 			propertyRows = cols.stream().map(PropertyRow::new)
 					.collect(Collectors.toList());
 			propertyRows.stream().filter(
@@ -128,7 +128,7 @@ public class TaskRefactorConfigSets3 extends PerformerTask {
 
 		int rowIdx;
 
-		PropertyRow(CsvRow row) {
+		PropertyRow(Row row) {
 			TaskRefactorConfigSets3 parent = TaskRefactorConfigSets3.this;
 			this.rowIdx = parent.propertyRowIdx++;
 			String packageName = row.get(Header.Package);

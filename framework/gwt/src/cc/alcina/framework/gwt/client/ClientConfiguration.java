@@ -24,6 +24,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.res.AlcinaResources;
 import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderGwt;
+import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 public class ClientConfiguration {
 	public void initServices() {
@@ -33,6 +34,7 @@ public class ClientConfiguration {
 		initExceptionHandling();
 		initCommonClient();
 		initContentProvider();
+		initValidationFeedback();
 		prepareDebugFromHistory();
 		extraConfiguration();
 	}
@@ -92,6 +94,10 @@ public class ClientConfiguration {
 	protected void initNotifications() {
 		Registry.register().singleton(ClientNotifications.class,
 				new ClientNotificationsImpl());
+	}
+
+	protected void initValidationFeedback() {
+		RelativePopupValidationFeedback.setupDefaultProvider();
 	}
 
 	protected void prepareDebugFromHistory() {

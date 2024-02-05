@@ -64,7 +64,6 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		return this.events;
 	}
 
-	
 	public boolean hadExceptions() {
 		return events.stream().anyMatch(Event::isEquivalenceTestFailed);
 	}

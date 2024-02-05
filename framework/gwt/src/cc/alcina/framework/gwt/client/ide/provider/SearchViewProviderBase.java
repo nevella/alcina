@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -30,7 +30,6 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
@@ -41,7 +40,7 @@ import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider.SearchDataProviderCommon;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
@@ -265,8 +264,8 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			}
 		}
 
-		public BoundTableExt createTableWidget(BoundWidgetTypeFactory factory,
-				Field[] fields, int mask, SearchDataProvider dp) {
+		public BoundTableExt createTableWidget(List<Field> fields, int mask,
+				SearchDataProvider dp) {
 			List<PermissibleAction> actions = getTableActions();
 			if (actions != null && !isEditableWidgets()) {
 				Toolbar tb = new Toolbar();
@@ -276,8 +275,8 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 				resultsHolder.add(tb);
 			}
 			return isEditableWidgets()
-					? new BoundTableExt(mask, factory, fields, dp)
-					: new NiceWidthBoundTable(mask, factory, fields, dp);
+					? new BoundTableExt(mask, fields, dp)
+					: new NiceWidthBoundTable(mask, fields, dp);
 		}
 
 		public SearchViewProviderBase getSearchViewProvider() {
@@ -320,18 +319,18 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			if (converter != null) {
 				bean = converter.apply(bean);
 			}
-			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
-			Field[] fields = null;
+			List<Field> fields = null;
 			try {
 				PermissionsManager.get().setOverrideAsOwnedObject(true);
-				fields = GwittirBridge.get()
-						.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-								factory, isEditableWidgets(), true);
+				fields = BeanFields.query().forBean(bean)
+						.asEditable(isEditableWidgets())
+						.forMultipleWidgetContainer(true)
+						.withEditableNamePredicate(
+								n -> !ignoreProperties.contains(n))
+						.listFields();
 			} finally {
 				PermissionsManager.get().setOverrideAsOwnedObject(false);
 			}
-			GwittirBridge.get().setIgnoreProperties(null);
 			int mask = BoundTableExt.HEADER_MASK;
 			if (def.isOrderable()) {
 				mask = mask | BoundTableExt.SORT_MASK;
@@ -342,7 +341,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			}
 			SearchDataProvider dp = createSearchDataProvider(completionCallback,
 					def);
-			this.table = createTableWidget(factory, fields, mask, dp);
+			this.table = createTableWidget(fields, mask, dp);
 			table.addStyleName("results-table");
 			if (linkButton != null) {
 				linkButton.setTable(this.table);

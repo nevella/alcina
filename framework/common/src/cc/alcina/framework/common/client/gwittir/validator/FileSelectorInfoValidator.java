@@ -21,7 +21,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.gwittir.widget.FileSelectorInfo;
+import cc.alcina.framework.gwt.client.gwittir.widget.FileData;
 
 @Reflected
 /**
@@ -61,7 +61,7 @@ public class FileSelectorInfoValidator implements ParameterisedValidator {
 				return null;
 			}
 		}
-		FileSelectorInfo info = (FileSelectorInfo) value;
+		FileData info = (FileData) value;
 		if (info == null || info.getFileName() == null
 				|| info.getBytes() == null) {
 			if (required) {

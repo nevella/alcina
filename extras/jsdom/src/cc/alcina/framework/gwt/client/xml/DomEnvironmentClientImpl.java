@@ -66,7 +66,7 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
-	public String toHtml(DomDocument doc) {
+	public String toHtml(DomDocument doc, boolean pretty) {
 		throw new UnsupportedOperationException();
 	}
 

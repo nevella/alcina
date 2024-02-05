@@ -8,14 +8,13 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
+@Bean(PropertySource.FIELDS)
 public class TaskIncrementalDelete extends PerformerTask {
 	public String path;
-
-	public String getPath() {
-		return this.path;
-	}
 
 	@Override
 	public void run() throws Exception {
@@ -29,9 +28,5 @@ public class TaskIncrementalDelete extends PerformerTask {
 			}
 		};
 		Files.walkFileTree(Path.of(path), visitor);
-	}
-
-	public void setPath(String path) {
-		this.path = path;
 	}
 }

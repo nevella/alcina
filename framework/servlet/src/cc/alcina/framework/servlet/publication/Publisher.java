@@ -339,4 +339,12 @@ public class Publisher {
 			Transaction.commit();
 		}
 	}
+
+	public static class ResultLoggerImpl
+			implements PublicationResult.ResultLogger {
+		@Override
+		public void log(PublicationResult publicationResult) {
+			Io.log().toFile(publicationResult.getContent());
+		}
+	}
 }

@@ -187,8 +187,9 @@ public class AnnotationLocation {
 	public String toString() {
 		if (property != null) {
 			String declaringSuffix = property.getOwningType() == classLocation
-					? ""
-					: Ax.format(" :: [%s]", classLocation.getSimpleName());
+					|| classLocation == null ? ""
+							: Ax.format(" :: [%s]",
+									classLocation.getSimpleName());
 			return Ax.format("%s%s", property.toString(), declaringSuffix);
 		} else {
 			return classLocation.getSimpleName();
@@ -319,6 +320,13 @@ public class AnnotationLocation {
 		private MultikeyMap<List<? extends Annotation>> resolvedCache = new UnsortedMultikeyMap<>(
 				2);
 
+		/*
+		 * For debugging
+		 */
+		public void clearResolutionCache() {
+			resolvedCache.clear();
+		}
+
 		/**
 		 * When a given annotationlocation can have multiple values (depending
 		 * on, say, document i/o type), override to return the appropriate
@@ -340,9 +348,9 @@ public class AnnotationLocation {
 
 		public synchronized <A extends Annotation> List<A> resolveAnnotations(
 				Class<A> annotationClass, AnnotationLocation location) {
-			return (List<A>) resolvedCache.ensure(
-					() -> resolveAnnotations0(annotationClass, location),
-					location, annotationClass);
+			return (List<A>) resolvedCache.ensure(() -> {
+				return resolveAnnotations0(annotationClass, location);
+			}, location, annotationClass);
 		}
 
 		/*

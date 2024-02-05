@@ -1,11 +1,22 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -15,11 +26,16 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -46,7 +62,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * <code>&lt;Input&gt;</code>, wrapping the corresponding DOM events
  *
  *
- *
+ * FIXME - dirndl - to Model.Fields
  *
  */
 @Directed(
@@ -55,13 +71,54 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			@Binding(type = Type.PROPERTY, from = "type"),
 			@Binding(type = Type.PROPERTY, from = "spellcheck"),
 			@Binding(type = Type.PROPERTY, from = "autocomplete"),
-			@Binding(type = Type.INNER_TEXT, from = "innerText") },
-	
-emits = { ModelEvents.Change.class, ModelEvents.Input.class })
-public class StringInput extends Model
-		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
-		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
-		DomEvents.Focusin.Handler, DomEvents.Focusout.Handler {
+			@Binding(type = Type.PROPERTY, from = "rows"),
+			@Binding(type = Type.PROPERTY, from = "disabled") },
+	emits = { ModelEvents.Change.class, ModelEvents.Input.class,
+			ModelEvents.Commit.class })
+@Registration({ Model.Value.class, FormModel.Editor.class, String.class })
+@Registration({ Model.Value.class, FormModel.Editor.class, Number.class })
+public class StringInput extends Model.Value<String> implements FocusOnBind,
+		HasTag, DomEvents.Change.Handler, DomEvents.Input.Handler,
+		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
+		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler {
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface Placeholder {
+		/**
+		 * The placeholder
+		 */
+		String value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface FocusOnBind {
+	}
+
+	static class SelectionState {
+		int selectionStart;
+
+		int selectionEnd;
+
+		SelectionState() {
+		}
+
+		void apply(Element element) {
+			TextBoxImpl.setTextBoxSelectionRange(element, selectionStart,
+					selectionEnd - selectionStart);
+		}
+
+		SelectionState snapshot(Element element) {
+			selectionStart = element.getPropertyInt("selectionStart");
+			selectionEnd = element.getPropertyInt("selectionEnd");
+			return this;
+		}
+	}
+
 	private String value;
 
 	private String currentValue;
@@ -78,20 +135,67 @@ public class StringInput extends Model
 
 	private boolean selectAllOnFocus;
 
-	private String spellcheck = "false";
+	private boolean moveCaretToEndOnFocus;
 
-	// used for element population if element is a textarea (dom quirk, really)
-	private String innerText;
+	private String spellcheck = "false";
 
 	SelectionState selectOnFocus;
 
 	private boolean preserveSelectionOverFocusChange;
+
+	private String rows;
+
+	private boolean ensureAllLinesVisible;
+
+	private boolean commitOnEnter;
+
+	private boolean disabled;
 
 	public StringInput() {
 	}
 
 	public StringInput(String value) {
 		setValue(value);
+	}
+
+	public boolean isDisabled() {
+		return disabled;
+	}
+
+	public void setDisabled(boolean disabled) {
+		this.disabled = disabled;
+	}
+
+	public boolean isMoveCaretToEndOnFocus() {
+		return moveCaretToEndOnFocus;
+	}
+
+	public void setMoveCaretToEndOnFocus(boolean moveCaretToEndOnFocus) {
+		this.moveCaretToEndOnFocus = moveCaretToEndOnFocus;
+	}
+
+	public boolean isCommitOnEnter() {
+		return commitOnEnter;
+	}
+
+	public void setCommitOnEnter(boolean commitOnEnter) {
+		this.commitOnEnter = commitOnEnter;
+	}
+
+	public boolean isEnsureAllLinesVisible() {
+		return ensureAllLinesVisible;
+	}
+
+	public void setEnsureAllLinesVisible(boolean ensureAllLinesVisible) {
+		this.ensureAllLinesVisible = ensureAllLinesVisible;
+	}
+
+	public String getRows() {
+		return rows;
+	}
+
+	public void setRows(String rows) {
+		this.rows = rows;
 	}
 
 	public void clear() {
@@ -112,14 +216,10 @@ public class StringInput extends Model
 	}
 
 	public String getCurrentValue() {
-		if (currentValue == null) {
+		if (currentValue == null && provideIsBound()) {
 			currentValue = elementValue();
 		}
 		return this.currentValue;
-	}
-
-	public String getInnerText() {
-		return this.innerText;
 	}
 
 	public String getPlaceholder() {
@@ -138,6 +238,7 @@ public class StringInput extends Model
 		return this.type;
 	}
 
+	@Override
 	public String getValue() {
 		return this.value;
 	}
@@ -157,16 +258,23 @@ public class StringInput extends Model
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
-		if (tag.equals("textarea") && innerText == null) {
-			innerText = value;
-		}
+		event.node.optional(Placeholder.class)
+				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
+		event.node.optional(FocusOnBind.class)
+				.ifPresent(ann -> setFocusOnBind(true));
+		super.onBeforeRender(event);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
 	}
 
 	@Override
 	public void onChange(Change event) {
 		currentValue = elementValue();
 		setValue(currentValue);
-		event.reemitAs(this, ModelEvents.Change.class);
+		event.reemitAs(this, ModelEvents.Change.class, currentValue);
 	}
 
 	@Override
@@ -180,6 +288,12 @@ public class StringInput extends Model
 			Rendered rendered = event.getContext().node.getRendered();
 			Element elem = rendered.asElement();
 			TextBoxImpl.setTextBoxSelectionRange(elem, 0,
+					elem.getPropertyString("value").length());
+		} else if (isMoveCaretToEndOnFocus()) {
+			Rendered rendered = event.getContext().node.getRendered();
+			Element elem = rendered.asElement();
+			TextBoxImpl.setTextBoxSelectionRange(elem,
+					elem.getPropertyString("value").length(),
 					elem.getPropertyString("value").length());
 		}
 	}
@@ -197,6 +311,7 @@ public class StringInput extends Model
 	public void onInput(Input event) {
 		currentValue = elementValue();
 		WidgetUtils.squelchCurrentEvent();
+		updateHeight();
 		event.reemitAs(this, ModelEvents.Input.class, currentValue);
 	}
 
@@ -240,33 +355,65 @@ public class StringInput extends Model
 		this.type = type;
 	}
 
+	@Override
 	public void setValue(String value) {
 		String old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
 	}
 
-	private String elementValue() {
-		return provideElement().getPropertyString("value");
+	@Override
+	public void onKeyDown(KeyDown event) {
+		Context context = event.getContext();
+		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
+		switch (domEvent.getNativeKeyCode()) {
+		case KeyCodes.KEY_ENTER:
+			if (commitOnEnter) {
+				value = getCurrentValue();
+				event.reemitAs(this, Commit.class);
+				domEvent.preventDefault();
+			}
+			// simulate a 'commit' event
+			break;
+		}
 	}
 
-	static class SelectionState {
-		int selectionStart;
-
-		int selectionEnd;
-
-		SelectionState() {
+	void updateHeight() {
+		if (ensureAllLinesVisible) {
+			Scheduler.get().scheduleDeferred(() -> {
+				Element element = provideElement();
+				element.getStyle().setProperty("height", "auto");
+				String paddingTop = WidgetUtils.getComputedStyle(element,
+						"paddingTop");
+				String paddingBottom = WidgetUtils.getComputedStyle(element,
+						"paddingBottom");
+				String computedHeight = WidgetUtils.getComputedStyle(element,
+						"height");
+				double paddingTopPx = paddingTop.endsWith("px")
+						? Double.parseDouble(paddingTop.replace("px", ""))
+						: 0;
+				double paddingBottomPx = paddingBottom.endsWith("px")
+						? Double.parseDouble(paddingBottom.replace("px", ""))
+						: 0;
+				double computedHeightPx = computedHeight.endsWith("px")
+						? Double.parseDouble(computedHeight.replace("px", ""))
+						: 0;
+				int scrollHeight = element.getScrollHeight();
+				if (scrollHeight != 0) {
+					if (scrollHeight == computedHeightPx + paddingBottomPx
+							+ paddingTopPx) {
+						// no need to change
+					} else {
+						element.getStyle().setHeight(scrollHeight,
+								// - paddingTopPx - paddingBottomPx,
+								Unit.PX);
+					}
+				}
+			});
 		}
+	}
 
-		void apply(Element element) {
-			TextBoxImpl.setTextBoxSelectionRange(element, selectionStart,
-					selectionEnd - selectionStart);
-		}
-
-		SelectionState snapshot(Element element) {
-			selectionStart = element.getPropertyInt("selectionStart");
-			selectionEnd = element.getPropertyInt("selectionEnd");
-			return this;
-		}
+	String elementValue() {
+		return provideElement().getPropertyString("value");
 	}
 }

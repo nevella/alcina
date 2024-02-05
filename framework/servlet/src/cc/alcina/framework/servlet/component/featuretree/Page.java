@@ -4,19 +4,16 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @Directed
-@Directed.AllProperties
-class Page extends Model.Fields {
+class Page extends Model.All {
 	Header header = new Header();
 
 	Main main = new Main();
 
-	@Directed.AllProperties
-	static class Header extends Model.Fields {
+	static class Header extends Model.All {
 		String name = FeatureTree.Ui.get().getMainCaption();
 	}
 
-	@Directed.AllProperties
-	static class Main extends Model.Fields {
+	static class Main extends Model.All {
 		FeatureTable featureTable;
 
 		Properties properties;

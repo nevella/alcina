@@ -2,6 +2,7 @@ package cc.alcina.extras.webdriver;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,17 +23,19 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Io;
 
 public class WdExec {
+	private static final int DEFAULT_TIMEOUT = 5;
+
 	private WebDriver driver;
 
 	private String xpath;
 
 	private String cssSelector;
 
-	private int timeoutSecs = 5;
+	private int timeoutSecs = DEFAULT_TIMEOUT;
 
 	private int index;
 
@@ -45,6 +48,8 @@ public class WdExec {
 	private TestCallback testCallback;
 
 	private WebElement fromElement;
+
+	private boolean useScriptedClick;
 
 	public Actions actions() {
 		Actions actions = new Actions(driver);
@@ -64,6 +69,21 @@ public class WdExec {
 
 	public void assertHasText() {
 		assert (getElement().getText().length() > 0);
+	}
+
+	public void awaitRemoval(WebElement elt) {
+		long timeoutAt = System.currentTimeMillis() + timeoutSecs * 1000;
+		while (System.currentTimeMillis() < timeoutAt) {
+			try {
+				elt.isDisplayed();
+				sleep(100);
+			} catch (Exception e) {
+				// removed
+				int debug = 3;
+				return;
+			}
+		}
+		throw new TimedOutException();
 	}
 
 	public void clear() {
@@ -95,8 +115,10 @@ public class WdExec {
 		return click(false);
 	}
 
+	Consumer<WebElement> theClick = WebElement::click;
+
 	public boolean click(boolean returnIfNotVisible) {
-		return performAction(returnIfNotVisible, WebElement::click);
+		return performAction(returnIfNotVisible, theClick);
 	}
 
 	public void clickLink(String linkText) {
@@ -118,7 +140,7 @@ public class WdExec {
 		if (getBy() == null) {
 			return WDUtils.executeScript(driver, null, script);
 		} else {
-			ObjectWrapper<Object> scriptResult = new ObjectWrapper<>();
+			Ref<Object> scriptResult = new Ref<>();
 			performAction(false, e -> scriptResult
 					.set(WDUtils.executeScript(driver, e, script)));
 			return scriptResult.get();
@@ -169,13 +191,21 @@ public class WdExec {
 		return this;
 	}
 
-	public boolean immediateTest() {
+	public boolean immediateIsInteractable() {
+		try {
+			return immediate(this::click);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public boolean immediate(Runnable runnable) {
 		int oTimeoutSecs = timeoutSecs;
 		try {
 			LooseContext.pushWithTrue(WDUtils.CONTEXT_DONT_LOG_EXCEPTION);
 			LooseContext.set(WDUtils.CONTEXT_OVERRIDE_TIMEOUT, 0);
 			timeoutSecs = 0;
-			getElement();
+			runnable.run();
 			return true;
 		} catch (RuntimeException e) {
 			if (e instanceof TimedOutException) {
@@ -187,6 +217,10 @@ public class WdExec {
 			LooseContext.pop();
 		}
 		return false;
+	}
+
+	public boolean immediateTest() {
+		return immediate(this::getElement);
 	}
 
 	public boolean immediateTest(String... paths) {
@@ -219,6 +253,7 @@ public class WdExec {
 			Consumer<WebElement> actor) {
 		RuntimeException lastException = null;
 		int maxTries = Math.max(1, timeoutSecs * 5);
+		boolean obscuredBySelf = false;
 		for (int attempt = 0; attempt < maxTries; attempt++) {
 			WebElement elem = getElement();
 			Actions actions = new Actions(driver);
@@ -227,6 +262,7 @@ public class WdExec {
 				throw new TimedOutException("forced timeout");
 			}
 			try {
+				elem = getElement();
 				actor.accept(elem);
 				return false;
 			} catch (RuntimeException e) {
@@ -234,6 +270,21 @@ public class WdExec {
 				if (e instanceof ElementNotInteractableException) {
 					if (returnIfNotVisible) {
 						return true;
+					}
+					if (!obscuredBySelf && useScriptedClick) {
+						String selfReceivedPattern = "element click intercepted: Element (<.+?) is not clickable.+receive the click: (<.+)\n";
+						Pattern p = Pattern.compile(selfReceivedPattern);
+						Matcher m = p.matcher(e.getMessage());
+						if (m.find()) {
+							if (Objects.equals(m.group(1), m.group(2))) {
+								obscuredBySelf = true;
+								actor = elem2 -> WDUtils.executeScript(driver,
+										elem2, "arguments[0].click()");
+								// Ax.out("Obscured by self :: using scripted
+								// click");
+								continue;
+							}
+						}
 					}
 					WDUtils.scrollToCenterUsingBoundingClientRect(driver, elem);
 					sleep(200);
@@ -351,6 +402,10 @@ public class WdExec {
 		return this;
 	}
 
+	public void toDefaultTimeout() {
+		timeout(DEFAULT_TIMEOUT);
+	}
+
 	public WdExec token(WDToken token) {
 		this.token = token;
 		if (driver == null) {
@@ -452,5 +507,14 @@ public class WdExec {
 			}
 			throw new TimedOutException();
 		}
+	}
+
+	/**
+	 * A workaround for shadow-dom click interceptions (by self)
+	 * 
+	 * @param useScriptedClick
+	 */
+	public void useScriptedClick(boolean useScriptedClick) {
+		this.useScriptedClick = useScriptedClick;
 	}
 }

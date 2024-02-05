@@ -30,6 +30,8 @@ public interface FragmentNodeOps {
 
 	Stream<? extends FragmentNode> children();
 
+	void ensureComputedNodes();
+
 	default Stream<? extends FragmentNode> stream() {
 		return (Stream<? extends FragmentNode>) (Stream) new DepthFirstTraversal<FragmentNodeOps>(
 				this, fn -> fn.children().collect(Collectors.toList())).stream()

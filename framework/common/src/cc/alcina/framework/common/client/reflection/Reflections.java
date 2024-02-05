@@ -46,6 +46,8 @@ public class Reflections {
 			return (Class<T>) char.class;
 		case "void":
 			return (Class<T>) void.class;
+		case "[B":
+			return (Class<T>) byte[].class;
 		}
 		return get().forName.computeIfAbsent(fqn, ForName::forName);
 	}
@@ -77,7 +79,8 @@ public class Reflections {
 
 	public static boolean isEffectivelyFinal(Class clazz) {
 		return ClassReflector.stdAndPrimitivesMap.containsKey(clazz.getName())
-				|| CommonUtils.isEnumOrEnumSubclass(clazz);
+				|| CommonUtils.isEnumOrEnumSubclass(clazz) || (clazz.isArray()
+						&& isEffectivelyFinal(clazz.getComponentType()));
 	}
 
 	public static <T> T newInstance(Class<T> clazz) {

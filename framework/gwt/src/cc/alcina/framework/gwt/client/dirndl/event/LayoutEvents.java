@@ -1,6 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class LayoutEvents {
 	/**
@@ -18,11 +20,17 @@ public class LayoutEvents {
 	 * have some fields sent via RPC, others that are only populated (here)
 	 * client-side
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class BeforeRender extends LayoutEvent<BeforeRender.Handler> {
-		public BeforeRender(DirectedLayout.Node node) {
+		public Object model;
+
+		public Node node;
+
+		public BeforeRender(DirectedLayout.Node node, Object model) {
+			this.model = model;
+			this.node = node;
 			setContext(Context.fromNode(node));
 		}
 
@@ -42,7 +50,7 @@ public class LayoutEvents {
 	 * this model. See {@link DirectedLayout.RendererInput#render} for details
 	 *
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static class Bind extends LayoutEvent<Bind.Handler> {
@@ -62,6 +70,11 @@ public class LayoutEvents {
 			return this.bound;
 		}
 
+		@Override
+		public String toString() {
+			return Ax.format("%s - bound: %s", super.toString(), bound);
+		}
+
 		public interface Handler extends NodeEvent.Handler {
 			/**
 			 * Do not modify the model (properties) here or create bindings -
@@ -76,7 +89,7 @@ public class LayoutEvents {
 	 * The respective Handler methods are called directly during layout. Note
 	 * that getContext() only provides the Node corresponding to the model
 	 *
-	 * 
+	 *
 	 *
 	 */
 	public static abstract class LayoutEvent<H extends NodeEvent.Handler>

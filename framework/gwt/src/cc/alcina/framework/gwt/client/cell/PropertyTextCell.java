@@ -63,7 +63,7 @@ public class PropertyTextCell
 	 *            a {@link SafeHtmlRenderer SafeHtmlRenderer<String>} instance
 	 */
 	public PropertyTextCell(SafeHtmlRenderer<String> renderer) {
-		super(CLICK, KEYUP, KEYDOWN, BLUR);
+		super(CLICK, KEYUP, KEYDOWN, BLUR, FOCUSOUT);
 		if (template == null) {
 			template = GWT.create(Template.class);
 		}
@@ -251,7 +251,7 @@ public class PropertyTextCell
 				// Update the text in the view data on each key.
 				updateViewData(parent, viewData, true);
 			}
-		} else if (BLUR.equals(type)) {
+		} else if (BLUR.equals(type) || FOCUSOUT.equals(type)) {
 			// Commit the change. Ensure that we are blurring the input element
 			// and
 			// not the parent element itself.

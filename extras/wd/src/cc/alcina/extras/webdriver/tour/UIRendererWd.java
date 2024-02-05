@@ -159,8 +159,7 @@ public class UIRendererWd extends UIRenderer {
 			// a noop, but forces evaluation/popup in wd mode
 			break;
 		}
-		ProcessObservers.publish(TourManager.AfterActionPerformed.class,
-				() -> new TourManager.AfterActionPerformed(step));
+		new TourManager.AfterActionPerformed(step).publish();
 		return true;
 	}
 

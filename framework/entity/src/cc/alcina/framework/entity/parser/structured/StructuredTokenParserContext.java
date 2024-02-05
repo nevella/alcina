@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomTokenStream;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -53,7 +54,7 @@ public class StructuredTokenParserContext {
 	/*
 	 * Open joins in the *output* - i.e. nested outputs
 	 */
-	public LinkedList<XmlStructuralJoin> openNodes = new LinkedList<>();
+	public OpenJoins openJoins = new OpenJoins();
 
 	Map<XmlStructuralJoin, OutputContextRoot> outputContextRoots = new LinkedHashMap<>();
 
@@ -133,7 +134,7 @@ public class StructuredTokenParserContext {
 	}
 
 	public boolean isOpen(XmlToken token) {
-		return openNodes.stream().anyMatch(xtn -> xtn.token == token);
+		return openJoins.stream().anyMatch(xtn -> xtn.token == token);
 	}
 
 	public boolean isSubCategory(Class clazz) {
@@ -168,7 +169,7 @@ public class StructuredTokenParserContext {
 	}
 
 	public void pushWrapper(XmlStructuralJoin join) {
-		openNodes.push(join);
+		openJoins.push(join);
 		out.debug("open wrapper - %s - %s",
 				join.token.getOutputContext(join).getTag(), join.hashCode());
 	}
@@ -208,7 +209,7 @@ public class StructuredTokenParserContext {
 
 	protected void closeOpenOutputWrappers(XmlStructuralJoin join) {
 		List<String> closed = new ArrayList<>();
-		for (Iterator<XmlStructuralJoin> itr = openNodes.iterator(); itr
+		for (Iterator<XmlStructuralJoin> itr = openJoins.iterator(); itr
 				.hasNext();) {
 			XmlStructuralJoin openNode = itr.next();
 			if (!openNode.sourceNode.isAncestorOf(join.sourceNode)
@@ -409,6 +410,91 @@ public class StructuredTokenParserContext {
 
 	public enum NodeAncestorsTypes {
 		SOURCE, TARGET, NODE
+	}
+
+	public static class OpenJoins {
+		public static boolean debug;
+
+		LinkedList<XmlStructuralJoin> joins = new LinkedList<>();
+
+		public XmlStructuralJoin first() {
+			return joins.get(0);
+		}
+
+		public XmlStructuralJoin get(int i) {
+			return joins.get(i);
+		}
+
+		public Iterator<XmlStructuralJoin> iterator() {
+			return new WrappedIterator();
+		}
+
+		public XmlStructuralJoin peek() {
+			return Ax.last(joins);
+		}
+
+		public XmlStructuralJoin pop() {
+			XmlStructuralJoin peek = peek();
+			debugRemove(peek);
+			joins.remove(joins.size() - 1);
+			return peek;
+		}
+
+		public void push(XmlStructuralJoin join) {
+			if (debug) {
+				FormatBuilder format = new FormatBuilder();
+				format.append(">>");
+				format.appendPadLeft(joins.size() * 2, join.sourceNode.name());
+				Ax.err(format);
+			}
+			joins.push(join);
+		}
+
+		public void remove(XmlStructuralJoin join) {
+			debugRemove(join);
+			joins.remove(join);
+		}
+
+		public int size() {
+			return joins.size();
+		}
+
+		public Stream<XmlStructuralJoin> stream() {
+			return joins.stream();
+		}
+
+		void debugRemove(XmlStructuralJoin join) {
+			if (!debug) {
+				return;
+			}
+			FormatBuilder format = new FormatBuilder();
+			format.append("<<");
+			format.appendPadLeft(joins.size() * 2, join.sourceNode.name());
+			Ax.err(format);
+		}
+
+		class WrappedIterator implements Iterator<XmlStructuralJoin> {
+			Iterator<XmlStructuralJoin> itr = joins.iterator();
+
+			XmlStructuralJoin current;
+
+			@Override
+			public boolean hasNext() {
+				return itr.hasNext();
+			}
+
+			@Override
+			public XmlStructuralJoin next() {
+				current = itr.next();
+				return current;
+			}
+
+			@Override
+			public void remove() {
+				debugRemove(current);
+				itr.remove();
+			}
+		}
 	}
 
 	public static abstract class OutputContextRoot {

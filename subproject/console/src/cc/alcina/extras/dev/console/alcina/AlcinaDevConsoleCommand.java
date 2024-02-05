@@ -1,5 +1,6 @@
 package cc.alcina.extras.dev.console.alcina;
 
+import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsoleCommand;
 
 public abstract class AlcinaDevConsoleCommand
@@ -26,9 +27,10 @@ public abstract class AlcinaDevConsoleCommand
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public String run(String[] argv) throws Exception {
 			CmdExecRunnable cmdExecRunnable = new CmdExecRunnable();
-			cmdExecRunnable.console = console;
+			cmdExecRunnable.console = (DevConsole) console;
 			return cmdExecRunnable.run(new String[] { "WdDevLocal" });
 		}
 	}
@@ -54,6 +56,7 @@ public abstract class AlcinaDevConsoleCommand
 			return true;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public String run(String[] argv) throws Exception {
 			CmdExecRunnable cmdExecRunnable = new CmdExecRunnable();

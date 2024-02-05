@@ -47,6 +47,23 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
+/**
+ * <p>
+ * Doc - work in progress - topics are:
+ * <ul>
+ * <li>criteria groups - operate as more-or-less a set of parentheses (a
+ * grouping on the criterion) as well as organisation hooks for the ui. Note
+ * movement away from CGs to multi-valued criteria
+ * <li>criteria - the meat of the definition - define constraints on the search.
+ * <li>ordering
+ * <li>eql
+ * <li>string representation
+ * <li>serialization
+ * </ul>
+ *
+ * @author nick@alcina.cc
+ *
+ */
 @Registrations({ @Registration(JaxbContextRegistration.class), })
 public abstract class SearchDefinition extends Bindable
 		implements TreeSerializable, TreeRenderable, ContentDefinition,
@@ -55,7 +72,7 @@ public abstract class SearchDefinition extends Bindable
 	public static final transient int LARGE_SEARCH = 0xFF0000;
 
 	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
-			.getName() + ":" + "current-search-definition";
+			.getName() + ".CONTEXT_CURRENT_SEARCH_DEFINITION";
 
 	final transient String orderJoin = ", ";
 
@@ -162,6 +179,10 @@ public abstract class SearchDefinition extends Bindable
 				getCriteriaGroups().add(cg);
 			}
 		}
+	}
+
+	public void ensureDefaultCriteria() {
+		getCriteriaGroups().forEach(CriteriaGroup::ensureDefaultCriteria);
 	}
 
 	public <V extends OrderGroup> V ensureOrderGroup(V orderGroup) {
@@ -531,15 +552,13 @@ public abstract class SearchDefinition extends Bindable
 		@Override
 		public void onAfterTreeDeserialize() {
 			super.onAfterTreeDeserialize();
-			serializable.getCriteriaGroups()
-					.forEach(CriteriaGroup::ensureDefaultCriteria);
+			serializable.ensureDefaultCriteria();
 		}
 
 		@Override
 		public void onAfterTreeSerialize() {
 			super.onAfterTreeSerialize();
-			serializable.getCriteriaGroups()
-					.forEach(CriteriaGroup::ensureDefaultCriteria);
+			serializable.ensureDefaultCriteria();
 		}
 
 		@Override

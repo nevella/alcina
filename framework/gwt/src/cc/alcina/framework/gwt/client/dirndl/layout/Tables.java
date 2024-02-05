@@ -6,18 +6,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -29,43 +27,65 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableTypeFactory;
 
 public class Tables {
-	public static class ColumnHeaders extends LeafModel.StringListModel {
+	public static class ColumnHeaders extends Model.All {
+		List<ColumnName> names;
+
 		public ColumnHeaders(Class<? extends Bindable> clazz,
 				DirectedLayout.Node node) {
-			BoundWidgetTypeFactory factory = Registry
-					.impl(TableTypeFactory.class);
 			List<String> strings = Reflections.at(clazz).properties().stream()
 					.map(p -> Annotations.resolve(p, Directed.Property.class,
 							node.getResolver()))
-					.filter(Objects::nonNull).map(Directed.Property::name)
+					.filter(Objects::nonNull).map(Directed.Property::value)
 					.collect(Collectors.toList());
-			setList(strings);
+			init(strings);
 		}
 
 		public ColumnHeaders(List<String> strings) {
-			super(strings);
+			init(strings);
+		}
+
+		void init(List<String> strings) {
+			names = strings.stream().map(ColumnName::new)
+					.collect(Collectors.toList());
 		}
 	}
 
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
 	/**
 	 * Used in the generated gridTemplateColumns style attribute of a generated
 	 * grid
 	 *
-	 * 
-	 *
 	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
 	public @interface ColumnWidth {
 		public String value();
 	}
 
-	@Reflected
+	/**
+	 * Overrides individual columnwidths
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface ColumnsWidth {
+		public String value();
+	}
+
+	/**
+	 * Exclude a property from the grid
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+	public @interface Exclude {
+	}
+
 	/*
 	 * Constructs a multi-column table from a list of reflected objects. Column
 	 * headers are either supplied or derived from fields
@@ -78,14 +98,14 @@ public class Tables {
 		}
 
 		@Directed(
-			tag = "multiple",
 			bindings = @Binding(
 				from = "gridTemplateColumns",
 				type = Type.STYLE_ATTRIBUTE))
-		public class IntermediateModel extends Model {
+		public class IntermediateModel extends Model
+				implements Directed.NonClassTag {
 			private String gridTemplateColumns;
 
-			private List<String> columnNames;
+			private List<ColumnName> columnNames;
 
 			private String gridColumnWidth;
 
@@ -97,27 +117,39 @@ public class Tables {
 				gridColumnWidth = defaultWidth != null ? defaultWidth.value()
 						: "auto";
 				this.rows = rows;
+				Predicate<Property> propertyFilter = p -> p.provideRenderable()
+						&& !p.has(Exclude.class);
 				if (rows.isEmpty()) {
-					this.columnNames = Collections.emptyList();
+					this.columnNames = new ArrayList<>();
 				} else {
 					Model template = rows.iterator().next();
 					columnNames = Reflections.at(template).properties().stream()
-							.filter(Property::provideRenderable)
-							.map(Property::getName)
+							.filter(propertyFilter).map(property -> {
+								Directed.Property propertyAnnotation = property
+										.annotation(Directed.Property.class);
+								return propertyAnnotation != null
+										? propertyAnnotation.value()
+										: CommonUtils
+												.deInfix(property.getName());
+							}).map(ColumnName::new)
 							.collect(Collectors.toList());
-					gridTemplateColumns = Reflections.at(template).properties()
-							.stream().filter(Property::provideRenderable)
-							.map(p -> {
-								ColumnWidth columnWidth = p
-										.annotation(ColumnWidth.class);
-								return columnWidth != null ? columnWidth.value()
-										: gridColumnWidth;
-							}).collect(Collectors.joining(" "));
+					ColumnsWidth columnsWidth = node
+							.annotation(ColumnsWidth.class);
+					gridTemplateColumns = columnsWidth != null
+							? columnsWidth.value()
+							: Reflections.at(template).properties().stream()
+									.filter(propertyFilter).map(p -> {
+										ColumnWidth columnWidth = p
+												.annotation(ColumnWidth.class);
+										return columnWidth != null
+												? columnWidth.value()
+												: gridColumnWidth;
+									}).collect(Collectors.joining(" "));
 				}
 			}
 
 			@Directed.Wrap("column-names")
-			public List<String> getColumnNames() {
+			public List<ColumnName> getColumnNames() {
 				return this.columnNames;
 			}
 
@@ -132,10 +164,6 @@ public class Tables {
 			@Directed
 			public List<? extends Model> getRows() {
 				return this.rows;
-			}
-
-			public void setGridColumnWidth(String gridColumnWidth) {
-				this.gridColumnWidth = gridColumnWidth;
 			}
 		}
 	}
@@ -158,7 +186,8 @@ public class Tables {
 		}
 
 		@Directed(tag = "table")
-		public static class IntermediateModel extends Model {
+		public static class IntermediateModel extends Model
+				implements Directed.NonClassTag {
 			public static IntermediateModel ofBindable(Bindable model) {
 				IntermediateModel result = new IntermediateModel();
 				List<Property> properties = Reflections.at(model).properties();
@@ -203,6 +232,8 @@ public class Tables {
 					if (propertyValue == null) {
 					} else if (propertyValue instanceof Model) {
 						value = propertyValue;
+					} else if (propertyValue instanceof Collection) {
+						value = propertyValue;
 					} else if (propertyValue instanceof Enum) {
 						value = Ax.friendly(propertyValue);
 					} else if (propertyValue instanceof HasDisplayName) {
@@ -224,7 +255,7 @@ public class Tables {
 					return this.key;
 				}
 
-				@Directed(tag = "td")
+				@Directed.Wrap("td")
 				public Object getValue() {
 					return this.value;
 				}
@@ -249,6 +280,21 @@ public class Tables {
 					this.value = value;
 				}
 			}
+		}
+	}
+
+	@Directed
+	static class ColumnName extends Model.Fields {
+		@Binding(type = Type.INNER_TEXT)
+		String text;
+
+		// for css selection
+		@Binding(type = Type.PROPERTY)
+		String name;
+
+		ColumnName(String name) {
+			this.name = name;
+			this.text = name;
 		}
 	}
 }

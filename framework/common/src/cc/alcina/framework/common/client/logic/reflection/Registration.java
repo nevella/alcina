@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.logic.reflection;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -76,6 +77,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @Resolution(
 	inheritance = { Inheritance.CLASS, Inheritance.INTERFACE },
 	mergeStrategy = Registration.MergeStrategy.class)
+@Repeatable(Registrations.class)
 public @interface Registration {
 	Implementation implementation() default Implementation.INSTANCE;
 
@@ -155,10 +157,6 @@ public @interface Registration {
 				Class<Registration> annotationClass,
 				ClassReflector<?> reflector,
 				ClassReflector<?> resolvingReflector, Resolver resolver) {
-			if (resolvingReflector.getReflectedClass().getName()
-					.contains("Adc1TestRegistrationAnnotations")) {
-				int debug = 3;
-			}
 			List<Registration> result = new ArrayList<>();
 			Registration registration = reflector
 					.annotation(Registration.class);

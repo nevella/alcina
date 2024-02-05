@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -129,7 +129,7 @@ public class ClientRpc {
 						handler.handle(response, message);
 					} else {
 						Ax.out("Received no-message response for %s",
-								NestedNameProvider.get(messageClass));
+								NestedName.get(messageClass));
 					}
 					if (messageClass == AwaitRemote.class
 							&& !RemoteObjectModelComponentState

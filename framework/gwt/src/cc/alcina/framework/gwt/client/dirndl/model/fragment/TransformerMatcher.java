@@ -7,6 +7,10 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 
+/**
+ * Match a transformer to a domnode (to create a FragmentModel from a DomNode),
+ * or to a FragmentModel (to create a Dirndl.Node/DomNode from a FragmentModel)
+ */
 class TransformerMatcher {
 	FragmentModel fragmentModel;
 

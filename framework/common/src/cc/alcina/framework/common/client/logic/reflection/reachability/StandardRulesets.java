@@ -286,7 +286,7 @@ public class StandardRulesets {
 	@Condition(classes = {
 			//@formatter:off
 
-			cc.alcina.framework.gwt.client.gwittir.GwittirBridge.DomainListProvider.class,
+			cc.alcina.framework.gwt.client.gwittir.BeanFields.DomainListProvider.class,
 			cc.alcina.framework.gwt.client.gwittir.HasBinding.class,
 			cc.alcina.framework.gwt.client.gwittir.customiser.Customiser.class,
 			cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectSuggestCustomiser.Args.class,

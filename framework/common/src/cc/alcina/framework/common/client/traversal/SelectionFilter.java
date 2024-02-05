@@ -9,110 +9,81 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gwt.regexp.shared.RegExp;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.common.client.util.NestedName;
 
-public class SelectionFilter extends Model implements TreeSerializable {
-	private int allGenerationsLimit = 0;
+public class SelectionFilter extends Bindable.Fields
+		implements TreeSerializable {
+	public int allLayersLimit = 0;
 
-	private int maxExceptions = 0;
+	public int maxExceptions = 0;
 
-	private List<SelectionFilter.GenerationEntry> generations = new ArrayList<>();
+	public List<SelectionFilter.SelectionClassEntry> filters = new ArrayList<>();
 
-	private transient Map<String, SelectionFilter.GenerationEntry> entriesByGeneration;
+	private transient Map<Class<? extends Selection>, SelectionFilter.SelectionClassEntry> filtersByClass;
 
-	public GenerationEntry addGenerationFilter(Object generation,
+	public SelectionClassEntry addLayerFilter(
+			Class<? extends Selection> selectionClass,
 			String pathSegmentRegex) {
-		SelectionFilter.GenerationEntry entry = new GenerationEntry(generation,
-				pathSegmentRegex);
-		generations.add(entry);
+		SelectionFilter.SelectionClassEntry entry = new SelectionClassEntry(
+				selectionClass, pathSegmentRegex);
+		filters.add(entry);
 		return entry;
 	}
 
 	public void copyFrom(SelectionFilter other) {
-		allGenerationsLimit = other.allGenerationsLimit;
-		generations = other.generations;
+		allLayersLimit = other.allLayersLimit;
+		filters = other.filters;
 		maxExceptions = other.maxExceptions;
-		entriesByGeneration = null;
+		filtersByClass = null;
 	}
 
-	public int getAllGenerationsLimit() {
-		return this.allGenerationsLimit;
+	public boolean
+			hasSelectionFilter(Class<? extends Selection> selectionClass) {
+		return filtersByClass.containsKey(selectionClass);
 	}
 
-	public List<SelectionFilter.GenerationEntry> getGenerations() {
-		return this.generations;
-	}
-
-	public int getMaxExceptions() {
-		return this.maxExceptions;
-	}
-
-	public boolean hasGenerationFilter(String generation) {
-		return entriesByGeneration.containsKey(generation);
-	}
-
-	public boolean matchesGenerationFilter(String generation,
-			List<String> list) {
-		return entriesByGeneration.get(generation).matches(list);
+	public boolean matchesSelectionTypeFilter(
+			Class<? extends Selection> selectionClass, List<String> list) {
+		return filtersByClass.get(selectionClass).matches(list);
 	}
 
 	public void prepareToFilter() {
-		generations.forEach(SelectionFilter.GenerationEntry::prepareToFilter);
-		entriesByGeneration = generations.stream().collect(AlcinaCollectors
-				.toKeyMap(SelectionFilter.GenerationEntry::getGeneration));
+		filters.forEach(SelectionFilter.SelectionClassEntry::prepareToFilter);
+		filtersByClass = filters.stream().collect(AlcinaCollectors.toKeyMap(
+				SelectionFilter.SelectionClassEntry::_selectionClass));
 	}
 
 	public boolean provideNotEmpty() {
-		return allGenerationsLimit != 0 || generations.size() != 0
-				|| maxExceptions != 0;
+		return allLayersLimit != 0 || filters.size() != 0 || maxExceptions != 0;
 	}
 
-	public void setAllGenerationsLimit(int allGenerationsLimit) {
-		this.allGenerationsLimit = allGenerationsLimit;
-	}
-
-	public void
-			setGenerations(List<SelectionFilter.GenerationEntry> generations) {
-		this.generations = generations;
-	}
-
-	public void setMaxExceptions(int maxExceptions) {
-		this.maxExceptions = maxExceptions;
-	}
-
-	public static class GenerationEntry extends Model
+	public static class SelectionClassEntry extends Bindable.Fields
 			implements TreeSerializable {
-		private String generation;
+		public Class<? extends Selection> _selectionClass() {
+			return selectionClass;
+		}
 
-		private String filterRegex;
+		public String filterRegex;
 
 		private transient RegExp regexp;
 
 		private transient Logger logger = LoggerFactory.getLogger(getClass());
 
-		private int logCount;
+		public int logCount;
 
-		public GenerationEntry() {
+		Class<? extends Selection> selectionClass;
+
+		public SelectionClassEntry() {
 		}
 
-		public GenerationEntry(Object generation, String filterRegex) {
-			this.generation = generation.toString();
+		public SelectionClassEntry(Class<? extends Selection> selectionClass,
+				String filterRegex) {
+			this.selectionClass = selectionClass;
 			this.filterRegex = filterRegex;
-		}
-
-		public String getFilterRegex() {
-			return this.filterRegex;
-		}
-
-		public String getGeneration() {
-			return this.generation;
-		}
-
-		public int getLogCount() {
-			return this.logCount;
 		}
 
 		public boolean matches(List<String> list) {
@@ -126,29 +97,17 @@ public class SelectionFilter extends Model implements TreeSerializable {
 			synchronized (this) {
 				if (logCount != 0) {
 					logCount--;
-					logger.info("Generation filter: {} : {} : {}", generation,
-							list, result);
+					logger.info("Selection class filter: {} : {} : {}",
+							NestedName.get(selectionClass), list, result);
 				}
 			}
 			return result;
 		}
 
-		public void setFilterRegex(String filterRegex) {
-			this.filterRegex = filterRegex;
-		}
-
-		public void setGeneration(String generation) {
-			this.generation = generation;
-		}
-
-		public void setLogCount(int logCount) {
-			this.logCount = logCount;
-		}
-
 		@Override
 		public String toString() {
-			return Ax.format("Filter entry :: %s :: %s", generation,
-					filterRegex);
+			return Ax.format("Filter entry :: %s :: %s",
+					NestedName.get(selectionClass), filterRegex);
 		}
 
 		void prepareToFilter() {

@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionHandler.Defaul
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -29,8 +30,7 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 @Directed(
-	
-bindings = { @Binding(from = "href", type = Type.PROPERTY),
+	bindings = { @Binding(from = "href", type = Type.PROPERTY),
 			@Binding(from = "className", type = Type.CLASS_PROPERTY),
 			@Binding(from = "innerHtml", type = Type.INNER_HTML),
 			@Binding(from = "text", type = Type.INNER_TEXT),
@@ -155,7 +155,7 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 						Reflections.newInstance(nonStandardObjectAction),
 						((EntityPlace) Client.currentPlace()).provideEntity());
 			} else {
-				// propagate href
+				// propagate href (not squelched)
 				if (!Objects.equals(tag, "a") && Ax.notBlank(href)) {
 					History.newItem(href);
 				}
@@ -312,8 +312,8 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		return this;
 	}
 
-	public Link withWithoutLink(boolean withoutLink) {
-		if (withoutLink) {
+	public Link withNoLink(boolean noLink) {
+		if (noLink) {
 			setHref("");
 		}
 		return this;
@@ -324,6 +324,18 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		@Override
 		public Link apply(Object t) {
 			return new Link().withId(t.toString());
+		}
+	}
+
+	public static class HrefTransform implements ModelTransform<Object, Link> {
+		@Override
+		public Link apply(Object t) {
+			if (t == null) {
+				return null;
+			}
+			String url = t.toString();
+			return new Link().withHref(url)
+					.withText(CommonUtils.shortenPath(url, 60)).withTitle(url);
 		}
 	}
 }

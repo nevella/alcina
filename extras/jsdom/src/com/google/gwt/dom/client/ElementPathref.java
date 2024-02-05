@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -64,6 +65,11 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	@Override
 	public void ensureId() {
 		throw new UnsupportedOperationException();
+	}
+
+	public void getBoundingClientRectAsync(AsyncCallback<DomRect> callback) {
+		getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(this,
+				"getBoundingClientRect", null, null, callback);
 	}
 
 	@Override

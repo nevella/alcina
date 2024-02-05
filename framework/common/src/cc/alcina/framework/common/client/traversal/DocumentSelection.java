@@ -16,19 +16,23 @@ public abstract class DocumentSelection extends MeasureSelection {
 
 	public DocumentSelection(AbstractUrlSelection parent,
 			DocumentSelection.Loader loader) {
-		super(parent, null, parent.get());
+		super(parent, null, Ax.format("url2doc:%s", parent.getPathSegment()));
 		this.loader = loader;
 	}
 
-	public DocumentSelection(PlainTextSelection parent) {
-		super(parent, null, parent.getClass().getName());
-		String text = Ax.ntrim(parent.get());
+	public DocumentSelection(PlainTextSelection parent,
+			boolean normaliseWhitespace) {
+		super(parent, null);
+		String text = parent.get();
+		if (normaliseWhitespace) {
+			text = Ax.ntrim(text);
+		}
 		document = DomDocument.createTextContainer(text);
 		documentToMeasure();
 	}
 
 	public DocumentSelection(Selection parent, DomDocument document) {
-		super(parent, null, parent.getClass().getName());
+		super(parent, null);
 		this.document = document;
 		documentToMeasure();
 	}
@@ -59,9 +63,22 @@ public abstract class DocumentSelection extends MeasureSelection {
 	private Measure documentToMeasure() {
 		Location.Range documentRange = document.getLocationRange();
 		Measure measure = new Measure(documentRange.start, documentRange.end,
-				null);
+				DocumentToken.TYPE);
 		set(measure);
 		return measure;
+	}
+
+	public static class DocumentToken implements Measure.Token {
+		public static DocumentToken TYPE = new DocumentToken();
+
+		private DocumentToken() {
+		}
+	}
+
+	@Override
+	public void releaseResources() {
+		super.releaseResources();
+		document = null;
 	}
 
 	public interface Loader<S extends Selection> {
@@ -74,16 +91,19 @@ public abstract class DocumentSelection extends MeasureSelection {
 			extends Layer<I> {
 		private Function<I, O> transform;
 
-		public TransformLayer(Class<I> input, Class<O> output,
-				Function<I, O> transform) {
-			super(input, output);
+		/*
+		 * Only for subtypes that generate documents imperatively
+		 */
+		public TransformLayer() {
+		}
+
+		public TransformLayer(Function<I, O> transform) {
 			this.transform = transform;
 		}
 
 		@Override
-		public void process(SelectionTraversal traversal, I selection)
-				throws Exception {
-			traversal.select(transform.apply(selection));
+		public void process(I selection) throws Exception {
+			select(transform.apply(selection));
 		}
 	}
 }

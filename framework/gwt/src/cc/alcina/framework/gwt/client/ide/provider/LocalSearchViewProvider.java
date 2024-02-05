@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -24,12 +25,10 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.LocalSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
@@ -38,7 +37,7 @@ import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.InputButton;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class LocalSearchViewProvider implements ViewProvider {
@@ -140,20 +139,17 @@ public class LocalSearchViewProvider implements ViewProvider {
 
 		protected void search() {
 			resultsHolder.clear();
-			Object bean = Reflections.at(def.getResultClass())
-					.templateInstance();
-			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
-			Field[] fields = GwittirBridge.get()
-					.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-							factory, false, true);
-			GwittirBridge.get().setIgnoreProperties(null);
+			Predicate<String> predicate = n -> !ignoreProperties.contains(n);
+			List<Field> fields = BeanFields.query()
+					.forClass(def.getResultClass())
+					.forMultipleWidgetContainer(true)
+					.withEditableNamePredicate(predicate).listFields();
 			int mask = BoundTableExt.HEADER_MASK;
 			mask = mask | BoundTableExt.SORT_MASK;
 			mask = addTableMasks(mask);
 			CollectionDataProvider dp = new CollectionDataProvider(
 					def.search());
-			this.table = new NiceWidthBoundTable(mask, factory, fields, dp);
+			this.table = new NiceWidthBoundTable(mask, fields, dp);
 			table.addStyleName("results-table");
 			table.setVisible(false);
 			resultsHolder.add(table);

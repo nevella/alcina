@@ -133,7 +133,6 @@ public abstract class LoginPage extends Model
 	}
 
 	@Directed
-	@Directed.PropertyNameTags
 	public static class HeadingArea extends Model {
 		private final Object logo = LeafRenderer.OBJECT_INSTANCE;
 

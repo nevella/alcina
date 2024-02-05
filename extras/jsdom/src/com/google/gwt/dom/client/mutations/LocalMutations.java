@@ -35,6 +35,10 @@ public class LocalMutations {
 		topicMutations.publish(mutations);
 	}
 
+	/*
+	 * Run a notificaiton runnable. This will also ensure a finally runnable
+	 * which fires mutations
+	 */
 	public void notify(Runnable runnable) {
 		if (!topicMutations.hasListeners()) {
 			return;

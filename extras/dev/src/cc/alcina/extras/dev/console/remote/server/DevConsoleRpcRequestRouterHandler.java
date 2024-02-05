@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationParameters;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationProxy;
@@ -35,6 +36,8 @@ public class DevConsoleRpcRequestRouterHandler extends AbstractHandler {
 		try {
 			LooseContext.pushWithTrue(
 					RemoteInvocationProxy.CONTEXT_NO_LINK_TO_DOMAIN);
+			LooseContext.setTrue(
+					ThreadlocalTransformManager.CONTEXT_DISABLE_EVICTION);
 			Registry.impl(DevConsole.class).ensureDomainStore();
 			Transaction.ensureEnded();
 			RemoteInvocationServlet_DevConsole impl = Registry

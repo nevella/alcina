@@ -19,14 +19,18 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -85,16 +89,16 @@ public @interface Display {
 
 	String widgetStyleName() default "";
 
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@ClientVisible
-	@Inherited
-	@Target({ ElementType.TYPE })
 	/**
 	 *
 	 * Marks that all properties should be displayed, irresepective of
 	 * {@link Display} annotation presence
 	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@ClientVisible
+	@Inherited
+	@Target({ ElementType.TYPE })
 	public @interface AllProperties {
 	}
 
@@ -104,6 +108,36 @@ public @interface Display {
 	}
 
 	public static class Support {
+		public static Boolean isEditable(Class clazz, String propertyName) {
+			ClassReflector<?> classReflector = Reflections.at(clazz);
+			Object templateInstance = classReflector.templateInstance();
+			ObjectPermissions op = classReflector
+					.annotation(ObjectPermissions.class);
+			Property property = classReflector.property(propertyName);
+			if (property != null && property.has(Display.class)) {
+				PropertyPermissions pp = property
+						.annotation(PropertyPermissions.class);
+				Display display = property.annotation(Display.class);
+				boolean fieldVisible = PermissionsManager.get()
+						.checkEffectivePropertyPermission(op, pp,
+								templateInstance, true)
+						&& display != null
+						&& PermissionsManager.get().isPermitted(
+								templateInstance, display.visible())
+						&& ((display.displayMask() & DISPLAY_AS_PROPERTY) != 0);
+				if (!fieldVisible) {
+					return false;
+				}
+				boolean propertyIsCollection = (property
+						.getType() == Set.class);
+				return PermissionsManager.get()
+						.checkEffectivePropertyPermission(op, pp,
+								templateInstance, false)
+						&& ((display.displayMask() & DISPLAY_RO) == 0);
+			}
+			return false;
+		}
+
 		public static String name(Property property, Display display) {
 			if (display == null) {
 				if (property == null) {

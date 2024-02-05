@@ -18,7 +18,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableStringLabelProvider;
 
 @Reflected
@@ -45,7 +45,7 @@ public class ExpandableLabelCustomiser implements Customiser {
 				.classValue(info.parameters(), RENDERER_CLASS, null);
 		NamedParameter p = NamedParameter.Support
 				.getParameter(info.parameters(), MAX_WIDTH);
-		int maxLength = p == null ? GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH
+		int maxLength = p == null ? BeanFields.MAX_EXPANDABLE_LABEL_LENGTH
 				: p.intValue();
 		p = NamedParameter.Support.getParameter(info.parameters(),
 				FORCE_COLUMN_WIDTH);

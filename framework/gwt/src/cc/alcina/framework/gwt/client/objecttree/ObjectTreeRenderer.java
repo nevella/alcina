@@ -32,7 +32,6 @@ import com.totsp.gwittir.client.beans.BindingBuilder;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
@@ -42,8 +41,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.HasWithNull;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.BoundWidgetTypeFactorySimpleGenerator;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
@@ -57,8 +55,6 @@ public class ObjectTreeRenderer {
 	public static final String SEARCH_SECTIONS = "SEARCH_SECTIONS";
 
 	private FlowPanelWithBinding op;
-
-	protected BoundWidgetTypeFactory factory = new BoundWidgetTypeFactorySimpleGenerator();
 
 	protected Map<Widget, TreeRenderer> level1ContentRendererMap = new HashMap<Widget, TreeRenderer>();
 
@@ -309,8 +305,8 @@ public class ObjectTreeRenderer {
 			String propertyName = node.renderablePropertyName();
 			Class type = Reflections.at(renderable).property(propertyName)
 					.getType();
-			Field f = GwittirBridge.get().getField(renderable.getClass(),
-					propertyName, true, false);
+			Field f = BeanFields.query().forClass(renderable.getClass())
+					.forPropertyName(propertyName).asEditable(true).getField();
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
 					RelativePopupValidationFeedback.BOTTOM, f.getFeedback());
 			vf.addCssBackground();

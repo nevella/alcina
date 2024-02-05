@@ -1,7 +1,10 @@
 package cc.alcina.framework.common.client.dom;
 
+import java.util.List;
+
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 
 public interface LocationContext {
 	default int compare(Location l1, Location l2) {
@@ -29,8 +32,8 @@ public interface LocationContext {
 			}
 			return 0;
 		}
-		DomNode n1 = l1.containingNode();
-		DomNode n2 = l2.containingNode();
+		DomNode n1 = l1.containingNode;
+		DomNode n2 = l2.containingNode;
 		if (n1.isAncestorOf(n2)) {
 			{
 				// for a given character, end is always after start (at any
@@ -67,8 +70,20 @@ public interface LocationContext {
 
 	DomNode getContainingNode(Location location);
 
-	Location getRelativeLocation(Location location,
-			RelativeDirection direction);
+	Location getRelativeLocation(Location location, RelativeDirection direction,
+			TextTraversal textTraversal);
 
 	String textContent(Range range);
+
+	String markupContent(Range range);
+
+	List<DomNode> getContainingNodes(int index, boolean after);
+
+	String getSubsequentText(Location location, int chars);
+
+	default String textContent(int from, int to) {
+		Location start = new Location(-1, from, false, null, this);
+		Location end = new Location(-1, to, true, null, this);
+		return new Range(start, end).text();
+	}
 }

@@ -1,5 +1,9 @@
 package cc.alcina.framework.gwt.client.util;
 
+import java.util.function.Consumer;
+
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
@@ -16,22 +20,32 @@ public class EventCollator<T> {
 
 	private T lastObject;
 
+	private int collationActionsInvoked;
+
 	private Runnable checkCallback = new Runnable() {
 		@Override
 		public void run() {
 			long time = System.currentTimeMillis();
+			long maxDelay = collationActionsInvoked == 0
+					? maxDelayFromFirstEvent
+					: maxDelayFromFirstCollatedEvent;
 			if (time - lastEventOccurred >= waitToPerformAction
-					|| (maxDelayFromFirstEvent != 0 && (time
-							- firstEventOccurred >= maxDelayFromFirstEvent))) {
+					|| (maxDelay != 0
+							&& (time - firstEventOccurred >= maxDelay))) {
 				synchronized (this) {
 					if (timer != null) {
 						timer.cancel();
 						timer = null;
 					}
 					firstEventOccurred = 0;
+					collationActionsInvoked++;
 				}
 				try {
-					action.run();
+					synchronized (finishedMonitor) {
+						if (!finished) {
+							action.accept(EventCollator.this);
+						}
+					}
 				} catch (Throwable t) {
 					t.printStackTrace();
 				}
@@ -47,20 +61,39 @@ public class EventCollator<T> {
 
 	private final long waitToPerformAction;
 
-	private final Runnable action;
+	private final Consumer<EventCollator<T>> action;
 
 	private final TimerWrapperProvider timerWrapperProvider;
 
+	// the delay before the (first) collation action call from the first event
+	// received by this collator
 	private long maxDelayFromFirstEvent;
+
+	// the delay before the collation action call from the first event received
+	// in the current collation. defaults to maxDelayFromFirstEvent
+	private long maxDelayFromFirstCollatedEvent;
 
 	private TimerWrapper timer = null;
 
-	public EventCollator(long waitToPerformAction, Runnable action) {
+	private boolean finished = false;
+
+	private Object finishedMonitor = new Object();
+
+	boolean runOnCurrentThread;
+
+	public EventCollator(long waitToPerformAction, Runnable runnable) {
+		this(waitToPerformAction, collator -> runnable.run(),
+				Registry.impl(TimerWrapperProvider.class));
+	}
+
+	public EventCollator(long waitToPerformAction,
+			Consumer<EventCollator<T>> action) {
 		this(waitToPerformAction, action,
 				Registry.impl(TimerWrapperProvider.class));
 	}
 
-	public EventCollator(long waitToPerformAction, Runnable action,
+	public EventCollator(long waitToPerformAction,
+			Consumer<EventCollator<T>> action,
 			TimerWrapperProvider timerWrapperProvider) {
 		this.waitToPerformAction = waitToPerformAction;
 		this.action = action;
@@ -71,6 +104,12 @@ public class EventCollator<T> {
 		if (timer != null) {
 			timer.cancel();
 			timer = null;
+		}
+		synchronized (finishedMonitor) {
+			finished = true;
+			if (firstEventOccurred != 0) {
+				action.accept(this);
+			}
 		}
 	}
 
@@ -88,9 +127,13 @@ public class EventCollator<T> {
 			if (firstEventOccurred == 0) {
 				firstEventOccurred = lastEventOccurred;
 			}
-			if (timer == null && timerWrapperProvider != null) {
-				timer = timerWrapperProvider.getTimer(checkCallback);
-				timer.scheduleRepeating(waitToPerformAction / 2);
+			if (runOnCurrentThread) {
+				checkCallback.run();
+			} else {
+				if (timer == null && timerWrapperProvider != null) {
+					timer = timerWrapperProvider.getTimer(checkCallback);
+					timer.scheduleRepeating(waitToPerformAction / 2);
+				}
 			}
 		}
 	}
@@ -108,6 +151,22 @@ public class EventCollator<T> {
 	public EventCollator
 			withMaxDelayFromFirstEvent(long maxDelayFromFirstEvent) {
 		this.maxDelayFromFirstEvent = maxDelayFromFirstEvent;
+		if (this.maxDelayFromFirstCollatedEvent == 0) {
+			this.maxDelayFromFirstCollatedEvent = maxDelayFromFirstEvent;
+		}
+		return this;
+	}
+
+	public EventCollator withMaxDelayFromFirstCollatedEvent(
+			long maxDelayFromFirstCollatedEvent) {
+		Preconditions.checkArgument(
+				maxDelayFromFirstCollatedEvent >= maxDelayFromFirstEvent);
+		this.maxDelayFromFirstCollatedEvent = maxDelayFromFirstCollatedEvent;
+		return this;
+	}
+
+	public EventCollator<T> withRunOnCurrentThread(boolean runOnCurrentThread) {
+		this.runOnCurrentThread = runOnCurrentThread;
 		return this;
 	}
 }

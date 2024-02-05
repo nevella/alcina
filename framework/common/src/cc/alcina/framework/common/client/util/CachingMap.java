@@ -8,6 +8,13 @@ import java.util.function.BiConsumer;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
+/*
+ * This should probably be called 'computing map' - a pre-jdk8 structure that
+ * does what Map.computeIfAbsent now does - but is often more convenient
+ * 
+ * Leaving as 'CachingMap' for now since I don't really like 'ComputingMap', and
+ * this is *often* used for caching
+ */
 public class CachingMap<I, O> {
 	private ThrowingFunction<I, O> function;
 

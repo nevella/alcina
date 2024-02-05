@@ -1,40 +1,58 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.List;
-import java.util.function.Consumer;
 
-import com.google.gwt.event.dom.client.DomEvent;
-import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
-import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
-import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
-public class FormValidation {
-	private Binding binding;
+class FormValidation {
+	static final String DEFAULT_BEAN_EXCEPTION_MESSAGE = "Please correct the problems in the form";
 
-	private Consumer<Void> onValid;
+	Binding binding;
 
-	public boolean validateAndCommit(final Widget sender,
-			final AsyncCallback<Void> serverValidationCallback) {
+	Topic<State> topicState = Topic.create();
+
+	String beanValidationExceptionMessage;
+
+	Bindable bindable;
+
+	void validate(TopicListener<FormValidation.State> stateListener,
+			Binding binding, Bindable bindable) {
+		this.bindable = bindable;
+		topicState.add(stateListener);
+		this.binding = binding;
+		validateAndCommit();
+	}
+
+	void validateAndCommit() {
+		topicState.publish(State.VALIDATING);
 		try {
 			if (!WidgetUtils.docHasFocus()) {
 				GwittirUtils.commitAllTextBoxes(binding);
 			}
 			LooseContext
 					.pushWithTrue(ContentViewFactory.CONTEXT_VALIDATING_BEAN);
-			if (!validateBean()) {
-				return false;
+			Validator beanValidator = BeanFields.query().forBean(bindable)
+					.getValidator();
+			if (beanValidator != null) {
+				try {
+					beanValidator.validate(bindable);
+				} catch (ValidationException e) {
+					beanValidationExceptionMessage = e.getMessage();
+					topicState.publish(State.INVALID);
+					return;
+				}
 			}
 			ServerValidator.performingBeanValidation = true;
 			boolean bindingValid = false;
@@ -47,97 +65,76 @@ public class FormValidation {
 					null);
 			if (!bindingValid) {
 				for (Validator v : validators) {
-					if (v instanceof ServerValidator && "fixme".isEmpty()) {
+					if (v instanceof ServerValidator) {
+						if (!"fixme".isEmpty()) {
+							throw new UnsupportedOperationException();
+						}
+						topicState.publish(State.ASYNC_VALIDATING);
 						ServerValidator sv = (ServerValidator) v;
 						if (sv.isValidating()) {
-							final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
-									"Checking values", null);
-							new Timer() {
-								@Override
-								public void run() {
-									crd.hide();
-									if (serverValidationCallback == null) {
-										if (sender != null) {
-											DomEvent.fireNativeEvent(
-													WidgetUtils
-															.createZeroClick(),
-													sender);
-										} else {
-											// FIXME - dirndl 1x2 -
-											// probably throw a dev
-											// exception - something should
-											// happen here (which means we
-											// need alcina devex support)
-										}
-									} else {
-										validateAndCommit(sender,
-												serverValidationCallback);
-									}
-								}
-							}.schedule(500);
-							return false;
+							// final CancellableRemoteDialog crd = new
+							// NonCancellableRemoteDialog(
+							// "Checking values", null);
+							// new Timer() {
+							// @Override
+							// public void run() {
+							// crd.hide();
+							// if (serverValidationCallback == null) {
+							// if (sender != null) {
+							// DomEvent.fireNativeEvent(
+							// WidgetUtils
+							// .createZeroClick(),
+							// sender);
+							// } else {
+							// // FIXME - dirndl 1x2 -
+							// // probably throw a dev
+							// // exception - something should
+							// // happen here (which means we
+							// // need alcina devex support)
+							// }
+							// } else {
+							// validateAndCommit(sender,
+							// serverValidationCallback);
+							// }
+							// }
+							// }.schedule(500);
+							// return false;
 						}
 					}
 				}
-				// if (PermissionsManager.get().isMemberOfGroup(
-				// PermissionsManager.getAdministratorGroupName())
-				// && sender != null) {
-				// if (GeneralProperties.get()
-				// .isAllowAdminInvalidObjectWrite()
-				// && !alwaysDisallowOkIfInvalid) {
-				// Registry.impl(ClientNotifications.class).confirm(
-				// "Administrative option: save the changed items "
-				// + "on this form (even though some are invalid)?",
-				// new OkCallback() {
-				// @Override
-				// public void ok() {
-				// commitChanges(true);
-				// }
-				// });
-				// return false;
+				beanValidationExceptionMessage = DEFAULT_BEAN_EXCEPTION_MESSAGE;
+				topicState.publish(State.INVALID);
+			} else {
+				// if (serverValidationCallback != null) {
+				// for (Validator v : validators) {
+				// if (v instanceof ServerValidator) {
+				// serverValidationCallback.onSuccess(null);
+				// return true;
 				// }
 				// }
-				Registry.impl(ClientNotifications.class)
-						.showWarning("Please correct the problems in the form");
-				return false;
-			} // not valid
-			if (serverValidationCallback != null) {
-				for (Validator v : validators) {
-					if (v instanceof ServerValidator) {
-						serverValidationCallback.onSuccess(null);
-						return true;
-					}
-				}
+				// }
+				topicState.publish(State.VALID);
 			}
 		} finally {
 			LooseContext.pop();
 		}
-		onValid.accept(null);
-		return true;
 	}
 
-	public boolean validateBean() {
-		// if (beanValidator == null) {
-		// return true;
-		// }
-		// try {
-		// beanValidator.validate(bean);
-		// return true;
-		// } catch (ValidationException e) {
-		// Registry.impl(ClientNotifications.class)
-		// .showWarning(e.getMessage());
-		// return false;
-		// }
-		return true;
-	}
+	enum State {
+		VALIDATING, ASYNC_VALIDATING, VALID, INVALID;
 
-	public boolean validateFields() {
-		return binding.validate();
-	}
+		boolean isComplete() {
+			switch (this) {
+			case VALIDATING:
+			case ASYNC_VALIDATING:
+				return false;
+			default:
+				return true;
+			}
+		}
 
-	boolean validate(Consumer<Void> onValid, Binding binding) {
-		this.onValid = onValid;
-		this.binding = binding;
-		return validateAndCommit(null, null);
+		boolean isValid() {
+			return this == VALID;
+		}
 	}
 }

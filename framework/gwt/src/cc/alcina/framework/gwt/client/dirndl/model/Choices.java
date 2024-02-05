@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.IndexedSelection;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
@@ -48,6 +49,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
  *
  * Also - possibly the wrapping with Choice could be done reflectively/more
  * elegantly
+ *
+ * Note - big one - clicking on a choice fires a 'Selected' event, but
+ * programattic change does not - both fire a 'SelectionChanged' event so that's
+ * generally what you want to observe
  *
  * FIXME - dirndl 1x1e - Now that overlay events are routed to logical parents,
  * it may be possible to cleanup event handling in this class
@@ -102,14 +107,7 @@ public abstract class Choices<T> extends Model
 	 * Note the preventDefault on mouseDown - which prevents (say) choices in a
 	 * ReferenceDecorator moving document focus
 	 */
-	@Directed(
-		bindings = {
-				@Binding(
-					type = Type.PROPERTY,
-					from = "selected",
-					to = "_selected"),
-				@Binding(type = Type.PROPERTY, from = "indexSelected") },
-		emits = ModelEvents.Selected.class)
+	@Directed(emits = ModelEvents.Selected.class)
 	public static class Choice<T> extends Model
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler {
 		private boolean selected;
@@ -127,17 +125,19 @@ public abstract class Choices<T> extends Model
 			return this.value;
 		}
 
+		@Binding(type = Type.PROPERTY)
 		public boolean isIndexSelected() {
 			return this.indexSelected;
 		}
 
+		@Binding(type = Type.PROPERTY, to = "_selected")
 		public boolean isSelected() {
 			return this.selected;
 		}
 
 		@Override
 		public void onClick(Click event) {
-			event.reemitAs(this, ModelEvents.Selected.class);
+			event.reemitAs(this, ModelEvents.Selected.class, this);
 		}
 
 		@Override
@@ -206,6 +206,7 @@ public abstract class Choices<T> extends Model
 	}
 
 	@Directed(tag = "select")
+	@DirectedContextResolver(SelectResolver.class)
 	public static class Select<T> extends Single<T>
 			implements DomEvents.Change.Handler {
 		@Override
@@ -220,6 +221,19 @@ public abstract class Choices<T> extends Model
 			setSelectedValue(value);
 			event.reemitAs(this, ModelEvents.Selected.class, choice);
 		}
+
+		@Override
+		public void setSelectedValue(T value) {
+			super.setSelectedValue(value);
+			if (provideIsBound()) {
+				DirectedLayout.Node node = provideNode()
+						.provideMostSpecificNodeForModel();
+				SelectElement selectElement = (SelectElement) node.getRendered()
+						.asElement();
+				int index = getValues().indexOf(value);
+				selectElement.setSelectedIndex(index);
+			}
+		}
 	}
 
 	/**
@@ -232,7 +246,7 @@ public abstract class Choices<T> extends Model
 		protected Property resolveDirectedProperty0(Property property) {
 			if (property.getDeclaringType() == Choices.class
 					&& property.getName().equals("choices")) {
-				return Reflections.at(Select.class)
+				return Reflections.at(SelectTemplate.class)
 						.property(property.getName());
 			} else {
 				return super.resolveDirectedProperty0(property);
@@ -251,13 +265,22 @@ public abstract class Choices<T> extends Model
 				super(displayName);
 			}
 
+			@Override
+			@Binding(type = Type.PROPERTY)
+			public boolean isSelected() {
+				return super.isSelected();
+			}
+
 			public static class Transform extends
 					AbstractContextSensitiveModelTransform<Choices.Choice, Option> {
 				@Override
 				public Option apply(Choice choice) {
 					SelectResolver resolver = (SelectResolver) node
 							.getResolver();
-					return new Option(resolver.transformOptionName(choice));
+					Option option = new Option(
+							resolver.transformOptionName(choice));
+					option.setSelected(choice.isSelected());
+					return option;
 				}
 			}
 		}
@@ -266,8 +289,8 @@ public abstract class Choices<T> extends Model
 		 * Style template
 		 */
 		@Bean
-		public static class Select {
-			@Directed.Transform(Option.Transform.class)
+		public static class SelectTemplate {
+			@Directed.TransformElements(Option.Transform.class)
 			public List<Choices.Choice> getChoices() {
 				return null;
 			}
@@ -384,7 +407,7 @@ public abstract class Choices<T> extends Model
 			T oldValue = getSelectedValue();
 			choices.forEach(c -> c.setSelected(c.value == value));
 			T newValue = getSelectedValue();
-			if (!Objects.equals(oldValue, newValue)) {
+			if (provideIsBound() && !Objects.equals(oldValue, newValue)) {
 				NodeEvent.Context.fromNode(provideNode()).dispatch(
 						ModelEvents.BeforeSelectionChangedDispatch.class,
 						newValue);

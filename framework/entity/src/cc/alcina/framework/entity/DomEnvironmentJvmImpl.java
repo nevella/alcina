@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 @Registration.Singleton(
 	value = DomEnvironment.class,
@@ -50,6 +51,7 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	@Override
 	public String log(DomNode xmlNode, boolean pretty) {
 		try {
+			LooseContext.pushWithTrue(XmlUtils.CONTEXT_MUTE_XML_SAX_EXCEPTIONS);
 			if (pretty) {
 				XmlUtils.logToFilePretty(xmlNode.w3cNode());
 			} else {
@@ -63,6 +65,8 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 			} catch (Exception e1) {
 				throw new WrappedRuntimeException(e);
 			}
+		} finally {
+			LooseContext.pop();
 		}
 	}
 
@@ -78,8 +82,10 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 			if (node.getNodeType() == Node.DOCUMENT_FRAGMENT_NODE) {
 				return XmlUtils
 						.prettyPrintWithDOM3LSNode((DocumentFragment) node);
-			} else {
+			} else if (node.getNodeType() == Node.ELEMENT_NODE) {
 				return XmlUtils.prettyPrintWithDOM3LSNode((Element) node);
+			} else {
+				return XmlUtils.streamXML(node);
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -116,8 +122,8 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
-	public String toHtml(DomDocument doc) {
-		String xml = doc.prettyToString();
+	public String toHtml(DomDocument doc, boolean pretty) {
+		String xml = pretty ? doc.prettyToString() : doc.fullToString();
 		xml = XmlUtils.expandEmptyElements(xml);
 		return XmlUtils.fixStyleNodeContents(xml);
 	}

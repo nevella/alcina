@@ -7,7 +7,7 @@ import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.NestedNameProvider;
+import cc.alcina.framework.common.client.util.NestedName;
 
 @ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 public interface BoundSuggestOracleResponseType {
@@ -73,7 +73,7 @@ public interface BoundSuggestOracleResponseType {
 			FormatBuilder format = new FormatBuilder().separator(" ");
 			format.append(displayString);
 			if (typedValue != null) {
-				format.format("[%s]", NestedNameProvider.get(typedValue));
+				format.format("[%s]", NestedName.get(typedValue));
 			}
 			return format.toString();
 		}

@@ -347,6 +347,11 @@ public class BoundSelector extends AbstractBoundWidget
 		update(old);
 	}
 
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+	}
+
 	protected void removeItem(Object item) {
 		if (search.getSelectedItems().remove(item)) {
 			((List) results.getItemMap().get("")).remove(item);

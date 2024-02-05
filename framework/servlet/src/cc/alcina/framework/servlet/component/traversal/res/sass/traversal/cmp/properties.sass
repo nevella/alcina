@@ -1,0 +1,26 @@
+@mixin contents
+  display: block
+  grid-area: props
+  overflow: scroll
+
+  bean-editor
+    padding: 1rem
+    box-sizing: border-box
+    line-height: 1.2em
+
+    value
+      display: block
+
+    form-element
+      padding-bottom: 1rem
+
+    label
+      display: block
+      color: #666
+      padding-bottom: 0.3rem
+
+    form-element[name='markup'] > value > value
+      max-width: 100%
+      overflow: scroll
+      white-space: pre
+      font-family: "Courier New", couriter, monospace

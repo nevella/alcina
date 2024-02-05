@@ -15,7 +15,6 @@
  */
 package elemental.json.impl;
 
-import cc.alcina.framework.entity.util.LengthConstrainedStringBuilder;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
 import elemental.json.JsonValue;
@@ -46,7 +45,7 @@ class JsonUtilFastWriter {
 	 * @return json formatted string
 	 */
 	public static String stringify(JsonValue jsonValue) {
-		final LengthConstrainedStringBuilder builder = new LengthConstrainedStringBuilder();
+		final StringBuilder builder = new StringBuilder();
 		new Visitor(builder).accept(jsonValue);
 		return builder.toString();
 	}
@@ -72,9 +71,9 @@ class JsonUtilFastWriter {
 	}
 
 	private static class Visitor extends JsonVisitor {
-		private final LengthConstrainedStringBuilder builder;
+		private final StringBuilder builder;
 
-		private Visitor(LengthConstrainedStringBuilder builder) {
+		private Visitor(StringBuilder builder) {
 			this.builder = builder;
 		}
 

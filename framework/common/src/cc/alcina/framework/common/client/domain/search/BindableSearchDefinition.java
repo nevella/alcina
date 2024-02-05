@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SpecificIdOrder;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.OrderGroup;
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -27,7 +28,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 
 /**
- * 
+ *
  * Uses 'searchorders' rather than 'order groups'
  */
 public abstract class BindableSearchDefinition extends SearchDefinition {
@@ -49,15 +50,15 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		return (EntityCriteriaGroup) getCriteriaGroups().iterator().next();
 	}
 
+	@XmlTransient
+	public GroupingParameters getGroupingParameters() {
+		return groupingParameters;
+	}
+
 	@Override
 	@PropertySerialization(ignore = true)
 	public Set<OrderGroup> getOrderGroups() {
 		return super.getOrderGroups();
-	}
-
-	@XmlTransient
-	public GroupingParameters getGroupingParameters() {
-		return groupingParameters;
 	}
 
 	@PropertySerialization(path = "o")
@@ -107,6 +108,13 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	public abstract Class<? extends Bindable> queriedBindableClass();
+
+	/**
+	 * For server-side searching
+	 */
+	public ModelSearchResults<?> search() {
+		return Registry.impl(SearchPerformer.class, getClass()).search(this);
+	}
 
 	public void setGroupingParameters(GroupingParameters groupingParameters) {
 		this.groupingParameters = groupingParameters;
@@ -165,5 +173,9 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		public <C extends Entity> Class<C> queriedEntityClass() {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	public interface SearchPerformer {
+		ModelSearchResults<?> search(BindableSearchDefinition def);
 	}
 }

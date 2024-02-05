@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -152,7 +153,9 @@ public class AlcinaParallel {
 			} finally {
 				LooseContext.pop();
 				if (!inTransaction) {
-					ThreadlocalTransformManager.cast().resetTltm(null);
+					if (TransformManager.hasInstance()) {
+						ThreadlocalTransformManager.cast().resetTltm(null);
+					}
 					if (parameters.transaction != null) {
 						Transaction.split();
 					}

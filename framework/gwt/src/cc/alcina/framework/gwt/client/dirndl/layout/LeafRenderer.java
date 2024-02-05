@@ -5,9 +5,14 @@ import java.util.Date;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
 
+import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.HasStringValue;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
@@ -33,7 +38,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput
  *
  * </ul>
  *
- * 
+ *
  *
  */
 public abstract class LeafRenderer extends DirectedRenderer {
@@ -55,6 +60,13 @@ public abstract class LeafRenderer extends DirectedRenderer {
 
 	protected abstract void renderNode(Node node);
 
+	public static class Blank extends LeafRenderer {
+		@Override
+		protected void renderNode(Node node) {
+			// NOOP
+		}
+	}
+
 	@Registration({ DirectedRenderer.class, Boolean.class })
 	public static class BooleanRenderer extends Text {
 	}
@@ -64,6 +76,14 @@ public abstract class LeafRenderer extends DirectedRenderer {
 		@Override
 		protected String getModelText(Object model) {
 			return Ax.dateTimeSlash((Date) model);
+		}
+
+		public static class ShortMonth extends Text {
+			@Override
+			protected String getModelText(Object model) {
+				return CommonUtils.formatDate((Date) model,
+						DateStyle.AU_SHORT_MONTH);
+			}
 		}
 	}
 
@@ -103,6 +123,32 @@ public abstract class LeafRenderer extends DirectedRenderer {
 
 	@Registration({ DirectedRenderer.class, Number.class })
 	public static class NumberNode extends Text {
+		public static class Currency extends Text {
+			@Override
+			protected String getModelText(Object model) {
+				FormatBuilder format = new FormatBuilder();
+				double value = (double) model;
+				if (Ax.twoPlaces(value + 0.0001) != Ax.twoPlaces(value)) {
+					// rounding issue somewhere in double creation - e.g
+					// 27.994999997
+					value = value + 0.0001;
+				}
+				if (value < 0) {
+					format.append("-");
+				}
+				value = Math.abs(value);
+				format.append((int) value);
+				format.append(".");
+				value = value - Math.floor(value);
+				value = value * 100;
+				Preconditions.checkArgument(value < 100);
+				if (value < 10) {
+					format.append("0");
+				}
+				format.append((int) value);
+				return format.toString();
+			}
+		}
 	}
 
 	public static class SafeHtml extends LeafRenderer {
@@ -148,11 +194,34 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	 */
 	public static class TextNode extends DirectedRenderer {
 		@Override
+		public DomNodeType rendersAsType() {
+			return DomNodeType.TEXT;
+		}
+
+		@Override
 		protected void render(RendererInput input) {
 			String contents = input.model instanceof String
 					? input.model.toString()
 					: "";
 			input.resolver.renderText(input.node, contents);
+		}
+	}
+
+	/**
+	 * Renders the input model as a DOM processing instruction node. Requires
+	 * the input model implement HasStringValue
+	 */
+	public static class ProcessingInstructionNode extends DirectedRenderer {
+		@Override
+		public DomNodeType rendersAsType() {
+			return DomNodeType.PROCESSING_INSTRUCTION;
+		}
+
+		@Override
+		protected void render(RendererInput input) {
+			String contents = ((HasStringValue) input.model).getStringValue();
+			input.resolver.renderNode(input.node, rendersAsType(),
+					input.soleDirected().tag(), contents);
 		}
 	}
 }

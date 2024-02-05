@@ -25,7 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TreePath.Operation;
 /**
  * Ordering is defined by __comparatorString (which is cached)
  *
- * 
+ *
  *
  * @param <E>
  */

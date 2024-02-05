@@ -15,16 +15,25 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+
+import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.Transformer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -39,7 +48,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
  * directly to DirectedLayout.Node mutations
  *
  *
- *
+ * <p>
+ * <b>Important</b> Because the tree structure of a FragmentModel/FragmentNode
+ * subtree is modelled by the linked Dirndl node structure, parent/child
+ * operations (appends, counts etc) will fail until the FragmentNode is attached
+ * to the parent via say nodes().append(). Creation of FragmentNode trees should
+ * go: (1) create node (2) in that node's onFragmentRegistration, add children
+ * via nodes().append(xxx)
  */
 /*
  * FIXME - fm - *probably* want to rework mutations - better to change the dom
@@ -53,6 +68,21 @@ public abstract class FragmentNode extends Model.Fields
 		implements FragmentNodeOps {
 	protected FragmentModel fragmentModel;
 
+	@Property.Not
+	public StringMap getDirectedPropertyBindingValues() {
+		StringMap result = new StringMap();
+		Element w3cElement = provideNode().rendered.asW3cElement();
+		if (w3cElement != null) {
+			NamedNodeMap map = w3cElement.getAttributes();
+			int length = map.getLength();
+			for (int idx = 0; idx < length; idx++) {
+				Attr attr = (Attr) map.item(idx);
+				result.put(attr.getName(), attr.getValue());
+			}
+		}
+		return result;
+	}
+
 	public <N extends FragmentNode> Optional<N> ancestor(Class<N> clazz) {
 		return (Optional<N>) (Optional<?>) ancestors().stream()
 				.filter(n -> n.getClass() == clazz).findFirst();
@@ -60,6 +90,20 @@ public abstract class FragmentNode extends Model.Fields
 
 	public Ancestors ancestors() {
 		return new Ancestors();
+	}
+
+	public void ensureComputedNodes() {
+		fragmentModel().ensureComputedNodes(this);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			// FIXME - use bindings() in constructor
+			provideNode().ensureChildren().topicNotifications
+					.add(this::onNotification);
+		}
 	}
 
 	@Override
@@ -101,10 +145,6 @@ public abstract class FragmentNode extends Model.Fields
 	 */
 	public FragmentTree fragmentTree() {
 		return new FragmentTree(true);
-	}
-
-	public void insertAsFirstChild(FragmentNode child) {
-		provideNode().insertAsFirstChild(child);
 	}
 
 	public Nodes nodes() {
@@ -212,7 +252,10 @@ public abstract class FragmentNode extends Model.Fields
 	public static class FragmentRoot implements FragmentNodeOps {
 		Model rootModel;
 
-		public FragmentRoot(Model rootModel) {
+		FragmentModel fragmentModel;
+
+		public FragmentRoot(FragmentModel fragmentModel, Model rootModel) {
+			this.fragmentModel = fragmentModel;
 			this.rootModel = rootModel;
 		}
 
@@ -222,13 +265,32 @@ public abstract class FragmentNode extends Model.Fields
 					.provideNode().ensureChildren().stream().map(n -> n.model)
 					.filter(m -> m instanceof FragmentNode);
 		}
+
+		public void addNotificationHandler(
+				TopicListener<NotifyingList.Notification> notificationListener) {
+			Topic<NotifyingList.Notification> top = (Topic) rootModel
+					.provideNode().ensureChildren().topicNotifications;
+			top.add(notificationListener);
+		}
+
+		@Override
+		public void ensureComputedNodes() {
+			// noop
+		}
+
+		public void append(FragmentNode child) {
+			FragmentModel
+					.withMutating(() -> rootModel.provideNode().append(child));
+			fragmentModel.register(child);
+		}
 	}
 
-	public class FragmentTree {
+	public class FragmentTree implements Iterator<FragmentNode> {
 		DomNodeTree tree;
 
 		FragmentTree(boolean fromRoot) {
-			this.tree = fromRoot ? fragmentModel().rootDomNode().tree()
+			fragmentModel();
+			this.tree = fromRoot ? fragmentModel.rootDomNode().tree()
 					: domNode().tree();
 			tree.setCurrentNode(domNode());
 		}
@@ -237,30 +299,74 @@ public abstract class FragmentNode extends Model.Fields
 				nextTextNode(boolean nonWhitespace) {
 			return (Optional<FragmentNode.TextNode>) (Optional<?>) tree
 					.nextTextNode(nonWhitespace)
-					.map(fragmentModel()::getFragmentNode);
+					.map(fragmentModel::getFragmentNode);
 		}
 
-		FragmentTree reversed() {
+		public FragmentTree reversed() {
 			tree.reversed();
 			return this;
 		}
 
-		Stream<FragmentNode> stream() {
+		public Stream<FragmentNode> stream() {
 			return tree.stream().map(fragmentModel::getFragmentNode);
+		}
+
+		@Override
+		public boolean hasNext() {
+			return tree.hasNext();
+		}
+
+		@Override
+		public FragmentNode next() {
+			return fragmentModel.getFragmentNode(tree.next());
 		}
 	}
 
 	/*
 	 * Reverse transformation falls back on this model if no other matches exist
 	 */
-	@Transformer(NodeTransformer.Generic.class)
-	public static class Generic extends FragmentNode {
+	@Transformer(NodeTransformer.GenericElement.class)
+	public static class GenericElement extends FragmentNode implements HasTag {
+		public String tag;
+
+		public GenericElement() {
+		}
+
+		public GenericElement(String tag) {
+			this.tag = tag;
+		}
+
+		@Override
+		public void copyFromExternal(FragmentNode external) {
+			tag = ((GenericElement) external).tag;
+		}
+
+		@Override
+		public String provideTag() {
+			return tag;
+		}
+	}
+
+	/**
+	 * Output not yet implemented
+	 */
+	@Transformer(NodeTransformer.GenericProcessingInstruction.class)
+	public static class GenericProcessingInstruction extends FragmentNode
+			implements Leaf {
+	}
+
+	/**
+	 * Output not yet implemented
+	 */
+	@Transformer(NodeTransformer.GenericComment.class)
+	public static class GenericComment extends FragmentNode implements Leaf {
 	}
 
 	public class Nodes {
-		public void append(FragmentNode child) {
+		public <FN extends FragmentNode> FN append(FN child) {
 			withMutating(() -> provideNode().append(child));
 			fragmentModel().register(child);
+			return (FN) child;
 		}
 
 		public void insertAfterThis(FragmentNode fragmentNode) {
@@ -280,6 +386,35 @@ public abstract class FragmentNode extends Model.Fields
 					.replaceChild(FragmentNode.this, other));
 			fragmentModel().register(other);
 		}
+
+		public void insertAsFirstChild(FragmentNode child) {
+			withMutating(() -> provideNode().insertAsFirstChild(child));
+			fragmentModel().register(child);
+		}
+
+		public void strip() {
+			withMutating(() -> provideNode().strip());
+		}
+
+		public FragmentNode previousSibling() {
+			DirectedLayout.Node directedPreviousSibling = provideNode()
+					.previousSibling();
+			return directedPreviousSibling == null ? null
+					: (FragmentNode) directedPreviousSibling.model;
+		}
+
+		public void removeFromParent() {
+			withMutating(() -> provideParentNode()
+					.removeChildNode(FragmentNode.this));
+		}
+	}
+
+	// childless DOM structure - anything except ELEMENT
+	public interface Leaf {
+	}
+
+	// text DOM structure
+	public interface TextLeaf extends Leaf {
 	}
 
 	/*
@@ -287,7 +422,7 @@ public abstract class FragmentNode extends Model.Fields
 	 */
 	@Transformer(NodeTransformer.Text.class)
 	@Directed(renderer = LeafRenderer.TextNode.class)
-	public static class TextNode extends FragmentNode {
+	public static class TextNode extends FragmentNode implements Leaf {
 		private String value;
 
 		public TextNode() {
@@ -297,13 +432,17 @@ public abstract class FragmentNode extends Model.Fields
 			this.value = value;
 		}
 
+		@Override
+		public void copyFromExternal(FragmentNode external) {
+			value = ((TextNode) external).value;
+		}
+
 		@Binding(type = Type.INNER_TEXT)
 		public String getValue() {
 			return this.value;
 		}
 
 		public void setValue(String value) {
-			Ax.err(">>%s", value);
 			set("value", this.value, value, () -> this.value = value);
 		}
 	}
@@ -315,5 +454,24 @@ public abstract class FragmentNode extends Model.Fields
 	@Target({ ElementType.TYPE })
 	public @interface Transformer {
 		Class<? extends NodeTransformer> value();
+	}
+
+	public void copyFromExternal(FragmentNode external) {
+	}
+
+	void onNotification(NotifyingList.Notification notification) {
+		fragmentModel().onChildNodesNotification(this, notification);
+	}
+
+	@Property.Not
+	public boolean isDetached() {
+		return !provideIsBound();
+	}
+
+	/**
+	 * Allow subclasses to populate children *in a node context*. This is the
+	 * way that fragment nodes should construct their own subtrees
+	 */
+	public void onFragmentRegistration() {
 	}
 }

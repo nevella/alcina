@@ -7,8 +7,13 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 
@@ -31,12 +36,46 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 
 	protected boolean breakPersistenceForRemoteRefresh;
 
+	Topic<PersistElementResult> topicElementPersisted = Topic.create();
+
 	protected FlatDeltaPersister(boolean applyToLeft) {
 		this.applyToLeft = applyToLeft;
 	}
 
+	public static class PersistElementResult {
+		public String action;
+
+		public String objectId;
+
+		public String objectType;
+
+		public int typeActionIndex;
+
+		public int typeActionCount;
+
+		public PersistElementResult(String action, String objectId,
+				String objectType, int typeActionIndex, int typeActionCount) {
+			this.action = action;
+			this.objectId = objectId;
+			this.objectType = objectType;
+			this.typeActionIndex = typeActionIndex;
+			this.typeActionCount = typeActionCount;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s::%s - [%s] - [%s/%s]", objectType, objectId,
+					action, typeActionIndex, typeActionCount);
+		}
+	}
+
 	public FlatDeltaPersisterResult apply(Logger logger, D delta,
-			List<Class> ignoreDueToIncompleteMerge) throws Exception {
+			List<Class> ignoreDueToIncompleteMerge,
+			TopicListener<FlatDeltaPersister.PersistElementResult> persistListener)
+			throws Exception {
+		if (persistListener != null) {
+			topicElementPersisted.add(persistListener);
+		}
 		try {
 			LooseContext.push();
 			return apply0(logger, delta, ignoreDueToIncompleteMerge);
@@ -65,17 +104,28 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 			}
 			FlatDeltaPersisterResult perClassResult = new FlatDeltaPersisterResult();
 			DeltaItemPersister persister = persisters.get(clazz);
-			for (SyncPair pair : delta.getDeltas().getAndEnsure(clazz)) {
+			List<SyncPair> pairs = delta.getDeltas().getAndEnsure(clazz);
+			for (SyncPair pair : pairs) {
 				SyncAction syncAction = pair.getAction()
 						.getDirectedAction(applyToLeft);
 				if (syncAction == null) {
 					perClassResult.noModificationCount++;
 					result.noModificationCount++;
+				} else if (!shouldApply(clazz, pair, syncAction)) {
+					perClassResult.noModificationCount++;
+					result.noModificationCount++;
+				}
+			}
+			int typeActionIndex = 1;
+			int typeActionCount = pairs.size()
+					- perClassResult.noModificationCount;
+			for (SyncPair pair : pairs) {
+				SyncAction syncAction = pair.getAction()
+						.getDirectedAction(applyToLeft);
+				if (syncAction == null) {
 					continue;
 				}
 				if (!shouldApply(clazz, pair, syncAction)) {
-					perClassResult.noModificationCount++;
-					result.noModificationCount++;
 					continue;
 				}
 				KeyedObject obj = applyToLeft ? pair.getLeft()
@@ -90,12 +140,34 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 				logAction(resultType, obj);
 				result.update(resultType);
 				perClassResult.update(resultType);
+				topicElementPersisted
+						.publish(new PersistElementResult(syncAction.toString(),
+								objectId(obj), clazz.getSimpleName(),
+								typeActionIndex++, typeActionCount));
 			}
 			classDeltasPersisted();
 			Ax.out("Flat delta persister/apply: %s - %s", clazz.getSimpleName(),
 					perClassResult);
 		}
 		return result;
+	}
+
+	String objectId(KeyedObject obj) {
+		Object object = obj.getObject();
+		FormatBuilder format = new FormatBuilder().separator(" - ");
+		boolean appended = false;
+		if (object instanceof HasId) {
+			format.append(((HasId) object).getId());
+			appended = true;
+		}
+		if (object instanceof HasDisplayName) {
+			format.append(((HasDisplayName) object).displayName());
+			appended = true;
+		}
+		if (!appended) {
+			format.append(object.toString());
+		}
+		return format.toString();
 	}
 
 	protected void classDeltasPersisted() {

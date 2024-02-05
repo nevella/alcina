@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
@@ -18,7 +17,7 @@ import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
-import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
+import cc.alcina.framework.common.client.logic.reflection.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -35,10 +34,13 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.DirectedEntitySearchActivityTransformer.TableContainer;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
@@ -58,12 +60,29 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  *
  *
  */
-public class TableModel extends Model {
+public class TableModel extends Model implements NodeEditorContext {
 	protected TableHeader header = new TableHeader();
 
 	protected List<TableRow> rows = new ArrayList<>();
 
+	public void setRows(List<TableRow> rows) {
+		set("rows", this.rows, rows, () -> this.rows = rows);
+	}
+
 	protected List<Link> actions = new ArrayList<>();
+
+	private Model emptyResults;
+
+	private Attributes attributes;
+
+	@Directed
+	public Model getEmptyResults() {
+		return emptyResults;
+	}
+
+	public void setEmptyResults(Model emptyResults) {
+		this.emptyResults = emptyResults;
+	}
 
 	public TableModel() {
 	}
@@ -80,13 +99,21 @@ public class TableModel extends Model {
 		return this.rows;
 	}
 
+	@Override
+	public boolean isEditable() {
+		return attributes.editable;
+	}
+
+	@Override
+	public boolean isRenderAsNodeEditors() {
+		return attributes.nodeEditors;
+	}
+
 	public static class DirectedCategoriesActivityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedCategoriesActivity<?>, TableModel> {
 		@Override
 		public TableModel apply(DirectedCategoriesActivity<?> activity) {
 			TableModel tableModel = new TableModel();
-			BoundWidgetTypeFactory factory = Registry
-					.impl(TableTypeFactory.class);
 			ModalResolver resolver = ModalResolver.multiple(node, true);
 			node.setResolver(resolver);
 			resolver.setTableModel(tableModel);
@@ -94,11 +121,10 @@ public class TableModel extends Model {
 					.getNamedPlaces();
 			places.removeIf(p -> !isPermitted(p));
 			Class<? extends Bindable> resultClass = CategoryNamePlaceTableAdapter.class;
-			GwittirBridge.get()
-					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							Reflections.at(resultClass).templateInstance(),
-							factory, false, true, node.getResolver())
-					.stream().map(TableColumn::new)
+			BeanFields.query().forClass(resultClass)
+					.forMultipleWidgetContainer(true)
+					.withResolver(node.getResolver()).listFields().stream()
+					.map(TableColumn::new)
 					.forEach(tableModel.header.columns::add);
 			places.stream().map(CategoryNamePlaceTableAdapter::new)
 					.map(bindable -> new TableRow(tableModel, bindable))
@@ -143,19 +169,48 @@ public class TableModel extends Model {
 	}
 
 	public static class DirectedEntitySearchActivityTransformer extends
-			AbstractContextSensitiveModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
+			AbstractContextSensitiveModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableContainer> {
+		@Directed.Delegating
+		public class TableContainer extends Model.All
+				implements TableEvents.SortTable.Handler {
+			TableModel tableModel;
+
+			TableContainer(TableModel tableModel) {
+				this.tableModel = tableModel;
+			}
+
+			@Override
+			public void onSortTable(SortTable event) {
+				TableColumn column = event.getModel();
+				Place rawPlace = Client.currentPlace();
+				if (!(rawPlace instanceof BindablePlace)) {
+					return;
+				}
+				BindablePlace<?> place = Client.currentPlace();
+				place = place.copy();
+				DisplaySearchOrder order = new DisplaySearchOrder();
+				order.setFieldName(column.getField().getPropertyName());
+				SearchOrders searchOrders = place.def.getSearchOrders();
+				Optional<SearchOrder> firstOrder = searchOrders.getFirstOrder();
+				if (firstOrder.isPresent()
+						&& firstOrder.get().equivalentTo(order)) {
+					searchOrders.toggleFirstOrder();
+				} else {
+					searchOrders.putFirstOrder(order);
+				}
+				place.go();
+			}
+		}
+
 		@Override
-		public TableModel apply(
+		public TableContainer apply(
 				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
 			TableModel tableModel = new TableModel();
-			BoundWidgetTypeFactory factory = Registry
-					.impl(TableTypeFactory.class);
+			TableContainer tableContainer = new TableContainer(tableModel);
 			if (activity.getSearchResults() == null) {
-				return tableModel;
+				return tableContainer;
 			}
-			ModalResolver resolver = ModalResolver.multiple(node, true);
-			resolver.setTableModel(tableModel);
-			node.setResolver(resolver);
+			ModalResolver resolver = tableModel.init(node);
 			BindableSearchDefinition def = activity.getSearchResults().getDef();
 			String sortFieldName = def.getSearchOrders()
 					.provideSearchOrderFieldName();
@@ -164,10 +219,9 @@ public class TableModel extends Model {
 							: SortDirection.DESCENDING;
 			Class<? extends Bindable> resultClass = activity.getSearchResults()
 					.resultClass();
-			List<Field> fields = GwittirBridge.get()
-					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							Reflections.at(resultClass).templateInstance(),
-							factory, false, true, resolver);
+			List<Field> fields = BeanFields.query().forClass(resultClass)
+					.forMultipleWidgetContainer(true).withResolver(resolver)
+					.listFields();
 			fields.stream().map(field -> {
 				SortDirection fieldDirection = field.getPropertyName()
 						.equals(sortFieldName) ? sortDirection : null;
@@ -185,7 +239,7 @@ public class TableModel extends Model {
 						.forEach(tableModel.rows::add);
 			}
 			// add actions if editable and adjunct
-			return tableModel;
+			return tableContainer;
 		}
 	}
 
@@ -194,36 +248,6 @@ public class TableModel extends Model {
 	public static class EmptyResultHandler {
 		public List<TableRow> getEmptyResultPlaceholder(List<Field> fields) {
 			return Collections.emptyList();
-		}
-	}
-
-	public static class SearchTableColumnClickHandler
-			implements DomEvents.Click.Handler {
-		private TableColumn column;
-
-		public SearchTableColumnClickHandler(TableColumn column) {
-			this.column = column;
-		}
-
-		@Override
-		public void onClick(Click Click) {
-			Place rawPlace = Client.currentPlace();
-			if (!(rawPlace instanceof BindablePlace)) {
-				return;
-			}
-			BindablePlace<?> place = Client.currentPlace();
-			place = place.copy();
-			DisplaySearchOrder order = new DisplaySearchOrder();
-			order.setFieldName(column.getField().getPropertyName());
-			SearchOrders searchOrders = place.def.getSearchOrders();
-			Optional<SearchOrder> firstOrder = searchOrders.getFirstOrder();
-			if (firstOrder.isPresent()
-					&& firstOrder.get().equivalentTo(order)) {
-				searchOrders.toggleFirstOrder();
-			} else {
-				searchOrders.putFirstOrder(order);
-			}
-			place.go();
 		}
 	}
 
@@ -299,7 +323,7 @@ public class TableModel extends Model {
 
 		@Override
 		public void onClick(Click event) {
-			new SearchTableColumnClickHandler(this).onClick(event);
+			event.reemitAs(this, TableEvents.SortTable.class, this);
 		}
 
 		public void onValueAdded(Object rowValue) {
@@ -363,6 +387,10 @@ public class TableModel extends Model {
 
 		private Bindable bindable;
 
+		public Bindable getBindable() {
+			return bindable;
+		}
+
 		public TableRow() {
 		}
 
@@ -377,11 +405,6 @@ public class TableModel extends Model {
 		public List<TableCell> getCells() {
 			return this.cells;
 		}
-	}
-
-	@Reflected
-	@Registration(TableTypeFactory.class)
-	public static class TableTypeFactory extends BoundWidgetTypeFactory {
 	}
 
 	public static class TableValueModel extends Model implements ValueModel {
@@ -412,5 +435,27 @@ public class TableModel extends Model {
 		public String getGroupName() {
 			return null;
 		}
+	}
+
+	ModalResolver init(Node node) {
+		ModalResolver resolver = ModalResolver.multiple(node, true);
+		resolver.setTableModel(this);
+		node.setResolver(resolver);
+		attributes = new Attributes();
+		BeanViewModifiers args = node.annotation(BeanViewModifiers.class);
+		if (args != null) {
+			attributes.adjunct = args.adjunct();
+			attributes.nodeEditors = args.nodeEditors();
+			attributes.editable = args.editable();
+		}
+		return resolver;
+	}
+
+	static class Attributes {
+		boolean nodeEditors = true;
+
+		boolean editable;
+
+		boolean adjunct;
 	}
 }

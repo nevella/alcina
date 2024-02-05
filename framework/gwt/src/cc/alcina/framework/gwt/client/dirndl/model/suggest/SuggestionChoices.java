@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.user.client.Timer;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -32,6 +33,8 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 	private Choices.Single<?> choices;
 
 	private Suggestor suggestor;
+
+	private State state;
 
 	public SuggestionChoices(Suggestor suggestor) {
 		this.suggestor = suggestor;
@@ -104,6 +107,7 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 
 	@Override
 	public void toState(State state) {
+		this.state = state;
 		switch (state) {
 		case UNBOUND:
 			ensureVisible(false);
@@ -118,7 +122,14 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		}
 		switch (state) {
 		case LOADING:
-			contents.setModel(Spinner.builder().generate());
+			new Timer() {
+				@Override
+				public void run() {
+					if (SuggestionChoices.this.state == State.LOADING) {
+						contents.setModel(Spinner.builder().generate());
+					}
+				}
+			}.schedule(suggestor.builder.showSpinnerDelay);
 			break;
 		}
 	}
@@ -126,9 +137,6 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 	void ensureVisible(boolean ensure) {
 		if (visible == ensure) {
 			return;
-		}
-		if (!ensure) {
-			int debug = 3;
 		}
 		NodeEvent.Context.fromNode(suggestor.provideNode())
 				.dispatch(SuggestorEvents.SuggestionsVisible.class, ensure);

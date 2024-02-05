@@ -15,11 +15,17 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.client.JsArray;
+import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 
@@ -52,6 +58,8 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * this package)
 	 */
 	public Data data = new Data();
+
+	transient Set<Modifier> modifiers;
 
 	public NativeEvent() {
 	}
@@ -502,5 +510,45 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		public native boolean getIsComposing() /*-{
       return this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.isComposing;
 		}-*/;
+	}
+
+	@Reflected
+	public static enum Modifier {
+		META, CTRL, ALT, SHIFT,
+		/*
+		 * META (osx), CTRL (other) - not emitted by getModifiers, but used as a
+		 * matcher
+		 */
+		OS_MODIFIER;
+
+		public Modifier osDependent() {
+			switch (this) {
+			case OS_MODIFIER:
+				boolean mac = Window.Navigator.getPlatform().matches("Mac.*");
+				return mac ? Modifier.META : CTRL;
+			default:
+				return this;
+			}
+		}
+	}
+
+	@AlcinaTransient
+	public Set<Modifier> getModifiers() {
+		if (modifiers == null) {
+			modifiers = new HashSet<>();
+			if (getCtrlKey()) {
+				modifiers.add(Modifier.CTRL);
+			}
+			if (getAltKey()) {
+				modifiers.add(Modifier.ALT);
+			}
+			if (getShiftKey()) {
+				modifiers.add(Modifier.SHIFT);
+			}
+			if (getMetaKey()) {
+				modifiers.add(Modifier.META);
+			}
+		}
+		return modifiers;
 	}
 }

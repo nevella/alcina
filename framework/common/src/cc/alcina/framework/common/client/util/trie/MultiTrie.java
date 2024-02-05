@@ -99,7 +99,7 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 				// FIXME - this causes infinite trie loops (for transactional
 				// tries).
 				// mostly occurs during reindex cycles - leaving the trie entry
-				// in *seems* harmless
+				// it *seems* harmless
 				// remove(key);
 				//
 				// FIXME - mvcc.5

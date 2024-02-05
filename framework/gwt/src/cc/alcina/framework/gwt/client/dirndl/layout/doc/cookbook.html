@@ -15,56 +15,30 @@
 	</p>
 	<h3>Common cases</h3>
 	<h4>Rendering a java bean (any class with getters)</h4>
+	<div>
+		<pre>
+<code-box type='java'>
+class Croissant() {
+  @Directed
+  String filling = "ham n cheese"
+}
+</code-box>
+--&gt; 
+<code-box type='h/xml'>
+&lt;croissant&gt;
+  &lt;span&gt;ham n cheese&lt;/span&gt;
+&lt;/croissant&gt;
+</code-box>
+		</pre>
+	</div>
 	<h4>Transforming the entries of a list</h4>
-	<p>
-		To transform the elements of a list, add the @Directed.Transform(
-		&lt;transform-class&gt;) annotation - e.g. to transform List&lt;String&gt; to List&lt;HtmlModel&gt;,
-		add @Directed.Transform(LeafModel.HtmlModel.Transform.class)
-	</p>
+	<p>To transform the elements of a list, add a @Directed.TransformElements(
+		&lt;transform-class&gt;) annotation - e.g. to transform List&lt;String&gt; to
+		List&lt;HtmlModel&gt;, add @Directed.TransformElements(LeafModel.HtmlModel.Transform.class)</p>
 	<h4>Wrapping a container in more than one tag</h4>
 	<h4>Transforming an object</h4>
 	<h4>
 		Rendering a java bean <i>without</i> a containing tag
 	</h4>
-	<h3>Uncommon cases</h3>
-	<h4>Transforming a list</h4>
-	<p>The simplest transform annotation, applied to a list property, transforms the elements, not
-		the containing list. To transform the parent list, you must explicitly set the renderer on the
-		annotation:</p>
-	<div>
-		<pre>
-		<code-box type='java'>
-//transforms each Entry element of the list - not what you want (since the renderer is the
-// default for a java.util.Collection subtype, DirectedRenderer.Collection)
-@Directed.Transform(Tables.Multiple.class)
-public List&lt;Entry&gt; getEntries() {
-  return this.entries;
-}
-</code-box>
-
---&gt; 
-
-<code-box type='java'>
-java.lang.ClassCastException (since the  Tables.Multiple class is from List&lt;?&gt; to Multiple.IntermediateModel, not from &lt;Entry&gt;)
-</code-box>
-
-<code-box type='java'>
-//This one
-@Directed(renderer=DirectedRenderer.TransformRenderer.class)
-@Directed.Transform(Tables.Multiple.class)
-public List&lt;Entry&gt; getEntries() {
-  return this.entries;
-}
-</code-box>	
-
---&gt; 
-
-<code-box type='html'>
-&lt;multiple&gt;&lt;column-names .../&gt;&lt;entry&gt;..&lt;/entry&gt;&lt;entry&gt;..&lt;/entry&gt;&lt;/multiple&gt;
-</code-box>
-		
-		</code-box>
-		</pre>
-	</div>
 </body>
 </html>

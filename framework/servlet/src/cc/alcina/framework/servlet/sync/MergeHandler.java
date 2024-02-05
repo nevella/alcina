@@ -9,10 +9,13 @@ import org.apache.log4j.Logger;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.servlet.sync.FlatDeltaPersister.PersistElementResult;
 
 /**
  * Handle merge - run the mergers (generally per-interchange-model member class)
@@ -24,7 +27,14 @@ import cc.alcina.framework.common.client.util.Topic;
  * @param <D>
  */
 public abstract class MergeHandler<I extends SyncInterchangeModel, D extends SyncDeltaModel> {
-	public static final Topic<SyncMerger> topicMergeCompleted = Topic.create();
+	public Topic<SyncMerger> topicMergeCompleted = Topic.create();
+
+	public Topic<SyncMerger> topicBeforeMerge = Topic.create();
+
+	public Topic<SyncMerger> topicDeltaPersisted = Topic.create();
+
+	public Topic<FlatDeltaPersister.PersistElementResult> topicElementPersisted = Topic
+			.create();
 
 	protected I leftInterchangeModel;
 
@@ -34,9 +44,23 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 
 	protected List<SyncMerger> syncMergers = new ArrayList<SyncMerger>();
 
+	public int getSyncMergerCount() {
+		return syncMergers.size();
+	}
+
 	public D deltaModel;
 
 	public FlatDeltaPersisterResult persisterResult;
+
+	public String getName() {
+		String simpleName = getClass().getSimpleName();
+		String regex = "([A-Z][a-z]+)([A-Z][a-z]+)MergeHandler";
+		if (simpleName.matches(regex)) {
+			return simpleName.replaceFirst(regex, "$1 >> $2");
+		} else {
+			return simpleName;
+		}
+	}
 
 	/**
 	 * returns number of successfully merged classes with non-zero merged rows
@@ -53,6 +77,7 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 				this.persisterResult = new FlatDeltaPersisterResult();
 				return;
 			}
+			topicBeforeMerge.publish(merger);
 			merger.merge(leftCollection, rightCollection, deltaModel, logger);
 			topicMergeCompleted.publish(merger);
 			if (merger.wasIncomplete() || mergeIncomplete.size() > 0) {
@@ -61,19 +86,33 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 				mergeIncomplete.add(merger);
 			}
 		}
-		// assure 'detached to domain'
-		Preconditions
-				.checkState(TransformManager.get().getTransforms().size() == 0);
+		// assure 'detached to domain' (the current transaction job/status
+		// transforms )
+		if (isDisallowDirectDomainTransforms()) {
+			Preconditions
+					.checkState(TransformManager.get().getTransforms().stream()
+							.filter(t -> !Job.class
+									.isAssignableFrom(t.getObjectClass()))
+							.count() == 0);
+		} else {
+			Transaction.commit();
+		}
 		beforePersistence();
 		if (shouldPersist()) {
 			this.persisterResult = localDeltaPersister.apply(logger, deltaModel,
 					mergeIncomplete.stream().map(c -> c.getMergedClass())
-							.collect(Collectors.toList()));
+							.collect(Collectors.toList()),
+					e -> topicElementPersisted
+							.publish((PersistElementResult) e));
 			this.persisterResult.allPersisted = !this.persisterResult.mergeInterrupted
 					&& mergeIncomplete.isEmpty();
 		} else {
 			logger.info(Ax.format("Not persisting:\n\t%s", deltaModel));
 		}
+	}
+
+	protected boolean isDisallowDirectDomainTransforms() {
+		return true;
 	}
 
 	protected void beforePersistence() {

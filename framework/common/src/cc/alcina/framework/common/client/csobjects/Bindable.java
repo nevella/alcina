@@ -38,7 +38,7 @@ public class Bindable extends BaseSourcesPropertyChangeEvents
 	public abstract static class Fields extends Bindable {
 	}
 
-	public interface HasContext<T> {
+	public interface HasBindableContext<T> {
 		public abstract T _getContext();
 
 		public abstract void _setContext(T _context);

@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.task;
 
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -16,7 +15,10 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
@@ -29,7 +31,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.EncryptionUtils;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphTraversal;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -45,7 +46,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
  *
  *
  *
- * 
+ *
  *
  */
 /*
@@ -58,6 +59,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 
  * @formatter:on
  */
+@Bean(PropertySource.FIELDS)
 public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 	public transient TreeSerializableSignatures signatures = new TreeSerializableSignatures();
 
@@ -155,10 +157,9 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 					|| Modifier.isStatic(field.getModifiers())) {
 				continue;
 			}
-			PropertyDescriptor propertyDescriptor = SEUtilities
-					.getPropertyDescriptorByName(serializable.getClass(),
-							field.getName());
-			if (propertyDescriptor == null) {
+			Property property = Reflections.at(serializable)
+					.property(field.getName());
+			if (property == null) {
 				missingPropertyDescriptors.add(field);
 			}
 		}

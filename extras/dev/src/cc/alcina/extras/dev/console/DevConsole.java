@@ -13,6 +13,7 @@ import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -39,6 +40,7 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils.LogMuter;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -47,6 +49,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -81,6 +84,7 @@ import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.task.TaskPublish;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
 /*
@@ -131,6 +135,9 @@ public abstract class DevConsole implements ClipboardOwner {
 		devOut.s2 = new NullPrintStream();
 		System.setErr(err);
 		System.setOut(out);
+		// headless
+		System.setProperty("java.awt.headless", "true");
+		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
 		File devConsoleRegistry = new File(
 				"/g/alcina/extras/dev/bin/registry.properties");
 		if (!devConsoleRegistry.exists()
@@ -218,9 +225,28 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	CountDownLatch currentCommandLatch;
 
+	protected String getLogFilePrefix() {
+		return getClass().getSimpleName().toLowerCase();
+	}
+
 	public DevConsole(String[] args) {
+		if (args.length == 0) {
+			String propertyArgs = System.getProperty("DevConsole.args");
+			if (Ax.notBlank(propertyArgs)) {
+				args = propertyArgs.split(";");
+			}
+		}
+		File consoleOutputFile = new File(
+				Ax.format("/tmp/log/console/%s.log", getLogFilePrefix()));
+		consoleOutputFile.delete();
+		consoleOutputFile.getParentFile().mkdirs();
 		String loggingPropertiesPath = null;
 		try {
+			consoleOutputFile.createNewFile();
+			devOut.s2 = new PrintStream(new FileOutputStream(consoleOutputFile),
+					true);
+			devErr.s2 = new PrintStream(new FileOutputStream(consoleOutputFile),
+					true);
 			InputStream s1 = DevConsole.class
 					.getResourceAsStream("logging.properties");
 			// will be a bufferedinputstream wrapping a fileinputstream
@@ -247,7 +273,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		if (Configuration.is("logStartupMetrics")) {
 			new DevStats().parse(logProvider).dump(true);
 		}
-		logger.info("Domain stores loaded - time from launch {} ms",
+		logger.info("\nDomain stores loaded - time from launch {} ms\n",
 				System.currentTimeMillis() - startupTime);
 		logProvider.startRemote();
 		BackendTransformQueue.get().start();
@@ -703,6 +729,14 @@ public abstract class DevConsole implements ClipboardOwner {
 				false, f1, s1, f2, s2);
 	}
 
+	public void publish(ContentRequestBase request) {
+		TaskPublish task = new TaskPublish();
+		task.setPublicationRequest(request);
+		Job job = task.perform();
+		job.domain().ensurePopulated();
+		Ax.out(job.getTaskSerialized());
+	}
+
 	public void pushSubshell(Class<? extends DevConsoleCommand> clazz) {
 		shells.push(clazz);
 		loadCommandMap();
@@ -710,6 +744,7 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	public void restart() {
 		String command = props.restartCommand;
+		command = "echo \"{ \\\"command\\\": \\\"workbench.action.debug.restart\\\" }\" | websocat ws://127.0.0.1:3710";
 		if (Ax.isBlank(command)) {
 			Ax.err("Property 'restartCommand' not set");
 		} else {
@@ -923,9 +958,6 @@ public abstract class DevConsole implements ClipboardOwner {
 		if (!headless) {
 			throw new UnsupportedOperationException();
 		}
-		// headless
-		System.setProperty("java.awt.headless", "true");
-		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
 		clear();
 		MetricLogging.get().setStart("init-console", statStartInit);
 		MetricLogging.get().end("init-console");
@@ -934,6 +966,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		new InitLightweightServices().emit(statEndInitLightweightServices);
 		new InitJaxbServices().emit(statEndInitJaxbServices);
 		devHelper.initPostObjectServices();
+		devHelper.initLifecycleServices();
 		devHelper.initAppDebug();
 		new InitPostObjectServices().emit(System.currentTimeMillis());
 		new InitConsole().emit(System.currentTimeMillis());

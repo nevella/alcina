@@ -3,8 +3,10 @@ package cc.alcina.framework.common.client.process;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.gwt.client.util.HasBind;
 
 /**
  * Marker interface: observes AlcinaProcess observable topics
@@ -13,9 +15,17 @@ import cc.alcina.framework.common.client.util.TopicListener;
  *
  */
 public interface ProcessObserver<T extends ProcessObservable>
-		extends TopicListener<T> {
+		extends TopicListener<T>, HasBind {
 	default Class<T> getObservableClass() {
 		return Reflections.at(this).getGenericBounds().bounds.get(0);
+	}
+
+	default void bind() {
+		ProcessObservers.observe(this, true);
+	}
+
+	default void unbind() {
+		ProcessObservers.observe(this, false);
 	}
 
 	/**
@@ -37,6 +47,11 @@ public interface ProcessObserver<T extends ProcessObservable>
 		public List<ProcessObserver> getObservers() {
 			return List.of();
 		}
+
+		public static void register() {
+			Registry.query(AppDebug.class).implementations()
+					.forEach(AppDebug::attach);
+		}
 	}
 
 	/**
@@ -44,15 +59,10 @@ public interface ProcessObserver<T extends ProcessObservable>
 	 * includes gwt app observers)
 	 *
 	 */
-	@Registration.Singleton
+	@Registration(AppDebugJvm.class)
 	public abstract static class AppDebugJvm implements HasObservers {
 		public void attach() {
 			ProcessObservers.observe(this);
-		}
-
-		@Override
-		public List<ProcessObserver> getObservers() {
-			return List.of();
 		}
 	}
 

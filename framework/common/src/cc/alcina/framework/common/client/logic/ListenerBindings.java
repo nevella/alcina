@@ -15,6 +15,9 @@ public class ListenerBindings implements ListenerBinding {
 
 	public void add(ListenerBinding listenerBinding) {
 		listenerBindings.add(listenerBinding);
+		if (bound) {
+			listenerBinding.bind();
+		}
 	}
 
 	public void add(Supplier<ListenerReference> listenerReferenceSupplier) {

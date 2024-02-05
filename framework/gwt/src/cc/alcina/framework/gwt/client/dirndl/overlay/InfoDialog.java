@@ -5,7 +5,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @Directed(className = "info-dialog")
-@Directed.PropertyNameTags
 public abstract class InfoDialog extends Model {
 	private final String areaTitle;
 

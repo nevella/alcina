@@ -140,7 +140,13 @@ public class ServletLayerUtils {
 				.orElse(request.getScheme());
 		String host = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
 				.orElse(request.getServerName());
-		return Ax.format("%s://%s/", protocol, host);
+		String portPart = "";
+		int serverPort = request.getServerPort();
+		String portString = "";
+		if (serverPort > 1000) {
+			portString = ":" + serverPort;
+		}
+		return Ax.format("%s://%s%s/", protocol, host, portString);
 	}
 
 	public static String

@@ -84,5 +84,9 @@ public class ArgParser {
 		public Optional<String> stringValue() {
 			return Optional.ofNullable(value);
 		}
+
+		public Optional<Boolean> booleanValue() {
+			return stringValue().map(Boolean::parseBoolean);
+		}
 	}
 }

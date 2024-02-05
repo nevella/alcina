@@ -19,6 +19,7 @@ import java.beans.PropertyChangeListener;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -35,6 +36,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.LazyPropertyChangeSupport;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.Client;
@@ -55,7 +57,7 @@ public class ActionProgress extends Composite
 
 	private FlowPanel fp;
 
-	private JobTracker info = new JobTracker();
+	private JobTracker tracker = new JobTracker();
 
 	private Grid grid;
 
@@ -87,11 +89,16 @@ public class ActionProgress extends Composite
 
 	private int timerCallCount = 0;
 
-	public ActionProgress(final String id) {
+	public ActionProgress(String id) {
 		this(id, null);
 	}
 
-	public ActionProgress(final String id,
+	private void navigateToDetail() {
+		Window.open(Ax.format("/job.do?action=detail&id=%s", getId()), "_blank",
+				"");
+	}
+
+	public ActionProgress(String id,
 			AsyncCallback<JobTracker> completionCallback) {
 		this.id = id;
 		this.completionCallback = completionCallback;
@@ -99,9 +106,18 @@ public class ActionProgress extends Composite
 		fp.setStyleName("alcina-ActionProgress");
 		grid = new Grid(4, 2);
 		jobName = new InlineLabel();
-		FlowPanel jobNCancel = new FlowPanel();
-		jobNCancel.add(jobName);
+		FlowPanel jobNActions = new FlowPanel();
+		jobNActions.add(jobName);
 		jobName.setStyleName("pad-right-5");
+		Link detailLink = new Link("(Detail)", new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				Widget sender = (Widget) event.getSource();
+				navigateToDetail();
+			}
+		});
+		detailLink.setTarget("_blank");
+		detailLink.setStyleName("pad-right-5");
 		this.cancelLink = new Link("(Cancel)", new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -109,11 +125,12 @@ public class ActionProgress extends Composite
 				cancelJob();
 			}
 		});
-		jobNCancel.add(cancelLink);
+		jobNActions.add(detailLink);
+		jobNActions.add(cancelLink);
 		cancellingStatusMessage = new InlineLabel();
 		cancellingStatusMessage.setVisible(false);
-		jobNCancel.add(cancellingStatusMessage);
-		addToGrid("Job", jobNCancel);
+		jobNActions.add(cancellingStatusMessage);
+		addToGrid("Job", jobNActions);
 		times = new HTML();
 		addToGrid("Time", times);
 		message = new Label();
@@ -232,7 +249,7 @@ public class ActionProgress extends Composite
 	}
 
 	public JobTracker getJobInfo() {
-		return info;
+		return tracker;
 	}
 
 	public int getMaxConnectionFailure() {
@@ -270,7 +287,7 @@ public class ActionProgress extends Composite
 	}
 
 	public void setJobInfo(JobTracker jobTracker) {
-		this.info = jobTracker;
+		this.tracker = jobTracker;
 		updateProgress();
 	}
 
@@ -336,32 +353,33 @@ public class ActionProgress extends Composite
 	}
 
 	private void updateProgress() {
-		jobName.setText(info.getJobName());
-		String time = info.getStartTime() == null ? ""
-				: "Start: " + CommonUtils.formatDate(info.getStartTime(),
+		jobName.setText(tracker.getJobName());
+		String time = tracker.getStartTime() == null ? ""
+				: "Start: " + CommonUtils.formatDate(tracker.getStartTime(),
 						DateStyle.AU_DATE_TIME_MS);
-		if (info.getEndTime() != null) {
-			time += "<br>End: " + CommonUtils.formatDate(info.getEndTime(),
+		if (tracker.getEndTime() != null) {
+			time += "<br>End: " + CommonUtils.formatDate(tracker.getEndTime(),
 					DateStyle.AU_DATE_TIME_MS);
 		}
 		times.setHTML(time);
-		String msg = info.getProgressMessage();
-		if (info.getJobResultType() == JobResultType.FAIL) {
-			msg = info.getJobResult();
+		String msg = tracker.getProgressMessage();
+		if (tracker.getJobResultType() == JobResultType.FAIL) {
+			msg = tracker.getJobResult();
 			message.addStyleName("error");
 		}
-		if (!info.isComplete()
+		if (!tracker.isComplete()
 				&& cancellingStatusMessage.getText().equals(CANCELLED)) {
 			cancellingStatusMessage.setVisible(false);
 			cancelLink.setVisible(true);
 		}
 		message.setText(msg);
-		if (info.isComplete()) {
-			info.setPercentComplete(Math.max(1.0, info.getPercentComplete()));
+		if (tracker.isComplete()) {
+			tracker.setPercentComplete(
+					Math.max(1.0, tracker.getPercentComplete()));
 		}
 		if (isAttached()) {
 			progress.setWidth(Math.max(0, ((int) (bar.getOffsetWidth() - 2)
-					* info.getPercentComplete())) + "px");
+					* tracker.getPercentComplete())) + "px");
 		}
 	}
 

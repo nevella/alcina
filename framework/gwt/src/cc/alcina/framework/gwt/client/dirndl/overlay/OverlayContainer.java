@@ -102,9 +102,6 @@ public class OverlayContainer extends Model implements HasTag {
 	}
 
 	public void setVisible(boolean visible) {
-		boolean old_visible = this.visible;
-		this.visible = visible;
-		propertyChangeSupport().firePropertyChange("visible", old_visible,
-				visible);
+		set("visible", this.visible, visible, () -> this.visible = visible);
 	}
 }

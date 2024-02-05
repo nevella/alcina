@@ -7,7 +7,7 @@
  * <p>
  * Much of the interaction is supported by the NodePathref subtypes in the
  * {@link com.google.gwt.dom.client} package; the 'server hosting client' code
- * is mostly in {@link Environment}
+ * is mostly in {@link VmEnvironment}
  *
  * <p>
  * The main rpc protocol comms between server + client:
@@ -22,7 +22,7 @@
  *
  * <h4>Server environments
  * <p>
- * Normally, a new {@link Environment} is generated for each init() from the
+ * Normally, a new {@link VmEnvironment} is generated for each init() from the
  * client - the exception is a 'sole environment' endpoint, such as an
  * android-app-hosted web ui, where there is only one DOM layout hosted per
  * client (but see package {@link cc.alcina.framework.servlet.dom} - romcom

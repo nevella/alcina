@@ -56,7 +56,6 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.table.DataProvider;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
@@ -79,7 +78,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Action;
-import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
@@ -95,7 +93,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
@@ -232,6 +230,8 @@ public class ContentViewFactory {
 
 	private boolean doNotRegister;
 
+	private List<String> ignorePropertyNames;
+
 	public ContentViewFactory
 			actionListener(PermissibleActionListener actionListener) {
 		this.actionListener = actionListener;
@@ -261,10 +261,7 @@ public class ContentViewFactory {
 					.collect(Collectors.toList());
 		}
 		Object bean = Reflections.at(beanClass).templateInstance();
-		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
-						false, true);
+		List<Field> fields = BeanFields.query().forBean(bean).listFields();
 		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK
 				| BoundTableExt.SORT_MASK;
 		if (withObjectActions) {
@@ -276,8 +273,7 @@ public class ContentViewFactory {
 		}
 		CollectionDataProvider cp = new CollectionDataProvider(beans);
 		cp.setPageSize(99999);
-		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, factory,
-				fields, cp);
+		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, fields, cp);
 		table.addStyleName("results-table");
 		if (actions != null && !actions.isEmpty()) {
 			Toolbar tb = createToolbar(
@@ -314,6 +310,9 @@ public class ContentViewFactory {
 		if (overrideAutoSave != null) {
 			autoSave = overrideAutoSave.booleanValue();
 		}
+		if (editableFieldFilter == null && ignorePropertyNames != null) {
+			editableFieldFilter = n -> !ignorePropertyNames.contains(n);
+		}
 		boolean cloned = false;
 		Collection supportingObjects = new ArrayList();
 		if (!doNotClone && !autoSave && (!(bean instanceof Entity)
@@ -334,11 +333,9 @@ public class ContentViewFactory {
 		if (!noCaption) {
 			cp.add(createCaption(bean, cp));
 		}
-		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		List<Field> fieldList = new ArrayList<>(Arrays.asList(GwittirBridge
-				.get().fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-						factory, editable, false, null, editableFieldFilter,
-						new DefaultAnnotationResolver())));
+		List<Field> fieldList = BeanFields.query().forBean(bean)
+				.asEditable(editable).asAdjunctEditor(autoSave)
+				.withEditableNamePredicate(editableFieldFilter).listFields();
 		if (fieldFilter != null) {
 			fieldList.removeIf(f -> !fieldFilter.test(f));
 		}
@@ -348,22 +345,21 @@ public class ContentViewFactory {
 		if (fieldPostReflectiveSetupModifier != null) {
 			fieldList.stream().forEach(fieldPostReflectiveSetupModifier);
 		}
-		Field[] fields = fieldList.toArray(new Field[fieldList.size()]);
 		if (cellRenderer == null) {
 			cellRenderer = new GridFormCellRendererGrid(horizontalGrid);
 		}
-		GridForm f = new GridForm(fields, 1, factory, cellRenderer);
+		GridForm f = new GridForm(fieldList, 1, cellRenderer);
 		if (tableStyleName != null) {
 			f.addStyleName(tableStyleName);
 		}
 		f.addAttachHandler(new RecheckVisibilityHandler(f));
-		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean, fields));
+		f.setAutofocusField(BeanFields.getFieldToFocus(fieldList));
 		f.setValue(bean);
 		cp.add(f);
 		cp.setBoundWidget(f);
 		if (editable) {
-			Validator beanValidator = GwittirBridge.get()
-					.getValidator(bean.getClass(), bean, null, null);
+			Validator beanValidator = BeanFields.query().forBean(bean)
+					.getValidator();
 			if (autoSave) {
 				cp.propertyChangeBeanValidator = beanValidator;
 			} else {
@@ -491,7 +487,8 @@ public class ContentViewFactory {
 		if (!noCaption) {
 			cp.add(createMultiCaption(beanClass, cp));
 		}
-		BoundTableExt table = createTable(beans, editable, tableMask, bean);
+		BoundTableExt table = createTable(beans, editable, tableMask,
+				bean.getClass());
 		if (tableStyleName != null) {
 			table.addStyleName(tableStyleName);
 		}
@@ -524,30 +521,27 @@ public class ContentViewFactory {
 	}
 
 	public BoundTableExt createTable(Collection beans, boolean editable,
-			int tableMask, Object templateBean) {
-		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		List<Field> fieldList = new ArrayList<>(Arrays.asList(GwittirBridge
-				.get().fieldsForReflectedObjectAndSetupWidgetFactory(
-						templateBean, factory, editable, true)));
+			int tableMask, Class type) {
+		List<Field> fields = BeanFields.query().forClass(type)
+				.asEditable(editable).forMultipleWidgetContainer(true)
+				.listFields();
 		if (fieldFilter != null) {
-			fieldList.removeIf(f -> !fieldFilter.test(f));
+			fields.removeIf(f -> !fieldFilter.test(f));
 		}
 		if (fieldOrder != null) {
-			Collections.sort(fieldList, fieldOrder);
+			Collections.sort(fields, fieldOrder);
 		}
 		if (fieldPostReflectiveSetupModifier != null) {
-			fieldList.stream().forEach(fieldPostReflectiveSetupModifier);
+			fields.stream().forEach(fieldPostReflectiveSetupModifier);
 		}
-		Field[] fields = fieldList.toArray(new Field[fieldList.size()]);
 		int mask = tableMask | BoundTableExt.HEADER_MASK
 				| BoundTableExt.SORT_MASK;
 		CollectionDataProvider cdp = new CollectionDataProvider(beans);
 		if ((mask & BoundTableExt.NO_NAV_ROW_MASK) != 0) {
 			cdp.showAllObjectsInCollection();
 		}
-		BoundTableExt table = editable
-				? new BoundTableExt(mask, factory, fields, cdp)
-				: new NiceWidthBoundTable(mask, factory, fields, cdp);
+		BoundTableExt table = editable ? new BoundTableExt(mask, fields, cdp)
+				: new NiceWidthBoundTable(mask, fields, cdp);
 		return table;
 	}
 
@@ -707,6 +701,10 @@ public class ContentViewFactory {
 		this.endRowButtonClickedHandler = endRowButtonClickedHandler;
 	}
 
+	public void setIgnorePropertyNames(List<String> ignorePropertyNames) {
+		this.ignorePropertyNames = ignorePropertyNames;
+	}
+
 	public void setInFormButtons(boolean inFormButtons) {
 		this.inFormButtons = inFormButtons;
 	}
@@ -829,10 +827,15 @@ public class ContentViewFactory {
 	public static class NiceWidthBoundTable extends FastROBoundTable {
 		public static final double EM_WIDTH = 0.55;
 
-		public NiceWidthBoundTable(int mask, BoundWidgetTypeFactory factory,
-				Field[] fields, DataProvider provider) {
+		public NiceWidthBoundTable(int mask, Field[] fields,
+				DataProvider provider) {
 			super(mask | BoundTableExt.NO_SELECT_CELL_MASK
-					| BoundTableExt.NO_SELECT_COL_MASK, factory, fields,
+					| BoundTableExt.NO_SELECT_COL_MASK, fields, provider);
+		}
+
+		public NiceWidthBoundTable(int mask, List<Field> fields,
+				DataProvider provider) {
+			this(mask, (Field[]) fields.toArray(new Field[fields.size()]),
 					provider);
 		}
 

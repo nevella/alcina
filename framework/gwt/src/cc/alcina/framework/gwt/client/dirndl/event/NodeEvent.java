@@ -60,7 +60,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 	public <O extends ModelEvent> void reemitAs(Model from,
 			Class<O> eventClass) {
-		reemitAs(from, eventClass, from);
+		reemitAs(from, eventClass, null);
 	}
 
 	public <O extends ModelEvent> void reemitAs(Model from, Class<O> eventClass,
@@ -153,18 +153,24 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return cursor.gwtEvent;
 		}
 
+		/**
+		 * A dispatched event (dispatched to a model) is a copy of the bubbling
+		 * event, so the first call to getPrevious() within a handler will
+		 * return that bubbling event. Subsequent calls will return the prior
+		 * event(s) causal events
+		 */
 		public Context getPrevious() {
 			return previous;
 		}
 
 		public boolean hasPrevious(Class<? extends NodeEvent> eventClass) {
-			if (eventClass == nodeEvent.getClass()) {
-				return true;
-			}
-			if (getPrevious() == null) {
-				return false;
-			}
-			return getPrevious().hasPrevious(eventClass);
+			return getPreviousEvent(eventClass) != null;
+		}
+
+		public void setNodeEvent(NodeEvent nodeEvent) {
+			Preconditions.checkState(this.nodeEvent == null);
+			this.nodeEvent = nodeEvent;
+			nodeEvent.context = this;
 		}
 
 		void reemit() {
@@ -174,10 +180,15 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			newContext.dispatch(modelEvent.getClass(), modelEvent.getModel());
 		}
 
-		public void setNodeEvent(NodeEvent nodeEvent) {
-			Preconditions.checkState(this.nodeEvent == null);
-			this.nodeEvent = nodeEvent;
-			nodeEvent.context = this;
+		public <E extends NodeEvent> E getPreviousEvent(Class<E> eventClass) {
+			Context cursor = this;
+			while (cursor != null) {
+				if (eventClass == cursor.nodeEvent.getClass()) {
+					return (E) cursor.getNodeEvent();
+				}
+				cursor = cursor.getPrevious();
+			}
+			return null;
 		}
 	}
 
@@ -203,5 +214,9 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 	// Marker interface - otherwise a Registry-supplied DomBinding is expected
 	public interface WithoutDomBinding {
+	}
+
+	public Object sourceModel() {
+		return context.getPrevious().node.getModel();
 	}
 }

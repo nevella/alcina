@@ -76,7 +76,7 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	public static ClassReflector<?> emptyReflector(Class clazz) {
 		return new ClassReflector<>(clazz, Collections.emptyList(),
-				Collections.emptyMap(), new AnnotationProvider.LookupProvider(),
+				Collections.emptyMap(), new AnnotationProvider.EmptyProvider(),
 				null, t -> false, Collections.emptyList(), null,
 				// may in fact be true, but unused
 				false, false);
@@ -190,6 +190,16 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	public Property property(PropertyEnum name) {
 		return byName.get(name.name());
+	}
+
+	public Property property(Object stringOrPropertyEnum) {
+		if (stringOrPropertyEnum instanceof String) {
+			return property((String) stringOrPropertyEnum);
+		} else if (stringOrPropertyEnum instanceof PropertyEnum) {
+			return byName.get(((PropertyEnum) stringOrPropertyEnum).name());
+		} else {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public Property property(String name) {

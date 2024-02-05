@@ -33,6 +33,47 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 		return this.entityNotFound;
 	}
 
+	public void setEntity(E entity) {
+		E old_entity = this.entity;
+		this.entity = entity;
+		propertyChangeSupport().firePropertyChange("entity", old_entity,
+				entity);
+	}
+
+	public void setEntityNotFound(boolean entityNotFound) {
+		boolean old_entityNotFound = this.entityNotFound;
+		this.entityNotFound = entityNotFound;
+		propertyChangeSupport().firePropertyChange("entityNotFound",
+				old_entityNotFound, entityNotFound);
+	}
+
+	@Override
+	public void start(AcceptsOneWidget panel, EventBus eventBus) {
+		Domain.async(provideDomainClass(), place.id, provideIsCreate(), e -> {
+			Runnable postCreate = () -> {
+				place.entity = e;
+				setEntity((E) e);
+				if (e == null) {
+					setEntityNotFound(true);
+				}
+				// FIXME - dirndl - can't we just use listeners on
+				// entity/entitynotfound? this is not the transform target, it
+				// *is* the transform source
+				if (provideIsBound()) {
+					// entity rendering is normally tree-shaped
+					provideNode().dispatch(
+							ModelEvents.TransformSourceModified.class, e);
+				}
+			};
+			if (provideIsCreate()) {
+				onCreate(e, postCreate);
+			} else {
+				postCreate.run();
+			}
+		});
+		super.start(panel, eventBus);
+	}
+
 	private void onCreate(Entity e, Runnable postCreate) {
 		if (place.fromId != 0 && place.fromClass != null) {
 			EntityPlace fromPlace = (EntityPlace) RegistryHistoryMapper.get()
@@ -60,42 +101,5 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 
 	private boolean provideIsCreate() {
 		return place.getAction() == EntityAction.CREATE;
-	}
-
-	public void setEntity(E entity) {
-		E old_entity = this.entity;
-		this.entity = entity;
-		propertyChangeSupport().firePropertyChange("entity", old_entity,
-				entity);
-	}
-
-	public void setEntityNotFound(boolean entityNotFound) {
-		boolean old_entityNotFound = this.entityNotFound;
-		this.entityNotFound = entityNotFound;
-		propertyChangeSupport().firePropertyChange("entityNotFound",
-				old_entityNotFound, entityNotFound);
-	}
-
-	@Override
-	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		Domain.async(provideDomainClass(), place.id, provideIsCreate(), e -> {
-			Runnable postCreate = () -> {
-				setEntity((E) e);
-				if (e == null) {
-					setEntityNotFound(true);
-				}
-				if (provideIsBound()) {
-					// entity rendering is normally tree-shaped
-					provideNode().dispatch(
-							ModelEvents.TransformSourceModified.class, e);
-				}
-			};
-			if (provideIsCreate()) {
-				onCreate(e, postCreate);
-			} else {
-				postCreate.run();
-			}
-		});
-		super.start(panel, eventBus);
 	}
 }

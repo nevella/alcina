@@ -14,6 +14,12 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 @TypeSerialization(flatSerializable = false)
 public class TaskPublish extends PerformerTask implements ServletAwaitTask {
+	public static String extractDownloadUrl(String response) {
+		return response.replaceFirst(
+				"(?s).+Added download at (/downloadServlet.do\\?id=.+)\n.+",
+				"$1");
+	}
+
 	private ContentRequestBase publicationRequest;
 
 	private boolean copyContentToLargeResult;
@@ -29,7 +35,8 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 
 	@Override
 	public String getName() {
-		return getPublicationRequest().provideJobName();
+		return getClass().getSimpleName() + " - "
+				+ getPublicationRequest().provideJobName();
 	}
 
 	public ContentRequestBase getPublicationRequest() {
@@ -43,6 +50,30 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 
 	public boolean isCopyContentToLargeResult() {
 		return this.copyContentToLargeResult;
+	}
+
+	@Override
+	public void run() throws Exception {
+		PublicationResult result = null;
+		IUser user = JobContext.get().getJob().getUser();
+		if (user == UserlandProvider.get().getSystemUser()) {
+			result = publicationRequest.publish();
+		} else {
+			try {
+				PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
+				result = publicationRequest.publish();
+			} finally {
+				PermissionsManager.get().popUser();
+			}
+		}
+		if (copyContentToLargeResult || Ax.isTest()) {
+			JobContext.get().getJob().setLargeResult(result.getContent());
+		}
+		if (!Ax.isTest()) {
+			result.ensureMinimal();
+		}
+		JobContext.get().getJob().setResult(result);
+		Transaction.commit();
 	}
 
 	public void setAwaitJobCompletion(boolean awaitJobCompletion) {
@@ -60,29 +91,5 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 	public ServletAwaitTask withRequest(ContentRequestBase publicationRequest) {
 		setPublicationRequest(publicationRequest);
 		return this;
-	}
-
-	@Override
-	public void run() throws Exception {
-		PublicationResult result = null;
-		IUser user = JobContext.get().getJob().getUser();
-		if (user == UserlandProvider.get().getSystemUser()) {
-			result = publicationRequest.publish();
-		} else {
-			try {
-				PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
-				result = publicationRequest.publish();
-			} finally {
-				PermissionsManager.get().popUser();
-			}
-		}
-		if (copyContentToLargeResult) {
-			JobContext.get().getJob().setLargeResult(result.getContent());
-		}
-		if (!Ax.isTest()) {
-			result.ensureMinimal();
-		}
-		JobContext.get().getJob().setResult(result);
-		Transaction.commit();
 	}
 }
