@@ -151,36 +151,12 @@ public class JobContext {
 		return get() != null;
 	}
 
-	Set<String> publishedMessages = Collections
-			.synchronizedSet(new LinkedHashSet<>());
+	public static void info(String template, Object... args) {
+		info0(false, template, args);
+	}
 
 	public static void infoOnce(String template, Object... args) {
 		info0(true, template, args);
-	}
-
-	static void info0(boolean once, String template, Object... args) {
-		String message = Ax.format(template.replace("{}", "%s"), args);
-		if (has()) {
-			if (once && !get().isFirstTimeMessage(message)) {
-				// duplicate
-			} else {
-				get().getLogger().info(template, args);
-			}
-		} else {
-			if (LooseContext.is(CONTEXT_KNOWN_OUTSIDE_JOB)) {
-				Ax.out(message);
-			} else {
-				Ax.out("Called JobContext.info() outside job - %s", message);
-			}
-		}
-	}
-
-	boolean isFirstTimeMessage(String message) {
-		return publishedMessages.add(message);
-	}
-
-	public static void info(String template, Object... args) {
-		info0(false, template, args);
 	}
 
 	public static void jobException(Exception e) {
@@ -265,18 +241,6 @@ public class JobContext {
 		}
 	}
 
-	private EventCollator<Runnable> debouncer = new EventCollator<Runnable>(
-			1000,
-			collator -> AlcinaChildRunnable
-					.runInTransaction(() -> collator.getLastObject().run()))
-							.withMaxDelayFromFirstEvent(100)
-							.withMaxDelayFromFirstCollatedEvent(1000)
-							.withRunOnCurrentThread(true);
-
-	private void fireDebounced(Runnable runnable) {
-		debouncer.eventOccurred(runnable);
-	}
-
 	public static void warn(String template, Exception ex) {
 		get().getLogger().warn(template, ex);
 	}
@@ -296,6 +260,34 @@ public class JobContext {
 	static boolean ignoreResource(JobResource resource) {
 		return LooseContext.is(CONTEXT_IGNORE_RESOURCES);
 	}
+
+	static void info0(boolean once, String template, Object... args) {
+		String message = Ax.format(template.replace("{}", "%s"), args);
+		if (has()) {
+			if (once && !get().isFirstTimeMessage(message)) {
+				// duplicate
+			} else {
+				get().getLogger().info(template, args);
+			}
+		} else {
+			if (LooseContext.is(CONTEXT_KNOWN_OUTSIDE_JOB)) {
+				Ax.out(message);
+			} else {
+				Ax.out("Called JobContext.info() outside job - %s", message);
+			}
+		}
+	}
+
+	Set<String> publishedMessages = Collections
+			.synchronizedSet(new LinkedHashSet<>());
+
+	private EventCollator<Runnable> debouncer = new EventCollator<Runnable>(
+			1000,
+			collator -> AlcinaChildRunnable
+					.runInTransaction(() -> collator.getLastObject().run()))
+							.withMaxDelayFromFirstEvent(100)
+							.withMaxDelayFromFirstCollatedEvent(1000)
+							.withRunOnCurrentThread(true);
 
 	private boolean enqueueProgressOnBackend;
 
@@ -491,6 +483,10 @@ public class JobContext {
 		endedLatch.countDown();
 	}
 
+	private void fireDebounced(Runnable runnable) {
+		debouncer.eventOccurred(runnable);
+	}
+
 	private void maybeEnqueue(Runnable runnable) {
 		if (enqueueProgressOnBackend) {
 			TransformCommit.get().enqueueBackendTransform(runnable);
@@ -513,9 +509,9 @@ public class JobContext {
 	void awaitSequenceCompletion() {
 		TransactionEnvironment.get().ensureEnded();
 		try {
-			endedLatch.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+			JobRegistry.awaitLatch(endedLatch);
+		} catch (Exception e) {
+			logger.warn("DEVEX-0 -- job sequence timeout/interruption", e);
 		}
 		allocator.awaitSequenceCompletion();
 		TransactionEnvironment.get().begin();
@@ -582,6 +578,10 @@ public class JobContext {
 		} else {
 			end0();
 		}
+	}
+
+	boolean isFirstTimeMessage(String message) {
+		return publishedMessages.add(message);
 	}
 
 	void persistStart() {

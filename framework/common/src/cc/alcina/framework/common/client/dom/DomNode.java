@@ -86,6 +86,1317 @@ DomDocument.from(
  *
  */
 public class DomNode {
+	public static class DocumentOrderComparator implements Comparator<DomNode> {
+		DomEnvironment domEnvironment = DomEnvironment.get();
+
+		@Override
+		public int compare(DomNode o1, DomNode o2) {
+			if (o1 == o2) {
+				return 0;
+			}
+			return domEnvironment.isEarlierThan(o1.w3cNode(), o2.w3cNode()) ? -1
+					: 1;
+		}
+	}
+
+	public class DomNodeAncestors {
+		private boolean orSelf = false;
+
+		public DomNode ancestorBefore(DomNode node) {
+			DomNode cursor = DomNode.this;
+			while (cursor != null) {
+				DomNode parent = cursor.parent();
+				if (parent == node) {
+					return cursor;
+				}
+				cursor = parent;
+			}
+			return null;
+		}
+
+		public DomNode get(String... tags) {
+			List<String> tagList = Arrays.asList(tags);
+			DomNode cursor = getStartingCursor();
+			while (cursor != null) {
+				if (cursor.tagIsOneOf(tagList)) {
+					return cursor;
+				}
+				cursor = cursor.parent();
+			}
+			return null;
+		}
+
+		public boolean has(DomNode test) {
+			test = test.asDomNode();
+			DomNode node = getStartingCursor();
+			while (node != null) {
+				if (node == test) {
+					return true;
+				}
+				node = node.parent();
+			}
+			return false;
+		}
+
+		public boolean has(Predicate<DomNode> test) {
+			DomNode node = getStartingCursor();
+			while (node != null) {
+				if (test.test(node)) {
+					return true;
+				}
+				node = node.parent();
+			}
+			return false;
+		}
+
+		public boolean has(String... tags) {
+			return get(tags) != null;
+		}
+
+		public boolean isFirstChild() {
+			return parent().children.isFirstChild(DomNode.this);
+		}
+
+		public List<DomNode> list() {
+			List<DomNode> result = new ArrayList<>();
+			DomNode cursor = getStartingCursor();
+			while (cursor != null) {
+				result.add(cursor);
+				cursor = cursor.parent();
+			}
+			return result;
+		}
+
+		public Optional<DomNode> match(Predicate<DomNode> predicate) {
+			DomNode cursor = getStartingCursor();
+			while (cursor != null) {
+				if (predicate.test(cursor)) {
+					return Optional.of(cursor);
+				}
+				cursor = cursor.parent();
+			}
+			return Optional.empty();
+		}
+
+		public DomNodeAncestors orSelf() {
+			DomNodeAncestors ancestor = new DomNodeAncestors();
+			ancestor.orSelf = true;
+			return ancestor;
+		}
+
+		public boolean parentHasNoTextOrElementsBeforeThisChild() {
+			for (DomNode node : parent().children.nodes()) {
+				if (node == DomNode.this) {
+					return true;
+				}
+				if (node.isText() || node.isElement()) {
+					return false;
+				}
+			}
+			return false;
+		}
+
+		public DomNode selfOrContainingElement() {
+			return isElement() ? DomNode.this : parent();
+		}
+
+		public Stream<DomNode> stream() {
+			return list().stream();
+		}
+
+		private DomNode getStartingCursor() {
+			return orSelf ? DomNode.this : DomNode.this.parent();
+		}
+	}
+
+	public class DomNodeChildren {
+		List<DomNode> nodes;
+
+		public void adoptFrom(DomNode n) {
+			n.children.nodes().forEach(this::append);
+		}
+
+		public void append(Collection<DomNode> childNodes) {
+			childNodes.stream().forEach(n -> append(n));
+		}
+
+		public void append(DomNode xmlNode) {
+			DomNode.this.node.appendChild(xmlNode.node);
+		}
+
+		public List<DomNode> byTag(String tag) {
+			List<DomNode> elements = elements();
+			elements.removeIf(n -> !n.tagIs(tag));
+			return elements;
+		}
+
+		public List<DomNode> byTags(String... tags) {
+			List<DomNode> elements = elements();
+			elements.removeIf(n -> !n.tagIsOneOf(tags));
+			return elements;
+		}
+
+		public void clear() {
+			nodes().stream().forEach(DomNode::removeFromParent);
+		}
+
+		public boolean contains(DomNode n) {
+			return nodes().contains(n);
+		}
+
+		public boolean contains(String tag) {
+			return elements().stream().anyMatch(xn -> xn.tagIs(tag));
+		}
+
+		public List<DomNode> elements() {
+			return nodes().stream().filter(DomNode::isElement)
+					.collect(Collectors.toList());
+		}
+
+		public DomNode firstElement() {
+			return CommonUtils.first(elements());
+		}
+
+		public DomNode firstNode() {
+			return CommonUtils.first(nodes());
+		}
+
+		public DomNode firstNonElementChild() {
+			return descendants().filter(n -> !n.isElement()).findFirst()
+					.orElse(null);
+		}
+
+		public DomNode firstNonWhitespaceNode() {
+			return nodes().stream()
+					.filter(n -> !(n.isText() && n.isWhitespaceTextContent()))
+					.findFirst().orElse(null);
+		}
+
+		public DomNode firstNonWhitespaceTextDescendant() {
+			return stream()
+					.filter(n -> n.isText() && !n.isWhitespaceTextContent())
+					.findFirst().orElse(null);
+		}
+
+		public DomNode importAsFirstChild(DomNode n) {
+			return importAsFirstChild(n, true);
+		}
+
+		public DomNode importAsFirstChild(DomNode n, boolean deep) {
+			Node importNode = document.domDoc().importNode(n.node, deep);
+			DomNode imported = document.nodeFor(importNode);
+			insertAsFirstChild(imported);
+			return imported;
+		}
+
+		public DomNode importFrom(DomNode n) {
+			return importFrom(n, true);
+		}
+
+		public DomNode importFrom(DomNode n, boolean deep) {
+			Node importNode = document.domDoc().importNode(n.node, deep);
+			DomNode imported = document.nodeFor(importNode);
+			append(imported);
+			return imported;
+		}
+
+		public void insertAsFirstChild(DomNode newChild) {
+			node.insertBefore(newChild.node, node.getFirstChild());
+		}
+
+		public boolean isFirstChild(DomNode xmlNode) {
+			return xmlNode != null && firstNode() == xmlNode.asDomNode();
+		}
+
+		public boolean isFirstNonWhitespaceChild(DomNode xmlNode) {
+			return xmlNode != null && firstNonWhitespaceNode() != null
+					&& firstNonWhitespaceNode().w3cNode() == xmlNode.w3cNode();
+		}
+
+		public boolean isFirstNonWhitespaceTextDescendant(DomNode xmlNode) {
+			return xmlNode != null && firstNonWhitespaceTextDescendant() != null
+					&& firstNonWhitespaceTextDescendant().w3cNode() == xmlNode
+							.w3cNode();
+		}
+
+		public boolean isLastChild(DomNode node) {
+			return node != null && lastNode() == node.asDomNode();
+		}
+
+		public boolean isLastElementNode(DomNode node) {
+			return node != null && lastElementNode() == node.asDomNode();
+		}
+
+		public boolean isLastNonWhitespaceChild(DomNode node) {
+			return node != null
+					&& lastNonWhitespaceNode().w3cNode() == node.w3cNode();
+		}
+
+		public DomNode lastElementNode() {
+			List<DomNode> nodes = nodes();
+			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
+				DomNode kid = nodes.get(idx);
+				if (kid.isElement()) {
+					return kid;
+				}
+			}
+			return null;
+		}
+
+		public DomNode lastNode() {
+			return CommonUtils.last(nodes());
+		}
+
+		public DomNode lastNonEmptyTextNode() {
+			List<DomNode> nodes = nodes();
+			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
+				DomNode kid = nodes.get(idx);
+				if (kid.isElement()
+						|| kid.isText() && !kid.isEmptyTextContent()) {
+					return kid;
+				}
+			}
+			return null;
+		}
+
+		public DomNode lastNonWhitespaceNode() {
+			return nodes().stream()
+					.filter(n -> !(n.isText() && n.isWhitespaceTextContent()))
+					.reduce((n1, n2) -> n2).orElse(null);
+		}
+
+		public DomNode lastNonWhitespaceTextNode() {
+			return nodes().stream()
+					.filter(n -> n.isText() && !n.isWhitespaceTextContent())
+					.reduce((n1, n2) -> n2).orElse(null);
+		}
+
+		public List<DomNode> nodes() {
+			if (this.nodes != null) {
+				return this.nodes;
+			}
+			List<DomNode> nodes = DomEnvironment
+					.nodeListToList(node.getChildNodes()).stream()
+					.map(document::nodeFor).collect(Collectors.toList());
+			if (document.isReadonly()) {
+				this.nodes = nodes;
+			}
+			return nodes;
+		}
+
+		public boolean noElements() {
+			return elements().size() == 0;
+		}
+
+		public DomNode soleElement() {
+			List<DomNode> elts = elements();
+			return elts.size() == 1 && nodes().size() == 1 ? elts.get(0) : null;
+		}
+
+		public boolean soleElement(String tag) {
+			List<DomNode> elts = elements();
+			return elts.size() == 1 && elts.get(0).tagIs(tag);
+		}
+
+		public Optional<DomNode>
+				soleElementExcludingProcessingInstructionsAndWhitespace() {
+			List<DomNode> nodes = nodes().stream().filter(
+					n -> !n.isProcessingInstruction() && !n.ntc().isEmpty())
+					.collect(Collectors.toList());
+			return nodes.size() == 1 && nodes.get(0).isElement()
+					? Optional.of(nodes.get(0))
+					: Optional.empty();
+		}
+
+		public String textContent() {
+			return TextUtils.normalizeWhitespaceAndTrim(nodes().stream()
+					.filter(DomNode::isText).map(DomNode::textContent)
+					.collect(Collectors.joining()));
+		}
+	}
+
+	public class DomNodeCss {
+		public void addBold() {
+			addStyle("font-weight: bold");
+		}
+
+		public void addClass(String className) {
+			addAttr("class", className, " ");
+		}
+
+		public void addStyle(String style) {
+			addAttr("style", style, "; ");
+		}
+
+		public void displayNone() {
+			addStyle("display:none");
+		}
+	}
+
+	public class DomNodeDebug {
+		public String shortRepresentation() {
+			String out = "";
+			DomNodeDebugSupport debugSupport = LooseContext
+					.get(CONTEXT_DEBUG_SUPPORT);
+			if (debugSupport != null) {
+				out = debugSupport.shortRepresentation(DomNode.this);
+			}
+			String xml = DomNode.this.toString().replace("\n", "\\n");
+			if (xml.length() > 0) {
+				xml = CommonUtils.trimToWsChars(xml, 50);
+				if (out.length() > 0) {
+					out += " : ";
+				}
+				out += xml;
+			}
+			return out;
+		}
+	}
+
+	public interface DomNodeDebugSupport {
+		public String shortRepresentation(DomNode node);
+	}
+
+	public class DomNodeHtml {
+		public DomNode addLink(String text, String href, String target) {
+			return builder().tag("a").attr("href", href).attr("target", target)
+					.text(text).append();
+		}
+
+		public void appendStyleNode(String css) {
+			head().builder().tag("style").text(css).append();
+		}
+
+		public DomNode body() {
+			return xpath("//body").optionalNode()
+					.orElse(xpath("//BODY").node());
+		}
+
+		public DomNode head() {
+			return xpath("//head").node();
+		}
+
+		public DomNodeHtmlTableBuilder tableBuilder() {
+			return new DomNodeHtmlTableBuilder(DomNode.this);
+		}
+
+		public String toHtml() {
+			return toHtml(true);
+		}
+
+		public String toHtml(boolean pretty) {
+			return DomEnvironment.get().toHtml(document, pretty);
+		}
+
+		public List<DomNode> trs() {
+			List<DomNode> trs = children.byTag("TR");
+			if (trs.isEmpty()) {
+				trs = xpath("./TBODY/TR").nodes();
+			}
+			return trs;
+		}
+	}
+
+	public class DomNodeRelative {
+		public boolean hasNextSibling() {
+			return node.getNextSibling() != null;
+		}
+
+		public boolean hasPreviousSibling() {
+			return node.getPreviousSibling() != null;
+		}
+
+		public void insertAfterThis(DomNode node) {
+			parent().node.insertBefore(node.node,
+					DomNode.this.node.getNextSibling());
+		}
+
+		public void insertAsFirstChildOf(DomNode other) {
+			other.children.insertAsFirstChild(DomNode.this);
+		}
+
+		public void insertBeforeThis(DomNode node) {
+			parent().node.insertBefore(node.node, DomNode.this.node);
+		}
+
+		public DomNode lastDescendant() {
+			DomNode cursor = DomNode.this;
+			while (cursor != null) {
+				DomNode last = cursor.children.lastNode();
+				if (last == null) {
+					return cursor;
+				}
+				cursor = last;
+			}
+			return null;
+		}
+
+		public DomNode lastDescendantElement() {
+			DomNode cursor = DomNode.this;
+			while (cursor != null) {
+				DomNode last = cursor.children.lastElementNode();
+				if (last == null) {
+					return cursor;
+				}
+				cursor = last;
+			}
+			return null;
+		}
+
+		public DomNode nextLogicalNode() {
+			if (hasNextSibling()) {
+				return nextSibling();
+			}
+			DomNode parent = parent();
+			if (parent != null) {
+				return parent.relative().nextLogicalNode();
+			}
+			return null;
+		}
+
+		public DomNode nextSibling() {
+			return document.nodeFor(node.getNextSibling());
+		}
+
+		public DomNode nextSiblingElement() {
+			Node cursor = node.getNextSibling();
+			while (cursor != null) {
+				DomNode xnCursor = document.nodeFor(cursor);
+				if (xnCursor.isElement()) {
+					return xnCursor;
+				}
+				cursor = cursor.getNextSibling();
+			}
+			return null;
+		}
+
+		public DomNode previousSibling() {
+			return document.nodeFor(node.getPreviousSibling());
+		}
+
+		public DomNode previousSiblingExcludingWhitespace() {
+			DomNode cursor = DomNode.this;
+			while (true) {
+				cursor = cursor.relative().previousSibling();
+				if (cursor == null) {
+					return null;
+				}
+				if (cursor.isText() && cursor.isWhitespaceTextContent()) {
+				} else {
+					return cursor;
+				}
+			}
+		}
+
+		public DomNode previousSibOrParentSibNode() {
+			if (hasPreviousSibling()) {
+				return previousSibling();
+			} else {
+				return parent();
+			}
+		}
+
+		public DomNode replaceWithMoveContents(DomNode node) {
+			replaceWith(node);
+			node.copyAttributesFrom(DomNode.this);
+			node.children.adoptFrom(DomNode.this);
+			return node;
+		}
+
+		public DomNode replaceWithTag(String tag) {
+			DomNode wrapper = document
+					.nodeFor(document.domDoc().createElement(tag));
+			return replaceWithMoveContents(wrapper);
+		}
+
+		public void swapWith(DomNode other) {
+			DomNode parent = parent();
+			DomNode insertBefore = nextSibling();
+			other.relative().insertBeforeThis(DomNode.this);
+			if (insertBefore != null) {
+				insertBefore.relative().insertBeforeThis(other);
+			} else {
+				parent.children.append(other);
+			}
+		}
+
+		public DomNode wrap(String tag) {
+			DomNode wrapper = document
+					.nodeFor(document.domDoc().createElement(tag));
+			replaceWith(wrapper);
+			wrapper.children.append(DomNode.this);
+			wrapper.copyAttributesFrom(DomNode.this);
+			return wrapper;
+		}
+
+		public void insertAfterThis(List<DomNode> list) {
+			List<DomNode> copy = list.stream().collect(Collectors.toList());
+			Collections.reverse(copy);
+			copy.forEach(n -> insertAfterThis(n));
+		}
+	}
+
+	public class DomNodeStyle {
+		public DomNode addClassName(String string) {
+			Set<String> classes = new LinkedHashSet<>();
+			Arrays.stream(attr("class").split(" ")).filter(Ax::notBlank)
+					.forEach(classes::add);
+			classes.add(string);
+			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
+			return DomNode.this;
+		}
+
+		public Optional<DomNode> containingBlock() {
+			return ancestors().orSelf().list().stream()
+					.filter(n -> n.style().isBlock()).findFirst();
+		}
+
+		public boolean hasClassName(String className) {
+			return isElement() && Arrays.stream(attr("class").split(" "))
+					.anyMatch(cn -> cn.equals(className));
+		}
+
+		public boolean isBlock() {
+			return isElement() && DomEnvironment.contextBlockResolver()
+					.isBlock(DomNode.this);
+		}
+
+		public boolean isBold() {
+			return DomEnvironment.contextBlockResolver()
+					.isBold(ancestors().selfOrContainingElement());
+		}
+
+		public boolean isItalic() {
+			return DomEnvironment.contextBlockResolver()
+					.isItalic(ancestors().selfOrContainingElement());
+		}
+
+		public boolean isOrContainsBlock(StyleResolver blockResolver) {
+			if (blockResolver.isBlock(DomNode.this)) {
+				return true;
+			}
+			return descendants().anyMatch(blockResolver::isBlock);
+		}
+
+		public DomNode setClassName(String string) {
+			setAttr("class", string);
+			return DomNode.this;
+		}
+
+		public void setProperty(String key, String value) {
+			key = jsToDom(key);
+			StringMap styles = new StringMap();
+			// t0tes naive
+			if (has("style")) {
+				String existing = attr("style");
+				Arrays.stream(existing.split(";")).forEach(s -> {
+					String[] parts = s.split(":");
+					styles.put(parts[0], parts[1]);
+				});
+			}
+			styles.put(key, value);
+			setAttr("style", toStyleAttribute(styles));
+		}
+
+		private String jsToDom(String key) {
+			if (key.equals(key.toLowerCase())) {
+				return key;
+			}
+			StringBuilder builder = new StringBuilder();
+			/*
+			 * Could use a regex...
+			 */
+			for (int idx = 0; idx < key.length(); idx++) {
+				char c = key.charAt(idx);
+				if (c >= 'A' && c <= 'Z') {
+					builder.append('-');
+					builder.append(String.valueOf(c).toLowerCase());
+				} else {
+					builder.append(c);
+				}
+			}
+			return builder.toString();
+		}
+	}
+
+	public class DomNodeText {
+		public class SplitResult {
+			public DomNode before;
+
+			public DomNode contents;
+
+			public DomNode after;
+		}
+
+		public void mergeWithAdjacentTexts() {
+			DomNode cursor = DomNode.this;
+			for (;;) {
+				DomNode previousSibling = cursor.relative().nextSibling();
+				if (previousSibling != null && previousSibling.isText()) {
+					cursor = previousSibling;
+				} else {
+					break;
+				}
+			}
+			for (;;) {
+				DomNode nextSibling = cursor.relative().nextSibling();
+				if (nextSibling != null && nextSibling.isText()) {
+					cursor.setText(
+							cursor.textContent() + nextSibling.textContent());
+					nextSibling.removeFromParent();
+				} else {
+					break;
+				}
+			}
+		}
+
+		public SplitResult split(int from, int to) {
+			SplitResult result = new SplitResult();
+			Preconditions.checkState(isText());
+			DomNode cursor = DomNode.this;
+			result.contents = cursor;
+			if (from > 0) {
+				result.before = cursor;
+				result.contents = cursor.builder()
+						.text(cursor.textContent().substring(from))
+						.insertAfterThis();
+				cursor.setText(cursor.textContent().substring(0, from));
+				cursor = result.contents;
+				to -= from;
+				from = 0;
+			}
+			if (to < cursor.textContent().length()) {
+				result.after = cursor.builder()
+						.text(cursor.textContent().substring(to))
+						.insertAfterThis();
+				cursor.setText(cursor.textContent().substring(0, to));
+			}
+			return result;
+		}
+	}
+
+	public static class DomNodeTraversal extends DepthFirstTraversal<DomNode> {
+		public DomNodeTraversal(DomNode root) {
+			super(root, node -> node.children.nodes());
+		}
+	}
+
+	public class DomNodeTree implements Iterator<DomNode> {
+		private TreeWalker tw;
+
+		public boolean forwards = true;
+
+		private Node hasNextFor;
+
+		private Node next;
+
+		private boolean currentIterated;
+
+		public DomNodeTree() {
+			tw = ((DocumentTraversal) document.domDoc()).createTreeWalker(
+					document.domDoc(), NodeFilter.SHOW_ALL, null, true);
+			tw.setCurrentNode(node);
+		}
+
+		public DomNode currentNode() {
+			return document.nodeFor(tw.getCurrentNode());
+		}
+
+		@Override
+		public boolean hasNext() {
+			Node currentNode = tw.getCurrentNode();
+			if (currentNode != hasNextFor) {
+				hasNextFor = currentNode;
+				next = next0();
+				if (next != null) {
+					tw.setCurrentNode(currentNode);
+				} else {
+				}
+			}
+			return next != null;
+		}
+
+		public List<DomNode> listUntil(DomNode end, boolean endInclusive) {
+			List<DomNode> result = new ArrayList<>();
+			while (currentNode() != end) {
+				result.add(currentNode());
+				nextLogicalNode();
+			}
+			if (endInclusive) {
+				result.add(end);
+			}
+			return result;
+		}
+
+		@Override
+		public DomNode next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			} else {
+				if (!currentIterated) {
+					currentIterated = true;
+					// clear, since this will equal root, and we need to recalc
+					// next
+					hasNextFor = null;
+				}
+				tw.setCurrentNode(next);
+				return document.nodeFor(tw.getCurrentNode());
+			}
+		}
+
+		public DomNode nextLogicalNode() {
+			Node next = nextNodeWithReversed();
+			return document.nodeFor(next);
+		}
+
+		public String nextNonWhitespaceText() {
+			return nextNonWhitespaceTextNode().map(DomNode::ntc).orElse(null);
+		}
+
+		public Optional<DomNode> nextNonWhitespaceTextNode() {
+			return nextTextNode(false);
+		}
+
+		public Optional<DomNode> nextTextNode(boolean nonWhitespace) {
+			while (true) {
+				Node next = nextNodeWithReversed();
+				if (next == null) {
+					return Optional.empty();
+				}
+				DomNode xNext = document.nodeFor(next);
+				if (xNext.isText() && (nonWhitespace
+						|| xNext.isNonWhitespaceTextContent())) {
+					return Optional.of(xNext);
+				}
+			}
+		}
+
+		public DomNode previousLogicalNode() {
+			return withReversed(this::nextLogicalNode);
+		}
+
+		public String previousNonWhitespaceText() {
+			return withReversed(this::nextNonWhitespaceText);
+		}
+
+		public Optional<DomNode> previousNonWhitespaceTextNode() {
+			return withReversed(this::nextNonWhitespaceTextNode);
+		}
+
+		public DomNodeTree reversed() {
+			this.forwards = !forwards;
+			return this;
+		}
+
+		public void setCurrentNode(DomNode cursor) {
+			tw.setCurrentNode(cursor.node);
+		}
+
+		public Stream<DomNode> stream() {
+			Iterable<DomNode> iterable = () -> this;
+			return StreamSupport.stream(iterable.spliterator(), false);
+		}
+
+		Node next0() {
+			if (!currentIterated) {
+				return tw.getCurrentNode();
+			}
+			while (true) {
+				// will be null at the end of the traversal
+				Node next = nextNodeWithReversed();
+				return next;
+			}
+		}
+
+		Node nextNodeWithReversed() {
+			return forwards ? tw.nextNode() : tw.previousNode();
+		}
+
+		<T> T withReversed(Supplier<T> supplier) {
+			reversed();
+			T result = supplier.get();
+			reversed();
+			return result;
+		}
+	}
+
+	public class DomNodeXpath {
+		public String query;
+
+		private XpathEvaluator evaluator;
+
+		public DomNodeXpath() {
+			if (document == DomNode.this) {
+				evaluator = DomEnvironment.get()
+						.createXpathEvaluator(DomNode.this, null);
+			} else {
+				evaluator = DomEnvironment.get().createXpathEvaluator(
+						DomNode.this, document.xpath("").getEvaluator());
+			}
+		}
+
+		public boolean booleanValue() {
+			return Boolean.valueOf(textOrEmpty());
+		}
+
+		public void forEach(Consumer<DomNode> consumer) {
+			stream().forEach(consumer);
+		}
+
+		public XpathEvaluator getEvaluator() {
+			return this.evaluator;
+		}
+
+		public boolean matchExists() {
+			return node() != null;
+		}
+
+		public Stream<DomNode> matching(String pattern) {
+			return matching(pattern, false);
+		}
+
+		/**
+		 * Warning - uses 'find', not 'matches'
+		 */
+		public Stream<DomNode> matching(String pattern, boolean ignoreCase) {
+			RegExp regex = ignoreCase ? RegExp.compile(pattern, "i")
+					: RegExp.compile(pattern);
+			return stream().filter(n -> regex.exec(n.ntc()) != null);
+		}
+
+		public Stream<DomNode> matchingAttr(String attrName, String pattern) {
+			RegExp regex = RegExp.compile(pattern);
+			return stream().filter(n -> {
+				String attr = n.attr(attrName);
+				MatchResult matchResult = regex.exec(attr);
+				return matchResult != null
+						&& matchResult.getGroup(0).equals(attr);
+			});
+		}
+
+		public DomNode node() {
+			if (document.isReadonly() && lookup().handlesXpath(query)) {
+				return stream().findFirst().orElse(null);
+			} else {
+				Node domNode = evaluator.getNodeByXpath(query, node);
+				return document.nodeFor(domNode);
+			}
+		}
+
+		public List<DomNode> nodes() {
+			return stream().collect(Collectors.toList());
+		}
+
+		public Optional<DomNode> optionalNode() {
+			return Optional.ofNullable(node());
+		}
+
+		public boolean selfIs() {
+			return DomNode.this.parent().xpath(query).nodes()
+					.contains(document.nodeFor(node));
+		}
+
+		public Stream<DomNode> stream() {
+			if (document.isReadonly() && lookup().handlesXpath(query)) {
+				return lookup.stream(query);
+			} else {
+				List<Node> domNodes = evaluator.getNodesByXpath(query, node);
+				return domNodes.stream().map(document::nodeFor);
+			}
+		}
+
+		public String textNormalised() {
+			return node().ntc();
+		}
+
+		public String textNormalised(boolean required) {
+			DomNode node = node();
+			Optional<DomNode> optional = required ? Optional.of(node)
+					: Optional.ofNullable(node);
+			return optional.map(DomNode::ntc).orElse("");
+		}
+
+		public String textNormalisedOrEmpty() {
+			return textNormalised(false);
+		}
+
+		public String textOrEmpty() {
+			return Optional.ofNullable(node()).map(DomNode::textContent)
+					.orElse("");
+		}
+	}
+
+	public class DomRange {
+		private DomNode end;
+
+		private boolean startAfterThis;
+
+		private boolean endBefore;
+
+		public DocumentFragment asFragment() {
+			return (DocumentFragment) toNode().node;
+		}
+
+		public void clearContents() {
+			boolean inRange = false;
+			List<DomNode> toRemoveNodes = new ArrayList<>();
+			Objects.requireNonNull(end);
+			DomNode keepAncestorsOf = end;
+			if (!endBefore) {
+				DomNodeTree tree = end.tree();
+				DomNode next = tree.nextLogicalNode();
+				Node keep = next == null ? null : next.node;
+				keepAncestorsOf = keep == null ? null : document.nodeFor(keep);
+			}
+			DomNodeTree tree = tree();
+			List<DomNode> remove = new ArrayList<>();
+			while (true) {
+				DomNode cursor = tree.currentNode();
+				if (cursor == DomNode.this) {
+					inRange = true;
+					if (startAfterThis) {
+						tree.nextLogicalNode();
+						continue;
+					}
+				}
+				if (cursor == end && endBefore) {
+					break;
+				}
+				if (inRange) {
+					if (keepAncestorsOf == null
+							|| !cursor.isAncestorOf(keepAncestorsOf)) {
+						remove.add(cursor);
+					}
+				}
+				if (cursor == end) {
+					break;
+				}
+				tree.nextLogicalNode();
+			}
+			remove.stream().filter(n -> n.parent() != null)
+					.forEach(DomNode::removeFromParent);
+		}
+
+		public DomRange end(DomNode end) {
+			this.end = end;
+			return this;
+		}
+
+		public DomRange endBefore(DomNode endBefore) {
+			this.end = endBefore;
+			this.endBefore = true;
+			return this;
+		}
+
+		public boolean isBefore(DomNode other) {
+			Range r1 = createRange();
+			Range r2 = other.range().createRange();
+			boolean result = r1.compareBoundaryPoints(Range.START_TO_START,
+					r2) < 0;
+			r1.detach();
+			r2.detach();
+			return result;
+		}
+
+		public boolean isEndAfter(DomNode other) {
+			Range r1 = createRange();
+			Range r2 = other.range().createRange();
+			boolean result = r1.compareBoundaryPoints(Range.END_TO_END, r2) > 0;
+			r1.detach();
+			r2.detach();
+			return result;
+		}
+
+		public DomRange startAfterThis() {
+			startAfterThis = true;
+			return this;
+		}
+
+		public DomNode toNode() {
+			Range range = createRange();
+			DocumentFragment frag = range.cloneContents();
+			range.detach();
+			return document.nodeFor(frag);
+		}
+
+		public DomNode toWrappedNode(String tag, boolean clone) {
+			Element wrapper = document.domDoc().createElement(tag);
+			Range range = createRange();
+			DocumentFragment frag = range.cloneContents();
+			range.detach();
+			wrapper.appendChild(frag);
+			if (!clone) {
+				clearContents();
+			}
+			return document.nodeFor(wrapper);
+		}
+
+		private Range createRange() {
+			Range range = ((DocumentRange) document.domDoc()).createRange();
+			if (startAfterThis) {
+				range.setStartAfter(node);
+			} else {
+				range.setStartBefore(node);
+			}
+			if (endBefore) {
+				range.setEndBefore(end.node);
+			} else {
+				range.setEndAfter(end == null ? node : end.node);
+			}
+			return range;
+		}
+	}
+
+	public static class W3cNodeTraversal
+			extends DepthFirstTraversal<org.w3c.dom.Node> {
+		static List<Node> children(Node node) {
+			List<Node> result = new ArrayList<>();
+			NodeList childNodes = node.getChildNodes();
+			int length = childNodes.getLength();
+			for (int idx = 0; idx < length; idx++) {
+				result.add(childNodes.item(idx));
+			}
+			return result;
+		}
+
+		public W3cNodeTraversal(Node root) {
+			super(root, W3cNodeTraversal::children);
+		}
+	}
+
+	public interface XpathEvaluator {
+		Node getNodeByXpath(String query, Node node);
+
+		List<Node> getNodesByXpath(String query, Node node);
+	}
+
+	class DomNodeReadonlyLookup {
+		class DescendantMap implements Function<DomNode, DomNode> {
+			private String tag;
+
+			private int index;
+
+			private boolean immediateChildrenOnly;
+
+			public DescendantMap(String tag, String indexStr,
+					boolean immediateChildrenOnly) {
+				this.immediateChildrenOnly = immediateChildrenOnly;
+				this.tag = normaliseTag(tag);
+				this.index = Ax.isBlank(indexStr) ? 1
+						: Integer.parseInt(indexStr);
+			}
+
+			@Override
+			public DomNode apply(DomNode t) {
+				Stream<DomNode> stream = immediateChildrenOnly
+						? t.children.elements().stream()
+						: t.descendants();
+				return stream.filter(n -> n.tagIs(tag)).skip(index - 1)
+						.findFirst().orElse(null);
+			}
+		}
+
+		class DescendantTagAttrTagMap implements Function<DomNode, DomNode> {
+			private String tag;
+
+			private String attrName;
+
+			private String attrValue;
+
+			private String childTag;
+
+			public DescendantTagAttrTagMap(String tag, String attrName,
+					String attrValue, String childTag) {
+				this.tag = normaliseTag(tag);
+				this.attrName = attrName;
+				this.attrValue = attrValue;
+				this.childTag = normaliseTag(childTag);
+			}
+
+			@Override
+			public DomNode apply(DomNode t) {
+				return t.descendants().filter(n -> n.tagIs(tag))
+						.filter(n -> n.attrIs(attrName, attrValue)).findFirst()
+						.flatMap(n -> n.children.byTag(childTag).stream()
+								.findFirst())
+						.orElse(null);
+			}
+		}
+
+		class DomNodeReadonlyLookupQuery {
+			String grandChildTag;
+
+			boolean grandChild;
+
+			public String id2;
+
+			public String id;
+
+			boolean immediateChild;
+
+			String tag;
+
+			Predicate<DomNode> predicate = node -> true;
+
+			Function<DomNode, DomNode> map = node -> node;
+
+			boolean valid = false;
+		}
+
+		public DomNodeReadonlyLookup() {
+		}
+
+		public boolean handlesXpath(String xpath) {
+			DomNodeReadonlyLookupQuery query = parse(xpath);
+			return query.valid && (query.immediateChild || query.grandChild
+					|| DomNode.this == document);
+		}
+
+		DomNodeReadonlyLookupQuery parse(String xpath) {
+			return queryLookup.computeIfAbsent(xpath, this::parse0);
+		}
+
+		Stream<DomNode> stream(String xpath) {
+			DomNodeReadonlyLookupQuery query = parse(xpath);
+			if (query.immediateChild) {
+				return children.byTag(query.tag).stream()
+						.filter(query.predicate).map(query.map);
+			} else if (query.grandChild) {
+				return children.byTag(query.tag).stream()
+						.filter(query.predicate)
+						.map(n -> n.children.byTag(query.grandChildTag))
+						.flatMap(Collection::stream).map(query.map);
+			} else {
+				Stream<DomNode> stream = null;
+				if (Ax.notBlank(query.id2)) {
+					stream = Stream.concat(
+							document.byId().getAndEnsure(query.id).stream(),
+							document.byId().getAndEnsure(query.id2).stream());
+				} else if (Ax.notBlank(query.id)) {
+					stream = document.byId().getAndEnsure(query.id).stream();
+				} else {
+					stream = document.byTag().getAndEnsure(query.tag).stream();
+				}
+				return stream.filter(query.predicate).map(query.map)
+						.filter(Objects::nonNull);
+			}
+		}
+
+		private String normaliseTag(String tag) {
+			return tag.replace("xhtml:", "");
+		}
+
+		// yes, this could be optimised and made prettier. but works for 98% of
+		// cases I care about, with no real regex compilation performance issues
+		//
+		// Anything to avoid going to xalan...
+		private DomNodeReadonlyLookupQuery parse0(String xpath) {
+			DomNodeReadonlyLookupQuery query = new DomNodeReadonlyLookupQuery();
+			String xmlIdentifierChars = "[a-zA-Z\\-_0-9\\.:]+";
+			String tagOnlyRegex = Ax.format("//(%s)", xmlIdentifierChars);
+			String tagAttrNodeRegex = Ax.format("//(%s)/@(%s)",
+					xmlIdentifierChars, xmlIdentifierChars);
+			String tagIdNodeRegex = Ax.format("//(%s)\\[@id='(%s)'\\]",
+					xmlIdentifierChars, xmlIdentifierChars);
+			String tagIdsNodeRegex = Ax.format(
+					"//(%s)\\[@id='(%s)' or @id='(%s)'\\]", xmlIdentifierChars,
+					xmlIdentifierChars, xmlIdentifierChars);
+			String tagIdChildRegex = Ax.format(
+					"//(%s)\\[@id='(%s)'\\]/(%s)(?:\\[(%s)\\])?",
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
+					xmlIdentifierChars);
+			String tagIdDescendantRegex = Ax.format(
+					"//(%s)\\[@id='(%s)'\\]//(%s)(?:\\[(%s)\\])?",
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
+					xmlIdentifierChars);
+			String tagIdDescendantAttrValueDescendantTagRegex = Ax.format(
+					"//(%s)\\[@id='(%s)'\\]//(%s)/?\\[@(%s)='(%s)'\\]/(%s)",
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
+			String tagAttrValueRegex = Ax.format("//(%s)/?\\[@(%s)='(%s)'\\]",
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
+			String immediateChildRegex = xmlIdentifierChars;
+			String grandChildRegex = Ax.format("(%s)/(%s)", xmlIdentifierChars,
+					xmlIdentifierChars);
+			if (xpath.matches(immediateChildRegex)) {
+				query.tag = xpath;
+				query.valid = true;
+				query.immediateChild = true;
+			} else if (xpath.matches(grandChildRegex)) {
+				query.tag = xpath.replaceFirst(grandChildRegex, "$1");
+				query.grandChildTag = xpath.replaceFirst(grandChildRegex, "$2");
+				query.valid = true;
+				query.grandChild = true;
+			} else if (xpath.matches(tagOnlyRegex)) {
+				query.tag = xpath.replaceFirst(tagOnlyRegex, "$1");
+				query.valid = true;
+			} else if (xpath.matches(tagAttrNodeRegex)) {
+				query.tag = xpath.replaceFirst(tagAttrNodeRegex, "$1");
+				String attrName = xpath.replaceFirst(tagAttrNodeRegex, "$2");
+				query.predicate = node -> node.has(attrName);
+				query.map = node -> node.document.nodeFor(
+						((Element) node.w3cNode()).getAttributeNode(attrName));
+				query.valid = true;
+			} else if (xpath.matches(tagAttrValueRegex)) {
+				query.tag = xpath.replaceFirst(tagAttrValueRegex, "$1");
+				String attrName = xpath.replaceFirst(tagAttrValueRegex, "$2");
+				String attrValue = xpath.replaceFirst(tagAttrValueRegex, "$3");
+				query.predicate = node -> node.attrIs(attrName, attrValue);
+				query.valid = true;
+			} else if (xpath.matches(tagIdNodeRegex)) {
+				query.tag = xpath.replaceFirst(tagIdNodeRegex, "$1");
+				query.id = xpath.replaceFirst(tagIdNodeRegex, "$2");
+				query.predicate = node -> node.tagIs(query.tag);
+				query.valid = true;
+			} else if (xpath.matches(tagIdsNodeRegex)) {
+				query.tag = xpath.replaceFirst(tagIdsNodeRegex, "$1");
+				query.id = xpath.replaceFirst(tagIdsNodeRegex, "$2");
+				query.id2 = xpath.replaceFirst(tagIdsNodeRegex, "$3");
+				query.predicate = node -> node.tagIs(query.tag);
+				query.valid = true;
+			} else if (xpath.matches(tagIdChildRegex)) {
+				query.tag = xpath.replaceFirst(tagIdChildRegex, "$1");
+				query.id = xpath.replaceFirst(tagIdChildRegex, "$2");
+				query.predicate = node -> node.tagIs(query.tag);
+				query.map = new DescendantMap(
+						xpath.replaceFirst(tagIdChildRegex, "$3"),
+						xpath.replaceFirst(tagIdChildRegex, "$4"), true);
+				query.valid = true;
+			} else if (xpath.matches(tagIdDescendantRegex)) {
+				query.tag = xpath.replaceFirst(tagIdDescendantRegex, "$1");
+				query.id = xpath.replaceFirst(tagIdDescendantRegex, "$2");
+				query.predicate = node -> node.tagIs(query.tag);
+				query.map = new DescendantMap(
+						xpath.replaceFirst(tagIdDescendantRegex, "$3"),
+						xpath.replaceFirst(tagIdDescendantRegex, "$4"), false);
+				query.valid = true;
+			} else if (xpath
+					.matches(tagIdDescendantAttrValueDescendantTagRegex)) {
+				query.tag = xpath.replaceFirst(
+						tagIdDescendantAttrValueDescendantTagRegex, "$1");
+				query.id = xpath.replaceFirst(
+						tagIdDescendantAttrValueDescendantTagRegex, "$2");
+				query.map = new DescendantTagAttrTagMap(xpath.replaceFirst(
+						tagIdDescendantAttrValueDescendantTagRegex, "$3"),
+						xpath.replaceFirst(
+								tagIdDescendantAttrValueDescendantTagRegex,
+								"$4"),
+						xpath.replaceFirst(
+								tagIdDescendantAttrValueDescendantTagRegex,
+								"$5"),
+						xpath.replaceFirst(
+								tagIdDescendantAttrValueDescendantTagRegex,
+								"$6"));
+				query.valid = true;
+			}
+			if (query.valid) {
+				query.tag = normaliseTag(query.tag);
+				Preconditions.checkState(!query.tag.contains(":"));
+			}
+			return query;
+		}
+	}
+
 	public static final transient String CONTEXT_DEBUG_SUPPORT = DomNode.class
 			.getName() + ".CONTEXT_DEBUG_SUPPORT";
 
@@ -101,6 +1412,12 @@ public class DomNode {
 			document = node.getOwnerDocument();
 		}
 		return DomDocument.from(document).nodeFor(node);
+	}
+
+	public static String toStyleAttribute(StringMap result) {
+		return result.entrySet().stream()
+				.map(e -> Ax.format("%s: %s", e.getKey(), e.getValue()))
+				.collect(Collectors.joining("; "));
 	}
 
 	protected Node node;
@@ -578,6 +1895,19 @@ public class DomNode {
 		return xpath;
 	}
 
+	public DomNodeType getDomNodeType() {
+		return DomNodeType.fromW3cNode(node);
+	}
+
+	public boolean classMatches(String regex) {
+		return attr("class").matches(regex);
+	}
+
+	protected Document domDoc() {
+		return node.getNodeType() == Node.DOCUMENT_NODE ? (Document) node
+				: node.getOwnerDocument();
+	}
+
 	private ProcessingInstruction getProcessingInstruction() {
 		return (ProcessingInstruction) node;
 	}
@@ -601,1332 +1931,5 @@ public class DomNode {
 		}
 		Iterable<DomNode> iterable = () -> domTokenStream;
 		return StreamSupport.stream(iterable.spliterator(), false);
-	}
-
-	protected Document domDoc() {
-		return node.getNodeType() == Node.DOCUMENT_NODE ? (Document) node
-				: node.getOwnerDocument();
-	}
-
-	public static class DocumentOrderComparator implements Comparator<DomNode> {
-		DomEnvironment domEnvironment = DomEnvironment.get();
-
-		@Override
-		public int compare(DomNode o1, DomNode o2) {
-			if (o1 == o2) {
-				return 0;
-			}
-			return domEnvironment.isEarlierThan(o1.w3cNode(), o2.w3cNode()) ? -1
-					: 1;
-		}
-	}
-
-	public class DomNodeAncestors {
-		private boolean orSelf = false;
-
-		public DomNode ancestorBefore(DomNode node) {
-			DomNode cursor = DomNode.this;
-			while (cursor != null) {
-				DomNode parent = cursor.parent();
-				if (parent == node) {
-					return cursor;
-				}
-				cursor = parent;
-			}
-			return null;
-		}
-
-		public DomNode get(String... tags) {
-			List<String> tagList = Arrays.asList(tags);
-			DomNode cursor = getStartingCursor();
-			while (cursor != null) {
-				if (cursor.tagIsOneOf(tagList)) {
-					return cursor;
-				}
-				cursor = cursor.parent();
-			}
-			return null;
-		}
-
-		public boolean has(DomNode test) {
-			test = test.asDomNode();
-			DomNode node = getStartingCursor();
-			while (node != null) {
-				if (node == test) {
-					return true;
-				}
-				node = node.parent();
-			}
-			return false;
-		}
-
-		public boolean has(Predicate<DomNode> test) {
-			DomNode node = getStartingCursor();
-			while (node != null) {
-				if (test.test(node)) {
-					return true;
-				}
-				node = node.parent();
-			}
-			return false;
-		}
-
-		public boolean has(String... tags) {
-			return get(tags) != null;
-		}
-
-		public boolean isFirstChild() {
-			return parent().children.isFirstChild(DomNode.this);
-		}
-
-		public List<DomNode> list() {
-			List<DomNode> result = new ArrayList<>();
-			DomNode cursor = getStartingCursor();
-			while (cursor != null) {
-				result.add(cursor);
-				cursor = cursor.parent();
-			}
-			return result;
-		}
-
-		public Optional<DomNode> match(Predicate<DomNode> predicate) {
-			DomNode cursor = getStartingCursor();
-			while (cursor != null) {
-				if (predicate.test(cursor)) {
-					return Optional.of(cursor);
-				}
-				cursor = cursor.parent();
-			}
-			return Optional.empty();
-		}
-
-		public DomNodeAncestors orSelf() {
-			DomNodeAncestors ancestor = new DomNodeAncestors();
-			ancestor.orSelf = true;
-			return ancestor;
-		}
-
-		public boolean parentHasNoTextOrElementsBeforeThisChild() {
-			for (DomNode node : parent().children.nodes()) {
-				if (node == DomNode.this) {
-					return true;
-				}
-				if (node.isText() || node.isElement()) {
-					return false;
-				}
-			}
-			return false;
-		}
-
-		public DomNode selfOrContainingElement() {
-			return isElement() ? DomNode.this : parent();
-		}
-
-		public Stream<DomNode> stream() {
-			return list().stream();
-		}
-
-		private DomNode getStartingCursor() {
-			return orSelf ? DomNode.this : DomNode.this.parent();
-		}
-	}
-
-	public class DomNodeChildren {
-		public void adoptFrom(DomNode n) {
-			n.children.nodes().forEach(this::append);
-		}
-
-		public void append(Collection<DomNode> childNodes) {
-			childNodes.stream().forEach(n -> append(n));
-		}
-
-		public void append(DomNode xmlNode) {
-			DomNode.this.node.appendChild(xmlNode.node);
-		}
-
-		public List<DomNode> byTag(String tag) {
-			List<DomNode> elements = elements();
-			elements.removeIf(n -> !n.tagIs(tag));
-			return elements;
-		}
-
-		public List<DomNode> byTags(String... tags) {
-			List<DomNode> elements = elements();
-			elements.removeIf(n -> !n.tagIsOneOf(tags));
-			return elements;
-		}
-
-		public void clear() {
-			nodes().stream().forEach(DomNode::removeFromParent);
-		}
-
-		public boolean contains(DomNode n) {
-			return nodes().contains(n);
-		}
-
-		public boolean contains(String tag) {
-			return elements().stream().anyMatch(xn -> xn.tagIs(tag));
-		}
-
-		public List<DomNode> elements() {
-			return nodes().stream().filter(DomNode::isElement)
-					.collect(Collectors.toList());
-		}
-
-		public DomNode firstElement() {
-			return CommonUtils.first(elements());
-		}
-
-		public DomNode firstNode() {
-			return CommonUtils.first(nodes());
-		}
-
-		public DomNode firstNonElementChild() {
-			return descendants().filter(n -> !n.isElement()).findFirst()
-					.orElse(null);
-		}
-
-		public DomNode firstNonWhitespaceNode() {
-			return nodes().stream()
-					.filter(n -> !(n.isText() && n.isWhitespaceTextContent()))
-					.findFirst().orElse(null);
-		}
-
-		public DomNode firstNonWhitespaceTextDescendant() {
-			return stream()
-					.filter(n -> n.isText() && !n.isWhitespaceTextContent())
-					.findFirst().orElse(null);
-		}
-
-		public DomNode importAsFirstChild(DomNode n) {
-			return importAsFirstChild(n, true);
-		}
-
-		public DomNode importAsFirstChild(DomNode n, boolean deep) {
-			Node importNode = document.domDoc().importNode(n.node, deep);
-			DomNode imported = document.nodeFor(importNode);
-			insertAsFirstChild(imported);
-			return imported;
-		}
-
-		public DomNode importFrom(DomNode n) {
-			return importFrom(n, true);
-		}
-
-		public DomNode importFrom(DomNode n, boolean deep) {
-			Node importNode = document.domDoc().importNode(n.node, deep);
-			DomNode imported = document.nodeFor(importNode);
-			append(imported);
-			return imported;
-		}
-
-		public void insertAsFirstChild(DomNode newChild) {
-			node.insertBefore(newChild.node, node.getFirstChild());
-		}
-
-		public boolean isFirstChild(DomNode xmlNode) {
-			return xmlNode != null && firstNode() == xmlNode.asDomNode();
-		}
-
-		public boolean isFirstNonWhitespaceChild(DomNode xmlNode) {
-			return xmlNode != null && firstNonWhitespaceNode() != null
-					&& firstNonWhitespaceNode().w3cNode() == xmlNode.w3cNode();
-		}
-
-		public boolean isFirstNonWhitespaceTextDescendant(DomNode xmlNode) {
-			return xmlNode != null && firstNonWhitespaceTextDescendant() != null
-					&& firstNonWhitespaceTextDescendant().w3cNode() == xmlNode
-							.w3cNode();
-		}
-
-		public boolean isLastChild(DomNode node) {
-			return node != null && lastNode() == node.asDomNode();
-		}
-
-		public boolean isLastElementNode(DomNode node) {
-			return node != null && lastElementNode() == node.asDomNode();
-		}
-
-		public boolean isLastNonWhitespaceChild(DomNode node) {
-			return node != null
-					&& lastNonWhitespaceNode().w3cNode() == node.w3cNode();
-		}
-
-		public DomNode lastElementNode() {
-			List<DomNode> nodes = nodes();
-			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
-				DomNode kid = nodes.get(idx);
-				if (kid.isElement()) {
-					return kid;
-				}
-			}
-			return null;
-		}
-
-		public DomNode lastNode() {
-			return CommonUtils.last(nodes());
-		}
-
-		public DomNode lastNonEmptyTextNode() {
-			List<DomNode> nodes = nodes();
-			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
-				DomNode kid = nodes.get(idx);
-				if (kid.isElement()
-						|| kid.isText() && !kid.isEmptyTextContent()) {
-					return kid;
-				}
-			}
-			return null;
-		}
-
-		public DomNode lastNonWhitespaceNode() {
-			return nodes().stream()
-					.filter(n -> !(n.isText() && n.isWhitespaceTextContent()))
-					.reduce((n1, n2) -> n2).orElse(null);
-		}
-
-		public DomNode lastNonWhitespaceTextNode() {
-			return nodes().stream()
-					.filter(n -> n.isText() && !n.isWhitespaceTextContent())
-					.reduce((n1, n2) -> n2).orElse(null);
-		}
-
-		List<DomNode> nodes;
-
-		public List<DomNode> nodes() {
-			if (this.nodes != null) {
-				return this.nodes;
-			}
-			List<DomNode> nodes = DomEnvironment
-					.nodeListToList(node.getChildNodes()).stream()
-					.map(document::nodeFor).collect(Collectors.toList());
-			if (document.isReadonly()) {
-				this.nodes = nodes;
-			}
-			return nodes;
-		}
-
-		public boolean noElements() {
-			return elements().size() == 0;
-		}
-
-		public DomNode soleElement() {
-			List<DomNode> elts = elements();
-			return elts.size() == 1 && nodes().size() == 1 ? elts.get(0) : null;
-		}
-
-		public boolean soleElement(String tag) {
-			List<DomNode> elts = elements();
-			return elts.size() == 1 && elts.get(0).tagIs(tag);
-		}
-
-		public Optional<DomNode>
-				soleElementExcludingProcessingInstructionsAndWhitespace() {
-			List<DomNode> nodes = nodes().stream().filter(
-					n -> !n.isProcessingInstruction() && !n.ntc().isEmpty())
-					.collect(Collectors.toList());
-			return nodes.size() == 1 && nodes.get(0).isElement()
-					? Optional.of(nodes.get(0))
-					: Optional.empty();
-		}
-
-		public String textContent() {
-			return TextUtils.normalizeWhitespaceAndTrim(nodes().stream()
-					.filter(DomNode::isText).map(DomNode::textContent)
-					.collect(Collectors.joining()));
-		}
-	}
-
-	public class DomNodeCss {
-		public void addBold() {
-			addStyle("font-weight: bold");
-		}
-
-		public void addClass(String className) {
-			addAttr("class", className, " ");
-		}
-
-		public void addStyle(String style) {
-			addAttr("style", style, "; ");
-		}
-
-		public void displayNone() {
-			addStyle("display:none");
-		}
-	}
-
-	public class DomNodeDebug {
-		public String shortRepresentation() {
-			String out = "";
-			DomNodeDebugSupport debugSupport = LooseContext
-					.get(CONTEXT_DEBUG_SUPPORT);
-			if (debugSupport != null) {
-				out = debugSupport.shortRepresentation(DomNode.this);
-			}
-			String xml = DomNode.this.toString().replace("\n", "\\n");
-			if (xml.length() > 0) {
-				xml = CommonUtils.trimToWsChars(xml, 50);
-				if (out.length() > 0) {
-					out += " : ";
-				}
-				out += xml;
-			}
-			return out;
-		}
-	}
-
-	public interface DomNodeDebugSupport {
-		public String shortRepresentation(DomNode node);
-	}
-
-	public class DomNodeHtml {
-		public DomNode addLink(String text, String href, String target) {
-			return builder().tag("a").attr("href", href).attr("target", target)
-					.text(text).append();
-		}
-
-		public void appendStyleNode(String css) {
-			head().builder().tag("style").text(css).append();
-		}
-
-		public DomNode body() {
-			return xpath("//body").optionalNode()
-					.orElse(xpath("//BODY").node());
-		}
-
-		public DomNode head() {
-			return xpath("//head").node();
-		}
-
-		public DomNodeHtmlTableBuilder tableBuilder() {
-			return new DomNodeHtmlTableBuilder(DomNode.this);
-		}
-
-		public String toHtml() {
-			return toHtml(true);
-		}
-
-		public String toHtml(boolean pretty) {
-			return DomEnvironment.get().toHtml(document, pretty);
-		}
-
-		public List<DomNode> trs() {
-			List<DomNode> trs = children.byTag("TR");
-			if (trs.isEmpty()) {
-				trs = xpath("./TBODY/TR").nodes();
-			}
-			return trs;
-		}
-	}
-
-	public class DomNodeRelative {
-		public boolean hasNextSibling() {
-			return node.getNextSibling() != null;
-		}
-
-		public boolean hasPreviousSibling() {
-			return node.getPreviousSibling() != null;
-		}
-
-		public void insertAfterThis(DomNode node) {
-			parent().node.insertBefore(node.node,
-					DomNode.this.node.getNextSibling());
-		}
-
-		public void insertAsFirstChildOf(DomNode other) {
-			other.children.insertAsFirstChild(DomNode.this);
-		}
-
-		public void insertBeforeThis(DomNode node) {
-			parent().node.insertBefore(node.node, DomNode.this.node);
-		}
-
-		public DomNode lastDescendant() {
-			DomNode cursor = DomNode.this;
-			while (cursor != null) {
-				DomNode last = cursor.children.lastNode();
-				if (last == null) {
-					return cursor;
-				}
-				cursor = last;
-			}
-			return null;
-		}
-
-		public DomNode lastDescendantElement() {
-			DomNode cursor = DomNode.this;
-			while (cursor != null) {
-				DomNode last = cursor.children.lastElementNode();
-				if (last == null) {
-					return cursor;
-				}
-				cursor = last;
-			}
-			return null;
-		}
-
-		public DomNode nextLogicalNode() {
-			if (hasNextSibling()) {
-				return nextSibling();
-			}
-			DomNode parent = parent();
-			if (parent != null) {
-				return parent.relative().nextLogicalNode();
-			}
-			return null;
-		}
-
-		public DomNode nextSibling() {
-			return document.nodeFor(node.getNextSibling());
-		}
-
-		public DomNode nextSiblingElement() {
-			Node cursor = node.getNextSibling();
-			while (cursor != null) {
-				DomNode xnCursor = document.nodeFor(cursor);
-				if (xnCursor.isElement()) {
-					return xnCursor;
-				}
-				cursor = cursor.getNextSibling();
-			}
-			return null;
-		}
-
-		public DomNode previousSibling() {
-			return document.nodeFor(node.getPreviousSibling());
-		}
-
-		public DomNode previousSiblingExcludingWhitespace() {
-			DomNode cursor = DomNode.this;
-			while (true) {
-				cursor = cursor.relative().previousSibling();
-				if (cursor == null) {
-					return null;
-				}
-				if (cursor.isText() && cursor.isWhitespaceTextContent()) {
-				} else {
-					return cursor;
-				}
-			}
-		}
-
-		public DomNode previousSibOrParentSibNode() {
-			if (hasPreviousSibling()) {
-				return previousSibling();
-			} else {
-				return parent();
-			}
-		}
-
-		public DomNode replaceWithMoveContents(DomNode node) {
-			replaceWith(node);
-			node.copyAttributesFrom(DomNode.this);
-			node.children.adoptFrom(DomNode.this);
-			return node;
-		}
-
-		public DomNode replaceWithTag(String tag) {
-			DomNode wrapper = document
-					.nodeFor(document.domDoc().createElement(tag));
-			return replaceWithMoveContents(wrapper);
-		}
-
-		public void swapWith(DomNode other) {
-			DomNode parent = parent();
-			DomNode insertBefore = nextSibling();
-			other.relative().insertBeforeThis(DomNode.this);
-			if (insertBefore != null) {
-				insertBefore.relative().insertBeforeThis(other);
-			} else {
-				parent.children.append(other);
-			}
-		}
-
-		public DomNode wrap(String tag) {
-			DomNode wrapper = document
-					.nodeFor(document.domDoc().createElement(tag));
-			replaceWith(wrapper);
-			wrapper.children.append(DomNode.this);
-			wrapper.copyAttributesFrom(DomNode.this);
-			return wrapper;
-		}
-
-		public void insertAfterThis(List<DomNode> list) {
-			List<DomNode> copy = list.stream().collect(Collectors.toList());
-			Collections.reverse(copy);
-			copy.forEach(n -> insertAfterThis(n));
-		}
-	}
-
-	public class DomNodeStyle {
-		public DomNode addClassName(String string) {
-			Set<String> classes = new LinkedHashSet<>();
-			Arrays.stream(attr("class").split(" ")).filter(Ax::notBlank)
-					.forEach(classes::add);
-			classes.add(string);
-			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
-			return DomNode.this;
-		}
-
-		public Optional<DomNode> containingBlock() {
-			return ancestors().orSelf().list().stream()
-					.filter(n -> n.style().isBlock()).findFirst();
-		}
-
-		public boolean hasClassName(String className) {
-			return isElement() && Arrays.stream(attr("class").split(" "))
-					.anyMatch(cn -> cn.equals(className));
-		}
-
-		public boolean isBlock() {
-			return isElement() && DomEnvironment.contextBlockResolver()
-					.isBlock(DomNode.this);
-		}
-
-		public boolean isBold() {
-			return DomEnvironment.contextBlockResolver()
-					.isBold(ancestors().selfOrContainingElement());
-		}
-
-		public boolean isItalic() {
-			return DomEnvironment.contextBlockResolver()
-					.isItalic(ancestors().selfOrContainingElement());
-		}
-
-		public boolean isOrContainsBlock(StyleResolver blockResolver) {
-			if (blockResolver.isBlock(DomNode.this)) {
-				return true;
-			}
-			return descendants().anyMatch(blockResolver::isBlock);
-		}
-
-		public DomNode setClassName(String string) {
-			setAttr("class", string);
-			return DomNode.this;
-		}
-
-		public void setProperty(String key, String value) {
-			key = jsToDom(key);
-			StringMap styles = new StringMap();
-			// t0tes naive
-			if (has("style")) {
-				String existing = attr("style");
-				Arrays.stream(existing.split(";")).forEach(s -> {
-					String[] parts = s.split(":");
-					styles.put(parts[0], parts[1]);
-				});
-			}
-			styles.put(key, value);
-			setAttr("style",
-					styles.entrySet().stream().map(
-							e -> Ax.format("%s:%s", e.getKey(), e.getValue()))
-							.collect(Collectors.joining("; ")));
-		}
-
-		private String jsToDom(String key) {
-			if (key.equals(key.toLowerCase())) {
-				return key;
-			}
-			StringBuilder builder = new StringBuilder();
-			/*
-			 * Could use a regex...
-			 */
-			for (int idx = 0; idx < key.length(); idx++) {
-				char c = key.charAt(idx);
-				if (c >= 'A' && c <= 'Z') {
-					builder.append('-');
-					builder.append(String.valueOf(c).toLowerCase());
-				} else {
-					builder.append(c);
-				}
-			}
-			return builder.toString();
-		}
-	}
-
-	public class DomNodeText {
-		public void mergeWithAdjacentTexts() {
-			DomNode cursor = DomNode.this;
-			for (;;) {
-				DomNode previousSibling = cursor.relative().nextSibling();
-				if (previousSibling != null && previousSibling.isText()) {
-					cursor = previousSibling;
-				} else {
-					break;
-				}
-			}
-			for (;;) {
-				DomNode nextSibling = cursor.relative().nextSibling();
-				if (nextSibling != null && nextSibling.isText()) {
-					cursor.setText(
-							cursor.textContent() + nextSibling.textContent());
-					nextSibling.removeFromParent();
-				} else {
-					break;
-				}
-			}
-		}
-
-		public SplitResult split(int from, int to) {
-			SplitResult result = new SplitResult();
-			Preconditions.checkState(isText());
-			DomNode cursor = DomNode.this;
-			result.contents = cursor;
-			if (from > 0) {
-				result.before = cursor;
-				result.contents = cursor.builder()
-						.text(cursor.textContent().substring(from))
-						.insertAfterThis();
-				cursor.setText(cursor.textContent().substring(0, from));
-				cursor = result.contents;
-				to -= from;
-				from = 0;
-			}
-			if (to < cursor.textContent().length()) {
-				result.after = cursor.builder()
-						.text(cursor.textContent().substring(to))
-						.insertAfterThis();
-				cursor.setText(cursor.textContent().substring(0, to));
-			}
-			return result;
-		}
-
-		public class SplitResult {
-			public DomNode before;
-
-			public DomNode contents;
-
-			public DomNode after;
-		}
-	}
-
-	public static class DomNodeTraversal extends DepthFirstTraversal<DomNode> {
-		public DomNodeTraversal(DomNode root) {
-			super(root, node -> node.children.nodes());
-		}
-	}
-
-	public class DomNodeTree implements Iterator<DomNode> {
-		private TreeWalker tw;
-
-		public boolean forwards = true;
-
-		private Node hasNextFor;
-
-		private Node next;
-
-		private boolean currentIterated;
-
-		public DomNodeTree() {
-			tw = ((DocumentTraversal) document.domDoc()).createTreeWalker(
-					document.domDoc(), NodeFilter.SHOW_ALL, null, true);
-			tw.setCurrentNode(node);
-		}
-
-		public DomNode currentNode() {
-			return document.nodeFor(tw.getCurrentNode());
-		}
-
-		@Override
-		public boolean hasNext() {
-			Node currentNode = tw.getCurrentNode();
-			if (currentNode != hasNextFor) {
-				hasNextFor = currentNode;
-				next = next0();
-				if (next != null) {
-					tw.setCurrentNode(currentNode);
-				} else {
-				}
-			}
-			return next != null;
-		}
-
-		public List<DomNode> listUntil(DomNode end, boolean endInclusive) {
-			List<DomNode> result = new ArrayList<>();
-			while (currentNode() != end) {
-				result.add(currentNode());
-				nextLogicalNode();
-			}
-			if (endInclusive) {
-				result.add(end);
-			}
-			return result;
-		}
-
-		@Override
-		public DomNode next() {
-			if (!hasNext()) {
-				throw new NoSuchElementException();
-			} else {
-				if (!currentIterated) {
-					currentIterated = true;
-					// clear, since this will equal root, and we need to recalc
-					// next
-					hasNextFor = null;
-				}
-				tw.setCurrentNode(next);
-				return document.nodeFor(tw.getCurrentNode());
-			}
-		}
-
-		public DomNode nextLogicalNode() {
-			Node next = nextNodeWithReversed();
-			return document.nodeFor(next);
-		}
-
-		public String nextNonWhitespaceText() {
-			return nextNonWhitespaceTextNode().map(DomNode::ntc).orElse(null);
-		}
-
-		public Optional<DomNode> nextNonWhitespaceTextNode() {
-			return nextTextNode(false);
-		}
-
-		public Optional<DomNode> nextTextNode(boolean nonWhitespace) {
-			while (true) {
-				Node next = nextNodeWithReversed();
-				if (next == null) {
-					return Optional.empty();
-				}
-				DomNode xNext = document.nodeFor(next);
-				if (xNext.isText() && (nonWhitespace
-						|| xNext.isNonWhitespaceTextContent())) {
-					return Optional.of(xNext);
-				}
-			}
-		}
-
-		public DomNode previousLogicalNode() {
-			return withReversed(this::nextLogicalNode);
-		}
-
-		public String previousNonWhitespaceText() {
-			return withReversed(this::nextNonWhitespaceText);
-		}
-
-		public Optional<DomNode> previousNonWhitespaceTextNode() {
-			return withReversed(this::nextNonWhitespaceTextNode);
-		}
-
-		public DomNodeTree reversed() {
-			this.forwards = !forwards;
-			return this;
-		}
-
-		public void setCurrentNode(DomNode cursor) {
-			tw.setCurrentNode(cursor.node);
-		}
-
-		public Stream<DomNode> stream() {
-			Iterable<DomNode> iterable = () -> this;
-			return StreamSupport.stream(iterable.spliterator(), false);
-		}
-
-		Node next0() {
-			if (!currentIterated) {
-				return tw.getCurrentNode();
-			}
-			while (true) {
-				// will be null at the end of the traversal
-				Node next = nextNodeWithReversed();
-				return next;
-			}
-		}
-
-		Node nextNodeWithReversed() {
-			return forwards ? tw.nextNode() : tw.previousNode();
-		}
-
-		<T> T withReversed(Supplier<T> supplier) {
-			reversed();
-			T result = supplier.get();
-			reversed();
-			return result;
-		}
-	}
-
-	public class DomNodeXpath {
-		public String query;
-
-		private XpathEvaluator evaluator;
-
-		public DomNodeXpath() {
-			if (document == DomNode.this) {
-				evaluator = DomEnvironment.get()
-						.createXpathEvaluator(DomNode.this, null);
-			} else {
-				evaluator = DomEnvironment.get().createXpathEvaluator(
-						DomNode.this, document.xpath("").getEvaluator());
-			}
-		}
-
-		public boolean booleanValue() {
-			return Boolean.valueOf(textOrEmpty());
-		}
-
-		public void forEach(Consumer<DomNode> consumer) {
-			stream().forEach(consumer);
-		}
-
-		public XpathEvaluator getEvaluator() {
-			return this.evaluator;
-		}
-
-		public boolean matchExists() {
-			return node() != null;
-		}
-
-		public Stream<DomNode> matching(String pattern) {
-			return matching(pattern, false);
-		}
-
-		/**
-		 * Warning - uses 'find', not 'matches'
-		 */
-		public Stream<DomNode> matching(String pattern, boolean ignoreCase) {
-			RegExp regex = ignoreCase ? RegExp.compile(pattern, "i")
-					: RegExp.compile(pattern);
-			return stream().filter(n -> regex.exec(n.ntc()) != null);
-		}
-
-		public Stream<DomNode> matchingAttr(String attrName, String pattern) {
-			RegExp regex = RegExp.compile(pattern);
-			return stream().filter(n -> {
-				String attr = n.attr(attrName);
-				MatchResult matchResult = regex.exec(attr);
-				return matchResult != null
-						&& matchResult.getGroup(0).equals(attr);
-			});
-		}
-
-		public DomNode node() {
-			if (document.isReadonly() && lookup().handlesXpath(query)) {
-				return stream().findFirst().orElse(null);
-			} else {
-				Node domNode = evaluator.getNodeByXpath(query, node);
-				return document.nodeFor(domNode);
-			}
-		}
-
-		public List<DomNode> nodes() {
-			return stream().collect(Collectors.toList());
-		}
-
-		public Optional<DomNode> optionalNode() {
-			return Optional.ofNullable(node());
-		}
-
-		public boolean selfIs() {
-			return DomNode.this.parent().xpath(query).nodes()
-					.contains(document.nodeFor(node));
-		}
-
-		public Stream<DomNode> stream() {
-			if (document.isReadonly() && lookup().handlesXpath(query)) {
-				return lookup.stream(query);
-			} else {
-				List<Node> domNodes = evaluator.getNodesByXpath(query, node);
-				return domNodes.stream().map(document::nodeFor);
-			}
-		}
-
-		public String textNormalised() {
-			return node().ntc();
-		}
-
-		public String textNormalised(boolean required) {
-			DomNode node = node();
-			Optional<DomNode> optional = required ? Optional.of(node)
-					: Optional.ofNullable(node);
-			return optional.map(DomNode::ntc).orElse("");
-		}
-
-		public String textNormalisedOrEmpty() {
-			return textNormalised(false);
-		}
-
-		public String textOrEmpty() {
-			return Optional.ofNullable(node()).map(DomNode::textContent)
-					.orElse("");
-		}
-	}
-
-	public class DomRange {
-		private DomNode end;
-
-		private boolean startAfterThis;
-
-		private boolean endBefore;
-
-		public DocumentFragment asFragment() {
-			return (DocumentFragment) toNode().node;
-		}
-
-		public void clearContents() {
-			boolean inRange = false;
-			List<DomNode> toRemoveNodes = new ArrayList<>();
-			Objects.requireNonNull(end);
-			DomNode keepAncestorsOf = end;
-			if (!endBefore) {
-				DomNodeTree tree = end.tree();
-				DomNode next = tree.nextLogicalNode();
-				Node keep = next == null ? null : next.node;
-				keepAncestorsOf = keep == null ? null : document.nodeFor(keep);
-			}
-			DomNodeTree tree = tree();
-			List<DomNode> remove = new ArrayList<>();
-			while (true) {
-				DomNode cursor = tree.currentNode();
-				if (cursor == DomNode.this) {
-					inRange = true;
-					if (startAfterThis) {
-						tree.nextLogicalNode();
-						continue;
-					}
-				}
-				if (cursor == end && endBefore) {
-					break;
-				}
-				if (inRange) {
-					if (keepAncestorsOf == null
-							|| !cursor.isAncestorOf(keepAncestorsOf)) {
-						remove.add(cursor);
-					}
-				}
-				if (cursor == end) {
-					break;
-				}
-				tree.nextLogicalNode();
-			}
-			remove.stream().filter(n -> n.parent() != null)
-					.forEach(DomNode::removeFromParent);
-		}
-
-		public DomRange end(DomNode end) {
-			this.end = end;
-			return this;
-		}
-
-		public DomRange endBefore(DomNode endBefore) {
-			this.end = endBefore;
-			this.endBefore = true;
-			return this;
-		}
-
-		public boolean isBefore(DomNode other) {
-			Range r1 = createRange();
-			Range r2 = other.range().createRange();
-			boolean result = r1.compareBoundaryPoints(Range.START_TO_START,
-					r2) < 0;
-			r1.detach();
-			r2.detach();
-			return result;
-		}
-
-		public boolean isEndAfter(DomNode other) {
-			Range r1 = createRange();
-			Range r2 = other.range().createRange();
-			boolean result = r1.compareBoundaryPoints(Range.END_TO_END, r2) > 0;
-			r1.detach();
-			r2.detach();
-			return result;
-		}
-
-		public DomRange startAfterThis() {
-			startAfterThis = true;
-			return this;
-		}
-
-		public DomNode toNode() {
-			Range range = createRange();
-			DocumentFragment frag = range.cloneContents();
-			range.detach();
-			return document.nodeFor(frag);
-		}
-
-		public DomNode toWrappedNode(String tag, boolean clone) {
-			Element wrapper = document.domDoc().createElement(tag);
-			Range range = createRange();
-			DocumentFragment frag = range.cloneContents();
-			range.detach();
-			wrapper.appendChild(frag);
-			if (!clone) {
-				clearContents();
-			}
-			return document.nodeFor(wrapper);
-		}
-
-		private Range createRange() {
-			Range range = ((DocumentRange) document.domDoc()).createRange();
-			if (startAfterThis) {
-				range.setStartAfter(node);
-			} else {
-				range.setStartBefore(node);
-			}
-			if (endBefore) {
-				range.setEndBefore(end.node);
-			} else {
-				range.setEndAfter(end == null ? node : end.node);
-			}
-			return range;
-		}
-	}
-
-	public static class W3cNodeTraversal
-			extends DepthFirstTraversal<org.w3c.dom.Node> {
-		static List<Node> children(Node node) {
-			List<Node> result = new ArrayList<>();
-			NodeList childNodes = node.getChildNodes();
-			int length = childNodes.getLength();
-			for (int idx = 0; idx < length; idx++) {
-				result.add(childNodes.item(idx));
-			}
-			return result;
-		}
-
-		public W3cNodeTraversal(Node root) {
-			super(root, W3cNodeTraversal::children);
-		}
-	}
-
-	public interface XpathEvaluator {
-		Node getNodeByXpath(String query, Node node);
-
-		List<Node> getNodesByXpath(String query, Node node);
-	}
-
-	class DomNodeReadonlyLookup {
-		public DomNodeReadonlyLookup() {
-		}
-
-		public boolean handlesXpath(String xpath) {
-			DomNodeReadonlyLookupQuery query = parse(xpath);
-			return query.valid && (query.immediateChild || query.grandChild
-					|| DomNode.this == document);
-		}
-
-		private String normaliseTag(String tag) {
-			return tag.replace("xhtml:", "");
-		}
-
-		// yes, this could be optimised and made prettier. but works for 98% of
-		// cases I care about, with no real regex compilation performance issues
-		//
-		// Anything to avoid going to xalan...
-		private DomNodeReadonlyLookupQuery parse0(String xpath) {
-			DomNodeReadonlyLookupQuery query = new DomNodeReadonlyLookupQuery();
-			String xmlIdentifierChars = "[a-zA-Z\\-_0-9\\.:]+";
-			String tagOnlyRegex = Ax.format("//(%s)", xmlIdentifierChars);
-			String tagAttrNodeRegex = Ax.format("//(%s)/@(%s)",
-					xmlIdentifierChars, xmlIdentifierChars);
-			String tagIdNodeRegex = Ax.format("//(%s)\\[@id='(%s)'\\]",
-					xmlIdentifierChars, xmlIdentifierChars);
-			String tagIdsNodeRegex = Ax.format(
-					"//(%s)\\[@id='(%s)' or @id='(%s)'\\]", xmlIdentifierChars,
-					xmlIdentifierChars, xmlIdentifierChars);
-			String tagIdChildRegex = Ax.format(
-					"//(%s)\\[@id='(%s)'\\]/(%s)(?:\\[(%s)\\])?",
-					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
-					xmlIdentifierChars);
-			String tagIdDescendantRegex = Ax.format(
-					"//(%s)\\[@id='(%s)'\\]//(%s)(?:\\[(%s)\\])?",
-					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
-					xmlIdentifierChars);
-			String tagIdDescendantAttrValueDescendantTagRegex = Ax.format(
-					"//(%s)\\[@id='(%s)'\\]//(%s)/?\\[@(%s)='(%s)'\\]/(%s)",
-					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
-					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
-			String tagAttrValueRegex = Ax.format("//(%s)/?\\[@(%s)='(%s)'\\]",
-					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
-			String immediateChildRegex = xmlIdentifierChars;
-			String grandChildRegex = Ax.format("(%s)/(%s)", xmlIdentifierChars,
-					xmlIdentifierChars);
-			if (xpath.matches(immediateChildRegex)) {
-				query.tag = xpath;
-				query.valid = true;
-				query.immediateChild = true;
-			} else if (xpath.matches(grandChildRegex)) {
-				query.tag = xpath.replaceFirst(grandChildRegex, "$1");
-				query.grandChildTag = xpath.replaceFirst(grandChildRegex, "$2");
-				query.valid = true;
-				query.grandChild = true;
-			} else if (xpath.matches(tagOnlyRegex)) {
-				query.tag = xpath.replaceFirst(tagOnlyRegex, "$1");
-				query.valid = true;
-			} else if (xpath.matches(tagAttrNodeRegex)) {
-				query.tag = xpath.replaceFirst(tagAttrNodeRegex, "$1");
-				String attrName = xpath.replaceFirst(tagAttrNodeRegex, "$2");
-				query.predicate = node -> node.has(attrName);
-				query.map = node -> node.document.nodeFor(
-						((Element) node.w3cNode()).getAttributeNode(attrName));
-				query.valid = true;
-			} else if (xpath.matches(tagAttrValueRegex)) {
-				query.tag = xpath.replaceFirst(tagAttrValueRegex, "$1");
-				String attrName = xpath.replaceFirst(tagAttrValueRegex, "$2");
-				String attrValue = xpath.replaceFirst(tagAttrValueRegex, "$3");
-				query.predicate = node -> node.attrIs(attrName, attrValue);
-				query.valid = true;
-			} else if (xpath.matches(tagIdNodeRegex)) {
-				query.tag = xpath.replaceFirst(tagIdNodeRegex, "$1");
-				query.id = xpath.replaceFirst(tagIdNodeRegex, "$2");
-				query.predicate = node -> node.tagIs(query.tag);
-				query.valid = true;
-			} else if (xpath.matches(tagIdsNodeRegex)) {
-				query.tag = xpath.replaceFirst(tagIdsNodeRegex, "$1");
-				query.id = xpath.replaceFirst(tagIdsNodeRegex, "$2");
-				query.id2 = xpath.replaceFirst(tagIdsNodeRegex, "$3");
-				query.predicate = node -> node.tagIs(query.tag);
-				query.valid = true;
-			} else if (xpath.matches(tagIdChildRegex)) {
-				query.tag = xpath.replaceFirst(tagIdChildRegex, "$1");
-				query.id = xpath.replaceFirst(tagIdChildRegex, "$2");
-				query.predicate = node -> node.tagIs(query.tag);
-				query.map = new DescendantMap(
-						xpath.replaceFirst(tagIdChildRegex, "$3"),
-						xpath.replaceFirst(tagIdChildRegex, "$4"), true);
-				query.valid = true;
-			} else if (xpath.matches(tagIdDescendantRegex)) {
-				query.tag = xpath.replaceFirst(tagIdDescendantRegex, "$1");
-				query.id = xpath.replaceFirst(tagIdDescendantRegex, "$2");
-				query.predicate = node -> node.tagIs(query.tag);
-				query.map = new DescendantMap(
-						xpath.replaceFirst(tagIdDescendantRegex, "$3"),
-						xpath.replaceFirst(tagIdDescendantRegex, "$4"), false);
-				query.valid = true;
-			} else if (xpath
-					.matches(tagIdDescendantAttrValueDescendantTagRegex)) {
-				query.tag = xpath.replaceFirst(
-						tagIdDescendantAttrValueDescendantTagRegex, "$1");
-				query.id = xpath.replaceFirst(
-						tagIdDescendantAttrValueDescendantTagRegex, "$2");
-				query.map = new DescendantTagAttrTagMap(xpath.replaceFirst(
-						tagIdDescendantAttrValueDescendantTagRegex, "$3"),
-						xpath.replaceFirst(
-								tagIdDescendantAttrValueDescendantTagRegex,
-								"$4"),
-						xpath.replaceFirst(
-								tagIdDescendantAttrValueDescendantTagRegex,
-								"$5"),
-						xpath.replaceFirst(
-								tagIdDescendantAttrValueDescendantTagRegex,
-								"$6"));
-				query.valid = true;
-			}
-			if (query.valid) {
-				query.tag = normaliseTag(query.tag);
-				Preconditions.checkState(!query.tag.contains(":"));
-			}
-			return query;
-		}
-
-		DomNodeReadonlyLookupQuery parse(String xpath) {
-			return queryLookup.computeIfAbsent(xpath, this::parse0);
-		}
-
-		Stream<DomNode> stream(String xpath) {
-			DomNodeReadonlyLookupQuery query = parse(xpath);
-			if (query.immediateChild) {
-				return children.byTag(query.tag).stream()
-						.filter(query.predicate).map(query.map);
-			} else if (query.grandChild) {
-				return children.byTag(query.tag).stream()
-						.filter(query.predicate)
-						.map(n -> n.children.byTag(query.grandChildTag))
-						.flatMap(Collection::stream).map(query.map);
-			} else {
-				Stream<DomNode> stream = null;
-				if (Ax.notBlank(query.id2)) {
-					stream = Stream.concat(
-							document.byId().getAndEnsure(query.id).stream(),
-							document.byId().getAndEnsure(query.id2).stream());
-				} else if (Ax.notBlank(query.id)) {
-					stream = document.byId().getAndEnsure(query.id).stream();
-				} else {
-					stream = document.byTag().getAndEnsure(query.tag).stream();
-				}
-				return stream.filter(query.predicate).map(query.map)
-						.filter(Objects::nonNull);
-			}
-		}
-
-		class DescendantMap implements Function<DomNode, DomNode> {
-			private String tag;
-
-			private int index;
-
-			private boolean immediateChildrenOnly;
-
-			public DescendantMap(String tag, String indexStr,
-					boolean immediateChildrenOnly) {
-				this.immediateChildrenOnly = immediateChildrenOnly;
-				this.tag = normaliseTag(tag);
-				this.index = Ax.isBlank(indexStr) ? 1
-						: Integer.parseInt(indexStr);
-			}
-
-			@Override
-			public DomNode apply(DomNode t) {
-				Stream<DomNode> stream = immediateChildrenOnly
-						? t.children.elements().stream()
-						: t.descendants();
-				return stream.filter(n -> n.tagIs(tag)).skip(index - 1)
-						.findFirst().orElse(null);
-			}
-		}
-
-		class DescendantTagAttrTagMap implements Function<DomNode, DomNode> {
-			private String tag;
-
-			private String attrName;
-
-			private String attrValue;
-
-			private String childTag;
-
-			public DescendantTagAttrTagMap(String tag, String attrName,
-					String attrValue, String childTag) {
-				this.tag = normaliseTag(tag);
-				this.attrName = attrName;
-				this.attrValue = attrValue;
-				this.childTag = normaliseTag(childTag);
-			}
-
-			@Override
-			public DomNode apply(DomNode t) {
-				return t.descendants().filter(n -> n.tagIs(tag))
-						.filter(n -> n.attrIs(attrName, attrValue)).findFirst()
-						.flatMap(n -> n.children.byTag(childTag).stream()
-								.findFirst())
-						.orElse(null);
-			}
-		}
-
-		class DomNodeReadonlyLookupQuery {
-			String grandChildTag;
-
-			boolean grandChild;
-
-			public String id2;
-
-			public String id;
-
-			boolean immediateChild;
-
-			String tag;
-
-			Predicate<DomNode> predicate = node -> true;
-
-			Function<DomNode, DomNode> map = node -> node;
-
-			boolean valid = false;
-		}
-	}
-
-	public DomNodeType getDomNodeType() {
-		return DomNodeType.fromW3cNode(node);
-	}
-
-	public boolean classMatches(String regex) {
-		return attr("class").matches(regex);
 	}
 }

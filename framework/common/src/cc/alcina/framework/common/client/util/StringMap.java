@@ -436,4 +436,8 @@ public class StringMap extends LinkedHashMap<String, String> {
 	public int getInt(String key) {
 		return Integer.parseInt(get(key));
 	}
+
+	public boolean has(String key, String value) {
+		return Objects.equals(get(key), value);
+	}
 }

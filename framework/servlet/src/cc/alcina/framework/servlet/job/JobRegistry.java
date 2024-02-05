@@ -94,7 +94,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 /**
  * <h2>Overview</h2>
@@ -252,6 +251,13 @@ public class JobRegistry {
 						"Domain transform permissions exception", e);
 				throw e;
 			}
+		}
+	}
+
+	static void awaitLatch(CountDownLatch latch) throws InterruptedException {
+		long timeout = Configuration.getLong("jobAllocatorSequenceTimeout");
+		if (!latch.await(timeout, TimeUnit.SECONDS)) {
+			throw new IllegalStateException("Latch timed out - %s seconds");
 		}
 	}
 

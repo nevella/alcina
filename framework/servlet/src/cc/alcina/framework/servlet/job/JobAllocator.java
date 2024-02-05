@@ -107,34 +107,6 @@ class JobAllocator {
 		enqueuedStatusMessage = null;
 	}
 
-	public void awaitSequenceCompletion() {
-		ensureStarted();
-		try {
-			while (!sequenceCompletionLatch.await(2, TimeUnit.SECONDS)) {
-				int debug = 3;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enqueueEvent(Event queueEvent) {
-		eventQueue.add(queueEvent);
-	}
-
-	public void fireDeletedEvent() {
-		queue.publish(EventType.DELETED);
-	}
-
-	@Override
-	public String toString() {
-		return queue.toString();
-	}
-
-	private JobEnvironment environment() {
-		return JobRegistry.get().getEnvironment();
-	}
-
 	/*
 	 * Called only from the performer thread (so job.provideChildren is live)
 	 */
@@ -162,11 +134,32 @@ class JobAllocator {
 		}
 	}
 
+	public void awaitSequenceCompletion() {
+		ensureStarted();
+		try {
+			JobRegistry.awaitLatch(sequenceCompletionLatch);
+		} catch (Exception e) {
+			logger.warn("DEVEX-0 -- job sequence timeout/interruption", e);
+		}
+	}
+
+	public void enqueueEvent(Event queueEvent) {
+		eventQueue.add(queueEvent);
+	}
+
 	void ensureStarted() {
 		if (allocationTask == null) {
 			allocationTask = new AllocationTask();
 			allocatorService.execute(allocationTask);
 		}
+	}
+
+	private JobEnvironment environment() {
+		return JobRegistry.get().getEnvironment();
+	}
+
+	public void fireDeletedEvent() {
+		queue.publish(EventType.DELETED);
 	}
 
 	ExecutionConstraints getExecutionConstraints() {
@@ -191,10 +184,95 @@ class JobAllocator {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return queue.toString();
+	}
+
 	private class AllocationTask implements Runnable {
 		boolean firstEvent = true;
 
 		long lastAllocated = System.currentTimeMillis();
+
+		boolean isAllocatable(Job job) {
+			switch (queue.currentPhase) {
+			case Self:
+				if (!SchedulingPermissions.canAllocate(queue.job)) {
+					return false;
+				}
+				/*
+				 * only top-level, first-in-sequence jobs are allocated by their
+				 * own allocator
+				 */
+				return job.provideIsTopLevel()
+						&& job.provideIsFirstInSequence();
+			case Child:
+				// the queue will only be visible if either local or clustered
+				// child allocation, so no need to check this
+				// return ExecutionConstraints.forQueue(queue)
+				// .isClusteredChildAllocation();
+				/*
+				 * Also, no jobs visible in this phase will have sequential
+				 * predecessors
+				 *
+				 */
+				return true;
+			case Sequence:
+				if (job.providePreviousOrSelfInSequence() == job) {
+					/*
+					 * A bug - this question shouldn't be aksed of
+					 * first-in-sequence - probable issue with ddj/remove
+					 */
+					return false;
+				}
+				return job.providePreviousOrSelfInSequence().provideIsComplete()
+						&& job.providePreviousOrSelfInSequence()
+								.getPerformer() == ClientInstance.self();
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		private boolean isPhaseComplete(Event event) {
+			if (event.type == EventType.DELETED) {
+				return true;
+			}
+			boolean selfPerformer = queue.job.getPerformer() == ClientInstance
+					.self();
+			switch (queue.currentPhase) {
+			case Self:
+				if (queue.job.provideIsComplete()) {
+					return true;
+				}
+				if (queue.job.resolveState() == JobState.PROCESSING) {
+					if (selfPerformer) {
+						// handled by jobContext and/or the jobPerformer
+						return event.type == EventType.TO_AWAITING_CHILDREN;
+					} else {
+						return true;
+					}
+				} else {
+					return false;
+				}
+			case Child:
+				if (queue.job.provideIsComplete()) {
+					return true;
+				}
+				// non-self performers may reach this phase before children are
+				// populated, self guaranteed not to
+				if (selfPerformer) {
+					return queue.isNoPendingJobsInPhase();
+				} else {
+					return queue.job.provideIsComplete();
+				}
+			case Sequence:
+				return queue.isNoPendingJobsInPhase();
+			case Complete:
+				return false;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 
 		public void processAllocationEvent(Event event) {
 			try {
@@ -519,86 +597,6 @@ class JobAllocator {
 				}
 			}
 			environment().setAllocatorThreadName("job-allocator::idle");
-		}
-
-		private boolean isPhaseComplete(Event event) {
-			if (event.type == EventType.DELETED) {
-				return true;
-			}
-			boolean selfPerformer = queue.job.getPerformer() == ClientInstance
-					.self();
-			switch (queue.currentPhase) {
-			case Self:
-				if (queue.job.provideIsComplete()) {
-					return true;
-				}
-				if (queue.job.resolveState() == JobState.PROCESSING) {
-					if (selfPerformer) {
-						// handled by jobContext and/or the jobPerformer
-						return event.type == EventType.TO_AWAITING_CHILDREN;
-					} else {
-						return true;
-					}
-				} else {
-					return false;
-				}
-			case Child:
-				if (queue.job.provideIsComplete()) {
-					return true;
-				}
-				// non-self performers may reach this phase before children are
-				// populated, self guaranteed not to
-				if (selfPerformer) {
-					return queue.isNoPendingJobsInPhase();
-				} else {
-					return queue.job.provideIsComplete();
-				}
-			case Sequence:
-				return queue.isNoPendingJobsInPhase();
-			case Complete:
-				return false;
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-
-		boolean isAllocatable(Job job) {
-			switch (queue.currentPhase) {
-			case Self:
-				if (!SchedulingPermissions.canAllocate(queue.job)) {
-					return false;
-				}
-				/*
-				 * only top-level, first-in-sequence jobs are allocated by their
-				 * own allocator
-				 */
-				return job.provideIsTopLevel()
-						&& job.provideIsFirstInSequence();
-			case Child:
-				// the queue will only be visible if either local or clustered
-				// child allocation, so no need to check this
-				// return ExecutionConstraints.forQueue(queue)
-				// .isClusteredChildAllocation();
-				/*
-				 * Also, no jobs visible in this phase will have sequential
-				 * predecessors
-				 *
-				 */
-				return true;
-			case Sequence:
-				if (job.providePreviousOrSelfInSequence() == job) {
-					/*
-					 * A bug - this question shouldn't be aksed of
-					 * first-in-sequence - probable issue with ddj/remove
-					 */
-					return false;
-				}
-				return job.providePreviousOrSelfInSequence().provideIsComplete()
-						&& job.providePreviousOrSelfInSequence()
-								.getPerformer() == ClientInstance.self();
-			default:
-				throw new UnsupportedOperationException();
-			}
 		}
 	}
 
