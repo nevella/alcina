@@ -111,6 +111,14 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		Ax.out(toDebugString());
 	}
 
+	public String text() {
+		return get().text();
+	}
+
+	public String markup() {
+		return get().markup();
+	}
+
 	/*
 	 * Utility to allow usage of measurecontainment etc from non-selection
 	 * measures

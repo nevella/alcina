@@ -188,7 +188,7 @@ public class MeasureContainment {
 			}
 		}
 
-		List<Containment> getChildContainments() {
+		public List<Containment> getChildContainments() {
 			ensureImmediateChildSelections();
 			return immediateChildren.stream().map(containments::get).toList();
 		}
