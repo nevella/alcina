@@ -40,6 +40,46 @@ public class SerializationSignatureListener
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	private void checkApplySignature(TransformPersistenceToken token,
+			DomainTransformEvent transform,
+			List<SetInstruction> setInstructions) {
+		Class entityClass = transform.getObjectClass();
+		String propertyName = transform.getPropertyName();
+		Property property = Reflections.at(transform.getObjectClass())
+				.property(transform.getPropertyName());
+		String sourcePropertyname = propertyName.replaceFirst("(.+)Serialized",
+				"$1");
+		Property toSerializeProperty = Reflections.at(entityClass)
+				.property(sourcePropertyname);
+		boolean serializedPropertyChange = toSerializeProperty != null
+				&& toSerializeProperty.annotation(DomainProperty.class) != null
+				&& toSerializeProperty.annotation(DomainProperty.class)
+						.serialize();
+		if (serializedPropertyChange) {
+			String signaturePropertyName = sourcePropertyname + "Signature";
+			if (Reflections.at(entityClass)
+					.hasProperty(signaturePropertyName)) {
+				Property serializedSignatureProperty = Reflections
+						.at(entityClass).property(signaturePropertyName);
+				AdjunctTransformCollation collation = token
+						.getTransformCollation();
+				EntityCollation entityCollation = collation
+						.forLocator(transform.toObjectLocator());
+				if (entityCollation == null) {
+					logger.warn("Null collation for serialized transform : {}",
+							transform.toObjectLocator());
+					// FIXME - devex
+				} else {
+					if (!entityCollation.isDeleted()) {
+						setInstructions.add(
+								new SetInstruction(serializedSignatureProperty,
+										entityCollation.getEntity()));
+					}
+				}
+			}
+		}
+	}
+
 	public synchronized String ensureSignature() {
 		if (signature == null) {
 			if (!Configuration.is("enabled")) {
@@ -124,46 +164,6 @@ public class SerializationSignatureListener
 				Entity entity) {
 			this.serializedSignatureProperty = serializedSignatureProperty;
 			this.entity = entity;
-		}
-	}
-
-	private void checkApplySignature(TransformPersistenceToken token,
-			DomainTransformEvent transform,
-			List<SetInstruction> setInstructions) {
-		Class entityClass = transform.getObjectClass();
-		String propertyName = transform.getPropertyName();
-		Property property = Reflections.at(transform.getObjectClass())
-				.property(transform.getPropertyName());
-		String sourcePropertyname = propertyName.replaceFirst("(.+)Serialized",
-				"$1");
-		Property toSerializeProperty = Reflections.at(entityClass)
-				.property(sourcePropertyname);
-		boolean serializedPropertyChange = toSerializeProperty != null
-				&& toSerializeProperty.annotation(DomainProperty.class) != null
-				&& toSerializeProperty.annotation(DomainProperty.class)
-						.serialize();
-		if (serializedPropertyChange) {
-			String signaturePropertyName = sourcePropertyname + "Signature";
-			if (Reflections.at(entityClass)
-					.hasProperty(signaturePropertyName)) {
-				Property serializedSignatureProperty = Reflections
-						.at(entityClass).property(signaturePropertyName);
-				AdjunctTransformCollation collation = token
-						.getTransformCollation();
-				EntityCollation entityCollation = collation
-						.forLocator(transform.toObjectLocator());
-				if (entityCollation == null) {
-					logger.warn("Null collation for serialized transform : {}",
-							transform.toObjectLocator());
-					// FIXME - devex
-				} else {
-					if (!entityCollation.isDeleted()) {
-						setInstructions.add(
-								new SetInstruction(serializedSignatureProperty,
-										entityCollation.getEntity()));
-					}
-				}
-			}
 		}
 	}
 }

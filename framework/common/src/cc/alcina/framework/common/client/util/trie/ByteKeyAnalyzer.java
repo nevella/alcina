@@ -42,16 +42,6 @@ public class ByteKeyAnalyzer extends AbstractKeyAnalyzer<Byte>
 	}
 
 	@Override
-	public int lengthInBits(Byte key) {
-		return Byte.SIZE;
-	}
-
-	@Override
-	public boolean isBitSet(Byte key, int bitIndex) {
-		return (key & mask(bitIndex)) != 0;
-	}
-
-	@Override
 	public int bitIndex(Byte key, Byte otherKey) {
 		byte keyValue = key.byteValue();
 		if (keyValue == 0) {
@@ -70,7 +60,17 @@ public class ByteKeyAnalyzer extends AbstractKeyAnalyzer<Byte>
 	}
 
 	@Override
+	public boolean isBitSet(Byte key, int bitIndex) {
+		return (key & mask(bitIndex)) != 0;
+	}
+
+	@Override
 	public boolean isPrefix(Byte key, Byte prefix) {
 		return key.equals(prefix);
+	}
+
+	@Override
+	public int lengthInBits(Byte key) {
+		return Byte.SIZE;
 	}
 }

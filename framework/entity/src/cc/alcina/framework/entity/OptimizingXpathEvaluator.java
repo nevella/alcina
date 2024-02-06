@@ -41,6 +41,23 @@ public class OptimizingXpathEvaluator implements XpathEvaluator {
 		this.expressionCache = xexc.expressionCache;
 	}
 
+	private <T> T evaluate(String xpathStr, Node node, QName qName,
+			ThrowingFunction<Object, T> mapper) {
+		Document monitor = node instanceof Document ? (Document) node
+				: node.getOwnerDocument();
+		synchronized (monitor) {
+			try {
+				xpathStr = maybeRemove(xpathStr, node);
+				Object result = expressionCache.get(xpathStr)
+						.evaluate(this.node, qName);
+				maybeReinsert();
+				return mapper.apply(result);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	public Element getElementByXpath(String xpathStr, Node node) {
 		return (Element) evaluate(xpathStr, node, XPathConstants.NODE, n -> {
 			return (Element) n;
@@ -82,28 +99,6 @@ public class OptimizingXpathEvaluator implements XpathEvaluator {
 		return optimiseXpathEvaluationSpeed;
 	}
 
-	public void setOptimiseXpathEvaluationSpeed(
-			boolean optimiseXpathEvaluationSpeed) {
-		this.optimiseXpathEvaluationSpeed = optimiseXpathEvaluationSpeed;
-	}
-
-	private <T> T evaluate(String xpathStr, Node node, QName qName,
-			ThrowingFunction<Object, T> mapper) {
-		Document monitor = node instanceof Document ? (Document) node
-				: node.getOwnerDocument();
-		synchronized (monitor) {
-			try {
-				xpathStr = maybeRemove(xpathStr, node);
-				Object result = expressionCache.get(xpathStr)
-						.evaluate(this.node, qName);
-				maybeReinsert();
-				return mapper.apply(result);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
 	private void maybeReinsert() {
 		if (removedNode != null) {
 			removedParent.insertBefore(removedNode, removedNextSib);
@@ -137,5 +132,10 @@ public class OptimizingXpathEvaluator implements XpathEvaluator {
 			removedParent.removeChild(node);
 		}
 		return xpathStr;
+	}
+
+	public void setOptimiseXpathEvaluationSpeed(
+			boolean optimiseXpathEvaluationSpeed) {
+		this.optimiseXpathEvaluationSpeed = optimiseXpathEvaluationSpeed;
 	}
 }

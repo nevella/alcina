@@ -4,11 +4,11 @@ import java.util.Collection;
 import java.util.function.BiConsumer;
 
 public class StreamWithPrevious<T> {
-	Collection<T> collection;
-
 	public static <T> StreamWithPrevious<T> of(Collection<T> collection) {
 		return new StreamWithPrevious<>(collection);
 	}
+
+	Collection<T> collection;
 
 	StreamWithPrevious(Collection<T> collection) {
 		this.collection = collection;

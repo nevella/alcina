@@ -49,6 +49,23 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 		this.instantiateProps = instantiateProps;
 	}
 
+	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
+			GraphProjection graphCloner) throws Exception {
+		Set hs = jpaImplementation.createPersistentSetProjection(context);
+		if (shouldClone(ps)) {
+			Iterator itr = ps.iterator();
+			Object value;
+			for (; itr.hasNext();) {
+				value = itr.next();
+				Object projected = graphCloner.project(value, context);
+				if (value == null || projected != null) {
+					hs.add(projected);
+				}
+			}
+		}
+		return hs;
+	}
+
 	@Override
 	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
@@ -67,23 +84,6 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 			return (T) clonePersistentSet((Set) value, context, graphCloner);
 		}
 		return super.filterData(value, cloned, context, graphCloner);
-	}
-
-	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
-			GraphProjection graphCloner) throws Exception {
-		Set hs = jpaImplementation.createPersistentSetProjection(context);
-		if (shouldClone(ps)) {
-			Iterator itr = ps.iterator();
-			Object value;
-			for (; itr.hasNext();) {
-				value = itr.next();
-				Object projected = graphCloner.project(value, context);
-				if (value == null || projected != null) {
-					hs.add(projected);
-				}
-			}
-		}
-		return hs;
 	}
 
 	protected boolean getWasInitialized(Set ps) throws Exception {

@@ -82,6 +82,26 @@ public class DateBox extends AbstractBoundWidget<Date>
 		initWidget(base);
 	}
 
+	protected com.google.gwt.user.datepicker.client.DateBox
+			createDateBox(Format dtFormat, DatePicker picker) {
+		return new com.google.gwt.user.datepicker.client.DateBox(picker, null,
+				dtFormat);
+	}
+
+	private void fireChangesFromBase() {
+		String oldText = this.text;
+		this.text = base.getTextBox().getText();
+		if (base.getStyleName().contains("dateBoxFormatError")) {
+			changes.firePropertyChange("value", oldText, this.text);
+			return;
+		}
+		setValue(dateTranslator.rightToLeft(base.getValue()));
+	}
+
+	protected DateTimeFormat getDateTimeFormat() {
+		return dateTimeFormat;
+	}
+
 	public BidiConverter<Date, Date> getDateTranslator() {
 		return this.dateTranslator;
 	}
@@ -93,6 +113,10 @@ public class DateBox extends AbstractBoundWidget<Date>
 	@Override
 	public int getTabIndex() {
 		return getTextBox().getTabIndex();
+	}
+
+	private TextBox getTextBox() {
+		return base.getTextBox();
 	}
 
 	@Override
@@ -130,30 +154,6 @@ public class DateBox extends AbstractBoundWidget<Date>
 		this.value = value;
 		base.setValue(dateTranslator.leftToRight(value), false);
 		changes.firePropertyChange("value", oldDate, this.value);
-	}
-
-	private void fireChangesFromBase() {
-		String oldText = this.text;
-		this.text = base.getTextBox().getText();
-		if (base.getStyleName().contains("dateBoxFormatError")) {
-			changes.firePropertyChange("value", oldText, this.text);
-			return;
-		}
-		setValue(dateTranslator.rightToLeft(base.getValue()));
-	}
-
-	private TextBox getTextBox() {
-		return base.getTextBox();
-	}
-
-	protected com.google.gwt.user.datepicker.client.DateBox
-			createDateBox(Format dtFormat, DatePicker picker) {
-		return new com.google.gwt.user.datepicker.client.DateBox(picker, null,
-				dtFormat);
-	}
-
-	protected DateTimeFormat getDateTimeFormat() {
-		return dateTimeFormat;
 	}
 
 	public static class DateBoxProvider implements BoundWidgetProvider {

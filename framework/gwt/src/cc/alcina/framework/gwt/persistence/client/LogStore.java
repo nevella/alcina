@@ -196,6 +196,10 @@ public class LogStore {
 		this.objectStore.getIdRange(completedCallback);
 	}
 
+	int getLocalSeriesIdCounter() {
+		return this.localSeriesIdCounter;
+	}
+
 	public ClientLogRecords getLogs() {
 		return this.logs;
 	}
@@ -252,48 +256,6 @@ public class LogStore {
 		}
 	}
 
-	public void pushLogsToRemote() {
-		if (remoteLogPersister != null) {
-			remoteLogPersister.push();
-		}
-	}
-
-	public void registerDelegate(PersistenceObjectStore objectStore) {
-		this.objectStore = objectStore;
-	}
-
-	public void removeIdRange(IntPair range,
-			final AsyncCallback<Void> completedCallback) {
-		this.objectStore.removeIdRange(range, new AsyncCallback<Void>() {
-			@Override
-			public void onFailure(Throwable caught) {
-				completedCallback.onFailure(caught);
-			}
-
-			@Override
-			public void onSuccess(Void result) {
-				topicDeleted.signal();
-				completedCallback.onSuccess(result);
-			}
-		});
-	}
-
-	public void setLocalPersistencePaused(boolean localPersistencePaused) {
-		this.localPersistencePaused = localPersistencePaused;
-	}
-
-	public void setMuted(boolean muted) {
-		this.muted = muted;
-	}
-
-	public void setRemoteLogPersister(RemoteLogPersister remoteLogPersister) {
-		this.remoteLogPersister = remoteLogPersister;
-	}
-
-	public void setUsesLzw(boolean usesLzw) {
-		this.usesLzw = usesLzw;
-	}
-
 	@SuppressWarnings("deprecation")
 	private void log0(String topic, String message) {
 		if (CommonUtils.equalsWithNullEquality(message, lastMessage) || muted) {
@@ -339,7 +301,45 @@ public class LogStore {
 		topicEventOccurred.publish(logRecord);
 	}
 
-	int getLocalSeriesIdCounter() {
-		return this.localSeriesIdCounter;
+	public void pushLogsToRemote() {
+		if (remoteLogPersister != null) {
+			remoteLogPersister.push();
+		}
+	}
+
+	public void registerDelegate(PersistenceObjectStore objectStore) {
+		this.objectStore = objectStore;
+	}
+
+	public void removeIdRange(IntPair range,
+			final AsyncCallback<Void> completedCallback) {
+		this.objectStore.removeIdRange(range, new AsyncCallback<Void>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				completedCallback.onFailure(caught);
+			}
+
+			@Override
+			public void onSuccess(Void result) {
+				topicDeleted.signal();
+				completedCallback.onSuccess(result);
+			}
+		});
+	}
+
+	public void setLocalPersistencePaused(boolean localPersistencePaused) {
+		this.localPersistencePaused = localPersistencePaused;
+	}
+
+	public void setMuted(boolean muted) {
+		this.muted = muted;
+	}
+
+	public void setRemoteLogPersister(RemoteLogPersister remoteLogPersister) {
+		this.remoteLogPersister = remoteLogPersister;
+	}
+
+	public void setUsesLzw(boolean usesLzw) {
+		this.usesLzw = usesLzw;
 	}
 }

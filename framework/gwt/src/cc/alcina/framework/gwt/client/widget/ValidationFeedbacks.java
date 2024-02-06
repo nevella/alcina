@@ -29,6 +29,10 @@ public class ValidationFeedbacks {
 		return wrapCollector(wrapStyleFeedback(feedback), null);
 	}
 
+	private StyleValidationFeedback svf() {
+		return new StyleValidationFeedback("err");
+	}
+
 	public void wrapBindingsInCollector(Binding binding) {
 		for (Binding b : binding.provideAllBindings(null)) {
 			if (b.getLeft() != null && b.getLeft().feedback != null) {
@@ -51,9 +55,5 @@ public class ValidationFeedbacks {
 
 	public AbstractValidationFeedback wrapStyleInCollector(String message) {
 		return wrapCollector(svf(), message);
-	}
-
-	private StyleValidationFeedback svf() {
-		return new StyleValidationFeedback("err");
 	}
 }

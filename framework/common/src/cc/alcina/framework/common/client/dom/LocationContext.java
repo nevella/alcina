@@ -70,18 +70,14 @@ public interface LocationContext {
 
 	DomNode getContainingNode(Location location);
 
+	List<DomNode> getContainingNodes(int index, boolean after);
+
 	Location getRelativeLocation(Location location, RelativeDirection direction,
 			TextTraversal textTraversal);
 
-	String textContent(Range range);
-
-	String markupContent(Range range);
-
-	List<DomNode> getContainingNodes(int index, boolean after);
-
 	String getSubsequentText(Location location, int chars);
 
-	int toValidIndex(int idx);
+	String markupContent(Range range);
 
 	default String textContent(int from, int to) {
 		Location start = new Location(-1, toValidIndex(from), false, null,
@@ -89,4 +85,8 @@ public interface LocationContext {
 		Location end = new Location(-1, toValidIndex(to), true, null, this);
 		return new Range(start, end).text();
 	}
+
+	String textContent(Range range);
+
+	int toValidIndex(int idx);
 }

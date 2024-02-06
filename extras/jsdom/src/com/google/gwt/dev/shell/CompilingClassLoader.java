@@ -387,82 +387,6 @@ public final class CompilingClassLoader extends ClassLoader
 	}
 
 	/**
-	 * Retrieves the mapped JSO for a given unique id, provided the id was
-	 * previously cached and the JSO has not been garbage collected.
-	 *
-	 * @param uniqueId
-	 *            the previously stored unique id
-	 * @return the mapped JSO, or <code>null</code> if the id was not previously
-	 *         mapped or if the JSO has been garbage collected
-	 */
-	public Object getCachedJso(int uniqueId) {
-		return weakJsoCache.get(uniqueId);
-	}
-
-	/**
-	 * Returns the {@link DispatchClassInfo} for a given dispatch id.
-	 *
-	 * @param dispId
-	 *            dispatch identifier
-	 * @return {@link DispatchClassInfo} for a given dispatch id or null if one
-	 *         does not exist
-	 */
-	@Override
-	public DispatchClassInfo getClassInfoByDispId(int dispId) {
-		return dispClassInfoOracle.getClassInfoByDispId(dispId);
-	}
-
-	/**
-	 * Returns the dispatch id for a JSNI member reference.
-	 *
-	 * @param jsniMemberRef
-	 *            a JSNI member reference
-	 * @return dispatch id or -1 if the JSNI member reference could not be found
-	 */
-	@Override
-	public int getDispId(String jsniMemberRef) {
-		return dispClassInfoOracle.getDispId(jsniMemberRef);
-	}
-
-	/**
-	 * Retrieves the mapped wrapper for a given Java Object, provided the
-	 * wrapper was previously cached and has not been garbage collected.
-	 *
-	 * @param javaObject
-	 *            the Object being wrapped
-	 * @return the mapped wrapper, or <code>null</code> if the Java object
-	 *         mapped or if the wrapper has been garbage collected
-	 */
-	public Object getWrapperForObject(Object javaObject) {
-		return weakJavaWrapperCache.get(javaObject);
-	}
-
-	/**
-	 * Weakly caches a given JSO by unique id. A cached JSO can be looked up by
-	 * unique id until it is garbage collected.
-	 *
-	 * @param uniqueId
-	 *            a unique id associated with the JSO
-	 * @param jso
-	 *            the value to cache
-	 */
-	public void putCachedJso(int uniqueId, Object jso) {
-		weakJsoCache.put(uniqueId, jso);
-	}
-
-	/**
-	 * Weakly caches a wrapper for a given Java Object.
-	 *
-	 * @param javaObject
-	 *            the Object being wrapped
-	 * @param wrapper
-	 *            the mapped wrapper
-	 */
-	public void putWrapperForObject(Object javaObject, Object wrapper) {
-		weakJavaWrapperCache.put(javaObject, wrapper);
-	}
-
-	/**
 	 * Convert a binary class name into a resource-like name.
 	 */
 	private String canonicalizeClassName(String className) {
@@ -475,244 +399,17 @@ public final class CompilingClassLoader extends ClassLoader
 		return lookupClassName;
 	}
 
-	@SuppressWarnings("deprecation")
-	private byte[] findClassBytes(String className) {
-		if (JavaScriptHost.class.getName().equals(className)) {
-			// No need to rewrite.
-			return javaScriptHostBytes;
-		}
-		// A JSO impl class needs the class bytes for the original class.
-		String lookupClassName = canonicalizeClassName(className);
-		CompiledClass compiledClass = compilationState.getClassFileMap()
-				.get(lookupClassName);
-		if (classRewriter != null && classRewriter.isJsoIntf(className)) {
-			// Generate a synthetic JSO interface class.
-			byte[] newBytes = classRewriter.writeJsoIntf(className,
-					compiledClass != null ? compiledClass.getBytes() : null);
-			if (CLASS_DUMP) {
-				classDump(className, newBytes);
-			}
-			return newBytes;
-		}
-		CompilationUnit unit = (compiledClass == null)
-				? getUnitForClassName(lookupClassName)
-				: compiledClass.getUnit();
-		if (emmaAvailable) {
-			/*
-			 * build the map for anonymous classes. Do so only if unit has
-			 * anonymous classes, jsni methods, is not super-source and the map
-			 * has not been built before.
-			 */
-			List<JsniMethod> jsniMethods = (unit == null) ? null
-					: unit.getJsniMethods();
-			if (unit != null && !unit.isSuperSource() && !unit.isGenerated()
-					&& unit.hasAnonymousClasses() && jsniMethods != null
-					&& jsniMethods.size() > 0 && !unit.createdClassMapping()) {
-				if (!unit.constructAnonymousClassMappings(logger)) {
-					logger.log(TreeLogger.ERROR,
-							"Our heuristic for mapping anonymous classes between compilers "
-									+ "failed. Unsafe to continue because the wrong jsni code "
-									+ "could end up running. className = "
-									+ className);
-					return null;
-				}
-			}
-		}
-		byte classBytes[] = null;
-		if (compiledClass != null) {
-			classBytes = compiledClass.getBytes();
-			if (!compiledClass.getUnit().isSuperSource()) {
-				classBytes = emmaStrategy.getEmmaClassBytes(classBytes,
-						lookupClassName,
-						compiledClass.getUnit().getLastModified());
-			} else {
-				if (logger.isLoggable(TreeLogger.SPAM)) {
-					logger.log(TreeLogger.SPAM,
-							"no emma instrumentation for " + lookupClassName
-									+ " because it is from super-source");
-				}
-			}
-		} else if (emmaAvailable) {
-			/*
-			 * TypeOracle does not know about this class. Most probably, this
-			 * class was referenced in one of the classes loaded from disk.
-			 * Check if we can find it on disk. Typically this is a synthetic
-			 * class added by the compiler.
-			 */
-			if (typeHasCompilationUnit(lookupClassName)
-					&& CompilationUnit.isClassnameGenerated(className)) {
-				/*
-				 * modification time = 0 ensures that whatever is on the disk is
-				 * always loaded.
-				 */
-				if (logger.isLoggable(TreeLogger.DEBUG)) {
-					logger.log(TreeLogger.DEBUG, "EmmaStrategy: loading "
-							+ lookupClassName
-							+ " from disk even though TypeOracle does not know about it");
-				}
-				classBytes = emmaStrategy.getEmmaClassBytes(null,
-						lookupClassName, 0);
-			}
-		}
-		if (classBytes != null && classRewriter != null) {
-			Map<String, String> anonymousClassMap = Collections.emptyMap();
-			if (unit != null) {
-				anonymousClassMap = unit.getAnonymousClassMap();
-			}
-			byte[] newBytes = classRewriter.rewrite(typeOracle, className,
-					classBytes, anonymousClassMap);
-			if (CLASS_DUMP) {
-				if (!Arrays.equals(classBytes, newBytes)) {
-					classDump(className, newBytes);
-				}
-			}
-			classBytes = newBytes;
-		}
-		if (unit != null && unit.isError()) {
-			// Compile worked, but the unit had some kind of error (JSNI?)
-			CompilationProblemReporter.reportErrors(logger, unit, false);
-		}
-		return classBytes;
-	}
-
-	private String getBinaryName(JClassType type) {
-		String name = type.getPackage().getName() + '.';
-		name += type.getName().replace('.', '$');
-		return name;
-	}
-
-	private String getBinaryOrPrimitiveName(JType type) {
-		JArrayType asArray = type.isArray();
-		JClassType asClass = type.isClassOrInterface();
-		JPrimitiveType asPrimitive = type.isPrimitive();
-		if (asClass != null) {
-			return getBinaryName(asClass);
-		} else if (asPrimitive != null) {
-			return asPrimitive.getQualifiedSourceName();
-		} else if (asArray != null) {
-			JType componentType = asArray.getComponentType();
-			return getBinaryOrPrimitiveName(componentType) + "[]";
-		} else {
-			throw new InternalCompilerException("Cannot create binary name for "
-					+ type.getQualifiedSourceName());
-		}
-	}
-
-	/**
-	 * Returns the compilationUnit corresponding to the className. For nested
-	 * classes, the unit corresponding to the top level type is returned.
-	 *
-	 * Since a file might have several top-level types, search using
-	 * classFileMap.
-	 */
-	private CompilationUnit getUnitForClassName(String className) {
-		String mainTypeName = className;
-		int index = mainTypeName.length();
-		CompiledClass cc = null;
-		while (cc == null && index != -1) {
-			mainTypeName = mainTypeName.substring(0, index);
-			cc = compilationState.getClassFileMap().get(mainTypeName);
-			index = mainTypeName.lastIndexOf('$');
-		}
-		return cc == null ? null : cc.getUnit();
-	}
-
-	private void injectJsniMethods(CompilationUnit unit) {
-		if (unit == null || unit.getJsniMethods() == null) {
-			return;
-		}
-		Event event = SpeedTracerLogger.start(DevModeEventType.LOAD_JSNI,
-				"unit", unit.getTypeName());
-		try {
-			shellJavaScriptHost.createNativeMethods(logger,
-					unit.getJsniMethods(), this);
-		} finally {
-			event.end();
-		}
-	}
-
-	/**
-	 * Returns a new bridge or null.
-	 */
-	private GWTBridgeImpl makeGwtBridge() {
-		if (shellJavaScriptHost == null) {
-			return null;
-		}
-		return new GWTBridgeImpl(shellJavaScriptHost);
-	}
-
-	private void maybeInitializeScriptOnlyClassLoader() {
-		if (scriptOnlyClassLoader == null) {
-			scriptOnlyClassLoader = new MultiParentClassLoader(this,
-					Thread.currentThread().getContextClassLoader());
-		}
-	}
-
-	/**
-	 * Calls setBridge method on the GWT class inside this classloader, if
-	 * possible.
-	 */
-	private void setGwtBridge(GWTBridgeImpl bridge) {
-		if (gwtClass == null) {
-			return;
-		}
-		Throwable caught;
-		try {
-			final Class<?>[] paramTypes = new Class[] { GWTBridge.class };
-			Method setBridgeMethod = gwtClass.getDeclaredMethod("setBridge",
-					paramTypes);
-			setBridgeMethod.setAccessible(true);
-			setBridgeMethod.invoke(gwtClass, new Object[] { bridge });
-			return;
-		} catch (SecurityException e) {
-			caught = e;
-		} catch (NoSuchMethodException e) {
-			caught = e;
-		} catch (IllegalArgumentException e) {
-			caught = e;
-		} catch (IllegalAccessException e) {
-			caught = e;
-		} catch (InvocationTargetException e) {
-			caught = e.getTargetException();
-		}
-		throw new RuntimeException("Error initializing GWT bridge", caught);
-	}
-
-	private boolean typeHasCompilationUnit(String className) {
-		return getUnitForClassName(className) != null;
-	}
-
-	/**
-	 * Tricky one, this. Reaches over into this modules's JavaScriptHost class
-	 * and sets its static 'host' field to our module space.
-	 *
-	 * @see JavaScriptHost
-	 */
-	private void updateJavaScriptHost() {
-		if (javaScriptHostClass == null) {
-			return;
-		}
-		Throwable caught;
-		try {
-			final Class<?>[] paramTypes = new Class[] {
-					ShellJavaScriptHost.class };
-			Method setHostMethod = javaScriptHostClass.getMethod("setHost",
-					paramTypes);
-			setHostMethod.invoke(javaScriptHostClass,
-					new Object[] { shellJavaScriptHost });
-			return;
-		} catch (SecurityException e) {
-			caught = e;
-		} catch (NoSuchMethodException e) {
-			caught = e;
-		} catch (IllegalArgumentException e) {
-			caught = e;
-		} catch (IllegalAccessException e) {
-			caught = e;
-		} catch (InvocationTargetException e) {
-			caught = e.getTargetException();
-		}
-		throw new RuntimeException("Error initializing JavaScriptHost", caught);
+	void clear() {
+		// Release our references to the shell.
+		shellJavaScriptHost = null;
+		scriptOnlyClasses.clear();
+		scriptOnlyClassLoader = null;
+		updateJavaScriptHost();
+		weakJsoCache.clear();
+		weakJavaWrapperCache.clear();
+		dispClassInfoOracle.clear();
+		Introspector.flushCaches();
+		setGwtBridge(null);
 	}
 
 	@Override
@@ -840,6 +537,213 @@ public final class CompilingClassLoader extends ClassLoader
 		}
 	}
 
+	@SuppressWarnings("deprecation")
+	private byte[] findClassBytes(String className) {
+		if (JavaScriptHost.class.getName().equals(className)) {
+			// No need to rewrite.
+			return javaScriptHostBytes;
+		}
+		// A JSO impl class needs the class bytes for the original class.
+		String lookupClassName = canonicalizeClassName(className);
+		CompiledClass compiledClass = compilationState.getClassFileMap()
+				.get(lookupClassName);
+		if (classRewriter != null && classRewriter.isJsoIntf(className)) {
+			// Generate a synthetic JSO interface class.
+			byte[] newBytes = classRewriter.writeJsoIntf(className,
+					compiledClass != null ? compiledClass.getBytes() : null);
+			if (CLASS_DUMP) {
+				classDump(className, newBytes);
+			}
+			return newBytes;
+		}
+		CompilationUnit unit = (compiledClass == null)
+				? getUnitForClassName(lookupClassName)
+				: compiledClass.getUnit();
+		if (emmaAvailable) {
+			/*
+			 * build the map for anonymous classes. Do so only if unit has
+			 * anonymous classes, jsni methods, is not super-source and the map
+			 * has not been built before.
+			 */
+			List<JsniMethod> jsniMethods = (unit == null) ? null
+					: unit.getJsniMethods();
+			if (unit != null && !unit.isSuperSource() && !unit.isGenerated()
+					&& unit.hasAnonymousClasses() && jsniMethods != null
+					&& jsniMethods.size() > 0 && !unit.createdClassMapping()) {
+				if (!unit.constructAnonymousClassMappings(logger)) {
+					logger.log(TreeLogger.ERROR,
+							"Our heuristic for mapping anonymous classes between compilers "
+									+ "failed. Unsafe to continue because the wrong jsni code "
+									+ "could end up running. className = "
+									+ className);
+					return null;
+				}
+			}
+		}
+		byte classBytes[] = null;
+		if (compiledClass != null) {
+			classBytes = compiledClass.getBytes();
+			if (!compiledClass.getUnit().isSuperSource()) {
+				classBytes = emmaStrategy.getEmmaClassBytes(classBytes,
+						lookupClassName,
+						compiledClass.getUnit().getLastModified());
+			} else {
+				if (logger.isLoggable(TreeLogger.SPAM)) {
+					logger.log(TreeLogger.SPAM,
+							"no emma instrumentation for " + lookupClassName
+									+ " because it is from super-source");
+				}
+			}
+		} else if (emmaAvailable) {
+			/*
+			 * TypeOracle does not know about this class. Most probably, this
+			 * class was referenced in one of the classes loaded from disk.
+			 * Check if we can find it on disk. Typically this is a synthetic
+			 * class added by the compiler.
+			 */
+			if (typeHasCompilationUnit(lookupClassName)
+					&& CompilationUnit.isClassnameGenerated(className)) {
+				/*
+				 * modification time = 0 ensures that whatever is on the disk is
+				 * always loaded.
+				 */
+				if (logger.isLoggable(TreeLogger.DEBUG)) {
+					logger.log(TreeLogger.DEBUG, "EmmaStrategy: loading "
+							+ lookupClassName
+							+ " from disk even though TypeOracle does not know about it");
+				}
+				classBytes = emmaStrategy.getEmmaClassBytes(null,
+						lookupClassName, 0);
+			}
+		}
+		if (classBytes != null && classRewriter != null) {
+			Map<String, String> anonymousClassMap = Collections.emptyMap();
+			if (unit != null) {
+				anonymousClassMap = unit.getAnonymousClassMap();
+			}
+			byte[] newBytes = classRewriter.rewrite(typeOracle, className,
+					classBytes, anonymousClassMap);
+			if (CLASS_DUMP) {
+				if (!Arrays.equals(classBytes, newBytes)) {
+					classDump(className, newBytes);
+				}
+			}
+			classBytes = newBytes;
+		}
+		if (unit != null && unit.isError()) {
+			// Compile worked, but the unit had some kind of error (JSNI?)
+			CompilationProblemReporter.reportErrors(logger, unit, false);
+		}
+		return classBytes;
+	}
+
+	private String getBinaryName(JClassType type) {
+		String name = type.getPackage().getName() + '.';
+		name += type.getName().replace('.', '$');
+		return name;
+	}
+
+	private String getBinaryOrPrimitiveName(JType type) {
+		JArrayType asArray = type.isArray();
+		JClassType asClass = type.isClassOrInterface();
+		JPrimitiveType asPrimitive = type.isPrimitive();
+		if (asClass != null) {
+			return getBinaryName(asClass);
+		} else if (asPrimitive != null) {
+			return asPrimitive.getQualifiedSourceName();
+		} else if (asArray != null) {
+			JType componentType = asArray.getComponentType();
+			return getBinaryOrPrimitiveName(componentType) + "[]";
+		} else {
+			throw new InternalCompilerException("Cannot create binary name for "
+					+ type.getQualifiedSourceName());
+		}
+	}
+
+	/**
+	 * Retrieves the mapped JSO for a given unique id, provided the id was
+	 * previously cached and the JSO has not been garbage collected.
+	 *
+	 * @param uniqueId
+	 *            the previously stored unique id
+	 * @return the mapped JSO, or <code>null</code> if the id was not previously
+	 *         mapped or if the JSO has been garbage collected
+	 */
+	public Object getCachedJso(int uniqueId) {
+		return weakJsoCache.get(uniqueId);
+	}
+
+	/**
+	 * Returns the {@link DispatchClassInfo} for a given dispatch id.
+	 *
+	 * @param dispId
+	 *            dispatch identifier
+	 * @return {@link DispatchClassInfo} for a given dispatch id or null if one
+	 *         does not exist
+	 */
+	@Override
+	public DispatchClassInfo getClassInfoByDispId(int dispId) {
+		return dispClassInfoOracle.getClassInfoByDispId(dispId);
+	}
+
+	/**
+	 * Returns the dispatch id for a JSNI member reference.
+	 *
+	 * @param jsniMemberRef
+	 *            a JSNI member reference
+	 * @return dispatch id or -1 if the JSNI member reference could not be found
+	 */
+	@Override
+	public int getDispId(String jsniMemberRef) {
+		return dispClassInfoOracle.getDispId(jsniMemberRef);
+	}
+
+	/**
+	 * Returns the compilationUnit corresponding to the className. For nested
+	 * classes, the unit corresponding to the top level type is returned.
+	 *
+	 * Since a file might have several top-level types, search using
+	 * classFileMap.
+	 */
+	private CompilationUnit getUnitForClassName(String className) {
+		String mainTypeName = className;
+		int index = mainTypeName.length();
+		CompiledClass cc = null;
+		while (cc == null && index != -1) {
+			mainTypeName = mainTypeName.substring(0, index);
+			cc = compilationState.getClassFileMap().get(mainTypeName);
+			index = mainTypeName.lastIndexOf('$');
+		}
+		return cc == null ? null : cc.getUnit();
+	}
+
+	/**
+	 * Retrieves the mapped wrapper for a given Java Object, provided the
+	 * wrapper was previously cached and has not been garbage collected.
+	 *
+	 * @param javaObject
+	 *            the Object being wrapped
+	 * @return the mapped wrapper, or <code>null</code> if the Java object
+	 *         mapped or if the wrapper has been garbage collected
+	 */
+	public Object getWrapperForObject(Object javaObject) {
+		return weakJavaWrapperCache.get(javaObject);
+	}
+
+	private void injectJsniMethods(CompilationUnit unit) {
+		if (unit == null || unit.getJsniMethods() == null) {
+			return;
+		}
+		Event event = SpeedTracerLogger.start(DevModeEventType.LOAD_JSNI,
+				"unit", unit.getTypeName());
+		try {
+			shellJavaScriptHost.createNativeMethods(logger,
+					unit.getJsniMethods(), this);
+		} finally {
+			event.end();
+		}
+	}
+
 	/**
 	 * Remove some of the excess locking that we'd normally inherit from
 	 * loadClass.
@@ -871,17 +775,113 @@ public final class CompilingClassLoader extends ClassLoader
 		return c;
 	}
 
-	void clear() {
-		// Release our references to the shell.
-		shellJavaScriptHost = null;
-		scriptOnlyClasses.clear();
-		scriptOnlyClassLoader = null;
-		updateJavaScriptHost();
-		weakJsoCache.clear();
-		weakJavaWrapperCache.clear();
-		dispClassInfoOracle.clear();
-		Introspector.flushCaches();
-		setGwtBridge(null);
+	/**
+	 * Returns a new bridge or null.
+	 */
+	private GWTBridgeImpl makeGwtBridge() {
+		if (shellJavaScriptHost == null) {
+			return null;
+		}
+		return new GWTBridgeImpl(shellJavaScriptHost);
+	}
+
+	private void maybeInitializeScriptOnlyClassLoader() {
+		if (scriptOnlyClassLoader == null) {
+			scriptOnlyClassLoader = new MultiParentClassLoader(this,
+					Thread.currentThread().getContextClassLoader());
+		}
+	}
+
+	/**
+	 * Weakly caches a given JSO by unique id. A cached JSO can be looked up by
+	 * unique id until it is garbage collected.
+	 *
+	 * @param uniqueId
+	 *            a unique id associated with the JSO
+	 * @param jso
+	 *            the value to cache
+	 */
+	public void putCachedJso(int uniqueId, Object jso) {
+		weakJsoCache.put(uniqueId, jso);
+	}
+
+	/**
+	 * Weakly caches a wrapper for a given Java Object.
+	 *
+	 * @param javaObject
+	 *            the Object being wrapped
+	 * @param wrapper
+	 *            the mapped wrapper
+	 */
+	public void putWrapperForObject(Object javaObject, Object wrapper) {
+		weakJavaWrapperCache.put(javaObject, wrapper);
+	}
+
+	/**
+	 * Calls setBridge method on the GWT class inside this classloader, if
+	 * possible.
+	 */
+	private void setGwtBridge(GWTBridgeImpl bridge) {
+		if (gwtClass == null) {
+			return;
+		}
+		Throwable caught;
+		try {
+			final Class<?>[] paramTypes = new Class[] { GWTBridge.class };
+			Method setBridgeMethod = gwtClass.getDeclaredMethod("setBridge",
+					paramTypes);
+			setBridgeMethod.setAccessible(true);
+			setBridgeMethod.invoke(gwtClass, new Object[] { bridge });
+			return;
+		} catch (SecurityException e) {
+			caught = e;
+		} catch (NoSuchMethodException e) {
+			caught = e;
+		} catch (IllegalArgumentException e) {
+			caught = e;
+		} catch (IllegalAccessException e) {
+			caught = e;
+		} catch (InvocationTargetException e) {
+			caught = e.getTargetException();
+		}
+		throw new RuntimeException("Error initializing GWT bridge", caught);
+	}
+
+	private boolean typeHasCompilationUnit(String className) {
+		return getUnitForClassName(className) != null;
+	}
+
+	/**
+	 * Tricky one, this. Reaches over into this modules's JavaScriptHost class
+	 * and sets its static 'host' field to our module space.
+	 *
+	 * @see JavaScriptHost
+	 */
+	private void updateJavaScriptHost() {
+		if (javaScriptHostClass == null) {
+			return;
+		}
+		Throwable caught;
+		try {
+			final Class<?>[] paramTypes = new Class[] {
+					ShellJavaScriptHost.class };
+			Method setHostMethod = javaScriptHostClass.getMethod("setHost",
+					paramTypes);
+			setHostMethod.invoke(javaScriptHostClass,
+					new Object[] { shellJavaScriptHost });
+			return;
+		} catch (SecurityException e) {
+			caught = e;
+		} catch (NoSuchMethodException e) {
+			caught = e;
+		} catch (IllegalArgumentException e) {
+			caught = e;
+		} catch (IllegalAccessException e) {
+			caught = e;
+		} catch (InvocationTargetException e) {
+			caught = e.getTargetException();
+		}
+		throw new RuntimeException("Error initializing JavaScriptHost", caught);
 	}
 
 	/**
@@ -905,83 +905,6 @@ public final class CompilingClassLoader extends ClassLoader
 		public synchronized void clear() {
 			classIdToClassInfo.clear();
 			classNameToClassInfo.clear();
-		}
-
-		/**
-		 * Returns the {@link DispatchClassInfo} for a given dispatch id.
-		 *
-		 * @param dispId
-		 *            dispatch id
-		 * @return DispatchClassInfo for the requested dispatch id
-		 */
-		public synchronized DispatchClassInfo getClassInfoByDispId(int dispId) {
-			int classId = extractClassIdFromDispId(dispId);
-			return classIdToClassInfo.get(classId);
-		}
-
-		/**
-		 * Returns the dispatch id for a given member reference. Member
-		 * references can be encoded as: "@class::field" or
-		 * "@class::method(typesigs)".
-		 *
-		 * @param jsniMemberRef
-		 *            a string encoding a JSNI member to use
-		 * @return integer encoded as ((classId << 16) | memberId)
-		 */
-		public synchronized int getDispId(String jsniMemberRef) {
-			/*
-			 * Map JS toString() onto the Java toString() method.
-			 */
-			if (jsniMemberRef.equals("toString")) {
-				jsniMemberRef = "@java.lang.Object::toString()";
-			}
-			JsniRef parsed = JsniRef.parse(jsniMemberRef);
-			if (parsed == null) {
-				logger.log(TreeLogger.ERROR,
-						"Malformed JSNI reference '" + jsniMemberRef
-								+ "'; expect subsequent failures",
-						new NoSuchFieldError(jsniMemberRef));
-				return -1;
-			}
-			// Do the lookup by class name.
-			String className = parsed.className();
-			DispatchClassInfo dispClassInfo = getClassInfoFromClassName(
-					className);
-			if (dispClassInfo != null) {
-				String memberName = parsed.memberSignature();
-				/*
-				 * Disallow the use of JSNI references to SingleJsoImpl
-				 * interface methods. This policy is due to web-mode dispatch
-				 * implementation details; resolving the JSNI reference wouldn't
-				 * be just be a name replacement, instead it would be necessary
-				 * to significantly alter the semantics of the hand-written JS.
-				 */
-				if (singleJsoImplTypes
-						.contains(canonicalizeClassName(className))) {
-					logger.log(TreeLogger.ERROR,
-							"Invalid JSNI reference to SingleJsoImpl interface ("
-									+ className
-									+ "); consider using a trampoline. "
-									+ "Expect subsequent failures.",
-							new NoSuchFieldError(jsniMemberRef));
-					return -1;
-				}
-				int memberId = dispClassInfo.getMemberId(memberName);
-				if (memberId < 0) {
-					if (!className.startsWith("java.")) {
-						logger.log(TreeLogger.ERROR, "Member '" + memberName
-								+ "' in JSNI reference '" + jsniMemberRef
-								+ "' could not be found; expect subsequent failures",
-								new NoSuchFieldError(memberName));
-					}
-				}
-				return synthesizeDispId(dispClassInfo.getClassId(), memberId);
-			}
-			logger.log(TreeLogger.ERROR, "Class '" + className
-					+ "' in JSNI reference '" + jsniMemberRef
-					+ "' could not be found; expect subsequent failures",
-					new ClassNotFoundException(className));
-			return -1;
 		}
 
 		/**
@@ -1056,6 +979,18 @@ public final class CompilingClassLoader extends ClassLoader
 		}
 
 		/**
+		 * Returns the {@link DispatchClassInfo} for a given dispatch id.
+		 *
+		 * @param dispId
+		 *            dispatch id
+		 * @return DispatchClassInfo for the requested dispatch id
+		 */
+		public synchronized DispatchClassInfo getClassInfoByDispId(int dispId) {
+			int classId = extractClassIdFromDispId(dispId);
+			return classIdToClassInfo.get(classId);
+		}
+
+		/**
 		 * Returns the {@link DispatchClassInfo} associated with the class name.
 		 * Since we allow both binary and source names to be used in JSNI class
 		 * references, we need to be able to deal with the fact that multiple
@@ -1125,6 +1060,71 @@ public final class CompilingClassLoader extends ClassLoader
 			default:
 				return null;
 			}
+		}
+
+		/**
+		 * Returns the dispatch id for a given member reference. Member
+		 * references can be encoded as: "@class::field" or
+		 * "@class::method(typesigs)".
+		 *
+		 * @param jsniMemberRef
+		 *            a string encoding a JSNI member to use
+		 * @return integer encoded as ((classId << 16) | memberId)
+		 */
+		public synchronized int getDispId(String jsniMemberRef) {
+			/*
+			 * Map JS toString() onto the Java toString() method.
+			 */
+			if (jsniMemberRef.equals("toString")) {
+				jsniMemberRef = "@java.lang.Object::toString()";
+			}
+			JsniRef parsed = JsniRef.parse(jsniMemberRef);
+			if (parsed == null) {
+				logger.log(TreeLogger.ERROR,
+						"Malformed JSNI reference '" + jsniMemberRef
+								+ "'; expect subsequent failures",
+						new NoSuchFieldError(jsniMemberRef));
+				return -1;
+			}
+			// Do the lookup by class name.
+			String className = parsed.className();
+			DispatchClassInfo dispClassInfo = getClassInfoFromClassName(
+					className);
+			if (dispClassInfo != null) {
+				String memberName = parsed.memberSignature();
+				/*
+				 * Disallow the use of JSNI references to SingleJsoImpl
+				 * interface methods. This policy is due to web-mode dispatch
+				 * implementation details; resolving the JSNI reference wouldn't
+				 * be just be a name replacement, instead it would be necessary
+				 * to significantly alter the semantics of the hand-written JS.
+				 */
+				if (singleJsoImplTypes
+						.contains(canonicalizeClassName(className))) {
+					logger.log(TreeLogger.ERROR,
+							"Invalid JSNI reference to SingleJsoImpl interface ("
+									+ className
+									+ "); consider using a trampoline. "
+									+ "Expect subsequent failures.",
+							new NoSuchFieldError(jsniMemberRef));
+					return -1;
+				}
+				int memberId = dispClassInfo.getMemberId(memberName);
+				if (memberId < 0) {
+					if (!className.startsWith("java.")) {
+						logger.log(TreeLogger.ERROR, "Member '" + memberName
+								+ "' in JSNI reference '" + jsniMemberRef
+								+ "' could not be found; expect subsequent failures",
+								new NoSuchFieldError(memberName));
+					}
+				}
+				return synthesizeDispId(dispClassInfo.getClassId(), memberId);
+			}
+			logger.log(TreeLogger.ERROR, "Class '" + className
+					+ "' in JSNI reference '" + jsniMemberRef
+					+ "' could not be found; expect subsequent failures",
+					new ClassNotFoundException(className));
+			return -1;
 		}
 
 		/**
@@ -1245,35 +1245,6 @@ public final class CompilingClassLoader extends ClassLoader
 			}
 		}
 
-		@Override
-		public String findOriginalDeclaringClass(String desc,
-				String signature) {
-			// Lookup the method.
-			Set<JClassType> declaringClasses = signatureToDeclaringClasses
-					.get(signature);
-			assert declaringClasses != null : "No classes for " + signature;
-			if (declaringClasses.size() == 1) {
-				// Shortcut: if there's only one answer, it must be right.
-				return createDescriptor(declaringClasses.iterator().next());
-			}
-			// Must check for assignability.
-			String sourceName = desc.replace('/', '.');
-			sourceName = sourceName.replace('$', '.');
-			JClassType declaredType = typeOracle.findType(sourceName);
-			// Check if I declare this directly.
-			if (declaringClasses.contains(declaredType)) {
-				return desc;
-			}
-			// Check to see what type I am assignable to.
-			for (JClassType possibleSupertype : declaringClasses) {
-				if (declaredType.isAssignableTo(possibleSupertype)) {
-					return createDescriptor(possibleSupertype);
-				}
-			}
-			throw new IllegalArgumentException("Could not resolve signature '"
-					+ signature + "' from class '" + desc + "'");
-		}
-
 		/**
 		 * Record that a given JSO type contains the concrete implementation of
 		 * a (possibly abstract) method.
@@ -1304,6 +1275,35 @@ public final class CompilingClassLoader extends ClassLoader
 			sb.append(method.getReturnType().getJNISignature());
 			String signature = sb.toString();
 			return signature;
+		}
+
+		@Override
+		public String findOriginalDeclaringClass(String desc,
+				String signature) {
+			// Lookup the method.
+			Set<JClassType> declaringClasses = signatureToDeclaringClasses
+					.get(signature);
+			assert declaringClasses != null : "No classes for " + signature;
+			if (declaringClasses.size() == 1) {
+				// Shortcut: if there's only one answer, it must be right.
+				return createDescriptor(declaringClasses.iterator().next());
+			}
+			// Must check for assignability.
+			String sourceName = desc.replace('/', '.');
+			sourceName = sourceName.replace('$', '.');
+			JClassType declaredType = typeOracle.findType(sourceName);
+			// Check if I declare this directly.
+			if (declaringClasses.contains(declaredType)) {
+				return desc;
+			}
+			// Check to see what type I am assignable to.
+			for (JClassType possibleSupertype : declaringClasses) {
+				if (declaredType.isAssignableTo(possibleSupertype)) {
+					return createDescriptor(possibleSupertype);
+				}
+			}
+			throw new IllegalArgumentException("Could not resolve signature '"
+					+ signature + "' from class '" + desc + "'");
 		}
 	}
 
@@ -1469,34 +1469,6 @@ public final class CompilingClassLoader extends ClassLoader
 			}
 		}
 
-		@Override
-		public List<org.objectweb.asm.commons.Method>
-				getDeclarations(String mangledName) {
-			List<org.objectweb.asm.commons.Method> toReturn = mangledNamesToDeclarations
-					.get(mangledName);
-			return toReturn == null ? null
-					: Collections.unmodifiableList(toReturn);
-		}
-
-		@Override
-		public List<org.objectweb.asm.commons.Method>
-				getImplementations(String mangledName) {
-			List<org.objectweb.asm.commons.Method> toReturn = mangledNamesToImplementations
-					.get(mangledName);
-			return toReturn == null ? toReturn
-					: Collections.unmodifiableList(toReturn);
-		}
-
-		@Override
-		public SortedSet<String> getMangledNames() {
-			return unmodifiableNames;
-		}
-
-		@Override
-		public Set<String> getSingleJsoIntfTypes() {
-			return unmodifiableIntfNames;
-		}
-
 		/**
 		 * Assumes that the usual case is a 1:1 mapping.
 		 */
@@ -1538,6 +1510,34 @@ public final class CompilingClassLoader extends ClassLoader
 				return method;
 			}
 			return null;
+		}
+
+		@Override
+		public List<org.objectweb.asm.commons.Method>
+				getDeclarations(String mangledName) {
+			List<org.objectweb.asm.commons.Method> toReturn = mangledNamesToDeclarations
+					.get(mangledName);
+			return toReturn == null ? null
+					: Collections.unmodifiableList(toReturn);
+		}
+
+		@Override
+		public List<org.objectweb.asm.commons.Method>
+				getImplementations(String mangledName) {
+			List<org.objectweb.asm.commons.Method> toReturn = mangledNamesToImplementations
+					.get(mangledName);
+			return toReturn == null ? toReturn
+					: Collections.unmodifiableList(toReturn);
+		}
+
+		@Override
+		public SortedSet<String> getMangledNames() {
+			return unmodifiableNames;
+		}
+
+		@Override
+		public Set<String> getSingleJsoIntfTypes() {
+			return unmodifiableIntfNames;
 		}
 	}
 }

@@ -115,6 +115,16 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		setElement(tableElem);
 	}
 
+	void addCells(Element container, int row, int num) {
+		com.google.gwt.dom.client.Element rowElem = impl.getRows(container)
+				.get(row);
+		for (int i = 0; i < num; i++) {
+			Element tdElement = container == headElem ? DOM.createTH()
+					: DOM.createTD();
+			rowElem.appendChild(tdElement);
+		}
+	}
+
 	@Override
 	public HandlerRegistration addClickHandler(ClickHandler handler) {
 		return addDomHandler(handler, ClickEvent.getType());
@@ -177,6 +187,62 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	}
 
 	/**
+	 * Bounds checks that the cell exists at the specified location.
+	 * 
+	 * @param row
+	 *            cell's row
+	 * @param column
+	 *            cell's column
+	 * @throws IndexOutOfBoundsException
+	 */
+	protected void checkCellBounds(int row, int column) {
+		checkRowBounds(row);
+		if (column < 0) {
+			throw new IndexOutOfBoundsException(
+					"Column " + column + " must be non-negative: " + column);
+		}
+		int cellSize = getCellCount(row);
+		if (cellSize <= column) {
+			throw new IndexOutOfBoundsException("Column index: " + column
+					+ ", Column size: " + getCellCount(row));
+		}
+	}
+
+	/**
+	 * Checks that the row is within the correct bounds.
+	 * 
+	 * @param row
+	 *            row index to check
+	 * @throws IndexOutOfBoundsException
+	 */
+	protected void checkRowBounds(int row) {
+		int rowSize = getRowCount();
+		if ((row >= rowSize) || (row < 0)) {
+			throw new IndexOutOfBoundsException(
+					"Row index: " + row + ", Row size: " + rowSize);
+		}
+	}
+
+	/**
+	 * Removes any widgets, text, and HTML within the cell. This method assumes
+	 * that the requested cell already exists.
+	 * 
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @param clearInnerHTML
+	 *            should the cell's inner html be cleared?
+	 * @return element that has been cleaned
+	 */
+	private Element cleanCell(int row, int column, boolean clearInnerHTML) {
+		// Clear whatever is in the cell.
+		Element td = getCellFormatter().getRawElement(row, column);
+		internalClearCell(td, clearInnerHTML);
+		return td;
+	}
+
+	/**
 	 * Removes all widgets from this table, but does not remove other HTML or
 	 * text contents of cells.
 	 */
@@ -215,6 +281,30 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	public boolean clearCell(int row, int column) {
 		Element td = getCellFormatter().getElement(row, column);
 		return internalClearCell(td, true);
+	}
+
+	/**
+	 * Creates a new cell. Override this method if the cell should have initial
+	 * contents.
+	 * 
+	 * @return the newly created TD
+	 */
+	protected Element createCell() {
+		return DOM.createTD();
+	}
+
+	protected Element createCell(int row) {
+		return resolveContainer(row) == headElem ? DOM.createTH()
+				: DOM.createTD();
+	}
+
+	/**
+	 * Gets the table's TBODY element.
+	 * 
+	 * @return the TBODY element
+	 */
+	protected Element getBodyElement() {
+		return DOM.asOld(bodyElem);
 	}
 
 	/**
@@ -281,423 +371,6 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 */
 	public ColumnFormatter getColumnFormatter() {
 		return columnFormatter;
-	}
-
-	/**
-	 * Gets the HTML contents of the specified cell.
-	 * 
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @return the cell's HTML contents
-	 * @throws IndexOutOfBoundsException
-	 */
-	public String getHTML(int row, int column) {
-		return cellFormatter.getElement(row, column).getInnerHTML();
-	}
-
-	/**
-	 * Gets the number of rows present in this table.
-	 * 
-	 * @return the table's row count
-	 */
-	public abstract int getRowCount();
-
-	/**
-	 * Gets the RowFormatter associated with this table.
-	 * 
-	 * @return the table's row formatter
-	 */
-	public RowFormatter getRowFormatter() {
-		return rowFormatter;
-	}
-
-	/**
-	 * Gets the text within the specified cell.
-	 * 
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @return the cell's text contents
-	 * @throws IndexOutOfBoundsException
-	 */
-	public String getText(int row, int column) {
-		checkCellBounds(row, column);
-		Element e = cellFormatter.getElement(row, column);
-		return e.getInnerText();
-	}
-
-	/**
-	 * Gets the widget in the specified cell.
-	 * 
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @return the widget in the specified cell, or <code>null</code> if none is
-	 *         present
-	 * @throws IndexOutOfBoundsException
-	 */
-	public Widget getWidget(int row, int column) {
-		checkCellBounds(row, column);
-		return getWidgetImpl(row, column);
-	}
-
-	/**
-	 * Determines whether the specified cell exists.
-	 * 
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @return <code>true</code> if the specified cell exists
-	 */
-	public boolean isCellPresent(int row, int column) {
-		if ((row >= getRowCount()) || (row < 0)) {
-			return false;
-		}
-		if ((column < 0) || (column >= getCellCount(row))) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	public boolean isUsesTHead() {
-		return this.usesTHead;
-	}
-
-	/**
-	 * Returns an iterator containing all the widgets in this table.
-	 * 
-	 * @return the iterator
-	 */
-	@Override
-	public Iterator<Widget> iterator() {
-		return new Iterator<Widget>() {
-			final ArrayList<Widget> widgetList = widgetMap.getObjectList();
-
-			int lastIndex = -1;
-
-			int nextIndex = -1;
-			{
-				findNext();
-			}
-
-			@Override
-			public boolean hasNext() {
-				return nextIndex < widgetList.size();
-			}
-
-			@Override
-			public Widget next() {
-				if (!hasNext()) {
-					throw new NoSuchElementException();
-				}
-				Widget result = widgetList.get(nextIndex);
-				lastIndex = nextIndex;
-				findNext();
-				return result;
-			}
-
-			@Override
-			public void remove() {
-				if (lastIndex < 0) {
-					throw new IllegalStateException();
-				}
-				Widget w = widgetList.get(lastIndex);
-				assert (w.getParent() instanceof HTMLTable);
-				w.removeFromParent();
-				lastIndex = -1;
-			}
-
-			private void findNext() {
-				while (++nextIndex < widgetList.size()) {
-					if (widgetList.get(nextIndex) != null) {
-						return;
-					}
-				}
-			}
-		};
-	}
-
-	/**
-	 * Remove the specified widget from the table.
-	 * 
-	 * @param widget
-	 *            widget to remove
-	 * @return was the widget removed from the table.
-	 */
-	@Override
-	public boolean remove(Widget widget) {
-		// Validate.
-		if (widget.getParent() != this) {
-			return false;
-		}
-		// Orphan.
-		try {
-			orphan(widget);
-		} finally {
-			// Physical detach.
-			Element elem = widget.getElement();
-			DOM.getParent(elem).removeChild(elem);
-			// Logical detach.
-			widgetMap.removeByElement(elem);
-		}
-		return true;
-	}
-
-	/**
-	 * Removes the specified table listener.
-	 * 
-	 * @param listener
-	 *            listener to remove
-	 *
-	 * @deprecated Use the {@link HandlerRegistration#removeHandler} method on
-	 *             the object returned by an add*Handler method instead
-	 */
-	@Override
-	@Deprecated
-	public void removeTableListener(TableListener listener) {
-		ListenerWrapper.WrappedTableListener.remove(this, listener);
-	}
-
-	/**
-	 * Sets the width of the table's border. This border is displayed around all
-	 * cells in the table.
-	 * 
-	 * @param width
-	 *            the width of the border, in pixels
-	 */
-	public void setBorderWidth(int width) {
-		tableElem.setPropertyString("border", "" + width);
-	}
-
-	/**
-	 * Sets the amount of padding to be added around all cells.
-	 * 
-	 * @param padding
-	 *            the cell padding, in pixels
-	 */
-	public void setCellPadding(int padding) {
-		tableElem.setPropertyInt("cellPadding", padding);
-	}
-
-	/**
-	 * Sets the amount of spacing to be added around all cells.
-	 * 
-	 * @param spacing
-	 *            the cell spacing, in pixels
-	 */
-	public void setCellSpacing(int spacing) {
-		tableElem.setPropertyInt("cellSpacing", spacing);
-	}
-
-	/**
-	 * Sets the HTML contents of the specified cell.
-	 *
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @param html
-	 *            the cell's safe html contents
-	 * @throws IndexOutOfBoundsException
-	 */
-	public void setHTML(int row, int column, SafeHtml html) {
-		setHTML(row, column, html.asString());
-	}
-
-	/**
-	 * Sets the HTML contents of the specified cell.
-	 *
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @param html
-	 *            the cell's HTML contents
-	 * @throws IndexOutOfBoundsException
-	 */
-	public void setHTML(int row, int column, @IsSafeHtml
-	String html) {
-		prepareCell(row, column);
-		Element td = cleanCell(row, column, html == null);
-		if (html != null) {
-			td.setInnerHTML(html);
-		}
-	}
-
-	/**
-	 * Sets the text within the specified cell.
-	 *
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            cell's column
-	 * @param text
-	 *            the cell's text contents
-	 * @throws IndexOutOfBoundsException
-	 */
-	public void setText(int row, int column, String text) {
-		prepareCell(row, column);
-		Element td;
-		td = cleanCell(row, column, text == null);
-		if (text != null) {
-			td.setInnerText(text);
-		}
-	}
-
-	public void setUsesTHead(boolean usesTHead) {
-		if (usesTHead && !this.usesTHead) {
-			headElem = DOM.createTHead();
-			DOM.insertBefore(tableElem, headElem, bodyElem);
-		}
-		this.usesTHead = usesTHead;
-	}
-
-	/**
-	 * Overloaded version for IsWidget.
-	 * 
-	 * @see #setWidget(int,int,Widget)
-	 */
-	public void setWidget(int row, int column, IsWidget widget) {
-		this.setWidget(row, column, asWidgetOrNull(widget));
-	}
-
-	/**
-	 * Sets the widget within the specified cell.
-	 * <p>
-	 * Inherited implementations may either throw IndexOutOfBounds exception if
-	 * the cell does not exist, or allocate a new cell to store the content.
-	 * </p>
-	 * <p>
-	 * FlexTable will automatically allocate the cell at the correct location
-	 * and then set the widget. Grid will set the widget if and only if the cell
-	 * is within the Grid's bounding box.
-	 * </p>
-	 * 
-	 * @param widget
-	 *            The widget to be added, or null to clear the cell
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @throws IndexOutOfBoundsException
-	 */
-	public void setWidget(int row, int column, Widget widget) {
-		prepareCell(row, column);
-		// Removes any existing widget.
-		Element td = cleanCell(row, column, true);
-		if (widget != null) {
-			widget.removeFromParent();
-			// Logical attach.
-			widgetMap.put(widget);
-			// Physical attach.
-			DOM.appendChild(td, widget.getElement());
-			adopt(widget);
-		}
-	}
-
-	/**
-	 * Removes any widgets, text, and HTML within the cell. This method assumes
-	 * that the requested cell already exists.
-	 * 
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @param clearInnerHTML
-	 *            should the cell's inner html be cleared?
-	 * @return element that has been cleaned
-	 */
-	private Element cleanCell(int row, int column, boolean clearInnerHTML) {
-		// Clear whatever is in the cell.
-		Element td = getCellFormatter().getRawElement(row, column);
-		internalClearCell(td, clearInnerHTML);
-		return td;
-	}
-
-	/**
-	 * Gets the Widget associated with the given cell.
-	 * 
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @return the widget
-	 */
-	private Widget getWidgetImpl(int row, int column) {
-		Element e = cellFormatter.getRawElement(row, column);
-		Element child = DOM.getFirstChild(e);
-		if (child == null) {
-			return null;
-		} else {
-			return widgetMap.get(child);
-		}
-	}
-
-	/**
-	 * Bounds checks that the cell exists at the specified location.
-	 * 
-	 * @param row
-	 *            cell's row
-	 * @param column
-	 *            cell's column
-	 * @throws IndexOutOfBoundsException
-	 */
-	protected void checkCellBounds(int row, int column) {
-		checkRowBounds(row);
-		if (column < 0) {
-			throw new IndexOutOfBoundsException(
-					"Column " + column + " must be non-negative: " + column);
-		}
-		int cellSize = getCellCount(row);
-		if (cellSize <= column) {
-			throw new IndexOutOfBoundsException("Column index: " + column
-					+ ", Column size: " + getCellCount(row));
-		}
-	}
-
-	/**
-	 * Checks that the row is within the correct bounds.
-	 * 
-	 * @param row
-	 *            row index to check
-	 * @throws IndexOutOfBoundsException
-	 */
-	protected void checkRowBounds(int row) {
-		int rowSize = getRowCount();
-		if ((row >= rowSize) || (row < 0)) {
-			throw new IndexOutOfBoundsException(
-					"Row index: " + row + ", Row size: " + rowSize);
-		}
-	}
-
-	/**
-	 * Creates a new cell. Override this method if the cell should have initial
-	 * contents.
-	 * 
-	 * @return the newly created TD
-	 */
-	protected Element createCell() {
-		return DOM.createTD();
-	}
-
-	protected Element createCell(int row) {
-		return resolveContainer(row) == headElem ? DOM.createTH()
-				: DOM.createTD();
-	}
-
-	/**
-	 * Gets the table's TBODY element.
-	 * 
-	 * @return the TBODY element
-	 */
-	protected Element getBodyElement() {
-		return DOM.asOld(bodyElem);
 	}
 
 	/**
@@ -771,6 +444,87 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Gets the HTML contents of the specified cell.
+	 * 
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @return the cell's HTML contents
+	 * @throws IndexOutOfBoundsException
+	 */
+	public String getHTML(int row, int column) {
+		return cellFormatter.getElement(row, column).getInnerHTML();
+	}
+
+	/**
+	 * Gets the number of rows present in this table.
+	 * 
+	 * @return the table's row count
+	 */
+	public abstract int getRowCount();
+
+	/**
+	 * Gets the RowFormatter associated with this table.
+	 * 
+	 * @return the table's row formatter
+	 */
+	public RowFormatter getRowFormatter() {
+		return rowFormatter;
+	}
+
+	/**
+	 * Gets the text within the specified cell.
+	 * 
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @return the cell's text contents
+	 * @throws IndexOutOfBoundsException
+	 */
+	public String getText(int row, int column) {
+		checkCellBounds(row, column);
+		Element e = cellFormatter.getElement(row, column);
+		return e.getInnerText();
+	}
+
+	/**
+	 * Gets the widget in the specified cell.
+	 * 
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @return the widget in the specified cell, or <code>null</code> if none is
+	 *         present
+	 * @throws IndexOutOfBoundsException
+	 */
+	public Widget getWidget(int row, int column) {
+		checkCellBounds(row, column);
+		return getWidgetImpl(row, column);
+	}
+
+	/**
+	 * Gets the Widget associated with the given cell.
+	 * 
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @return the widget
+	 */
+	private Widget getWidgetImpl(int row, int column) {
+		Element e = cellFormatter.getRawElement(row, column);
+		Element child = DOM.getFirstChild(e);
+		if (child == null) {
+			return null;
+		} else {
+			return widgetMap.get(child);
+		}
 	}
 
 	/**
@@ -859,6 +613,84 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	}
 
 	/**
+	 * Determines whether the specified cell exists.
+	 * 
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @return <code>true</code> if the specified cell exists
+	 */
+	public boolean isCellPresent(int row, int column) {
+		if ((row >= getRowCount()) || (row < 0)) {
+			return false;
+		}
+		if ((column < 0) || (column >= getCellCount(row))) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	public boolean isUsesTHead() {
+		return this.usesTHead;
+	}
+
+	/**
+	 * Returns an iterator containing all the widgets in this table.
+	 * 
+	 * @return the iterator
+	 */
+	@Override
+	public Iterator<Widget> iterator() {
+		return new Iterator<Widget>() {
+			final ArrayList<Widget> widgetList = widgetMap.getObjectList();
+
+			int lastIndex = -1;
+
+			int nextIndex = -1;
+			{
+				findNext();
+			}
+
+			private void findNext() {
+				while (++nextIndex < widgetList.size()) {
+					if (widgetList.get(nextIndex) != null) {
+						return;
+					}
+				}
+			}
+
+			@Override
+			public boolean hasNext() {
+				return nextIndex < widgetList.size();
+			}
+
+			@Override
+			public Widget next() {
+				if (!hasNext()) {
+					throw new NoSuchElementException();
+				}
+				Widget result = widgetList.get(nextIndex);
+				lastIndex = nextIndex;
+				findNext();
+				return result;
+			}
+
+			@Override
+			public void remove() {
+				if (lastIndex < 0) {
+					throw new IllegalStateException();
+				}
+				Widget w = widgetList.get(lastIndex);
+				assert (w.getParent() instanceof HTMLTable);
+				w.removeFromParent();
+				lastIndex = -1;
+			}
+		};
+	}
+
+	/**
 	 * <b>Affected Elements:</b>
 	 * <ul>
 	 * <li>-(row)#-(cell)# = the cell at the given row and cell index.</li>
@@ -921,6 +753,32 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	protected abstract void prepareRow(int row);
 
 	/**
+	 * Remove the specified widget from the table.
+	 * 
+	 * @param widget
+	 *            widget to remove
+	 * @return was the widget removed from the table.
+	 */
+	@Override
+	public boolean remove(Widget widget) {
+		// Validate.
+		if (widget.getParent() != this) {
+			return false;
+		}
+		// Orphan.
+		try {
+			orphan(widget);
+		} finally {
+			// Physical detach.
+			Element elem = widget.getElement();
+			DOM.getParent(elem).removeChild(elem);
+			// Logical detach.
+			widgetMap.removeByElement(elem);
+		}
+		return true;
+	}
+
+	/**
 	 * Removes the specified cell from the table.
 	 * 
 	 * @param row
@@ -953,12 +811,38 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 				.getRow(resolveContainer(row), resolveRowInContainer(row)));
 	}
 
+	/**
+	 * Removes the specified table listener.
+	 * 
+	 * @param listener
+	 *            listener to remove
+	 *
+	 * @deprecated Use the {@link HandlerRegistration#removeHandler} method on
+	 *             the object returned by an add*Handler method instead
+	 */
+	@Override
+	@Deprecated
+	public void removeTableListener(TableListener listener) {
+		ListenerWrapper.WrappedTableListener.remove(this, listener);
+	}
+
 	protected Element resolveContainer(int row) {
 		return row == 0 && isUsesTHead() ? headElem : bodyElem;
 	}
 
 	protected int resolveRowInContainer(int row) {
 		return isUsesTHead() ? row == 0 ? 0 : row - 1 : row;
+	}
+
+	/**
+	 * Sets the width of the table's border. This border is displayed around all
+	 * cells in the table.
+	 * 
+	 * @param width
+	 *            the width of the border, in pixels
+	 */
+	public void setBorderWidth(int width) {
+		tableElem.setPropertyString("border", "" + width);
 	}
 
 	/**
@@ -969,6 +853,26 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 */
 	protected void setCellFormatter(CellFormatter cellFormatter) {
 		this.cellFormatter = cellFormatter;
+	}
+
+	/**
+	 * Sets the amount of padding to be added around all cells.
+	 * 
+	 * @param padding
+	 *            the cell padding, in pixels
+	 */
+	public void setCellPadding(int padding) {
+		tableElem.setPropertyInt("cellPadding", padding);
+	}
+
+	/**
+	 * Sets the amount of spacing to be added around all cells.
+	 * 
+	 * @param spacing
+	 *            the cell spacing, in pixels
+	 */
+	public void setCellSpacing(int spacing) {
+		tableElem.setPropertyInt("cellSpacing", spacing);
 	}
 
 	protected void setColumnFormatter(ColumnFormatter formatter) {
@@ -983,6 +887,41 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	}
 
 	/**
+	 * Sets the HTML contents of the specified cell.
+	 *
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @param html
+	 *            the cell's safe html contents
+	 * @throws IndexOutOfBoundsException
+	 */
+	public void setHTML(int row, int column, SafeHtml html) {
+		setHTML(row, column, html.asString());
+	}
+
+	/**
+	 * Sets the HTML contents of the specified cell.
+	 *
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @param html
+	 *            the cell's HTML contents
+	 * @throws IndexOutOfBoundsException
+	 */
+	public void setHTML(int row, int column, @IsSafeHtml
+	String html) {
+		prepareCell(row, column);
+		Element td = cleanCell(row, column, html == null);
+		if (html != null) {
+			td.setInnerHTML(html);
+		}
+	}
+
+	/**
 	 * Sets the table's RowFormatter.
 	 * 
 	 * @param rowFormatter
@@ -992,13 +931,74 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		this.rowFormatter = rowFormatter;
 	}
 
-	void addCells(Element container, int row, int num) {
-		com.google.gwt.dom.client.Element rowElem = impl.getRows(container)
-				.get(row);
-		for (int i = 0; i < num; i++) {
-			Element tdElement = container == headElem ? DOM.createTH()
-					: DOM.createTD();
-			rowElem.appendChild(tdElement);
+	/**
+	 * Sets the text within the specified cell.
+	 *
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            cell's column
+	 * @param text
+	 *            the cell's text contents
+	 * @throws IndexOutOfBoundsException
+	 */
+	public void setText(int row, int column, String text) {
+		prepareCell(row, column);
+		Element td;
+		td = cleanCell(row, column, text == null);
+		if (text != null) {
+			td.setInnerText(text);
+		}
+	}
+
+	public void setUsesTHead(boolean usesTHead) {
+		if (usesTHead && !this.usesTHead) {
+			headElem = DOM.createTHead();
+			DOM.insertBefore(tableElem, headElem, bodyElem);
+		}
+		this.usesTHead = usesTHead;
+	}
+
+	/**
+	 * Overloaded version for IsWidget.
+	 * 
+	 * @see #setWidget(int,int,Widget)
+	 */
+	public void setWidget(int row, int column, IsWidget widget) {
+		this.setWidget(row, column, asWidgetOrNull(widget));
+	}
+
+	/**
+	 * Sets the widget within the specified cell.
+	 * <p>
+	 * Inherited implementations may either throw IndexOutOfBounds exception if
+	 * the cell does not exist, or allocate a new cell to store the content.
+	 * </p>
+	 * <p>
+	 * FlexTable will automatically allocate the cell at the correct location
+	 * and then set the widget. Grid will set the widget if and only if the cell
+	 * is within the Grid's bounding box.
+	 * </p>
+	 * 
+	 * @param widget
+	 *            The widget to be added, or null to clear the cell
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @throws IndexOutOfBoundsException
+	 */
+	public void setWidget(int row, int column, Widget widget) {
+		prepareCell(row, column);
+		// Removes any existing widget.
+		Element td = cleanCell(row, column, true);
+		if (widget != null) {
+			widget.removeFromParent();
+			// Logical attach.
+			widgetMap.put(widget);
+			// Physical attach.
+			DOM.appendChild(td, widget.getElement());
+			adopt(widget);
 		}
 	}
 
@@ -1075,6 +1075,57 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		}
 
 		/**
+		 * Gets the element associated with a cell. If it does not exist and the
+		 * subtype allows creation of elements, creates it.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @return the cell's element
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected Element ensureElement(int row, int column) {
+			prepareCell(row, column);
+			return DOM.asOld(getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column));
+		}
+
+		/**
+		 * Convenience methods to get an attribute on a cell.
+		 * 
+		 * @param row
+		 *            cell's row
+		 * @param column
+		 *            cell's column
+		 * @param attr
+		 *            attribute to get
+		 * @return the attribute's value
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected String getAttr(int row, int column, String attr) {
+			Element elem = getElement(row, column);
+			return elem.getAttribute(attr);
+		}
+
+		/**
+		 * Get a cell's element.
+		 * 
+		 * @param tbody
+		 *            the table element
+		 * @param row
+		 *            the row of the cell
+		 * @param col
+		 *            the column of the cell
+		 * @return the element
+		 */
+		private Element getCellElement(Element tbody, int row, int col) {
+			Element rowObj = impl.getRows(tbody).get(row);
+			ElementArray<Element> cells = impl.getCells(rowObj);
+			return cells.get(col);
+		}
+
+		/**
 		 * Gets the TD element representing the specified cell.
 		 * 
 		 * @param row
@@ -1088,6 +1139,22 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 			checkCellBounds(row, column);
 			return DOM.asOld(getCellElement(resolveContainer(row),
 					resolveRowInContainer(row), column));
+		}
+
+		/**
+		 * Gets the TD element representing the specified cell unsafely (meaning
+		 * that it doesn't ensure that <code>row</code> and <code>column</code>
+		 * are valid).
+		 * 
+		 * @param row
+		 *            the row of the cell to be retrieved
+		 * @param column
+		 *            the column of the cell to be retrieved
+		 * @return the cell's TD element
+		 */
+		private Element getRawElement(int row, int column) {
+			return getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column);
 		}
 
 		/**
@@ -1174,6 +1241,25 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 				VerticalAlignmentConstant vAlign) {
 			setHorizontalAlignment(row, column, hAlign);
 			setVerticalAlignment(row, column, vAlign);
+		}
+
+		/**
+		 * Convenience methods to set an attribute on a cell.
+		 * 
+		 * @param row
+		 *            cell's row
+		 * @param column
+		 *            cell's column
+		 * @param attrName
+		 *            attribute to set
+		 * @param value
+		 *            value to set
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected void setAttr(int row, int column, String attrName,
+				String value) {
+			Element elem = ensureElement(row, column);
+			elem.setAttribute(attrName, value);
 		}
 
 		/**
@@ -1324,92 +1410,6 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 			getElement(row, column).getStyle().setProperty("whiteSpace",
 					wrapValue);
 		}
-
-		/**
-		 * Get a cell's element.
-		 * 
-		 * @param tbody
-		 *            the table element
-		 * @param row
-		 *            the row of the cell
-		 * @param col
-		 *            the column of the cell
-		 * @return the element
-		 */
-		private Element getCellElement(Element tbody, int row, int col) {
-			Element rowObj = impl.getRows(tbody).get(row);
-			ElementArray<Element> cells = impl.getCells(rowObj);
-			return cells.get(col);
-		}
-
-		/**
-		 * Gets the TD element representing the specified cell unsafely (meaning
-		 * that it doesn't ensure that <code>row</code> and <code>column</code>
-		 * are valid).
-		 * 
-		 * @param row
-		 *            the row of the cell to be retrieved
-		 * @param column
-		 *            the column of the cell to be retrieved
-		 * @return the cell's TD element
-		 */
-		private Element getRawElement(int row, int column) {
-			return getCellElement(resolveContainer(row),
-					resolveRowInContainer(row), column);
-		}
-
-		/**
-		 * Gets the element associated with a cell. If it does not exist and the
-		 * subtype allows creation of elements, creates it.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @return the cell's element
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected Element ensureElement(int row, int column) {
-			prepareCell(row, column);
-			return DOM.asOld(getCellElement(resolveContainer(row),
-					resolveRowInContainer(row), column));
-		}
-
-		/**
-		 * Convenience methods to get an attribute on a cell.
-		 * 
-		 * @param row
-		 *            cell's row
-		 * @param column
-		 *            cell's column
-		 * @param attr
-		 *            attribute to get
-		 * @return the attribute's value
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected String getAttr(int row, int column, String attr) {
-			Element elem = getElement(row, column);
-			return elem.getAttribute(attr);
-		}
-
-		/**
-		 * Convenience methods to set an attribute on a cell.
-		 * 
-		 * @param row
-		 *            cell's row
-		 * @param column
-		 *            cell's column
-		 * @param attrName
-		 *            attribute to set
-		 * @param value
-		 *            value to set
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected void setAttr(int row, int column, String attrName,
-				String value) {
-			Element elem = ensureElement(row, column);
-			elem.setAttribute(attrName, value);
-		}
 	}
 
 	/**
@@ -1431,6 +1431,13 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		public void addStyleName(int col, String styleName) {
 			UIObject.setStyleName(ensureColumn(col), styleName, true);
+		}
+
+		private Element ensureColumn(int col) {
+			prepareColumn(col);
+			prepareColumnGroup();
+			resizeColumnGroup(col + 1, true);
+			return columnGroup.getChild(col).cast();
 		}
 
 		/**
@@ -1471,6 +1478,20 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		}
 
 		/**
+		 * Prepare the colgroup tag for the first time, guaranteeing that it
+		 * exists and has at least one col tag in it. This method corrects a
+		 * Mozilla issue where the col tag will affect the wrong column if a col
+		 * tag doesn't exist when the element is attached to the page.
+		 */
+		private void prepareColumnGroup() {
+			if (columnGroup == null) {
+				columnGroup = DOM.createElement("colgroup");
+				DOM.insertChild(tableElem, columnGroup, 0);
+				DOM.appendChild(columnGroup, DOM.createElement("col"));
+			}
+		}
+
+		/**
 		 * Removes a style from the specified column.
 		 * 
 		 * @param column
@@ -1482,6 +1503,30 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		public void removeStyleName(int column, String styleName) {
 			UIObject.setStyleName(ensureColumn(column), styleName, false);
+		}
+
+		/**
+		 * Resize the column group element.
+		 * 
+		 * @param columns
+		 *            the number of columns
+		 * @param growOnly
+		 *            true to only grow, false to shrink if needed
+		 */
+		void resizeColumnGroup(int columns, boolean growOnly) {
+			// The colgroup should always have at least one element. See
+			// prepareColumnGroup() for more details.
+			columns = Math.max(columns, 1);
+			int num = columnGroup.getChildCount();
+			if (num < columns) {
+				for (int i = num; i < columns; i++) {
+					columnGroup.appendChild(Document.get().createColElement());
+				}
+			} else if (!growOnly && num > columns) {
+				for (int i = num; i > columns; i--) {
+					columnGroup.removeChild(columnGroup.getLastChild());
+				}
+			}
 		}
 
 		/**
@@ -1538,51 +1583,92 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		public void setWidth(int column, String width) {
 			ensureColumn(column).setPropertyString("width", width);
 		}
+	}
 
-		private Element ensureColumn(int col) {
-			prepareColumn(col);
-			prepareColumnGroup();
-			resizeColumnGroup(col + 1, true);
-			return columnGroup.getChild(col).cast();
+	static class ElementArray<T extends Node> {
+		private JsArray<ElementJso> jsArray;
+
+		private NodeList<? extends Element> nodeList;
+
+		private List<? extends Element> jvmList;
+
+		public ElementArray(JsArray<ElementJso> elements) {
+			this.jsArray = elements;
 		}
 
-		/**
-		 * Prepare the colgroup tag for the first time, guaranteeing that it
-		 * exists and has at least one col tag in it. This method corrects a
-		 * Mozilla issue where the col tag will affect the wrong column if a col
-		 * tag doesn't exist when the element is attached to the page.
-		 */
-		private void prepareColumnGroup() {
-			if (columnGroup == null) {
-				columnGroup = DOM.createElement("colgroup");
-				DOM.insertChild(tableElem, columnGroup, 0);
-				DOM.appendChild(columnGroup, DOM.createElement("col"));
+		public ElementArray(List<? extends Element> jvmList) {
+			this.jvmList = jvmList;
+		}
+
+		public ElementArray(NodeList<? extends Element> nodeList) {
+			this.nodeList = nodeList;
+		}
+
+		public Element get(int idx) {
+			if (jvmList != null) {
+				return jvmList.get(idx);
 			}
+			return nodeList != null ? nodeList.getItem(idx)
+					: LocalDom.nodeFor(jsArray.get(idx));
 		}
 
-		/**
-		 * Resize the column group element.
-		 * 
-		 * @param columns
-		 *            the number of columns
-		 * @param growOnly
-		 *            true to only grow, false to shrink if needed
-		 */
-		void resizeColumnGroup(int columns, boolean growOnly) {
-			// The colgroup should always have at least one element. See
-			// prepareColumnGroup() for more details.
-			columns = Math.max(columns, 1);
-			int num = columnGroup.getChildCount();
-			if (num < columns) {
-				for (int i = num; i < columns; i++) {
-					columnGroup.appendChild(Document.get().createColElement());
-				}
-			} else if (!growOnly && num > columns) {
-				for (int i = num; i > columns; i--) {
-					columnGroup.removeChild(columnGroup.getLastChild());
-				}
+		public int length() {
+			if (jvmList != null) {
+				return jvmList.size();
 			}
+			return nodeList != null ? nodeList.getLength() : jsArray.length();
 		}
+	}
+
+	/**
+	 * IE specific implementation for accessing the Table DOM. see: issue 6938
+	 */
+	@SuppressWarnings("unused") // used due to rebinding
+	private static class HTMLTableIEImpl extends HTMLTableStandardImpl {
+		@Override
+		native JsArray<ElementJso> getCells0(ElementJso row) /*-{
+      return row.children;
+		}-*/;
+
+		@Override
+		native JsArray<ElementJso> getRows0(ElementJso tbody) /*-{
+      return tbody.children;
+		}-*/;
+	}
+
+	/**
+	 * Interface to access {@link HTMLTable}'s DOM.
+	 */
+	private interface HTMLTableImpl {
+		ElementArray<Element> getCells(Element row);
+
+		ElementArray<Element> getRows(Element tbody);
+	}
+
+	/**
+	 * Standard implementation for accessing the Table DOM.
+	 */
+	private static class HTMLTableStandardImpl implements HTMLTableImpl {
+		@Override
+		public ElementArray<Element> getCells(Element row) {
+			return new ElementArray<Element>(
+					(List) ((TableRowElement) row).provideChildNodeList());
+		}
+
+		native JsArray<ElementJso> getCells0(ElementJso row) /*-{
+      return row.cells;
+		}-*/;
+
+		@Override
+		public ElementArray<Element> getRows(Element tbody) {
+			return new ElementArray<Element>(
+					(List) ((TableSectionElement) tbody)
+							.provideChildNodeList());
+		}
+
+		native JsArray<ElementJso> getRows0(ElementJso tbody) /*-{
+      return tbody.rows;
+		}-*/;
 	}
 
 	/**
@@ -1604,6 +1690,21 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		}
 
 		/**
+		 * Ensure the TR element representing the specified row exists for
+		 * subclasses that allow dynamic addition of elements.
+		 * 
+		 * @param row
+		 *            the row whose TR element is to be retrieved
+		 * @return the row's TR element
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected Element ensureElement(int row) {
+			prepareRow(row);
+			return DOM.asOld(
+					getRow(resolveContainer(row), resolveRowInContainer(row)));
+		}
+
+		/**
 		 * Gets the TR element representing the specified row.
 		 * 
 		 * @param row
@@ -1615,6 +1716,14 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 			checkRowBounds(row);
 			return DOM.asOld(
 					getRow(resolveContainer(row), resolveRowInContainer(row)));
+		}
+
+		/**
+		 * @deprecated Call and override {@link #getRow(Element, int)} instead.
+		 */
+		@Deprecated
+		protected Element getRow(Element tbody, int row) {
+			return DOM.asOld(impl.getRows(tbody).get(row));
 		}
 
 		/**
@@ -1668,6 +1777,22 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		public void removeStyleName(int row, String styleName) {
 			UIObject.setStyleName(ensureElement(row), styleName, false);
+		}
+
+		/**
+		 * Convenience methods to set an attribute on a row.
+		 * 
+		 * @param row
+		 *            cell's row
+		 * @param attrName
+		 *            attribute to set
+		 * @param value
+		 *            value to set
+		 * @throws IndexOutOfBoundsException
+		 */
+		protected void setAttr(int row, String attrName, String value) {
+			Element elem = ensureElement(row);
+			elem.setAttribute(attrName, value);
 		}
 
 		/**
@@ -1725,131 +1850,6 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		public void setVisible(int row, boolean visible) {
 			Element e = ensureElement(row);
 			UIObject.setVisible(e, visible);
-		}
-
-		/**
-		 * Ensure the TR element representing the specified row exists for
-		 * subclasses that allow dynamic addition of elements.
-		 * 
-		 * @param row
-		 *            the row whose TR element is to be retrieved
-		 * @return the row's TR element
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected Element ensureElement(int row) {
-			prepareRow(row);
-			return DOM.asOld(
-					getRow(resolveContainer(row), resolveRowInContainer(row)));
-		}
-
-		/**
-		 * @deprecated Call and override {@link #getRow(Element, int)} instead.
-		 */
-		@Deprecated
-		protected Element getRow(Element tbody, int row) {
-			return DOM.asOld(impl.getRows(tbody).get(row));
-		}
-
-		/**
-		 * Convenience methods to set an attribute on a row.
-		 * 
-		 * @param row
-		 *            cell's row
-		 * @param attrName
-		 *            attribute to set
-		 * @param value
-		 *            value to set
-		 * @throws IndexOutOfBoundsException
-		 */
-		protected void setAttr(int row, String attrName, String value) {
-			Element elem = ensureElement(row);
-			elem.setAttribute(attrName, value);
-		}
-	}
-
-	/**
-	 * IE specific implementation for accessing the Table DOM. see: issue 6938
-	 */
-	@SuppressWarnings("unused") // used due to rebinding
-	private static class HTMLTableIEImpl extends HTMLTableStandardImpl {
-		@Override
-		native JsArray<ElementJso> getCells0(ElementJso row) /*-{
-      return row.children;
-		}-*/;
-
-		@Override
-		native JsArray<ElementJso> getRows0(ElementJso tbody) /*-{
-      return tbody.children;
-		}-*/;
-	}
-
-	/**
-	 * Interface to access {@link HTMLTable}'s DOM.
-	 */
-	private interface HTMLTableImpl {
-		ElementArray<Element> getCells(Element row);
-
-		ElementArray<Element> getRows(Element tbody);
-	}
-
-	/**
-	 * Standard implementation for accessing the Table DOM.
-	 */
-	private static class HTMLTableStandardImpl implements HTMLTableImpl {
-		@Override
-		public ElementArray<Element> getCells(Element row) {
-			return new ElementArray<Element>(
-					(List) ((TableRowElement) row).provideChildNodeList());
-		}
-
-		@Override
-		public ElementArray<Element> getRows(Element tbody) {
-			return new ElementArray<Element>(
-					(List) ((TableSectionElement) tbody)
-							.provideChildNodeList());
-		}
-
-		native JsArray<ElementJso> getCells0(ElementJso row) /*-{
-      return row.cells;
-		}-*/;
-
-		native JsArray<ElementJso> getRows0(ElementJso tbody) /*-{
-      return tbody.rows;
-		}-*/;
-	}
-
-	static class ElementArray<T extends Node> {
-		private JsArray<ElementJso> jsArray;
-
-		private NodeList<? extends Element> nodeList;
-
-		private List<? extends Element> jvmList;
-
-		public ElementArray(JsArray<ElementJso> elements) {
-			this.jsArray = elements;
-		}
-
-		public ElementArray(List<? extends Element> jvmList) {
-			this.jvmList = jvmList;
-		}
-
-		public ElementArray(NodeList<? extends Element> nodeList) {
-			this.nodeList = nodeList;
-		}
-
-		public Element get(int idx) {
-			if (jvmList != null) {
-				return jvmList.get(idx);
-			}
-			return nodeList != null ? nodeList.getItem(idx)
-					: LocalDom.nodeFor(jsArray.get(idx));
-		}
-
-		public int length() {
-			if (jvmList != null) {
-				return jvmList.size();
-			}
-			return nodeList != null ? nodeList.getLength() : jsArray.length();
 		}
 	}
 }

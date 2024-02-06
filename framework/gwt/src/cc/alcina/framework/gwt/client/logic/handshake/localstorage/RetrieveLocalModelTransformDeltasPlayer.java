@@ -49,6 +49,10 @@ public class RetrieveLocalModelTransformDeltasPlayer
 			super(Phase.class, callback);
 		}
 
+		Iterator<DomainModelDelta> fromPersistenceDeltas() {
+			return (Iterator<DomainModelDelta>) lastCallbackResult;
+		}
+
 		@Override
 		public void runPlayer(AllStatesPlayer player, Phase next) {
 			switch (next) {
@@ -68,10 +72,6 @@ public class RetrieveLocalModelTransformDeltasPlayer
 						.getDomainModelDeltaIterator(filters, player);
 				break;
 			}
-		}
-
-		Iterator<DomainModelDelta> fromPersistenceDeltas() {
-			return (Iterator<DomainModelDelta>) lastCallbackResult;
 		}
 	}
 }

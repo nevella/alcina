@@ -92,10 +92,113 @@ public class FastROBoundTable extends BoundTableExt {
 		super(mask, fields, provider);
 	}
 
+	@Override
+	protected void addRow(final SourcesPropertyChangeEvents o) {
+		int row = table.getRowCount();
+		final CheckBox handle;
+		int startColumn = 0;
+		final List<CheckBox> handles = this.rowHandles;
+		if ((this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0) {
+			handle = new CheckBox();
+			handle.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					setActive(true);
+					List newSelected = null;
+					if ((masks & BoundTableExt.MULTIROWSELECT_MASK) > 0) {
+						newSelected = new ArrayList(getSelectedObjects());
+					} else {
+						for (CheckBox cb : handles) {
+							if (cb != handle) {
+								cb.setValue(false);
+							}
+						}
+						newSelected = new ArrayList();
+					}
+					if (!handle.getValue()) {
+						newSelected.remove(o);
+					} else {
+						newSelected.add(o);
+					}
+					setSelected(newSelected);
+					setSelectedObjects(newSelected);
+				}
+			});
+			startColumn++;
+			this.rowHandles.add(handle);
+			this.table.setWidget(row, 0, handle);
+		} else {
+			handle = null;
+		}
+		for (int col = 0; col < this.columns.length; col++) {
+			Widget widget = (Widget) createCellWidget(col, o);
+			if (this.columns[col].getWidgetStyleName() != null) {
+				widget.addStyleName(this.columns[col].getWidgetStyleName());
+			}
+			table.setWidget(row, col + startColumn, widget);
+			if (this.columns[col].getStyleName() != null) {
+				table.getCellFormatter().setStyleName(row, col + startColumn,
+						this.columns[col].getStyleName());
+			}
+		}
+		if ((this.masks & BoundTableExt.END_ROW_BUTTON) > 0) {
+			EndRowButton endRowButton = new EndRowButton();
+			table.setWidget(row, this.columns.length + startColumn,
+					endRowButton);
+			int f_row = row;
+			endRowButton.addClickHandler(e -> {
+				EndRowButtonClickedEvent.fire(FastROBoundTable.this, f_row, o);
+			});
+		}
+		boolean odd = (this.calculateRowToObjectOffset(Integer.valueOf(row))
+				.intValue() % 2) != 0;
+		this.table.getRowFormatter().setStyleName(row, odd ? "odd" : "even");
+	}
+
+	protected void beautify() {
+		if (allRowsHandle != null) {
+			allRowsHandle.setVisible(false);
+		}
+	}
+
 	public boolean checkEditable(SourcesPropertyChangeEvents target,
 			Field editableField) {
 		return checkEditableFilter == null || checkEditableFilter
 				.test(new CheckEditableTuple(target, editableField));
+	}
+
+	protected BoundWidget createCellWidget(int colIndex,
+			SourcesPropertyChangeEvents target) {
+		final BoundWidget widget;
+		Field col = this.columns[colIndex];
+		if (!wpMap.containsKey(col.getPropertyName())) {
+			Property p = Reflections.at(target).property(col.getPropertyName());
+			BoundWidgetProvider wp = this.factory
+					.getWidgetProvider(p.getType());
+			pMap.put(col.getPropertyName(), p);
+			wpMap.put(col.getPropertyName(), wp);
+		}
+		Property p = pMap.get(col.getPropertyName());
+		BoundWidgetProvider wp = col.getCellProvider() != null
+				? col.getCellProvider()
+				: wpMap.get(col.getPropertyName());
+		if (wp instanceof RequiresContextBindable) {
+			((RequiresContextBindable) wp).setBindable(target);
+		}
+		widget = wp.get();
+		try {
+			widget.setModel(target);
+			widget.setValue(p.get(target));
+		} catch (Exception e) {
+			GWT.log("Exception creating cell widget", e);
+		}
+		return widget;
+	}
+
+	@Override
+	protected FlexTable createTableImpl() {
+		ROFlexTable table = new ROFlexTable();
+		return table;
 	}
 
 	public void edit(Object target, final String fieldName) {
@@ -179,6 +282,15 @@ public class FastROBoundTable extends BoundTableExt {
 		((Collection) getValue()).remove(o);
 	}
 
+	@Override
+	protected void renderAll() {
+		if (wpMap == null) {
+			return;
+		}
+		super.renderAll();
+		setSelectedObject(selectedObject);
+	}
+
 	public void setCheckEditableFilter(
 			Predicate<CheckEditableTuple> checkEditableFilter) {
 		this.checkEditableFilter = checkEditableFilter;
@@ -212,118 +324,6 @@ public class FastROBoundTable extends BoundTableExt {
 		this.selectedObjects = selectedObjects;
 	}
 
-	@Override
-	protected void addRow(final SourcesPropertyChangeEvents o) {
-		int row = table.getRowCount();
-		final CheckBox handle;
-		int startColumn = 0;
-		final List<CheckBox> handles = this.rowHandles;
-		if ((this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0) {
-			handle = new CheckBox();
-			handle.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent event) {
-					setActive(true);
-					List newSelected = null;
-					if ((masks & BoundTableExt.MULTIROWSELECT_MASK) > 0) {
-						newSelected = new ArrayList(getSelectedObjects());
-					} else {
-						for (CheckBox cb : handles) {
-							if (cb != handle) {
-								cb.setValue(false);
-							}
-						}
-						newSelected = new ArrayList();
-					}
-					if (!handle.getValue()) {
-						newSelected.remove(o);
-					} else {
-						newSelected.add(o);
-					}
-					setSelected(newSelected);
-					setSelectedObjects(newSelected);
-				}
-			});
-			startColumn++;
-			this.rowHandles.add(handle);
-			this.table.setWidget(row, 0, handle);
-		} else {
-			handle = null;
-		}
-		for (int col = 0; col < this.columns.length; col++) {
-			Widget widget = (Widget) createCellWidget(col, o);
-			if (this.columns[col].getWidgetStyleName() != null) {
-				widget.addStyleName(this.columns[col].getWidgetStyleName());
-			}
-			table.setWidget(row, col + startColumn, widget);
-			if (this.columns[col].getStyleName() != null) {
-				table.getCellFormatter().setStyleName(row, col + startColumn,
-						this.columns[col].getStyleName());
-			}
-		}
-		if ((this.masks & BoundTableExt.END_ROW_BUTTON) > 0) {
-			EndRowButton endRowButton = new EndRowButton();
-			table.setWidget(row, this.columns.length + startColumn,
-					endRowButton);
-			int f_row = row;
-			endRowButton.addClickHandler(e -> {
-				EndRowButtonClickedEvent.fire(FastROBoundTable.this, f_row, o);
-			});
-		}
-		boolean odd = (this.calculateRowToObjectOffset(Integer.valueOf(row))
-				.intValue() % 2) != 0;
-		this.table.getRowFormatter().setStyleName(row, odd ? "odd" : "even");
-	}
-
-	protected void beautify() {
-		if (allRowsHandle != null) {
-			allRowsHandle.setVisible(false);
-		}
-	}
-
-	protected BoundWidget createCellWidget(int colIndex,
-			SourcesPropertyChangeEvents target) {
-		final BoundWidget widget;
-		Field col = this.columns[colIndex];
-		if (!wpMap.containsKey(col.getPropertyName())) {
-			Property p = Reflections.at(target).property(col.getPropertyName());
-			BoundWidgetProvider wp = this.factory
-					.getWidgetProvider(p.getType());
-			pMap.put(col.getPropertyName(), p);
-			wpMap.put(col.getPropertyName(), wp);
-		}
-		Property p = pMap.get(col.getPropertyName());
-		BoundWidgetProvider wp = col.getCellProvider() != null
-				? col.getCellProvider()
-				: wpMap.get(col.getPropertyName());
-		if (wp instanceof RequiresContextBindable) {
-			((RequiresContextBindable) wp).setBindable(target);
-		}
-		widget = wp.get();
-		try {
-			widget.setModel(target);
-			widget.setValue(p.get(target));
-		} catch (Exception e) {
-			GWT.log("Exception creating cell widget", e);
-		}
-		return widget;
-	}
-
-	@Override
-	protected FlexTable createTableImpl() {
-		ROFlexTable table = new ROFlexTable();
-		return table;
-	}
-
-	@Override
-	protected void renderAll() {
-		if (wpMap == null) {
-			return;
-		}
-		super.renderAll();
-		setSelectedObject(selectedObject);
-	}
-
 	public static class CheckEditableTuple {
 		public SourcesPropertyChangeEvents target;
 
@@ -354,88 +354,6 @@ public class FastROBoundTable extends BoundTableExt {
 			for (Field f : columns) {
 				editableColumns.put(i++, Display.Support
 						.isEditable(tableObjectClass, f.getPropertyName()));
-			}
-		}
-
-		@Override
-		public void onClick(ClickEvent event) {
-			RowCol rowCol = getRowCol(event);
-			edit(rowCol);
-		}
-
-		@Override
-		public void onMouseMove(MouseMoveEvent event) {
-			RowCol rowCol = getRowCol(event);
-			if (lastRowCol != null && !lastRowCol.equals(rowCol)) {
-				showEditable(null);
-			}
-			if (editableColumns.get(rowCol.col)) {
-				showEditable(rowCol);
-			}
-		}
-
-		@Override
-		public void onMouseOut(MouseOutEvent event) {
-			showEditable(null);
-		}
-
-		@Override
-		public void onMouseOver(MouseOverEvent event) {
-		}
-
-		private RowCol getRowCol(DomEvent event) {
-			try {
-				com.google.gwt.dom.client.Element elt = Element
-						.as(event.getNativeEvent().getEventTarget());
-				Element tableElt = table.getElement();
-				com.google.gwt.dom.client.Element tr = null;
-				com.google.gwt.dom.client.Element td = null;
-				while (elt != null && elt != tableElt) {
-					if (elt.getTagName().equalsIgnoreCase("td")) {
-						td = elt;
-					}
-					if (elt.getTagName().equalsIgnoreCase("tr")) {
-						tr = elt;
-					}
-					elt = elt.getParentElement();
-				}
-				return new RowCol(indexInParent(tr), indexInParent(td));
-			} catch (Exception e) {
-				// messy but effective
-				return new RowCol(-1, -1);
-			}
-		}
-
-		private int indexInParent(com.google.gwt.dom.client.Element elt) {
-			com.google.gwt.dom.client.Element parent = elt.getParentElement();
-			NodeList<Node> childNodes = parent.getChildNodes();
-			String eltName = elt.getTagName();
-			int index = -1;
-			for (int i = 0; i < childNodes.getLength(); i++) {
-				Node item = childNodes.getItem(i);
-				if (item.getNodeType() == Node.ELEMENT_NODE
-						&& item.getNodeName().equalsIgnoreCase(eltName)) {
-					index++;
-				}
-				if (item == elt) {
-					break;
-				}
-			}
-			return index;
-		}
-
-		private void styleDelta(RowCol rowCol, String styleToAdd,
-				String styleToRemove) {
-			if (rowCol == null || rowCol.col == -1 || rowCol.row == -1) {
-				return;
-			}
-			if (styleToAdd != null) {
-				table.getCellFormatter().addStyleName(rowCol.row, rowCol.col,
-						styleToAdd);
-			}
-			if (styleToRemove != null) {
-				table.getCellFormatter().removeStyleName(rowCol.row, rowCol.col,
-						styleToRemove);
 			}
 		}
 
@@ -504,12 +422,94 @@ public class FastROBoundTable extends BoundTableExt {
 			}
 		}
 
+		private RowCol getRowCol(DomEvent event) {
+			try {
+				com.google.gwt.dom.client.Element elt = Element
+						.as(event.getNativeEvent().getEventTarget());
+				Element tableElt = table.getElement();
+				com.google.gwt.dom.client.Element tr = null;
+				com.google.gwt.dom.client.Element td = null;
+				while (elt != null && elt != tableElt) {
+					if (elt.getTagName().equalsIgnoreCase("td")) {
+						td = elt;
+					}
+					if (elt.getTagName().equalsIgnoreCase("tr")) {
+						tr = elt;
+					}
+					elt = elt.getParentElement();
+				}
+				return new RowCol(indexInParent(tr), indexInParent(td));
+			} catch (Exception e) {
+				// messy but effective
+				return new RowCol(-1, -1);
+			}
+		}
+
+		private int indexInParent(com.google.gwt.dom.client.Element elt) {
+			com.google.gwt.dom.client.Element parent = elt.getParentElement();
+			NodeList<Node> childNodes = parent.getChildNodes();
+			String eltName = elt.getTagName();
+			int index = -1;
+			for (int i = 0; i < childNodes.getLength(); i++) {
+				Node item = childNodes.getItem(i);
+				if (item.getNodeType() == Node.ELEMENT_NODE
+						&& item.getNodeName().equalsIgnoreCase(eltName)) {
+					index++;
+				}
+				if (item == elt) {
+					break;
+				}
+			}
+			return index;
+		}
+
+		@Override
+		public void onClick(ClickEvent event) {
+			RowCol rowCol = getRowCol(event);
+			edit(rowCol);
+		}
+
+		@Override
+		public void onMouseMove(MouseMoveEvent event) {
+			RowCol rowCol = getRowCol(event);
+			if (lastRowCol != null && !lastRowCol.equals(rowCol)) {
+				showEditable(null);
+			}
+			if (editableColumns.get(rowCol.col)) {
+				showEditable(rowCol);
+			}
+		}
+
+		@Override
+		public void onMouseOut(MouseOutEvent event) {
+			showEditable(null);
+		}
+
+		@Override
+		public void onMouseOver(MouseOverEvent event) {
+		}
+
 		protected void showEditable(RowCol rowCol) {
 			styleDelta(lastRowCol, null, "editableOver");
 			lastRowCol = null;
 			if (rowCol != null) {
 				lastRowCol = rowCol;
 				styleDelta(lastRowCol, "editableOver", null);
+			}
+		}
+
+		private void styleDelta(RowCol rowCol, String styleToAdd,
+				String styleToRemove) {
+			if (rowCol == null || rowCol.col == -1 || rowCol.row == -1) {
+				return;
+			}
+			if (styleToAdd != null) {
+				table.getCellFormatter().addStyleName(rowCol.row, rowCol.col,
+						styleToAdd);
+			}
+			if (styleToRemove != null) {
+				table.getCellFormatter().removeStyleName(rowCol.row, rowCol.col,
+						styleToRemove);
 			}
 		}
 	}

@@ -109,13 +109,6 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 		nonBubblingEvents.add(BrowserEvents.ERROR);
 	}
 
-	@Override
-	public void resetFocus(ScheduledCommand command) {
-		// Some browsers will not focus an element that was created in this
-		// event loop.
-		Scheduler.get().scheduleDeferred(command);
-	}
-
 	/**
 	 * Initialize the event system.
 	 */
@@ -127,21 +120,12 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
     });
 	}-*/;
 
-	/**
-	 * Sink an event on the element.
-	 *
-	 * @param elem
-	 *            the element to sink the event on
-	 * @param typeName
-	 *            the name of the event to sink
-	 */
-	private native void sinkEventImpl(ElementJso elem, String typeName) /*-{
-    elem
-        .addEventListener(
-            typeName,
-            @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent,
-            true);
-	}-*/;
+	@Override
+	public void resetFocus(ScheduledCommand command) {
+		// Some browsers will not focus an element that was created in this
+		// event loop.
+		Scheduler.get().scheduleDeferred(command);
+	}
 
 	@Override
 	protected int sinkEvent(Widget widget, String typeName) {
@@ -166,6 +150,22 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 			return super.sinkEvent(widget, typeName);
 		}
 	}
+
+	/**
+	 * Sink an event on the element.
+	 *
+	 * @param elem
+	 *            the element to sink the event on
+	 * @param typeName
+	 *            the name of the event to sink
+	 */
+	private native void sinkEventImpl(ElementJso elem, String typeName) /*-{
+    elem
+        .addEventListener(
+            typeName,
+            @com.google.gwt.user.cellview.client.CellBasedWidgetImplStandard::dispatchNonBubblingEvent,
+            true);
+	}-*/;
 
 	private class SinkHandler implements Handler {
 		public HandlerRegistration registration;

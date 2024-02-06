@@ -58,6 +58,9 @@ public class AnnotationLocation {
 
 	public ResolutionState resolutionState = new ResolutionState();
 
+	protected AnnotationLocation() {
+	}
+
 	public AnnotationLocation(Class clazz, Property property) {
 		this(clazz, property, null);
 	}
@@ -71,9 +74,6 @@ public class AnnotationLocation {
 			resolver = Resolver.get();
 		}
 		this.resolver = resolver;
-	}
-
-	protected AnnotationLocation() {
 	}
 
 	public AnnotationLocation copyWithClassLocation(Class<?> clazz) {
@@ -116,6 +116,24 @@ public class AnnotationLocation {
 			return resolvedAnnotation;
 		} else {
 			return null;
+		}
+	}
+
+	private <A extends Annotation> A getAnnotation0(Class<A> annotationClass) {
+		if (property != null) {
+			A annotation = property.annotation(annotationClass);
+			if (annotation != null) {
+				return annotation;
+			}
+		}
+		if (classLocation == null) {
+			return null;
+		} else {
+			ClassReflector<?> classReflector = Reflections.at(classLocation);
+			if (classReflector == null) {
+				return null;
+			}
+			return (A) classReflector.annotation(annotationClass);
 		}
 	}
 
@@ -193,24 +211,6 @@ public class AnnotationLocation {
 			return Ax.format("%s%s", property.toString(), declaringSuffix);
 		} else {
 			return classLocation.getSimpleName();
-		}
-	}
-
-	private <A extends Annotation> A getAnnotation0(Class<A> annotationClass) {
-		if (property != null) {
-			A annotation = property.annotation(annotationClass);
-			if (annotation != null) {
-				return annotation;
-			}
-		}
-		if (classLocation == null) {
-			return null;
-		} else {
-			ClassReflector<?> classReflector = Reflections.at(classLocation);
-			if (classReflector == null) {
-				return null;
-			}
-			return (A) classReflector.annotation(annotationClass);
 		}
 	}
 

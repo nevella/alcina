@@ -73,8 +73,28 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	private int contentScrollPanelHeight = 0;
 
+	protected abstract boolean beforeMoveToPage(int newPageIndex);
+
+	protected boolean canCancel() {
+		return true;
+	}
+
+	protected abstract boolean canFinishOnThisPage();
+
+	protected boolean canMoveBack() {
+		return pageIndex != 0;
+	}
+
+	protected boolean canMoveForward() {
+		return pageIndex != pages.size() - 1;
+	}
+
 	public int getContentScrollPanelHeight() {
 		return this.contentScrollPanelHeight;
+	}
+
+	// for subclasses
+	protected void getExtraActions() {
 	}
 
 	public M getModel() {
@@ -103,6 +123,8 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		return allButtonsEnabled;
 	}
 
+	protected abstract boolean isPageValid();
+
 	public boolean isRenderInScrollPanel() {
 		return this.renderInScrollPanel;
 	}
@@ -113,6 +135,80 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	public boolean isToolbarAsNativeButtons() {
 		return this.toolbarAsNativeButtons;
+	}
+
+	protected void moveNext() {
+		if (beforeMoveToPage(pageIndex + 1)) {
+			pageIndex++;
+			WidgetUtils.replace(currentWidget, renderPage());
+			refreshButtonActivation();
+		}
+	}
+
+	protected void movePrevious() {
+		if (beforeMoveToPage(pageIndex - 1)) {
+			pageIndex--;
+			WidgetUtils.replace(currentWidget, renderPage());
+			refreshButtonActivation();
+		}
+	}
+
+	protected abstract void onCancel();
+
+	protected abstract void onFinished();
+
+	protected void refreshButtonActivation() {
+		if (allButtonsEnabled) {
+			return;
+		}
+		for (PermissibleAction action : actions) {
+			ToolbarButton tb = toolbar.getButtonForAction(action);
+			if (tb != null) {
+				if (action == nextPage || action == finish) {
+					tb.setEnabled(isPageValid());
+				}
+			}
+		}
+	}
+
+	private void renderButtonsPane(FlowPanel fp) {
+		actions = new ArrayList<PermissibleAction>();
+		if (canMoveBack()) {
+			actions.add(previousPage);
+		}
+		if (canMoveForward()) {
+			actions.add(nextPage);
+		}
+		if (canCancel()) {
+			actions.add(cancel);
+		}
+		if (canFinishOnThisPage()) {
+			actions.add(finish);
+		}
+		this.toolbar = new Toolbar();
+		toolbar.setRemoveListenersOnDetach(false);
+		toolbar.setAsButton(isToolbarAsNativeButtons());
+		toolbar.addStyleName("wizard-toolbar");
+		toolbar.setWidth("");
+		getExtraActions();
+		toolbar.setActions(actions);
+		if (actions.contains(cancel)) {
+			toolbar.getButtonForAction(cancel).addStyleName("cancel");
+		}
+		if (actions.contains(finish)) {
+			toolbar.getButtonForAction(finish).addStyleName("finish");
+		}
+		refreshButtonActivation();
+		FlowPanel holder = new FlowPanel();
+		holder.add(toolbar);
+		holder.setStyleName("wizard-toolbar-outer");
+		fp.add(holder);
+	}
+
+	private void renderHeader(FlowPanel fp) {
+		if (titleIsBreadcrumbBar) {
+			fp.add(new BreadcrumbBar(getTitle()));
+		}
 	}
 
 	public Widget renderPage() {
@@ -161,6 +257,9 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		} else {
 			return fp;
 		}
+	}
+
+	private void renderTabPane(FlowPanel fp) {
 	}
 
 	public void setAllButtonsEnabled(boolean allButtonsEnabled) {
@@ -212,105 +311,6 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		}
 		if (evt.getAction() == finish) {
 			onFinished();
-		}
-	}
-
-	private void renderButtonsPane(FlowPanel fp) {
-		actions = new ArrayList<PermissibleAction>();
-		if (canMoveBack()) {
-			actions.add(previousPage);
-		}
-		if (canMoveForward()) {
-			actions.add(nextPage);
-		}
-		if (canCancel()) {
-			actions.add(cancel);
-		}
-		if (canFinishOnThisPage()) {
-			actions.add(finish);
-		}
-		this.toolbar = new Toolbar();
-		toolbar.setRemoveListenersOnDetach(false);
-		toolbar.setAsButton(isToolbarAsNativeButtons());
-		toolbar.addStyleName("wizard-toolbar");
-		toolbar.setWidth("");
-		getExtraActions();
-		toolbar.setActions(actions);
-		if (actions.contains(cancel)) {
-			toolbar.getButtonForAction(cancel).addStyleName("cancel");
-		}
-		if (actions.contains(finish)) {
-			toolbar.getButtonForAction(finish).addStyleName("finish");
-		}
-		refreshButtonActivation();
-		FlowPanel holder = new FlowPanel();
-		holder.add(toolbar);
-		holder.setStyleName("wizard-toolbar-outer");
-		fp.add(holder);
-	}
-
-	private void renderHeader(FlowPanel fp) {
-		if (titleIsBreadcrumbBar) {
-			fp.add(new BreadcrumbBar(getTitle()));
-		}
-	}
-
-	private void renderTabPane(FlowPanel fp) {
-	}
-
-	protected abstract boolean beforeMoveToPage(int newPageIndex);
-
-	protected boolean canCancel() {
-		return true;
-	}
-
-	protected abstract boolean canFinishOnThisPage();
-
-	protected boolean canMoveBack() {
-		return pageIndex != 0;
-	}
-
-	protected boolean canMoveForward() {
-		return pageIndex != pages.size() - 1;
-	}
-
-	// for subclasses
-	protected void getExtraActions() {
-	}
-
-	protected abstract boolean isPageValid();
-
-	protected void moveNext() {
-		if (beforeMoveToPage(pageIndex + 1)) {
-			pageIndex++;
-			WidgetUtils.replace(currentWidget, renderPage());
-			refreshButtonActivation();
-		}
-	}
-
-	protected void movePrevious() {
-		if (beforeMoveToPage(pageIndex - 1)) {
-			pageIndex--;
-			WidgetUtils.replace(currentWidget, renderPage());
-			refreshButtonActivation();
-		}
-	}
-
-	protected abstract void onCancel();
-
-	protected abstract void onFinished();
-
-	protected void refreshButtonActivation() {
-		if (allButtonsEnabled) {
-			return;
-		}
-		for (PermissibleAction action : actions) {
-			ToolbarButton tb = toolbar.getButtonForAction(action);
-			if (tb != null) {
-				if (action == nextPage || action == finish) {
-					tb.setEnabled(isPageValid());
-				}
-			}
 		}
 	}
 

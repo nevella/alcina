@@ -13,13 +13,6 @@ public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends Bin
 		extends BasePlaceTokenizer<P> {
 	protected static final String P_DEF = "d";
 
-	public abstract Class<HL> getModelClass();
-
-	@Override
-	public Class<P> getTokenizedClass() {
-		return Reflections.at(getClass()).getGenericBounds().bounds.get(2);
-	}
-
 	protected SD deserializeDef(P place) {
 		SD def = searchDefinitionSerializer().deserialize(place.def.getClass(),
 				getStringParameter(P_DEF));
@@ -37,6 +30,8 @@ public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends Bin
 	protected List<String> encodedValues() {
 		return Arrays.asList(P_DEF);
 	}
+
+	public abstract Class<HL> getModelClass();
 
 	@Override
 	protected P getPlace0(String token) {
@@ -61,6 +56,11 @@ public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends Bin
 			setParameter(P_DEF,
 					searchDefinitionSerializer().serialize(place.def));
 		}
+	}
+
+	@Override
+	public Class<P> getTokenizedClass() {
+		return Reflections.at(getClass()).getGenericBounds().bounds.get(2);
 	}
 
 	@Override

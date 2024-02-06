@@ -24,16 +24,6 @@ public class WindowTitleManager {
 	public WindowTitleManager() {
 	}
 
-	public void init(EventBus eventBus, String defaultPlaceName,
-			String appName) {
-		this.eventBus = eventBus;
-		this.defaultPlaceName = defaultPlaceName;
-		this.appName = appName;
-		setup();
-		DetailView.topicDetailModelObjectSet
-				.add(e -> updateTitle(Client.currentPlace()));
-	}
-
 	protected String getTitlePartFromPlace(Place place,
 			String defaultPlaceName) {
 		String category = place.getClass().getSimpleName()
@@ -45,9 +35,14 @@ public class WindowTitleManager {
 		}
 	}
 
-	protected void updateTitle(Place place) {
-		Document.get().setTitle(Ax.format("%s - %s",
-				getTitlePartFromPlace(place, defaultPlaceName), appName));
+	public void init(EventBus eventBus, String defaultPlaceName,
+			String appName) {
+		this.eventBus = eventBus;
+		this.defaultPlaceName = defaultPlaceName;
+		this.appName = appName;
+		setup();
+		DetailView.topicDetailModelObjectSet
+				.add(e -> updateTitle(Client.currentPlace()));
 	}
 
 	void setup() {
@@ -59,5 +54,10 @@ public class WindowTitleManager {
 						updateTitle(newPlace);
 					}
 				});
+	}
+
+	protected void updateTitle(Place place) {
+		Document.get().setTitle(Ax.format("%s - %s",
+				getTitlePartFromPlace(place, defaultPlaceName), appName));
 	}
 }

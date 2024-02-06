@@ -83,6 +83,16 @@ public class SystemoutCounter {
 		dotCtr = 0;
 	}
 
+	private void outLine(String string) {
+		string = buffer + string;
+		if (logger == null) {
+			System.out.println(string);
+		} else {
+			logger.debug(string);
+		}
+		buffer = "";
+	}
+
 	public void setLogger(Logger logger) {
 		this.logger = logger;
 	}
@@ -117,15 +127,5 @@ public class SystemoutCounter {
 				lines++;
 			}
 		}
-	}
-
-	private void outLine(String string) {
-		string = buffer + string;
-		if (logger == null) {
-			System.out.println(string);
-		} else {
-			logger.debug(string);
-		}
-		buffer = "";
 	}
 }

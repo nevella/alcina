@@ -102,6 +102,39 @@ public class PlaceHistoryHandler {
 		handleHistoryToken(historian.getToken(), true);
 	}
 
+	private void handleHistoryToken(String token, boolean onStartup) {
+		Place newPlace = null;
+		if (Ax.isBlank(token)) {
+			newPlace = defaultPlaceSupplier.get();
+		}
+		if (newPlace == null) {
+			try {
+				newPlace = mapper.getPlace(token);
+			} catch (UnparseablePlaceException e) {
+				// let the ClientTopics message throw if in dev - in general
+				// case, ignore (since we totally can't control the incoming
+				// url/token // )
+			}
+		}
+		if (newPlace == null) {
+			log().warning("Unrecognized history token: " + token);
+			newPlace = defaultPlaceSupplier.get();
+			if (lastFiredToken != null) {
+				return;
+			}
+		}
+		lastPlace = currentPlace;
+		currentPlace = newPlace;
+		placeController.goTo(newPlace);
+	}
+
+	/**
+	 * Visible for testing.
+	 */
+	Logger log() {
+		return log;
+	}
+
 	/**
 	 * Legacy method tied to the old location for {@link EventBus}.
 	 *
@@ -162,32 +195,6 @@ public class PlaceHistoryHandler {
 		this.defaultPlaceToken = defaultPlaceToken;
 	}
 
-	private void handleHistoryToken(String token, boolean onStartup) {
-		Place newPlace = null;
-		if (Ax.isBlank(token)) {
-			newPlace = defaultPlaceSupplier.get();
-		}
-		if (newPlace == null) {
-			try {
-				newPlace = mapper.getPlace(token);
-			} catch (UnparseablePlaceException e) {
-				// let the ClientTopics message throw if in dev - in general
-				// case, ignore (since we totally can't control the incoming
-				// url/token // )
-			}
-		}
-		if (newPlace == null) {
-			log().warning("Unrecognized history token: " + token);
-			newPlace = defaultPlaceSupplier.get();
-			if (lastFiredToken != null) {
-				return;
-			}
-		}
-		lastPlace = currentPlace;
-		currentPlace = newPlace;
-		placeController.goTo(newPlace);
-	}
-
 	private String tokenForPlace(Place newPlace) {
 		if (defaultPlaceSupplier.get().equals(newPlace)) {
 			return defaultPlaceToken;
@@ -198,13 +205,6 @@ public class PlaceHistoryHandler {
 		}
 		log().warning("Place not mapped to a token: " + newPlace);
 		return "";
-	}
-
-	/**
-	 * Visible for testing.
-	 */
-	Logger log() {
-		return log;
 	}
 
 	/**

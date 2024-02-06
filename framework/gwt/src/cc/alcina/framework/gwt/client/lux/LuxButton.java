@@ -34,6 +34,26 @@ public class LuxButton extends Composite implements HasClickHandlers {
 		return addDomHandler(handler, ClickEvent.getType());
 	}
 
+	private SimplePanel ensureAsyncIndicator() {
+		if (asyncIndicator == null) {
+			asyncIndicator = new SimplePanel();
+			LuxButtonStyle.ASYNC_INDICATOR.addTo(asyncIndicator);
+			panel.add(asyncIndicator);
+			SimplePanel child = new SimplePanel();
+			asyncIndicator.add(child);
+		}
+		return asyncIndicator;
+	}
+
+	private InlineLabel ensureLabel() {
+		if (label == null) {
+			label = new InlineLabel();
+			LuxButtonStyle.LABEL.addTo(label);
+			panel.add(label);
+		}
+		return label;
+	}
+
 	public void setActive(boolean active) {
 		// Only update if the active state changes
 		if (this.active == null || this.active != active) {
@@ -92,25 +112,5 @@ public class LuxButton extends Composite implements HasClickHandlers {
 	public LuxButton withText(String text) {
 		ensureLabel().setText(text);
 		return this;
-	}
-
-	private SimplePanel ensureAsyncIndicator() {
-		if (asyncIndicator == null) {
-			asyncIndicator = new SimplePanel();
-			LuxButtonStyle.ASYNC_INDICATOR.addTo(asyncIndicator);
-			panel.add(asyncIndicator);
-			SimplePanel child = new SimplePanel();
-			asyncIndicator.add(child);
-		}
-		return asyncIndicator;
-	}
-
-	private InlineLabel ensureLabel() {
-		if (label == null) {
-			label = new InlineLabel();
-			LuxButtonStyle.LABEL.addTo(label);
-			panel.add(label);
-		}
-		return label;
 	}
 }

@@ -9,15 +9,15 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo.LayoutInfo;
 public interface WorkspaceVisualiser extends IsWidget {
 	void focusVisibleView();
 
+	Widget getContentWidget();
+
 	LayoutInfo getLayoutInfo();
-
-	void showView(WorkspaceView view);
-
-	void setContentWidget(Widget widget);
-
-	TreeItem selectNodeForObject(Object singleObj, boolean b);
 
 	void redraw();
 
-	Widget getContentWidget();
+	TreeItem selectNodeForObject(Object singleObj, boolean b);
+
+	void setContentWidget(Widget widget);
+
+	void showView(WorkspaceView view);
 }

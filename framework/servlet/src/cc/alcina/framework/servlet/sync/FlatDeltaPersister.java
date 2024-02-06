@@ -42,33 +42,6 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 		this.applyToLeft = applyToLeft;
 	}
 
-	public static class PersistElementResult {
-		public String action;
-
-		public String objectId;
-
-		public String objectType;
-
-		public int typeActionIndex;
-
-		public int typeActionCount;
-
-		public PersistElementResult(String action, String objectId,
-				String objectType, int typeActionIndex, int typeActionCount) {
-			this.action = action;
-			this.objectId = objectId;
-			this.objectType = objectType;
-			this.typeActionIndex = typeActionIndex;
-			this.typeActionCount = typeActionCount;
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s::%s - [%s] - [%s/%s]", objectType, objectId,
-					action, typeActionIndex, typeActionCount);
-		}
-	}
-
 	public FlatDeltaPersisterResult apply(Logger logger, D delta,
 			List<Class> ignoreDueToIncompleteMerge,
 			TopicListener<FlatDeltaPersister.PersistElementResult> persistListener)
@@ -152,24 +125,6 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 		return result;
 	}
 
-	String objectId(KeyedObject obj) {
-		Object object = obj.getObject();
-		FormatBuilder format = new FormatBuilder().separator(" - ");
-		boolean appended = false;
-		if (object instanceof HasId) {
-			format.append(((HasId) object).getId());
-			appended = true;
-		}
-		if (object instanceof HasDisplayName) {
-			format.append(((HasDisplayName) object).displayName());
-			appended = true;
-		}
-		if (!appended) {
-			format.append(object.toString());
-		}
-		return format.toString();
-	}
-
 	protected void classDeltasPersisted() {
 	}
 
@@ -186,6 +141,24 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 			System.out.println("deleted -> " + object);
 			break;
 		}
+	}
+
+	String objectId(KeyedObject obj) {
+		Object object = obj.getObject();
+		FormatBuilder format = new FormatBuilder().separator(" - ");
+		boolean appended = false;
+		if (object instanceof HasId) {
+			format.append(((HasId) object).getId());
+			appended = true;
+		}
+		if (object instanceof HasDisplayName) {
+			format.append(((HasDisplayName) object).displayName());
+			appended = true;
+		}
+		if (!appended) {
+			format.append(object.toString());
+		}
+		return format.toString();
 	}
 
 	protected abstract List<Class> perClassDeltaOrder();
@@ -224,6 +197,33 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 					interchangeClass.getSimpleName(), pair.getKey(),
 					syncAction);
 			return false;
+		}
+	}
+
+	public static class PersistElementResult {
+		public String action;
+
+		public String objectId;
+
+		public String objectType;
+
+		public int typeActionIndex;
+
+		public int typeActionCount;
+
+		public PersistElementResult(String action, String objectId,
+				String objectType, int typeActionIndex, int typeActionCount) {
+			this.action = action;
+			this.objectId = objectId;
+			this.objectType = objectType;
+			this.typeActionIndex = typeActionIndex;
+			this.typeActionCount = typeActionCount;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s::%s - [%s] - [%s/%s]", objectType, objectId,
+					action, typeActionIndex, typeActionCount);
 		}
 	}
 }

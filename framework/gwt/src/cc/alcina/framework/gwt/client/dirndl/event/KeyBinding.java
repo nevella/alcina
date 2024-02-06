@@ -29,11 +29,11 @@ import cc.alcina.framework.gwt.client.dirndl.event.KeyBinding.Keybindings;
 @Target({ ElementType.TYPE })
 @Repeatable(Keybindings.class)
 public @interface KeyBinding {
+	Class<? extends CommandContext>[] context() default {};
+
 	String key();
 
 	NativeEvent.Modifier[] modifiers() default {};
-
-	Class<? extends CommandContext>[] context() default {};
 
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
@@ -49,8 +49,24 @@ public @interface KeyBinding {
 
 		Class<? extends ModelEvent> eventType;
 
+		public MatchData(Class<? extends ModelEvent> eventType) {
+			this.eventType = eventType;
+			entries = Reflections.at(eventType).annotations(KeyBinding.class)
+					.stream().map(Entry::new).collect(Collectors.toList());
+		}
+
 		public Class<? extends ModelEvent> getEventType() {
 			return eventType;
+		}
+
+		boolean matches(List<Class<? extends CommandContext>> contexts,
+				Set<Modifier> modifiers, String key) {
+			return entries.get(0).matches(contexts, modifiers, key);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s => %s", entries, eventType.getSimpleName());
 		}
 
 		class Entry {
@@ -83,22 +99,6 @@ public @interface KeyBinding {
 			public String toString() {
 				return Ax.format("%s '%s'", modifiers, binding.key());
 			}
-		}
-
-		public MatchData(Class<? extends ModelEvent> eventType) {
-			this.eventType = eventType;
-			entries = Reflections.at(eventType).annotations(KeyBinding.class)
-					.stream().map(Entry::new).collect(Collectors.toList());
-		}
-
-		boolean matches(List<Class<? extends CommandContext>> contexts,
-				Set<Modifier> modifiers, String key) {
-			return entries.get(0).matches(contexts, modifiers, key);
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s => %s", entries, eventType.getSimpleName());
 		}
 	}
 

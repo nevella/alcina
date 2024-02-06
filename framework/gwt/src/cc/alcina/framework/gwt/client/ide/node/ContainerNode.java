@@ -51,22 +51,13 @@ public class ContainerNode extends FilterableTreeItem
 	}
 
 	@Override
-	public String getTitle() {
-		return this.title;
-	}
-
-	@Override
-	public void onDetach() {
-		for (int i = 0; i < getChildCount(); i++) {
-			TreeItem child = getChild(i);
-			if (child instanceof DetachListener)
-				((DetachListener) child).onDetach();
-		}
-	}
-
-	@Override
 	protected String getText0() {
 		return getTitle();
+	}
+
+	@Override
+	public String getTitle() {
+		return this.title;
 	}
 
 	protected String imageItemHTML(AbstractImagePrototype imageProto,
@@ -75,6 +66,15 @@ public class ContainerNode extends FilterableTreeItem
 			return imageProto.getHTML() + " " + title;
 		} else {
 			return title;
+		}
+	}
+
+	@Override
+	public void onDetach() {
+		for (int i = 0; i < getChildCount(); i++) {
+			TreeItem child = getChild(i);
+			if (child instanceof DetachListener)
+				((DetachListener) child).onDetach();
 		}
 	}
 

@@ -39,6 +39,20 @@ public class LinkSelector<T> extends AbstractBoundWidget<T> {
 		return this.value;
 	}
 
+	private void render() {
+		fp.clear();
+		for (T option : options) {
+			FlowPanelClickable optionPanel = new FlowPanelClickable();
+			InlineLabel label = new InlineLabel(optionRenderer.apply(option));
+			if (option == value) {
+				optionPanel.addStyleName("selected");
+			}
+			optionPanel.add(label);
+			optionPanel.addClickHandler(e -> setValue(option));
+			fp.add(optionPanel);
+		}
+	}
+
 	public void setOptionRenderer(Function<T, String> optionRenderer) {
 		this.optionRenderer = optionRenderer;
 	}
@@ -55,20 +69,6 @@ public class LinkSelector<T> extends AbstractBoundWidget<T> {
 		updateStyles(value);
 		if (!Objects.equals(old, value)) {
 			this.changes.firePropertyChange("value", old, this.getValue());
-		}
-	}
-
-	private void render() {
-		fp.clear();
-		for (T option : options) {
-			FlowPanelClickable optionPanel = new FlowPanelClickable();
-			InlineLabel label = new InlineLabel(optionRenderer.apply(option));
-			if (option == value) {
-				optionPanel.addStyleName("selected");
-			}
-			optionPanel.add(label);
-			optionPanel.addClickHandler(e -> setValue(option));
-			fp.add(optionPanel);
 		}
 	}
 

@@ -392,6 +392,47 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 	}
 
 	/**
+	 * Build a list of row values.
+	 *
+	 * @param values
+	 *            the row values to render
+	 * @param start
+	 *            the absolute start index
+	 * @param isRebuildingAllRows
+	 *            is this going to rebuild all rows
+	 * @return a {@link SafeHtml} string containing the row values
+	 */
+	private SafeHtml buildRowValues(List<T> values, int start,
+			boolean isRebuildingAllRows) {
+		int length = values.size();
+		int end = start + length;
+		tableBuilder.start(isRebuildingAllRows);
+		for (int i = start; i < end; i++) {
+			T value = values.get(i - start);
+			tableBuilder.buildRow(value, i);
+		}
+		// Update the properties of the table.
+		coalesceCellProperties();
+		TableSectionBuilder tableSectionBuilder = tableBuilder.finish();
+		return tableSectionToSafeHtml(tableSectionBuilder, "tbody");
+	}
+
+	/**
+	 * Check that the specified column is within bounds.
+	 *
+	 * @param col
+	 *            the column index
+	 * @throws IndexOutOfBoundsException
+	 *             if the column is out of bounds
+	 */
+	private void checkColumnBounds(int col) {
+		if (col < 0 || col >= getColumnCount()) {
+			throw new IndexOutOfBoundsException(
+					"Column index is out of bounds: " + col);
+		}
+	}
+
+	/**
 	 * Clear the width of the specified {@link Column}.
 	 *
 	 * @param column
@@ -424,6 +465,129 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 	}
 
 	/**
+	 * Coalesce the various cell properties (dependsOnSelection,
+	 * handlesSelection, isInteractive) into a table policy.
+	 */
+	private void coalesceCellProperties() {
+		dependsOnSelection = false;
+		handlesSelection = false;
+		isInteractive = false;
+		for (HasCell<T, ?> column : tableBuilder.getColumns()) {
+			Cell<?> cell = column.getCell();
+			if (cell.dependsOnSelection()) {
+				dependsOnSelection = true;
+			}
+			if (cell.handlesSelection()) {
+				handlesSelection = true;
+			}
+			if (isColumnInteractive(column)) {
+				isInteractive = true;
+			}
+		}
+	}
+
+	@Override
+	protected Element convertToElements(SafeHtml html) {
+		return TABLE_IMPL.convertToSectionElement(AbstractCellTable.this,
+				"tbody", html);
+	}
+
+	/**
+	 * Render the header or footer.
+	 *
+	 * @param isFooter
+	 *            true if this is the footer table, false if the header table
+	 */
+	private void createHeaders(boolean isFooter) {
+		TableSectionBuilder section = isFooter ? footerBuilder.buildFooter()
+				: headerBuilder.buildHeader();
+		if (section != null) {
+			TABLE_IMPL.replaceAllRows(this,
+					isFooter ? getTableFootElement() : getTableHeadElement(),
+					tableSectionToSafeHtml(section,
+							isFooter ? "tfoot" : "thead"));
+			doSetHeaderVisible(isFooter, true);
+		} else {
+			// If the section isn't used, hide it.
+			doSetHeaderVisible(isFooter, false);
+		}
+	}
+
+	@Override
+	protected boolean dependsOnSelection() {
+		return dependsOnSelection;
+	}
+
+	/**
+	 * Set the width of a column.
+	 *
+	 * @param column
+	 *            the column index
+	 * @param width
+	 *            the width, or null to clear the width
+	 */
+	protected abstract void doSetColumnWidth(int column, String width);
+
+	/**
+	 * Show or hide a header section.
+	 *
+	 * @param isFooter
+	 *            true for the footer, false for the header
+	 * @param isVisible
+	 *            true to show, false to hide
+	 */
+	protected abstract void doSetHeaderVisible(boolean isFooter,
+			boolean isVisible);
+
+	/**
+	 * Fire an event to the Cell within the specified {@link TableCellElement}.
+	 */
+	private <C> void fireEventToCell(Event event, String eventType,
+			Element parentElem, final T rowValue, Context context,
+			HasCell<T, C> column) {
+		// Check if the cell consumes the event.
+		Cell<C> cell = column.getCell();
+		if (!cellConsumesEventType(cell, eventType)) {
+			return;
+		}
+		C cellValue = column.getValue(rowValue);
+		boolean cellWasEditing = cell.isEditing(context, parentElem, cellValue);
+		if (column instanceof Column) {
+			/*
+			 * If the HasCell is a Column, let it handle the event itself. This
+			 * is here for legacy support.
+			 */
+			Column<T, C> col = (Column<T, C>) column;
+			col.onBrowserEvent(context, parentElem, rowValue, event);
+		} else {
+			// Create a FieldUpdater.
+			final FieldUpdater<T, C> fieldUpdater = column.getFieldUpdater();
+			final int index = context.getIndex();
+			ValueUpdater<C> valueUpdater = (fieldUpdater == null) ? null
+					: new ValueUpdater<C>() {
+						@Override
+						public void update(C value) {
+							fieldUpdater.update(index, rowValue, value);
+						}
+					};
+			// Fire the event to the cell.
+			cell.onBrowserEvent(context, parentElem, cellValue, event,
+					valueUpdater);
+		}
+		// Reset focus if needed.
+		cellIsEditing = cell.isEditing(context, parentElem, cellValue);
+		if (cellWasEditing && !cellIsEditing) {
+			CellBasedWidgetImpl.get()
+					.resetFocus(new Scheduler.ScheduledCommand() {
+						@Override
+						public void execute() {
+							setFocus(true);
+						}
+					});
+		}
+	}
+
+	/**
 	 * Flush all pending changes to the table and render immediately.
 	 *
 	 * <p>
@@ -436,6 +600,30 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 	 */
 	public void flush() {
 		getPresenter().flush();
+	}
+
+	@Override
+	protected Element getChildContainer() {
+		return getTableBodyElement();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The row element may not be the same as the TR element at the specified
+	 * index if some row values are rendered with additional rows.
+	 * </p>
+	 *
+	 * @param row
+	 *            the row index, relative to the page start
+	 * @return the row element, or null if it doesn't exists
+	 * @throws IndexOutOfBoundsException
+	 *             if the row index is outside of the current page
+	 */
+	@Override
+	protected TableRowElement getChildElement(int row) {
+		return getSubRowElement(row + getPageStart(), 0);
 	}
 
 	/**
@@ -499,6 +687,27 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 	}
 
 	/**
+	 * Get the column width. Associating a width with a {@link Column} takes
+	 * precedence over setting the width of a column index.
+	 *
+	 * @param columnIndex
+	 *            the column index
+	 * @return the column width, or null if none specified
+	 */
+	String getColumnWidth(int columnIndex) {
+		String width = null;
+		if (columns.size() > columnIndex) {
+			// Look for the width by Column.
+			width = columnWidths.get(columns.get(columnIndex));
+		}
+		if (width == null) {
+			// Look for the width by index.
+			width = columnWidthsByIndex.get(columnIndex);
+		}
+		return width;
+	}
+
+	/**
 	 * Get the widget displayed when the table has no rows.
 	 *
 	 * @return the empty table widget
@@ -548,6 +757,43 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 				: keyboardSelectedColumn;
 	}
 
+	@Override
+	protected Element getKeyboardSelectedElement() {
+		return getKeyboardSelectedElement(
+				getKeyboardSelectedTableCellElement());
+	}
+
+	/**
+	 * Get the keyboard selected element from the selected table cell.
+	 *
+	 * @return the keyboard selected element, or null if there is none
+	 */
+	private Element getKeyboardSelectedElement(TableCellElement td) {
+		if (td == null) {
+			return null;
+		}
+		/*
+		 * The TD itself is a cell parent, which means its internal structure
+		 * (including the tabIndex that we set) could be modified by its Cell.
+		 * We return the TD to be safe.
+		 */
+		if (tableBuilder.isColumn(td)) {
+			return td;
+		}
+		/*
+		 * The default table builder adds a focusable div to the table cell
+		 * because TDs aren't focusable in all browsers. If the user defines a
+		 * custom table builder with a different structure, we must assume the
+		 * keyboard selected element is the TD itself.
+		 */
+		Element firstChild = td.getFirstChildElement();
+		if (firstChild != null && td.getChildCount() == 1
+				&& "div".equalsIgnoreCase(firstChild.getTagName())) {
+			return firstChild;
+		}
+		return td;
+	}
+
 	/**
 	 * Get the index of the sub row that is currently selected via the keyboard.
 	 * If the row value maps to one rendered row element, the subrow is 0.
@@ -561,12 +807,48 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 	}
 
 	/**
+	 * Get the {@link TableCellElement} that is currently keyboard selected.
+	 *
+	 * @return the table cell element, or null if not selected
+	 */
+	private TableCellElement getKeyboardSelectedTableCellElement() {
+		int colIndex = getKeyboardSelectedColumn();
+		if (colIndex < 0) {
+			return null;
+		}
+		// Do not use getRowElement() because that will flush the presenter.
+		int rowIndex = getKeyboardSelectedRow();
+		if (rowIndex < 0
+				|| rowIndex >= getTableBodyElement().getRows().getLength()) {
+			return null;
+		}
+		TableRowElement tr = getSubRowElement(rowIndex + getPageStart(),
+				keyboardSelectedSubrow);
+		if (tr != null) {
+			int cellCount = tr.getCells().getLength();
+			if (cellCount > 0) {
+				int column = Math.min(colIndex, cellCount - 1);
+				return tr.getCells().getItem(column);
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Get the widget displayed when the data is loading.
 	 *
 	 * @return the loading indicator
 	 */
 	public Widget getLoadingIndicator() {
 		return loadingIndicator;
+	}
+
+	/**
+	 * Get the real column count, which is the greater of the number of Columns
+	 * or the maximum index of a column with a defined column width.
+	 */
+	protected int getRealColumnCount() {
+		return Math.max(getColumnCount(), maxColumnIndex + 1);
 	}
 
 	/**
@@ -598,6 +880,112 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 	 */
 	public RowStyles<T> getRowStyles() {
 		return this.rowStyles;
+	}
+
+	/**
+	 * Get a subrow element given the index of the row value and the sub row
+	 * index.
+	 *
+	 * @param absRow
+	 *            the absolute row value index
+	 * @param subrow
+	 *            the index of the subrow beneath the row.
+	 * @return the row element, or null if not found
+	 */
+	protected TableRowElement getSubRowElement(int absRow, int subrow) {
+		int relRow = absRow - getPageStart();
+		checkRowBounds(relRow);
+		/*
+		 * In most tables, the row element that represents the row object at the
+		 * specified index will be at the same index in the DOM. However, if the
+		 * user provides a TableBuilder that renders multiple rows per row
+		 * value, that will not be the case.
+		 *
+		 * We use a binary search to find the row, but we start at the index as
+		 * that is the most likely location.
+		 */
+		NodeList<TableRowElement> rows = getTableBodyElement().getRows();
+		int rowCount = rows.getLength();
+		if (rowCount == 0) {
+			return null;
+		}
+		int frameStart = 0;
+		int frameEnd = rowCount - 1;
+		int domIndex = Math.min(relRow, frameEnd);
+		while (domIndex >= frameStart && domIndex <= frameEnd) {
+			TableRowElement curRow = rows.getItem(domIndex);
+			int rowValueIndex = tableBuilder.getRowValueIndex(curRow);
+			if (rowValueIndex == absRow) {
+				// Found a subrow in the row index.
+				int subrowValueIndex = tableBuilder.getSubrowValueIndex(curRow);
+				if (subrow != subrowValueIndex) {
+					// Shift to the correct subrow.
+					int offset = subrow - subrowValueIndex;
+					int subrowIndex = domIndex + offset;
+					if (subrowIndex >= rows.getLength()) {
+						// The subrow is out of range of the table.
+						return null;
+					}
+					curRow = rows.getItem(subrowIndex);
+					if (tableBuilder.getRowValueIndex(curRow) != absRow) {
+						// The "subrow" is actually part of the next row.
+						return null;
+					}
+				}
+				return curRow;
+			} else if (rowValueIndex > absRow) {
+				// Shift the frame to lower indexes.
+				frameEnd = domIndex - 1;
+			} else {
+				// Shift the frame to higher indexes.
+				frameStart = domIndex + 1;
+			}
+			// Move the dom index.
+			domIndex = (frameStart + frameEnd) / 2;
+		}
+		// The element wasn't found.
+		return null;
+	}
+
+	/**
+	 * Get the tbody element that contains the render row values.
+	 */
+	protected abstract TableSectionElement getTableBodyElement();
+
+	/**
+	 * Get the tfoot element that contains the footers.
+	 */
+	protected abstract TableSectionElement getTableFootElement();
+
+	/**
+	 * Get the thead element that contains the headers.
+	 */
+	protected abstract TableSectionElement getTableHeadElement();
+
+	/**
+	 * Initialize the widget.
+	 */
+	private void init() {
+		if (TABLE_IMPL == null) {
+			TABLE_IMPL = GWT.create(Impl.class);
+		}
+		if (template == null) {
+			template = GWT.create(Template.class);
+		}
+		// Set the cell table style
+		setStyleName(style.widget());
+		// Sink events.
+		Set<String> eventTypes = new HashSet<String>();
+		eventTypes.add(BrowserEvents.MOUSEOVER);
+		eventTypes.add(BrowserEvents.MOUSEOUT);
+		CellBasedWidgetImpl.get().sinkEvents(this, eventTypes);
+		// Set the table builder.
+		tableBuilder = new DefaultCellTableBuilder<T>(this);
+		headerBuilder = new DefaultHeaderOrFooterBuilder<T>(this, false);
+		footerBuilder = new DefaultHeaderOrFooterBuilder<T>(this, true);
+		// Set the keyboard handler.
+		setKeyboardSelectionHandler(
+				new CellTableKeyboardSelectionHandler<T>(this));
 	}
 
 	/**
@@ -780,6 +1168,11 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 		return headerRefreshDisabled;
 	}
 
+	@Override
+	protected boolean isKeyboardNavigationSuppressed() {
+		return cellIsEditing;
+	}
+
 	/**
 	 * Gets the skipRowHoverCheck flag. If true, the CellTable will not check
 	 * for row-level hover events (MOUSEOVER and MOUSEOUT).
@@ -809,801 +1202,6 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 	 */
 	public boolean isSkipRowHoverStyleUpdate() {
 		return this.skipRowHoverStyleUpdate;
-	}
-
-	/**
-	 * Redraw the table's footers. The footers will be re-rendered
-	 * synchronously.
-	 */
-	public void redrawFooters() {
-		createHeaders(true);
-	}
-
-	/**
-	 * Redraw the table's headers. The headers will be re-rendered
-	 * synchronously.
-	 */
-	public void redrawHeaders() {
-		createHeaders(false);
-	}
-
-	/**
-	 * Remove a column.
-	 *
-	 * @param col
-	 *            the column to remove
-	 */
-	public void removeColumn(Column<T, ?> col) {
-		int index = columns.indexOf(col);
-		if (index < 0) {
-			throw new IllegalArgumentException(
-					"The specified column is not part of this table.");
-		}
-		removeColumn(index);
-	}
-
-	/**
-	 * Remove a column.
-	 *
-	 * @param index
-	 *            the column index
-	 */
-	public void removeColumn(int index) {
-		if (index < 0 || index >= columns.size()) {
-			throw new IndexOutOfBoundsException(
-					"The specified column index is out of bounds.");
-		}
-		columns.remove(index);
-		headers.remove(index);
-		footers.remove(index);
-		// Decrement the keyboard selected column.
-		if (index <= keyboardSelectedColumn && keyboardSelectedColumn > 0) {
-			keyboardSelectedColumn--;
-		}
-		// Redraw the table asynchronously.
-		headersDirty = true;
-		refreshColumnsAndRedraw();
-		// We don't unsink events because other handlers or user code may have
-		// sunk
-		// them intentionally.
-	}
-
-	/**
-	 * Remove a style from the <code>col</code> element at the specified index.
-	 *
-	 * @param index
-	 *            the column index
-	 * @param styleName
-	 *            the style name to remove
-	 */
-	public abstract void removeColumnStyleName(int index, String styleName);
-
-	/**
-	 * Enable or disable auto footer refresh when row data is changed. By
-	 * default, footers are refreshed every time the row data changes in case
-	 * the headers depend on the current row data. If the headers do not depend
-	 * on the current row data, you can disable this feature to improve
-	 * performance.
-	 *
-	 * <p>
-	 * Note that headers will still refresh when columns are added or removed,
-	 * regardless of whether or not this feature is enabled.
-	 * </p>
-	 */
-	public void setAutoFooterRefreshDisabled(boolean disabled) {
-		this.footerRefreshDisabled = disabled;
-	}
-
-	/**
-	 * Enable or disable auto header refresh when row data is changed. By
-	 * default, headers are refreshed every time the row data changes in case
-	 * the footers depend on the current row data. If the footers do not depend
-	 * on the current row data, you can disable this feature to improve
-	 * performance.
-	 *
-	 * <p>
-	 * Note that footers will still refresh when columns are added or removed,
-	 * regardless of whether or not this feature is enabled.
-	 * </p>
-	 */
-	public void setAutoHeaderRefreshDisabled(boolean disabled) {
-		this.headerRefreshDisabled = disabled;
-	}
-
-	/**
-	 * Set the width of a {@link Column}. The width will persist with the column
-	 * and takes precedence of any width set via
-	 * {@link #setColumnWidth(int, double, Unit)}.
-	 *
-	 * @param column
-	 *            the column
-	 * @param width
-	 *            the width of the column
-	 * @param unit
-	 *            the {@link Unit} of measurement
-	 */
-	public void setColumnWidth(Column<T, ?> column, double width, Unit unit) {
-		setColumnWidth(column, width + unit.getType());
-	}
-
-	/**
-	 * Set the width of a {@link Column}. The width will persist with the column
-	 * and takes precedence of any width set via
-	 * {@link #setColumnWidth(int, String)}.
-	 *
-	 * @param column
-	 *            the column
-	 * @param width
-	 *            the width of the column
-	 */
-	public void setColumnWidth(Column<T, ?> column, String width) {
-		columnWidths.put(column, width);
-		updateColumnWidthImpl(column, width);
-	}
-
-	/**
-	 * Set the width of a {@link Column}.
-	 *
-	 * @param column
-	 *            the column
-	 * @param width
-	 *            the width of the column
-	 * @param unit
-	 *            the {@link Unit} of measurement
-	 */
-	public void setColumnWidth(int column, double width, Unit unit) {
-		setColumnWidth(column, width + unit.getType());
-	}
-
-	/**
-	 * Set the width of a {@link Column}.
-	 *
-	 * @param column
-	 *            the column
-	 * @param width
-	 *            the width of the column
-	 */
-	public void setColumnWidth(int column, String width) {
-		columnWidthsByIndex.put(column, width);
-		maxColumnIndex = Math.max(maxColumnIndex, column);
-		// Update the column width.
-		if (column < getRealColumnCount()) {
-			doSetColumnWidth(column, width);
-		}
-	}
-
-	/**
-	 * Set the widget to display when the table has no rows.
-	 *
-	 * @param widget
-	 *            the empty table widget, or null to disable
-	 */
-	@UiChild(tagname = "emptyTableWidget", limit = 1)
-	public void setEmptyTableWidget(Widget widget) {
-		this.emptyTableWidget = widget;
-	}
-
-	/**
-	 * Set the {@link HeaderBuilder} used to build the footer section of the
-	 * table.
-	 */
-	public void setFooterBuilder(FooterBuilder<T> builder) {
-		assert builder != null : "builder cannot be null";
-		this.footerBuilder = builder;
-		redrawFooters();
-	}
-
-	/**
-	 * Set the {@link HeaderBuilder} used to build the header section of the
-	 * table.
-	 */
-	public void setHeaderBuilder(HeaderBuilder<T> builder) {
-		assert builder != null : "builder cannot be null";
-		this.headerBuilder = builder;
-		redrawHeaders();
-	}
-
-	/**
-	 * Set the keyboard selected column index.
-	 *
-	 * <p>
-	 * If keyboard selection is disabled, this method does nothing.
-	 * </p>
-	 *
-	 * <p>
-	 * If the keyboard selected column is greater than the number of columns in
-	 * the keyboard selected row, the last column in the row is selected, but
-	 * the column index is remembered.
-	 * </p>
-	 *
-	 * @param column
-	 *            the column index, greater than or equal to zero
-	 */
-	public final void setKeyboardSelectedColumn(int column) {
-		setKeyboardSelectedColumn(column, true);
-	}
-
-	/**
-	 * Set the keyboard selected column index and optionally focus on the new
-	 * cell.
-	 *
-	 * @param column
-	 *            the column index, greater than or equal to zero
-	 * @param stealFocus
-	 *            true to focus on the new column
-	 * @see #setKeyboardSelectedColumn(int)
-	 */
-	public void setKeyboardSelectedColumn(int column, boolean stealFocus) {
-		assert column >= 0 : "Column must be zero or greater";
-		if (KeyboardSelectionPolicy.DISABLED == getKeyboardSelectionPolicy()) {
-			return;
-		}
-		this.keyboardSelectedColumn = column;
-		// Reselect the row to move the selected column.
-		setKeyboardSelectedRow(getKeyboardSelectedRow(), keyboardSelectedSubrow,
-				stealFocus);
-	}
-
-	@Override
-	public void setKeyboardSelectedRow(int row, boolean stealFocus) {
-		setKeyboardSelectedRow(row, 0, stealFocus);
-	}
-
-	/**
-	 * Set the keyboard selected row and subrow, optionally focus on the new
-	 * row.
-	 *
-	 * @param row
-	 *            the row index relative to the page start
-	 * @param subrow
-	 *            the row index of the child row
-	 * @param stealFocus
-	 *            true to focus on the new row
-	 * @see #setKeyboardSelectedRow(int)
-	 */
-	public void setKeyboardSelectedRow(int row, int subrow,
-			boolean stealFocus) {
-		this.keyboardSelectedSubrow = subrow;
-		super.setKeyboardSelectedRow(row, stealFocus);
-	}
-
-	/**
-	 * Set the widget to display when the data is loading.
-	 *
-	 * @param widget
-	 *            the loading indicator, or null to disable
-	 */
-	@UiChild(tagname = "loadingIndicator", limit = 1)
-	public void setLoadingIndicator(Widget widget) {
-		loadingIndicator = widget;
-	}
-
-	/**
-	 * Sets the object used to determine how a row is styled; the change will
-	 * take effect the next time that the table is rendered.
-	 *
-	 * @param rowStyles
-	 *            a {@link RowStyles} object
-	 */
-	public void setRowStyles(RowStyles<T> rowStyles) {
-		this.rowStyles = rowStyles;
-	}
-
-	/**
-	 * Sets the skipRowHoverCheck flag. If set, the CellTable will not check for
-	 * row-level hover events (MOUSEOVER and MOUSEOUT).
-	 *
-	 * @param skipRowHoverCheck
-	 *            the new flag value
-	 */
-	public void setSkipRowHoverCheck(boolean skipRowHoverCheck) {
-		this.skipRowHoverCheck = skipRowHoverCheck;
-	}
-
-	/**
-	 * Sets the skipRowHoverFloatElementCheck flag. If set, the CellTable will
-	 * not not check for floating (fixed position) elements over the hovered
-	 * row.
-	 *
-	 * @param skipRowHoverFloatElementCheck
-	 *            the new flag value
-	 */
-	public void setSkipRowHoverFloatElementCheck(
-			boolean skipRowHoverFloatElementCheck) {
-		this.skipRowHoverFloatElementCheck = skipRowHoverFloatElementCheck;
-	}
-
-	/**
-	 * Sets the skipRowHoverStyleUpdate flag. If set, the CellTable will not
-	 * update the row's style on row-level hover events (MOUSEOVER and
-	 * MOUSEOUT).
-	 *
-	 * @param skipRowHoverCheck
-	 *            the new flag value
-	 */
-	public void setSkipRowHoverStyleUpdate(boolean skipRowHoverStyleUpdate) {
-		this.skipRowHoverStyleUpdate = skipRowHoverStyleUpdate;
-	}
-
-	/**
-	 * Specify the {@link CellTableBuilder} that will be used to render the row
-	 * values into the table.
-	 */
-	public void setTableBuilder(CellTableBuilder<T> tableBuilder) {
-		assert tableBuilder != null : "tableBuilder cannot be null";
-		this.tableBuilder = tableBuilder;
-		redraw();
-	}
-
-	/**
-	 * Build a list of row values.
-	 *
-	 * @param values
-	 *            the row values to render
-	 * @param start
-	 *            the absolute start index
-	 * @param isRebuildingAllRows
-	 *            is this going to rebuild all rows
-	 * @return a {@link SafeHtml} string containing the row values
-	 */
-	private SafeHtml buildRowValues(List<T> values, int start,
-			boolean isRebuildingAllRows) {
-		int length = values.size();
-		int end = start + length;
-		tableBuilder.start(isRebuildingAllRows);
-		for (int i = start; i < end; i++) {
-			T value = values.get(i - start);
-			tableBuilder.buildRow(value, i);
-		}
-		// Update the properties of the table.
-		coalesceCellProperties();
-		TableSectionBuilder tableSectionBuilder = tableBuilder.finish();
-		return tableSectionToSafeHtml(tableSectionBuilder, "tbody");
-	}
-
-	/**
-	 * Check that the specified column is within bounds.
-	 *
-	 * @param col
-	 *            the column index
-	 * @throws IndexOutOfBoundsException
-	 *             if the column is out of bounds
-	 */
-	private void checkColumnBounds(int col) {
-		if (col < 0 || col >= getColumnCount()) {
-			throw new IndexOutOfBoundsException(
-					"Column index is out of bounds: " + col);
-		}
-	}
-
-	/**
-	 * Coalesce the various cell properties (dependsOnSelection,
-	 * handlesSelection, isInteractive) into a table policy.
-	 */
-	private void coalesceCellProperties() {
-		dependsOnSelection = false;
-		handlesSelection = false;
-		isInteractive = false;
-		for (HasCell<T, ?> column : tableBuilder.getColumns()) {
-			Cell<?> cell = column.getCell();
-			if (cell.dependsOnSelection()) {
-				dependsOnSelection = true;
-			}
-			if (cell.handlesSelection()) {
-				handlesSelection = true;
-			}
-			if (isColumnInteractive(column)) {
-				isInteractive = true;
-			}
-		}
-	}
-
-	/**
-	 * Render the header or footer.
-	 *
-	 * @param isFooter
-	 *            true if this is the footer table, false if the header table
-	 */
-	private void createHeaders(boolean isFooter) {
-		TableSectionBuilder section = isFooter ? footerBuilder.buildFooter()
-				: headerBuilder.buildHeader();
-		if (section != null) {
-			TABLE_IMPL.replaceAllRows(this,
-					isFooter ? getTableFootElement() : getTableHeadElement(),
-					tableSectionToSafeHtml(section,
-							isFooter ? "tfoot" : "thead"));
-			doSetHeaderVisible(isFooter, true);
-		} else {
-			// If the section isn't used, hide it.
-			doSetHeaderVisible(isFooter, false);
-		}
-	}
-
-	/**
-	 * Fire an event to the Cell within the specified {@link TableCellElement}.
-	 */
-	private <C> void fireEventToCell(Event event, String eventType,
-			Element parentElem, final T rowValue, Context context,
-			HasCell<T, C> column) {
-		// Check if the cell consumes the event.
-		Cell<C> cell = column.getCell();
-		if (!cellConsumesEventType(cell, eventType)) {
-			return;
-		}
-		C cellValue = column.getValue(rowValue);
-		boolean cellWasEditing = cell.isEditing(context, parentElem, cellValue);
-		if (column instanceof Column) {
-			/*
-			 * If the HasCell is a Column, let it handle the event itself. This
-			 * is here for legacy support.
-			 */
-			Column<T, C> col = (Column<T, C>) column;
-			col.onBrowserEvent(context, parentElem, rowValue, event);
-		} else {
-			// Create a FieldUpdater.
-			final FieldUpdater<T, C> fieldUpdater = column.getFieldUpdater();
-			final int index = context.getIndex();
-			ValueUpdater<C> valueUpdater = (fieldUpdater == null) ? null
-					: new ValueUpdater<C>() {
-						@Override
-						public void update(C value) {
-							fieldUpdater.update(index, rowValue, value);
-						}
-					};
-			// Fire the event to the cell.
-			cell.onBrowserEvent(context, parentElem, cellValue, event,
-					valueUpdater);
-		}
-		// Reset focus if needed.
-		cellIsEditing = cell.isEditing(context, parentElem, cellValue);
-		if (cellWasEditing && !cellIsEditing) {
-			CellBasedWidgetImpl.get()
-					.resetFocus(new Scheduler.ScheduledCommand() {
-						@Override
-						public void execute() {
-							setFocus(true);
-						}
-					});
-		}
-	}
-
-	/**
-	 * Get the keyboard selected element from the selected table cell.
-	 *
-	 * @return the keyboard selected element, or null if there is none
-	 */
-	private Element getKeyboardSelectedElement(TableCellElement td) {
-		if (td == null) {
-			return null;
-		}
-		/*
-		 * The TD itself is a cell parent, which means its internal structure
-		 * (including the tabIndex that we set) could be modified by its Cell.
-		 * We return the TD to be safe.
-		 */
-		if (tableBuilder.isColumn(td)) {
-			return td;
-		}
-		/*
-		 * The default table builder adds a focusable div to the table cell
-		 * because TDs aren't focusable in all browsers. If the user defines a
-		 * custom table builder with a different structure, we must assume the
-		 * keyboard selected element is the TD itself.
-		 */
-		Element firstChild = td.getFirstChildElement();
-		if (firstChild != null && td.getChildCount() == 1
-				&& "div".equalsIgnoreCase(firstChild.getTagName())) {
-			return firstChild;
-		}
-		return td;
-	}
-
-	/**
-	 * Get the {@link TableCellElement} that is currently keyboard selected.
-	 *
-	 * @return the table cell element, or null if not selected
-	 */
-	private TableCellElement getKeyboardSelectedTableCellElement() {
-		int colIndex = getKeyboardSelectedColumn();
-		if (colIndex < 0) {
-			return null;
-		}
-		// Do not use getRowElement() because that will flush the presenter.
-		int rowIndex = getKeyboardSelectedRow();
-		if (rowIndex < 0
-				|| rowIndex >= getTableBodyElement().getRows().getLength()) {
-			return null;
-		}
-		TableRowElement tr = getSubRowElement(rowIndex + getPageStart(),
-				keyboardSelectedSubrow);
-		if (tr != null) {
-			int cellCount = tr.getCells().getLength();
-			if (cellCount > 0) {
-				int column = Math.min(colIndex, cellCount - 1);
-				return tr.getCells().getItem(column);
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Initialize the widget.
-	 */
-	private void init() {
-		if (TABLE_IMPL == null) {
-			TABLE_IMPL = GWT.create(Impl.class);
-		}
-		if (template == null) {
-			template = GWT.create(Template.class);
-		}
-		// Set the cell table style
-		setStyleName(style.widget());
-		// Sink events.
-		Set<String> eventTypes = new HashSet<String>();
-		eventTypes.add(BrowserEvents.MOUSEOVER);
-		eventTypes.add(BrowserEvents.MOUSEOUT);
-		CellBasedWidgetImpl.get().sinkEvents(this, eventTypes);
-		// Set the table builder.
-		tableBuilder = new DefaultCellTableBuilder<T>(this);
-		headerBuilder = new DefaultHeaderOrFooterBuilder<T>(this, false);
-		footerBuilder = new DefaultHeaderOrFooterBuilder<T>(this, true);
-		// Set the keyboard handler.
-		setKeyboardSelectionHandler(
-				new CellTableKeyboardSelectionHandler<T>(this));
-	}
-
-	/**
-	 * Mark the column widths as dirty and redraw the table.
-	 */
-	private void refreshColumnsAndRedraw() {
-		columnWidthsDirty = true;
-		redraw();
-	}
-
-	/**
-	 * Refresh the headers and column widths.
-	 */
-	private void refreshHeadersAndColumnsImpl() {
-		// Refresh the column widths if needed.
-		if (columnWidthsDirty) {
-			columnWidthsDirty = false;
-			refreshColumnWidths();
-		}
-		// Render the headers and footers.
-		boolean wereHeadersDirty = headersDirty;
-		headersDirty = false;
-		if (wereHeadersDirty || !headerRefreshDisabled) {
-			createHeaders(false);
-		}
-		if (wereHeadersDirty || !footerRefreshDisabled) {
-			createHeaders(true);
-		}
-	}
-
-	private <C> boolean resetFocusOnCellImpl(Context context, T value,
-			HasCell<T, C> column, Element cellParent) {
-		C cellValue = column.getValue(value);
-		Cell<C> cell = column.getCell();
-		return cell.resetFocus(context, cellParent, cellValue);
-	}
-
-	/**
-	 * Set a row's hovering style and fire a {@link RowHoverEvent}
-	 *
-	 * @param tr
-	 *            the row element
-	 * @param event
-	 *            the original event
-	 * @param isHovering
-	 *            false if this is an unhover event
-	 * @param isRowChange
-	 *            true if the hover event is a full row change, false if it is a
-	 *            hover on a cell. Row style update is called only on full row
-	 *            change.
-	 */
-	private void setRowHover(TableRowElement tr, Event event,
-			boolean isHovering, boolean isRowChange) {
-		if (!skipRowHoverStyleUpdate) {
-			setRowStyleName(tr, style.hoveredRow(), style.hoveredRowCell(),
-					isHovering);
-		}
-		RowHoverEvent.fire(this, tr, event, !isHovering,
-				isRowChange ? RowHoverEvent.HoveringScope.ROW_HOVER
-						: RowHoverEvent.HoveringScope.CELL_HOVER);
-	}
-
-	/**
-	 * Apply a style to a row and all cells in the row.
-	 *
-	 * @param tr
-	 *            the row element
-	 * @param rowStyle
-	 *            the style to apply to the row
-	 * @param cellStyle
-	 *            the style to apply to the cells
-	 * @param add
-	 *            true to add the style, false to remove
-	 */
-	private void setRowStyleName(TableRowElement tr, String rowStyle,
-			String cellStyle, boolean add) {
-		setStyleName(tr, rowStyle, add);
-		NodeList<TableCellElement> cells = tr.getCells();
-		for (int i = 0; i < cells.getLength(); i++) {
-			setStyleName(cells.getItem(i), cellStyle, add);
-		}
-	}
-
-	/**
-	 * Update the width of all instances of the specified column. A column
-	 * instance may appear multiple times in the table.
-	 *
-	 * @param column
-	 *            the column to update
-	 * @param width
-	 *            the width of the column, or null to clear the width
-	 */
-	private void updateColumnWidthImpl(Column<T, ?> column, String width) {
-		int columnCount = getColumnCount();
-		for (int i = 0; i < columnCount; i++) {
-			if (columns.get(i) == column) {
-				doSetColumnWidth(i, width);
-			}
-		}
-	}
-
-	@Override
-	protected Element convertToElements(SafeHtml html) {
-		return TABLE_IMPL.convertToSectionElement(AbstractCellTable.this,
-				"tbody", html);
-	}
-
-	@Override
-	protected boolean dependsOnSelection() {
-		return dependsOnSelection;
-	}
-
-	/**
-	 * Set the width of a column.
-	 *
-	 * @param column
-	 *            the column index
-	 * @param width
-	 *            the width, or null to clear the width
-	 */
-	protected abstract void doSetColumnWidth(int column, String width);
-
-	/**
-	 * Show or hide a header section.
-	 *
-	 * @param isFooter
-	 *            true for the footer, false for the header
-	 * @param isVisible
-	 *            true to show, false to hide
-	 */
-	protected abstract void doSetHeaderVisible(boolean isFooter,
-			boolean isVisible);
-
-	@Override
-	protected Element getChildContainer() {
-		return getTableBodyElement();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The row element may not be the same as the TR element at the specified
-	 * index if some row values are rendered with additional rows.
-	 * </p>
-	 *
-	 * @param row
-	 *            the row index, relative to the page start
-	 * @return the row element, or null if it doesn't exists
-	 * @throws IndexOutOfBoundsException
-	 *             if the row index is outside of the current page
-	 */
-	@Override
-	protected TableRowElement getChildElement(int row) {
-		return getSubRowElement(row + getPageStart(), 0);
-	}
-
-	@Override
-	protected Element getKeyboardSelectedElement() {
-		return getKeyboardSelectedElement(
-				getKeyboardSelectedTableCellElement());
-	}
-
-	/**
-	 * Get the real column count, which is the greater of the number of Columns
-	 * or the maximum index of a column with a defined column width.
-	 */
-	protected int getRealColumnCount() {
-		return Math.max(getColumnCount(), maxColumnIndex + 1);
-	}
-
-	/**
-	 * Get a subrow element given the index of the row value and the sub row
-	 * index.
-	 *
-	 * @param absRow
-	 *            the absolute row value index
-	 * @param subrow
-	 *            the index of the subrow beneath the row.
-	 * @return the row element, or null if not found
-	 */
-	protected TableRowElement getSubRowElement(int absRow, int subrow) {
-		int relRow = absRow - getPageStart();
-		checkRowBounds(relRow);
-		/*
-		 * In most tables, the row element that represents the row object at the
-		 * specified index will be at the same index in the DOM. However, if the
-		 * user provides a TableBuilder that renders multiple rows per row
-		 * value, that will not be the case.
-		 *
-		 * We use a binary search to find the row, but we start at the index as
-		 * that is the most likely location.
-		 */
-		NodeList<TableRowElement> rows = getTableBodyElement().getRows();
-		int rowCount = rows.getLength();
-		if (rowCount == 0) {
-			return null;
-		}
-		int frameStart = 0;
-		int frameEnd = rowCount - 1;
-		int domIndex = Math.min(relRow, frameEnd);
-		while (domIndex >= frameStart && domIndex <= frameEnd) {
-			TableRowElement curRow = rows.getItem(domIndex);
-			int rowValueIndex = tableBuilder.getRowValueIndex(curRow);
-			if (rowValueIndex == absRow) {
-				// Found a subrow in the row index.
-				int subrowValueIndex = tableBuilder.getSubrowValueIndex(curRow);
-				if (subrow != subrowValueIndex) {
-					// Shift to the correct subrow.
-					int offset = subrow - subrowValueIndex;
-					int subrowIndex = domIndex + offset;
-					if (subrowIndex >= rows.getLength()) {
-						// The subrow is out of range of the table.
-						return null;
-					}
-					curRow = rows.getItem(subrowIndex);
-					if (tableBuilder.getRowValueIndex(curRow) != absRow) {
-						// The "subrow" is actually part of the next row.
-						return null;
-					}
-				}
-				return curRow;
-			} else if (rowValueIndex > absRow) {
-				// Shift the frame to lower indexes.
-				frameEnd = domIndex - 1;
-			} else {
-				// Shift the frame to higher indexes.
-				frameStart = domIndex + 1;
-			}
-			// Move the dom index.
-			domIndex = (frameStart + frameEnd) / 2;
-		}
-		// The element wasn't found.
-		return null;
-	}
-
-	/**
-	 * Get the tbody element that contains the render row values.
-	 */
-	protected abstract TableSectionElement getTableBodyElement();
-
-	/**
-	 * Get the tfoot element that contains the footers.
-	 */
-	protected abstract TableSectionElement getTableFootElement();
-
-	/**
-	 * Get the thead element that contains the headers.
-	 */
-	protected abstract TableSectionElement getTableHeadElement();
-
-	@Override
-	protected boolean isKeyboardNavigationSuppressed() {
-		return cellIsEditing;
 	}
 
 	@Override
@@ -1866,12 +1464,107 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 		}
 	}
 
+	/**
+	 * Redraw the table's footers. The footers will be re-rendered
+	 * synchronously.
+	 */
+	public void redrawFooters() {
+		createHeaders(true);
+	}
+
+	/**
+	 * Redraw the table's headers. The headers will be re-rendered
+	 * synchronously.
+	 */
+	public void redrawHeaders() {
+		createHeaders(false);
+	}
+
+	/**
+	 * Mark the column widths as dirty and redraw the table.
+	 */
+	private void refreshColumnsAndRedraw() {
+		columnWidthsDirty = true;
+		redraw();
+	}
+
 	protected void refreshColumnWidths() {
 		int columnCount = getRealColumnCount();
 		for (int i = 0; i < columnCount; i++) {
 			doSetColumnWidth(i, getColumnWidth(i));
 		}
 	}
+
+	/**
+	 * Refresh the headers and column widths.
+	 */
+	private void refreshHeadersAndColumnsImpl() {
+		// Refresh the column widths if needed.
+		if (columnWidthsDirty) {
+			columnWidthsDirty = false;
+			refreshColumnWidths();
+		}
+		// Render the headers and footers.
+		boolean wereHeadersDirty = headersDirty;
+		headersDirty = false;
+		if (wereHeadersDirty || !headerRefreshDisabled) {
+			createHeaders(false);
+		}
+		if (wereHeadersDirty || !footerRefreshDisabled) {
+			createHeaders(true);
+		}
+	}
+
+	/**
+	 * Remove a column.
+	 *
+	 * @param col
+	 *            the column to remove
+	 */
+	public void removeColumn(Column<T, ?> col) {
+		int index = columns.indexOf(col);
+		if (index < 0) {
+			throw new IllegalArgumentException(
+					"The specified column is not part of this table.");
+		}
+		removeColumn(index);
+	}
+
+	/**
+	 * Remove a column.
+	 *
+	 * @param index
+	 *            the column index
+	 */
+	public void removeColumn(int index) {
+		if (index < 0 || index >= columns.size()) {
+			throw new IndexOutOfBoundsException(
+					"The specified column index is out of bounds.");
+		}
+		columns.remove(index);
+		headers.remove(index);
+		footers.remove(index);
+		// Decrement the keyboard selected column.
+		if (index <= keyboardSelectedColumn && keyboardSelectedColumn > 0) {
+			keyboardSelectedColumn--;
+		}
+		// Redraw the table asynchronously.
+		headersDirty = true;
+		refreshColumnsAndRedraw();
+		// We don't unsink events because other handlers or user code may have
+		// sunk
+		// them intentionally.
+	}
+
+	/**
+	 * Remove a style from the <code>col</code> element at the specified index.
+	 *
+	 * @param index
+	 *            the column index
+	 * @param styleName
+	 *            the style name to remove
+	 */
+	public abstract void removeColumnStyleName(int index, String styleName);
 
 	/**
 	 * @deprecated as of GWT 2.5, use a {@link CellTableBuilder} to customize
@@ -2043,6 +1736,138 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 		return false;
 	}
 
+	private <C> boolean resetFocusOnCellImpl(Context context, T value,
+			HasCell<T, C> column, Element cellParent) {
+		C cellValue = column.getValue(value);
+		Cell<C> cell = column.getCell();
+		return cell.resetFocus(context, cellParent, cellValue);
+	}
+
+	/**
+	 * Enable or disable auto footer refresh when row data is changed. By
+	 * default, footers are refreshed every time the row data changes in case
+	 * the headers depend on the current row data. If the headers do not depend
+	 * on the current row data, you can disable this feature to improve
+	 * performance.
+	 *
+	 * <p>
+	 * Note that headers will still refresh when columns are added or removed,
+	 * regardless of whether or not this feature is enabled.
+	 * </p>
+	 */
+	public void setAutoFooterRefreshDisabled(boolean disabled) {
+		this.footerRefreshDisabled = disabled;
+	}
+
+	/**
+	 * Enable or disable auto header refresh when row data is changed. By
+	 * default, headers are refreshed every time the row data changes in case
+	 * the footers depend on the current row data. If the footers do not depend
+	 * on the current row data, you can disable this feature to improve
+	 * performance.
+	 *
+	 * <p>
+	 * Note that footers will still refresh when columns are added or removed,
+	 * regardless of whether or not this feature is enabled.
+	 * </p>
+	 */
+	public void setAutoHeaderRefreshDisabled(boolean disabled) {
+		this.headerRefreshDisabled = disabled;
+	}
+
+	/**
+	 * Set the width of a {@link Column}. The width will persist with the column
+	 * and takes precedence of any width set via
+	 * {@link #setColumnWidth(int, double, Unit)}.
+	 *
+	 * @param column
+	 *            the column
+	 * @param width
+	 *            the width of the column
+	 * @param unit
+	 *            the {@link Unit} of measurement
+	 */
+	public void setColumnWidth(Column<T, ?> column, double width, Unit unit) {
+		setColumnWidth(column, width + unit.getType());
+	}
+
+	/**
+	 * Set the width of a {@link Column}. The width will persist with the column
+	 * and takes precedence of any width set via
+	 * {@link #setColumnWidth(int, String)}.
+	 *
+	 * @param column
+	 *            the column
+	 * @param width
+	 *            the width of the column
+	 */
+	public void setColumnWidth(Column<T, ?> column, String width) {
+		columnWidths.put(column, width);
+		updateColumnWidthImpl(column, width);
+	}
+
+	/**
+	 * Set the width of a {@link Column}.
+	 *
+	 * @param column
+	 *            the column
+	 * @param width
+	 *            the width of the column
+	 * @param unit
+	 *            the {@link Unit} of measurement
+	 */
+	public void setColumnWidth(int column, double width, Unit unit) {
+		setColumnWidth(column, width + unit.getType());
+	}
+
+	/**
+	 * Set the width of a {@link Column}.
+	 *
+	 * @param column
+	 *            the column
+	 * @param width
+	 *            the width of the column
+	 */
+	public void setColumnWidth(int column, String width) {
+		columnWidthsByIndex.put(column, width);
+		maxColumnIndex = Math.max(maxColumnIndex, column);
+		// Update the column width.
+		if (column < getRealColumnCount()) {
+			doSetColumnWidth(column, width);
+		}
+	}
+
+	/**
+	 * Set the widget to display when the table has no rows.
+	 *
+	 * @param widget
+	 *            the empty table widget, or null to disable
+	 */
+	@UiChild(tagname = "emptyTableWidget", limit = 1)
+	public void setEmptyTableWidget(Widget widget) {
+		this.emptyTableWidget = widget;
+	}
+
+	/**
+	 * Set the {@link HeaderBuilder} used to build the footer section of the
+	 * table.
+	 */
+	public void setFooterBuilder(FooterBuilder<T> builder) {
+		assert builder != null : "builder cannot be null";
+		this.footerBuilder = builder;
+		redrawFooters();
+	}
+
+	/**
+	 * Set the {@link HeaderBuilder} used to build the header section of the
+	 * table.
+	 */
+	public void setHeaderBuilder(HeaderBuilder<T> builder) {
+		assert builder != null : "builder cannot be null";
+		this.headerBuilder = builder;
+		redrawHeaders();
+	}
+
 	@Override
 	protected void setKeyboardSelected(int index, boolean selected,
 			boolean stealFocus) {
@@ -2093,24 +1918,199 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 	}
 
 	/**
-	 * Get the column width. Associating a width with a {@link Column} takes
-	 * precedence over setting the width of a column index.
+	 * Set the keyboard selected column index.
 	 *
-	 * @param columnIndex
-	 *            the column index
-	 * @return the column width, or null if none specified
+	 * <p>
+	 * If keyboard selection is disabled, this method does nothing.
+	 * </p>
+	 *
+	 * <p>
+	 * If the keyboard selected column is greater than the number of columns in
+	 * the keyboard selected row, the last column in the row is selected, but
+	 * the column index is remembered.
+	 * </p>
+	 *
+	 * @param column
+	 *            the column index, greater than or equal to zero
 	 */
-	String getColumnWidth(int columnIndex) {
-		String width = null;
-		if (columns.size() > columnIndex) {
-			// Look for the width by Column.
-			width = columnWidths.get(columns.get(columnIndex));
+	public final void setKeyboardSelectedColumn(int column) {
+		setKeyboardSelectedColumn(column, true);
+	}
+
+	/**
+	 * Set the keyboard selected column index and optionally focus on the new
+	 * cell.
+	 *
+	 * @param column
+	 *            the column index, greater than or equal to zero
+	 * @param stealFocus
+	 *            true to focus on the new column
+	 * @see #setKeyboardSelectedColumn(int)
+	 */
+	public void setKeyboardSelectedColumn(int column, boolean stealFocus) {
+		assert column >= 0 : "Column must be zero or greater";
+		if (KeyboardSelectionPolicy.DISABLED == getKeyboardSelectionPolicy()) {
+			return;
 		}
-		if (width == null) {
-			// Look for the width by index.
-			width = columnWidthsByIndex.get(columnIndex);
+		this.keyboardSelectedColumn = column;
+		// Reselect the row to move the selected column.
+		setKeyboardSelectedRow(getKeyboardSelectedRow(), keyboardSelectedSubrow,
+				stealFocus);
+	}
+
+	@Override
+	public void setKeyboardSelectedRow(int row, boolean stealFocus) {
+		setKeyboardSelectedRow(row, 0, stealFocus);
+	}
+
+	/**
+	 * Set the keyboard selected row and subrow, optionally focus on the new
+	 * row.
+	 *
+	 * @param row
+	 *            the row index relative to the page start
+	 * @param subrow
+	 *            the row index of the child row
+	 * @param stealFocus
+	 *            true to focus on the new row
+	 * @see #setKeyboardSelectedRow(int)
+	 */
+	public void setKeyboardSelectedRow(int row, int subrow,
+			boolean stealFocus) {
+		this.keyboardSelectedSubrow = subrow;
+		super.setKeyboardSelectedRow(row, stealFocus);
+	}
+
+	/**
+	 * Set the widget to display when the data is loading.
+	 *
+	 * @param widget
+	 *            the loading indicator, or null to disable
+	 */
+	@UiChild(tagname = "loadingIndicator", limit = 1)
+	public void setLoadingIndicator(Widget widget) {
+		loadingIndicator = widget;
+	}
+
+	/**
+	 * Set a row's hovering style and fire a {@link RowHoverEvent}
+	 *
+	 * @param tr
+	 *            the row element
+	 * @param event
+	 *            the original event
+	 * @param isHovering
+	 *            false if this is an unhover event
+	 * @param isRowChange
+	 *            true if the hover event is a full row change, false if it is a
+	 *            hover on a cell. Row style update is called only on full row
+	 *            change.
+	 */
+	private void setRowHover(TableRowElement tr, Event event,
+			boolean isHovering, boolean isRowChange) {
+		if (!skipRowHoverStyleUpdate) {
+			setRowStyleName(tr, style.hoveredRow(), style.hoveredRowCell(),
+					isHovering);
 		}
-		return width;
+		RowHoverEvent.fire(this, tr, event, !isHovering,
+				isRowChange ? RowHoverEvent.HoveringScope.ROW_HOVER
+						: RowHoverEvent.HoveringScope.CELL_HOVER);
+	}
+
+	/**
+	 * Apply a style to a row and all cells in the row.
+	 *
+	 * @param tr
+	 *            the row element
+	 * @param rowStyle
+	 *            the style to apply to the row
+	 * @param cellStyle
+	 *            the style to apply to the cells
+	 * @param add
+	 *            true to add the style, false to remove
+	 */
+	private void setRowStyleName(TableRowElement tr, String rowStyle,
+			String cellStyle, boolean add) {
+		setStyleName(tr, rowStyle, add);
+		NodeList<TableCellElement> cells = tr.getCells();
+		for (int i = 0; i < cells.getLength(); i++) {
+			setStyleName(cells.getItem(i), cellStyle, add);
+		}
+	}
+
+	/**
+	 * Sets the object used to determine how a row is styled; the change will
+	 * take effect the next time that the table is rendered.
+	 *
+	 * @param rowStyles
+	 *            a {@link RowStyles} object
+	 */
+	public void setRowStyles(RowStyles<T> rowStyles) {
+		this.rowStyles = rowStyles;
+	}
+
+	/**
+	 * Sets the skipRowHoverCheck flag. If set, the CellTable will not check for
+	 * row-level hover events (MOUSEOVER and MOUSEOUT).
+	 *
+	 * @param skipRowHoverCheck
+	 *            the new flag value
+	 */
+	public void setSkipRowHoverCheck(boolean skipRowHoverCheck) {
+		this.skipRowHoverCheck = skipRowHoverCheck;
+	}
+
+	/**
+	 * Sets the skipRowHoverFloatElementCheck flag. If set, the CellTable will
+	 * not not check for floating (fixed position) elements over the hovered
+	 * row.
+	 *
+	 * @param skipRowHoverFloatElementCheck
+	 *            the new flag value
+	 */
+	public void setSkipRowHoverFloatElementCheck(
+			boolean skipRowHoverFloatElementCheck) {
+		this.skipRowHoverFloatElementCheck = skipRowHoverFloatElementCheck;
+	}
+
+	/**
+	 * Sets the skipRowHoverStyleUpdate flag. If set, the CellTable will not
+	 * update the row's style on row-level hover events (MOUSEOVER and
+	 * MOUSEOUT).
+	 *
+	 * @param skipRowHoverCheck
+	 *            the new flag value
+	 */
+	public void setSkipRowHoverStyleUpdate(boolean skipRowHoverStyleUpdate) {
+		this.skipRowHoverStyleUpdate = skipRowHoverStyleUpdate;
+	}
+
+	/**
+	 * Specify the {@link CellTableBuilder} that will be used to render the row
+	 * values into the table.
+	 */
+	public void setTableBuilder(CellTableBuilder<T> tableBuilder) {
+		assert tableBuilder != null : "tableBuilder cannot be null";
+		this.tableBuilder = tableBuilder;
+		redraw();
+	}
+
+	/**
+	 * Update the width of all instances of the specified column. A column
+	 * instance may appear multiple times in the table.
+	 *
+	 * @param column
+	 *            the column to update
+	 * @param width
+	 *            the width of the column, or null to clear the width
+	 */
+	private void updateColumnWidthImpl(Column<T, ?> column, String width) {
+		int columnCount = getColumnCount();
+		for (int i = 0; i < columnCount; i++) {
+			if (columns.get(i) == column) {
+				doSetColumnWidth(i, width);
+			}
+		}
 	}
 
 	/**
@@ -2133,6 +2133,48 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 		public CellTableKeyboardSelectionHandler(AbstractCellTable<T> table) {
 			super(table);
 			this.table = table;
+		}
+
+		/**
+		 * Find and return the index of the next interactive column. If no
+		 * column is interactive, 0 is returned. If the start index is the only
+		 * interactive column, it is returned.
+		 *
+		 * @param start
+		 *            the start index, exclusive unless it is the only option
+		 * @param reverse
+		 *            true to do a reverse search
+		 * @return the interactive column index, or 0 if not interactive
+		 */
+		private int findInteractiveColumn(int start, boolean reverse) {
+			if (!table.isInteractive) {
+				return 0;
+			} else if (reverse) {
+				for (int i = start - 1; i >= 0; i--) {
+					if (isColumnInteractive(table.getColumn(i))) {
+						return i;
+					}
+				}
+				// Wrap to the end.
+				for (int i = table.getColumnCount() - 1; i >= start; i--) {
+					if (isColumnInteractive(table.getColumn(i))) {
+						return i;
+					}
+				}
+			} else {
+				for (int i = start + 1; i < table.getColumnCount(); i++) {
+					if (isColumnInteractive(table.getColumn(i))) {
+						return i;
+					}
+				}
+				// Wrap to the start.
+				for (int i = 0; i <= start; i++) {
+					if (isColumnInteractive(table.getColumn(i))) {
+						return i;
+					}
+				}
+			}
+			return 0;
 		}
 
 		@Override
@@ -2235,47 +2277,339 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 			// Let the parent class handle the event.
 			super.onCellPreview(event);
 		}
+	}
+
+	/**
+	 * Implementation of {@link AbstractCellTable}.
+	 */
+	private static class Impl {
+		private final Element tmpElem = Document.get().createDivElement();
 
 		/**
-		 * Find and return the index of the next interactive column. If no
-		 * column is interactive, 0 is returned. If the start index is the only
-		 * interactive column, it is returned.
+		 * Convert the rowHtml into Elements wrapped by the specified table
+		 * section.
 		 *
-		 * @param start
-		 *            the start index, exclusive unless it is the only option
-		 * @param reverse
-		 *            true to do a reverse search
-		 * @return the interactive column index, or 0 if not interactive
+		 * @param table
+		 *            the {@link AbstractCellTable}
+		 * @param sectionTag
+		 *            the table section tag
+		 * @param rowHtml
+		 *            the Html for the rows
+		 * @return the section element
 		 */
-		private int findInteractiveColumn(int start, boolean reverse) {
-			if (!table.isInteractive) {
-				return 0;
-			} else if (reverse) {
-				for (int i = start - 1; i >= 0; i--) {
-					if (isColumnInteractive(table.getColumn(i))) {
-						return i;
-					}
-				}
-				// Wrap to the end.
-				for (int i = table.getColumnCount() - 1; i >= start; i--) {
-					if (isColumnInteractive(table.getColumn(i))) {
-						return i;
-					}
+		public TableSectionElement convertToSectionElement(
+				AbstractCellTable<?> table, String sectionTag,
+				SafeHtml rowHtml) {
+			// Attach an event listener so we can catch synchronous load events
+			// from
+			// cached images.
+			DOM.setEventListener(tmpElem, table);
+			/*
+			 * Render the rows into a table.
+			 *
+			 * IE doesn't support innerHtml on a TableSection or Table element,
+			 * so we generate the entire table. We do the same for all browsers
+			 * to avoid any future bugs, since setting innerHTML on a table
+			 * section seems brittle.
+			 */
+			sectionTag = sectionTag.toLowerCase(Locale.ROOT);
+			if ("tbody".equals(sectionTag)) {
+				tmpElem.setInnerSafeHtml(template.tbody(rowHtml));
+			} else if ("thead".equals(sectionTag)) {
+				tmpElem.setInnerSafeHtml(template.thead(rowHtml));
+			} else if ("tfoot".equals(sectionTag)) {
+				tmpElem.setInnerSafeHtml(template.tfoot(rowHtml));
+			} else {
+				throw new IllegalArgumentException(
+						"Invalid table section tag: " + sectionTag);
+			}
+			TableElement tableElem = tmpElem.getFirstChildElement().cast();
+			// Detach the event listener.
+			DOM.setEventListener(tmpElem, null);
+			// Get the section out of the table.
+			if ("tbody".equals(sectionTag)) {
+				return tableElem.getTBodies().getItem(0);
+			} else if ("thead".equals(sectionTag)) {
+				return tableElem.getTHead();
+			} else if ("tfoot".equals(sectionTag)) {
+				return tableElem.getTFoot();
+			} else {
+				throw new IllegalArgumentException(
+						"Invalid table section tag: " + sectionTag);
+			}
+		}
+
+		/**
+		 * Detach a table section element from its parent.
+		 *
+		 * @param section
+		 *            the element to detach
+		 */
+		protected void detachSectionElement(TableSectionElement section) {
+			section.removeFromParent();
+		}
+
+		/**
+		 * Reattach a table section element from its parent.
+		 *
+		 * @param parent
+		 *            the parent element
+		 * @param section
+		 *            the element to reattach
+		 * @param nextSection
+		 *            the next section
+		 */
+		protected void reattachSectionElement(Element parent,
+				TableSectionElement section, Element nextSection) {
+			parent.insertBefore(section, nextSection);
+		}
+
+		/**
+		 * Render a table section in the table.
+		 *
+		 * @param table
+		 *            the {@link AbstractCellTable}
+		 * @param section
+		 *            the {@link TableSectionElement} to replace
+		 * @param html
+		 *            the html of a table section element containing the rows
+		 */
+		public final void replaceAllRows(AbstractCellTable<?> table,
+				TableSectionElement section, SafeHtml html) {
+			// If the widget is not attached, attach an event listener so we can
+			// catch
+			// synchronous load events from cached images.
+			if (!table.isAttached()) {
+				DOM.setEventListener(table.getElement(), table);
+			}
+			// Remove the section from the tbody.
+			Element parent = section.getParentElement();
+			Element nextSection = section.getNextSiblingElement();
+			detachSectionElement(section);
+			// Render the html.
+			replaceAllRowsImpl(table, section, html);
+			/*
+			 * Reattach the section. If next section is null, the section will
+			 * be appended instead.
+			 */
+			reattachSectionElement(parent, section, nextSection);
+			// Detach the event listener.
+			if (!table.isAttached()) {
+				DOM.setEventListener(table.getElement(), null);
+			}
+		}
+
+		/**
+		 * Render a table section in the table.
+		 *
+		 * @param table
+		 *            the {@link AbstractCellTable}
+		 * @param section
+		 *            the {@link TableSectionElement} to replace
+		 * @param html
+		 *            the html of a table section element containing the rows
+		 */
+		protected void replaceAllRowsImpl(AbstractCellTable<?> table,
+				TableSectionElement section, SafeHtml html) {
+			section.setInnerSafeHtml(html, false);
+		}
+
+		/**
+		 * Replace a set of row values with newly rendered values.
+		 *
+		 * This method does not necessarily perform a one to one replacement.
+		 * Some row values may be rendered as multiple row elements, while
+		 * others are rendered as only one row element.
+		 *
+		 * @param table
+		 *            the {@link AbstractCellTable}
+		 * @param section
+		 *            the {@link TableSectionElement} to replace
+		 * @param html
+		 *            the html of a table section element containing the rows
+		 * @param startIndex
+		 *            the start index to replace
+		 * @param childCount
+		 *            the number of row values to replace
+		 */
+		public final void replaceChildren(AbstractCellTable<?> table,
+				TableSectionElement section, SafeHtml html, int startIndex,
+				int childCount) {
+			// If the widget is not attached, attach an event listener so we can
+			// catch
+			// synchronous load events from cached images.
+			if (!table.isAttached()) {
+				DOM.setEventListener(table.getElement(), table);
+			}
+			// Remove the section from the tbody.
+			Element parent = section.getParentElement();
+			Element nextSection = section.getNextSiblingElement();
+			detachSectionElement(section);
+			// Remove all children in the range.
+			final int absEndIndex = table.getPageStart() + startIndex
+					+ childCount;
+			TableRowElement insertBefore = table.getChildElement(startIndex);
+			if (table.legacyRenderRowValues) {
+				int count = 0;
+				while (insertBefore != null && count < childCount) {
+					Element next = insertBefore.getNextSiblingElement();
+					section.removeChild(insertBefore);
+					insertBefore = (next == null) ? null
+							: next.<TableRowElement> cast();
+					count++;
 				}
 			} else {
-				for (int i = start + 1; i < table.getColumnCount(); i++) {
-					if (isColumnInteractive(table.getColumn(i))) {
-						return i;
-					}
-				}
-				// Wrap to the start.
-				for (int i = 0; i <= start; i++) {
-					if (isColumnInteractive(table.getColumn(i))) {
-						return i;
-					}
+				while (insertBefore != null && table.tableBuilder
+						.getRowValueIndex(insertBefore) < absEndIndex) {
+					Element next = insertBefore.getNextSiblingElement();
+					section.removeChild(insertBefore);
+					insertBefore = (next == null) ? null
+							: next.<TableRowElement> cast();
 				}
 			}
-			return 0;
+			// Add new child elements.
+			TableSectionElement newSection = convertToSectionElement(table,
+					section.getTagName(), html);
+			Element newChild = newSection.getFirstChildElement();
+			while (newChild != null) {
+				Element next = newChild.getNextSiblingElement();
+				section.insertBefore(newChild, insertBefore);
+				newChild = next;
+			}
+			/*
+			 * Reattach the section. If next section is null, the section will
+			 * be appended instead.
+			 */
+			reattachSectionElement(parent, section, nextSection);
+			// Detach the event listener.
+			if (!table.isAttached()) {
+				DOM.setEventListener(table.getElement(), null);
+			}
+		}
+	}
+
+	/**
+	 * Implementation of {@link CellTable} used by Firefox.
+	 */
+	@SuppressWarnings("unused")
+	private static class ImplMozilla extends Impl {
+		/**
+		 * Firefox 3.6 and earlier convert td elements to divs if the tbody is
+		 * removed from the table element.
+		 */
+		@Override
+		protected void detachSectionElement(TableSectionElement section) {
+			if (isGecko192OrBefore()) {
+				return;
+			}
+			super.detachSectionElement(section);
+		}
+
+		/**
+		 * Return true if using Gecko 1.9.2 (Firefox 3.6) or earlier.
+		 */
+		private native boolean isGecko192OrBefore() /*-{
+      return @com.google.gwt.dom.client.DOMImplMozilla::isGecko192OrBefore()();
+		}-*/;
+
+		@Override
+		protected void reattachSectionElement(Element parent,
+				TableSectionElement section, Element nextSection) {
+			if (isGecko192OrBefore()) {
+				return;
+			}
+			super.reattachSectionElement(parent, section, nextSection);
+		}
+	}
+
+	/**
+	 * Implementation of {@link AbstractCellTable} used by IE.
+	 */
+	@SuppressWarnings("unused")
+	private static class ImplTrident extends Impl {
+		/**
+		 * A different optimization is used in IE.
+		 */
+		@Override
+		protected void detachSectionElement(TableSectionElement section) {
+			return;
+		}
+
+		@Override
+		protected void reattachSectionElement(Element parent,
+				TableSectionElement section, Element nextSection) {
+			return;
+		}
+
+		/**
+		 * Instead of replacing each TR element, swaping out the entire section
+		 * is much faster. If the table has a sectionChangeHandler, this method
+		 * will be used.
+		 */
+		@Override
+		protected void replaceAllRowsImpl(AbstractCellTable<?> table,
+				TableSectionElement section, SafeHtml html) {
+			if (table instanceof TableSectionChangeHandler) {
+				replaceTableSection(table, section, html);
+			} else {
+				replaceAllRowsImplLegacy(table, section, html);
+			}
+		}
+
+		/**
+		 * This method is used for legacy AbstractCellTable that's not a
+		 * {@link TableSectionChangeHandler}.
+		 */
+		protected void replaceAllRowsImplLegacy(AbstractCellTable<?> table,
+				TableSectionElement section, SafeHtml html) {
+			// Remove all children.
+			Element child = section.getFirstChildElement();
+			while (child != null) {
+				Element next = child.getNextSiblingElement();
+				section.removeChild(child);
+				child = next;
+			}
+			// Add new child elements.
+			TableSectionElement newSection = convertToSectionElement(table,
+					section.getTagName(), html);
+			child = newSection.getFirstChildElement();
+			while (child != null) {
+				Element next = child.getNextSiblingElement();
+				section.appendChild(child);
+				child = next;
+			}
+		}
+
+		/**
+		 * Render html into a table section. This is achieved by first setting
+		 * the html in a DIV element, and then swap the table section with the
+		 * corresponding element in the DIV. This method is used in IE since the
+		 * normal optimizations are not feasible.
+		 *
+		 * @param table
+		 *            the {@link AbstractCellTable}
+		 * @param section
+		 *            the {@link TableSectionElement} to replace
+		 * @param html
+		 *            the html of a table section element containing the rows
+		 */
+		private void replaceTableSection(AbstractCellTable<?> table,
+				TableSectionElement section, SafeHtml html) {
+			String sectionName = section.getTagName().toLowerCase(Locale.ROOT);
+			TableSectionElement newSection = convertToSectionElement(table,
+					sectionName, html);
+			TableElement tableElement = table.getElement().cast();
+			tableElement.replaceChild(newSection, section);
+			if ("tbody".equals(sectionName)) {
+				((TableSectionChangeHandler) table)
+						.onTableBodyChange(newSection);
+			} else if ("thead".equals(sectionName)) {
+				((TableSectionChangeHandler) table)
+						.onTableHeadChange(newSection);
+			} else if ("tfoot".equals(sectionName)) {
+				((TableSectionChangeHandler) table)
+						.onTableFootChange(newSection);
+			}
 		}
 	}
 
@@ -2422,340 +2756,6 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 		 * Applied to the table.
 		 */
 		String widget();
-	}
-
-	/**
-	 * Implementation of {@link AbstractCellTable}.
-	 */
-	private static class Impl {
-		private final Element tmpElem = Document.get().createDivElement();
-
-		/**
-		 * Convert the rowHtml into Elements wrapped by the specified table
-		 * section.
-		 *
-		 * @param table
-		 *            the {@link AbstractCellTable}
-		 * @param sectionTag
-		 *            the table section tag
-		 * @param rowHtml
-		 *            the Html for the rows
-		 * @return the section element
-		 */
-		public TableSectionElement convertToSectionElement(
-				AbstractCellTable<?> table, String sectionTag,
-				SafeHtml rowHtml) {
-			// Attach an event listener so we can catch synchronous load events
-			// from
-			// cached images.
-			DOM.setEventListener(tmpElem, table);
-			/*
-			 * Render the rows into a table.
-			 *
-			 * IE doesn't support innerHtml on a TableSection or Table element,
-			 * so we generate the entire table. We do the same for all browsers
-			 * to avoid any future bugs, since setting innerHTML on a table
-			 * section seems brittle.
-			 */
-			sectionTag = sectionTag.toLowerCase(Locale.ROOT);
-			if ("tbody".equals(sectionTag)) {
-				tmpElem.setInnerSafeHtml(template.tbody(rowHtml));
-			} else if ("thead".equals(sectionTag)) {
-				tmpElem.setInnerSafeHtml(template.thead(rowHtml));
-			} else if ("tfoot".equals(sectionTag)) {
-				tmpElem.setInnerSafeHtml(template.tfoot(rowHtml));
-			} else {
-				throw new IllegalArgumentException(
-						"Invalid table section tag: " + sectionTag);
-			}
-			TableElement tableElem = tmpElem.getFirstChildElement().cast();
-			// Detach the event listener.
-			DOM.setEventListener(tmpElem, null);
-			// Get the section out of the table.
-			if ("tbody".equals(sectionTag)) {
-				return tableElem.getTBodies().getItem(0);
-			} else if ("thead".equals(sectionTag)) {
-				return tableElem.getTHead();
-			} else if ("tfoot".equals(sectionTag)) {
-				return tableElem.getTFoot();
-			} else {
-				throw new IllegalArgumentException(
-						"Invalid table section tag: " + sectionTag);
-			}
-		}
-
-		/**
-		 * Render a table section in the table.
-		 *
-		 * @param table
-		 *            the {@link AbstractCellTable}
-		 * @param section
-		 *            the {@link TableSectionElement} to replace
-		 * @param html
-		 *            the html of a table section element containing the rows
-		 */
-		public final void replaceAllRows(AbstractCellTable<?> table,
-				TableSectionElement section, SafeHtml html) {
-			// If the widget is not attached, attach an event listener so we can
-			// catch
-			// synchronous load events from cached images.
-			if (!table.isAttached()) {
-				DOM.setEventListener(table.getElement(), table);
-			}
-			// Remove the section from the tbody.
-			Element parent = section.getParentElement();
-			Element nextSection = section.getNextSiblingElement();
-			detachSectionElement(section);
-			// Render the html.
-			replaceAllRowsImpl(table, section, html);
-			/*
-			 * Reattach the section. If next section is null, the section will
-			 * be appended instead.
-			 */
-			reattachSectionElement(parent, section, nextSection);
-			// Detach the event listener.
-			if (!table.isAttached()) {
-				DOM.setEventListener(table.getElement(), null);
-			}
-		}
-
-		/**
-		 * Replace a set of row values with newly rendered values.
-		 *
-		 * This method does not necessarily perform a one to one replacement.
-		 * Some row values may be rendered as multiple row elements, while
-		 * others are rendered as only one row element.
-		 *
-		 * @param table
-		 *            the {@link AbstractCellTable}
-		 * @param section
-		 *            the {@link TableSectionElement} to replace
-		 * @param html
-		 *            the html of a table section element containing the rows
-		 * @param startIndex
-		 *            the start index to replace
-		 * @param childCount
-		 *            the number of row values to replace
-		 */
-		public final void replaceChildren(AbstractCellTable<?> table,
-				TableSectionElement section, SafeHtml html, int startIndex,
-				int childCount) {
-			// If the widget is not attached, attach an event listener so we can
-			// catch
-			// synchronous load events from cached images.
-			if (!table.isAttached()) {
-				DOM.setEventListener(table.getElement(), table);
-			}
-			// Remove the section from the tbody.
-			Element parent = section.getParentElement();
-			Element nextSection = section.getNextSiblingElement();
-			detachSectionElement(section);
-			// Remove all children in the range.
-			final int absEndIndex = table.getPageStart() + startIndex
-					+ childCount;
-			TableRowElement insertBefore = table.getChildElement(startIndex);
-			if (table.legacyRenderRowValues) {
-				int count = 0;
-				while (insertBefore != null && count < childCount) {
-					Element next = insertBefore.getNextSiblingElement();
-					section.removeChild(insertBefore);
-					insertBefore = (next == null) ? null
-							: next.<TableRowElement> cast();
-					count++;
-				}
-			} else {
-				while (insertBefore != null && table.tableBuilder
-						.getRowValueIndex(insertBefore) < absEndIndex) {
-					Element next = insertBefore.getNextSiblingElement();
-					section.removeChild(insertBefore);
-					insertBefore = (next == null) ? null
-							: next.<TableRowElement> cast();
-				}
-			}
-			// Add new child elements.
-			TableSectionElement newSection = convertToSectionElement(table,
-					section.getTagName(), html);
-			Element newChild = newSection.getFirstChildElement();
-			while (newChild != null) {
-				Element next = newChild.getNextSiblingElement();
-				section.insertBefore(newChild, insertBefore);
-				newChild = next;
-			}
-			/*
-			 * Reattach the section. If next section is null, the section will
-			 * be appended instead.
-			 */
-			reattachSectionElement(parent, section, nextSection);
-			// Detach the event listener.
-			if (!table.isAttached()) {
-				DOM.setEventListener(table.getElement(), null);
-			}
-		}
-
-		/**
-		 * Detach a table section element from its parent.
-		 *
-		 * @param section
-		 *            the element to detach
-		 */
-		protected void detachSectionElement(TableSectionElement section) {
-			section.removeFromParent();
-		}
-
-		/**
-		 * Reattach a table section element from its parent.
-		 *
-		 * @param parent
-		 *            the parent element
-		 * @param section
-		 *            the element to reattach
-		 * @param nextSection
-		 *            the next section
-		 */
-		protected void reattachSectionElement(Element parent,
-				TableSectionElement section, Element nextSection) {
-			parent.insertBefore(section, nextSection);
-		}
-
-		/**
-		 * Render a table section in the table.
-		 *
-		 * @param table
-		 *            the {@link AbstractCellTable}
-		 * @param section
-		 *            the {@link TableSectionElement} to replace
-		 * @param html
-		 *            the html of a table section element containing the rows
-		 */
-		protected void replaceAllRowsImpl(AbstractCellTable<?> table,
-				TableSectionElement section, SafeHtml html) {
-			section.setInnerSafeHtml(html, false);
-		}
-	}
-
-	/**
-	 * Implementation of {@link CellTable} used by Firefox.
-	 */
-	@SuppressWarnings("unused")
-	private static class ImplMozilla extends Impl {
-		/**
-		 * Return true if using Gecko 1.9.2 (Firefox 3.6) or earlier.
-		 */
-		private native boolean isGecko192OrBefore() /*-{
-      return @com.google.gwt.dom.client.DOMImplMozilla::isGecko192OrBefore()();
-		}-*/;
-
-		/**
-		 * Firefox 3.6 and earlier convert td elements to divs if the tbody is
-		 * removed from the table element.
-		 */
-		@Override
-		protected void detachSectionElement(TableSectionElement section) {
-			if (isGecko192OrBefore()) {
-				return;
-			}
-			super.detachSectionElement(section);
-		}
-
-		@Override
-		protected void reattachSectionElement(Element parent,
-				TableSectionElement section, Element nextSection) {
-			if (isGecko192OrBefore()) {
-				return;
-			}
-			super.reattachSectionElement(parent, section, nextSection);
-		}
-	}
-
-	/**
-	 * Implementation of {@link AbstractCellTable} used by IE.
-	 */
-	@SuppressWarnings("unused")
-	private static class ImplTrident extends Impl {
-		/**
-		 * Render html into a table section. This is achieved by first setting
-		 * the html in a DIV element, and then swap the table section with the
-		 * corresponding element in the DIV. This method is used in IE since the
-		 * normal optimizations are not feasible.
-		 *
-		 * @param table
-		 *            the {@link AbstractCellTable}
-		 * @param section
-		 *            the {@link TableSectionElement} to replace
-		 * @param html
-		 *            the html of a table section element containing the rows
-		 */
-		private void replaceTableSection(AbstractCellTable<?> table,
-				TableSectionElement section, SafeHtml html) {
-			String sectionName = section.getTagName().toLowerCase(Locale.ROOT);
-			TableSectionElement newSection = convertToSectionElement(table,
-					sectionName, html);
-			TableElement tableElement = table.getElement().cast();
-			tableElement.replaceChild(newSection, section);
-			if ("tbody".equals(sectionName)) {
-				((TableSectionChangeHandler) table)
-						.onTableBodyChange(newSection);
-			} else if ("thead".equals(sectionName)) {
-				((TableSectionChangeHandler) table)
-						.onTableHeadChange(newSection);
-			} else if ("tfoot".equals(sectionName)) {
-				((TableSectionChangeHandler) table)
-						.onTableFootChange(newSection);
-			}
-		}
-
-		/**
-		 * A different optimization is used in IE.
-		 */
-		@Override
-		protected void detachSectionElement(TableSectionElement section) {
-			return;
-		}
-
-		@Override
-		protected void reattachSectionElement(Element parent,
-				TableSectionElement section, Element nextSection) {
-			return;
-		}
-
-		/**
-		 * Instead of replacing each TR element, swaping out the entire section
-		 * is much faster. If the table has a sectionChangeHandler, this method
-		 * will be used.
-		 */
-		@Override
-		protected void replaceAllRowsImpl(AbstractCellTable<?> table,
-				TableSectionElement section, SafeHtml html) {
-			if (table instanceof TableSectionChangeHandler) {
-				replaceTableSection(table, section, html);
-			} else {
-				replaceAllRowsImplLegacy(table, section, html);
-			}
-		}
-
-		/**
-		 * This method is used for legacy AbstractCellTable that's not a
-		 * {@link TableSectionChangeHandler}.
-		 */
-		protected void replaceAllRowsImplLegacy(AbstractCellTable<?> table,
-				TableSectionElement section, SafeHtml html) {
-			// Remove all children.
-			Element child = section.getFirstChildElement();
-			while (child != null) {
-				Element next = child.getNextSiblingElement();
-				section.removeChild(child);
-				child = next;
-			}
-			// Add new child elements.
-			TableSectionElement newSection = convertToSectionElement(table,
-					section.getTagName(), html);
-			child = newSection.getFirstChildElement();
-			while (child != null) {
-				Element next = child.getNextSiblingElement();
-				section.appendChild(child);
-				child = next;
-			}
-		}
 	}
 
 	/**

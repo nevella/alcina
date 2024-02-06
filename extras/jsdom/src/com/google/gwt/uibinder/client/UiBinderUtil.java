@@ -49,15 +49,6 @@ public class UiBinderUtil {
 		return new TempAttachment(origParent, origSibling, element);
 	}
 
-	public static Element fromHtml(@IsSafeHtml
-	String html) {
-		ensureHiddenDiv();
-		hiddenDiv.setInnerHTML(html);
-		Element newbie = hiddenDiv.getFirstChildElement();
-		orphan(newbie);
-		return newbie;
-	}
-
 	private static void ensureHiddenDiv() {
 		// If the hidden DIV has not been created, create it.
 		if (hiddenDiv == null) {
@@ -65,6 +56,15 @@ public class UiBinderUtil {
 			UIObject.setVisible(hiddenDiv, false);
 			RootPanel.getBodyElement().appendChild(hiddenDiv);
 		}
+	}
+
+	public static Element fromHtml(@IsSafeHtml
+	String html) {
+		ensureHiddenDiv();
+		hiddenDiv.setInnerHTML(html);
+		Element newbie = hiddenDiv.getFirstChildElement();
+		orphan(newbie);
+		return newbie;
 	}
 
 	private static void orphan(Node node) {

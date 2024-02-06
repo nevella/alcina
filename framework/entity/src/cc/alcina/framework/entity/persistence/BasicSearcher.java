@@ -32,6 +32,12 @@ public class BasicSearcher implements Searcher {
 		return this.entityManager;
 	}
 
+	protected EqlWithParameters getEqlWithParameters(
+			SingleTableSearchDefinition sdef, boolean withOrderClause) {
+		EqlWithParameters ewp = sdef.eql(withOrderClause);
+		return ewp;
+	}
+
 	@Override
 	public SearchResultsBase search(SearchDefinition def,
 			EntityManager entityManager) {
@@ -48,12 +54,6 @@ public class BasicSearcher implements Searcher {
 			query.setParameter(i++, o);
 		}
 		return query;
-	}
-
-	protected EqlWithParameters getEqlWithParameters(
-			SingleTableSearchDefinition sdef, boolean withOrderClause) {
-		EqlWithParameters ewp = sdef.eql(withOrderClause);
-		return ewp;
 	}
 
 	/*

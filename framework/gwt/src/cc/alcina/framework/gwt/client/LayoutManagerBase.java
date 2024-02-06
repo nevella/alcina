@@ -45,12 +45,6 @@ public abstract class LayoutManagerBase
 				true);
 	}
 
-	public abstract void redrawLayout();
-
-	public void setDisplayInitialised(boolean displayInitialised) {
-		this.displayInitialised = displayInitialised;
-	}
-
 	// prevents old IE resize infinite loop
 	protected boolean onWindowResized(int clientWidth, int clientHeight,
 			boolean fromBrowser) {
@@ -61,5 +55,11 @@ public abstract class LayoutManagerBase
 		lastWidth = clientWidth;
 		lastHeight = clientHeight;
 		return !isLayoutInitialising();
+	}
+
+	public abstract void redrawLayout();
+
+	public void setDisplayInitialised(boolean displayInitialised) {
+		this.displayInitialised = displayInitialised;
 	}
 }

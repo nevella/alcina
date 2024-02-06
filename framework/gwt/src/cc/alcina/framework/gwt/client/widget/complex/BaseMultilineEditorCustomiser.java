@@ -18,6 +18,10 @@ public abstract class BaseMultilineEditorCustomiser<T extends Entity>
 		implements Customiser, BoundWidgetProvider {
 	private boolean editable;
 
+	protected boolean asMultipleGrids() {
+		return false;
+	}
+
 	public void customiseActions(List<PermissibleAction> actions) {
 	}
 
@@ -25,23 +29,12 @@ public abstract class BaseMultilineEditorCustomiser<T extends Entity>
 			ContentViewFactory contentViewFactory, Object model) {
 	}
 
-	protected Predicate<Field> getFieldFilter() {
-		return field -> {
-			switch (field.getPropertyName()) {
-			case "note":
-			case "creationContact":
-			case "creationDate":
-				return true;
-			default:
-				return false;
-			}
-		};
-	}
-
 	public List<Link> customisePerRowEditActions(List<Link> actions, T rowValue,
 			BaseMultilineEditor editor) {
 		return actions;
 	}
+
+	protected abstract void deleteItem(T t);
 
 	public abstract void doCreateRow(Object model,
 			BaseMultilineEditor<T> editor);
@@ -70,6 +63,19 @@ public abstract class BaseMultilineEditorCustomiser<T extends Entity>
 
 	public abstract String getCreateActionDisplayName();
 
+	protected Predicate<Field> getFieldFilter() {
+		return field -> {
+			switch (field.getPropertyName()) {
+			case "note":
+			case "creationContact":
+			case "creationDate":
+				return true;
+			default:
+				return false;
+			}
+		};
+	}
+
 	public abstract Class<T> getItemClass();
 
 	@Override
@@ -87,10 +93,4 @@ public abstract class BaseMultilineEditorCustomiser<T extends Entity>
 	public void sortValues(List<T> values) {
 		values.sort(Entity.EntityComparatorLocalsHigh.INSTANCE);
 	}
-
-	protected boolean asMultipleGrids() {
-		return false;
-	}
-
-	protected abstract void deleteItem(T t);
 }

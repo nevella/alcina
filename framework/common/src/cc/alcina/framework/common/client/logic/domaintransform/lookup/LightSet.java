@@ -113,12 +113,38 @@ public class LightSet<H> extends AbstractSet<H>
 		return indexOf(o) != -1;
 	}
 
+	private int indexOf(Object e) {
+		int test = Objects.hashCode(e);
+		for (int idx = 0; idx < size; idx++) {
+			if (hashes[idx] == test) {
+				Object f = elementData[idx];
+				if (Objects.equals(e, f)) {
+					return idx;
+				}
+			}
+		}
+		return -1;
+	}
+
 	@Override
 	public Iterator<H> iterator() {
 		if (degenerate != null) {
 			return degenerate.iterator();
 		}
 		return new LightSetIterator();
+	}
+
+	@GwtIncompatible("java serialization")
+	private void readObject(java.io.ObjectInputStream s)
+			throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+		int arrayLength = s.readInt();
+		if (arrayLength != 0) {
+			// use add, to handle degenerate case
+			for (int i = 0; i < arrayLength; i++) {
+				add((H) s.readObject());
+			}
+		}
 	}
 
 	@Override
@@ -155,32 +181,6 @@ public class LightSet<H> extends AbstractSet<H>
 			return degenerate.size();
 		}
 		return size;
-	}
-
-	private int indexOf(Object e) {
-		int test = Objects.hashCode(e);
-		for (int idx = 0; idx < size; idx++) {
-			if (hashes[idx] == test) {
-				Object f = elementData[idx];
-				if (Objects.equals(e, f)) {
-					return idx;
-				}
-			}
-		}
-		return -1;
-	}
-
-	@GwtIncompatible("java serialization")
-	private void readObject(java.io.ObjectInputStream s)
-			throws java.io.IOException, ClassNotFoundException {
-		s.defaultReadObject();
-		int arrayLength = s.readInt();
-		if (arrayLength != 0) {
-			// use add, to handle degenerate case
-			for (int i = 0; i < arrayLength; i++) {
-				add((H) s.readObject());
-			}
-		}
 	}
 
 	@GwtIncompatible("java serialization")

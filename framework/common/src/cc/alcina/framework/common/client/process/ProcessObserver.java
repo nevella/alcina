@@ -16,12 +16,12 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  */
 public interface ProcessObserver<T extends ProcessObservable>
 		extends TopicListener<T>, HasBind {
-	default Class<T> getObservableClass() {
-		return Reflections.at(this).getGenericBounds().bounds.get(0);
-	}
-
 	default void bind() {
 		ProcessObservers.observe(this, true);
+	}
+
+	default Class<T> getObservableClass() {
+		return Reflections.at(this).getGenericBounds().bounds.get(0);
 	}
 
 	default void unbind() {
@@ -39,6 +39,11 @@ public interface ProcessObserver<T extends ProcessObservable>
 	 */
 	@Registration.Singleton
 	public abstract static class AppDebug implements HasObservers {
+		public static void register() {
+			Registry.query(AppDebug.class).implementations()
+					.forEach(AppDebug::attach);
+		}
+
 		public void attach() {
 			ProcessObservers.observe(this);
 		}
@@ -46,11 +51,6 @@ public interface ProcessObserver<T extends ProcessObservable>
 		@Override
 		public List<ProcessObserver> getObservers() {
 			return List.of();
-		}
-
-		public static void register() {
-			Registry.query(AppDebug.class).implementations()
-					.forEach(AppDebug::attach);
 		}
 	}
 

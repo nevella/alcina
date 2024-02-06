@@ -99,21 +99,6 @@ public class HistoryImplPushState extends HistoryImpl {
 		return true;
 	}
 
-	@Override
-	public void nativeUpdate(final String historyToken) {
-		String newPushStateToken = CodeServerParameterHelper
-				.append(historyToken);
-		if (!newPushStateToken.startsWith("/")) {
-			newPushStateToken = "/" + newPushStateToken;
-		}
-		if (!Objects.equals(newPushStateToken, lastPushed)
-				&& !Objects.equals(historyToken, lastPushed)
-				&& !LooseContext.is(CONTEXT_IN_POP_STATE)) {
-			pushState(newPushStateToken);
-			lastPushed = newPushStateToken;
-		}
-	}
-
 	/**
 	 * Initialize an event handler that gets executed when the token changes.
 	 */
@@ -129,6 +114,21 @@ public class HistoryImplPushState extends HistoryImpl {
       }
     });
 	}-*/;
+
+	@Override
+	public void nativeUpdate(final String historyToken) {
+		String newPushStateToken = CodeServerParameterHelper
+				.append(historyToken);
+		if (!newPushStateToken.startsWith("/")) {
+			newPushStateToken = "/" + newPushStateToken;
+		}
+		if (!Objects.equals(newPushStateToken, lastPushed)
+				&& !Objects.equals(historyToken, lastPushed)
+				&& !LooseContext.is(CONTEXT_IN_POP_STATE)) {
+			pushState(newPushStateToken);
+			lastPushed = newPushStateToken;
+		}
+	}
 
 	/**
 	 * Called from native JavaScript when an old history state was popped.

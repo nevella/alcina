@@ -14,9 +14,20 @@ import com.google.gwt.core.client.Scheduler;
 public class Events {
 	public EmissionStyle emissionStyle;
 
+	List<Runnable> events = new ArrayList<>();
+
 	public Events() {
 		emissionStyle = GWT.isClient() ? EmissionStyle.SCHEDULER
 				: EmissionStyle.NONE;
+	}
+
+	public void pump() {
+		Preconditions.checkState(emissionStyle == EmissionStyle.MANUAL);
+		while (this.events.size() > 0) {
+			List<Runnable> passEvents = this.events;
+			this.events = new ArrayList<>();
+			passEvents.forEach(Runnable::run);
+		}
 	}
 
 	public void queue(Runnable event) {
@@ -33,17 +44,6 @@ public class Events {
 			throw new UnsupportedOperationException();
 		}
 	}
-
-	public void pump() {
-		Preconditions.checkState(emissionStyle == EmissionStyle.MANUAL);
-		while (this.events.size() > 0) {
-			List<Runnable> passEvents = this.events;
-			this.events = new ArrayList<>();
-			passEvents.forEach(Runnable::run);
-		}
-	}
-
-	List<Runnable> events = new ArrayList<>();
 
 	public enum EmissionStyle {
 		NONE,

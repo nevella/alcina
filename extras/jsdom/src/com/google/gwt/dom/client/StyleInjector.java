@@ -39,12 +39,27 @@ public class StyleInjector {
 
 	private static boolean needsInjection = false;
 
+	private static StyleElement createElement(String contents) {
+		StyleElement style = Document.get().createStyleElement();
+		style.setPropertyString("language", "text/css");
+		setContents(style, contents);
+		return style;
+	}
+
 	public static void flush() {
 		String contents = pending.stream().collect(Collectors.joining(""));
 		StyleElement style = createElement(contents);
 		getHead().appendChild(style);
 		pending.clear();
 		needsInjection = false;
+	}
+
+	private static HeadElement getHead() {
+		Element elt = (Element) Document.get().getDocumentElement()
+				.asDomNode().children.byTag("head").get(0).w3cElement();
+		assert elt != null : "The host HTML page does not have a <head> element"
+				+ " which is required by StyleInjector";
+		return HeadElement.as(elt);
 	}
 
 	public static void inject(String contents) {
@@ -57,29 +72,14 @@ public class StyleInjector {
 		flush();
 	}
 
-	public static void setContents(StyleElement style, String contents) {
-		style.setInnerText(contents);
-	}
-
-	private static StyleElement createElement(String contents) {
-		StyleElement style = Document.get().createStyleElement();
-		style.setPropertyString("language", "text/css");
-		setContents(style, contents);
-		return style;
-	}
-
-	private static HeadElement getHead() {
-		Element elt = (Element) Document.get().getDocumentElement()
-				.asDomNode().children.byTag("head").get(0).w3cElement();
-		assert elt != null : "The host HTML page does not have a <head> element"
-				+ " which is required by StyleInjector";
-		return HeadElement.as(elt);
-	}
-
 	private static void schedule() {
 		if (!needsInjection) {
 			needsInjection = true;
 			Scheduler.get().scheduleFinally(flusher);
 		}
+	}
+
+	public static void setContents(StyleElement style, String contents) {
+		style.setInnerText(contents);
 	}
 }

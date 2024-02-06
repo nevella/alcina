@@ -112,6 +112,10 @@ public class ShowMorePager extends AbstractPager {
 		return this.pagingDisabled;
 	}
 
+	@Override
+	protected void onRangeOrRowCountChanged() {
+	}
+
 	/**
 	 * Set the number of rows by which the range is increased when the scrollbar
 	 * reaches the bottom.
@@ -125,9 +129,5 @@ public class ShowMorePager extends AbstractPager {
 
 	public void setPagingDisabled(boolean pagingDisabled) {
 		this.pagingDisabled = pagingDisabled;
-	}
-
-	@Override
-	protected void onRangeOrRowCountChanged() {
 	}
 }

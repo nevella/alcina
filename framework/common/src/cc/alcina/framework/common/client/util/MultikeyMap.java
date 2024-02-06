@@ -11,10 +11,21 @@ import java.util.function.Supplier;
 import com.totsp.gwittir.client.beans.Converter;
 
 public interface MultikeyMap<V> {
+	default void addInteger(int delta, Object... objects) {
+		Integer value = (Integer) ensure(() -> (V) (Object) Integer.valueOf(0),
+				objects);
+		value += delta;
+		List<Object> list = new ArrayList<>(Arrays.asList(objects));
+		list.add(value);
+		put(list.toArray());
+	}
+
 	public abstract <T> void addTupleObjects(List<T> tupleObjects,
 			Converter<T, List> converter);
 
 	public abstract void addTuples(List<List> tuples);
+
+	void addValues(List<V> values);
 
 	public abstract List<V> allValues();
 
@@ -48,13 +59,19 @@ public interface MultikeyMap<V> {
 
 	public abstract int getDepth();
 
+	V getEnsure(boolean ensure, Object... objects);
+
 	public boolean isEmpty();
 
 	public abstract <T> Collection<T> items(Object... objects);
 
+	<T> Collection<T> keys(Object... objects);
+
 	public <T> Set<T> keySet();
 
 	public abstract Object put(Object... objects);
+
+	void putMulti(MultikeyMap<V> multi);
 
 	public abstract Object remove(Object... objects);
 
@@ -64,6 +81,8 @@ public interface MultikeyMap<V> {
 
 	public abstract <T> Collection<T> reverseValues(Object... objects);
 
+	void setDepth(int depth);
+
 	public int size();
 
 	public void sortKeys(Object... objects);
@@ -72,29 +91,6 @@ public interface MultikeyMap<V> {
 
 	public abstract MultikeyMap<V> swapKeysZeroAndOne();
 
-	public abstract <T> Collection<T> values(Object... objects);
-
-	public abstract Map writeableDelegate();
-
-	default void addInteger(int delta, Object... objects) {
-		Integer value = (Integer) ensure(() -> (V) (Object) Integer.valueOf(0),
-				objects);
-		value += delta;
-		List<Object> list = new ArrayList<>(Arrays.asList(objects));
-		list.add(value);
-		put(list.toArray());
-	}
-
-	void addValues(List<V> values);
-
-	V getEnsure(boolean ensure, Object... objects);
-
-	<T> Collection<T> keys(Object... objects);
-
-	void putMulti(MultikeyMap<V> multi);
-
-	void setDepth(int depth);
-
 	default <T> Set<? extends T> typedKeySet(Class<T> clazz) {
 		return keySet();
 	}
@@ -102,4 +98,8 @@ public interface MultikeyMap<V> {
 	default <T> Collection<T> typedValues(Class<T> typed, Object... objects) {
 		return values(objects);
 	}
+
+	public abstract <T> Collection<T> values(Object... objects);
+
+	public abstract Map writeableDelegate();
 }

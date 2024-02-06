@@ -215,6 +215,11 @@ public class Checker {
 		Checker.lessThanOrEqual(name, 0, longValue);
 	}
 
+	static boolean isParameterOrField(final String message) {
+		return message.startsWith(Constants.PARAMETER)
+				|| message.startsWith(Constants.FIELD);
+	}
+
 	public static void isPositive(final String name, final double doubleValue) {
 		Checker.greaterThanOrEqual(name, 0.0, doubleValue);
 	}
@@ -385,10 +390,5 @@ public class Checker {
 		if (!booleanValue) {
 			fail(message);
 		}
-	}
-
-	static boolean isParameterOrField(final String message) {
-		return message.startsWith(Constants.PARAMETER)
-				|| message.startsWith(Constants.FIELD);
 	}
 }

@@ -96,11 +96,27 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		center();
 	}
 
+	// for subclasses
+	protected void adjustDisplay() {
+	}
+
+	private void cancel() {
+		if (vetoableActionListener != null) {
+			vetoableActionListener.vetoableAction(
+					new PermissibleActionEvent(this, CancelAction.INSTANCE));
+		}
+		OkCancelDialogBox.this.hide();
+	}
+
 	@Override
 	public void center() {
 		isCentering = true;
 		super.center();
 		isCentering = false;
+	}
+
+	protected boolean checkValid() {
+		return true;
 	}
 
 	// makes sure richtextareas get a focuslost()
@@ -112,37 +128,13 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		return this.buttonsPanel;
 	}
 
+	protected String getOKButtonName() {
+		return "OK";
+	}
+
 	@Override
 	public void hide() {
 		super.hide();
-	}
-
-	@Override
-	public void show() {
-		super.show();
-		if (!isCentering) {
-			okButton.setFocus(true);
-		}
-	}
-
-	private void cancel() {
-		if (vetoableActionListener != null) {
-			vetoableActionListener.vetoableAction(
-					new PermissibleActionEvent(this, CancelAction.INSTANCE));
-		}
-		OkCancelDialogBox.this.hide();
-	}
-
-	// for subclasses
-	protected void adjustDisplay() {
-	}
-
-	protected boolean checkValid() {
-		return true;
-	}
-
-	protected String getOKButtonName() {
-		return "OK";
 	}
 
 	@Override
@@ -196,6 +188,14 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		}
 	}
 
+	@Override
+	public void show() {
+		super.show();
+		if (!isCentering) {
+			okButton.setFocus(true);
+		}
+	}
+
 	protected boolean showAnimated() {
 		return true;
 	}
@@ -208,15 +208,6 @@ public class OkCancelDialogBox extends GlassDialogBox {
 				HorizontalAlignmentConstant widgetAlign, Binding binding) {
 			super(title, widget, l, widgetAlign);
 			this.binding = binding;
-		}
-
-		@Override
-		public void show() {
-			super.show();
-			if (widget instanceof HasFirstFocusable) {
-				HasFirstFocusable ff = (HasFirstFocusable) widget;
-				ff.firstFocusable().setFocus(true);
-			}
 		}
 
 		@Override
@@ -237,6 +228,15 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		protected void notifyProblem() {
 			Registry.impl(ClientNotifications.class)
 					.showWarning("Please correct the problems in the form");
+		}
+
+		@Override
+		public void show() {
+			super.show();
+			if (widget instanceof HasFirstFocusable) {
+				HasFirstFocusable ff = (HasFirstFocusable) widget;
+				ff.firstFocusable().setFocus(true);
+			}
 		}
 	}
 }

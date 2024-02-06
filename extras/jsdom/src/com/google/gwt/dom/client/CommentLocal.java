@@ -13,6 +13,21 @@ public class CommentLocal extends NodeLocal implements ClientDomComment {
 	}
 
 	@Override
+	void appendOuterHtml(UnsafeHtmlBuilder builder) {
+		builder.appendEscapedNoQuotes(text);
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		// builder.append(getData());
+		// definitely not part of innertext
+	}
+
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		builder.appendUnsafeHtml(text);
+	}
+
+	@Override
 	public Node cloneNode(boolean deep) {
 		return getOwnerDocument().createComment(getData());
 	}
@@ -57,6 +72,10 @@ public class CommentLocal extends NodeLocal implements ClientDomComment {
 		return commentNode;
 	}
 
+	void putComment(Comment commentNode) {
+		this.commentNode = commentNode;
+	}
+
 	@Override
 	public void replaceData(int offset, int length, String data) {
 		throw new UnsupportedOperationException();
@@ -80,24 +99,5 @@ public class CommentLocal extends NodeLocal implements ClientDomComment {
 	@Override
 	public String toString() {
 		return Ax.format("#COMMENT[%s]", getData());
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendEscapedNoQuotes(text);
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		// builder.append(getData());
-		// definitely not part of innertext
-	}
-
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
-		builder.appendUnsafeHtml(text);
-	}
-
-	void putComment(Comment commentNode) {
-		this.commentNode = commentNode;
 	}
 }

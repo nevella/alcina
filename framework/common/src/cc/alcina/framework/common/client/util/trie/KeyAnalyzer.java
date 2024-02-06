@@ -41,9 +41,9 @@ public interface KeyAnalyzer<K> extends Comparator<K> {
 	public static final int OUT_OF_BOUNDS_BIT_KEY = -3;
 
 	/**
-	 * Returns the key's length in bits.
+	 * Returns the index of the first bit that is different in the two keys.
 	 */
-	public int lengthInBits(K key);
+	public int bitIndex(K key, K otherKey);
 
 	/**
 	 * Returns {@code true} if a key's bit it set at the given index.
@@ -51,13 +51,13 @@ public interface KeyAnalyzer<K> extends Comparator<K> {
 	public boolean isBitSet(K key, int bitIndex);
 
 	/**
-	 * Returns the index of the first bit that is different in the two keys.
-	 */
-	public int bitIndex(K key, K otherKey);
-
-	/**
 	 * Returns {@code true} if the second argument is a prefix of the first
 	 * argument.
 	 */
 	public boolean isPrefix(K key, K prefix);
+
+	/**
+	 * Returns the key's length in bits.
+	 */
+	public int lengthInBits(K key);
 }

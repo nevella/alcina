@@ -6,6 +6,10 @@ import java.util.Objects;
  * This class is intended for use as a two-valued map key
  */
 public class Pair {
+	public static Pair of(Object o1, Object o2) {
+		return new Pair(o1, o2);
+	}
+
 	Object o1;
 
 	Object o2;
@@ -17,11 +21,6 @@ public class Pair {
 		this.o2 = o2;
 		this.hash = Objects.hash(o1, o2);
 	}
-
-	@Override
-	public int hashCode() {
-		return hash;
-	}
 	@Override
 	public boolean equals(Object obj) {
 		if(obj instanceof Pair){
@@ -32,7 +31,8 @@ public class Pair {
 		}
 	}
 
-	public static Pair of(Object o1, Object o2) {
-		return new Pair(o1, o2);
+	@Override
+	public int hashCode() {
+		return hash;
 	}
 }

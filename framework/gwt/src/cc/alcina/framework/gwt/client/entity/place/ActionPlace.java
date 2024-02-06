@@ -89,6 +89,17 @@ public abstract class ActionPlace extends BasePlace {
 			return place;
 		}
 
+		ClassReflector<? extends ActionPlace> getReflector(String actionName) {
+			ensureLookup();
+			ClassReflector<? extends ActionPlace> reflector = byName
+					.get(actionName);
+			if (reflector == null) {
+				byName = null;
+				ensureLookup();
+			}
+			return reflector;
+		}
+
 		@Override
 		protected void getToken0(ActionPlace place) {
 			addTokenPart(place.getName());
@@ -100,17 +111,6 @@ public abstract class ActionPlace extends BasePlace {
 		@Override
 		protected boolean handlesPlaceSubclasses() {
 			return true;
-		}
-
-		ClassReflector<? extends ActionPlace> getReflector(String actionName) {
-			ensureLookup();
-			ClassReflector<? extends ActionPlace> reflector = byName
-					.get(actionName);
-			if (reflector == null) {
-				byName = null;
-				ensureLookup();
-			}
-			return reflector;
 		}
 	}
 }

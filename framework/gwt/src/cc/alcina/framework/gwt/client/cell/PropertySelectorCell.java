@@ -97,43 +97,6 @@ public class PropertySelectorCell<T extends Entity>
 		});
 	}
 
-	@Override
-	public boolean isEditing(Context context, Element parent, Set<T> value) {
-		return lastKey != null && lastKey.equals(context.getKey());
-	}
-
-	@Override
-	public void onBrowserEvent(Context context, Element parent, Set<T> value,
-			NativeEvent event, ValueUpdater<Set<T>> valueUpdater) {
-		super.onBrowserEvent(context, parent, value, event, valueUpdater);
-		if (CLICK.equals(event.getType())) {
-			onEnterKeyDown(context, parent, value, event, valueUpdater);
-		}
-	}
-
-	@Override
-	public void render(Context context, Set<T> value, SafeHtmlBuilder sb) {
-		// Get the view data.
-		Object key = context.getKey();
-		Set<T> viewData = getViewData(key);
-		if (viewData != null && viewData.equals(value)) {
-			clearViewData(key);
-			viewData = null;
-		}
-		String s = null;
-		if (viewData != null) {
-			s = toStringMapper.apply(viewData);
-		} else if (value != null) {
-			s = toStringMapper.apply(value);
-		}
-		if (s != null) {
-			if (s.isEmpty()) {
-				s = "\u00A0";
-			}
-			sb.append(renderer.render(s));
-		}
-	}
-
 	private PopupPanel ensurePopup() {
 		this.panel = new PopupPanel(true, true) {
 			@Override
@@ -167,6 +130,20 @@ public class PropertySelectorCell<T extends Entity>
 	}
 
 	@Override
+	public boolean isEditing(Context context, Element parent, Set<T> value) {
+		return lastKey != null && lastKey.equals(context.getKey());
+	}
+
+	@Override
+	public void onBrowserEvent(Context context, Element parent, Set<T> value,
+			NativeEvent event, ValueUpdater<Set<T>> valueUpdater) {
+		super.onBrowserEvent(context, parent, value, event, valueUpdater);
+		if (CLICK.equals(event.getType())) {
+			onEnterKeyDown(context, parent, value, event, valueUpdater);
+		}
+	}
+
+	@Override
 	protected void onEnterKeyDown(Context context, Element parent, Set<T> value,
 			NativeEvent event, ValueUpdater<Set<T>> valueUpdater) {
 		this.lastKey = context.getKey();
@@ -187,5 +164,28 @@ public class PropertySelectorCell<T extends Entity>
 				selector.setFilterText(lastFilterText);
 			}
 		});
+	}
+
+	@Override
+	public void render(Context context, Set<T> value, SafeHtmlBuilder sb) {
+		// Get the view data.
+		Object key = context.getKey();
+		Set<T> viewData = getViewData(key);
+		if (viewData != null && viewData.equals(value)) {
+			clearViewData(key);
+			viewData = null;
+		}
+		String s = null;
+		if (viewData != null) {
+			s = toStringMapper.apply(viewData);
+		} else if (value != null) {
+			s = toStringMapper.apply(value);
+		}
+		if (s != null) {
+			if (s.isEmpty()) {
+				s = "\u00A0";
+			}
+			sb.append(renderer.render(s));
+		}
 	}
 }

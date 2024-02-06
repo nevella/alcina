@@ -134,6 +134,13 @@ public class AbsolutePanel extends ComplexPanel
 		verifyPositionNotStatic(w);
 	}
 
+	private void checkWidgetParent(Widget w) {
+		if (w.getParent() != this) {
+			throw new IllegalArgumentException(
+					"Widget must be a child of this panel.");
+		}
+	}
+
 	/**
 	 * Gets the position of the left outer border edge of the widget relative to
 	 * the left outer border edge of the panel.
@@ -236,10 +243,14 @@ public class AbsolutePanel extends ComplexPanel
 		verifyPositionNotStatic(w);
 	}
 
-	private void checkWidgetParent(Widget w) {
-		if (w.getParent() != this) {
-			throw new IllegalArgumentException(
-					"Widget must be a child of this panel.");
+	protected void setWidgetPositionImpl(Widget w, int left, int top) {
+		Element h = w.getElement();
+		if (left == -1 && top == -1) {
+			changeToStaticPositioning(h);
+		} else {
+			h.getStyle().setProperty("position", "absolute");
+			h.getStyle().setProperty("left", left + "px");
+			h.getStyle().setProperty("top", top + "px");
 		}
 	}
 
@@ -296,16 +307,5 @@ public class AbsolutePanel extends ComplexPanel
 				// Stack trace provides context for the developer
 				new IllegalStateException(className
 						+ " is missing CSS 'position:{relative,absolute,fixed}'"));
-	}
-
-	protected void setWidgetPositionImpl(Widget w, int left, int top) {
-		Element h = w.getElement();
-		if (left == -1 && top == -1) {
-			changeToStaticPositioning(h);
-		} else {
-			h.getStyle().setProperty("position", "absolute");
-			h.getStyle().setProperty("left", left + "px");
-			h.getStyle().setProperty("top", top + "px");
-		}
 	}
 }

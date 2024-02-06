@@ -95,6 +95,10 @@ public class Gallery {
 		gallery.remove();
 	}
 
+	static Gallery instance() {
+		return gallery.get();
+	}
+
 	public static boolean isInitialised() {
 		return instance() != null;
 	}
@@ -110,10 +114,6 @@ public class Gallery {
 		if (instance() != null && Configuration.key(SNAP).is()) {
 			instance().snap0(snapName);
 		}
-	}
-
-	static Gallery instance() {
-		return gallery.get();
 	}
 
 	private String appName;

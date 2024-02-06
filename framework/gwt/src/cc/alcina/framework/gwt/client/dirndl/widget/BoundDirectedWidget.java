@@ -15,14 +15,15 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 
 public class BoundDirectedWidget extends AbstractBoundWidget {
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface BoundDirectedWidgetCustomiserArgs {
-		String[] tags();
+	@Override
+	public Object getValue() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-		String[] cssClasses();
+	@Override
+	public void setValue(Object value) {
+		// TODO Auto-generated method stub
 	}
 
 	public static class BoundDirectedWidgetCustomiser
@@ -45,14 +46,13 @@ public class BoundDirectedWidget extends AbstractBoundWidget {
 		}
 	}
 
-	@Override
-	public Object getValue() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface BoundDirectedWidgetCustomiserArgs {
+		String[] cssClasses();
 
-	@Override
-	public void setValue(Object value) {
-		// TODO Auto-generated method stub
+		String[] tags();
 	}
 }

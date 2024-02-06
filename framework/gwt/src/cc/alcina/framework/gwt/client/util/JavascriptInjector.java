@@ -9,6 +9,23 @@ import com.google.gwt.dom.client.ScriptElement;
 public class JavascriptInjector {
 	private static HeadElement head;
 
+	private static ScriptElement createScriptElement() {
+		ScriptElement script = Document.get().createScriptElement();
+		script.setAttribute("language", "javascript");
+		return script;
+	}
+
+	private static HeadElement getHead() {
+		if (head == null) {
+			Element element = Document.get().getElementsByTagName("head")
+					.getItem(0);
+			assert element != null : "HTML Head element required";
+			HeadElement head = HeadElement.as(element);
+			JavascriptInjector.head = head;
+		}
+		return JavascriptInjector.head;
+	}
+
 	/*
 	 * Because script creation injection can cause dom mutations (the script
 	 * runs immediately), run it *outside* localdom
@@ -16,6 +33,14 @@ public class JavascriptInjector {
 	public static void inject(String javascript) {
 		LocalDom.invokeExternal(() -> inject0(javascript));
 	}
+
+	private static native void inject0(String javascript) /*-{
+    var head = $doc.head;
+    var script = $doc.createElement("script");
+    script.language = "javascript";
+    script.text = javascript;
+    head.appendChild(script);
+	}-*/;
 
 	public static void injectExternal(String sourceUrl) {
 		HeadElement head = getHead();
@@ -37,29 +62,4 @@ public class JavascriptInjector {
 		HeadElement head = getHead();
 		head.removeChild(element);
 	}
-
-	private static ScriptElement createScriptElement() {
-		ScriptElement script = Document.get().createScriptElement();
-		script.setAttribute("language", "javascript");
-		return script;
-	}
-
-	private static HeadElement getHead() {
-		if (head == null) {
-			Element element = Document.get().getElementsByTagName("head")
-					.getItem(0);
-			assert element != null : "HTML Head element required";
-			HeadElement head = HeadElement.as(element);
-			JavascriptInjector.head = head;
-		}
-		return JavascriptInjector.head;
-	}
-
-	private static native void inject0(String javascript) /*-{
-    var head = $doc.head;
-    var script = $doc.createElement("script");
-    script.language = "javascript";
-    script.text = javascript;
-    head.appendChild(script);
-	}-*/;
 }

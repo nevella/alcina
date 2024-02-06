@@ -20,6 +20,25 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 class Utils {
+	private static int copyDirectory(File in, File out) throws IOException {
+		int fc = 0;
+		if (out.exists()) {
+			if (out.isDirectory()) {
+				deleteDirectory(out);
+			} else {
+				out.delete();
+			}
+		}
+		out.mkdirs();
+		File[] files = in.listFiles();
+		for (File subIn : files) {
+			File subOut = new File(
+					out.getPath() + File.separator + subIn.getName());
+			fc += copyFile(subIn, subOut);
+		}
+		return fc;
+	}
+
 	public static int copyFile(File in, File out) throws IOException {
 		if (in.isDirectory()) {
 			return copyDirectory(in, out);
@@ -156,24 +175,5 @@ class Utils {
 		bos.flush();
 		bos.close();
 		is.close();
-	}
-
-	private static int copyDirectory(File in, File out) throws IOException {
-		int fc = 0;
-		if (out.exists()) {
-			if (out.isDirectory()) {
-				deleteDirectory(out);
-			} else {
-				out.delete();
-			}
-		}
-		out.mkdirs();
-		File[] files = in.listFiles();
-		for (File subIn : files) {
-			File subOut = new File(
-					out.getPath() + File.separator + subIn.getName());
-			fc += copyFile(subIn, subOut);
-		}
-		return fc;
 	}
 }

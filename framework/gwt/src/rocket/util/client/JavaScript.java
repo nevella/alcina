@@ -75,6 +75,16 @@ public class JavaScript {
 		return getBoolean0(object, propertyName);
 	}
 
+	private native static boolean getBoolean0(final JavaScriptObject object,
+			final int index)/*-{
+    return !!object[index];
+	}-*/;
+
+	private native static boolean getBoolean0(final JavaScriptObject object,
+			final String propertyName)/*-{
+    return !!object[propertyName];
+	}-*/;
+
 	public static double getDouble(final JavaScriptObject object,
 			final int index) {
 		Checker.notNull("parameter:object", object);
@@ -96,6 +106,26 @@ public class JavaScript {
 		return getDouble0(object, propertyName);
 	}
 
+	private native static double getDouble0(final JavaScriptObject object,
+			final int index)/*-{
+    var value = object[index];
+    if (typeof (value) == "undefined") {
+      throw "The object does not contain a property called \"" + index
+          + "\", object: " + object;
+    }
+    return value;
+	}-*/;
+
+	private native static double getDouble0(final JavaScriptObject object,
+			final String propertyName)/*-{
+    var value = object[propertyName];
+    if (typeof (value) == "undefined") {
+      throw "The object does not contain a property called \"" + propertyName
+          + "\", object: " + object;
+    }
+    return value;
+	}-*/;
+
 	public static Element getElement(final JavaScriptObject object,
 			final int index) {
 		Checker.notNull("parameter:object", object);
@@ -116,6 +146,18 @@ public class JavaScript {
 		Checker.notEmpty("parameter:propertyName", propertyName);
 		return getElement0(object, propertyName);
 	}
+
+	native private static Element getElement0(final JavaScriptObject object,
+			final int index)/*-{
+    var value = object[index];
+    return value || null;
+	}-*/;
+
+	native private static Element getElement0(final JavaScriptObject object,
+			final String propertyName)/*-{
+    var value = object[propertyName];
+    return value || null;
+	}-*/;
 
 	public static int getInteger(final JavaScriptObject object,
 			final int index) {
@@ -140,6 +182,29 @@ public class JavaScript {
 		return getInteger0(object, propertyName);
 	}
 
+	private native static int getInteger0(final JavaScriptObject object,
+			final int index)/*-{
+    var value = object[index];
+    if (typeof (value) == "undefined") {
+      throw "The object does not contain a property called \"" + index
+          + "\", object: " + object;
+    }
+    return value;
+	}-*/;
+
+	private native static int getInteger0(final JavaScriptObject object,
+			final String propertyName)/*-{
+    //		@rocket.util.client.Checker::checkNotNull(Ljava/lang/Object;Ljava/lang/String;)("parameter:object", object );
+    //		@rocket.util.client.Checker::checkNotNull(Ljava/lang/Object;Ljava/lang/String;)("parameter:propertyName", object );
+
+    var value = object[propertyName];
+    if (typeof (value) == "undefined") {
+      throw "The object does not contain a property called \"" + propertyName
+          + "\", object: " + object;
+    }
+    return value;
+	}-*/;
+
 	public static JavaScriptObject getObject(final JavaScriptObject object,
 			final int index) {
 		Checker.notNull("parameter:object", object);
@@ -161,6 +226,18 @@ public class JavaScript {
 		return getObject0(object, propertyName);
 	}
 
+	native private static JavaScriptObject
+			getObject0(final JavaScriptObject object, final int index)/*-{
+    var value = object[index];
+    return value || null;
+	}-*/;
+
+	native private static JavaScriptObject
+			getObject0(final JavaScriptObject object, final String propertyName)/*-{
+    var value = object[propertyName];
+    return value || null;
+	}-*/;
+
 	/**
 	 * Retrieves the property count for the given javascript object.
 	 * 
@@ -171,6 +248,28 @@ public class JavaScript {
 		Checker.notNull("parameter:object", object);
 		return getPropertyCount0(object);
 	}
+
+	/**
+	 * Retrieves the property count for the given native object. If the length
+	 * property is present that value is returned otherwise a for each loop is
+	 * used to count all the properties
+	 * 
+	 * @param nativeObject
+	 * @return
+	 */
+	native private static int
+			getPropertyCount0(final JavaScriptObject nativeObject)/*-{
+    var propertyCount = nativeObject.length;
+    if (typeof (propertyCount) != "number") {
+
+      // length not found need to count properties...
+      propertyCount = 0;
+      for (propertyName in nativeObject) {
+        propertyCount++;
+      }
+    }
+    return propertyCount;
+	}-*/;
 
 	/**
 	 * Builds an array containing the names of all the properties from the given
@@ -188,6 +287,17 @@ public class JavaScript {
 		}
 		return strings;
 	}
+
+	native static private JavaScriptObject
+			getPropertyNames0(final JavaScriptObject object)/*-{
+    var names = new Array();
+
+    for (name in object) {
+      names.push(name);
+    }
+
+    return names;
+	}-*/;
 
 	public static String getString(final JavaScriptObject object,
 			final int index) {
@@ -209,6 +319,18 @@ public class JavaScript {
 		Checker.notEmpty("parameter:propertyName", propertyName);
 		return getString0(object, propertyName);
 	}
+
+	private static native String getString0(final JavaScriptObject object,
+			final int index)/*-{
+    var value = object[index];
+    return value ? "" + value : null;
+	}-*/;
+
+	private static native String getString0(final JavaScriptObject object,
+			final String propertyName)/*-{
+    var value = object[propertyName];
+    return value ? "" + value : null;
+	}-*/;
 
 	/**
 	 * Retrieves the actual javascript type for the property value at the given
@@ -239,6 +361,16 @@ public class JavaScript {
 		return JavaScript.getType0(object, propertyName);
 	}
 
+	native private static String getType0(final JavaScriptObject object,
+			final int index)/*-{
+    return typeof (object[index]);
+	}-*/;
+
+	native private static String getType0(final JavaScriptObject object,
+			final String propertyName)/*-{
+    return typeof (object[propertyName]);
+	}-*/;
+
 	/**
 	 * Tests if the given javascript object has a property at the given slot
 	 * 
@@ -267,6 +399,19 @@ public class JavaScript {
 		return hasProperty0(object, propertyName);
 	}
 
+	private static native boolean hasProperty0(final JavaScriptObject object,
+			final int index)/*-{
+    var value = object[index];
+    return typeof (value) != "undefined";
+	}-*/;
+
+	private static native boolean hasProperty0(final JavaScriptObject object,
+			final String propertyName)/*-{
+    var value = object[propertyName];
+
+    return typeof (value) != "undefined";
+	}-*/;
+
 	/**
 	 * Searches the given array for an element returning the index of the first
 	 * match
@@ -280,6 +425,18 @@ public class JavaScript {
 		return JavaScript.indexOf0(array, element);
 	}
 
+	native private static int indexOf0(final JavaScriptObject array,
+			final JavaScriptObject element)/*-{
+    var index = -1;
+    for (var i = 0; i < array.length; i++) {
+      if (array[i] == element) {
+        index = i;
+        break;
+      }
+    }
+    return index;
+	}-*/;
+
 	/**
 	 * Searches the given array for an element starting with the last element
 	 * until a match is found and then returns that index.
@@ -292,6 +449,18 @@ public class JavaScript {
 			final JavaScriptObject element) {
 		return JavaScript.lastIndexOf0(array, element);
 	}
+
+	native private static int lastIndexOf0(final JavaScriptObject array,
+			final JavaScriptObject element)/*-{
+    var index = -1;
+    for (var i = array.length - 1; i >= 0; i--) {
+      if (array[i] == element) {
+        index = i;
+        break;
+      }
+    }
+    return index;
+	}-*/;
 
 	public static JavaScriptObject removeProperty(final JavaScriptObject object,
 			final int index) {
@@ -313,6 +482,20 @@ public class JavaScript {
 		Checker.notEmpty("parameter:propertyName", propertyName);
 		return removeProperty0(object, propertyName);
 	}
+
+	native private static JavaScriptObject
+			removeProperty0(final JavaScriptObject object, final int index)/*-{
+    var previousValue = object[index];
+    delete object[index];
+    return previousValue || null;
+	}-*/;
+
+	native private static JavaScriptObject removeProperty0(
+			final JavaScriptObject object, final String propertyName)/*-{
+    var previousValue = object[propertyName];
+    delete object[propertyName];
+    return previousValue || null;
+	}-*/;
 
 	public static void setBoolean(final JavaScriptObject object,
 			final int index, final boolean booleanValue) {
@@ -338,6 +521,16 @@ public class JavaScript {
 		setBoolean0(object, propertyName, booleanValue);
 	}
 
+	private static native void setBoolean0(final JavaScriptObject object,
+			final int index, final boolean booleanValue)/*-{
+    object[index] = booleanValue;
+	}-*/;
+
+	private static native void setBoolean0(final JavaScriptObject object,
+			final String propertyName, final boolean booleanValue)/*-{
+    object[propertyName] = booleanValue;
+	}-*/;
+
 	public static void setDouble(final JavaScriptObject object, final int index,
 			final double value) {
 		Checker.notNull("parameter:object", object);
@@ -358,6 +551,16 @@ public class JavaScript {
 		Checker.notEmpty("parameter:propertyName", propertyName);
 		setDouble0(object, propertyName, value);
 	}
+
+	private static native void setDouble0(final JavaScriptObject object,
+			final int index, final double value)/*-{
+    object[index] = value;
+	}-*/;
+
+	private static native void setDouble0(final JavaScriptObject object,
+			final String propertyName, final double value)/*-{
+    object[propertyName] = value;
+	}-*/;
 
 	public static void setInteger(final JavaScriptObject object,
 			final int index, final int intValue) {
@@ -383,6 +586,16 @@ public class JavaScript {
 		setInteger0(object, propertyName, intValue);
 	}
 
+	private static native void setInteger0(final JavaScriptObject object,
+			final int index, final int intValue)/*-{
+    object[index] = intValue;
+	}-*/;
+
+	private static native void setInteger0(final JavaScriptObject object,
+			final String propertyName, final int intValue)/*-{
+    object[propertyName] = intValue;
+	}-*/;
+
 	public static void setObject(final JavaScriptObject object, final int index,
 			final JavaScriptObject value) {
 		Checker.notNull("parameter:object", object);
@@ -405,6 +618,16 @@ public class JavaScript {
 		setObject0(object, propertyName, value);
 	}
 
+	native private static void setObject0(final JavaScriptObject object,
+			final int index, final JavaScriptObject value)/*-{
+    object[index] = value;
+	}-*/;
+
+	native private static void setObject0(final JavaScriptObject object,
+			final String propertyName, final JavaScriptObject value)/*-{
+    object[propertyName] = value;
+	}-*/;
+
 	public static void setString(final JavaScriptObject object, final int index,
 			final String value) {
 		Checker.notNull("parameter:object", object);
@@ -426,229 +649,6 @@ public class JavaScript {
 		Checker.notEmpty("parameter:propertyName", propertyName);
 		setString0(object, propertyName, value);
 	}
-
-	private native static boolean getBoolean0(final JavaScriptObject object,
-			final int index)/*-{
-    return !!object[index];
-	}-*/;
-
-	private native static boolean getBoolean0(final JavaScriptObject object,
-			final String propertyName)/*-{
-    return !!object[propertyName];
-	}-*/;
-
-	private native static double getDouble0(final JavaScriptObject object,
-			final int index)/*-{
-    var value = object[index];
-    if (typeof (value) == "undefined") {
-      throw "The object does not contain a property called \"" + index
-          + "\", object: " + object;
-    }
-    return value;
-	}-*/;
-
-	private native static double getDouble0(final JavaScriptObject object,
-			final String propertyName)/*-{
-    var value = object[propertyName];
-    if (typeof (value) == "undefined") {
-      throw "The object does not contain a property called \"" + propertyName
-          + "\", object: " + object;
-    }
-    return value;
-	}-*/;
-
-	native private static Element getElement0(final JavaScriptObject object,
-			final int index)/*-{
-    var value = object[index];
-    return value || null;
-	}-*/;
-
-	native private static Element getElement0(final JavaScriptObject object,
-			final String propertyName)/*-{
-    var value = object[propertyName];
-    return value || null;
-	}-*/;
-
-	private native static int getInteger0(final JavaScriptObject object,
-			final int index)/*-{
-    var value = object[index];
-    if (typeof (value) == "undefined") {
-      throw "The object does not contain a property called \"" + index
-          + "\", object: " + object;
-    }
-    return value;
-	}-*/;
-
-	private native static int getInteger0(final JavaScriptObject object,
-			final String propertyName)/*-{
-    //		@rocket.util.client.Checker::checkNotNull(Ljava/lang/Object;Ljava/lang/String;)("parameter:object", object );
-    //		@rocket.util.client.Checker::checkNotNull(Ljava/lang/Object;Ljava/lang/String;)("parameter:propertyName", object );
-
-    var value = object[propertyName];
-    if (typeof (value) == "undefined") {
-      throw "The object does not contain a property called \"" + propertyName
-          + "\", object: " + object;
-    }
-    return value;
-	}-*/;
-
-	native private static JavaScriptObject
-			getObject0(final JavaScriptObject object, final int index)/*-{
-    var value = object[index];
-    return value || null;
-	}-*/;
-
-	native private static JavaScriptObject
-			getObject0(final JavaScriptObject object, final String propertyName)/*-{
-    var value = object[propertyName];
-    return value || null;
-	}-*/;
-
-	/**
-	 * Retrieves the property count for the given native object. If the length
-	 * property is present that value is returned otherwise a for each loop is
-	 * used to count all the properties
-	 * 
-	 * @param nativeObject
-	 * @return
-	 */
-	native private static int
-			getPropertyCount0(final JavaScriptObject nativeObject)/*-{
-    var propertyCount = nativeObject.length;
-    if (typeof (propertyCount) != "number") {
-
-      // length not found need to count properties...
-      propertyCount = 0;
-      for (propertyName in nativeObject) {
-        propertyCount++;
-      }
-    }
-    return propertyCount;
-	}-*/;
-
-	native static private JavaScriptObject
-			getPropertyNames0(final JavaScriptObject object)/*-{
-    var names = new Array();
-
-    for (name in object) {
-      names.push(name);
-    }
-
-    return names;
-	}-*/;
-
-	private static native String getString0(final JavaScriptObject object,
-			final int index)/*-{
-    var value = object[index];
-    return value ? "" + value : null;
-	}-*/;
-
-	private static native String getString0(final JavaScriptObject object,
-			final String propertyName)/*-{
-    var value = object[propertyName];
-    return value ? "" + value : null;
-	}-*/;
-
-	native private static String getType0(final JavaScriptObject object,
-			final int index)/*-{
-    return typeof (object[index]);
-	}-*/;
-
-	native private static String getType0(final JavaScriptObject object,
-			final String propertyName)/*-{
-    return typeof (object[propertyName]);
-	}-*/;
-
-	private static native boolean hasProperty0(final JavaScriptObject object,
-			final int index)/*-{
-    var value = object[index];
-    return typeof (value) != "undefined";
-	}-*/;
-
-	private static native boolean hasProperty0(final JavaScriptObject object,
-			final String propertyName)/*-{
-    var value = object[propertyName];
-
-    return typeof (value) != "undefined";
-	}-*/;
-
-	native private static int indexOf0(final JavaScriptObject array,
-			final JavaScriptObject element)/*-{
-    var index = -1;
-    for (var i = 0; i < array.length; i++) {
-      if (array[i] == element) {
-        index = i;
-        break;
-      }
-    }
-    return index;
-	}-*/;
-
-	native private static int lastIndexOf0(final JavaScriptObject array,
-			final JavaScriptObject element)/*-{
-    var index = -1;
-    for (var i = array.length - 1; i >= 0; i--) {
-      if (array[i] == element) {
-        index = i;
-        break;
-      }
-    }
-    return index;
-	}-*/;
-
-	native private static JavaScriptObject
-			removeProperty0(final JavaScriptObject object, final int index)/*-{
-    var previousValue = object[index];
-    delete object[index];
-    return previousValue || null;
-	}-*/;
-
-	native private static JavaScriptObject removeProperty0(
-			final JavaScriptObject object, final String propertyName)/*-{
-    var previousValue = object[propertyName];
-    delete object[propertyName];
-    return previousValue || null;
-	}-*/;
-
-	private static native void setBoolean0(final JavaScriptObject object,
-			final int index, final boolean booleanValue)/*-{
-    object[index] = booleanValue;
-	}-*/;
-
-	private static native void setBoolean0(final JavaScriptObject object,
-			final String propertyName, final boolean booleanValue)/*-{
-    object[propertyName] = booleanValue;
-	}-*/;
-
-	private static native void setDouble0(final JavaScriptObject object,
-			final int index, final double value)/*-{
-    object[index] = value;
-	}-*/;
-
-	private static native void setDouble0(final JavaScriptObject object,
-			final String propertyName, final double value)/*-{
-    object[propertyName] = value;
-	}-*/;
-
-	private static native void setInteger0(final JavaScriptObject object,
-			final int index, final int intValue)/*-{
-    object[index] = intValue;
-	}-*/;
-
-	private static native void setInteger0(final JavaScriptObject object,
-			final String propertyName, final int intValue)/*-{
-    object[propertyName] = intValue;
-	}-*/;
-
-	native private static void setObject0(final JavaScriptObject object,
-			final int index, final JavaScriptObject value)/*-{
-    object[index] = value;
-	}-*/;
-
-	native private static void setObject0(final JavaScriptObject object,
-			final String propertyName, final JavaScriptObject value)/*-{
-    object[propertyName] = value;
-	}-*/;
 
 	private static native void setString0(final JavaScriptObject object,
 			final int index, final String value)/*-{

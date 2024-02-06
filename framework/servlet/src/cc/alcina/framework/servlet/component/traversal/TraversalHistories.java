@@ -17,10 +17,23 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObserv
  */
 @Registration.Singleton
 public class TraversalHistories extends LifecycleService.AlsoDev {
-	RemoteComponentObservables<SelectionTraversal> observables;
-
 	public static TraversalHistories get() {
 		return Registry.impl(TraversalHistories.class);
+	}
+
+	RemoteComponentObservables<SelectionTraversal> observables;
+
+	public TraversalHistories() {
+		observables = new RemoteComponentObservables<>(SelectionTraversal.class,
+				t -> {
+					return t.getRootLayer().getName();
+				}, 1 * TimeConstants.ONE_MINUTE_MS);
+	}
+
+	public void observe() {
+		SelectionTraversal.topicTraversalComplete
+				.add(this::onTraversalComplete);
+		observables.observe();
 	}
 
 	@Override
@@ -30,26 +43,13 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 		}
 	}
 
-	public TraversalHistories() {
-		observables = new RemoteComponentObservables<>(SelectionTraversal.class,
-				t -> {
-					return t.getRootLayer().getName();
-				}, 1 * TimeConstants.ONE_MINUTE_MS);
+	void onTraversalComplete(SelectionTraversal traversal) {
+		observables.publish(null, traversal);
+		observables.publish(traversal.id, traversal);
 	}
 
 	public ListenerReference subscribe(String traversalKey,
 			TopicListener<RemoteComponentObservables<SelectionTraversal>.ObservableHistory> subscriber) {
 		return observables.subscribe(traversalKey, subscriber);
-	}
-
-	public void observe() {
-		SelectionTraversal.topicTraversalComplete
-				.add(this::onTraversalComplete);
-		observables.observe();
-	}
-
-	void onTraversalComplete(SelectionTraversal traversal) {
-		observables.publish(null, traversal);
-		observables.publish(traversal.id, traversal);
 	}
 }

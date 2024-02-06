@@ -95,6 +95,14 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 				columnCount);
 	}
 
+	protected CheckBox createCheckBox(String displayText) {
+		RadioButton radioButton = new RadioButton(groupName, displayText, true);
+		if (radioButtonContainerStyleName != null) {
+			radioButton.setStyleName(radioButtonContainerStyleName);
+		}
+		return radioButton;
+	}
+
 	public int getColumnCount() {
 		return columnCount;
 	}
@@ -158,6 +166,32 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 		}
 	}
 
+	private void render() {
+		fp.clear();
+		checkMap.clear();
+		table = new FlexTable();
+		int x = 0, y = 0;
+		for (T o : getValues()) {
+			String displayHtml = renderer.render(o);
+			if (iconRenderer != null) {
+				String imgHtml = AbstractImagePrototype
+						.create(iconRenderer.render(o)).getHTML();
+				displayHtml = Ax.format(
+						"<span class='radio-button-icon'>%s</span><span class='radio-button-icon-label'>%s</span>",
+						imgHtml, displayHtml);
+			}
+			CheckBox radioButton = createCheckBox(displayHtml);
+			checkMap.put(o, radioButton);
+			table.setWidget(y, x++, radioButton);
+			if (x == getColumnCount()) {
+				x = 0;
+				y++;
+			}
+			radioButton.addClickHandler(this);
+		}
+		fp.add(table);
+	}
+
 	public void setColumnCount(int width) {
 		this.columnCount = width;
 		render();
@@ -205,52 +239,18 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 		}
 	}
 
+	protected boolean singleResult() {
+		return true;
+	}
+
 	public T singleValue() {
 		return (T) (getValue() instanceof Collection
 				? singleValue((Collection<T>) getValue())
 				: getValue());
 	}
 
-	private void render() {
-		fp.clear();
-		checkMap.clear();
-		table = new FlexTable();
-		int x = 0, y = 0;
-		for (T o : getValues()) {
-			String displayHtml = renderer.render(o);
-			if (iconRenderer != null) {
-				String imgHtml = AbstractImagePrototype
-						.create(iconRenderer.render(o)).getHTML();
-				displayHtml = Ax.format(
-						"<span class='radio-button-icon'>%s</span><span class='radio-button-icon-label'>%s</span>",
-						imgHtml, displayHtml);
-			}
-			CheckBox radioButton = createCheckBox(displayHtml);
-			checkMap.put(o, radioButton);
-			table.setWidget(y, x++, radioButton);
-			if (x == getColumnCount()) {
-				x = 0;
-				y++;
-			}
-			radioButton.addClickHandler(this);
-		}
-		fp.add(table);
-	}
-
 	private T singleValue(Collection<T> values) {
 		return CommonUtils.isNullOrEmpty(values) ? null
 				: values.iterator().next();
-	}
-
-	protected CheckBox createCheckBox(String displayText) {
-		RadioButton radioButton = new RadioButton(groupName, displayText, true);
-		if (radioButtonContainerStyleName != null) {
-			radioButton.setStyleName(radioButtonContainerStyleName);
-		}
-		return radioButton;
-	}
-
-	protected boolean singleResult() {
-		return true;
 	}
 }

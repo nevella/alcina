@@ -25,11 +25,6 @@ abstract class DOMImplStandard extends DOMImpl {
 
 	private NativeEventJso lastEvent;
 
-	private native EventTarget eventGetTarget0(NativeEventJso evt) /*-{
-    return !evt.target ? null
-        : @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(evt.target);
-	}-*/;
-
 	@Override
 	protected native NativeEventJso createHtmlEvent(DocumentJso doc,
 			String type, boolean canBubble, boolean cancelable) /*-{
@@ -113,6 +108,11 @@ abstract class DOMImplStandard extends DOMImpl {
 		return lastEventTarget;
 	}
 
+	private native EventTarget eventGetTarget0(NativeEventJso evt) /*-{
+    return !evt.target ? null
+        : @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(evt.target);
+	}-*/;
+
 	@Override
 	protected native void eventPreventDefault(NativeEventJso evt) /*-{
     evt.preventDefault();
@@ -121,30 +121,6 @@ abstract class DOMImplStandard extends DOMImpl {
 	@Override
 	protected native String eventToString(NativeEventJso evt) /*-{
     return evt.toString();
-	}-*/;
-
-	/*
-	 * textContent is used over innerText for two reasons: 1 - It is consistent
-	 * across browsers. textContent does not convert <br>'s to new lines. 2 -
-	 * textContent is faster on retreival because WebKit does not recalculate
-	 * styles as it does for innerText.
-	 */
-	@Override
-	protected native String getInnerText(ElementJso elem) /*-{
-    return elem.textContent;
-	}-*/;
-
-	@Override
-	protected native boolean isOrHasChild(NodeJso parent, NodeJso child) /*-{
-    return parent.contains(child);
-	}-*/;
-
-	/*
-	 * See getInnerText for why textContent is used instead of innerText.
-	 */
-	@Override
-	protected native void setInnerText(ElementJso elem, String text) /*-{
-    elem.textContent = text || '';
 	}-*/;
 
 	@Override
@@ -158,11 +134,35 @@ abstract class DOMImplStandard extends DOMImpl {
 		return getLegacyDocumentScrollingElement(doc);
 	}
 
+	/*
+	 * textContent is used over innerText for two reasons: 1 - It is consistent
+	 * across browsers. textContent does not convert <br>'s to new lines. 2 -
+	 * textContent is faster on retreival because WebKit does not recalculate
+	 * styles as it does for innerText.
+	 */
+	@Override
+	protected native String getInnerText(ElementJso elem) /*-{
+    return elem.textContent;
+	}-*/;
+
 	Element getLegacyDocumentScrollingElement(DocumentJso doc) {
 		return doc.getViewportElement();
 	}
 
 	final native Element getNativeDocumentScrollingElement(DocumentJso doc) /*-{
     return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(doc.scrollingElement);
+	}-*/;
+
+	@Override
+	protected native boolean isOrHasChild(NodeJso parent, NodeJso child) /*-{
+    return parent.contains(child);
+	}-*/;
+
+	/*
+	 * See getInnerText for why textContent is used instead of innerText.
+	 */
+	@Override
+	protected native void setInnerText(ElementJso elem, String text) /*-{
+    elem.textContent = text || '';
 	}-*/;
 }

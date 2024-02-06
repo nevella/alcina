@@ -30,19 +30,6 @@ public class TaskTestBackendQueues extends PerformerTask {
 	public static class TaskTestSubjob extends PerformerTask {
 		private TestType type;
 
-		public TestType getType() {
-			return this.type;
-		}
-
-		public void setType(TestType type) {
-			this.type = type;
-		}
-
-		public TaskTestSubjob withType(TestType type) {
-			this.type = type;
-			return this;
-		}
-
 		private void backend_pause() {
 			Job job = JobContext.get().getJob();
 			AlcinaChildRunnable.runInTransactionNewThread("test-child", () -> {
@@ -66,6 +53,10 @@ public class TaskTestBackendQueues extends PerformerTask {
 			TransformCommit.get().enqueueBackendTransform(
 					() -> job.setStatusMessage("Will status in job commit..."));
 			Ax.out("ending job");
+		}
+
+		public TestType getType() {
+			return this.type;
 		}
 
 		private void job_pause() {
@@ -95,6 +86,15 @@ public class TaskTestBackendQueues extends PerformerTask {
 			default:
 				throw new UnsupportedOperationException();
 			}
+		}
+
+		public void setType(TestType type) {
+			this.type = type;
+		}
+
+		public TaskTestSubjob withType(TestType type) {
+			this.type = type;
+			return this;
 		}
 
 		public static enum TestType {

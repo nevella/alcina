@@ -52,8 +52,22 @@ public @interface ModalDisplay {
 		SINGLE_ANY, SINGLE_READ, SINGLE_WRITE, MULTIPLE_ANY, MULTIPLE_READ,
 		MULTIPLE_WRITE;
 
+		private boolean isAny() {
+			switch (this) {
+			case SINGLE_ANY:
+			case MULTIPLE_ANY:
+				return true;
+			default:
+				return false;
+			}
+		}
+
 		public boolean isMultiple() {
 			return !isSingle();
+		}
+
+		private boolean isSameArity(Mode other) {
+			return this.isSingle() ^ !other.isSingle();
 		}
 
 		public boolean isSingle() {
@@ -74,20 +88,6 @@ public @interface ModalDisplay {
 				return (this.isAny() || other.isAny())
 						&& this.isSameArity(other);
 			}
-		}
-
-		private boolean isAny() {
-			switch (this) {
-			case SINGLE_ANY:
-			case MULTIPLE_ANY:
-				return true;
-			default:
-				return false;
-			}
-		}
-
-		private boolean isSameArity(Mode other) {
-			return this.isSingle() ^ !other.isSingle();
 		}
 	}
 

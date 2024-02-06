@@ -33,16 +33,16 @@ public class Colour implements java.io.Serializable, IsSerializable {
 	private static Map namedColours;
 	static {
 		final Map named = new HashMap() {
+			protected String fixKey(final Object key) {
+				return ((String) key).toLowerCase();
+			}
+
 			public Object get(final Object key) {
 				return super.get(fixKey(key));
 			}
 
 			public Object put(final Object key, final Object value) {
 				return super.put(fixKey(key), value);
-			}
-
-			protected String fixKey(final Object key) {
-				return ((String) key).toLowerCase();
 			}
 		};
 		named.put("aliceBlue", new Colour(0xf0f8ff));
@@ -439,21 +439,6 @@ public class Colour implements java.io.Serializable, IsSerializable {
 		return new Colour(mixedRed, mixedGreen, mixedBlue);
 	}
 
-	public String toCssColour() {
-		final int rgb = this.getRed() * 0x10000 + this.getGreen() * 0x100
-				+ this.getBlue();
-		final String rgbHexString = Integer.toHexString(rgb);
-		final String string = '#' + Utilities.padLeft(rgbHexString, 6, '0');
-		return string;
-	}
-
-	public String toString() {
-		return // super.toString() + ", colour:
-		"0x" + Utilities.padLeft(Integer.toHexString(red), 2, '0')
-				+ Utilities.padLeft(Integer.toHexString(green), 2, '0')
-				+ Utilities.padLeft(Integer.toHexString(blue), 2, '0');
-	}
-
 	void setBlue(final int blue) {
 		Checker.between("parameter:blue", blue, 0,
 				Constants.COLOUR_COMPONENT_VALUE + 1);
@@ -470,5 +455,20 @@ public class Colour implements java.io.Serializable, IsSerializable {
 		Checker.between("parameter:red", red, 0,
 				Constants.COLOUR_COMPONENT_VALUE + 1);
 		this.red = red;
+	}
+
+	public String toCssColour() {
+		final int rgb = this.getRed() * 0x10000 + this.getGreen() * 0x100
+				+ this.getBlue();
+		final String rgbHexString = Integer.toHexString(rgb);
+		final String string = '#' + Utilities.padLeft(rgbHexString, 6, '0');
+		return string;
+	}
+
+	public String toString() {
+		return // super.toString() + ", colour:
+		"0x" + Utilities.padLeft(Integer.toHexString(red), 2, '0')
+				+ Utilities.padLeft(Integer.toHexString(green), 2, '0')
+				+ Utilities.padLeft(Integer.toHexString(blue), 2, '0');
 	}
 }

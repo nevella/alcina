@@ -256,6 +256,19 @@ public class RelativePopupPanel extends SimplePanel
 	}
 
 	/**
+	 * Remove focus from an Element.
+	 * 
+	 * @param elt
+	 *            The Element on which <code>blur()</code> will be invoked
+	 */
+	private native void blur(Element elt) /*-{
+											// Issue 2390: blurring the body causes IE to disappear to the background
+											if (elt.blur && elt != $doc.body) {
+											elt.blur();
+											}
+											}-*/;
+
+	/**
 	 * Centers the popup in the browser window and shows it. If the popup was
 	 * already showing, then the popup is centered.
 	 */
@@ -284,6 +297,60 @@ public class RelativePopupPanel extends SimplePanel
 				setVisible(true);
 			}
 		}
+	}
+
+	/**
+	 * Does the event target one of the partner elements?
+	 * 
+	 * @param event
+	 *            the native event
+	 * @return true if the event targets a partner
+	 */
+	private boolean eventTargetsPartner(NativeEvent event) {
+		if (autoHidePartners == null) {
+			return false;
+		}
+		EventTarget target = event.getEventTarget();
+		if (Element.is(target)) {
+			for (Element elem : autoHidePartners) {
+				if (elem.isOrHasChild(Element.as(target))) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Does the event target this popup?
+	 * 
+	 * @param event
+	 *            the native event
+	 * @return true if the event targets the popup
+	 */
+	private boolean eventTargetsPopup(NativeEvent event) {
+		EventTarget target = event.getEventTarget();
+		if (Element.is(target)) {
+			Element eTarget = Element.as(target);
+			return getElement().isOrHasChild(eTarget);
+		}
+		return false;
+	}
+
+	@Override
+	protected Element getContainerElement() {
+		return impl.getContainerElement(getPopupImplElement()).cast();
+	}
+
+	/**
+	 * Get the glass element used by this {@link RelativePopupPanel}. The
+	 * element is not created until it is enabled via
+	 * {@link #setGlassEnabled(boolean)}.
+	 * 
+	 * @return the glass element, or null if not created
+	 */
+	protected Element getGlassElement() {
+		return glass;
 	}
 
 	/**
@@ -321,6 +388,18 @@ public class RelativePopupPanel extends SimplePanel
 	}
 
 	/**
+	 * Get the element that {@link PopupImpl} uses. PopupImpl creates an element
+	 * that goes inside of the outer element, so all methods in PopupImpl are
+	 * relative to the first child of the outer element, not the outer element
+	 * itself.
+	 * 
+	 * @return the Element that {@link PopupImpl} creates and expects
+	 */
+	private Element getPopupImplElement() {
+		return DOM.getFirstChild(super.getContainerElement());
+	}
+
+	/**
 	 * Gets the popup's left position relative to the browser's client area.
 	 * 
 	 * @return the popup's left position
@@ -340,6 +419,11 @@ public class RelativePopupPanel extends SimplePanel
 
 	public ComplexPanel getPositioningContainer() {
 		return positioningContainer;
+	}
+
+	@Override
+	protected Element getStyleElement() {
+		return impl.getStyleElement(getPopupImplElement()).cast();
 	}
 
 	@Override
@@ -458,6 +542,36 @@ public class RelativePopupPanel extends SimplePanel
 	}
 
 	/**
+	 * We control size by setting our child widget's size. However, if we don't
+	 * currently have a child, we record the size the user wanted so that when
+	 * we do get a child, we can set it correctly. Until size is explicitly
+	 * cleared, any child put into the popup will be given that size.
+	 */
+	void maybeUpdateSize() {
+		// For subclasses of RelativePopupPanel, we want the default behavior of
+		// setWidth
+		// and setHeight to change the dimensions of RelativePopupPanel's child
+		// widget.
+		// We do this because RelativePopupPanel's child widget is the first
+		// widget in
+		// the hierarchy which provides structure to the panel. DialogBox is
+		// an example of this. We want to set the dimensions on DialogBox's
+		// FlexTable, which is RelativePopupPanel's child widget. However, it is
+		// not
+		// DialogBox's child widget. To make sure that we are actually getting
+		// RelativePopupPanel's child widget, we have to use super.getWidget().
+		Widget w = super.getWidget();
+		if (w != null) {
+			if (desiredHeight != null) {
+				w.setHeight(desiredHeight);
+			}
+			if (desiredWidth != null) {
+				w.setWidth(desiredWidth);
+			}
+		}
+	}
+
+	/**
 	 * @deprecated Use {@link #onPreviewNativeEvent} instead
 	 */
 	@Deprecated
@@ -516,344 +630,24 @@ public class RelativePopupPanel extends SimplePanel
 		return true;
 	}
 
-	/**
-	 * Remove an autoHide partner.
-	 * 
-	 * @param partner
-	 *            the auto hide partner to remove
-	 */
-	public void removeAutoHidePartner(Element partner) {
-		assert partner != null : "partner cannot be null";
-		if (autoHidePartners != null) {
-			autoHidePartners.remove(partner);
+	protected void onPreviewNativeEvent(NativePreviewEvent event) {
+		// Cancel the event based on the deprecated onEventPreview() method
+		if (event.isFirstHandler()
+				&& !onEventPreview(Event.as(event.getNativeEvent()))) {
+			event.cancel();
 		}
 	}
 
-	public void setAnimationEnabled(boolean enable) {
-		isAnimationEnabled = enable;
-	}
-
-	/**
-	 * Enable or disable the autoHide feature. When enabled, the popup will be
-	 * automatically hidden when the user clicks outside of it.
-	 * 
-	 * @param autoHide
-	 *            true to enable autoHide, false to disable
-	 */
-	public void setAutoHideEnabled(boolean autoHide) {
-		this.autoHide = autoHide;
-	}
-
-	/**
-	 * Enable or disable autoHide on history change events. When enabled, the
-	 * popup will be automatically hidden when the history token changes, such
-	 * as when the user presses the browser's back button. Disabled by default.
-	 * 
-	 * @param enabled
-	 *            true to enable, false to disable
-	 */
-	public void setAutoHideOnHistoryEventsEnabled(boolean enabled) {
-		this.autoHideOnHistoryEvents = enabled;
-	}
-
-	/**
-	 * When enabled, the background will be blocked with a semi-transparent pane
-	 * the next time it is shown. If the RelativePopupPanel is already visible,
-	 * the glass will not be displayed until it is hidden and shown again.
-	 * 
-	 * @param enabled
-	 *            true to enable, false to disable
-	 */
-	public void setGlassEnabled(boolean enabled) {
-		this.isGlassEnabled = enabled;
-		if (enabled && glass == null) {
-			glass = Document.get().createDivElement();
-			glass.setClassName(glassStyleName);
-			glass.getStyle().setPosition(Position.ABSOLUTE);
-			glass.getStyle().setLeft(0, Unit.PX);
-			glass.getStyle().setTop(0, Unit.PX);
-		}
-	}
-
-	/**
-	 * Sets the style name to be used on the glass element. By default, this is
-	 * "gwt-PopupPanelGlass".
-	 * 
-	 * @param glassStyleName
-	 *            the glass element's style name
-	 */
-	public void setGlassStyleName(String glassStyleName) {
-		this.glassStyleName = glassStyleName;
-		if (glass != null) {
-			glass.setClassName(glassStyleName);
-		}
-	}
-
-	/**
-	 * Sets the height of the panel's child widget. If the panel's child widget
-	 * has not been set, the height passed in will be cached and used to set the
-	 * height immediately after the child widget is set.
-	 * 
-	 * <p>
-	 * Note that subclasses may have a different behavior. A subclass may decide
-	 * not to change the height of the child widget. It may instead decide to
-	 * change the height of an internal panel widget, which contains the child
-	 * widget.
-	 * </p>
-	 * 
-	 * @param height
-	 *            the object's new height, in CSS units (e.g. "10px", "1em")
-	 */
 	@Override
-	public void setHeight(String height) {
-		desiredHeight = height;
-		maybeUpdateSize();
-		// If the user cleared the size, revert to not trying to control
-		// children.
-		if (height.length() == 0) {
-			desiredHeight = null;
-		}
-	}
-
-	public void setHideOnEscape(boolean hideOnEscape) {
-		this.hideOnEscape = hideOnEscape;
-	}
-
-	/**
-	 * When the popup is modal, keyboard or mouse events that do not target the
-	 * RelativePopupPanel or its children will be ignored.
-	 * 
-	 * @param modal
-	 *            true to make the popup modal
-	 */
-	public void setModal(boolean modal) {
-		this.modal = modal;
-	}
-
-	/**
-	 * Sets the popup's position relative to the browser's client area. The
-	 * popup's position may be set before calling {@link #show()}.
-	 * 
-	 * @param left
-	 *            the left position, in pixels
-	 * @param top
-	 *            the top position, in pixels
-	 */
-	public void setPopupPosition(int left, int top) {
-		// Save the position of the popup
-		leftPosition = left;
-		topPosition = top;
-		// Account for the difference between absolute position and the
-		// body's positioning context.
-		left -= Document.get().getBodyOffsetLeft();
-		top -= Document.get().getBodyOffsetTop();
-		// Set the popup's position manually, allowing setPopupPosition() to be
-		// called before show() is called (so a popup can be positioned without
+	protected void onUnload() {
+		// Just to be sure, we perform cleanup when the popup is unloaded (i.e.
+		// removed from the DOM). This is normally taken care of in hide(), but
 		// it
-		// 'jumping' on the screen).
-		Element elem = getElement();
-		elem.getStyle().setPropertyPx("left", left);
-		elem.getStyle().setPropertyPx("top", top);
-	}
-
-	/**
-	 * Sets the popup's position using a {@link PositionCallback}, and shows the
-	 * popup. The callback allows positioning to be performed based on the
-	 * offsetWidth and offsetHeight of the popup, which are normally not
-	 * available until the popup is showing. By positioning the popup before it
-	 * is shown, the the popup will not jump from its original position to the
-	 * new position.
-	 * 
-	 * @param callback
-	 *            the callback to set the position of the popup
-	 * @see PositionCallback#setPosition(int offsetWidth, int offsetHeight)
-	 */
-	public void setPopupPositionAndShow(PositionCallback callback) {
-		setVisible(false);
-		show();
-		callback.setPosition(getOffsetWidth(), getOffsetHeight());
-		setVisible(true);
-	}
-
-	public void setPositioningContainer(ComplexPanel positioningContainer) {
-		this.positioningContainer = positioningContainer;
-	}
-
-	/**
-	 * <p>
-	 * When enabled, the popup will preview all native events, even if another
-	 * popup was opened after this one.
-	 * </p>
-	 * <p>
-	 * If autoHide is enabled, enabling this feature will cause the popup to
-	 * autoHide even if another non-modal popup was shown after it. If this
-	 * feature is disabled, the popup will only autoHide if it was the last
-	 * popup opened.
-	 * </p>
-	 * 
-	 * @param previewAllNativeEvents
-	 *            true to enable, false to disable
-	 */
-	public void setPreviewingAllNativeEvents(boolean previewAllNativeEvents) {
-		this.previewAllNativeEvents = previewAllNativeEvents;
-	}
-
-	@Override
-	public void setTitle(String title) {
-		Element containerElement = getContainerElement();
-		if (title == null || title.length() == 0) {
-			containerElement.removeAttribute("title");
-		} else {
-			containerElement.setAttribute("title", title);
+		// can be missed if someone removes the popup directly from the
+		// RootPanel.
+		if (isShowing()) {
+			setState(false, false);
 		}
-	}
-
-	/**
-	 * Sets whether this object is visible. This method just sets the
-	 * <code>visibility</code> style attribute. You need to call {@link #show()}
-	 * to actually attached/detach the {@link RelativePopupPanel} to the page.
-	 * 
-	 * @param visible
-	 *            <code>true</code> to show the object, <code>false</code> to
-	 *            hide it
-	 * @see #show()
-	 * @see #hide()
-	 */
-	@Override
-	public void setVisible(boolean visible) {
-		// We use visibility here instead of UIObject's default of display
-		// Because the panel is absolutely positioned, this will not create
-		// "holes" in displayed contents and it allows normal layout passes
-		// to occur so the size of the RelativePopupPanel can be reliably
-		// determined.
-		DOM.setStyleAttribute(getElement(), "visibility",
-				visible ? "visible" : "hidden");
-	}
-
-	@Override
-	public void setWidget(Widget w) {
-		super.setWidget(w);
-		maybeUpdateSize();
-	}
-
-	/**
-	 * Sets the width of the panel's child widget. If the panel's child widget
-	 * has not been set, the width passed in will be cached and used to set the
-	 * width immediately after the child widget is set.
-	 * 
-	 * <p>
-	 * Note that subclasses may have a different behavior. A subclass may decide
-	 * not to change the width of the child widget. It may instead decide to
-	 * change the width of an internal panel widget, which contains the child
-	 * widget.
-	 * </p>
-	 * 
-	 * @param width
-	 *            the object's new width, in CSS units (e.g. "10px", "1em")
-	 */
-	@Override
-	public void setWidth(String width) {
-		desiredWidth = width;
-		maybeUpdateSize();
-		// If the user cleared the size, revert to not trying to control
-		// children.
-		if (width.length() == 0) {
-			desiredWidth = null;
-		}
-	}
-
-	/**
-	 * Shows the popup and attach it to the page. It must have a child widget
-	 * before this method is called.
-	 */
-	public void show() {
-		if (showing) {
-			return;
-		}
-		setState(true, true);
-	}
-
-	/**
-	 * Normally, the popup is positioned directly below the relative target,
-	 * with its left edge aligned with the left edge of the target. Depending on
-	 * the width and height of the popup and the distance from the target to the
-	 * bottom and right edges of the window, the popup may be displayed directly
-	 * above the target, and/or its right edge may be aligned with the right
-	 * edge of the target.
-	 * 
-	 * @param target
-	 *            the target to show the popup below
-	 */
-	public final void showRelativeTo(final UIObject target) {
-		// Set the position of the popup right before it is shown.
-		setPopupPositionAndShow(new PositionCallback() {
-			public void setPosition(int offsetWidth, int offsetHeight) {
-				position(target, offsetWidth, offsetHeight);
-			}
-		});
-	}
-
-	/**
-	 * Remove focus from an Element.
-	 * 
-	 * @param elt
-	 *            The Element on which <code>blur()</code> will be invoked
-	 */
-	private native void blur(Element elt) /*-{
-											// Issue 2390: blurring the body causes IE to disappear to the background
-											if (elt.blur && elt != $doc.body) {
-											elt.blur();
-											}
-											}-*/;
-
-	/**
-	 * Does the event target one of the partner elements?
-	 * 
-	 * @param event
-	 *            the native event
-	 * @return true if the event targets a partner
-	 */
-	private boolean eventTargetsPartner(NativeEvent event) {
-		if (autoHidePartners == null) {
-			return false;
-		}
-		EventTarget target = event.getEventTarget();
-		if (Element.is(target)) {
-			for (Element elem : autoHidePartners) {
-				if (elem.isOrHasChild(Element.as(target))) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Does the event target this popup?
-	 * 
-	 * @param event
-	 *            the native event
-	 * @return true if the event targets the popup
-	 */
-	private boolean eventTargetsPopup(NativeEvent event) {
-		EventTarget target = event.getEventTarget();
-		if (Element.is(target)) {
-			Element eTarget = Element.as(target);
-			return getElement().isOrHasChild(eTarget);
-		}
-		return false;
-	}
-
-	/**
-	 * Get the element that {@link PopupImpl} uses. PopupImpl creates an element
-	 * that goes inside of the outer element, so all methods in PopupImpl are
-	 * relative to the first child of the outer element, not the outer element
-	 * itself.
-	 * 
-	 * @return the Element that {@link PopupImpl} creates and expects
-	 */
-	private Element getPopupImplElement() {
-		return DOM.getFirstChild(super.getContainerElement());
 	}
 
 	/**
@@ -1082,6 +876,210 @@ public class RelativePopupPanel extends SimplePanel
 	}
 
 	/**
+	 * Remove an autoHide partner.
+	 * 
+	 * @param partner
+	 *            the auto hide partner to remove
+	 */
+	public void removeAutoHidePartner(Element partner) {
+		assert partner != null : "partner cannot be null";
+		if (autoHidePartners != null) {
+			autoHidePartners.remove(partner);
+		}
+	}
+
+	/**
+	 * Sets the animation used to animate this popup. Used by gwt-incubator to
+	 * allow DropDownPanel to override the default popup animation. Not
+	 * protected because the exact API may change in gwt 1.6.
+	 * 
+	 * @param animation
+	 *            the animation to use for this popup
+	 */
+	void setAnimation(ResizeAnimation animation) {
+		resizeAnimation = animation;
+	}
+
+	public void setAnimationEnabled(boolean enable) {
+		isAnimationEnabled = enable;
+	}
+
+	/**
+	 * Enable or disable animation of the {@link RelativePopupPanel}.
+	 * 
+	 * @param type
+	 *            the type of animation to use
+	 */
+	void setAnimationType(AnimationType type) {
+		animType = type;
+	}
+
+	/**
+	 * Enable or disable the autoHide feature. When enabled, the popup will be
+	 * automatically hidden when the user clicks outside of it.
+	 * 
+	 * @param autoHide
+	 *            true to enable autoHide, false to disable
+	 */
+	public void setAutoHideEnabled(boolean autoHide) {
+		this.autoHide = autoHide;
+	}
+
+	/**
+	 * Enable or disable autoHide on history change events. When enabled, the
+	 * popup will be automatically hidden when the history token changes, such
+	 * as when the user presses the browser's back button. Disabled by default.
+	 * 
+	 * @param enabled
+	 *            true to enable, false to disable
+	 */
+	public void setAutoHideOnHistoryEventsEnabled(boolean enabled) {
+		this.autoHideOnHistoryEvents = enabled;
+	}
+
+	/**
+	 * When enabled, the background will be blocked with a semi-transparent pane
+	 * the next time it is shown. If the RelativePopupPanel is already visible,
+	 * the glass will not be displayed until it is hidden and shown again.
+	 * 
+	 * @param enabled
+	 *            true to enable, false to disable
+	 */
+	public void setGlassEnabled(boolean enabled) {
+		this.isGlassEnabled = enabled;
+		if (enabled && glass == null) {
+			glass = Document.get().createDivElement();
+			glass.setClassName(glassStyleName);
+			glass.getStyle().setPosition(Position.ABSOLUTE);
+			glass.getStyle().setLeft(0, Unit.PX);
+			glass.getStyle().setTop(0, Unit.PX);
+		}
+	}
+
+	/**
+	 * Sets the style name to be used on the glass element. By default, this is
+	 * "gwt-PopupPanelGlass".
+	 * 
+	 * @param glassStyleName
+	 *            the glass element's style name
+	 */
+	public void setGlassStyleName(String glassStyleName) {
+		this.glassStyleName = glassStyleName;
+		if (glass != null) {
+			glass.setClassName(glassStyleName);
+		}
+	}
+
+	/**
+	 * Sets the height of the panel's child widget. If the panel's child widget
+	 * has not been set, the height passed in will be cached and used to set the
+	 * height immediately after the child widget is set.
+	 * 
+	 * <p>
+	 * Note that subclasses may have a different behavior. A subclass may decide
+	 * not to change the height of the child widget. It may instead decide to
+	 * change the height of an internal panel widget, which contains the child
+	 * widget.
+	 * </p>
+	 * 
+	 * @param height
+	 *            the object's new height, in CSS units (e.g. "10px", "1em")
+	 */
+	@Override
+	public void setHeight(String height) {
+		desiredHeight = height;
+		maybeUpdateSize();
+		// If the user cleared the size, revert to not trying to control
+		// children.
+		if (height.length() == 0) {
+			desiredHeight = null;
+		}
+	}
+
+	public void setHideOnEscape(boolean hideOnEscape) {
+		this.hideOnEscape = hideOnEscape;
+	}
+
+	/**
+	 * When the popup is modal, keyboard or mouse events that do not target the
+	 * RelativePopupPanel or its children will be ignored.
+	 * 
+	 * @param modal
+	 *            true to make the popup modal
+	 */
+	public void setModal(boolean modal) {
+		this.modal = modal;
+	}
+
+	/**
+	 * Sets the popup's position relative to the browser's client area. The
+	 * popup's position may be set before calling {@link #show()}.
+	 * 
+	 * @param left
+	 *            the left position, in pixels
+	 * @param top
+	 *            the top position, in pixels
+	 */
+	public void setPopupPosition(int left, int top) {
+		// Save the position of the popup
+		leftPosition = left;
+		topPosition = top;
+		// Account for the difference between absolute position and the
+		// body's positioning context.
+		left -= Document.get().getBodyOffsetLeft();
+		top -= Document.get().getBodyOffsetTop();
+		// Set the popup's position manually, allowing setPopupPosition() to be
+		// called before show() is called (so a popup can be positioned without
+		// it
+		// 'jumping' on the screen).
+		Element elem = getElement();
+		elem.getStyle().setPropertyPx("left", left);
+		elem.getStyle().setPropertyPx("top", top);
+	}
+
+	/**
+	 * Sets the popup's position using a {@link PositionCallback}, and shows the
+	 * popup. The callback allows positioning to be performed based on the
+	 * offsetWidth and offsetHeight of the popup, which are normally not
+	 * available until the popup is showing. By positioning the popup before it
+	 * is shown, the the popup will not jump from its original position to the
+	 * new position.
+	 * 
+	 * @param callback
+	 *            the callback to set the position of the popup
+	 * @see PositionCallback#setPosition(int offsetWidth, int offsetHeight)
+	 */
+	public void setPopupPositionAndShow(PositionCallback callback) {
+		setVisible(false);
+		show();
+		callback.setPosition(getOffsetWidth(), getOffsetHeight());
+		setVisible(true);
+	}
+
+	public void setPositioningContainer(ComplexPanel positioningContainer) {
+		this.positioningContainer = positioningContainer;
+	}
+
+	/**
+	 * <p>
+	 * When enabled, the popup will preview all native events, even if another
+	 * popup was opened after this one.
+	 * </p>
+	 * <p>
+	 * If autoHide is enabled, enabling this feature will cause the popup to
+	 * autoHide even if another non-modal popup was shown after it. If this
+	 * feature is disabled, the popup will only autoHide if it was the last
+	 * popup opened.
+	 * </p>
+	 * 
+	 * @param previewAllNativeEvents
+	 *            true to enable, false to disable
+	 */
+	public void setPreviewingAllNativeEvents(boolean previewAllNativeEvents) {
+		this.previewAllNativeEvents = previewAllNativeEvents;
+	}
+
+	/**
 	 * Set the showing state of the popup. If maybeAnimate is true, the
 	 * animation will be used to set the state. If it is false, the animation
 	 * will be cancelled.
@@ -1129,96 +1127,111 @@ public class RelativePopupPanel extends SimplePanel
 	}
 
 	@Override
-	protected Element getContainerElement() {
-		return impl.getContainerElement(getPopupImplElement()).cast();
+	public void setTitle(String title) {
+		Element containerElement = getContainerElement();
+		if (title == null || title.length() == 0) {
+			containerElement.removeAttribute("title");
+		} else {
+			containerElement.setAttribute("title", title);
+		}
 	}
 
 	/**
-	 * Get the glass element used by this {@link RelativePopupPanel}. The
-	 * element is not created until it is enabled via
-	 * {@link #setGlassEnabled(boolean)}.
+	 * Sets whether this object is visible. This method just sets the
+	 * <code>visibility</code> style attribute. You need to call {@link #show()}
+	 * to actually attached/detach the {@link RelativePopupPanel} to the page.
 	 * 
-	 * @return the glass element, or null if not created
+	 * @param visible
+	 *            <code>true</code> to show the object, <code>false</code> to
+	 *            hide it
+	 * @see #show()
+	 * @see #hide()
 	 */
-	protected Element getGlassElement() {
-		return glass;
+	@Override
+	public void setVisible(boolean visible) {
+		// We use visibility here instead of UIObject's default of display
+		// Because the panel is absolutely positioned, this will not create
+		// "holes" in displayed contents and it allows normal layout passes
+		// to occur so the size of the RelativePopupPanel can be reliably
+		// determined.
+		DOM.setStyleAttribute(getElement(), "visibility",
+				visible ? "visible" : "hidden");
 	}
 
 	@Override
-	protected Element getStyleElement() {
-		return impl.getStyleElement(getPopupImplElement()).cast();
+	public void setWidget(Widget w) {
+		super.setWidget(w);
+		maybeUpdateSize();
 	}
 
-	protected void onPreviewNativeEvent(NativePreviewEvent event) {
-		// Cancel the event based on the deprecated onEventPreview() method
-		if (event.isFirstHandler()
-				&& !onEventPreview(Event.as(event.getNativeEvent()))) {
-			event.cancel();
-		}
-	}
-
+	/**
+	 * Sets the width of the panel's child widget. If the panel's child widget
+	 * has not been set, the width passed in will be cached and used to set the
+	 * width immediately after the child widget is set.
+	 * 
+	 * <p>
+	 * Note that subclasses may have a different behavior. A subclass may decide
+	 * not to change the width of the child widget. It may instead decide to
+	 * change the width of an internal panel widget, which contains the child
+	 * widget.
+	 * </p>
+	 * 
+	 * @param width
+	 *            the object's new width, in CSS units (e.g. "10px", "1em")
+	 */
 	@Override
-	protected void onUnload() {
-		// Just to be sure, we perform cleanup when the popup is unloaded (i.e.
-		// removed from the DOM). This is normally taken care of in hide(), but
-		// it
-		// can be missed if someone removes the popup directly from the
-		// RootPanel.
-		if (isShowing()) {
-			setState(false, false);
+	public void setWidth(String width) {
+		desiredWidth = width;
+		maybeUpdateSize();
+		// If the user cleared the size, revert to not trying to control
+		// children.
+		if (width.length() == 0) {
+			desiredWidth = null;
 		}
 	}
 
 	/**
-	 * We control size by setting our child widget's size. However, if we don't
-	 * currently have a child, we record the size the user wanted so that when
-	 * we do get a child, we can set it correctly. Until size is explicitly
-	 * cleared, any child put into the popup will be given that size.
+	 * Shows the popup and attach it to the page. It must have a child widget
+	 * before this method is called.
 	 */
-	void maybeUpdateSize() {
-		// For subclasses of RelativePopupPanel, we want the default behavior of
-		// setWidth
-		// and setHeight to change the dimensions of RelativePopupPanel's child
-		// widget.
-		// We do this because RelativePopupPanel's child widget is the first
-		// widget in
-		// the hierarchy which provides structure to the panel. DialogBox is
-		// an example of this. We want to set the dimensions on DialogBox's
-		// FlexTable, which is RelativePopupPanel's child widget. However, it is
-		// not
-		// DialogBox's child widget. To make sure that we are actually getting
-		// RelativePopupPanel's child widget, we have to use super.getWidget().
-		Widget w = super.getWidget();
-		if (w != null) {
-			if (desiredHeight != null) {
-				w.setHeight(desiredHeight);
-			}
-			if (desiredWidth != null) {
-				w.setWidth(desiredWidth);
-			}
+	public void show() {
+		if (showing) {
+			return;
 		}
+		setState(true, true);
 	}
 
 	/**
-	 * Sets the animation used to animate this popup. Used by gwt-incubator to
-	 * allow DropDownPanel to override the default popup animation. Not
-	 * protected because the exact API may change in gwt 1.6.
+	 * Normally, the popup is positioned directly below the relative target,
+	 * with its left edge aligned with the left edge of the target. Depending on
+	 * the width and height of the popup and the distance from the target to the
+	 * bottom and right edges of the window, the popup may be displayed directly
+	 * above the target, and/or its right edge may be aligned with the right
+	 * edge of the target.
 	 * 
-	 * @param animation
-	 *            the animation to use for this popup
+	 * @param target
+	 *            the target to show the popup below
 	 */
-	void setAnimation(ResizeAnimation animation) {
-		resizeAnimation = animation;
+	public final void showRelativeTo(final UIObject target) {
+		// Set the position of the popup right before it is shown.
+		setPopupPositionAndShow(new PositionCallback() {
+			public void setPosition(int offsetWidth, int offsetHeight) {
+				position(target, offsetWidth, offsetHeight);
+			}
+		});
 	}
 
 	/**
-	 * Enable or disable animation of the {@link RelativePopupPanel}.
+	 * The type of animation to use when opening the popup.
 	 * 
-	 * @param type
-	 *            the type of animation to use
+	 * <ul>
+	 * <li>CENTER - Expand from the center of the popup</li>
+	 * <li>ONE_WAY_CORNER - Expand from the top left corner, do not animate
+	 * hiding</li>
+	 * </ul>
 	 */
-	void setAnimationType(AnimationType type) {
-		animType = type;
+	static enum AnimationType {
+		CENTER, ONE_WAY_CORNER, ROLL_DOWN
 	}
 
 	/**
@@ -1246,19 +1259,6 @@ public class RelativePopupPanel extends SimplePanel
 		public boolean test(Widget o) {
 			return o instanceof RelativePopupPanel;
 		}
-	}
-
-	/**
-	 * The type of animation to use when opening the popup.
-	 * 
-	 * <ul>
-	 * <li>CENTER - Expand from the center of the popup</li>
-	 * <li>ONE_WAY_CORNER - Expand from the top left corner, do not animate
-	 * hiding</li>
-	 * </ul>
-	 */
-	static enum AnimationType {
-		CENTER, ONE_WAY_CORNER, ROLL_DOWN
 	}
 
 	/**
@@ -1296,6 +1296,109 @@ public class RelativePopupPanel extends SimplePanel
 		 */
 		public ResizeAnimation(RelativePopupPanel panel) {
 			this.curPanel = panel;
+		}
+
+		/**
+		 * @return a rect string
+		 */
+		private String getRectString(int top, int right, int bottom, int left) {
+			return "rect(" + top + "px, " + right + "px, " + bottom + "px, "
+					+ left + "px)";
+		}
+
+		/**
+		 * Show or hide the glass.
+		 */
+		private void maybeShowGlass() {
+			if (showing) {
+				if (curPanel.isGlassEnabled) {
+					Document.get().getBody().appendChild(curPanel.glass);
+					resizeRegistration = Window
+							.addResizeHandler(curPanel.glassResizer);
+					curPanel.glassResizer.onResize(null);
+					glassShowing = true;
+				}
+			} else if (glassShowing) {
+				Document.get().getBody().removeChild(curPanel.glass);
+				resizeRegistration.removeHandler();
+				resizeRegistration = null;
+				glassShowing = false;
+			}
+		}
+
+		@Override
+		protected void onComplete() {
+			if (!showing) {
+				maybeShowGlass();
+				curPanel.getPositioningContainer().remove(curPanel);
+			}
+			impl.setClip(curPanel.getElement(), "rect(auto, auto, auto, auto)");
+			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
+		}
+
+		private void onInstantaneousRun() {
+			maybeShowGlass();
+			if (showing) {
+				// Set the position attribute, and then attach to the DOM.
+				// Otherwise,
+				// the RelativePopupPanel will appear to 'jump' from its
+				// static/relative
+				// position to its absolute position (issue #1231).
+				DOM.setStyleAttribute(curPanel.getElement(), "position",
+						"absolute");
+				if (curPanel.topPosition != -1) {
+					curPanel.setPopupPosition(curPanel.leftPosition,
+							curPanel.topPosition);
+				}
+				curPanel.getPositioningContainer().add(curPanel);
+			} else {
+				curPanel.getPositioningContainer().remove(curPanel);
+			}
+			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
+		}
+
+		@Override
+		protected void onStart() {
+			offsetHeight = curPanel.getOffsetHeight();
+			offsetWidth = curPanel.getOffsetWidth();
+			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "hidden");
+			super.onStart();
+		}
+
+		@Override
+		protected void onUpdate(double progress) {
+			if (!showing) {
+				progress = 1.0 - progress;
+			}
+			// Determine the clipping size
+			int top = 0;
+			int left = 0;
+			int right = 0;
+			int bottom = 0;
+			int height = (int) (progress * offsetHeight);
+			int width = (int) (progress * offsetWidth);
+			switch (curPanel.animType) {
+			case ROLL_DOWN:
+				right = offsetWidth;
+				bottom = height;
+				break;
+			case CENTER:
+				top = (offsetHeight - height) >> 1;
+				left = (offsetWidth - width) >> 1;
+				right = left + width;
+				bottom = top + height;
+				break;
+			case ONE_WAY_CORNER:
+				if (LocaleInfo.getCurrentLocale().isRTL()) {
+					left = offsetWidth - width;
+				}
+				right = left + width;
+				bottom = top + height;
+				break;
+			}
+			// Set the rect clipping
+			impl.setClip(curPanel.getElement(),
+					getRectString(top, right, bottom, left));
 		}
 
 		/**
@@ -1349,109 +1452,6 @@ public class RelativePopupPanel extends SimplePanel
 			} else {
 				onInstantaneousRun();
 			}
-		}
-
-		/**
-		 * @return a rect string
-		 */
-		private String getRectString(int top, int right, int bottom, int left) {
-			return "rect(" + top + "px, " + right + "px, " + bottom + "px, "
-					+ left + "px)";
-		}
-
-		/**
-		 * Show or hide the glass.
-		 */
-		private void maybeShowGlass() {
-			if (showing) {
-				if (curPanel.isGlassEnabled) {
-					Document.get().getBody().appendChild(curPanel.glass);
-					resizeRegistration = Window
-							.addResizeHandler(curPanel.glassResizer);
-					curPanel.glassResizer.onResize(null);
-					glassShowing = true;
-				}
-			} else if (glassShowing) {
-				Document.get().getBody().removeChild(curPanel.glass);
-				resizeRegistration.removeHandler();
-				resizeRegistration = null;
-				glassShowing = false;
-			}
-		}
-
-		private void onInstantaneousRun() {
-			maybeShowGlass();
-			if (showing) {
-				// Set the position attribute, and then attach to the DOM.
-				// Otherwise,
-				// the RelativePopupPanel will appear to 'jump' from its
-				// static/relative
-				// position to its absolute position (issue #1231).
-				DOM.setStyleAttribute(curPanel.getElement(), "position",
-						"absolute");
-				if (curPanel.topPosition != -1) {
-					curPanel.setPopupPosition(curPanel.leftPosition,
-							curPanel.topPosition);
-				}
-				curPanel.getPositioningContainer().add(curPanel);
-			} else {
-				curPanel.getPositioningContainer().remove(curPanel);
-			}
-			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
-		}
-
-		@Override
-		protected void onComplete() {
-			if (!showing) {
-				maybeShowGlass();
-				curPanel.getPositioningContainer().remove(curPanel);
-			}
-			impl.setClip(curPanel.getElement(), "rect(auto, auto, auto, auto)");
-			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
-		}
-
-		@Override
-		protected void onStart() {
-			offsetHeight = curPanel.getOffsetHeight();
-			offsetWidth = curPanel.getOffsetWidth();
-			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "hidden");
-			super.onStart();
-		}
-
-		@Override
-		protected void onUpdate(double progress) {
-			if (!showing) {
-				progress = 1.0 - progress;
-			}
-			// Determine the clipping size
-			int top = 0;
-			int left = 0;
-			int right = 0;
-			int bottom = 0;
-			int height = (int) (progress * offsetHeight);
-			int width = (int) (progress * offsetWidth);
-			switch (curPanel.animType) {
-			case ROLL_DOWN:
-				right = offsetWidth;
-				bottom = height;
-				break;
-			case CENTER:
-				top = (offsetHeight - height) >> 1;
-				left = (offsetWidth - width) >> 1;
-				right = left + width;
-				bottom = top + height;
-				break;
-			case ONE_WAY_CORNER:
-				if (LocaleInfo.getCurrentLocale().isRTL()) {
-					left = offsetWidth - width;
-				}
-				right = left + width;
-				bottom = top + height;
-				break;
-			}
-			// Set the rect clipping
-			impl.setClip(curPanel.getElement(),
-					getRectString(top, right, bottom, left));
 		}
 	}
 }

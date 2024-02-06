@@ -10,6 +10,8 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 		XmlTokens.get().register(getCategory(), this);
 	}
 
+	protected abstract Class getCategory();
+
 	public XmlTokenContext getInputContext(XmlStructuralJoin node) {
 		XmlTokenContext tokenContext = new XmlTokenContext();
 		tokenContext.properties = node.sourceNode.attributes();
@@ -18,6 +20,10 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 
 	public XmlTokenContext getOutputContext(XmlStructuralJoin node) {
 		return XmlTokenContext.EMPTY;
+	}
+
+	protected Class getSubCategory() {
+		return getCategory();
 	}
 
 	public boolean ignoreable() {
@@ -39,6 +45,12 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 		onMatchPreWrappers(context, join);
 	}
 
+	protected void onMatchPostWrappers(C context, XmlStructuralJoin join) {
+	}
+
+	protected abstract void onMatchPreWrappers(C context,
+			XmlStructuralJoin join);
+
 	public String textContent(DomNode sourceNode) {
 		return null;
 	}
@@ -47,16 +59,4 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 	public String toString() {
 		return "XmlToken: " + name;
 	}
-
-	protected abstract Class getCategory();
-
-	protected Class getSubCategory() {
-		return getCategory();
-	}
-
-	protected void onMatchPostWrappers(C context, XmlStructuralJoin join) {
-	}
-
-	protected abstract void onMatchPreWrappers(C context,
-			XmlStructuralJoin join);
 }

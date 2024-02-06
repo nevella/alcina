@@ -39,16 +39,6 @@ public class IntegerKeyAnalyzer extends AbstractKeyAnalyzer<Integer>
 	}
 
 	@Override
-	public int lengthInBits(Integer key) {
-		return Integer.SIZE;
-	}
-
-	@Override
-	public boolean isBitSet(Integer key, int bitIndex) {
-		return (key & mask(bitIndex)) != 0;
-	}
-
-	@Override
 	public int bitIndex(Integer key, Integer otherKey) {
 		int keyValue = key.intValue();
 		if (keyValue == 0) {
@@ -67,7 +57,17 @@ public class IntegerKeyAnalyzer extends AbstractKeyAnalyzer<Integer>
 	}
 
 	@Override
+	public boolean isBitSet(Integer key, int bitIndex) {
+		return (key & mask(bitIndex)) != 0;
+	}
+
+	@Override
 	public boolean isPrefix(Integer key, Integer prefix) {
 		return key.equals(prefix);
+	}
+
+	@Override
+	public int lengthInBits(Integer key) {
+		return Integer.SIZE;
 	}
 }

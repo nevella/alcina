@@ -78,6 +78,44 @@ public class Transaction implements Comparable<Transaction> {
 		begin(TransactionPhase.TO_DB_PREPARING);
 	}
 
+	static void begin(TransactionPhase initialPhase) {
+		begin(initialPhase, null);
+	}
+
+	static void begin(TransactionPhase initialPhase,
+			Transaction copyVisibleTransactionsFrom) {
+		if (!Transactions.isInitialised()) {
+			return;
+		}
+		if (getPerThreadTransaction() != null) {
+			throw new MvccException(Ax.format("Begin without end: %s - %s",
+					initialPhase, getPerThreadTransaction()));
+		}
+		switch (initialPhase) {
+		case TO_DB_PREPARING:
+		case TO_DOMAIN_PREPARING:
+		case VACUUM_BEGIN:
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		Transaction transaction = new Transaction(initialPhase,
+				copyVisibleTransactionsFrom);
+		logger.debug("Joining tx - {} {} {}", transaction,
+				Thread.currentThread().getName(),
+				Thread.currentThread().getId());
+		transaction.originatingThread = Thread.currentThread();
+		setThreadLocalTransaction(transaction);
+		transaction.originatingThreadName = Thread.currentThread().getName();
+		synchronized (transaction.resolvedMostRecentVisibleTransactions) {
+			transaction.threadCount++;
+		}
+		if (retainStartEndTraces()) {
+			transaction.transactionStartTrace = SEUtilities
+					.getCurrentThreadStacktraceSlice();
+		}
+	}
+
 	public static void beginDomainPreparing() {
 		begin(TransactionPhase.TO_DOMAIN_PREPARING);
 	}
@@ -223,6 +261,10 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	private static Transaction getPerThreadTransaction() {
+		return perThreadTransaction.get(Thread.currentThread());
+	}
+
 	public static boolean isInActiveTransaction() {
 		Transaction currentThreadTransaction = provideCurrentThreadTransaction();
 		return currentThreadTransaction != null
@@ -250,30 +292,6 @@ public class Transaction implements Comparable<Transaction> {
 		setThreadLocalTransaction(transaction);
 	}
 
-	public static void removePerThreadContext() {
-		removeThreadLocalTransaction();
-	}
-
-	public static void setSupplier(Supplier<Transaction> transactionSupplier) {
-		threadLocalSupplier.set(transactionSupplier);
-	}
-
-	// inverse of join
-	public static void split() {
-		Transaction transaction = getPerThreadTransaction();
-		logger.debug("Removing tx - {} {} {}", transaction,
-				Thread.currentThread().getName(),
-				Thread.currentThread().getId());
-		removeThreadLocalTransaction();
-		synchronized (transaction.resolvedMostRecentVisibleTransactions) {
-			transaction.threadCount--;
-		}
-	}
-
-	private static Transaction getPerThreadTransaction() {
-		return perThreadTransaction.get(Thread.currentThread());
-	}
-
 	private static Transaction provideCurrentThreadTransaction() {
 		Transaction transaction = perThreadTransaction
 				.get(Thread.currentThread());
@@ -289,6 +307,14 @@ public class Transaction implements Comparable<Transaction> {
 		return transaction;
 	}
 
+	static void reapUnreferencedTransactions() {
+		perThreadTransaction.keySet().removeIf(t -> !t.isAlive());
+	}
+
+	public static void removePerThreadContext() {
+		removeThreadLocalTransaction();
+	}
+
 	private static void removeThreadLocalTransaction() {
 		perThreadTransaction.remove(Thread.currentThread());
 	}
@@ -297,50 +323,24 @@ public class Transaction implements Comparable<Transaction> {
 		return retainStartEndTraces;
 	}
 
+	public static void setSupplier(Supplier<Transaction> transactionSupplier) {
+		threadLocalSupplier.set(transactionSupplier);
+	}
+
 	private static void setThreadLocalTransaction(Transaction transaction) {
 		perThreadTransaction.put(Thread.currentThread(), transaction);
 	}
 
-	static void begin(TransactionPhase initialPhase) {
-		begin(initialPhase, null);
-	}
-
-	static void begin(TransactionPhase initialPhase,
-			Transaction copyVisibleTransactionsFrom) {
-		if (!Transactions.isInitialised()) {
-			return;
-		}
-		if (getPerThreadTransaction() != null) {
-			throw new MvccException(Ax.format("Begin without end: %s - %s",
-					initialPhase, getPerThreadTransaction()));
-		}
-		switch (initialPhase) {
-		case TO_DB_PREPARING:
-		case TO_DOMAIN_PREPARING:
-		case VACUUM_BEGIN:
-			break;
-		default:
-			throw new UnsupportedOperationException();
-		}
-		Transaction transaction = new Transaction(initialPhase,
-				copyVisibleTransactionsFrom);
-		logger.debug("Joining tx - {} {} {}", transaction,
+	// inverse of join
+	public static void split() {
+		Transaction transaction = getPerThreadTransaction();
+		logger.debug("Removing tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
-		transaction.originatingThread = Thread.currentThread();
-		setThreadLocalTransaction(transaction);
-		transaction.originatingThreadName = Thread.currentThread().getName();
+		removeThreadLocalTransaction();
 		synchronized (transaction.resolvedMostRecentVisibleTransactions) {
-			transaction.threadCount++;
+			transaction.threadCount--;
 		}
-		if (retainStartEndTraces()) {
-			transaction.transactionStartTrace = SEUtilities
-					.getCurrentThreadStacktraceSlice();
-		}
-	}
-
-	static void reapUnreferencedTransactions() {
-		perThreadTransaction.keySet().removeIf(t -> !t.isAlive());
 	}
 
 	// used as a monitor for threadCount modification (not access)
@@ -449,6 +449,91 @@ public class Transaction implements Comparable<Transaction> {
 		return t;
 	}
 
+	void endTransaction() {
+		originatingThread = null;
+		ended = true;
+		TransactionPhase endPhase = getPhase();
+		TransformManager transformManager = TransformManager.get();
+		if (transformManager == null) {
+			return;
+		}
+		Set<DomainTransformEvent> transforms = transformManager.getTransforms();
+		switch (endPhase) {
+		case TO_DB_PERSISTED:
+		case TO_DB_ABORTED:
+		case TO_DOMAIN_COMMITTED:
+		case TO_DOMAIN_ABORTED:
+		case VACUUM_ENDED:
+		case READ_ONLY:
+		case TO_DB_PREPARING:
+		case NON_COMMITAL:
+			break;
+		default:
+			// we used to throw to an exception if there were
+			// uncommitted transforms but we can't allow dangling
+			// transactions - we can end up here if an exception is thrown on
+			// postProcess()
+			if (AppPersistenceBase.isTestServer()) {
+				throw new MvccException(
+						Ax.format("Ending on invalid phase: %s %s transforms",
+								endPhase, transforms.size()));
+			} else {
+				logger.warn("Ending transaction on invalid phase: {}",
+						endPhase);
+			}
+		}
+		if (isWriteable()) {
+			if (transforms.size() == 0) {
+			} else {
+				// FIXME - mvcc.5 - mvcc exception (after cleanup)
+				switch (endPhase) {
+				case NON_COMMITAL:
+					// no warning, transforms allowed - in fact expected
+					break;
+				default:
+					logger.warn(
+							"Ending transaction with uncommitted transforms: {} {}",
+							endPhase, transforms.size());
+					if (Ax.isTest()) {
+						throw new RuntimeException(Ax.format(
+								"Uncommitted transforms\n\n%s", transforms));
+					}
+					break;
+				}
+			}
+		}
+		// need to do this even if transforms == 0 - to clear listeners
+		// setup during the transaction
+		//
+		// but only if tx is not readonly
+		//
+		if (endPhase != TransactionPhase.READ_ONLY) {
+			try {
+				LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
+				switch (endPhase) {
+				case NON_COMMITAL:
+					ThreadlocalTransformManager.cast().resetTltmNonCommitalTx();
+					break;
+				default:
+					if (createdLocalsForEviction.size() > 0) {
+						ThreadlocalTransformManager.cast()
+								.evictNonPromotedLocals(
+										createdLocalsForEviction);
+					}
+					ThreadlocalTransformManager.cast().resetTltm(null);
+					break;
+				}
+			} finally {
+				LooseContext.pop();
+			}
+		}
+		if (retainStartEndTraces()) {
+			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();
+		}
+		logger.debug("Ended tx: {}", this);
+		Transactions.get().onTransactionEnded(this);
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Transaction) {
@@ -467,12 +552,20 @@ public class Transaction implements Comparable<Transaction> {
 		return this.id;
 	}
 
+	TransactionPhase getPhase() {
+		return this.phase;
+	}
+
 	public DomainTransformCommitPosition getPosition() {
 		return null;
 	}
 
 	public long getTimeout() {
 		return this.timeout;
+	}
+
+	long getTransformRequestId() {
+		return this.transformRequestId;
 	}
 
 	@Override
@@ -507,6 +600,10 @@ public class Transaction implements Comparable<Transaction> {
 		return phase == TransactionPhase.TO_DB_PREPARING;
 	}
 
+	boolean isReadonly() {
+		return threadCount != 1 || phase == TransactionPhase.READ_ONLY;
+	}
+
 	public boolean isReadOnly() {
 		return this.phase == TransactionPhase.READ_ONLY;
 	}
@@ -528,6 +625,31 @@ public class Transaction implements Comparable<Transaction> {
 		return !isReadonly();
 	}
 
+	/*
+	 * Cache the result (for a given object, and a given transaction, it may be
+	 * called many times). Non-synchronized if single-threaded
+	 */
+	Transaction
+			mostRecentVisibleCommittedTransaction(MvccObjectVersions versions) {
+		// Defensively synchronized - this sort of logic doesn't work anyway
+		// (although a CAS would)
+		// if (threadCount == 1) {
+		// return resolvedMostRecentVisibleTransactions
+		// .computeIfAbsent(versions,
+		// v -> TransactionVersions.mostRecentCommonVisible(
+		// v.versions().keySet(),
+		// committedTransactions));
+		// } else {
+		synchronized (resolvedMostRecentVisibleTransactions) {
+			return resolvedMostRecentVisibleTransactions
+					.computeIfAbsent(versions,
+							v -> TransactionVersions.mostRecentCommonVisible(
+									v.versions().keySet(),
+									committedTransactions));
+		}
+		// }
+	}
+
 	public long provideAge() {
 		return System.currentTimeMillis() - startTime;
 	}
@@ -546,6 +668,19 @@ public class Transaction implements Comparable<Transaction> {
 	 */
 	public void setBaseTransaction(boolean baseTransaction) {
 		this.baseTransaction = baseTransaction;
+	}
+
+	void setId(TransactionId id) {
+		this.id = id;
+	}
+
+	void setPhase(TransactionPhase phase) {
+		if (Configuration.is("debugSetPhase")) {
+			logger.info("{}->{} ::\n{}", this.phase, phase,
+					SEUtilities.getCurrentThreadStacktraceSlice());
+		}
+		this.phase = phase;
+		logger.debug("Transition tx: {}", this);
 	}
 
 	public void setPopulatingPureTransactional(
@@ -634,6 +769,17 @@ public class Transaction implements Comparable<Transaction> {
 		toReadonly(false);
 	}
 
+	private void toReadonly(boolean allowExistingTransforms) {
+		if (this.phase == TransactionPhase.READ_ONLY) {
+			return;
+		}
+		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
+				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
+				&& (allowExistingTransforms
+						|| TransformManager.get().getTransforms().isEmpty()));
+		this.phase = TransactionPhase.READ_ONLY;
+	}
+
 	@Override
 	public String toString() {
 		return Ax.format("%s::%s", id, phase);
@@ -666,152 +812,6 @@ public class Transaction implements Comparable<Transaction> {
 			throw new UnsupportedOperationException(Ax.format(
 					"Cannot cancel transaction %s in phase %s", id, phase));
 		}
-	}
-
-	private void toReadonly(boolean allowExistingTransforms) {
-		if (this.phase == TransactionPhase.READ_ONLY) {
-			return;
-		}
-		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
-				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
-				&& (allowExistingTransforms
-						|| TransformManager.get().getTransforms().isEmpty()));
-		this.phase = TransactionPhase.READ_ONLY;
-	}
-
-	void endTransaction() {
-		originatingThread = null;
-		ended = true;
-		TransactionPhase endPhase = getPhase();
-		TransformManager transformManager = TransformManager.get();
-		if (transformManager == null) {
-			return;
-		}
-		Set<DomainTransformEvent> transforms = transformManager.getTransforms();
-		switch (endPhase) {
-		case TO_DB_PERSISTED:
-		case TO_DB_ABORTED:
-		case TO_DOMAIN_COMMITTED:
-		case TO_DOMAIN_ABORTED:
-		case VACUUM_ENDED:
-		case READ_ONLY:
-		case TO_DB_PREPARING:
-		case NON_COMMITAL:
-			break;
-		default:
-			// we used to throw to an exception if there were
-			// uncommitted transforms but we can't allow dangling
-			// transactions - we can end up here if an exception is thrown on
-			// postProcess()
-			if (AppPersistenceBase.isTestServer()) {
-				throw new MvccException(
-						Ax.format("Ending on invalid phase: %s %s transforms",
-								endPhase, transforms.size()));
-			} else {
-				logger.warn("Ending transaction on invalid phase: {}",
-						endPhase);
-			}
-		}
-		if (isWriteable()) {
-			if (transforms.size() == 0) {
-			} else {
-				// FIXME - mvcc.5 - mvcc exception (after cleanup)
-				switch (endPhase) {
-				case NON_COMMITAL:
-					// no warning, transforms allowed - in fact expected
-					break;
-				default:
-					logger.warn(
-							"Ending transaction with uncommitted transforms: {} {}",
-							endPhase, transforms.size());
-					if (Ax.isTest()) {
-						throw new RuntimeException(Ax.format(
-								"Uncommitted transforms\n\n%s", transforms));
-					}
-					break;
-				}
-			}
-		}
-		// need to do this even if transforms == 0 - to clear listeners
-		// setup during the transaction
-		//
-		// but only if tx is not readonly
-		//
-		if (endPhase != TransactionPhase.READ_ONLY) {
-			try {
-				LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
-				switch (endPhase) {
-				case NON_COMMITAL:
-					ThreadlocalTransformManager.cast().resetTltmNonCommitalTx();
-					break;
-				default:
-					if (createdLocalsForEviction.size() > 0) {
-						ThreadlocalTransformManager.cast()
-								.evictNonPromotedLocals(
-										createdLocalsForEviction);
-					}
-					ThreadlocalTransformManager.cast().resetTltm(null);
-					break;
-				}
-			} finally {
-				LooseContext.pop();
-			}
-		}
-		if (retainStartEndTraces()) {
-			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();
-		}
-		logger.debug("Ended tx: {}", this);
-		Transactions.get().onTransactionEnded(this);
-	}
-
-	TransactionPhase getPhase() {
-		return this.phase;
-	}
-
-	long getTransformRequestId() {
-		return this.transformRequestId;
-	}
-
-	boolean isReadonly() {
-		return threadCount != 1 || phase == TransactionPhase.READ_ONLY;
-	}
-
-	/*
-	 * Cache the result (for a given object, and a given transaction, it may be
-	 * called many times). Non-synchronized if single-threaded
-	 */
-	Transaction
-			mostRecentVisibleCommittedTransaction(MvccObjectVersions versions) {
-		// Defensively synchronized - this sort of logic doesn't work anyway
-		// (although a CAS would)
-		// if (threadCount == 1) {
-		// return resolvedMostRecentVisibleTransactions
-		// .computeIfAbsent(versions,
-		// v -> TransactionVersions.mostRecentCommonVisible(
-		// v.versions().keySet(),
-		// committedTransactions));
-		// } else {
-		synchronized (resolvedMostRecentVisibleTransactions) {
-			return resolvedMostRecentVisibleTransactions
-					.computeIfAbsent(versions,
-							v -> TransactionVersions.mostRecentCommonVisible(
-									v.versions().keySet(),
-									committedTransactions));
-		}
-		// }
-	}
-
-	void setId(TransactionId id) {
-		this.id = id;
-	}
-
-	void setPhase(TransactionPhase phase) {
-		if (Configuration.is("debugSetPhase")) {
-			logger.info("{}->{} ::\n{}", this.phase, phase,
-					SEUtilities.getCurrentThreadStacktraceSlice());
-		}
-		this.phase = phase;
-		logger.debug("Transition tx: {}", this);
 	}
 
 	void toVacuumEnded(List<Transaction> vacuumableTransactions) {

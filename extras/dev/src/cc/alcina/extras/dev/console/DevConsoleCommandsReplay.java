@@ -15,6 +15,24 @@ import cc.alcina.framework.common.client.util.StringPair;
 public class DevConsoleCommandsReplay {
 	public static class CmdConvertCommandLogToReplays
 			extends DevConsoleCommand {
+		private void addInstruction(List<ReplayInstruction> instructions,
+				String group1, String group0, String g2) {
+			if (group0.contains("DIV.test-overlay")) {
+				return;
+			}
+			ReplayInstructionType type = CommonUtils
+					.getEnumValueOrNull(ReplayInstructionType.class, group1);
+			if (type != null) {
+				if (g2.contains("\\tvalue :: ")) {
+					g2 = ReplayInstruction.unescape(g2);
+				}
+				StringPair locValuePair = ClientLogRecord
+						.parseLocationValue(g2);
+				instructions.add(new ReplayInstruction(type, locValuePair.s1,
+						locValuePair.s2));
+			}
+		}
+
 		@Override
 		public boolean clsBeforeRun() {
 			return true;
@@ -86,24 +104,6 @@ public class DevConsoleCommandsReplay {
 			console.setClipboardContents(ser);
 			System.out.println("\n");
 			return "ok";
-		}
-
-		private void addInstruction(List<ReplayInstruction> instructions,
-				String group1, String group0, String g2) {
-			if (group0.contains("DIV.test-overlay")) {
-				return;
-			}
-			ReplayInstructionType type = CommonUtils
-					.getEnumValueOrNull(ReplayInstructionType.class, group1);
-			if (type != null) {
-				if (g2.contains("\\tvalue :: ")) {
-					g2 = ReplayInstruction.unescape(g2);
-				}
-				StringPair locValuePair = ClientLogRecord
-						.parseLocationValue(g2);
-				instructions.add(new ReplayInstruction(type, locValuePair.s1,
-						locValuePair.s2));
-			}
 		}
 	}
 }

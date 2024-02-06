@@ -86,42 +86,6 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 		}
 	}
 
-	public void setOperator(SearchOperator operator) {
-		SearchOperator old_operator = this.operator;
-		this.operator = operator;
-		if (old_operator == null && operator == null) {
-			return;
-		}
-		changes.firePropertyChange("operator", old_operator, operator);
-		renderAndBind();
-	}
-
-	public void setSearchable(FlatSearchable searchable) {
-		FlatSearchable old_searchable = this.searchable;
-		this.searchable = searchable;
-		changes.firePropertyChange("searchable", old_searchable, searchable);
-		if (value != null) {
-			rowAction.unbind(this);
-			LooseContext.runWithTrue(FlatSearchRow.CONTEXT_CHANGING_SEARCHABLE,
-					() -> {
-						controller.setupForNewCriterion(this,
-								old_searchable.hasValue(value));
-						return null;
-					});
-			renderAndBind();
-		} else {
-			operator = null;
-			renderAndBind();
-		}
-	}
-
-	public void setValue(SearchCriterion value) {
-		SearchCriterion old_value = this.value;
-		this.value = value;
-		changes.firePropertyChange("value", old_value, value);
-		renderAndBind();
-	}
-
 	private void renderAndBind() {
 		if (searchable != null && value != null) {
 			if (operator == null) {
@@ -165,6 +129,42 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 		rowAction.refreshBindings();
 	}
 
+	public void setOperator(SearchOperator operator) {
+		SearchOperator old_operator = this.operator;
+		this.operator = operator;
+		if (old_operator == null && operator == null) {
+			return;
+		}
+		changes.firePropertyChange("operator", old_operator, operator);
+		renderAndBind();
+	}
+
+	public void setSearchable(FlatSearchable searchable) {
+		FlatSearchable old_searchable = this.searchable;
+		this.searchable = searchable;
+		changes.firePropertyChange("searchable", old_searchable, searchable);
+		if (value != null) {
+			rowAction.unbind(this);
+			LooseContext.runWithTrue(FlatSearchRow.CONTEXT_CHANGING_SEARCHABLE,
+					() -> {
+						controller.setupForNewCriterion(this,
+								old_searchable.hasValue(value));
+						return null;
+					});
+			renderAndBind();
+		} else {
+			operator = null;
+			renderAndBind();
+		}
+	}
+
+	public void setValue(SearchCriterion value) {
+		SearchCriterion old_value = this.value;
+		this.value = value;
+		changes.firePropertyChange("value", old_value, value);
+		renderAndBind();
+	}
+
 	private class AddRemoveButtons extends Composite {
 		private Button minus;
 
@@ -184,11 +184,6 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 	}
 
 	class FlatSearchRowAction extends BasicBindingAction {
-		@Override
-		protected void set0(BoundWidget widget) {
-			refreshBindings();
-		}
-
 		void refreshBindings() {
 			boolean wasBound = binding.isBound();
 			if (binding.isBound()) {
@@ -218,6 +213,11 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 			if (wasBound) {
 				binding.bind();
 			}
+		}
+
+		@Override
+		protected void set0(BoundWidget widget) {
+			refreshBindings();
 		}
 	}
 }

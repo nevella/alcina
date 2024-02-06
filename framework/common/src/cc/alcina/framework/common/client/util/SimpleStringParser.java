@@ -22,43 +22,6 @@ import com.google.gwt.core.client.UnsafeNativeLong;
  *         plain versions
  */
 public class SimpleStringParser {
-	public static long longFromBase64(String value) {
-		int pos = 0;
-		long longVal = base64Value(value.charAt(pos++));
-		int len = value.length();
-		while (pos < len) {
-			longVal <<= 6;
-			longVal |= base64Value(value.charAt(pos++));
-		}
-		return longVal;
-	}
-
-	public static long toLong(String str) {
-		int idx = str.indexOf("/");
-		if (idx == -1) {
-			return Long.parseLong(str);
-		} else {
-			if (str.substring(0, idx).contains(".")) {
-				return SimpleStringParser20.toLong(str);
-			}
-			return longFromBase64(str.substring(idx + 1));
-		}
-	}
-
-	public static String toString(long value) {
-		String serLong = GWT.isScript() ? fastMinSerialisedLong(value)
-				: String.valueOf(value);
-		return serLong + "/" + toBase64(value);
-	}
-
-	public static String toStringNoInfo(long value) {
-		return toBase64(value);
-	}
-
-	public static String toStringOrNullNonNegativeInteger(Integer value) {
-		return value == null ? "-1" : value.toString();
-	}
-
 	private static boolean base64Append(StringBuilder sb, int digit,
 			boolean haveNonZero) {
 		if (digit > 0) {
@@ -113,6 +76,17 @@ public class SimpleStringParser {
 																	}
 																	}-*/;
 
+	public static long longFromBase64(String value) {
+		int pos = 0;
+		long longVal = base64Value(value.charAt(pos++));
+		int len = value.length();
+		while (pos < len) {
+			longVal <<= 6;
+			longVal |= base64Value(value.charAt(pos++));
+		}
+		return longVal;
+	}
+
 	/**
 	 * Return an optionally single-quoted string containing a base-64 encoded
 	 * version of the given long value.
@@ -139,6 +113,32 @@ public class SimpleStringParser {
 		return sb.toString();
 	}
 
+	public static long toLong(String str) {
+		int idx = str.indexOf("/");
+		if (idx == -1) {
+			return Long.parseLong(str);
+		} else {
+			if (str.substring(0, idx).contains(".")) {
+				return SimpleStringParser20.toLong(str);
+			}
+			return longFromBase64(str.substring(idx + 1));
+		}
+	}
+
+	public static String toString(long value) {
+		String serLong = GWT.isScript() ? fastMinSerialisedLong(value)
+				: String.valueOf(value);
+		return serLong + "/" + toBase64(value);
+	}
+
+	public static String toStringNoInfo(long value) {
+		return toBase64(value);
+	}
+
+	public static String toStringOrNullNonNegativeInteger(Integer value) {
+		return value == null ? "-1" : value.toString();
+	}
+
 	private final String s;
 
 	private int offset;
@@ -154,6 +154,10 @@ public class SimpleStringParser {
 
 	public int indexOf(String of) {
 		return s.indexOf(of, offset);
+	}
+
+	public boolean peek(String start) {
+		return s.indexOf(start, offset) == offset;
 	}
 
 	public int percentComplete() {
@@ -205,9 +209,5 @@ public class SimpleStringParser {
 		String str = read(start, end);
 		int i = Integer.parseInt(str);
 		return i < 0 ? null : i;
-	}
-
-	public boolean peek(String start) {
-		return s.indexOf(start, offset) == offset;
 	}
 }

@@ -18,27 +18,17 @@ public class Toggle extends Model.Fields implements ModelEvents.Toggle.Handler {
 
 	int displayedIndex = 0;
 
-	public Object getActive() {
-		int activeIndex = (displayedIndex + 1) % 2;
-		return values.get(activeIndex);
-	}
-
-	public void setDisplayed(Object displayed) {
-		set("displayed", this.displayed, displayed,
-				() -> this.displayed = displayed);
-	}
-
-	public void setDisplayedIndex(int displayedIndex) {
-		set(Property.displayedIndex, this.displayedIndex, displayedIndex,
-				() -> this.displayedIndex = displayedIndex);
-	}
-
 	public Toggle(List<Object> values) {
 		this.values = values;
 		// this could also have been implemented by adding code to
 		// setDisplayedIndex - but note that we get init for free this way
 		bindings().from(this).on(Property.displayedIndex).typed(Integer.class)
 				.accept(this::onDisplayedIndexSet);
+	}
+
+	public Object getActive() {
+		int activeIndex = (displayedIndex + 1) % 2;
+		return values.get(activeIndex);
 	}
 
 	void onDisplayedIndexSet(int newIndex) {
@@ -54,6 +44,16 @@ public class Toggle extends Model.Fields implements ModelEvents.Toggle.Handler {
 		int nextIndex = (displayedIndex + 1) % 2;
 		setDisplayedIndex(nextIndex);
 		event.reemit();
+	}
+
+	public void setDisplayed(Object displayed) {
+		set("displayed", this.displayed, displayed,
+				() -> this.displayed = displayed);
+	}
+
+	public void setDisplayedIndex(int displayedIndex) {
+		set(Property.displayedIndex, this.displayedIndex, displayedIndex,
+				() -> this.displayedIndex = displayedIndex);
 	}
 
 	enum Property implements PropertyEnum {

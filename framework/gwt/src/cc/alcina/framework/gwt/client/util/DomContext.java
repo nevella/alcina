@@ -11,6 +11,10 @@ public abstract class DomContext {
 		get().clearReferences0();
 	}
 
+	private static DomContext get() {
+		return Registry.impl(DomContext.class);
+	}
+
 	public static int getAbsoluteTop(Element parentElement) {
 		return get().getAbsoluteTop0(parentElement);
 	}
@@ -50,10 +54,6 @@ public abstract class DomContext {
 
 	public static DomDocument xmlDoc(Document domDocument) {
 		return get().getXmlDoc(domDocument);
-	}
-
-	private static DomContext get() {
-		return Registry.impl(DomContext.class);
 	}
 
 	protected abstract void clearReferences0();

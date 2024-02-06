@@ -140,19 +140,19 @@ public class PlaceController {
 		}
 	}
 
+	/**
+	 * Visible for testing.
+	 */
+	Logger log() {
+		return log;
+	}
+
 	private String maybeGoTo(Place newPlace) {
 		PlaceChangeRequestEvent willChange = new PlaceChangeRequestEvent(
 				newPlace);
 		eventBus.fireEvent(willChange);
 		String warning = willChange.getWarning();
 		return warning;
-	}
-
-	/**
-	 * Visible for testing.
-	 */
-	Logger log() {
-		return log;
 	}
 
 	/**

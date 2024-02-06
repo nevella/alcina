@@ -79,6 +79,26 @@ public abstract class ActionViewProviderBase
 
 	protected RemoteAction action;
 
+	protected boolean alwaysExpandFirst() {
+		return false;
+	}
+
+	private Widget createCaption(PermissibleAction action) {
+		List<SimpleHistoryEventInfo> history = Arrays
+				.asList(new SimpleHistoryEventInfo[] {
+						new SimpleHistoryEventInfo("Action"),
+						new SimpleHistoryEventInfo(action.getDisplayName()) });
+		List<Widget> maxButtonArr = BreadcrumbBar.maxButton(wrapper);
+		this.maxButton = (BreadcrumbBarMaximiseButton) maxButtonArr.get(0);
+		return new BreadcrumbBar(null, history, maxButtonArr);
+	}
+
+	protected void getActionLogs(AsyncCallback<List<JobTracker>> outerCallback,
+			int logItemCount) {
+		Registry.impl(ActionLogProvider.class).getLogsForAction(action,
+				logItemCount, outerCallback, true);
+	}
+
 	@Override
 	public Widget getViewForObject(Object obj) {
 		action = (RemoteAction) obj;
@@ -92,32 +112,58 @@ public abstract class ActionViewProviderBase
 		return wrapper;
 	}
 
+	protected abstract void performAction(AsyncCallback<String> asyncCallback);
+
 	@Override
 	public void vetoableAction(PermissibleActionEvent evt) {
 		// no response at the mo'
 	}
 
-	private Widget createCaption(PermissibleAction action) {
-		List<SimpleHistoryEventInfo> history = Arrays
-				.asList(new SimpleHistoryEventInfo[] {
-						new SimpleHistoryEventInfo("Action"),
-						new SimpleHistoryEventInfo(action.getDisplayName()) });
-		List<Widget> maxButtonArr = BreadcrumbBar.maxButton(wrapper);
-		this.maxButton = (BreadcrumbBarMaximiseButton) maxButtonArr.get(0);
-		return new BreadcrumbBar(null, history, maxButtonArr);
-	}
+	class ActionLogItemVisualiser extends Composite implements ClickHandler {
+		private Link link;
 
-	protected boolean alwaysExpandFirst() {
-		return false;
-	}
+		private HTML html;
 
-	protected void getActionLogs(AsyncCallback<List<JobTracker>> outerCallback,
-			int logItemCount) {
-		Registry.impl(ActionLogProvider.class).getLogsForAction(action,
-				logItemCount, outerCallback, true);
-	}
+		private VerticalPanel vp;
 
-	protected abstract void performAction(AsyncCallback<String> asyncCallback);
+		ActionLogItemVisualiser(JobTracker tracker, boolean first) {
+			this.vp = new VerticalPanel();
+			this.link = new Link(CommonUtils.formatDate(tracker.getEndTime(),
+					DateStyle.AU_DATE_TIME) + " - " + tracker.getJobResult());
+			link.addClickHandler(this);
+			String actionLog = tracker.getLog();
+			if (actionLog == null) {
+				actionLog = "{no log}";
+			}
+			boolean customHtml = actionLog.contains("<div>");
+			String xhtmlMarker = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html>";
+			boolean hasXhtml = false;
+			if (actionLog.contains(xhtmlMarker)) {
+				hasXhtml = true;
+				String bodyMarker = "<body>";
+				String endBodyMarker = "</body>";
+				actionLog = actionLog.substring(
+						actionLog.indexOf(bodyMarker) + bodyMarker.length(),
+						actionLog.indexOf(endBodyMarker));
+			}
+			this.html = new HTML(customHtml || hasXhtml ? actionLog
+					: "<pre>" + SafeHtmlUtils.htmlEscape(actionLog) + "</pre>",
+					true);
+			html.setVisible(first && (actionLog.length() < 2000 || hasXhtml
+					|| alwaysExpandFirst()));
+			if (!(customHtml || hasXhtml)) {
+				html.setStyleName("logboxpre");
+			}
+			vp.add(link);
+			vp.add(html);
+			initWidget(vp);
+		}
+
+		@Override
+		public void onClick(ClickEvent event) {
+			html.setVisible(!html.isVisible());
+		}
+	}
 
 	public class ActionLogPanel extends VerticalPanel implements ClickHandler {
 		private static final String RUNNING = "...running";
@@ -259,17 +305,6 @@ public abstract class ActionViewProviderBase
 			performAction(asyncCallback);
 		}
 
-		@Override
-		public String toString() {
-			return this.hasChildHandlersSupport.toString();
-		}
-
-		private void running(boolean running) {
-			button.setText("Run now");
-			button.setEnabled(!running);
-			runningLabel.setVisible(running);
-		}
-
 		protected void redraw() {
 			WidgetUtils.clearChildren(fp);
 			hasChildHandlersSupport.detachHandlers();
@@ -322,6 +357,17 @@ public abstract class ActionViewProviderBase
 				}
 			});
 		}
+
+		private void running(boolean running) {
+			button.setText("Run now");
+			button.setEnabled(!running);
+			runningLabel.setVisible(running);
+		}
+
+		@Override
+		public String toString() {
+			return this.hasChildHandlersSupport.toString();
+		}
 	}
 
 	public static class ActionViewProvider extends ActionViewProviderBase {
@@ -329,52 +375,6 @@ public abstract class ActionViewProviderBase
 		protected void performAction(AsyncCallback<String> asyncCallback) {
 			Client.commonRemoteService().performAction(action, asyncCallback);
 			action.wasCalled();
-		}
-	}
-
-	class ActionLogItemVisualiser extends Composite implements ClickHandler {
-		private Link link;
-
-		private HTML html;
-
-		private VerticalPanel vp;
-
-		ActionLogItemVisualiser(JobTracker tracker, boolean first) {
-			this.vp = new VerticalPanel();
-			this.link = new Link(CommonUtils.formatDate(tracker.getEndTime(),
-					DateStyle.AU_DATE_TIME) + " - " + tracker.getJobResult());
-			link.addClickHandler(this);
-			String actionLog = tracker.getLog();
-			if (actionLog == null) {
-				actionLog = "{no log}";
-			}
-			boolean customHtml = actionLog.contains("<div>");
-			String xhtmlMarker = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html>";
-			boolean hasXhtml = false;
-			if (actionLog.contains(xhtmlMarker)) {
-				hasXhtml = true;
-				String bodyMarker = "<body>";
-				String endBodyMarker = "</body>";
-				actionLog = actionLog.substring(
-						actionLog.indexOf(bodyMarker) + bodyMarker.length(),
-						actionLog.indexOf(endBodyMarker));
-			}
-			this.html = new HTML(customHtml || hasXhtml ? actionLog
-					: "<pre>" + SafeHtmlUtils.htmlEscape(actionLog) + "</pre>",
-					true);
-			html.setVisible(first && (actionLog.length() < 2000 || hasXhtml
-					|| alwaysExpandFirst()));
-			if (!(customHtml || hasXhtml)) {
-				html.setStyleName("logboxpre");
-			}
-			vp.add(link);
-			vp.add(html);
-			initWidget(vp);
-		}
-
-		@Override
-		public void onClick(ClickEvent event) {
-			html.setVisible(!html.isVisible());
 		}
 	}
 

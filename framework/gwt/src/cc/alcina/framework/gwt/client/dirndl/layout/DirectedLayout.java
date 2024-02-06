@@ -244,33 +244,6 @@ public class DirectedLayout implements AlcinaProcess {
 	 */
 	public Consumer<Runnable> mutationDispatch = Runnable::run;
 
-	// remove the root node (unbind all listeners following removal from the
-	// dom)
-	public void remove() {
-		root.remove(true);
-		root = null;
-	}
-
-	/**
-	 * Render a model object and add top-level output widgets to the parent
-	 * widget
-	 */
-	public LayoutResult render(ContextResolver resolver, Object model) {
-		if (resolver == null) {
-			resolver = ContextResolver.Default.get().createResolver();
-		}
-		resolver.layout = this;
-		AnnotationLocation location = new AnnotationLocation(model.getClass(),
-				null, resolver);
-		enqueueInput(resolver, model, location, null, null);
-		layout();
-		return new LayoutResult();
-	}
-
-	public LayoutResult render(Object model) {
-		return render(null, model);
-	}
-
 	RendererInput enqueueInput(ContextResolver resolver, Object model,
 			AnnotationLocation location, List<Directed> directeds,
 			Node parentNode) {
@@ -313,6 +286,33 @@ public class DirectedLayout implements AlcinaProcess {
 				insertionPoint = null;
 			}
 		}
+	}
+
+	// remove the root node (unbind all listeners following removal from the
+	// dom)
+	public void remove() {
+		root.remove(true);
+		root = null;
+	}
+
+	/**
+	 * Render a model object and add top-level output widgets to the parent
+	 * widget
+	 */
+	public LayoutResult render(ContextResolver resolver, Object model) {
+		if (resolver == null) {
+			resolver = ContextResolver.Default.get().createResolver();
+		}
+		resolver.layout = this;
+		AnnotationLocation location = new AnnotationLocation(model.getClass(),
+				null, resolver);
+		enqueueInput(resolver, model, location, null, null);
+		layout();
+		return new LayoutResult();
+	}
+
+	public LayoutResult render(Object model) {
+		return render(null, model);
 	}
 
 	/*
@@ -389,6 +389,31 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 	}
 
+	/**
+	 * A resolved location in the widget tree relative to which a widget should
+	 * be inserted
+	 *
+	 *
+	 *
+	 */
+	static class InsertionPoint {
+		Point point = Point.LAST;
+
+		Rendered after;
+
+		Rendered container;
+
+		void clear() {
+			// clear refs to possibly removed widgets
+			after = null;
+			container = null;
+		}
+
+		enum Point {
+			FIRST, AFTER, LAST
+		}
+	}
+
 	public class LayoutResult {
 		public Rendered getRendered() {
 			return root.firstDescendantRendered();
@@ -400,6 +425,53 @@ public class DirectedLayout implements AlcinaProcess {
 
 		public void remove() {
 			DirectedLayout.this.remove();
+		}
+	}
+
+	static class ModelEventDispatch {
+		static void dispatchAscent(ModelEvent modelEvent) {
+			/*
+			 * Bubble until event is handled or we've reached the top of the
+			 * node tree
+			 */
+			Node cursor = modelEvent.getContext().node;
+			while (cursor != null) {
+				cursor.fireEvent(modelEvent);
+				if (modelEvent.isHandled()) {
+					break;
+				}
+				boolean rerouted = false;
+				{
+					/*
+					 * this logic supports the DOM requirement that popups
+					 * (overlays) be outside the dom containment of the parent
+					 * (in general) - while maintining the event bubbling
+					 * relationship of a popup model to its logical model parent
+					 *
+					 */
+					if (cursor.model instanceof Model.RerouteBubbledEvents) {
+						Model rerouteTo = ((Model.RerouteBubbledEvents) cursor.model)
+								.rerouteBubbledEventsTo();
+						if (rerouteTo != null && rerouteTo instanceof HasNode) {
+							Node rerouteToNode = ((HasNode) rerouteTo)
+									.provideNode();
+							if (rerouteToNode != null) {
+								cursor = rerouteToNode;
+								rerouted = true;
+							}
+						}
+					}
+				}
+				if (!rerouted) {
+					cursor = cursor.parent;
+				}
+			}
+		}
+
+		static void dispatchDescent(ModelEvent modelEvent) {
+			Node cursor = modelEvent.getContext().node;
+			cursor.getEventBinding(modelEvent.getClass())
+					.dispatchDescent(modelEvent);
 		}
 	}
 
@@ -478,8 +550,21 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
+		NodeEventBinding
+				addDescentEventBinding(Class<? extends NodeEvent> type) {
+			Preconditions
+					.checkArgument(NodeEventBinding.isDescendantBinding(type));
+			NodeEventBinding newBinding = new NodeEventBinding(this, type);
+			eventBindings.add(newBinding);
+			return newBinding;
+		}
+
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			return annotationLocation.getAnnotation(clazz);
+		}
+
+		void append(FragmentNode child) {
+			insertBefore(child, null);
 		}
 
 		public void applyReverseBindings() {
@@ -488,161 +573,19 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		// FIXME - dirndl 1x2 (use models for form intermediates) (remove, let
-		// the form node handle focus itself)
-		public Node childWithModel(Predicate<Object> test) {
-			if (test.test(this.model)) {
-				return this;
+		void bind(boolean modelToRendered) {
+			if (modelToRendered) {
+				bindEvents();
 			}
-			if (children != null) {
-				for (Node child : children) {
-					Node childWithModel = child.childWithModel(test);
-					if (childWithModel != null) {
-						return childWithModel;
-					}
-				}
+			bindModel(modelToRendered);
+			bindParentProperty();
+			/*
+			 * During normal rendering there will be no children - this handles
+			 * reverse-model node movements (e.g. wrapping, re-parenting)
+			 */
+			if (children != null && !modelToRendered) {
+				children.forEach(c -> c.bind(false));
 			}
-			return null;
-		}
-
-		public void dispatch(Class<? extends ModelEvent> modelEventClass,
-				Object data) {
-			Context context = NodeEvent.Context.fromNode(this);
-			context.dispatch(modelEventClass, data);
-		}
-
-		public AnnotationLocation getAnnotationLocation() {
-			return this.annotationLocation;
-		}
-
-		public <T> T getModel() {
-			return (T) this.model;
-		}
-
-		public DirectedLayout.Rendered getRendered() {
-			return rendered;
-		}
-
-		public ContextResolver getResolver() {
-			return resolver;
-		}
-
-		public <A extends Annotation> boolean has(Class<A> clazz) {
-			return annotation(clazz) != null;
-		}
-
-		public boolean hasRendered() {
-			return rendered != null;
-		}
-
-		public void insertAfter(FragmentNode newChildModel,
-				FragmentNode refModel) {
-			int nextNodeIndex = children.indexOf(refModel.provideNode()) + 1;
-			FragmentNode beforeModel = nextNodeIndex == children.size() ? null
-					: (FragmentNode) children.get(nextNodeIndex).model;
-			insertBefore(newChildModel, beforeModel);
-		}
-
-		/*
-		 * Note that this requires an onto dom/layout correlation (no
-		 * delegated), which is fine since it's only called by dom traversal
-		 */
-		public Node insertFragmentChild(Model childModel,
-				org.w3c.dom.Node childW3cNode) {
-			Node node = new Node(resolver, this, new AnnotationLocation(
-					childModel.getClass(), null, resolver), childModel, true);
-			node.rendered = new RenderedW3cNode(childW3cNode);
-			node.directed = node.annotation(Directed.class);
-			if (node.directed == null) {
-				node.annotation(Directed.class);
-			}
-			org.w3c.dom.Node previousSibling = childW3cNode
-					.getPreviousSibling();
-			ensureChildren();
-			boolean append = previousSibling == null && children.isEmpty()
-					|| previousSibling == Ax.last(children).rendered.getNode();
-			if (append) {
-				children.add(node);
-			} else {
-				int idx = 0;
-				int insertAfter = -1;
-				while (idx < children.size()) {
-					if (children.get(idx).rendered
-							.getNode() == previousSibling) {
-						insertAfter = idx;
-						break;
-					}
-					idx++;
-				}
-				children.add(insertAfter + 1, node);
-			}
-			node.bind(false);
-			return node;
-		}
-
-		/**
-		 * FIMXE - dirndl - tmp, until widget system completely removed (i.e.
-		 * value editors)
-		 */
-		public void onUnbind(Runnable runnable) {
-			this.onUnbind = runnable;
-		}
-
-		public <A extends Annotation> Optional<A> optional(Class<A> clazz) {
-			return Optional.ofNullable(annotation(clazz));
-		}
-
-		public <A extends Annotation> Optional<A>
-				optionalAnnotation(Class<A> clazz) {
-			return Optional.ofNullable(annotationLocation.getAnnotation(clazz));
-		}
-
-		public Node provideMostSpecificNodeForModel() {
-			Node cursor = this;
-			while (true) {
-				if (cursor.children.size() == 1) {
-					Node firstChild = cursor.children.get(0);
-					if (firstChild.model == model) {
-						cursor = firstChild;
-						continue;
-					}
-				}
-				return cursor;
-			}
-		}
-
-		/*
-		 * Only call from framework code (here, or FragmentModel). If syncing
-		 * from mutations, do not double-remove
-		 */
-		public void remove(boolean removeFromRendered) {
-			if (removeFromRendered) {
-				resolveRenderedRendereds().forEach(Rendered::removeFromParent);
-			}
-			if (parent != null) {
-				parent.children.remove(this);
-			}
-			unbind();
-		}
-
-		public <T> T resolveRenderContextProperty(String key) {
-			return getResolver().resolveRenderContextProperty(key);
-		}
-
-		// Rare - but crucial - called by a DirectedRenderer
-		// (DirectedRenderer.Transform transform ), imperatively setup a child
-		// renderer
-		public void setResolver(ContextResolver resolver) {
-			this.resolver = resolver;
-		}
-
-		public String toParentStack() {
-			return path();
-		}
-
-		@Override
-		public String toString() {
-			return pathSegment();
 		}
 
 		private void bindEvents() {
@@ -766,46 +709,21 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		private Rendered provideRenderedOrLastDescendantChildRenderedPriorTo() {
-			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
-					this, Node::readOnlyChildren, true);
-			for (Node node : traversal) {
-				if (node.rendered != null) {
-					return node.rendered;
-				}
+		// FIXME - dirndl 1x2 (use models for form intermediates) (remove, let
+		// the form node handle focus itself)
+		public Node childWithModel(Predicate<Object> test) {
+			if (test.test(this.model)) {
+				return this;
 			}
-			return null;
-		}
-
-		private void resolveRenderedRendereds0(List<Rendered> list) {
-			if (hasRendered()) {
-				list.add(getRendered());
-			} else {
-				if (children != null) {
-					for (Node child : children) {
-						child.resolveRenderedRendereds0(list);
+			if (children != null) {
+				for (Node child : children) {
+					Node childWithModel = child.childWithModel(test);
+					if (childWithModel != null) {
+						return childWithModel;
 					}
 				}
 			}
-		}
-
-		void append(FragmentNode child) {
-			insertBefore(child, null);
-		}
-
-		void bind(boolean modelToRendered) {
-			if (modelToRendered) {
-				bindEvents();
-			}
-			bindModel(modelToRendered);
-			bindParentProperty();
-			/*
-			 * During normal rendering there will be no children - this handles
-			 * reverse-model node movements (e.g. wrapping, re-parenting)
-			 */
-			if (children != null && !modelToRendered) {
-				children.forEach(c -> c.bind(false));
-			}
+			return null;
 		}
 
 		int depth() {
@@ -819,25 +737,17 @@ public class DirectedLayout implements AlcinaProcess {
 			return depth;
 		}
 
+		public void dispatch(Class<? extends ModelEvent> modelEventClass,
+				Object data) {
+			Context context = NodeEvent.Context.fromNode(this);
+			context.dispatch(modelEventClass, data);
+		}
+
 		NotifyingList<Node> ensureChildren() {
 			if (children == null) {
 				children = new NotifyingList<>(new ArrayList<>());
 			}
 			return children;
-		}
-
-		NodeEventBinding getEventBinding(Class<? extends NodeEvent> type) {
-			return eventBindings.stream().filter(eb -> eb.type == type)
-					.findFirst().get();
-		}
-
-		NodeEventBinding
-				addDescentEventBinding(Class<? extends NodeEvent> type) {
-			Preconditions
-					.checkArgument(NodeEventBinding.isDescendantBinding(type));
-			NodeEventBinding newBinding = new NodeEventBinding(this, type);
-			eventBindings.add(newBinding);
-			return newBinding;
 		}
 
 		Emitter findEmitter(Class<? extends NodeEvent> type) {
@@ -888,8 +798,45 @@ public class DirectedLayout implements AlcinaProcess {
 			return Optional.empty();
 		}
 
+		public AnnotationLocation getAnnotationLocation() {
+			return this.annotationLocation;
+		}
+
+		NodeEventBinding getEventBinding(Class<? extends NodeEvent> type) {
+			return eventBindings.stream().filter(eb -> eb.type == type)
+					.findFirst().get();
+		}
+
+		public <T> T getModel() {
+			return (T) this.model;
+		}
+
 		Property getProperty() {
 			return annotationLocation.property;
+		}
+
+		public DirectedLayout.Rendered getRendered() {
+			return rendered;
+		}
+
+		public ContextResolver getResolver() {
+			return resolver;
+		}
+
+		public <A extends Annotation> boolean has(Class<A> clazz) {
+			return annotation(clazz) != null;
+		}
+
+		public boolean hasRendered() {
+			return rendered != null;
+		}
+
+		public void insertAfter(FragmentNode newChildModel,
+				FragmentNode refModel) {
+			int nextNodeIndex = children.indexOf(refModel.provideNode()) + 1;
+			FragmentNode beforeModel = nextNodeIndex == children.size() ? null
+					: (FragmentNode) children.get(nextNodeIndex).model;
+			insertBefore(newChildModel, beforeModel);
 		}
 
 		/**
@@ -923,6 +870,43 @@ public class DirectedLayout implements AlcinaProcess {
 			moveChildren(oldNode, newChildModel.provideNode());
 		}
 
+		/*
+		 * Note that this requires an onto dom/layout correlation (no
+		 * delegated), which is fine since it's only called by dom traversal
+		 */
+		public Node insertFragmentChild(Model childModel,
+				org.w3c.dom.Node childW3cNode) {
+			Node node = new Node(resolver, this, new AnnotationLocation(
+					childModel.getClass(), null, resolver), childModel, true);
+			node.rendered = new RenderedW3cNode(childW3cNode);
+			node.directed = node.annotation(Directed.class);
+			if (node.directed == null) {
+				node.annotation(Directed.class);
+			}
+			org.w3c.dom.Node previousSibling = childW3cNode
+					.getPreviousSibling();
+			ensureChildren();
+			boolean append = previousSibling == null && children.isEmpty()
+					|| previousSibling == Ax.last(children).rendered.getNode();
+			if (append) {
+				children.add(node);
+			} else {
+				int idx = 0;
+				int insertAfter = -1;
+				while (idx < children.size()) {
+					if (children.get(idx).rendered
+							.getNode() == previousSibling) {
+						insertAfter = idx;
+						break;
+					}
+					idx++;
+				}
+				children.add(insertAfter + 1, node);
+			}
+			node.bind(false);
+			return node;
+		}
+
 		void moveChildren(Node from, Node to) {
 			if (from == null || from.ensureChildren().isEmpty()) {
 				return;
@@ -937,6 +921,23 @@ public class DirectedLayout implements AlcinaProcess {
 						to.rendered.append(child.rendered);
 						child.bind(false);
 					});
+		}
+
+		/**
+		 * FIMXE - dirndl - tmp, until widget system completely removed (i.e.
+		 * value editors)
+		 */
+		public void onUnbind(Runnable runnable) {
+			this.onUnbind = runnable;
+		}
+
+		public <A extends Annotation> Optional<A> optional(Class<A> clazz) {
+			return Optional.ofNullable(annotation(clazz));
+		}
+
+		public <A extends Annotation> Optional<A>
+				optionalAnnotation(Class<A> clazz) {
+			return Optional.ofNullable(annotationLocation.getAnnotation(clazz));
 		}
 
 		String path() {
@@ -974,8 +975,55 @@ public class DirectedLayout implements AlcinaProcess {
 			bind(true);
 		}
 
+		public Node previousSibling() {
+			if (parent == null) {
+				return null;
+			}
+			int idx = parent.children.indexOf(this);
+			return idx == 0 ? null : parent.children.get(idx - 1);
+		}
+
+		public Node provideMostSpecificNodeForModel() {
+			Node cursor = this;
+			while (true) {
+				if (cursor.children.size() == 1) {
+					Node firstChild = cursor.children.get(0);
+					if (firstChild.model == model) {
+						cursor = firstChild;
+						continue;
+					}
+				}
+				return cursor;
+			}
+		}
+
+		private Rendered provideRenderedOrLastDescendantChildRenderedPriorTo() {
+			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
+					this, Node::readOnlyChildren, true);
+			for (Node node : traversal) {
+				if (node.rendered != null) {
+					return node.rendered;
+				}
+			}
+			return null;
+		}
+
 		List<Node> readOnlyChildren() {
 			return children != null ? children : Collections.emptyList();
+		}
+
+		/*
+		 * Only call from framework code (here, or FragmentModel). If syncing
+		 * from mutations, do not double-remove
+		 */
+		public void remove(boolean removeFromRendered) {
+			if (removeFromRendered) {
+				resolveRenderedRendereds().forEach(Rendered::removeFromParent);
+			}
+			if (parent != null) {
+				parent.children.remove(this);
+			}
+			unbind();
 		}
 
 		void removeChildNode(Model child) {
@@ -1052,6 +1100,10 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
+		public <T> T resolveRenderContextProperty(String key) {
+			return getResolver().resolveRenderContextProperty(key);
+		}
+
 		/*
 		 * Either self.optionalRendered, or
 		 * sum(children.resolveRenderedRendereds()), recursive
@@ -1067,6 +1119,25 @@ public class DirectedLayout implements AlcinaProcess {
 			return list;
 		}
 
+		private void resolveRenderedRendereds0(List<Rendered> list) {
+			if (hasRendered()) {
+				list.add(getRendered());
+			} else {
+				if (children != null) {
+					for (Node child : children) {
+						child.resolveRenderedRendereds0(list);
+					}
+				}
+			}
+		}
+
+		// Rare - but crucial - called by a DirectedRenderer
+		// (DirectedRenderer.Transform transform ), imperatively setup a child
+		// renderer
+		public void setResolver(ContextResolver resolver) {
+			this.resolver = resolver;
+		}
+
 		void strip() {
 			List<Node> oldChildren = children.stream()
 					.collect(Collectors.toList());
@@ -1080,6 +1151,15 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			parent.children.remove(this);
 			rendered.removeFromParent();
+		}
+
+		public String toParentStack() {
+			return path();
+		}
+
+		@Override
+		public String toString() {
+			return pathSegment();
 		}
 
 		void unbind() {
@@ -1477,10 +1557,6 @@ public class DirectedLayout implements AlcinaProcess {
 			PropertyBindings() {
 			}
 
-			public void setLeft() {
-				bindings.forEach(PropertyBinding::setLeft);
-			}
-
 			/*
 			 * FIXME - dirndl - validate (only 1 innertext/innerhtml, no
 			 * duplicate property anns)
@@ -1497,162 +1573,13 @@ public class DirectedLayout implements AlcinaProcess {
 						});
 			}
 
+			public void setLeft() {
+				bindings.forEach(PropertyBinding::setLeft);
+			}
+
 			void unbind() {
 				bindings.forEach(PropertyBinding::unbind);
 			}
-		}
-
-		public Node previousSibling() {
-			if (parent == null) {
-				return null;
-			}
-			int idx = parent.children.indexOf(this);
-			return idx == 0 ? null : parent.children.get(idx - 1);
-		}
-	}
-
-	/**
-	 * The output of RendererInputs - for Uis with events the default is a GWT
-	 * element
-	 *
-	 *
-	 *
-	 */
-	public interface Rendered {
-		void append(Rendered rendered);
-
-		void appendToRoot();
-
-		<T> T as(Class<T> class1);
-
-		default DomNode asDomNode() {
-			return DomNode.from(getNode());
-		}
-
-		Element asElement();
-
-		org.w3c.dom.Element asW3cElement();
-
-		int getChildCount();
-
-		int getChildIndex(Rendered after);
-
-		org.w3c.dom.Node getNode();
-
-		void insertAsFirstChild(Rendered rendered);
-
-		void insertChild(Rendered rendered, int i);
-
-		boolean isElement();
-
-		void removeFromParent();
-	}
-
-	/**
-	 * Usage:
-	 *
-	 * <code>
-	 * <pre>
-	public class MyClientObservers extends ProcessObserver.AppDebug {
-	public MyClientObservers() {j
-		ProcessObservers.observe(DirectedLayout.RenderObservable.class, o -> {
-			if (o.node.getModel() instanceof MyModel) {
-				boolean breakpointHere = true;
-			}
-		}, true);
-	}
-	}
-	 * </pre>
-	 *</code>
-	 *
-	 *
-	 *
-	 *
-	 */
-	public static class RenderObservable implements ProcessObservable {
-		public Node node;
-
-		public RenderObservable(Node node) {
-			this.node = node;
-		}
-
-		@Override
-		public String toString() {
-			FormatBuilder fb = new FormatBuilder().separator("\n");
-			fb.append(node);
-			return fb.toString();
-		}
-	}
-
-	/**
-	 * A resolved location in the widget tree relative to which a widget should
-	 * be inserted
-	 *
-	 *
-	 *
-	 */
-	static class InsertionPoint {
-		Point point = Point.LAST;
-
-		Rendered after;
-
-		Rendered container;
-
-		void clear() {
-			// clear refs to possibly removed widgets
-			after = null;
-			container = null;
-		}
-
-		enum Point {
-			FIRST, AFTER, LAST
-		}
-	}
-
-	static class ModelEventDispatch {
-		static void dispatchAscent(ModelEvent modelEvent) {
-			/*
-			 * Bubble until event is handled or we've reached the top of the
-			 * node tree
-			 */
-			Node cursor = modelEvent.getContext().node;
-			while (cursor != null) {
-				cursor.fireEvent(modelEvent);
-				if (modelEvent.isHandled()) {
-					break;
-				}
-				boolean rerouted = false;
-				{
-					/*
-					 * this logic supports the DOM requirement that popups
-					 * (overlays) be outside the dom containment of the parent
-					 * (in general) - while maintining the event bubbling
-					 * relationship of a popup model to its logical model parent
-					 *
-					 */
-					if (cursor.model instanceof Model.RerouteBubbledEvents) {
-						Model rerouteTo = ((Model.RerouteBubbledEvents) cursor.model)
-								.rerouteBubbledEventsTo();
-						if (rerouteTo != null && rerouteTo instanceof HasNode) {
-							Node rerouteToNode = ((HasNode) rerouteTo)
-									.provideNode();
-							if (rerouteToNode != null) {
-								cursor = rerouteToNode;
-								rerouted = true;
-							}
-						}
-					}
-				}
-				if (!rerouted) {
-					cursor = cursor.parent;
-				}
-			}
-		}
-
-		static void dispatchDescent(ModelEvent modelEvent) {
-			Node cursor = modelEvent.getContext().node;
-			cursor.getEventBinding(modelEvent.getClass())
-					.dispatchDescent(modelEvent);
 		}
 	}
 
@@ -1755,15 +1682,52 @@ public class DirectedLayout implements AlcinaProcess {
 			return Objects.hash(model, annotationLocation);
 		}
 
+		Object model() {
+			return model;
+		}
+
 		@Override
 		public String toString() {
 			return FormatBuilder.keyValues("location", annotationLocation,
 					"model", model);
 		}
+	}
 
-		Object model() {
-			return model;
+	/**
+	 * The output of RendererInputs - for Uis with events the default is a GWT
+	 * element
+	 *
+	 *
+	 *
+	 */
+	public interface Rendered {
+		void append(Rendered rendered);
+
+		void appendToRoot();
+
+		<T> T as(Class<T> class1);
+
+		default DomNode asDomNode() {
+			return DomNode.from(getNode());
 		}
+
+		Element asElement();
+
+		org.w3c.dom.Element asW3cElement();
+
+		int getChildCount();
+
+		int getChildIndex(Rendered after);
+
+		org.w3c.dom.Node getNode();
+
+		void insertAsFirstChild(Rendered rendered);
+
+		void insertChild(Rendered rendered, int i);
+
+		boolean isElement();
+
+		void removeFromParent();
 	}
 
 	/**
@@ -1804,41 +1768,6 @@ public class DirectedLayout implements AlcinaProcess {
 		Rendered rendered;
 
 		private RendererInput() {
-		}
-
-		@Override
-		public Iterator children() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void enter() {
-		}
-
-		@Override
-		public void exit() {
-		}
-
-		@Override
-		public void release() {
-			resolver = null;
-			model = null;
-			location = null;
-			directeds = null;
-			parentNode = null;
-			node = null;
-			replace = null;
-			before = null;
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("Node:\n%s\n\nLocation: %s", node.toParentStack(),
-					location.toString());
-		}
-
-		private Directed firstDirected() {
-			return directeds.get(0);
 		}
 
 		void afterRender() {
@@ -1913,6 +1842,11 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
+		@Override
+		public Iterator children() {
+			throw new UnsupportedOperationException();
+		}
+
 		void enqueueInput(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
@@ -1920,9 +1854,21 @@ public class DirectedLayout implements AlcinaProcess {
 					directeds, parentNode);
 		}
 
+		@Override
+		public void enter() {
+		}
+
+		@Override
+		public void exit() {
+		}
+
 		Optional<Rendered> firstAncestorRendered() {
 			return parentNode == null ? Optional.empty()
 					: parentNode.firstSelfOrAncestorRendered(true);
+		}
+
+		private Directed firstDirected() {
+			return directeds.get(0);
 		}
 
 		void init(ContextResolver resolver, Object model,
@@ -1959,6 +1905,18 @@ public class DirectedLayout implements AlcinaProcess {
 			// parentNode.children.add(node);
 			// }
 			node.directed = firstDirected();
+		}
+
+		@Override
+		public void release() {
+			resolver = null;
+			model = null;
+			location = null;
+			directeds = null;
+			parentNode = null;
+			node = null;
+			replace = null;
+			before = null;
 		}
 
 		void render() {
@@ -2011,11 +1969,53 @@ public class DirectedLayout implements AlcinaProcess {
 			Preconditions.checkState(directeds.size() == 1);
 			return directeds.get(0);
 		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Node:\n%s\n\nLocation: %s", node.toParentStack(),
+					location.toString());
+		}
 	}
 
 	static class RendererNotFoundException extends RuntimeException {
 		public RendererNotFoundException(String message, Throwable cause) {
 			super(message, cause);
+		}
+	}
+
+	/**
+	 * Usage:
+	 *
+	 * <code>
+	 * <pre>
+	public class MyClientObservers extends ProcessObserver.AppDebug {
+	public MyClientObservers() {j
+		ProcessObservers.observe(DirectedLayout.RenderObservable.class, o -> {
+			if (o.node.getModel() instanceof MyModel) {
+				boolean breakpointHere = true;
+			}
+		}, true);
+	}
+	}
+	 * </pre>
+	 *</code>
+	 *
+	 *
+	 *
+	 *
+	 */
+	public static class RenderObservable implements ProcessObservable {
+		public Node node;
+
+		public RenderObservable(Node node) {
+			this.node = node;
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder fb = new FormatBuilder().separator("\n");
+			fb.append(node);
+			return fb.toString();
 		}
 	}
 }

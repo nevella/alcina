@@ -45,6 +45,45 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected boolean allowUnregisteredEntityTargetObject() {
+		return true;
+	}
+
+	@Override
+	protected boolean alwaysFireObjectOwnerCollectionModifications() {
+		return true;
+	}
+
+	@Override
+	protected void beforeDirectCollectionModification(Entity obj,
+			String propertyName, Object value,
+			CollectionModificationType collectionModificationType) {
+		if (isFirePropertyChangesOnConsumedCollectionMods()) {
+			modifyCollectionProperty(obj, propertyName,
+					Collections.singleton(value), collectionModificationType);
+		}
+	}
+
+	protected boolean checkRemoveAssociation(Entity entity, Entity target,
+			Property property) {
+		Association association = property.annotation(Association.class);
+		if (association != null && association.dereferenceOnDelete()) {
+			return true;
+		}
+		return !(target instanceof IUser || target instanceof IGroup);
+	}
+
+	@Override
+	protected void checkVersion(Entity obj, DomainTransformEvent event)
+			throws DomainTransformException {
+		if (isReplayingRemoteEvent() && obj instanceof HasVersionNumber
+				&& CommonUtils.iv(event.getObjectVersionNumber()) > 0) {
+			((HasVersionNumber) obj)
+					.setVersionNumber(event.getObjectVersionNumber());
+		}
+	}
+
+	@Override
 	public void clearUserObjects() {
 		requiresEditPrep.clear();
 		super.clearUserObjects();
@@ -71,6 +110,19 @@ public abstract class ClientTransformManager extends TransformManager {
 		return entity;
 	}
 
+	@Override
+	protected Object ensureEndpointInTransformGraph(Object object) {
+		if (object instanceof Entity) {
+			registerDomainObject((Entity) object);
+		}
+		return object;
+	}
+
+	@Override
+	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
+		return true;
+	}
+
 	/*
 	 * get a local id for assigning to pre-TM-store objects (such as faux
 	 * ClientInstance)
@@ -94,6 +146,16 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	public boolean isProvisionalEditing() {
 		return this.provisionalEditing;
+	}
+
+	@Override
+	protected void maybeFireCollectionModificationEvent(
+			Class<? extends Object> collectionClass,
+			boolean fromPropertyChange) {
+		fireCollectionModificationEvent(
+				new CollectionModificationEvent(this, collectionClass,
+						getObjectStore().getCollection(collectionClass),
+						fromPropertyChange));
 	}
 
 	public Collection prepareObject(Entity domainObject, boolean autoSave,
@@ -235,77 +297,6 @@ public abstract class ClientTransformManager extends TransformManager {
 		addDomainTransformListener(new CommitToLocalDomainTransformListener());
 	}
 
-	@Override
-	protected boolean allowUnregisteredEntityTargetObject() {
-		return true;
-	}
-
-	@Override
-	protected boolean alwaysFireObjectOwnerCollectionModifications() {
-		return true;
-	}
-
-	@Override
-	protected void beforeDirectCollectionModification(Entity obj,
-			String propertyName, Object value,
-			CollectionModificationType collectionModificationType) {
-		if (isFirePropertyChangesOnConsumedCollectionMods()) {
-			modifyCollectionProperty(obj, propertyName,
-					Collections.singleton(value), collectionModificationType);
-		}
-	}
-
-	protected boolean checkRemoveAssociation(Entity entity, Entity target,
-			Property property) {
-		Association association = property.annotation(Association.class);
-		if (association != null && association.dereferenceOnDelete()) {
-			return true;
-		}
-		return !(target instanceof IUser || target instanceof IGroup);
-	}
-
-	@Override
-	protected void checkVersion(Entity obj, DomainTransformEvent event)
-			throws DomainTransformException {
-		if (isReplayingRemoteEvent() && obj instanceof HasVersionNumber
-				&& CommonUtils.iv(event.getObjectVersionNumber()) > 0) {
-			((HasVersionNumber) obj)
-					.setVersionNumber(event.getObjectVersionNumber());
-		}
-	}
-
-	@Override
-	protected Object ensureEndpointInTransformGraph(Object object) {
-		if (object instanceof Entity) {
-			registerDomainObject((Entity) object);
-		}
-		return object;
-	}
-
-	@Override
-	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
-		return true;
-	}
-
-	@Override
-	protected void maybeFireCollectionModificationEvent(
-			Class<? extends Object> collectionClass,
-			boolean fromPropertyChange) {
-		fireCollectionModificationEvent(
-				new CollectionModificationEvent(this, collectionClass,
-						getObjectStore().getCollection(collectionClass),
-						fromPropertyChange));
-	}
-
-	public static class ClientTransformManagerCommon
-			extends ClientTransformManager {
-	}
-
-	public interface PersistableTransformListener {
-		public void persistableTransform(DomainTransformRequest dtr,
-				DeltaApplicationRecordType type);
-	}
-
 	class ClientDteWorker extends ClientUIThreadWorker {
 		List<DomainTransformEvent> creates = new ArrayList<DomainTransformEvent>();
 
@@ -373,5 +364,14 @@ public abstract class ClientTransformManager extends TransformManager {
 				throw new WrappedRuntimeException(e);
 			}
 		}
+	}
+
+	public static class ClientTransformManagerCommon
+			extends ClientTransformManager {
+	}
+
+	public interface PersistableTransformListener {
+		public void persistableTransform(DomainTransformRequest dtr,
+				DeltaApplicationRecordType type);
 	}
 }

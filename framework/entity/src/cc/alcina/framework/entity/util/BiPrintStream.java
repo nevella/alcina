@@ -57,6 +57,27 @@ public class BiPrintStream extends PrintStream {
 		s2.close();
 	}
 
+	private void debugPrint() {
+		int debug = 4;
+	}
+
+	private void debugPrint(Object obj) {
+		if (debugMarker != null && obj != null) {
+			String s = String.valueOf(obj);
+			if (s != null) {
+				boolean match = s.contains(debugMarker);
+				try {
+					match |= s.matches(debugMarker);
+				} catch (Exception e) {
+					throw WrappedRuntimeException.wrap(e);
+				}
+				if (match) {
+					int debug = 4;
+				}
+			}
+		}
+	}
+
 	@Override
 	public void flush() {
 		s1.flush();
@@ -262,27 +283,6 @@ public class BiPrintStream extends PrintStream {
 		debugPrint();
 		s1.write(b);
 		s2.write(b);
-	}
-
-	private void debugPrint() {
-		int debug = 4;
-	}
-
-	private void debugPrint(Object obj) {
-		if (debugMarker != null && obj != null) {
-			String s = String.valueOf(obj);
-			if (s != null) {
-				boolean match = s.contains(debugMarker);
-				try {
-					match |= s.matches(debugMarker);
-				} catch (Exception e) {
-					throw WrappedRuntimeException.wrap(e);
-				}
-				if (match) {
-					int debug = 4;
-				}
-			}
-		}
 	}
 
 	public static class NullPrintStream extends PrintStream {

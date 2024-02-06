@@ -66,11 +66,6 @@ public abstract class AbstractRenderer<T extends TreeRenderable>
 	}
 
 	@Override
-	public Predicate predicate() {
-		return null;
-	}
-
-	@Override
 	public CollectionProvider collectionProvider() {
 		return null;
 	}
@@ -113,6 +108,11 @@ public abstract class AbstractRenderer<T extends TreeRenderable>
 	@Override
 	public boolean isSingleLineCustomiser() {
 		return false;
+	}
+
+	@Override
+	public Predicate predicate() {
+		return null;
 	}
 
 	@Override

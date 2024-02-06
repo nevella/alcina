@@ -156,6 +156,16 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.base.addStyleName(style);
 	}
 
+	protected boolean contains(final Collection c, final Object o) {
+		for (Iterator it = c.iterator(); it.hasNext();) {
+			Object next = it.next();
+			if (safeCompare(o, next) == 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof SetBasedListBox)) {
@@ -167,6 +177,22 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			return false;
 		}
 		return true;
+	}
+
+	private void fireAdaptedChange(String propertyName, List old,
+			List selected) {
+		changes.firePropertyChange(VALUE_PROPERTY_NAME, new HashSet(old),
+				new HashSet(selected));
+	}
+
+	private void fireChangeListeners() {
+		for (Iterator it = this.changeListeners.iterator(); it.hasNext();) {
+			ChangeListener l = (ChangeListener) it.next();
+			l.onChange(this);
+		}
+		if (this.getAction() != null) {
+			this.getAction().execute(this);
+		}
 	}
 
 	@Override
@@ -270,6 +296,37 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return this.base.hashCode();
 	}
 
+	private void init0() {
+		this.base = new com.google.gwt.user.client.ui.ListBox();
+		this.setRenderer(ToStringRenderer.INSTANCE);
+		this.setComparator(SimpleComparator.INSTANCE);
+		this.base.addClickListener(new ClickListener() {
+			@Override
+			public void onClick(Widget sender) {
+				update();
+			}
+		});
+		this.base.addChangeListener(new ChangeListener() {
+			@Override
+			public void onChange(Widget sender) {
+				update();
+			}
+			// foo!
+		});
+		Widget delegate = base;
+		if (listAddItemHandler != null) {
+			FlowPanel fp = new FlowPanel();
+			fp.setStyleName("nowrap");
+			delegate = fp;
+			fp.add(base);
+			InlineButtonHandler addItemAction = new AddItemHandler();
+			addButton = new ToolbarButton(addItemAction, true);
+			fp.add(UsefulWidgetFactory.createSpacer(2));
+			fp.add(addButton);
+		}
+		super.initWidget(delegate);
+	}
+
 	@Override
 	public boolean isEnabled() {
 		boolean retValue;
@@ -289,6 +346,11 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 
 	public boolean isSortOptionsByToString() {
 		return sortOptionsByToString;
+	}
+
+	@Override
+	protected void onDetach() {
+		super.onDetach();
 	}
 
 	public Object provideOtherValue() {
@@ -509,53 +571,6 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.base.setWidth(width);
 	}
 
-	private void fireAdaptedChange(String propertyName, List old,
-			List selected) {
-		changes.firePropertyChange(VALUE_PROPERTY_NAME, new HashSet(old),
-				new HashSet(selected));
-	}
-
-	private void fireChangeListeners() {
-		for (Iterator it = this.changeListeners.iterator(); it.hasNext();) {
-			ChangeListener l = (ChangeListener) it.next();
-			l.onChange(this);
-		}
-		if (this.getAction() != null) {
-			this.getAction().execute(this);
-		}
-	}
-
-	private void init0() {
-		this.base = new com.google.gwt.user.client.ui.ListBox();
-		this.setRenderer(ToStringRenderer.INSTANCE);
-		this.setComparator(SimpleComparator.INSTANCE);
-		this.base.addClickListener(new ClickListener() {
-			@Override
-			public void onClick(Widget sender) {
-				update();
-			}
-		});
-		this.base.addChangeListener(new ChangeListener() {
-			@Override
-			public void onChange(Widget sender) {
-				update();
-			}
-			// foo!
-		});
-		Widget delegate = base;
-		if (listAddItemHandler != null) {
-			FlowPanel fp = new FlowPanel();
-			fp.setStyleName("nowrap");
-			delegate = fp;
-			fp.add(base);
-			InlineButtonHandler addItemAction = new AddItemHandler();
-			addButton = new ToolbarButton(addItemAction, true);
-			fp.add(UsefulWidgetFactory.createSpacer(2));
-			fp.add(addButton);
-		}
-		super.initWidget(delegate);
-	}
-
 	private void update() {
 		ArrayList selected = new ArrayList();
 		Iterator it = this.options.iterator();
@@ -582,19 +597,50 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		fireChangeListeners();
 	}
 
-	protected boolean contains(final Collection c, final Object o) {
-		for (Iterator it = c.iterator(); it.hasNext();) {
-			Object next = it.next();
-			if (safeCompare(o, next) == 0) {
-				return true;
+	private class AddItemHandler extends InlineButtonHandler {
+		@Override
+		public String getActionName() {
+			return "+";
+		}
+
+		@Override
+		public void onClick(ClickEvent event) {
+			String validationMessage = listAddItemHandler
+					.validateCanAdd(getValue());
+			if (validationMessage != null) {
+				Registry.impl(ClientNotifications.class)
+						.showMessage(validationMessage);
+				return;
+			}
+			String namePrompt = listAddItemHandler.getPrompt();
+			String nameValue = null;
+			Callback<String> actionCallback = new Callback<String>() {
+				@Override
+				public void accept(String nameValue) {
+					Object newItem = listAddItemHandler
+							.createNewItem(nameValue);
+					List optionsCopy = new ArrayList(getOptions());
+					optionsCopy.add(newItem);
+					setOptions(optionsCopy);
+					setValue(newItem);
+				}
+			};
+			Callback<OkCancelDialogBox> positioningCallback = new Callback<OkCancelDialogBox>() {
+				@Override
+				public void accept(OkCancelDialogBox box) {
+					box.setPopupPosition(addButton.getAbsoluteLeft(),
+							addButton.getAbsoluteTop()
+									+ addButton.getOffsetHeight());
+				}
+			};
+			if (namePrompt != null) {
+				String defaultName = listAddItemHandler.getDefaultName();
+				new Prompter("Message", namePrompt, defaultName, null,
+						positioningCallback, actionCallback);
+			} else {
+				actionCallback.accept(null);
 			}
 		}
-		return false;
-	}
-
-	@Override
-	protected void onDetach() {
-		super.onDetach();
 	}
 
 	public static class DomainListBox extends SetBasedListBox {
@@ -626,6 +672,20 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			}
 		}
 
+		private void ensureModelListener(boolean add) {
+			if (listenedModel != null) {
+				listenedModel.removePropertyChangeListener(refreshListener);
+				listenedModel = null;
+			}
+			if (add) {
+				if (getModel() instanceof SourcesPropertyChangeEvents
+						&& isAttached() && isRefreshOnModelChange()) {
+					listenedModel = (SourcesPropertyChangeEvents) getModel();
+					listenedModel.addPropertyChangeListener(refreshListener);
+				}
+			}
+		}
+
 		public Predicate getPredicate() {
 			return this.predicate;
 		}
@@ -636,6 +696,18 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 
 		public boolean isRefreshOnModelChange() {
 			return this.refreshOnModelChange;
+		}
+
+		@Override
+		protected void onAttach() {
+			super.onAttach();
+			ensureModelListener(true);
+		}
+
+		@Override
+		protected void onDetach() {
+			super.onDetach();
+			ensureModelListener(false);
 		}
 
 		public void refreshOptions() {
@@ -694,78 +766,6 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 
 		public void setRefreshOnModelChange(boolean refreshOnModelChange) {
 			this.refreshOnModelChange = refreshOnModelChange;
-		}
-
-		private void ensureModelListener(boolean add) {
-			if (listenedModel != null) {
-				listenedModel.removePropertyChangeListener(refreshListener);
-				listenedModel = null;
-			}
-			if (add) {
-				if (getModel() instanceof SourcesPropertyChangeEvents
-						&& isAttached() && isRefreshOnModelChange()) {
-					listenedModel = (SourcesPropertyChangeEvents) getModel();
-					listenedModel.addPropertyChangeListener(refreshListener);
-				}
-			}
-		}
-
-		@Override
-		protected void onAttach() {
-			super.onAttach();
-			ensureModelListener(true);
-		}
-
-		@Override
-		protected void onDetach() {
-			super.onDetach();
-			ensureModelListener(false);
-		}
-	}
-
-	private class AddItemHandler extends InlineButtonHandler {
-		@Override
-		public String getActionName() {
-			return "+";
-		}
-
-		@Override
-		public void onClick(ClickEvent event) {
-			String validationMessage = listAddItemHandler
-					.validateCanAdd(getValue());
-			if (validationMessage != null) {
-				Registry.impl(ClientNotifications.class)
-						.showMessage(validationMessage);
-				return;
-			}
-			String namePrompt = listAddItemHandler.getPrompt();
-			String nameValue = null;
-			Callback<String> actionCallback = new Callback<String>() {
-				@Override
-				public void accept(String nameValue) {
-					Object newItem = listAddItemHandler
-							.createNewItem(nameValue);
-					List optionsCopy = new ArrayList(getOptions());
-					optionsCopy.add(newItem);
-					setOptions(optionsCopy);
-					setValue(newItem);
-				}
-			};
-			Callback<OkCancelDialogBox> positioningCallback = new Callback<OkCancelDialogBox>() {
-				@Override
-				public void accept(OkCancelDialogBox box) {
-					box.setPopupPosition(addButton.getAbsoluteLeft(),
-							addButton.getAbsoluteTop()
-									+ addButton.getOffsetHeight());
-				}
-			};
-			if (namePrompt != null) {
-				String defaultName = listAddItemHandler.getDefaultName();
-				new Prompter("Message", namePrompt, defaultName, null,
-						positioningCallback, actionCallback);
-			} else {
-				actionCallback.accept(null);
-			}
 		}
 	}
 }

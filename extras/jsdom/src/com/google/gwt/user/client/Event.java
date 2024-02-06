@@ -523,18 +523,6 @@ public class Event extends NativeEvent {
 		protected static NativePreviewEvent singleton;
 
 		/**
-		 * Gets the type associated with this event.
-		 *
-		 * @return returns the handler type
-		 */
-		public static Type<NativePreviewHandler> getType() {
-			if (TYPE == null) {
-				TYPE = new Type<NativePreviewHandler>();
-			}
-			return TYPE;
-		}
-
-		/**
 		 * Fire a {@link NativePreviewEvent} for the native event.
 		 *
 		 * @param handlers
@@ -569,6 +557,18 @@ public class Event extends NativeEvent {
 				return ret;
 			}
 			return true;
+		}
+
+		/**
+		 * Gets the type associated with this event.
+		 *
+		 * @return returns the handler type
+		 */
+		public static Type<NativePreviewHandler> getType() {
+			if (TYPE == null) {
+				TYPE = new Type<NativePreviewHandler>();
+			}
+			return TYPE;
 		}
 
 		/**
@@ -613,6 +613,12 @@ public class Event extends NativeEvent {
 		 */
 		public void consume() {
 			isConsumed = true;
+		}
+
+		@Override
+		protected void dispatch(NativePreviewHandler handler) {
+			handler.onPreviewNativeEvent(this);
+			singleton.isFirstHandler = false;
 		}
 
 		@Override
@@ -666,6 +672,15 @@ public class Event extends NativeEvent {
 			return isFirstHandler;
 		}
 
+		@Override
+		protected void revive() {
+			super.revive();
+			isCanceled = false;
+			isConsumed = false;
+			isFirstHandler = true;
+			nativeEvent = null;
+		}
+
 		/**
 		 * Set the native event.
 		 *
@@ -674,21 +689,6 @@ public class Event extends NativeEvent {
 		 */
 		private void setNativeEvent(NativeEvent nativeEvent) {
 			this.nativeEvent = nativeEvent;
-		}
-
-		@Override
-		protected void dispatch(NativePreviewHandler handler) {
-			handler.onPreviewNativeEvent(this);
-			singleton.isFirstHandler = false;
-		}
-
-		@Override
-		protected void revive() {
-			super.revive();
-			isCanceled = false;
-			isConsumed = false;
-			isFirstHandler = true;
-			nativeEvent = null;
 		}
 	}
 

@@ -83,19 +83,6 @@ public class MvccEntitySortedIndexTest3<IU extends Entity & IUser, IG extends En
 			setName("MvccEntitySortedIndexTest3-Thread0");
 		}
 
-		@Override
-		public void run() {
-			try {
-				Transaction.begin();
-				createEntities();
-				creationCompleteLatch.countDown();
-				mutateEntities();
-				modificationCompleteLatch.countDown();
-			} finally {
-				Transaction.ensureEnded();
-			}
-		}
-
 		private void createEntities() {
 			for (int idx = 0; idx < 200; idx++) {
 				Entity entity = Registry.impl(TestSupport.class)
@@ -117,6 +104,19 @@ public class MvccEntitySortedIndexTest3<IU extends Entity & IUser, IG extends En
 				}
 				Transaction.commit();
 				logger.info("Committed mutation transaction: {}", txIdx);
+			}
+		}
+
+		@Override
+		public void run() {
+			try {
+				Transaction.begin();
+				createEntities();
+				creationCompleteLatch.countDown();
+				mutateEntities();
+				modificationCompleteLatch.countDown();
+			} finally {
+				Transaction.ensureEnded();
 			}
 		}
 

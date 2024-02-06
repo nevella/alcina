@@ -73,6 +73,22 @@ public class DomainLookup<T, E extends Entity>
 		}
 	}
 
+	protected boolean add(T key, E value) {
+		if (value == null) {
+			System.err.println(
+					"Invalid value (null) for cache lookup put - " + key);
+			return false;
+		}
+		try {
+			return getAndEnsure(key).add(value);
+		} catch (RuntimeException e) {
+			String message = FormatBuilder.keyValues("Issue type",
+					"lookup insert", "lookup", this, "key", key, "value",
+					value);
+			throw new RuntimeException(message, e);
+		}
+	}
+
 	@Override
 	public FilterCost estimateFilterCost(int entityCount,
 			DomainFilter... filters) {
@@ -82,6 +98,18 @@ public class DomainLookup<T, E extends Entity>
 	public Set<E> get(T k1) {
 		k1 = normalise(k1);
 		return store.get(k1);
+	}
+
+	protected Set<E> getAndEnsure(T key) {
+		key = normalise(key);
+		return store.getAndEnsure(key);
+	}
+
+	protected Object getChainedProperty(E entity) {
+		if (descriptor.valueFunction != null) {
+			return descriptor.valueFunction.apply(entity);
+		}
+		return propertyPath.getChainedProperty(entity);
 	}
 
 	@Override
@@ -163,6 +191,10 @@ public class DomainLookup<T, E extends Entity>
 				keys[0]);
 	}
 
+	private T normalise(T key) {
+		return normaliser == null ? key : normaliser.convert(key);
+	}
+
 	@Override
 	public void remove(E entity) {
 		Object v1 = getChainedProperty(entity);
@@ -173,6 +205,15 @@ public class DomainLookup<T, E extends Entity>
 			}
 		} else {
 			remove(normalise((T) v1), entity);
+		}
+	}
+
+	protected boolean remove(T key, E value) {
+		Set<E> set = get(key);
+		if (set != null) {
+			return set.remove(value);
+		} else {
+			return false;
 		}
 	}
 
@@ -203,46 +244,5 @@ public class DomainLookup<T, E extends Entity>
 	public String toString() {
 		return Ax.format("Lookup: %s [%s]", getListenedClass().getSimpleName(),
 				descriptor.propertyPath);
-	}
-
-	private T normalise(T key) {
-		return normaliser == null ? key : normaliser.convert(key);
-	}
-
-	protected boolean add(T key, E value) {
-		if (value == null) {
-			System.err.println(
-					"Invalid value (null) for cache lookup put - " + key);
-			return false;
-		}
-		try {
-			return getAndEnsure(key).add(value);
-		} catch (RuntimeException e) {
-			String message = FormatBuilder.keyValues("Issue type",
-					"lookup insert", "lookup", this, "key", key, "value",
-					value);
-			throw new RuntimeException(message, e);
-		}
-	}
-
-	protected Set<E> getAndEnsure(T key) {
-		key = normalise(key);
-		return store.getAndEnsure(key);
-	}
-
-	protected Object getChainedProperty(E entity) {
-		if (descriptor.valueFunction != null) {
-			return descriptor.valueFunction.apply(entity);
-		}
-		return propertyPath.getChainedProperty(entity);
-	}
-
-	protected boolean remove(T key, E value) {
-		Set<E> set = get(key);
-		if (set != null) {
-			return set.remove(value);
-		} else {
-			return false;
-		}
 	}
 }

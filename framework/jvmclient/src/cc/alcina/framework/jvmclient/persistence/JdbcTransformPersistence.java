@@ -92,6 +92,16 @@ public abstract class JdbcTransformPersistence
 	}
 
 	@Override
+	protected void clearAllPersisted(final AsyncCallback callback) {
+		try {
+			executeStatement("DELETE from TransformRequests");
+			callback.onSuccess(null);
+		} catch (Exception e) {
+			callback.onFailure(e);
+		}
+	}
+
+	@Override
 	public void clearPersistedClient(final ClientInstance exceptFor,
 			int exceptForId, final AsyncCallback callback,
 			boolean clearDeltaStore) {
@@ -101,6 +111,23 @@ public abstract class JdbcTransformPersistence
 			callback.onSuccess(null);
 		} catch (Exception e) {
 			callback.onFailure(e);
+		}
+	}
+
+	protected void ensureDb(final AsyncCallback callback) {
+		// should be done elsewhere (for generic jdbc)(generally done in
+		// constructor, so this is a noop)
+		callback.onSuccess(null);
+	}
+
+	private void executeStatement(String sql) {
+		CleanupTuple cleanupTuple = new CleanupTuple();
+		try {
+			cleanupTuple.execute(sql);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		} finally {
+			cleanupTuple.cleanup();
 		}
 	}
 
@@ -144,6 +171,40 @@ public abstract class JdbcTransformPersistence
 	}
 
 	@Override
+	protected void getTransforms(DeltaApplicationFilters filters,
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
+		CleanupTuple cleanupTuple = new CleanupTuple();
+		try {
+			String sql = getTransformWrapperSql(filters);
+			sql = sql.replaceFirst("select.+?from(.+?)(order by.+)$",
+					"select id from $1 $2");
+			ResultSet countRs = cleanupTuple.executeQuery(sql);
+			List<Long> ids = new ArrayList<Long>();
+			while (countRs.next()) {
+				ids.add(countRs.getLong(1));
+			}
+			countRs.close();
+			ResultSet rs = getTransformsResultSet(filters, cleanupTuple);
+			callback.onSuccess(new RsIterator(rs, cleanupTuple, ids));
+		} catch (Exception e) {
+			callback.onFailure(e);
+			cleanupTuple.cleanup();
+		}
+	}
+
+	protected ResultSet getTransformsResultSet(
+			final DeltaApplicationFilters filters, CleanupTuple tuple)
+			throws SQLException {
+		String sql = getTransformWrapperSql(filters);
+		return tuple.executeQuery(sql);
+	}
+
+	@Override
+	protected String getTransformWrapperSqlFields() {
+		return "id, timestamp,user_id,clientInstance_id,request_id,clientInstance_auth,transform_request_type,transform_event_protocol,tag,chunk_uuid";
+	}
+
+	@Override
 	public void init(final DTESerializationPolicy dteSerializationPolicy,
 			final CommitToStorageTransformListener commitToServerTransformListener,
 			final AsyncCallback callback) {
@@ -178,6 +239,54 @@ public abstract class JdbcTransformPersistence
 			}
 		});
 		callback.onSuccess(null);
+	}
+
+	private void initSuper(DTESerializationPolicy dteSerializationPolicy,
+			CommitToStorageTransformListener commitToServerTransformListener,
+			final AsyncCallback superCallback) {
+		super.init(dteSerializationPolicy, commitToServerTransformListener,
+				superCallback);
+	}
+
+	@Override
+	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
+			final AsyncCallback callback) {
+		topicPersisting
+				.publish(new LocalPersistenceTuple(wrapper.getType().toString(),
+						wrapper.getText().length(), wrapper.getText()));
+		CleanupTuple tuple = new CleanupTuple();
+		try {
+			PreparedStatement pstmt = tuple.prepareStatement(
+					"INSERT INTO TransformRequests " + "(transform, timestamp,"
+							+ "user_id,clientInstance_id"
+							+ ",request_id,clientInstance_auth,"
+							+ "transform_request_type,transform_event_protocol,tag,chunk_uuid) VALUES (?, ?,?,?,?,?,?,?,?,?)");
+			if (wrapper.getProtocolVersion() == null) {
+				throw new Exception("wrapper must have protocol version");
+			}
+			Clob clob = tuple.conn.createClob();
+			clob.setString(1, wrapper.getText());
+			pstmt.setClob(1, clob);
+			pstmt.setLong(2, wrapper.getTimestamp());
+			pstmt.setLong(3, wrapper.getUserId());
+			pstmt.setLong(4, wrapper.getClientInstanceId());
+			pstmt.setLong(5, wrapper.getRequestId());
+			pstmt.setLong(6, wrapper.getClientInstanceAuth());
+			pstmt.setString(7, wrapper.getType().toString());
+			pstmt.setString(8, wrapper.getProtocolVersion());
+			pstmt.setString(9, wrapper.getTag());
+			pstmt.setString(10, wrapper.getChunkUuidString());
+			tuple.executePstmt();
+			ResultSet rs = tuple.getGeneratedKeys();
+			rs.next();
+			int newid = rs.getInt(1);
+			wrapper.setId(newid);
+			callback.onSuccess(null);
+		} catch (Exception e) {
+			callback.onFailure(e);
+		} finally {
+			tuple.cleanup();
+		}
 	}
 
 	@Override
@@ -246,6 +355,22 @@ public abstract class JdbcTransformPersistence
 		this.connectionUrl = connectionUrl;
 	}
 
+	@Override
+	protected void transformPersisted(
+			final List<DeltaApplicationRecord> persistedWrappers,
+			final AsyncCallback callback) {
+		try {
+			for (DeltaApplicationRecord wrapper : persistedWrappers) {
+				executeStatement("update  TransformRequests  set "
+						+ "transform_request_type='TO_REMOTE_COMPLETED'"
+						+ " where id = " + wrapper.getId());
+			}
+			callback.onSuccess(null);
+		} catch (Exception e) {
+			callback.onFailure(e);
+		}
+	}
+
 	public void updateTransformTableRequestType(AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
@@ -264,128 +389,101 @@ public abstract class JdbcTransformPersistence
 		}
 	}
 
-	private void executeStatement(String sql) {
-		CleanupTuple cleanupTuple = new CleanupTuple();
-		try {
-			cleanupTuple.execute(sql);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		} finally {
-			cleanupTuple.cleanup();
-		}
-	}
+	class CleanupTuple {
+		Connection conn = null;
 
-	private void initSuper(DTESerializationPolicy dteSerializationPolicy,
-			CommitToStorageTransformListener commitToServerTransformListener,
-			final AsyncCallback superCallback) {
-		super.init(dteSerializationPolicy, commitToServerTransformListener,
-				superCallback);
-	}
+		Statement stmt = null;
 
-	@Override
-	protected void clearAllPersisted(final AsyncCallback callback) {
-		try {
-			executeStatement("DELETE from TransformRequests");
-			callback.onSuccess(null);
-		} catch (Exception e) {
-			callback.onFailure(e);
-		}
-	}
+		PreparedStatement pstmt = null;
 
-	protected void ensureDb(final AsyncCallback callback) {
-		// should be done elsewhere (for generic jdbc)(generally done in
-		// constructor, so this is a noop)
-		callback.onSuccess(null);
-	}
+		ResultSet rs = null;
 
-	@Override
-	protected void getTransforms(DeltaApplicationFilters filters,
-			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
-		CleanupTuple cleanupTuple = new CleanupTuple();
-		try {
-			String sql = getTransformWrapperSql(filters);
-			sql = sql.replaceFirst("select.+?from(.+?)(order by.+)$",
-					"select id from $1 $2");
-			ResultSet countRs = cleanupTuple.executeQuery(sql);
-			List<Long> ids = new ArrayList<Long>();
-			while (countRs.next()) {
-				ids.add(countRs.getLong(1));
+		public CleanupTuple() {
+			try {
+				conn = getConnection();
+				stmt = conn.createStatement();
+			} catch (Exception e) {
+				cleanup();
+				throw new WrappedRuntimeException(e);
 			}
-			countRs.close();
-			ResultSet rs = getTransformsResultSet(filters, cleanupTuple);
-			callback.onSuccess(new RsIterator(rs, cleanupTuple, ids));
-		} catch (Exception e) {
-			callback.onFailure(e);
-			cleanupTuple.cleanup();
+		}
+
+		void cleanup() {
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+				if (stmt != null) {
+					stmt.close();
+				}
+				if (pstmt != null) {
+					pstmt.close();
+				}
+				if (conn != null) {
+					conn.close();
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException("Problem accessing local db",
+						e);
+			}
+		}
+
+		void execute(String sql) throws SQLException {
+			try {
+				stmt.execute(sql);
+			} catch (SQLException e) {
+				cleanup();
+				throw e;
+			}
+		}
+
+		public void executePstmt() throws SQLException {
+			pstmt.execute();
+		}
+
+		ResultSet executeQuery(String sql) throws SQLException {
+			try {
+				return stmt.executeQuery(sql);
+			} catch (SQLException e) {
+				cleanup();
+				throw e;
+			}
+		}
+
+		public ResultSet getGeneratedKeys() throws SQLException {
+			return pstmt.getGeneratedKeys();
+		}
+
+		public PreparedStatement prepareStatement(String sql)
+				throws SQLException {
+			pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+			return pstmt;
 		}
 	}
 
-	protected ResultSet getTransformsResultSet(
-			final DeltaApplicationFilters filters, CleanupTuple tuple)
-			throws SQLException {
-		String sql = getTransformWrapperSql(filters);
-		return tuple.executeQuery(sql);
-	}
+	private class PersistentDomainModelDeltaIterator
+			implements Iterator<DomainModelDelta>, HasSize {
+		private Iterator<DeltaApplicationRecord> itr;
 
-	@Override
-	protected String getTransformWrapperSqlFields() {
-		return "id, timestamp,user_id,clientInstance_id,request_id,clientInstance_auth,transform_request_type,transform_event_protocol,tag,chunk_uuid";
-	}
-
-	@Override
-	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
-			final AsyncCallback callback) {
-		topicPersisting
-				.publish(new LocalPersistenceTuple(wrapper.getType().toString(),
-						wrapper.getText().length(), wrapper.getText()));
-		CleanupTuple tuple = new CleanupTuple();
-		try {
-			PreparedStatement pstmt = tuple.prepareStatement(
-					"INSERT INTO TransformRequests " + "(transform, timestamp,"
-							+ "user_id,clientInstance_id"
-							+ ",request_id,clientInstance_auth,"
-							+ "transform_request_type,transform_event_protocol,tag,chunk_uuid) VALUES (?, ?,?,?,?,?,?,?,?,?)");
-			if (wrapper.getProtocolVersion() == null) {
-				throw new Exception("wrapper must have protocol version");
-			}
-			Clob clob = tuple.conn.createClob();
-			clob.setString(1, wrapper.getText());
-			pstmt.setClob(1, clob);
-			pstmt.setLong(2, wrapper.getTimestamp());
-			pstmt.setLong(3, wrapper.getUserId());
-			pstmt.setLong(4, wrapper.getClientInstanceId());
-			pstmt.setLong(5, wrapper.getRequestId());
-			pstmt.setLong(6, wrapper.getClientInstanceAuth());
-			pstmt.setString(7, wrapper.getType().toString());
-			pstmt.setString(8, wrapper.getProtocolVersion());
-			pstmt.setString(9, wrapper.getTag());
-			pstmt.setString(10, wrapper.getChunkUuidString());
-			tuple.executePstmt();
-			ResultSet rs = tuple.getGeneratedKeys();
-			rs.next();
-			int newid = rs.getInt(1);
-			wrapper.setId(newid);
-			callback.onSuccess(null);
-		} catch (Exception e) {
-			callback.onFailure(e);
-		} finally {
-			tuple.cleanup();
+		public PersistentDomainModelDeltaIterator(
+				Iterator<DeltaApplicationRecord> result) {
+			this.itr = result;
 		}
-	}
 
-	@Override
-	protected void transformPersisted(
-			final List<DeltaApplicationRecord> persistedWrappers,
-			final AsyncCallback callback) {
-		try {
-			for (DeltaApplicationRecord wrapper : persistedWrappers) {
-				executeStatement("update  TransformRequests  set "
-						+ "transform_request_type='TO_REMOTE_COMPLETED'"
-						+ " where id = " + wrapper.getId());
-			}
-			callback.onSuccess(null);
-		} catch (Exception e) {
-			callback.onFailure(e);
+		@Override
+		public int getSize() {
+			return ((HasSize) itr).getSize();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return itr.hasNext();
+		}
+
+		@Override
+		public DomainModelDelta next() {
+			return new DeltaApplicationRecordToDomainModelDeltaConverter()
+					.convert(itr.next());
 		}
 	}
 
@@ -428,37 +526,6 @@ public abstract class JdbcTransformPersistence
 			return ids.size();
 		}
 
-		@Override
-		public boolean hasNext() {
-			return hasNext;
-		}
-
-		@Override
-		public DeltaApplicationRecord next() {
-			if (!hasNext) {
-				throw new NoSuchElementException();
-			}
-			try {
-				Map<String, Object> map = getFieldsAs(rs, transformParams);
-				DeltaApplicationRecord wr = new DeltaApplicationRecord(
-						(Integer) map.get("id"),
-						getTransformText(rs, map.get("id").toString()),
-						(Long) map.get("timestamp"), (Long) map.get("user_id"),
-						(Long) map.get("clientInstance_id"),
-						(Integer) map.get("request_id"),
-						(Integer) map.get("clientInstance_auth"),
-						(DeltaApplicationRecordType) map
-								.get("transform_request_type"),
-						(String) map.get("transform_event_protocol"),
-						(String) map.get("tag"),
-						(String) map.get("chunk_uuid"));
-				hasNext = rs.next();
-				return wr;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
 		private String getTransformText(ResultSet rs2, String id) {
 			if (transformCache.containsKey(id)) {
 				return transformCache.get(id);
@@ -491,102 +558,35 @@ public abstract class JdbcTransformPersistence
 									/ 1000000);
 			return transformCache.get(id);
 		}
-	}
-
-	private class PersistentDomainModelDeltaIterator
-			implements Iterator<DomainModelDelta>, HasSize {
-		private Iterator<DeltaApplicationRecord> itr;
-
-		public PersistentDomainModelDeltaIterator(
-				Iterator<DeltaApplicationRecord> result) {
-			this.itr = result;
-		}
-
-		@Override
-		public int getSize() {
-			return ((HasSize) itr).getSize();
-		}
 
 		@Override
 		public boolean hasNext() {
-			return itr.hasNext();
+			return hasNext;
 		}
 
 		@Override
-		public DomainModelDelta next() {
-			return new DeltaApplicationRecordToDomainModelDeltaConverter()
-					.convert(itr.next());
-		}
-	}
-
-	class CleanupTuple {
-		Connection conn = null;
-
-		Statement stmt = null;
-
-		PreparedStatement pstmt = null;
-
-		ResultSet rs = null;
-
-		public CleanupTuple() {
+		public DeltaApplicationRecord next() {
+			if (!hasNext) {
+				throw new NoSuchElementException();
+			}
 			try {
-				conn = getConnection();
-				stmt = conn.createStatement();
+				Map<String, Object> map = getFieldsAs(rs, transformParams);
+				DeltaApplicationRecord wr = new DeltaApplicationRecord(
+						(Integer) map.get("id"),
+						getTransformText(rs, map.get("id").toString()),
+						(Long) map.get("timestamp"), (Long) map.get("user_id"),
+						(Long) map.get("clientInstance_id"),
+						(Integer) map.get("request_id"),
+						(Integer) map.get("clientInstance_auth"),
+						(DeltaApplicationRecordType) map
+								.get("transform_request_type"),
+						(String) map.get("transform_event_protocol"),
+						(String) map.get("tag"),
+						(String) map.get("chunk_uuid"));
+				hasNext = rs.next();
+				return wr;
 			} catch (Exception e) {
-				cleanup();
 				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		public void executePstmt() throws SQLException {
-			pstmt.execute();
-		}
-
-		public ResultSet getGeneratedKeys() throws SQLException {
-			return pstmt.getGeneratedKeys();
-		}
-
-		public PreparedStatement prepareStatement(String sql)
-				throws SQLException {
-			pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-			return pstmt;
-		}
-
-		void cleanup() {
-			try {
-				if (rs != null) {
-					rs.close();
-				}
-				if (stmt != null) {
-					stmt.close();
-				}
-				if (pstmt != null) {
-					pstmt.close();
-				}
-				if (conn != null) {
-					conn.close();
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException("Problem accessing local db",
-						e);
-			}
-		}
-
-		void execute(String sql) throws SQLException {
-			try {
-				stmt.execute(sql);
-			} catch (SQLException e) {
-				cleanup();
-				throw e;
-			}
-		}
-
-		ResultSet executeQuery(String sql) throws SQLException {
-			try {
-				return stmt.executeQuery(sql);
-			} catch (SQLException e) {
-				cleanup();
-				throw e;
 			}
 		}
 	}

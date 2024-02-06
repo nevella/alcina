@@ -33,6 +33,35 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 		return this.entityNotFound;
 	}
 
+	private void onCreate(Entity e, Runnable postCreate) {
+		if (place.fromId != 0 && place.fromClass != null) {
+			EntityPlace fromPlace = (EntityPlace) RegistryHistoryMapper.get()
+					.getPlaceOrThrow(place.fromClass);
+			Class implementationClass = fromPlace.provideEntityClass();
+			Optional<Property> ownerReflector = Entity.Ownership
+					.getOwnerReflectors(e.entityClass())
+					.filter(r -> r.annotation(Association.class)
+							.implementationClass() == implementationClass)
+					.filter(Objects::nonNull).findFirst();
+			Domain.async(implementationClass, place.fromId, false, parent -> {
+				if (ownerReflector.isPresent()) {
+					ownerReflector.get().set(e, parent);
+				}
+				postCreate.run();
+			});
+			return;
+		}
+		postCreate.run();
+	}
+
+	private Class<? extends Entity> provideDomainClass() {
+		return getPlace().provideEntityClass();
+	}
+
+	private boolean provideIsCreate() {
+		return place.getAction() == EntityAction.CREATE;
+	}
+
 	public void setEntity(E entity) {
 		E old_entity = this.entity;
 		this.entity = entity;
@@ -72,34 +101,5 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 			}
 		});
 		super.start(panel, eventBus);
-	}
-
-	private void onCreate(Entity e, Runnable postCreate) {
-		if (place.fromId != 0 && place.fromClass != null) {
-			EntityPlace fromPlace = (EntityPlace) RegistryHistoryMapper.get()
-					.getPlaceOrThrow(place.fromClass);
-			Class implementationClass = fromPlace.provideEntityClass();
-			Optional<Property> ownerReflector = Entity.Ownership
-					.getOwnerReflectors(e.entityClass())
-					.filter(r -> r.annotation(Association.class)
-							.implementationClass() == implementationClass)
-					.filter(Objects::nonNull).findFirst();
-			Domain.async(implementationClass, place.fromId, false, parent -> {
-				if (ownerReflector.isPresent()) {
-					ownerReflector.get().set(e, parent);
-				}
-				postCreate.run();
-			});
-			return;
-		}
-		postCreate.run();
-	}
-
-	private Class<? extends Entity> provideDomainClass() {
-		return getPlace().provideEntityClass();
-	}
-
-	private boolean provideIsCreate() {
-		return place.getAction() == EntityAction.CREATE;
 	}
 }

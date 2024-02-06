@@ -131,119 +131,6 @@ public class Widget extends UIObject
 		return this;
 	}
 
-	@Override
-	public void fireEvent(GwtEvent<?> event) {
-		if (handlerManager != null) {
-			handlerManager.fireEvent(event);
-		}
-	}
-
-	/**
-	 * Gets the panel-defined layout data associated with this widget.
-	 *
-	 * @return the widget's layout data
-	 * @see #setLayoutData
-	 */
-	public Object getLayoutData() {
-		return layoutData;
-	}
-
-	@Override
-	public int getOffsetHeight() {
-		return isAttached() ? super.getOffsetHeight() : 0;
-	}
-
-	@Override
-	public int getOffsetWidth() {
-		return isAttached() ? super.getOffsetWidth() : 0;
-	}
-
-	/**
-	 * Gets this widget's parent panel.
-	 *
-	 * @return the widget's parent panel
-	 */
-	public Widget getParent() {
-		return parent;
-	}
-
-	/**
-	 * Determines whether this widget is currently attached to the browser's
-	 * document (i.e., there is an unbroken chain of widgets between this widget
-	 * and the underlying browser document).
-	 *
-	 * @return <code>true</code> if the widget is attached
-	 */
-	@Override
-	public boolean isAttached() {
-		return attached;
-	}
-
-	@Override
-	public void onBrowserEvent(Event event) {
-		switch (DOM.eventGetType(event)) {
-		case Event.ONMOUSEOVER:
-			// Only fire the mouse over event if it's coming from outside this
-			// widget.
-		case Event.ONMOUSEOUT:
-			// Only fire the mouse out event if it's leaving this
-			// widget.
-			EventTarget relatedEventTarget = event.getRelatedEventTarget();
-			if (relatedEventTarget != null && Element.is(relatedEventTarget)) {
-				Element related = relatedEventTarget.cast();
-				if (related != null && getElement().isOrHasChild(related)) {
-					return;
-				}
-			}
-			break;
-		}
-		DomEvent.fireNativeEvent(event, this, this.getElement());
-	}
-
-	/**
-	 * Removes this widget from its parent widget, if one exists.
-	 *
-	 * <p>
-	 * If it has no parent, this method does nothing. If it is a "root" widget
-	 * (meaning it's been added to the detach list via
-	 * {@link RootPanel#detachOnWindowClose(Widget)}), it will be removed from
-	 * the detached immediately. This makes it possible for Composites and
-	 * Panels to adopt root widgets.
-	 * </p>
-	 *
-	 * @throws IllegalStateException
-	 *             if this widget's parent does not support removal (e.g.
-	 *             {@link Composite})
-	 */
-	public void removeFromParent() {
-		if (parent == null) {
-			// If the widget had no parent, check to see if it was in the detach
-			// list
-			// and remove it if necessary.
-			if (RootPanel.isInDetachList(this)) {
-				RootPanel.detachNow(this);
-			}
-		} else if (parent instanceof HasWidgets) {
-			((HasWidgets) parent).remove(this);
-		} else if (parent != null) {
-			throw new IllegalStateException(
-					"This widget's parent does not implement HasWidgets");
-		}
-	}
-
-	/**
-	 * Sets the panel-defined layout data associated with this widget. Only the
-	 * panel that currently contains a widget should ever set this value. It
-	 * serves as a place to store layout bookkeeping data associated with a
-	 * widget.
-	 *
-	 * @param layoutData
-	 *            the widget's layout data
-	 */
-	public void setLayoutData(Object layoutData) {
-		this.layoutData = layoutData;
-	}
-
 	/**
 	 * Creates the {@link HandlerManager} used by this Widget. You can override
 	 * this method to create a custom {@link HandlerManager}.
@@ -290,6 +177,23 @@ public class Widget extends UIObject
 	}
 
 	/**
+	 * Ensures the existence of the handler manager.
+	 *
+	 * @return the handler manager
+	 */
+	HandlerManager ensureHandlers() {
+		return handlerManager == null ? handlerManager = createHandlerManager()
+				: handlerManager;
+	}
+
+	@Override
+	public void fireEvent(GwtEvent<?> event) {
+		if (handlerManager != null) {
+			handlerManager.fireEvent(event);
+		}
+	}
+
+	/**
 	 * Gets the number of handlers listening to the event type.
 	 *
 	 * @param type
@@ -299,6 +203,51 @@ public class Widget extends UIObject
 	protected int getHandlerCount(GwtEvent.Type<?> type) {
 		return handlerManager == null ? 0
 				: handlerManager.getHandlerCount(type);
+	}
+
+	HandlerManager getHandlerManager() {
+		return handlerManager;
+	}
+
+	/**
+	 * Gets the panel-defined layout data associated with this widget.
+	 *
+	 * @return the widget's layout data
+	 * @see #setLayoutData
+	 */
+	public Object getLayoutData() {
+		return layoutData;
+	}
+
+	@Override
+	public int getOffsetHeight() {
+		return isAttached() ? super.getOffsetHeight() : 0;
+	}
+
+	@Override
+	public int getOffsetWidth() {
+		return isAttached() ? super.getOffsetWidth() : 0;
+	}
+
+	/**
+	 * Gets this widget's parent panel.
+	 *
+	 * @return the widget's parent panel
+	 */
+	public Widget getParent() {
+		return parent;
+	}
+
+	/**
+	 * Determines whether this widget is currently attached to the browser's
+	 * document (i.e., there is an unbroken chain of widgets between this widget
+	 * and the underlying browser document).
+	 *
+	 * @return <code>true</code> if the widget is attached
+	 */
+	@Override
+	public boolean isAttached() {
+		return attached;
 	}
 
 	/**
@@ -352,6 +301,27 @@ public class Widget extends UIObject
 		// attached.
 		onLoad();
 		AttachEvent.fire(this, true);
+	}
+
+	@Override
+	public void onBrowserEvent(Event event) {
+		switch (DOM.eventGetType(event)) {
+		case Event.ONMOUSEOVER:
+			// Only fire the mouse over event if it's coming from outside this
+			// widget.
+		case Event.ONMOUSEOUT:
+			// Only fire the mouse out event if it's leaving this
+			// widget.
+			EventTarget relatedEventTarget = event.getRelatedEventTarget();
+			if (relatedEventTarget != null && Element.is(relatedEventTarget)) {
+				Element related = relatedEventTarget.cast();
+				if (related != null && getElement().isOrHasChild(related)) {
+					return;
+				}
+			}
+			break;
+		}
+		DomEvent.fireNativeEvent(event, this, this.getElement());
 	}
 
 	/**
@@ -417,17 +387,34 @@ public class Widget extends UIObject
 	}
 
 	/**
-	 * Ensures the existence of the handler manager.
+	 * Removes this widget from its parent widget, if one exists.
 	 *
-	 * @return the handler manager
+	 * <p>
+	 * If it has no parent, this method does nothing. If it is a "root" widget
+	 * (meaning it's been added to the detach list via
+	 * {@link RootPanel#detachOnWindowClose(Widget)}), it will be removed from
+	 * the detached immediately. This makes it possible for Composites and
+	 * Panels to adopt root widgets.
+	 * </p>
+	 *
+	 * @throws IllegalStateException
+	 *             if this widget's parent does not support removal (e.g.
+	 *             {@link Composite})
 	 */
-	HandlerManager ensureHandlers() {
-		return handlerManager == null ? handlerManager = createHandlerManager()
-				: handlerManager;
-	}
-
-	HandlerManager getHandlerManager() {
-		return handlerManager;
+	public void removeFromParent() {
+		if (parent == null) {
+			// If the widget had no parent, check to see if it was in the detach
+			// list
+			// and remove it if necessary.
+			if (RootPanel.isInDetachList(this)) {
+				RootPanel.detachNow(this);
+			}
+		} else if (parent instanceof HasWidgets) {
+			((HasWidgets) parent).remove(this);
+		} else if (parent != null) {
+			throw new IllegalStateException(
+					"This widget's parent does not implement HasWidgets");
+		}
 	}
 
 	@Override
@@ -449,6 +436,19 @@ public class Widget extends UIObject
 			// attached to the document.
 			DOM.setEventListener(getElement(), this);
 		}
+	}
+
+	/**
+	 * Sets the panel-defined layout data associated with this widget. Only the
+	 * panel that currently contains a widget should ever set this value. It
+	 * serves as a place to store layout bookkeeping data associated with a
+	 * widget.
+	 *
+	 * @param layoutData
+	 *            the widget's layout data
+	 */
+	public void setLayoutData(Object layoutData) {
+		this.layoutData = layoutData;
 	}
 
 	/**

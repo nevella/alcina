@@ -44,26 +44,13 @@ public class CharSequenceArray
 
 	private boolean partialReturn;
 
+	private int pos;
+
 	/**
 	 * Creates a new segment.
 	 */
 	public CharSequenceArray() {
 		this(null, 0, 0);
-	}
-
-	@Override
-	public int hashCode() {
-		return array.hashCode() ^ offset ^ count;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof CharSequenceArray) {
-			CharSequenceArray o = (CharSequenceArray) obj;
-			return array == o.array && offset == o.offset && count == o.count;
-		} else {
-			return false;
-		}
 	}
 
 	/**
@@ -84,44 +71,56 @@ public class CharSequenceArray
 	}
 
 	/**
-	 * Flag to indicate that partial returns are valid. If the flag is true, an
-	 * implementation of the interface method
-	 * Document.getText(position,length,Segment) should return as much text as
-	 * possible without making a copy. The default state of the flag is false
-	 * which will cause Document.getText(position,length,Segment) to provide the
-	 * same return behavior it always had, which may or may not make a copy of
-	 * the text depending upon the request.
-	 *
-	 * @param p
-	 *            whether or not partial returns are valid.
-	 * @since 1.4
+	 * {@inheritDoc}
+	 * 
+	 * @since 1.6
 	 */
-	public void setPartialReturn(boolean p) {
-		partialReturn = p;
-	}
-
-	/**
-	 * Flag to indicate that partial returns are valid.
-	 *
-	 * @return whether or not partial returns are valid.
-	 * @since 1.4
-	 */
-	public boolean isPartialReturn() {
-		return partialReturn;
-	}
-
-	/**
-	 * Converts a segment into a String.
-	 *
-	 * @return the string
-	 */
-	public String toString() {
-		if (array != null) {
-			return new String(array, offset, count);
+	public char charAt(int index) {
+		if (index < 0 || index >= count) {
+			throw new StringIndexOutOfBoundsException(index);
 		}
-		return "";
+		return array[offset + index];
 	}
-	// --- CharacterIterator methods -------------------------------------
+
+	/**
+	 * Creates a shallow copy.
+	 *
+	 * @return the copy
+	 */
+	public Object clone() {
+		Object o;
+		try {
+			o = super.clone();
+		} catch (CloneNotSupportedException cnse) {
+			o = null;
+		}
+		return o;
+	}
+
+	/**
+	 * Gets the character at the current position (as returned by getIndex()).
+	 * 
+	 * @return the character at the current position or DONE if the current
+	 *         position is off the end of the text.
+	 * @see #getIndex
+	 * @since 1.3
+	 */
+	public char current() {
+		if (count != 0 && pos < offset + count) {
+			return array[pos];
+		}
+		return DONE;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof CharSequenceArray) {
+			CharSequenceArray o = (CharSequenceArray) obj;
+			return array == o.array && offset == o.offset && count == o.count;
+		} else {
+			return false;
+		}
+	}
 
 	/**
 	 * Sets the position to getBeginIndex() and returns the character at that
@@ -137,6 +136,53 @@ public class CharSequenceArray
 			return array[pos];
 		}
 		return DONE;
+	}
+
+	/**
+	 * Returns the start index of the text.
+	 * 
+	 * @return the index at which the text begins.
+	 * @since 1.3
+	 */
+	public int getBeginIndex() {
+		return offset;
+	}
+
+	/**
+	 * Returns the end index of the text. This index is the index of the first
+	 * character following the end of the text.
+	 * 
+	 * @return the index after the last character in the text
+	 * @since 1.3
+	 */
+	public int getEndIndex() {
+		return offset + count;
+	}
+
+	/**
+	 * Returns the current index.
+	 * 
+	 * @return the current index.
+	 * @since 1.3
+	 */
+	public int getIndex() {
+		return pos;
+	}
+	// --- CharSequence methods -------------------------------------
+
+	@Override
+	public int hashCode() {
+		return array.hashCode() ^ offset ^ count;
+	}
+
+	/**
+	 * Flag to indicate that partial returns are valid.
+	 *
+	 * @return whether or not partial returns are valid.
+	 * @since 1.4
+	 */
+	public boolean isPartialReturn() {
+		return partialReturn;
 	}
 
 	/**
@@ -157,18 +203,12 @@ public class CharSequenceArray
 	}
 
 	/**
-	 * Gets the character at the current position (as returned by getIndex()).
+	 * {@inheritDoc}
 	 * 
-	 * @return the character at the current position or DONE if the current
-	 *         position is off the end of the text.
-	 * @see #getIndex
-	 * @since 1.3
+	 * @since 1.6
 	 */
-	public char current() {
-		if (count != 0 && pos < offset + count) {
-			return array[pos];
-		}
-		return DONE;
+	public int length() {
+		return count;
 	}
 
 	/**
@@ -233,56 +273,20 @@ public class CharSequenceArray
 	}
 
 	/**
-	 * Returns the start index of the text.
-	 * 
-	 * @return the index at which the text begins.
-	 * @since 1.3
+	 * Flag to indicate that partial returns are valid. If the flag is true, an
+	 * implementation of the interface method
+	 * Document.getText(position,length,Segment) should return as much text as
+	 * possible without making a copy. The default state of the flag is false
+	 * which will cause Document.getText(position,length,Segment) to provide the
+	 * same return behavior it always had, which may or may not make a copy of
+	 * the text depending upon the request.
+	 *
+	 * @param p
+	 *            whether or not partial returns are valid.
+	 * @since 1.4
 	 */
-	public int getBeginIndex() {
-		return offset;
-	}
-
-	/**
-	 * Returns the end index of the text. This index is the index of the first
-	 * character following the end of the text.
-	 * 
-	 * @return the index after the last character in the text
-	 * @since 1.3
-	 */
-	public int getEndIndex() {
-		return offset + count;
-	}
-
-	/**
-	 * Returns the current index.
-	 * 
-	 * @return the current index.
-	 * @since 1.3
-	 */
-	public int getIndex() {
-		return pos;
-	}
-	// --- CharSequence methods -------------------------------------
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @since 1.6
-	 */
-	public char charAt(int index) {
-		if (index < 0 || index >= count) {
-			throw new StringIndexOutOfBoundsException(index);
-		}
-		return array[offset + index];
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @since 1.6
-	 */
-	public int length() {
-		return count;
+	public void setPartialReturn(boolean p) {
+		partialReturn = p;
 	}
 
 	/**
@@ -308,19 +312,15 @@ public class CharSequenceArray
 	}
 
 	/**
-	 * Creates a shallow copy.
+	 * Converts a segment into a String.
 	 *
-	 * @return the copy
+	 * @return the string
 	 */
-	public Object clone() {
-		Object o;
-		try {
-			o = super.clone();
-		} catch (CloneNotSupportedException cnse) {
-			o = null;
+	public String toString() {
+		if (array != null) {
+			return new String(array, offset, count);
 		}
-		return o;
+		return "";
 	}
-
-	private int pos;
+	// --- CharacterIterator methods -------------------------------------
 }

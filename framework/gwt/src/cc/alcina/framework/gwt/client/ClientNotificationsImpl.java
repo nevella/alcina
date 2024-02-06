@@ -113,6 +113,14 @@ public class ClientNotificationsImpl implements ClientNotifications {
 				}).show();
 	}
 
+	protected native void consoleLog(String s) /*-{
+    try {
+      $wnd.console.log(s);
+    } catch (e) {
+
+    }
+	}-*/;
+
 	@Override
 	public void enqueue(ClientNotification notification) {
 		if (notification.isOncePerClientInstance()
@@ -124,6 +132,12 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		flushNotifications();
 	}
 
+	private void ensureImages() {
+		if (images == null) {
+			images = GWT.create(StandardDataImages.class);
+		}
+	}
+
 	public void ensureLocalisedMessages() {
 		if (localisedMessages == null) {
 			localisedMessages = new HashMap<String, String>();
@@ -133,6 +147,32 @@ public class ClientNotificationsImpl implements ClientNotifications {
 							LT_NOTIFY_COMPLETED_SAVE,
 							"Your offline work has been saved to the server"));
 		}
+	}
+
+	private void flushNotifications() {
+		if (!ClientState.get().isUiInitialised() && uiStateListener == null) {
+			uiStateListener = evt -> flushNotifications();
+			ClientState.get().addPropertyChangeListener("uiInitialised",
+					uiStateListener);
+			return;
+		}
+		notificationQueue.stream()
+				.filter(notification -> ClientState.get().isUiInitialised()
+						|| notification.isShowBeforeUiInitComplete())
+				.findFirst().ifPresent(notification -> {
+					notificationQueue.remove(notification);
+					showDialog(notification.getCaption(), null,
+							notification.getBody(),
+							MessageType.fromNotificationLevel(
+									notification.getLevel()),
+							null);
+					new Timer() {
+						@Override
+						public void run() {
+							flushNotifications();
+						}
+					}.schedule(2000);
+				});
 	}
 
 	@Override
@@ -154,6 +194,12 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		return notifier;
 	}
 
+	protected String getStandardErrorText() {
+		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
+				+ ""
+				+ " If the problem recurs, please try refreshing your browser";
+	}
+
 	@Override
 	public void hideDialog() {
 		if (dialogBox != null) {
@@ -168,6 +214,10 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	public boolean isLogToSysOut() {
 		return this.logToSysOut;
+	}
+
+	protected boolean isViewDetail() {
+		return true;
 	}
 
 	@Override
@@ -411,56 +461,6 @@ public class ClientNotificationsImpl implements ClientNotifications {
     }
     return result;
 	}-*/;
-
-	private void ensureImages() {
-		if (images == null) {
-			images = GWT.create(StandardDataImages.class);
-		}
-	}
-
-	private void flushNotifications() {
-		if (!ClientState.get().isUiInitialised() && uiStateListener == null) {
-			uiStateListener = evt -> flushNotifications();
-			ClientState.get().addPropertyChangeListener("uiInitialised",
-					uiStateListener);
-			return;
-		}
-		notificationQueue.stream()
-				.filter(notification -> ClientState.get().isUiInitialised()
-						|| notification.isShowBeforeUiInitComplete())
-				.findFirst().ifPresent(notification -> {
-					notificationQueue.remove(notification);
-					showDialog(notification.getCaption(), null,
-							notification.getBody(),
-							MessageType.fromNotificationLevel(
-									notification.getLevel()),
-							null);
-					new Timer() {
-						@Override
-						public void run() {
-							flushNotifications();
-						}
-					}.schedule(2000);
-				});
-	}
-
-	protected native void consoleLog(String s) /*-{
-    try {
-      $wnd.console.log(s);
-    } catch (e) {
-
-    }
-	}-*/;
-
-	protected String getStandardErrorText() {
-		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
-				+ ""
-				+ " If the problem recurs, please try refreshing your browser";
-	}
-
-	protected boolean isViewDetail() {
-		return true;
-	}
 
 	public enum MessageType {
 		INFO, WARN, ERROR;

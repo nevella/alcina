@@ -121,94 +121,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 		return this;
 	}
 
-	@Override
-	public <T> T filterData(T original, T projected,
-			GraphProjectionContext context, GraphProjection graphProjection)
-			throws Exception {
-		T filtered = super.filterData(original, projected, context,
-				graphProjection);
-		if (skip(context.field)) {
-			return null;
-		}
-		String toPath = noPath ? "..." : context.toPath(!noPathToString);
-		visited.put(context.projectedOwner, toPath);
-		visited.put(filtered, toPath);
-		ownerMap.add(context.projectedOwner, filtered);
-		ownerMap.ensureKey(filtered);
-		owneeMap.add(filtered, context.projectedOwner);
-		return filtered;
-	}
-
-	public void getGraphStats(Object source, Class[] calculateOwnerStatsFor,
-			Class[] calculatePathStatsFor, StatsFilterSortKey sortKey,
-			boolean reverse) {
-		this.sortKey = sortKey;
-		this.reverse = reverse;
-		this.calculateOwnerStatsFor = new LinkedHashSet<Class>(
-				Arrays.asList(calculateOwnerStatsFor));
-		this.calculatePathStatsFor = new LinkedHashSet<Class>(
-				Arrays.asList(calculatePathStatsFor));
-		DetachedEntityCache cache = new DetachedEntityCache();
-		try {
-			GraphProjectionNoLisetNulls projection = new GraphProjectionNoLisetNulls(
-					null, this);
-			projection.project(source, null);
-			System.err.println(projection.constructorExceptions);
-			dumpStats();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public StatsFilter noPath() {
-		noPath = true;
-		return this;
-	}
-
-	public StatsFilter noPathToString() {
-		noPathToString = true;
-		return this;
-	}
-
-	public StatsFilter skipGwtTransient() {
-		this.skipGwtTransient = true;
-		return this;
-	}
-
-	private Field[] getFieldsForClass(Object projected) {
-		Class<? extends Object> clazz = projected.getClass();
-		if (!projectableFields.containsKey(clazz)) {
-			List<Field> allFields = new ArrayList<Field>();
-			Set<Field> dynamicPermissionFields = new HashSet<Field>();
-			Class c = clazz;
-			while (c != Object.class) {
-				Field[] fields = c.getDeclaredFields();
-				for (Field f : fields) {
-					if (Modifier.isTransient(f.getModifiers())
-							|| Modifier.isStatic(f.getModifiers())) {
-						continue;
-					}
-					f.setAccessible(true);
-					allFields.add(f);
-				}
-				c = c.getSuperclass();
-			}
-			projectableFields.put(clazz,
-					(Field[]) allFields.toArray(new Field[allFields.size()]));
-		}
-		return projectableFields.get(clazz);
-	}
-
-	private boolean skip(Field field) {
-		if (skipGwtTransient) {
-			if (field != null
-					&& field.getAnnotation(GwtTransient.class) != null) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	void dumpStats() {
 		try {
 			Set<Object> owned = new LinkedHashSet<Object>();
@@ -391,8 +303,92 @@ public class StatsFilter extends CollectionProjectionFilter {
 		System.out.println("\n----------\n\n");
 	}
 
-	public enum StatsFilterSortKey {
-		CLASSNAME, RAW_SIZE, RETAINED_SIZE
+	@Override
+	public <T> T filterData(T original, T projected,
+			GraphProjectionContext context, GraphProjection graphProjection)
+			throws Exception {
+		T filtered = super.filterData(original, projected, context,
+				graphProjection);
+		if (skip(context.field)) {
+			return null;
+		}
+		String toPath = noPath ? "..." : context.toPath(!noPathToString);
+		visited.put(context.projectedOwner, toPath);
+		visited.put(filtered, toPath);
+		ownerMap.add(context.projectedOwner, filtered);
+		ownerMap.ensureKey(filtered);
+		owneeMap.add(filtered, context.projectedOwner);
+		return filtered;
+	}
+
+	private Field[] getFieldsForClass(Object projected) {
+		Class<? extends Object> clazz = projected.getClass();
+		if (!projectableFields.containsKey(clazz)) {
+			List<Field> allFields = new ArrayList<Field>();
+			Set<Field> dynamicPermissionFields = new HashSet<Field>();
+			Class c = clazz;
+			while (c != Object.class) {
+				Field[] fields = c.getDeclaredFields();
+				for (Field f : fields) {
+					if (Modifier.isTransient(f.getModifiers())
+							|| Modifier.isStatic(f.getModifiers())) {
+						continue;
+					}
+					f.setAccessible(true);
+					allFields.add(f);
+				}
+				c = c.getSuperclass();
+			}
+			projectableFields.put(clazz,
+					(Field[]) allFields.toArray(new Field[allFields.size()]));
+		}
+		return projectableFields.get(clazz);
+	}
+
+	public void getGraphStats(Object source, Class[] calculateOwnerStatsFor,
+			Class[] calculatePathStatsFor, StatsFilterSortKey sortKey,
+			boolean reverse) {
+		this.sortKey = sortKey;
+		this.reverse = reverse;
+		this.calculateOwnerStatsFor = new LinkedHashSet<Class>(
+				Arrays.asList(calculateOwnerStatsFor));
+		this.calculatePathStatsFor = new LinkedHashSet<Class>(
+				Arrays.asList(calculatePathStatsFor));
+		DetachedEntityCache cache = new DetachedEntityCache();
+		try {
+			GraphProjectionNoLisetNulls projection = new GraphProjectionNoLisetNulls(
+					null, this);
+			projection.project(source, null);
+			System.err.println(projection.constructorExceptions);
+			dumpStats();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public StatsFilter noPath() {
+		noPath = true;
+		return this;
+	}
+
+	public StatsFilter noPathToString() {
+		noPathToString = true;
+		return this;
+	}
+
+	private boolean skip(Field field) {
+		if (skipGwtTransient) {
+			if (field != null
+					&& field.getAnnotation(GwtTransient.class) != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public StatsFilter skipGwtTransient() {
+		this.skipGwtTransient = true;
+		return this;
 	}
 
 	static class CountingMap<K> extends LinkedHashMap<K, Integer> {
@@ -480,6 +476,26 @@ public class StatsFilter extends CollectionProjectionFilter {
 			super(fieldFilter, dataFilter);
 		}
 
+		@Override
+		protected boolean checkObjectPermissions(Object source) {
+			return true;
+		}
+
+		@Override
+		protected <T> T newInstance(Class sourceClass,
+				GraphProjectionContext context) throws Exception {
+			try {
+				return super.newInstance(sourceClass, context);
+			} catch (Exception e) {
+				try {
+					return tryWithObjenesis(sourceClass);
+				} catch (Throwable e1) {
+					constructorExceptions.add(sourceClass);
+					return null;
+				}
+			}
+		}
+
 		// TODO - shouldn't this be package-private?
 		@Override
 		public Collection projectCollection(Collection coll,
@@ -525,26 +541,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 							sc -> objenesis.getInstantiatorOf(sc));
 			return (T) objectInstantiator.newInstance();
 		}
-
-		@Override
-		protected boolean checkObjectPermissions(Object source) {
-			return true;
-		}
-
-		@Override
-		protected <T> T newInstance(Class sourceClass,
-				GraphProjectionContext context) throws Exception {
-			try {
-				return super.newInstance(sourceClass, context);
-			} catch (Exception e) {
-				try {
-					return tryWithObjenesis(sourceClass);
-				} catch (Throwable e1) {
-					constructorExceptions.add(sourceClass);
-					return null;
-				}
-			}
-		}
 	}
 
 	static class MultiIdentityMap
@@ -559,6 +555,10 @@ public class StatsFilter extends CollectionProjectionFilter {
 				put(o1, new IdentityHashMap<Object, Object>());
 			}
 		}
+	}
+
+	public enum StatsFilterSortKey {
+		CLASSNAME, RAW_SIZE, RETAINED_SIZE
 	}
 
 	class StatsItem {

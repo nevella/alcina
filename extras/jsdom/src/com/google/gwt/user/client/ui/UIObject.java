@@ -199,6 +199,55 @@ public abstract class UIObject implements HasVisibility {
 	}
 
 	/**
+	 * Set the debug id of a specific element. The id will be appended to the
+	 * end of the base debug id, with a dash separator. The base debug id is the
+	 * ID of the main element in this UIObject.
+	 *
+	 * @param elem
+	 *            the element
+	 * @param baseID
+	 *            the base ID used by the main element
+	 * @param id
+	 *            the id to append to the base debug id
+	 */
+	protected static void ensureDebugId(Element elem, String baseID,
+			String id) {
+		debugIdImpl.ensureDebugId(elem, baseID, id);
+	}
+
+	/**
+	 * Gets all of the element's style names, as a space-separated list.
+	 *
+	 * @param elem
+	 *            the element whose style is to be retrieved
+	 * @return the objects's space-separated style names
+	 */
+	protected static String getStyleName(Element elem) {
+		return elem.getClassName();
+	}
+
+	/**
+	 * Gets the element's primary style name.
+	 *
+	 * @param elem
+	 *            the element whose primary style name is to be retrieved
+	 * @return the element's primary style name
+	 */
+	protected static String getStylePrimaryName(Element elem) {
+		String fullClassName = getStyleName(elem);
+		// The primary style name is always the first token of the full CSS
+		// class
+		// name. There can be no leading whitespace in the class name, so it's
+		// not
+		// necessary to trim() it.
+		int spaceIdx = fullClassName.indexOf(' ');
+		if (spaceIdx >= 0) {
+			return fullClassName.substring(0, spaceIdx);
+		}
+		return fullClassName;
+	}
+
+	/**
 	 * Returns whether the given element is visible in a way consistent with
 	 * {@link #setVisible(Element, boolean)}.
 	 *
@@ -253,6 +302,29 @@ public abstract class UIObject implements HasVisibility {
 		} else {
 			elem.removeClassName(style);
 		}
+	}
+
+	/**
+	 * Sets the element's primary style name and updates all dependent style
+	 * names.
+	 *
+	 * @param elem
+	 *            the element whose style is to be reset
+	 * @param style
+	 *            the new primary style name
+	 * @see #setStyleName(Element, String, boolean)
+	 */
+	protected static void setStylePrimaryName(Element elem, String style) {
+		if (elem == null) {
+			throw new RuntimeException(NULL_HANDLE_MSG);
+		}
+		// Style names cannot contain leading or trailing whitespace, and cannot
+		// legally be empty.
+		style = style.trim();
+		if (style.length() == 0) {
+			throw new IllegalArgumentException(EMPTY_STYLENAME_MSG);
+		}
+		updatePrimaryAndDependentStyleNames(elem, style);
 	}
 
 	/**
@@ -328,78 +400,6 @@ public abstract class UIObject implements HasVisibility {
     }
     elem.className = classes.join(" ");
 	}-*/;
-
-	/**
-	 * Set the debug id of a specific element. The id will be appended to the
-	 * end of the base debug id, with a dash separator. The base debug id is the
-	 * ID of the main element in this UIObject.
-	 *
-	 * @param elem
-	 *            the element
-	 * @param baseID
-	 *            the base ID used by the main element
-	 * @param id
-	 *            the id to append to the base debug id
-	 */
-	protected static void ensureDebugId(Element elem, String baseID,
-			String id) {
-		debugIdImpl.ensureDebugId(elem, baseID, id);
-	}
-
-	/**
-	 * Gets all of the element's style names, as a space-separated list.
-	 *
-	 * @param elem
-	 *            the element whose style is to be retrieved
-	 * @return the objects's space-separated style names
-	 */
-	protected static String getStyleName(Element elem) {
-		return elem.getClassName();
-	}
-
-	/**
-	 * Gets the element's primary style name.
-	 *
-	 * @param elem
-	 *            the element whose primary style name is to be retrieved
-	 * @return the element's primary style name
-	 */
-	protected static String getStylePrimaryName(Element elem) {
-		String fullClassName = getStyleName(elem);
-		// The primary style name is always the first token of the full CSS
-		// class
-		// name. There can be no leading whitespace in the class name, so it's
-		// not
-		// necessary to trim() it.
-		int spaceIdx = fullClassName.indexOf(' ');
-		if (spaceIdx >= 0) {
-			return fullClassName.substring(0, spaceIdx);
-		}
-		return fullClassName;
-	}
-
-	/**
-	 * Sets the element's primary style name and updates all dependent style
-	 * names.
-	 *
-	 * @param elem
-	 *            the element whose style is to be reset
-	 * @param style
-	 *            the new primary style name
-	 * @see #setStyleName(Element, String, boolean)
-	 */
-	protected static void setStylePrimaryName(Element elem, String style) {
-		if (elem == null) {
-			throw new RuntimeException(NULL_HANDLE_MSG);
-		}
-		// Style names cannot contain leading or trailing whitespace, and cannot
-		// legally be empty.
-		style = style.trim();
-		if (style.length() == 0) {
-			throw new IllegalArgumentException(EMPTY_STYLENAME_MSG);
-		}
-		updatePrimaryAndDependentStyleNames(elem, style);
-	}
 
 	private Element element;
 
@@ -550,6 +550,33 @@ public abstract class UIObject implements HasVisibility {
 	}
 
 	/**
+	 * Intended to be used to pull the value out of a CSS length. If the value
+	 * is "auto" or "inherit", 0 will be returned.
+	 *
+	 * @param s
+	 *            The CSS length string to extract
+	 * @return The leading numeric portion of <code>s</code>, or 0 if "auto" or
+	 *         "inherit" are passed in.
+	 */
+	private native double extractLengthValue(String s) /*-{
+    if (s == "auto" || s == "inherit" || s == "") {
+      return 0;
+    } else {
+      // numberRegex is similar to java.lang.Number.floatRegex, but divides
+      // the string into a leading numeric portion followed by an arbitrary
+      // portion.
+      var numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex;
+      if (!numberRegex) {
+        numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex = /^(\s*[+-]?((\d+\.?\d*)|(\.\d+))([eE][+-]?\d+)?)(.*)$/;
+      }
+
+      // Extract the leading numeric portion of s
+      s = s.replace(numberRegex, "$1");
+      return parseFloat(s);
+    }
+	}-*/;
+
+	/**
 	 * Gets the object's absolute left position in pixels, as measured from the
 	 * browser window's client area.
 	 *
@@ -608,6 +635,17 @@ public abstract class UIObject implements HasVisibility {
 	}
 
 	/**
+	 * Template method that returns the element to which style names will be
+	 * applied. By default it returns the root element, but this method may be
+	 * overridden to apply styles to a child element.
+	 *
+	 * @return the element to which style names will be applied
+	 */
+	protected Element getStyleElement() {
+		return getElement();
+	}
+
+	/**
 	 * Gets all of the object's style names, as a space-separated list. If you
 	 * wish to retrieve only the primary style name, call
 	 * {@link #getStylePrimaryName()}.
@@ -647,6 +685,33 @@ public abstract class UIObject implements HasVisibility {
 	}
 
 	/**
+	 * Called when the user sets the id using the {@link #ensureDebugId(String)}
+	 * method. Subclasses of {@link UIObject} can override this method to add
+	 * IDs to their sub elements. If a subclass does override this method, it
+	 * should list the IDs (relative to the base ID), that will be applied to
+	 * each sub {@link Element} with a short description. For example:
+	 * <ul>
+	 * <li>-mysubelement = Applies to my sub element.</li>
+	 * </ul>
+	 *
+	 * Subclasses should make a super call to this method to ensure that the ID
+	 * of the main element is set.
+	 *
+	 * This method will not be called unless you inherit the DebugID module in
+	 * your gwt.xml file by adding the following line:
+	 *
+	 * <pre class="code">
+	 * &lt;inherits name="com.google.gwt.user.Debug"/&gt;
+	 * </pre>
+	 *
+	 * @param baseID
+	 *            the base ID used by the main element
+	 */
+	protected void onEnsureDebugId(String baseID) {
+		ensureDebugId(getElement(), "", baseID);
+	}
+
+	/**
 	 * Removes a dependent style name by specifying the style name's suffix.
 	 *
 	 * @param styleSuffix
@@ -671,6 +736,78 @@ public abstract class UIObject implements HasVisibility {
 	 */
 	public void removeStyleName(String style) {
 		setStyleName(style, false);
+	}
+
+	/**
+	 * Replaces this object's browser element.
+	 *
+	 * This method exists only to support a specific use-case in Image, and
+	 * should not be used by other classes.
+	 *
+	 * @param elem
+	 *            the object's new element
+	 */
+	void replaceElement(Element elem) {
+		if (element != null) {
+			element.uiObject = null;
+			// replace this.element in its parent with elem.
+			replaceNode(element, elem);
+		}
+		this.element = elem;
+		element.uiObject = this;
+	}
+
+	private native void replaceNode(Element node, Element newNode) /*-{
+    var p = node.parentNode;
+    if (!p) {
+      return;
+    }
+    p.insertBefore(newNode, node);
+    p.removeChild(node);
+	}-*/;
+
+	/**
+	 * EXPERIMENTAL and subject to change. Do not use this in production code.
+	 * <p>
+	 * To be overridden by {@link IsRenderable} subclasses that initialize
+	 * themselves by by calling
+	 * <code>setElement(PotentialElement.build(this))</code>.
+	 * <p>
+	 * The receiver must:
+	 * <ul>
+	 * <li>create a real {@link Element} to replace its {@link PotentialElement}
+	 * <li>call {@link #setElement()} with the new Element
+	 * <li>and return the new Element
+	 * </ul>
+	 * <p>
+	 * This method is called when the receiver's element is about to be added to
+	 * a parent node, as a side effect of {@link DOM#appendChild}.
+	 * <p>
+	 * Note that this method is normally called only on the top element of an
+	 * IsRenderable tree. Children instead will receive
+	 * {@link IsRenderable#render} and
+	 * {@link IsRenderable#claimElement(Element)}.
+	 *
+	 * @see PotentialElement
+	 * @see IsRenderable
+	 */
+	protected Element resolvePotentialElement() {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Sets this object's browser element. UIObject subclasses must call this
+	 * method before attempting to call any other methods, and it may only be
+	 * called once.
+	 *
+	 * @param elem
+	 *            the object's element
+	 */
+	protected final void setElement(Element elem) {
+		assert (element == null || PotentialElement
+				.isPotential(element)) : SETELEMENT_TWICE_ERROR;
+		this.element = elem;
+		this.element.uiObject = this;
 	}
 
 	/**
@@ -876,143 +1013,6 @@ public abstract class UIObject implements HasVisibility {
 	public void unsinkEvents(int eventBitsToRemove) {
 		DOM.sinkEvents(getElement(),
 				DOM.getEventsSunk(getElement()) & (~eventBitsToRemove));
-	}
-
-	/**
-	 * Intended to be used to pull the value out of a CSS length. If the value
-	 * is "auto" or "inherit", 0 will be returned.
-	 *
-	 * @param s
-	 *            The CSS length string to extract
-	 * @return The leading numeric portion of <code>s</code>, or 0 if "auto" or
-	 *         "inherit" are passed in.
-	 */
-	private native double extractLengthValue(String s) /*-{
-    if (s == "auto" || s == "inherit" || s == "") {
-      return 0;
-    } else {
-      // numberRegex is similar to java.lang.Number.floatRegex, but divides
-      // the string into a leading numeric portion followed by an arbitrary
-      // portion.
-      var numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex;
-      if (!numberRegex) {
-        numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex = /^(\s*[+-]?((\d+\.?\d*)|(\.\d+))([eE][+-]?\d+)?)(.*)$/;
-      }
-
-      // Extract the leading numeric portion of s
-      s = s.replace(numberRegex, "$1");
-      return parseFloat(s);
-    }
-	}-*/;
-
-	private native void replaceNode(Element node, Element newNode) /*-{
-    var p = node.parentNode;
-    if (!p) {
-      return;
-    }
-    p.insertBefore(newNode, node);
-    p.removeChild(node);
-	}-*/;
-
-	/**
-	 * Template method that returns the element to which style names will be
-	 * applied. By default it returns the root element, but this method may be
-	 * overridden to apply styles to a child element.
-	 *
-	 * @return the element to which style names will be applied
-	 */
-	protected Element getStyleElement() {
-		return getElement();
-	}
-
-	/**
-	 * Called when the user sets the id using the {@link #ensureDebugId(String)}
-	 * method. Subclasses of {@link UIObject} can override this method to add
-	 * IDs to their sub elements. If a subclass does override this method, it
-	 * should list the IDs (relative to the base ID), that will be applied to
-	 * each sub {@link Element} with a short description. For example:
-	 * <ul>
-	 * <li>-mysubelement = Applies to my sub element.</li>
-	 * </ul>
-	 *
-	 * Subclasses should make a super call to this method to ensure that the ID
-	 * of the main element is set.
-	 *
-	 * This method will not be called unless you inherit the DebugID module in
-	 * your gwt.xml file by adding the following line:
-	 *
-	 * <pre class="code">
-	 * &lt;inherits name="com.google.gwt.user.Debug"/&gt;
-	 * </pre>
-	 *
-	 * @param baseID
-	 *            the base ID used by the main element
-	 */
-	protected void onEnsureDebugId(String baseID) {
-		ensureDebugId(getElement(), "", baseID);
-	}
-
-	/**
-	 * EXPERIMENTAL and subject to change. Do not use this in production code.
-	 * <p>
-	 * To be overridden by {@link IsRenderable} subclasses that initialize
-	 * themselves by by calling
-	 * <code>setElement(PotentialElement.build(this))</code>.
-	 * <p>
-	 * The receiver must:
-	 * <ul>
-	 * <li>create a real {@link Element} to replace its {@link PotentialElement}
-	 * <li>call {@link #setElement()} with the new Element
-	 * <li>and return the new Element
-	 * </ul>
-	 * <p>
-	 * This method is called when the receiver's element is about to be added to
-	 * a parent node, as a side effect of {@link DOM#appendChild}.
-	 * <p>
-	 * Note that this method is normally called only on the top element of an
-	 * IsRenderable tree. Children instead will receive
-	 * {@link IsRenderable#render} and
-	 * {@link IsRenderable#claimElement(Element)}.
-	 *
-	 * @see PotentialElement
-	 * @see IsRenderable
-	 */
-	protected Element resolvePotentialElement() {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * Sets this object's browser element. UIObject subclasses must call this
-	 * method before attempting to call any other methods, and it may only be
-	 * called once.
-	 *
-	 * @param elem
-	 *            the object's element
-	 */
-	protected final void setElement(Element elem) {
-		assert (element == null || PotentialElement
-				.isPotential(element)) : SETELEMENT_TWICE_ERROR;
-		this.element = elem;
-		this.element.uiObject = this;
-	}
-
-	/**
-	 * Replaces this object's browser element.
-	 *
-	 * This method exists only to support a specific use-case in Image, and
-	 * should not be used by other classes.
-	 *
-	 * @param elem
-	 *            the object's new element
-	 */
-	void replaceElement(Element elem) {
-		if (element != null) {
-			element.uiObject = null;
-			// replace this.element in its parent with elem.
-			replaceNode(element, elem);
-		}
-		this.element = elem;
-		element.uiObject = this;
 	}
 
 	/**

@@ -131,61 +131,6 @@ public class Diff {
 	}
 
 	/**
-	 * Get the results of comparison as an edit script. The script is described
-	 * by a list of changes. The standard ScriptBuilder implementations provide
-	 * for forward and reverse edit scripts. Alternate implementations could,
-	 * for instance, list common elements instead of differences.
-	 *
-	 * @param bld
-	 *            an object to build the script from change flags
-	 * @return the head of a list of changes
-	 */
-	public Change diff(final ScriptBuilder bld) {
-		/*
-		 * Some lines are obviously insertions or deletions because they don't
-		 * match anything. Detect them now, and avoid even thinking about them
-		 * in the main comparison algorithm.
-		 */
-		discard_confusing_lines();
-		/*
-		 * Now do the main comparison algorithm, considering just the
-		 * undiscarded lines.
-		 */
-		xvec = filevec[0].undiscarded;
-		yvec = filevec[1].undiscarded;
-		int diags = filevec[0].nondiscarded_lines
-				+ filevec[1].nondiscarded_lines + 3;
-		fdiag = new int[diags];
-		fdiagoff = filevec[1].nondiscarded_lines + 1;
-		bdiag = new int[diags];
-		bdiagoff = filevec[1].nondiscarded_lines + 1;
-		compareseq(0, filevec[0].nondiscarded_lines, 0,
-				filevec[1].nondiscarded_lines);
-		fdiag = null;
-		bdiag = null;
-		/*
-		 * Modify the results slightly to make them prettier in cases where that
-		 * can validly be done.
-		 */
-		shift_boundaries();
-		/*
-		 * Get the results of comparison in the form of a chain of `struct
-		 * change's -- an edit script.
-		 */
-		return bld.build_script(filevec[0].changed_flag,
-				filevec[0].buffered_lines, filevec[1].changed_flag,
-				filevec[1].buffered_lines);
-	}
-
-	/*
-	 * Report the differences of two files. DEPTH is the current directory
-	 * depth.
-	 */
-	public final Change diff_2(final boolean reverse) {
-		return diff(reverse ? reverseScript : forwardScript);
-	}
-
-	/**
 	 * Compare in detail contiguous subsequences of the two files which are
 	 * known, as a whole, to match each other.
 	 *
@@ -421,6 +366,61 @@ public class Diff {
 	}
 
 	/**
+	 * Get the results of comparison as an edit script. The script is described
+	 * by a list of changes. The standard ScriptBuilder implementations provide
+	 * for forward and reverse edit scripts. Alternate implementations could,
+	 * for instance, list common elements instead of differences.
+	 *
+	 * @param bld
+	 *            an object to build the script from change flags
+	 * @return the head of a list of changes
+	 */
+	public Change diff(final ScriptBuilder bld) {
+		/*
+		 * Some lines are obviously insertions or deletions because they don't
+		 * match anything. Detect them now, and avoid even thinking about them
+		 * in the main comparison algorithm.
+		 */
+		discard_confusing_lines();
+		/*
+		 * Now do the main comparison algorithm, considering just the
+		 * undiscarded lines.
+		 */
+		xvec = filevec[0].undiscarded;
+		yvec = filevec[1].undiscarded;
+		int diags = filevec[0].nondiscarded_lines
+				+ filevec[1].nondiscarded_lines + 3;
+		fdiag = new int[diags];
+		fdiagoff = filevec[1].nondiscarded_lines + 1;
+		bdiag = new int[diags];
+		bdiagoff = filevec[1].nondiscarded_lines + 1;
+		compareseq(0, filevec[0].nondiscarded_lines, 0,
+				filevec[1].nondiscarded_lines);
+		fdiag = null;
+		bdiag = null;
+		/*
+		 * Modify the results slightly to make them prettier in cases where that
+		 * can validly be done.
+		 */
+		shift_boundaries();
+		/*
+		 * Get the results of comparison in the form of a chain of `struct
+		 * change's -- an edit script.
+		 */
+		return bld.build_script(filevec[0].changed_flag,
+				filevec[0].buffered_lines, filevec[1].changed_flag,
+				filevec[1].buffered_lines);
+	}
+
+	/*
+	 * Report the differences of two files. DEPTH is the current directory
+	 * depth.
+	 */
+	public final Change diff_2(final boolean reverse) {
+		return diff(reverse ? reverseScript : forwardScript);
+	}
+
+	/**
 	 * Discard lines from one file that have no matches in the other file.
 	 */
 	private void discard_confusing_lines() {
@@ -579,71 +579,6 @@ public class Diff {
 		}
 	}
 
-	public interface ScriptBuilder {
-		/**
-		 * Scan the tables of which lines are inserted and deleted, producing an
-		 * edit script.
-		 *
-		 * @param changed0
-		 *            true for lines in first file which do not match 2nd
-		 * @param len0
-		 *            number of lines in first file
-		 * @param changed1
-		 *            true for lines in 2nd file which do not match 1st
-		 * @param len1
-		 *            number of lines in 2nd file
-		 * @return a linked list of changes - or null
-		 */
-		public Change build_script(boolean[] changed0, int len0,
-				boolean[] changed1, int len1);
-	}
-
-	public static class SingleLineDiff {
-		public String text;
-
-		public SingleLineDiff(String s1, String s2) {
-			String[] split1 = s1.split(" ");
-			String[] split2 = s2.split(" ");
-			String join = "";
-			Map<Integer, Integer> split1Offsets = new LinkedHashMap<>();
-			split1Offsets.put(0, 0);
-			for (String split : split1) {
-				if (join.length() > 0) {
-					join += " ";
-				}
-				join += split;
-				split1Offsets.put(split1Offsets.size(), join.length());
-			}
-			Change change = new Diff(split1, split2).diff(Diff.forwardScript);
-			FormatBuilder format = new FormatBuilder();
-			int idx2 = 0;
-			while (change != null) {
-				format.append(
-						s1.substring(idx2, split1Offsets.get(change.line0)));
-				int modCount = 0;
-				for (int idx = 0; idx < change.deleted; idx++) {
-					String deleteWord = split1[change.line0 + idx];
-					if (modCount++ > 0) {
-						format.append(" -- ");
-					}
-					format.format("-:>>%s<<", deleteWord);
-				}
-				for (int idx = 0; idx < change.inserted; idx++) {
-					String insertWord = split2[change.line1 + idx];
-					if (modCount++ > 0) {
-						format.append(" -- ");
-					}
-					format.format("+:>>%s<<", insertWord);
-				}
-				format.append(" ");
-				idx2 = split1Offsets.get(change.line0 + change.deleted);
-				change = change.link;
-			}
-			format.append(s1.substring(idx2));
-			text = format.toString();
-		}
-	}
-
 	/**
 	 * Data on one input file being compared.
 	 */
@@ -696,6 +631,16 @@ public class Diff {
 			}
 		}
 
+		/** Allocate changed array for the results of comparison. */
+		void clear() {
+			/*
+			 * Allocate a flag for each line of each file, saying whether that
+			 * line is an insertion or deletion. Allocate an extra element,
+			 * always zero, at each end of each vector.
+			 */
+			changed_flag = new boolean[buffered_lines + 2];
+		}
+
 		/**
 		 * Actually discard the lines.
 		 *
@@ -712,6 +657,36 @@ public class Diff {
 				} else
 					changed_flag[1 + i] = true;
 			nondiscarded_lines = j;
+		}
+
+		/**
+		 * Discard lines that have no matches in another file.
+		 *
+		 * A line which is discarded will not be considered by the actual
+		 * comparison algorithm; it will be as if that line were not in the
+		 * file. The file's `realindexes' table maps virtual line numbers (which
+		 * don't count the discarded lines) into real line numbers; this is how
+		 * the actual comparison algorithm produces results that are
+		 * comprehensible when the discarded lines are counted.
+		 * <p>
+		 * When we discard a line, we also mark it as a deletion or insertion so
+		 * that it will be printed in the output.
+		 *
+		 * @param f
+		 *            the other file
+		 */
+		void discard_confusing_lines(FileData f) {
+			clear();
+			/* Set up table of which lines are going to be discarded. */
+			final byte[] discarded = discardable(f.equivCount());
+			/*
+			 * Don't really discard the provisional lines except when they occur
+			 * in a run of discardables, with nonprovisionals at the beginning
+			 * and end.
+			 */
+			filterDiscards(discarded);
+			/* Actually discard the lines. */
+			discard(discarded);
 		}
 
 		/**
@@ -747,6 +722,19 @@ public class Diff {
 					discards[i] = 2;
 			}
 			return discards;
+		}
+
+		/**
+		 * Return equiv_count[I] as the number of lines in this file that fall
+		 * in equivalence class I.
+		 *
+		 * @return the array of equivalence class counts.
+		 */
+		int[] equivCount() {
+			int[] equiv_count = new int[equiv_max];
+			for (int i = 0; i < buffered_lines; ++i)
+				++equiv_count[equivs[i]];
+			return equiv_count;
 		}
 
 		/**
@@ -861,59 +849,6 @@ public class Diff {
 					}
 				}
 			}
-		}
-
-		/** Allocate changed array for the results of comparison. */
-		void clear() {
-			/*
-			 * Allocate a flag for each line of each file, saying whether that
-			 * line is an insertion or deletion. Allocate an extra element,
-			 * always zero, at each end of each vector.
-			 */
-			changed_flag = new boolean[buffered_lines + 2];
-		}
-
-		/**
-		 * Discard lines that have no matches in another file.
-		 *
-		 * A line which is discarded will not be considered by the actual
-		 * comparison algorithm; it will be as if that line were not in the
-		 * file. The file's `realindexes' table maps virtual line numbers (which
-		 * don't count the discarded lines) into real line numbers; this is how
-		 * the actual comparison algorithm produces results that are
-		 * comprehensible when the discarded lines are counted.
-		 * <p>
-		 * When we discard a line, we also mark it as a deletion or insertion so
-		 * that it will be printed in the output.
-		 *
-		 * @param f
-		 *            the other file
-		 */
-		void discard_confusing_lines(FileData f) {
-			clear();
-			/* Set up table of which lines are going to be discarded. */
-			final byte[] discarded = discardable(f.equivCount());
-			/*
-			 * Don't really discard the provisional lines except when they occur
-			 * in a run of discardables, with nonprovisionals at the beginning
-			 * and end.
-			 */
-			filterDiscards(discarded);
-			/* Actually discard the lines. */
-			discard(discarded);
-		}
-
-		/**
-		 * Return equiv_count[I] as the number of lines in this file that fall
-		 * in equivalence class I.
-		 *
-		 * @return the array of equivalence class counts.
-		 */
-		int[] equivCount() {
-			int[] equiv_count = new int[equiv_max];
-			for (int i = 0; i < buffered_lines; ++i)
-				++equiv_count[equivs[i]];
-			return equiv_count;
 		}
 
 		/**
@@ -1056,6 +991,71 @@ public class Diff {
 				i1++;
 			}
 			return script;
+		}
+	}
+
+	public interface ScriptBuilder {
+		/**
+		 * Scan the tables of which lines are inserted and deleted, producing an
+		 * edit script.
+		 *
+		 * @param changed0
+		 *            true for lines in first file which do not match 2nd
+		 * @param len0
+		 *            number of lines in first file
+		 * @param changed1
+		 *            true for lines in 2nd file which do not match 1st
+		 * @param len1
+		 *            number of lines in 2nd file
+		 * @return a linked list of changes - or null
+		 */
+		public Change build_script(boolean[] changed0, int len0,
+				boolean[] changed1, int len1);
+	}
+
+	public static class SingleLineDiff {
+		public String text;
+
+		public SingleLineDiff(String s1, String s2) {
+			String[] split1 = s1.split(" ");
+			String[] split2 = s2.split(" ");
+			String join = "";
+			Map<Integer, Integer> split1Offsets = new LinkedHashMap<>();
+			split1Offsets.put(0, 0);
+			for (String split : split1) {
+				if (join.length() > 0) {
+					join += " ";
+				}
+				join += split;
+				split1Offsets.put(split1Offsets.size(), join.length());
+			}
+			Change change = new Diff(split1, split2).diff(Diff.forwardScript);
+			FormatBuilder format = new FormatBuilder();
+			int idx2 = 0;
+			while (change != null) {
+				format.append(
+						s1.substring(idx2, split1Offsets.get(change.line0)));
+				int modCount = 0;
+				for (int idx = 0; idx < change.deleted; idx++) {
+					String deleteWord = split1[change.line0 + idx];
+					if (modCount++ > 0) {
+						format.append(" -- ");
+					}
+					format.format("-:>>%s<<", deleteWord);
+				}
+				for (int idx = 0; idx < change.inserted; idx++) {
+					String insertWord = split2[change.line1 + idx];
+					if (modCount++ > 0) {
+						format.append(" -- ");
+					}
+					format.format("+:>>%s<<", insertWord);
+				}
+				format.append(" ");
+				idx2 = split1Offsets.get(change.line0 + change.deleted);
+				change = change.link;
+			}
+			format.append(s1.substring(idx2));
+			text = format.toString();
 		}
 	}
 }

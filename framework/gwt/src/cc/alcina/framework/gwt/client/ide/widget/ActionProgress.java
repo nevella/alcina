@@ -93,11 +93,6 @@ public class ActionProgress extends Composite
 		this(id, null);
 	}
 
-	private void navigateToDetail() {
-		Window.open(Ax.format("/job.do?action=detail&id=%s", getId()), "_blank",
-				"");
-	}
-
 	public ActionProgress(String id,
 			AsyncCallback<JobTracker> completionCallback) {
 		this.id = id;
@@ -166,6 +161,11 @@ public class ActionProgress extends Composite
 						}
 					}
 
+					private void onReturned() {
+						checking = false;
+						scheduleNext();
+					}
+
 					@Override
 					public void onSuccess(JobTracker info) {
 						onReturned();
@@ -184,11 +184,6 @@ public class ActionProgress extends Composite
 						}
 						setJobInfo(info);
 						fireUnspecifiedPropertyChange("Updated");
-					}
-
-					private void onReturned() {
-						checking = false;
-						scheduleNext();
 					}
 				};
 				if (!checking) {
@@ -210,6 +205,38 @@ public class ActionProgress extends Composite
 			PropertyChangeListener listener) {
 		this.propertyChangeSupport.addPropertyChangeListener(propertyName,
 				listener);
+	}
+
+	private void addToGrid(String label, Widget widget) {
+		InlineLabel l = new InlineLabel(label + ": ");
+		l.setStyleName("caption");
+		grid.setWidget(row, 0, l);
+		grid.setWidget(row, 1, widget);
+		grid.getCellFormatter().setVerticalAlignment(row, 0,
+				HasVerticalAlignment.ALIGN_TOP);
+		grid.getCellFormatter().setVerticalAlignment(row, 1,
+				HasVerticalAlignment.ALIGN_TOP);
+		row++;
+	}
+
+	private void cancelJob() {
+		cancelLink.setVisible(false);
+		cancellingStatusMessage.setText(" - Cancelling...");
+		cancellingStatusMessage.setVisible(true);
+		Client.commonRemoteService().pollJobStatus(getId(), true,
+				new AsyncCallback<JobTracker>() {
+					@Override
+					public void onFailure(Throwable e) {
+						cancellingStatusMessage.setText(" - Error cancelling");
+						throw new WrappedRuntimeException(e);
+					}
+
+					@Override
+					public void onSuccess(JobTracker result) {
+						cancellingStatusMessage.setText(CANCELLED);
+					}
+				});
+		return;
 	}
 
 	public void ensureRunning() {
@@ -265,6 +292,23 @@ public class ActionProgress extends Composite
 		fp.addStyleName("minimal");
 	}
 
+	private void navigateToDetail() {
+		Window.open(Ax.format("/job.do?action=detail&id=%s", getId()), "_blank",
+				"");
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		startTimer();
+	}
+
+	@Override
+	protected void onDetach() {
+		stopTimer();
+		super.onDetach();
+	}
+
 	@Override
 	public PropertyChangeListener[] propertyChangeListeners() {
 		return this.propertyChangeSupport.getPropertyChangeListeners();
@@ -282,51 +326,6 @@ public class ActionProgress extends Composite
 				listener);
 	}
 
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public void setJobInfo(JobTracker jobTracker) {
-		this.tracker = jobTracker;
-		updateProgress();
-	}
-
-	public void setMaxConnectionFailure(int maxConnectionFailure) {
-		this.maxConnectionFailure = maxConnectionFailure;
-	}
-
-	private void addToGrid(String label, Widget widget) {
-		InlineLabel l = new InlineLabel(label + ": ");
-		l.setStyleName("caption");
-		grid.setWidget(row, 0, l);
-		grid.setWidget(row, 1, widget);
-		grid.getCellFormatter().setVerticalAlignment(row, 0,
-				HasVerticalAlignment.ALIGN_TOP);
-		grid.getCellFormatter().setVerticalAlignment(row, 1,
-				HasVerticalAlignment.ALIGN_TOP);
-		row++;
-	}
-
-	private void cancelJob() {
-		cancelLink.setVisible(false);
-		cancellingStatusMessage.setText(" - Cancelling...");
-		cancellingStatusMessage.setVisible(true);
-		Client.commonRemoteService().pollJobStatus(getId(), true,
-				new AsyncCallback<JobTracker>() {
-					@Override
-					public void onFailure(Throwable e) {
-						cancellingStatusMessage.setText(" - Error cancelling");
-						throw new WrappedRuntimeException(e);
-					}
-
-					@Override
-					public void onSuccess(JobTracker result) {
-						cancellingStatusMessage.setText(CANCELLED);
-					}
-				});
-		return;
-	}
-
 	private void scheduleNext() {
 		if (stopped) {
 			return;
@@ -338,6 +337,19 @@ public class ActionProgress extends Composite
 		} else {
 			timer.schedule(2000);
 		}
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public void setJobInfo(JobTracker jobTracker) {
+		this.tracker = jobTracker;
+		updateProgress();
+	}
+
+	public void setMaxConnectionFailure(int maxConnectionFailure) {
+		this.maxConnectionFailure = maxConnectionFailure;
 	}
 
 	private void startTimer() {
@@ -381,17 +393,5 @@ public class ActionProgress extends Composite
 			progress.setWidth(Math.max(0, ((int) (bar.getOffsetWidth() - 2)
 					* tracker.getPercentComplete())) + "px");
 		}
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		startTimer();
-	}
-
-	@Override
-	protected void onDetach() {
-		stopTimer();
-		super.onDetach();
 	}
 }

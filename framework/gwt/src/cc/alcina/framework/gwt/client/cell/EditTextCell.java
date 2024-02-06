@@ -69,6 +69,122 @@ public class EditTextCell
 		this.renderer = renderer;
 	}
 
+	/**
+	 * Convert the cell to non-edit mode.
+	 * 
+	 * @param context
+	 *            the context of the cell
+	 * @param parent
+	 *            the parent Element
+	 * @param value
+	 *            the value associated with the cell
+	 */
+	private void cancel(Context context, Element parent, String value) {
+		clearInput(getInputElement(parent));
+		setValue(context, parent, value);
+	}
+
+	/**
+	 * Clear selected from the input element. Both Firefox and IE fire spurious
+	 * onblur events after the input is removed from the DOM if selection is not
+	 * cleared.
+	 *
+	 * @param input
+	 *            the input element
+	 */
+	private native void clearInput(Element input) /*-{
+													if (input.selectionEnd)
+													input.selectionEnd = input.selectionStart;
+													else if ($doc.selection)
+													$doc.selection.clear();
+													}-*/;
+
+	/**
+	 * Commit the current value.
+	 * 
+	 * @param context
+	 *            the context of the cell
+	 * @param parent
+	 *            the parent Element
+	 * @param viewData
+	 *            the {@link ViewData} object
+	 * @param valueUpdater
+	 *            the {@link ValueUpdater}
+	 */
+	private void commit(Context context, Element parent, ViewData viewData,
+			ValueUpdater<String> valueUpdater) {
+		String value = updateViewData(parent, viewData, false);
+		clearInput(getInputElement(parent));
+		setValue(context, parent, viewData.getOriginal());
+		if (valueUpdater != null) {
+			valueUpdater.update(value);
+		}
+	}
+
+	/**
+	 * Convert the cell to edit mode.
+	 *
+	 * @param context
+	 *            the {@link Context} of the cell
+	 * @param parent
+	 *            the parent element
+	 * @param value
+	 *            the current value
+	 */
+	protected void edit(Context context, Element parent, String value) {
+		setValue(context, parent, value);
+		InputElement input = getInputElement(parent);
+		input.focus();
+		input.select();
+	}
+
+	private void editEvent(Context context, Element parent, String value,
+			ViewData viewData, NativeEvent event,
+			ValueUpdater<String> valueUpdater) {
+		String type = event.getType();
+		boolean keyUp = KEYUP.equals(type);
+		boolean keyDown = KEYDOWN.equals(type);
+		if (keyUp || keyDown) {
+			int keyCode = event.getKeyCode();
+			if (keyUp && keyCode == KeyCodes.KEY_ENTER) {
+				// Commit the change.
+				commit(context, parent, viewData, valueUpdater);
+			} else if (keyUp && keyCode == KeyCodes.KEY_ESCAPE) {
+				// Cancel edit mode.
+				String originalText = viewData.getOriginal();
+				if (viewData.isEditingAgain()) {
+					viewData.setText(originalText);
+					viewData.setEditing(false);
+				} else {
+					setViewData(context.getKey(), null);
+				}
+				cancel(context, parent, value);
+			} else {
+				// Update the text in the view data on each key.
+				updateViewData(parent, viewData, true);
+			}
+		} else if (BLUR.equals(type)) {
+			// Commit the change. Ensure that we are blurring the input element
+			// and
+			// not the parent element itself.
+			EventTarget eventTarget = event.getEventTarget();
+			if (Element.is(eventTarget)) {
+				Element target = Element.as(eventTarget);
+				if ("input"
+						.equals(target.getTagName().toLowerCase(Locale.ROOT))) {
+					commit(context, parent, viewData, valueUpdater);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Get the input element in edit mode.
+	 */
+	private InputElement getInputElement(Element parent) {
+		return parent.getFirstChild().<InputElement> cast();
+	}
+
 	@Override
 	public boolean isEditing(Context context, Element parent, String value) {
 		ViewData viewData = getViewData(context.getKey());
@@ -148,105 +264,6 @@ public class EditTextCell
 	}
 
 	/**
-	 * Convert the cell to non-edit mode.
-	 * 
-	 * @param context
-	 *            the context of the cell
-	 * @param parent
-	 *            the parent Element
-	 * @param value
-	 *            the value associated with the cell
-	 */
-	private void cancel(Context context, Element parent, String value) {
-		clearInput(getInputElement(parent));
-		setValue(context, parent, value);
-	}
-
-	/**
-	 * Clear selected from the input element. Both Firefox and IE fire spurious
-	 * onblur events after the input is removed from the DOM if selection is not
-	 * cleared.
-	 *
-	 * @param input
-	 *            the input element
-	 */
-	private native void clearInput(Element input) /*-{
-													if (input.selectionEnd)
-													input.selectionEnd = input.selectionStart;
-													else if ($doc.selection)
-													$doc.selection.clear();
-													}-*/;
-
-	/**
-	 * Commit the current value.
-	 * 
-	 * @param context
-	 *            the context of the cell
-	 * @param parent
-	 *            the parent Element
-	 * @param viewData
-	 *            the {@link ViewData} object
-	 * @param valueUpdater
-	 *            the {@link ValueUpdater}
-	 */
-	private void commit(Context context, Element parent, ViewData viewData,
-			ValueUpdater<String> valueUpdater) {
-		String value = updateViewData(parent, viewData, false);
-		clearInput(getInputElement(parent));
-		setValue(context, parent, viewData.getOriginal());
-		if (valueUpdater != null) {
-			valueUpdater.update(value);
-		}
-	}
-
-	private void editEvent(Context context, Element parent, String value,
-			ViewData viewData, NativeEvent event,
-			ValueUpdater<String> valueUpdater) {
-		String type = event.getType();
-		boolean keyUp = KEYUP.equals(type);
-		boolean keyDown = KEYDOWN.equals(type);
-		if (keyUp || keyDown) {
-			int keyCode = event.getKeyCode();
-			if (keyUp && keyCode == KeyCodes.KEY_ENTER) {
-				// Commit the change.
-				commit(context, parent, viewData, valueUpdater);
-			} else if (keyUp && keyCode == KeyCodes.KEY_ESCAPE) {
-				// Cancel edit mode.
-				String originalText = viewData.getOriginal();
-				if (viewData.isEditingAgain()) {
-					viewData.setText(originalText);
-					viewData.setEditing(false);
-				} else {
-					setViewData(context.getKey(), null);
-				}
-				cancel(context, parent, value);
-			} else {
-				// Update the text in the view data on each key.
-				updateViewData(parent, viewData, true);
-			}
-		} else if (BLUR.equals(type)) {
-			// Commit the change. Ensure that we are blurring the input element
-			// and
-			// not the parent element itself.
-			EventTarget eventTarget = event.getEventTarget();
-			if (Element.is(eventTarget)) {
-				Element target = Element.as(eventTarget);
-				if ("input"
-						.equals(target.getTagName().toLowerCase(Locale.ROOT))) {
-					commit(context, parent, viewData, valueUpdater);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Get the input element in edit mode.
-	 */
-	private InputElement getInputElement(Element parent) {
-		return parent.getFirstChild().<InputElement> cast();
-	}
-
-	/**
 	 * Update the view data based on the current value.
 	 *
 	 * @param parent
@@ -264,23 +281,6 @@ public class EditTextCell
 		viewData.setText(value);
 		viewData.setEditing(isEditing);
 		return value;
-	}
-
-	/**
-	 * Convert the cell to edit mode.
-	 *
-	 * @param context
-	 *            the {@link Context} of the cell
-	 * @param parent
-	 *            the parent element
-	 * @param value
-	 *            the current value
-	 */
-	protected void edit(Context context, Element parent, String value) {
-		setValue(context, parent, value);
-		InputElement input = getInputElement(parent);
-		input.focus();
-		input.select();
 	}
 
 	interface Template extends SafeHtmlTemplates {
@@ -337,6 +337,10 @@ public class EditTextCell
 					&& isEditingAgain == vd.isEditingAgain;
 		}
 
+		private boolean equalsOrBothNull(Object o1, Object o2) {
+			return (o1 == null) ? o2 == null : o1.equals(o2);
+		}
+
 		public String getOriginal() {
 			return original;
 		}
@@ -372,10 +376,6 @@ public class EditTextCell
 
 		public void setText(String text) {
 			this.text = text;
-		}
-
-		private boolean equalsOrBothNull(Object o1, Object o2) {
-			return (o1 == null) ? o2 == null : o1.equals(o2);
 		}
 	}
 }

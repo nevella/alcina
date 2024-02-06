@@ -12,8 +12,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 
 public interface PersistentObjectCache<T> {
-	public Class<T> getPersistedClass();
-
 	default List<String> allPaths() {
 		return listChildPaths("");
 	}
@@ -28,6 +26,8 @@ public interface PersistentObjectCache<T> {
 	}
 
 	T get(String path);
+
+	public Class<T> getPersistedClass();
 
 	Optional<Long> lastModified(String path);
 
@@ -107,6 +107,10 @@ public interface PersistentObjectCache<T> {
 			return value;
 		}
 
+		private String getPath() {
+			return delegate.getPersistedClass().getName();
+		}
+
 		public void invalidate() {
 			value = null;
 			get();
@@ -119,10 +123,6 @@ public interface PersistentObjectCache<T> {
 
 		public synchronized void set(T value) {
 			this.value = value;
-		}
-
-		private String getPath() {
-			return delegate.getPersistedClass().getName();
 		}
 	}
 }

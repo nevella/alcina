@@ -9,6 +9,8 @@ public abstract class CheckSoleInstancePlayer
 		addProvides(HandshakeState.SOLE_OPEN_TAB_CHECKED);
 	}
 
+	protected abstract void checkFailed();
+
 	@Override
 	public void onSuccess(Boolean result) {
 		if (result) {
@@ -23,8 +25,6 @@ public abstract class CheckSoleInstancePlayer
 	public void run() {
 		ClientSession.get().checkSoleOpenTab(this);
 	}
-
-	protected abstract void checkFailed();
 
 	public static class NotSoleInstanceException extends Exception {
 	}

@@ -79,8 +79,84 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 
 	protected RangeFooter rangeFooter;
 
+	protected void addInitialDataDisplay() {
+		model.dataProvider.addDataDisplay(table);
+	}
+
+	protected RangeFooter createRangeFooter() {
+		rangeFooter = new RangeFooter(table);
+		return rangeFooter;
+	}
+
+	protected abstract List<FlatSearchable> createSearchables();
+
+	protected ShowMorePager createTablePager() {
+		ShowMorePager pager = new ShowMorePager();
+		return pager;
+	}
+
+	protected TableRes createTableResources() {
+		return isEditing() ? GWT.create(TableResEditable.class)
+				: GWT.create(TableRes.class);
+	}
+
+	protected abstract void customSetupTable(ColumnsBuilder<T> builder);
+
+	protected abstract void customSetupToolbar(FlowPanel linksPanel);
+
+	protected void deleteSelected() {
+		List<T> selectedList = multiSelectionSupport.multipleSelectionModel
+				.getSelectedList();
+		AppController.get().deleteMultiple(selectedList);
+		searchProvider();
+	}
+
+	protected abstract String getFilterHint();
+
+	protected int getPageSize() {
+		return 100;
+	}
+
+	protected abstract Class<T> getRowClass();
+
+	protected EntitySearchDefinition getSearchDefinitionFromPlace() {
+		EntityPlace place = (EntityPlace) model.getPlace();
+		EntitySearchDefinition searchDefinition = place.getSearchDefinition();
+		return searchDefinition;
+	}
+
+	protected abstract Widget getSubNav();
+
 	public AbstractCellTable<Row> groupedCellTable() {
 		return this.groupedTable;
+	}
+
+	protected void init() {
+		fp = new FlowPanel();
+		initWidget(fp);
+		container = new FlowPanel();
+		container.setStyleName("searchable-container pane-container");
+		Widget subNav = getSubNav();
+		if (subNav != null) {
+			container.add(subNav);
+		}
+		fp.add(container);
+		toolbar = new FlowPanel();
+		container.add(toolbar);
+		updateToolbar();
+		renderFilter();
+		new KeyboardActionHandler().setup(this, 'T',
+				() -> multiSelectionSupport.toggleSelecting());
+	}
+
+	protected void invalidate() {
+		model.dataProvider.refresh();
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		EntityClientUtils.clearSelection(table);
 	}
 
 	@Override
@@ -98,6 +174,12 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 			refresh();
 		}
 		EntityClientUtils.clearSelection(table);
+	}
+
+	@Override
+	protected void refresh() {
+		model.dataProvider.refresh();
+		MessageManager.get().showMessage("Refreshed");
 	}
 
 	public void renderFilter() {
@@ -195,121 +277,6 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 				((DataGridWithScrollAccess) table).getBodyScrollPanel());
 	}
 
-	public Set<Long> selectedIds() {
-		return multiSelectionSupport.provideSelectedIds();
-	}
-
-	@Override
-	public AbstractCellTable<T> table() {
-		return table;
-	}
-
-	@Override
-	public void updateToolbar() {
-		toolbar.clear();
-		toolbar.setStyleName("toolbar2");
-		if (filter == null) {
-			filter = new FilterWidget(getFilterHint());
-			filter.registerFilterable(filterProxy);
-			filter.setEnterHandler(
-					evt -> search(filter.getTextBox().getText()));
-		}
-		toolbar.add(filter);
-		FlowPanel linksPanel = new FlowPanel();
-		linksPanel.setStyleName("links-panel");
-		toolbar.add(linksPanel);
-		filterLink = new Link("Filter",
-				c -> showFilterPanel(!defFilter.isVisible()));
-		linksPanel.add(filterLink);
-		Link link = Link.createNoUnderline("Refresh", evt -> {
-			refresh();
-		});
-		linksPanel.add(link);
-		customSetupToolbar(linksPanel);
-	}
-
-	protected void addInitialDataDisplay() {
-		model.dataProvider.addDataDisplay(table);
-	}
-
-	protected RangeFooter createRangeFooter() {
-		rangeFooter = new RangeFooter(table);
-		return rangeFooter;
-	}
-
-	protected abstract List<FlatSearchable> createSearchables();
-
-	protected ShowMorePager createTablePager() {
-		ShowMorePager pager = new ShowMorePager();
-		return pager;
-	}
-
-	protected TableRes createTableResources() {
-		return isEditing() ? GWT.create(TableResEditable.class)
-				: GWT.create(TableRes.class);
-	}
-
-	protected abstract void customSetupTable(ColumnsBuilder<T> builder);
-
-	protected abstract void customSetupToolbar(FlowPanel linksPanel);
-
-	protected void deleteSelected() {
-		List<T> selectedList = multiSelectionSupport.multipleSelectionModel
-				.getSelectedList();
-		AppController.get().deleteMultiple(selectedList);
-		searchProvider();
-	}
-
-	protected abstract String getFilterHint();
-
-	protected int getPageSize() {
-		return 100;
-	}
-
-	protected abstract Class<T> getRowClass();
-
-	protected EntitySearchDefinition getSearchDefinitionFromPlace() {
-		EntityPlace place = (EntityPlace) model.getPlace();
-		EntitySearchDefinition searchDefinition = place.getSearchDefinition();
-		return searchDefinition;
-	}
-
-	protected abstract Widget getSubNav();
-
-	protected void init() {
-		fp = new FlowPanel();
-		initWidget(fp);
-		container = new FlowPanel();
-		container.setStyleName("searchable-container pane-container");
-		Widget subNav = getSubNav();
-		if (subNav != null) {
-			container.add(subNav);
-		}
-		fp.add(container);
-		toolbar = new FlowPanel();
-		container.add(toolbar);
-		updateToolbar();
-		renderFilter();
-		new KeyboardActionHandler().setup(this, 'T',
-				() -> multiSelectionSupport.toggleSelecting());
-	}
-
-	protected void invalidate() {
-		model.dataProvider.refresh();
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		EntityClientUtils.clearSelection(table);
-	}
-
-	@Override
-	protected void refresh() {
-		model.dataProvider.refresh();
-		MessageManager.get().showMessage("Refreshed");
-	}
-
 	protected void search(SD searchDefinition) {
 		clearTableSelectionModel();
 		AppController.get().doSearch(searchDefinition);
@@ -324,12 +291,21 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 		model.dataProvider.search();
 	}
 
+	public Set<Long> selectedIds() {
+		return multiSelectionSupport.provideSelectedIds();
+	}
+
 	protected void showFilterPanel(boolean show) {
 		defFilter.setVisible(show);
 	}
 
 	protected boolean suppressDevIdColumn() {
 		return false;
+	}
+
+	@Override
+	public AbstractCellTable<T> table() {
+		return table;
 	}
 
 	protected void updatePlace() {
@@ -369,5 +345,29 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 			searchProvider();
 		}
 		EntityClientUtils.clearSelection(table);
+	}
+
+	@Override
+	public void updateToolbar() {
+		toolbar.clear();
+		toolbar.setStyleName("toolbar2");
+		if (filter == null) {
+			filter = new FilterWidget(getFilterHint());
+			filter.registerFilterable(filterProxy);
+			filter.setEnterHandler(
+					evt -> search(filter.getTextBox().getText()));
+		}
+		toolbar.add(filter);
+		FlowPanel linksPanel = new FlowPanel();
+		linksPanel.setStyleName("links-panel");
+		toolbar.add(linksPanel);
+		filterLink = new Link("Filter",
+				c -> showFilterPanel(!defFilter.isVisible()));
+		linksPanel.add(filterLink);
+		Link link = Link.createNoUnderline("Refresh", evt -> {
+			refresh();
+		});
+		linksPanel.add(link);
+		customSetupToolbar(linksPanel);
 	}
 }

@@ -181,6 +181,11 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 		this.base.cancelKey();
 	}
 
+	private void fireChangeFromOld() {
+		changes.firePropertyChange("value", old, getValue());
+		old = (String) getValue();
+	}
+
 	@Override
 	public Action getAction() {
 		Action retValue;
@@ -430,10 +435,5 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	private void fireChangeFromOld() {
-		changes.firePropertyChange("value", old, getValue());
-		old = (String) getValue();
 	}
 }

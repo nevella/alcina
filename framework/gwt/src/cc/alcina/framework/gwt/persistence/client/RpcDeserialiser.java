@@ -8,6 +8,9 @@ import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 
 @Reflected
 public abstract class RpcDeserialiser {
+	protected abstract void callServiceInstance(ServiceDefTarget service,
+			Class resultClass, AsyncCallback callback);
+
 	public <T> void deserialize(Class<T> clazz, String payload,
 			AsyncCallback<T> callback) {
 		ServiceDefTarget service = getAsyncService(clazz);
@@ -16,9 +19,6 @@ public abstract class RpcDeserialiser {
 		service.setRpcRequestBuilder(rpcRequestBuilder);
 		callServiceInstance(service, clazz, callback);
 	}
-
-	protected abstract void callServiceInstance(ServiceDefTarget service,
-			Class resultClass, AsyncCallback callback);
 
 	protected abstract ServiceDefTarget getAsyncService(Class clazz);
 }

@@ -469,6 +469,84 @@ public class DOM {
 		currentEvent = prevCurrentEvent;
 	}
 
+	private static void dispatchEventImpl(Event event, Element elem,
+			EventListener listener) {
+		// If this element has capture...
+		if (elem == sCaptureElem) {
+			// ... and it's losing capture, clear sCaptureElem.
+			if (eventGetType(event) == Event.ONLOSECAPTURE) {
+				sCaptureElem = null;
+			}
+		}
+		EventTarget eventTarget = event.getEventTarget();
+		String lcType = event.getType().toLowerCase();
+		int eventTypeInt = Event.getTypeInt(lcType);
+		DispatchInfo dispatchInfo = null;
+		Optional<DispatchInfo> first = recentDispatches.stream()
+				.filter(di -> di.isForEvent(event)).findFirst();
+		if (first.isPresent()) {
+			dispatchInfo = first.get();
+		} else {
+			dispatchInfo = new DispatchInfo(event);
+			recentDispatches.add(dispatchInfo);
+			if (recentDispatches.size() > 10) {
+				recentDispatches.remove(0);
+			}
+		}
+		/*
+		 * This is not a patch - it recognises that we can get a multiple fire
+		 * of the same event due to dom bubbling, but we implement our own
+		 * bubbling handling in the local dom so don't want/need the non-first
+		 * dom events
+		 */
+		if (elem.eventListener != null
+				&& dispatchInfo.wasDispatchedTo(elem)) {
+			return;
+		}
+		if (Element.is(eventTarget)) {
+			Element childElement = Element.as(eventTarget);
+			// get the listeners early, to prevent overwrite. Note that this
+			// isn't perfect
+			// ideally there'd be an is-still-in-chain check for bubbling
+			//
+			// actually - is it not 'perfect'?
+			Map<Element, EventListener> forDispatch = new LinkedHashMap<>();
+			while (childElement != elem && childElement != null) {
+				if (childElement.eventListener != null
+						&& !dispatchInfo.wasDispatchedTo(childElement)) {
+					// FIXME - dirndl 1x1e - does this handle bitless events
+					// - i.e. touch events? Also this code is dense (works),
+					// could self-document better. Ditto JSO casting
+					int bitsSunk = childElement.localEventBitsSunk();
+					if (eventTypeInt != -1 && (bitsSunk & eventTypeInt) == 0) {
+					} else {
+						dispatchInfo.willDispatchTo(childElement);
+						forDispatch.put(childElement,
+								childElement.eventListener);
+					}
+				}
+				childElement = childElement.getParentElement();
+			}
+			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
+				eventCurrentTarget = entry.getKey();
+				EventListener elementListener = entry.getValue();
+				elementListener.onBrowserEvent(event);
+				if (LocalDom.isStopPropagation(event)) {
+					return;
+				}
+			}
+			dispatchInfo.willDispatchTo(Element.as(eventTarget));
+		}
+		if (Element.is(event.getCurrentEventTarget())) {
+			eventCurrentTarget = event.getCurrentEventTarget().cast();
+			dispatchInfo.willDispatchTo(eventCurrentTarget);
+		} else {
+			eventCurrentTarget = null;
+		}
+		// Pass the event to the listener.
+		listener.onBrowserEvent(event);
+	}
+
 	/**
 	 * Cancels bubbling for the given event. This will stop the event from being
 	 * propagated to parent elements.
@@ -1231,6 +1309,13 @@ public class DOM {
 	}
 
 	/**
+	 * Initialize the event system if it has not already been initialized.
+	 */
+	static void maybeInitializeEventSystem() {
+		impl.maybeInitializeEventSystem();
+	}
+
+	/**
 	 * This method is called directly by native code when event preview is being
 	 * used.
 	 *
@@ -1673,89 +1758,26 @@ public class DOM {
 		return Window.getClientWidth();
 	}
 
-	private static void dispatchEventImpl(Event event, Element elem,
-			EventListener listener) {
-		// If this element has capture...
-		if (elem == sCaptureElem) {
-			// ... and it's losing capture, clear sCaptureElem.
-			if (eventGetType(event) == Event.ONLOSECAPTURE) {
-				sCaptureElem = null;
-			}
-		}
-		EventTarget eventTarget = event.getEventTarget();
-		String lcType = event.getType().toLowerCase();
-		int eventTypeInt = Event.getTypeInt(lcType);
-		DispatchInfo dispatchInfo = null;
-		Optional<DispatchInfo> first = recentDispatches.stream()
-				.filter(di -> di.isForEvent(event)).findFirst();
-		if (first.isPresent()) {
-			dispatchInfo = first.get();
-		} else {
-			dispatchInfo = new DispatchInfo(event);
-			recentDispatches.add(dispatchInfo);
-			if (recentDispatches.size() > 10) {
-				recentDispatches.remove(0);
-			}
-		}
-		/*
-		 * This is not a patch - it recognises that we can get a multiple fire
-		 * of the same event due to dom bubbling, but we implement our own
-		 * bubbling handling in the local dom so don't want/need the non-first
-		 * dom events
-		 */
-		if (elem.eventListener != null
-				&& dispatchInfo.wasDispatchedTo(elem)) {
-			return;
-		}
-		if (Element.is(eventTarget)) {
-			Element childElement = Element.as(eventTarget);
-			// get the listeners early, to prevent overwrite. Note that this
-			// isn't perfect
-			// ideally there'd be an is-still-in-chain check for bubbling
-			//
-			// actually - is it not 'perfect'?
-			Map<Element, EventListener> forDispatch = new LinkedHashMap<>();
-			while (childElement != elem && childElement != null) {
-				if (childElement.eventListener != null
-						&& !dispatchInfo.wasDispatchedTo(childElement)) {
-					// FIXME - dirndl 1x1e - does this handle bitless events
-					// - i.e. touch events? Also this code is dense (works),
-					// could self-document better. Ditto JSO casting
-					int bitsSunk = childElement.localEventBitsSunk();
-					if (eventTypeInt != -1 && (bitsSunk & eventTypeInt) == 0) {
-					} else {
-						dispatchInfo.willDispatchTo(childElement);
-						forDispatch.put(childElement,
-								childElement.eventListener);
-					}
-				}
-				childElement = childElement.getParentElement();
-			}
-			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
-				eventCurrentTarget = entry.getKey();
-				EventListener elementListener = entry.getValue();
-				elementListener.onBrowserEvent(event);
-				if (LocalDom.isStopPropagation(event)) {
-					return;
-				}
-			}
-			dispatchInfo.willDispatchTo(Element.as(eventTarget));
-		}
-		if (Element.is(event.getCurrentEventTarget())) {
-			eventCurrentTarget = event.getCurrentEventTarget().cast();
-			dispatchInfo.willDispatchTo(eventCurrentTarget);
-		} else {
-			eventCurrentTarget = null;
-		}
-		// Pass the event to the listener.
-		listener.onBrowserEvent(event);
-	}
+	static class DispatchInfo {
+		Event event;
 
-	/**
-	 * Initialize the event system if it has not already been initialized.
-	 */
-	static void maybeInitializeEventSystem() {
-		impl.maybeInitializeEventSystem();
+		List<Element> dispatchedToElements = new ArrayList<>();
+
+		public DispatchInfo(Event event) {
+			this.event = event;
+		}
+
+		public boolean isForEvent(Event event) {
+			return this.event.jso != null && this.event.jso == event.jso;
+		}
+
+		public boolean wasDispatchedTo(Element element) {
+			return dispatchedToElements.contains(element);
+		}
+
+		public void willDispatchTo(Element childElement) {
+			dispatchedToElements.add(childElement);
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1785,28 +1807,6 @@ public class DOM {
 					event.cancel();
 				}
 			}
-		}
-	}
-
-	static class DispatchInfo {
-		Event event;
-
-		List<Element> dispatchedToElements = new ArrayList<>();
-
-		public DispatchInfo(Event event) {
-			this.event = event;
-		}
-
-		public boolean isForEvent(Event event) {
-			return this.event.jso != null && this.event.jso == event.jso;
-		}
-
-		public boolean wasDispatchedTo(Element element) {
-			return dispatchedToElements.contains(element);
-		}
-
-		public void willDispatchTo(Element childElement) {
-			dispatchedToElements.add(childElement);
 		}
 	}
 }

@@ -9,11 +9,11 @@ public interface HasStringId {
 		return hasStringId == null ? null : hasStringId.stringId();
 	}
 
-	public String stringId();
-
 	default String nullSafeId(HasStringId hasStringId) {
 		return hasStringId == null ? null : hasStringId.stringId();
 	}
+
+	public String stringId();
 
 	@Reflected
 	public static class HasStringIdRenderer

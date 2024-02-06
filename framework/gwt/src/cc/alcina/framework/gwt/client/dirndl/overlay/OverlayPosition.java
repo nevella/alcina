@@ -36,6 +36,17 @@ public class OverlayPosition {
 		constraints.add(new Constraint(direction, from, to, px));
 	}
 
+	void apply() {
+		// allow exactly one of {viewportCentered,non-empty constraints}
+		Preconditions.checkState(viewportCentered ^ constraints.size() > 0);
+		if (viewportCentered) {
+			return;
+		}
+		Preconditions.checkState(fromRect != null);
+		toRect = toElement.getBoundingClientRect();
+		constraints.forEach(Constraint::apply);
+	}
+
 	public void dropdown(Position xalign, DomRect rect) {
 		fromRect(rect);
 		addConstraint(Direction.X_AXIS, xalign, xalign, 0);
@@ -63,21 +74,6 @@ public class OverlayPosition {
 		return this;
 	}
 
-	void apply() {
-		// allow exactly one of {viewportCentered,non-empty constraints}
-		Preconditions.checkState(viewportCentered ^ constraints.size() > 0);
-		if (viewportCentered) {
-			return;
-		}
-		Preconditions.checkState(fromRect != null);
-		toRect = toElement.getBoundingClientRect();
-		constraints.forEach(Constraint::apply);
-	}
-
-	public enum Position {
-		START, CENTER, END
-	}
-
 	class Constraint {
 		Direction direction;
 
@@ -94,10 +90,13 @@ public class OverlayPosition {
 			this.px = px;
 		}
 
-		@Override
-		public String toString() {
-			return FormatBuilder.keyValues("direction", direction, "px", px,
-					"from", from, "to", to);
+		void apply() {
+			DoublePair fromLine = line(fromRect);
+			DoublePair toLine = line(toRect);
+			double fromOffset = pos(fromLine, from);
+			double toOffset = pos(toLine, to);
+			double delta = fromOffset - toOffset + px;
+			move(delta);
 		}
 
 		private DoublePair line(DomRect rect) {
@@ -106,6 +105,19 @@ public class OverlayPosition {
 				return new DoublePair(rect.getLeft(), rect.getRight());
 			case Y_AXIS:
 				return new DoublePair(rect.getTop(), rect.getBottom());
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		void move(double offset) {
+			switch (direction) {
+			case X_AXIS:
+				toElement.getStyle().setLeft(offset, Unit.PX);
+				break;
+			case Y_AXIS:
+				toElement.getStyle().setTop(offset, Unit.PX);
+				break;
 			default:
 				throw new UnsupportedOperationException();
 			}
@@ -124,30 +136,18 @@ public class OverlayPosition {
 			}
 		}
 
-		void apply() {
-			DoublePair fromLine = line(fromRect);
-			DoublePair toLine = line(toRect);
-			double fromOffset = pos(fromLine, from);
-			double toOffset = pos(toLine, to);
-			double delta = fromOffset - toOffset + px;
-			move(delta);
-		}
-
-		void move(double offset) {
-			switch (direction) {
-			case X_AXIS:
-				toElement.getStyle().setLeft(offset, Unit.PX);
-				break;
-			case Y_AXIS:
-				toElement.getStyle().setTop(offset, Unit.PX);
-				break;
-			default:
-				throw new UnsupportedOperationException();
-			}
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("direction", direction, "px", px,
+					"from", from, "to", to);
 		}
 	}
 
 	enum Direction {
 		X_AXIS, Y_AXIS
+	}
+
+	public enum Position {
+		START, CENTER, END
 	}
 }

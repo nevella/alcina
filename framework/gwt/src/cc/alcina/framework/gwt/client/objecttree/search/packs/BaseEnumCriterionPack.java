@@ -16,8 +16,6 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 public class BaseEnumCriterionPack {
 	public interface BaseEnumCriterionHandler<T, E extends Enum, C extends EnumCriterion<E>>
 			extends DomainCriterionFilter<C> {
-		public boolean test(T t, E value);
-
 		@Override
 		default DomainFilter getFilter(C sc) {
 			E e = sc.getValue();
@@ -32,6 +30,8 @@ public class BaseEnumCriterionPack {
 			}).invertIf(
 					sc.getOperator() == StandardSearchOperator.DOES_NOT_EQUAL);
 		}
+
+		public boolean test(T t, E value);
 	}
 
 	public static abstract class BaseEnumCriterionSearchable<E extends Enum, C extends EnumCriterion<E>>

@@ -30,22 +30,6 @@ public class LazyPropertyLoadTask<T extends Entity>
 	}
 
 	@Override
-	public Stream<T> wrap(Stream<T> stream) {
-		if (LooseContext.is(LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)) {
-			return stream;
-		}
-		if (LooseContext
-				.is(DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)) {
-			return stream;
-		}
-		if (!LooseContext.is(
-				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)) {
-			return stream;
-		}
-		return super.wrap(stream);
-	}
-
-	@Override
 	protected boolean checkShouldLazyLoad(List toLoad) {
 		return true;
 	}
@@ -89,5 +73,21 @@ public class LazyPropertyLoadTask<T extends Entity>
 	@Override
 	protected synchronized List requireLazyLoad(Collection objects) {
 		return (List) objects.stream().distinct().collect(Collectors.toList());
+	}
+
+	@Override
+	public Stream<T> wrap(Stream<T> stream) {
+		if (LooseContext.is(LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)) {
+			return stream;
+		}
+		if (LooseContext
+				.is(DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)) {
+			return stream;
+		}
+		if (!LooseContext.is(
+				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)) {
+			return stream;
+		}
+		return super.wrap(stream);
 	}
 }

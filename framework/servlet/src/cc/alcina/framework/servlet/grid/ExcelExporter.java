@@ -157,28 +157,6 @@ public class ExcelExporter {
 		addCollectionToBook(coll, book, sheetName, pdMultis);
 	}
 
-	public void addCollectionToBook(Collection coll, Document book,
-			String sheetName, PropertyDescriptor[] pds) throws Exception {
-		List<PdMultiplexer> pdMultis = Arrays.stream(pds)
-				.filter(pd -> !ignorePd(pd)).map(PdMultiplexer::new).sorted()
-				.collect(Collectors.toList());
-		addCollectionToBook(coll, book, sheetName, pds);
-	}
-
-	public List<List> getCellList() {
-		return this.cellList;
-	}
-
-	public Document getTemplate() throws Exception {
-		InputStream stream = this.getClass()
-				.getResourceAsStream(DOC_TEMPLATE_XML);
-		Document document = XmlUtils.loadDocument(stream);
-		sheetTemplate = (Element) document.getDocumentElement()
-				.getElementsByTagName("Worksheet").item(0);
-		sheetTemplate.getParentNode().removeChild(sheetTemplate);
-		return document;
-	}
-
 	private void addCollectionToBook(Collection coll, Document book,
 			String sheetName, List<PdMultiplexer> pds) throws Exception {
 		if (!coll.iterator().hasNext()) {
@@ -280,6 +258,28 @@ public class ExcelExporter {
 		}
 	}
 
+	public void addCollectionToBook(Collection coll, Document book,
+			String sheetName, PropertyDescriptor[] pds) throws Exception {
+		List<PdMultiplexer> pdMultis = Arrays.stream(pds)
+				.filter(pd -> !ignorePd(pd)).map(PdMultiplexer::new).sorted()
+				.collect(Collectors.toList());
+		addCollectionToBook(coll, book, sheetName, pds);
+	}
+
+	public List<List> getCellList() {
+		return this.cellList;
+	}
+
+	public Document getTemplate() throws Exception {
+		InputStream stream = this.getClass()
+				.getResourceAsStream(DOC_TEMPLATE_XML);
+		Document document = XmlUtils.loadDocument(stream);
+		sheetTemplate = (Element) document.getDocumentElement()
+				.getElementsByTagName("Worksheet").item(0);
+		sheetTemplate.getParentNode().removeChild(sheetTemplate);
+		return document;
+	}
+
 	private boolean ignorePd(PropertyDescriptor pd) {
 		if (pd.getReadMethod() == null) {
 			return true;
@@ -342,13 +342,13 @@ public class ExcelExporter {
 			}
 		}
 
-		public boolean hasAnnotation() {
-			return xfa != null || dia != null;
-		}
-
 		@Override
 		public int compareTo(PdMultiplexer o) {
 			return order() - o.order();
+		}
+
+		public boolean hasAnnotation() {
+			return xfa != null || dia != null;
 		}
 
 		public String name() {

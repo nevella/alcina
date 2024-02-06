@@ -163,40 +163,6 @@ public class CompilationStateBuilder {
 		return compilationState;
 	}
 
-	private ContentId getResourceContentId(Resource resource) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
-		try {
-			InputStream in = resource.openContents();
-			/**
-			 * In most cases openContents() will throw an exception, however in
-			 * the case of a ZipFileResource it might return null causing an NPE
-			 * in Util.copyNoClose(), see issue 4359.
-			 */
-			if (in == null) {
-				throw new RuntimeException(
-						"Unexpected error reading resource '" + resource + "'");
-			}
-			// TODO: deprecate com.google.gwt.dev.util.Util and use Guava.
-			Util.copy(in, out);
-		} catch (IOException e) {
-			throw new RuntimeException(
-					"Unexpected error reading resource '" + resource + "'", e);
-		}
-		byte[] content = out.toByteArray();
-		return new ContentId(Shared.getTypeName(resource),
-				Util.computeStrongName(content));
-	}
-
-	private boolean verifyContentId(TreeLogger logger, Resource resource,
-			CompilationUnit cachedUnit) {
-		if (!cachedUnit.getContentId().equals(getResourceContentId(resource))) {
-			logger.log(TreeLogger.WARN,
-					"Modification date hasn't changed but contentId has changed for "
-							+ resource.getLocation());
-		}
-		return true;
-	}
-
 	/**
 	 * Compile new generated units into an existing state.
 	 *
@@ -246,6 +212,40 @@ public class CompilationStateBuilder {
 				.incrementCachedGeneratedSourceCount(cachedUnits.size());
 		return compileMoreLater.compile(logger, compilerContext, builders,
 				cachedUnits, CompilerEventType.JDT_COMPILER_CSB_GENERATED);
+	}
+
+	private ContentId getResourceContentId(Resource resource) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+		try {
+			InputStream in = resource.openContents();
+			/**
+			 * In most cases openContents() will throw an exception, however in
+			 * the case of a ZipFileResource it might return null causing an NPE
+			 * in Util.copyNoClose(), see issue 4359.
+			 */
+			if (in == null) {
+				throw new RuntimeException(
+						"Unexpected error reading resource '" + resource + "'");
+			}
+			// TODO: deprecate com.google.gwt.dev.util.Util and use Guava.
+			Util.copy(in, out);
+		} catch (IOException e) {
+			throw new RuntimeException(
+					"Unexpected error reading resource '" + resource + "'", e);
+		}
+		byte[] content = out.toByteArray();
+		return new ContentId(Shared.getTypeName(resource),
+				Util.computeStrongName(content));
+	}
+
+	private boolean verifyContentId(TreeLogger logger, Resource resource,
+			CompilationUnit cachedUnit) {
+		if (!cachedUnit.getContentId().equals(getResourceContentId(resource))) {
+			logger.log(TreeLogger.WARN,
+					"Modification date hasn't changed but contentId has changed for "
+							+ resource.getLocation());
+		}
+		return true;
 	}
 
 	/**
@@ -299,66 +299,6 @@ public class CompilationStateBuilder {
 						generatedUnits, compilationState, this);
 			} finally {
 				event.end();
-			}
-		}
-
-		public Map<String, CompiledClass> getValidClasses() {
-			return Collections.unmodifiableMap(allValidClasses);
-		}
-
-		/**
-		 * Removes cached units that fail validation with the current set of
-		 * valid classes; also add the builder of the invalidated unit back for
-		 * retry later.
-		 */
-		private void removeInvalidCachedUnitsAndRescheduleCorrespondingBuilders(
-				TreeLogger logger, Collection<CompilationUnitBuilder> builders,
-				Map<CompilationUnitBuilder, CompilationUnit> cachedUnits) {
-			/*
-			 * Invalidate any cached units with invalid refs.
-			 */
-			Collection<CompilationUnit> invalidatedUnits = Lists.newArrayList();
-			for (Iterator<Entry<CompilationUnitBuilder, CompilationUnit>> it = cachedUnits
-					.entrySet().iterator(); it.hasNext();) {
-				Entry<CompilationUnitBuilder, CompilationUnit> entry = it
-						.next();
-				CompilationUnit unit = entry.getValue();
-				boolean isValid = unit.getDependencies().validate(logger,
-						allValidClasses);
-				if (isValid && unit.isError()) {
-					// See if the unit has classes that can't provide a
-					// NameEnvironmentAnswer
-					for (CompiledClass cc : unit.getCompiledClasses()) {
-						try {
-							cc.getNameEnvironmentAnswer();
-						} catch (ClassFormatException ex) {
-							isValid = false;
-							break;
-						}
-					}
-				}
-				if (!isValid) {
-					if (logger.isLoggable(TreeLogger.TRACE)) {
-						logger.log(TreeLogger.TRACE,
-								"Invalid Unit: " + unit.getTypeName());
-					}
-					invalidatedUnits.add(unit);
-					builders.add(entry.getKey());
-					it.remove();
-				}
-			}
-			if (invalidatedUnits.size() > 0) {
-				if (logger.isLoggable(TreeLogger.TRACE)) {
-					logger.log(TreeLogger.TRACE,
-							"Invalid units found: " + invalidatedUnits.size());
-				}
-			}
-			// Any units we invalidated must now be removed from the valid
-			// classes.
-			for (CompilationUnit unit : invalidatedUnits) {
-				for (CompiledClass cc : unit.getCompiledClasses()) {
-					allValidClasses.remove(cc.getSourceName());
-				}
 			}
 		}
 
@@ -542,6 +482,66 @@ public class CompilationStateBuilder {
 			// Sort units to ensure stable output.
 			Collections.sort(resultUnits, CompilationUnit.COMPARATOR);
 			return resultUnits;
+		}
+
+		public Map<String, CompiledClass> getValidClasses() {
+			return Collections.unmodifiableMap(allValidClasses);
+		}
+
+		/**
+		 * Removes cached units that fail validation with the current set of
+		 * valid classes; also add the builder of the invalidated unit back for
+		 * retry later.
+		 */
+		private void removeInvalidCachedUnitsAndRescheduleCorrespondingBuilders(
+				TreeLogger logger, Collection<CompilationUnitBuilder> builders,
+				Map<CompilationUnitBuilder, CompilationUnit> cachedUnits) {
+			/*
+			 * Invalidate any cached units with invalid refs.
+			 */
+			Collection<CompilationUnit> invalidatedUnits = Lists.newArrayList();
+			for (Iterator<Entry<CompilationUnitBuilder, CompilationUnit>> it = cachedUnits
+					.entrySet().iterator(); it.hasNext();) {
+				Entry<CompilationUnitBuilder, CompilationUnit> entry = it
+						.next();
+				CompilationUnit unit = entry.getValue();
+				boolean isValid = unit.getDependencies().validate(logger,
+						allValidClasses);
+				if (isValid && unit.isError()) {
+					// See if the unit has classes that can't provide a
+					// NameEnvironmentAnswer
+					for (CompiledClass cc : unit.getCompiledClasses()) {
+						try {
+							cc.getNameEnvironmentAnswer();
+						} catch (ClassFormatException ex) {
+							isValid = false;
+							break;
+						}
+					}
+				}
+				if (!isValid) {
+					if (logger.isLoggable(TreeLogger.TRACE)) {
+						logger.log(TreeLogger.TRACE,
+								"Invalid Unit: " + unit.getTypeName());
+					}
+					invalidatedUnits.add(unit);
+					builders.add(entry.getKey());
+					it.remove();
+				}
+			}
+			if (invalidatedUnits.size() > 0) {
+				if (logger.isLoggable(TreeLogger.TRACE)) {
+					logger.log(TreeLogger.TRACE,
+							"Invalid units found: " + invalidatedUnits.size());
+				}
+			}
+			// Any units we invalidated must now be removed from the valid
+			// classes.
+			for (CompilationUnit unit : invalidatedUnits) {
+				for (CompiledClass cc : unit.getCompiledClasses()) {
+					allValidClasses.remove(cc.getSourceName());
+				}
+			}
 		}
 
 		private final class UnitProcessorImpl implements UnitProcessor {

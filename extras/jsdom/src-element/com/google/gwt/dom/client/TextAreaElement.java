@@ -131,16 +131,6 @@ public class TextAreaElement extends Element {
 		return this.getPropertyString("name");
 	}
 
-	public int getSelectionStart() {
-		ensureRemoteCheck();
-		return this.getPropertyInt("selectionStart");
-	}
-
-	public int getSelectionEnd() {
-		ensureRemoteCheck();
-		return this.getPropertyInt("selectionEnd");
-	}
-
 	@Override
 	public String getPropertyString(String name) {
 		ensureRemoteCheck();
@@ -171,6 +161,16 @@ public class TextAreaElement extends Element {
 	 */
 	public int getRows() {
 		return this.getPropertyInt("rows");
+	}
+
+	public int getSelectionEnd() {
+		ensureRemoteCheck();
+		return this.getPropertyInt("selectionEnd");
+	}
+
+	public int getSelectionStart() {
+		ensureRemoteCheck();
+		return this.getPropertyInt("selectionStart");
 	}
 
 	/**
@@ -218,6 +218,13 @@ public class TextAreaElement extends Element {
 	}
 
 	/**
+	 * Select the contents of the TEXTAREA.
+	 */
+	native void select0(ElementJso elt) /*-{
+    this.select();
+	}-*/;
+
+	/**
 	 * A single character access key to give access to the form control.
 	 * 
 	 * @see <a href=
@@ -237,14 +244,6 @@ public class TextAreaElement extends Element {
 	 */
 	public void setCols(int cols) {
 		this.setPropertyInt("cols", cols);
-	}
-
-	public void setSelectionStart(int selectionStart) {
-		this.setPropertyInt("selectionStart", selectionStart);
-	}
-
-	public void setSelectionEnd(int selectionEnd) {
-		this.setPropertyInt("selectionEnd", selectionEnd);
 	}
 
 	/**
@@ -322,6 +321,14 @@ public class TextAreaElement extends Element {
 		this.setPropertyInt("rows", rows);
 	}
 
+	public void setSelectionEnd(int selectionEnd) {
+		this.setPropertyInt("selectionEnd", selectionEnd);
+	}
+
+	public void setSelectionStart(int selectionStart) {
+		this.setPropertyInt("selectionStart", selectionStart);
+	}
+
 	/**
 	 * Represents the current contents of the corresponding form control, in an
 	 * interactive user agent. Changing this attribute changes the contents of
@@ -332,11 +339,4 @@ public class TextAreaElement extends Element {
 	public void setValue(String value) {
 		this.setPropertyString("value", value);
 	}
-
-	/**
-	 * Select the contents of the TEXTAREA.
-	 */
-	native void select0(ElementJso elt) /*-{
-    this.select();
-	}-*/;
 }

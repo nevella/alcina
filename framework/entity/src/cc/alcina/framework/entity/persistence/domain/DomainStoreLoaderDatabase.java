@@ -180,6 +180,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				.setSequencer(transformSequencer);
 	}
 
+	private void addColumnName(Class clazz, PdOperator pdOperator,
+			Class propertyType) {
+		columnDescriptors.add(clazz,
+				new ColumnDescriptor(clazz, pdOperator.pd, propertyType));
+		propertyDescriptorFetchTypes.put(pdOperator, propertyType);
+	}
+
 	@Override
 	public void appShutdown() {
 		connectionPool.drain();
@@ -208,187 +215,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		connectionPool.drain();
 	}
 
-	@Override
-	public LazyObjectLoader getLazyObjectLoader() {
-		return backupLazyLoader;
-	}
-
-	public DomainStore getStore() {
-		return this.store;
-	}
-
-	@Override
-	public DomainTransformPersistenceQueue.Sequencer getTransformSequencer() {
-		return this.transformSequencer;
-	}
-
-	@Override
-	public DomainTransformRequestPersistent loadTransformRequest(long id) {
-		synchronized (loadTransformRequestLock) {
-			try {
-				return loadTransformRequest0(id);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	public void setConnectionUrl(String newUrl) {
-		dataSource.setConnectionUrl(newUrl);
-	}
-
-	@Override
-	public void warmup() throws Exception {
-		new StatCategory_DomainStore.Warmup.Loader().emit();
-		this.domainDescriptor = store.domainDescriptor;
-		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
-		descriptors = new LinkedHashMap<Class, List<PdOperator>>();
-		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
-		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
-		domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
-		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
-		warmupTransaction = Transaction.current();
-		warmupTransaction.setTimeout(60 * TimeConstants.ONE_MINUTE_MS);
-		transformSequencer.setInitialised(true);
-		transformSequencer.waitForWritableTransactionsToTerminate();
-		{
-			Connection conn = getConnection();
-			transformSequencer.markHighestVisibleTransformList(conn);
-			releaseConn(conn);
-		}
-		DomainTransformCommitPosition highestVisibleCommitPosition = transformSequencer.highestVisiblePosition;
-		warmupTransaction.toDomainCommitting(
-				highestVisibleCommitPosition.getCommitTimestamp(), store,
-				store.applyTxToGraphCounter.getAndIncrement(), 0L);
-		store.getPersistenceEvents().getQueue().setMuteEventsOnOrBefore(
-				highestVisibleCommitPosition.getCommitTimestamp());
-		new StatCategory_DomainStore.Warmup.Loader.Mark().emit();
-		// get non-many-many obj
-		// lazy tables, load a segment (for large db dev work)
-		if (domainDescriptor.getDomainSegmentLoader() != null) {
-			MetricLogging.get().start("initialise-domain-segment");
-			initialiseDomainSegment();
-			MetricLogging.get().end("initialise-domain-segment");
-		}
-		MetricLogging.get().start("tables");
-		for (DomainClassDescriptor descriptor : domainDescriptor
-				.getWarmupClasses()) {
-			Class clazz = descriptor.clazz;
-			prepareTable(descriptor);
-			// warmup threadsafe
-			store.cache.getMap(clazz);
-		}
-		List<Callable> calls = new ArrayList<Callable>();
-		setupInitialLoadTableCalls(calls);
-		invokeAllWithThrow(calls);
-		new StatCategory_DomainStore.Warmup.Loader.Tables().emit();
-		setupInitialJoinTableCalls(calls);
-		invokeAllWithThrow(calls);
-		new StatCategory_DomainStore.Warmup.Loader.JoinTables().emit();
-		MetricLogging.get().end("tables");
-		// clear existing interns, but intern incoming changes - optimal
-		// allocation
-		interns.setRotating(true);
-		MetricLogging.get().start("xrefs");
-		for (EntityRefs ll : warmupEntityRefs) {
-			calls.add(() -> {
-				ll.resolve();
-				return null;
-			});
-		}
-		invokeAllWithThrow(calls);
-		MetricLogging.get().end("xrefs");
-		new StatCategory_DomainStore.Warmup.Loader.Xrefs().emit();
-		warmupEntityRefs.clear();
-		// lazy tables, load a segment (for large db dev work)
-		if (domainDescriptor.getDomainSegmentLoader() != null) {
-			MetricLogging.get().start("domain-segment");
-			loadDomainSegment();
-			MetricLogging.get().end("domain-segment");
-		}
-		new StatCategory_DomainStore.Warmup.Loader.Segment().emit();
-		MetricLogging.get().start("postLoad");
-		for (final DomainStoreTask task : domainDescriptor.postLoadTasks) {
-			calls.add(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					MetricLogging.get().start(task.getClass().getSimpleName());
-					task.run();
-					MetricLogging.get().end(task.getClass().getSimpleName(),
-							store.metricLogger);
-					return null;
-				}
-			});
-		}
-		/*
-		 * running synchronously (do they collide? they do...)
-		 */
-		for (Callable callable : calls) {
-			callable.call();
-		}
-		calls.clear();
-		// invokeAllWithThrow(calls);
-		MetricLogging.get().end("postLoad");
-		new StatCategory_DomainStore.Warmup.Loader.PostLoad().emit();
-		MetricLogging.get().start("lookups");
-		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
-				.values()) {
-			calls.add(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					Thread.currentThread().setName("loader-lookup-"
-							+ descriptor.clazz.getSimpleName());
-					for (DomainStoreLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
-						lookupDescriptor.setDomainStore(store);
-						lookupDescriptor.createLookup();
-						if (lookupDescriptor.isEnabled()) {
-							store.addValues(lookupDescriptor.getLookup());
-						}
-					}
-					return null;
-				}
-			});
-		}
-		invokeAllWithThrow(calls);
-		MetricLogging.get().end("lookups");
-		new StatCategory_DomainStore.Warmup.Loader.Lookups().emit();
-		MetricLogging.get().start("projections");
-		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
-				.values()) {
-			calls.add(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					Thread.currentThread().setName("loader-projections-"
-							+ descriptor.clazz.getSimpleName());
-					for (DomainProjection projection : descriptor.projections) {
-						if (projection.isEnabled()) {
-							store.addValues(projection);
-						}
-					}
-					return null;
-				}
-			});
-		}
-		invokeAllWithThrow(calls);
-		MetricLogging.get().end("projections");
-		new StatCategory_DomainStore.Warmup.Loader.Projections().emit();
-		store.initialising = false;
-		connectionPool.drain();
-		warmupExecutor.shutdown();
-		warmupExecutor = null;
-		warmupTransaction = null;
-		Transaction.current().toDomainCommitted(highestVisibleCommitPosition);
-		store.getPersistenceEvents().getQueue()
-				.setTransformLogPosition(highestVisibleCommitPosition);
-		Transaction.endAndBeginNew();
-		new StatCategory_DomainStore.Warmup.Loader.End().emit();
-	}
-
-	private void addColumnName(Class clazz, PdOperator pdOperator,
-			Class propertyType) {
-		columnDescriptors.add(clazz,
-				new ColumnDescriptor(clazz, pdOperator.pd, propertyType));
-		propertyDescriptorFetchTypes.put(pdOperator, propertyType);
+	String createDateClause(String columnName) {
+		return String.format(
+				"EXTRACT (EPOCH FROM %s::timestamp at time zone 'utc')::float*1000 as %s",
+				columnName, columnName);
 	}
 
 	private synchronized PdOperator ensurePdOperator(PropertyDescriptor pd,
@@ -404,12 +234,25 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}, clazz, pd);
 	}
 
+	Connection getConnection() {
+		return connectionPool.getConnection();
+	}
+
 	private Class getEntityType(Class entityType) {
 		if (MvccObject.class.isAssignableFrom(entityType)) {
 			return entityType.getSuperclass();
 		} else {
 			return entityType;
 		}
+	}
+
+	@Override
+	public LazyObjectLoader getLazyObjectLoader() {
+		return backupLazyLoader;
+	}
+
+	public DomainStore getStore() {
+		return this.store;
 	}
 
 	private Class getTargetEntityType(Method rm) {
@@ -428,6 +271,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			return domainStoreColumn.targetEntity();
 		}
 		return rm.getReturnType();
+	}
+
+	@Override
+	public DomainTransformPersistenceQueue.Sequencer getTransformSequencer() {
+		return this.transformSequencer;
 	}
 
 	private void initialiseDomainSegment() throws Exception {
@@ -571,6 +419,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		segmentLoader.saveSegmentData();
 	}
 
+	Loader loader() {
+		return new Loader();
+	}
+
 	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry,
 			EntityRefs entityRefs) {
 		JoinTable joinTable = entry.getValue();
@@ -679,6 +531,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						store.metricLogger);
 			} finally {
 				releaseConn(conn);
+			}
+		}
+	}
+
+	@Override
+	public DomainTransformRequestPersistent loadTransformRequest(long id) {
+		synchronized (loadTransformRequestLock) {
+			try {
+				return loadTransformRequest0(id);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			}
 		}
 	}
@@ -935,6 +798,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
+	void releaseConn(Connection conn) {
+		if (conn == null) {
+			return;
+		}
+		connectionPool.releaseConnection(conn);
+	}
+
+	public void setConnectionUrl(String newUrl) {
+		dataSource.setConnectionUrl(newUrl);
+	}
+
 	private void setupInitialJoinTableCalls(List<Callable> calls) {
 		for (Entry<PropertyDescriptor, JoinTable> entry : joinTables
 				.entrySet()) {
@@ -983,106 +857,157 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		return new Date(timeLocal);
 	}
 
-	String createDateClause(String columnName) {
-		return String.format(
-				"EXTRACT (EPOCH FROM %s::timestamp at time zone 'utc')::float*1000 as %s",
-				columnName, columnName);
-	}
-
-	Connection getConnection() {
-		return connectionPool.getConnection();
-	}
-
-	Loader loader() {
-		return new Loader();
-	}
-
-	void releaseConn(Connection conn) {
-		if (conn == null) {
-			return;
+	@Override
+	public void warmup() throws Exception {
+		new StatCategory_DomainStore.Warmup.Loader().emit();
+		this.domainDescriptor = store.domainDescriptor;
+		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
+		descriptors = new LinkedHashMap<Class, List<PdOperator>>();
+		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
+		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
+		domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
+		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
+		warmupTransaction = Transaction.current();
+		warmupTransaction.setTimeout(60 * TimeConstants.ONE_MINUTE_MS);
+		transformSequencer.setInitialised(true);
+		transformSequencer.waitForWritableTransactionsToTerminate();
+		{
+			Connection conn = getConnection();
+			transformSequencer.markHighestVisibleTransformList(conn);
+			releaseConn(conn);
 		}
-		connectionPool.releaseConnection(conn);
+		DomainTransformCommitPosition highestVisibleCommitPosition = transformSequencer.highestVisiblePosition;
+		warmupTransaction.toDomainCommitting(
+				highestVisibleCommitPosition.getCommitTimestamp(), store,
+				store.applyTxToGraphCounter.getAndIncrement(), 0L);
+		store.getPersistenceEvents().getQueue().setMuteEventsOnOrBefore(
+				highestVisibleCommitPosition.getCommitTimestamp());
+		new StatCategory_DomainStore.Warmup.Loader.Mark().emit();
+		// get non-many-many obj
+		// lazy tables, load a segment (for large db dev work)
+		if (domainDescriptor.getDomainSegmentLoader() != null) {
+			MetricLogging.get().start("initialise-domain-segment");
+			initialiseDomainSegment();
+			MetricLogging.get().end("initialise-domain-segment");
+		}
+		MetricLogging.get().start("tables");
+		for (DomainClassDescriptor descriptor : domainDescriptor
+				.getWarmupClasses()) {
+			Class clazz = descriptor.clazz;
+			prepareTable(descriptor);
+			// warmup threadsafe
+			store.cache.getMap(clazz);
+		}
+		List<Callable> calls = new ArrayList<Callable>();
+		setupInitialLoadTableCalls(calls);
+		invokeAllWithThrow(calls);
+		new StatCategory_DomainStore.Warmup.Loader.Tables().emit();
+		setupInitialJoinTableCalls(calls);
+		invokeAllWithThrow(calls);
+		new StatCategory_DomainStore.Warmup.Loader.JoinTables().emit();
+		MetricLogging.get().end("tables");
+		// clear existing interns, but intern incoming changes - optimal
+		// allocation
+		interns.setRotating(true);
+		MetricLogging.get().start("xrefs");
+		for (EntityRefs ll : warmupEntityRefs) {
+			calls.add(() -> {
+				ll.resolve();
+				return null;
+			});
+		}
+		invokeAllWithThrow(calls);
+		MetricLogging.get().end("xrefs");
+		new StatCategory_DomainStore.Warmup.Loader.Xrefs().emit();
+		warmupEntityRefs.clear();
+		// lazy tables, load a segment (for large db dev work)
+		if (domainDescriptor.getDomainSegmentLoader() != null) {
+			MetricLogging.get().start("domain-segment");
+			loadDomainSegment();
+			MetricLogging.get().end("domain-segment");
+		}
+		new StatCategory_DomainStore.Warmup.Loader.Segment().emit();
+		MetricLogging.get().start("postLoad");
+		for (final DomainStoreTask task : domainDescriptor.postLoadTasks) {
+			calls.add(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					MetricLogging.get().start(task.getClass().getSimpleName());
+					task.run();
+					MetricLogging.get().end(task.getClass().getSimpleName(),
+							store.metricLogger);
+					return null;
+				}
+			});
+		}
+		/*
+		 * running synchronously (do they collide? they do...)
+		 */
+		for (Callable callable : calls) {
+			callable.call();
+		}
+		calls.clear();
+		// invokeAllWithThrow(calls);
+		MetricLogging.get().end("postLoad");
+		new StatCategory_DomainStore.Warmup.Loader.PostLoad().emit();
+		MetricLogging.get().start("lookups");
+		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
+				.values()) {
+			calls.add(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					Thread.currentThread().setName("loader-lookup-"
+							+ descriptor.clazz.getSimpleName());
+					for (DomainStoreLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
+						lookupDescriptor.setDomainStore(store);
+						lookupDescriptor.createLookup();
+						if (lookupDescriptor.isEnabled()) {
+							store.addValues(lookupDescriptor.getLookup());
+						}
+					}
+					return null;
+				}
+			});
+		}
+		invokeAllWithThrow(calls);
+		MetricLogging.get().end("lookups");
+		new StatCategory_DomainStore.Warmup.Loader.Lookups().emit();
+		MetricLogging.get().start("projections");
+		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
+				.values()) {
+			calls.add(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					Thread.currentThread().setName("loader-projections-"
+							+ descriptor.clazz.getSimpleName());
+					for (DomainProjection projection : descriptor.projections) {
+						if (projection.isEnabled()) {
+							store.addValues(projection);
+						}
+					}
+					return null;
+				}
+			});
+		}
+		invokeAllWithThrow(calls);
+		MetricLogging.get().end("projections");
+		new StatCategory_DomainStore.Warmup.Loader.Projections().emit();
+		store.initialising = false;
+		connectionPool.drain();
+		warmupExecutor.shutdown();
+		warmupExecutor = null;
+		warmupTransaction = null;
+		Transaction.current().toDomainCommitted(highestVisibleCommitPosition);
+		store.getPersistenceEvents().getQueue()
+				.setTransformLogPosition(highestVisibleCommitPosition);
+		Transaction.endAndBeginNew();
+		new StatCategory_DomainStore.Warmup.Loader.End().emit();
 	}
 
 	synchronized EntityRefs warmupEntityRefs() {
 		EntityRefs result = new EntityRefs();
 		warmupEntityRefs.add(result);
 		return result;
-	}
-
-	public static interface DomainStoreJoinHandler {
-		public String getTargetSql();
-
-		public void injectValue(String stringValue, Entity source);
-	}
-
-	private class IVersionableLoaderTask implements Callable<Void> {
-		private Class<Entity> clazz;
-
-		private Collection<EntityCollation> collations;
-
-		private Connection conn;
-
-		public IVersionableLoaderTask(Connection conn, Class<Entity> clazz,
-				List<EntityCollation> collations) {
-			this.conn = conn;
-			this.clazz = clazz;
-			this.collations = collations;
-		}
-
-		@Override
-		public Void call() {
-			try {
-				EntityRefs entityRefs = new EntityRefs();
-				String sql = Ax.format(
-						"select id,%s,%s from %s where id in %s ",
-						createDateClause("creationDate"),
-						createDateClause("lastModificationDate"),
-						clazz.getAnnotation(Table.class).name(),
-						EntityPersistenceHelper.toInClause(collations));
-				try (Statement statement = conn.createStatement()) {
-					ResultSet rs = SqlUtils.executeQuery(statement, sql);
-					Map<EntityLocator, EntityCollation> locatorCollation = collations
-							.stream().collect(AlcinaCollectors
-									.toKeyMap(EntityCollation::getLocator));
-					while (rs.next()) {
-						VersionableEntity persistentSource = (VersionableEntity) Reflections
-								.newInstance(clazz);
-						persistentSource.setId(rs.getLong("id"));
-						persistentSource.setCreationDate(
-								utcTimeToDate(rs.getLong("creationDate")));
-						persistentSource.setLastModificationDate(utcTimeToDate(
-								rs.getLong("lastModificationDate")));
-						EntityCollation collation = locatorCollation
-								.get(persistentSource.toLocator());
-						((DomainTransformEventPersistent) collation.last())
-								.populateDbMetadata(persistentSource);
-					}
-					return null;
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	private class WarmupTxCallable implements Callable {
-		private Callable delegate;
-
-		WarmupTxCallable(Object delegate) {
-			this.delegate = (Callable) delegate;
-		}
-
-		@Override
-		public Object call() throws Exception {
-			try {
-				Transaction.join(warmupTransaction);
-				return delegate.call();
-			} finally {
-				Transaction.split();
-			}
-		}
 	}
 
 	class BackupLazyLoader implements LazyObjectLoader {
@@ -1175,6 +1100,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			} else {
 				return columnName;
 			}
+		}
+
+		private Object intern(Object object) {
+			if (object == null) {
+				return null;
+			}
+			return interns.get(object);
 		}
 
 		public void loadObject(ResultSet rs, int idx,
@@ -1291,13 +1223,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			throw new RuntimeException(
 					"Unhandled rs type: " + type.getSimpleName());
 		}
-
-		private Object intern(Object object) {
-			if (object == null) {
-				return null;
-			}
-			return interns.get(object);
-		}
 	}
 
 	/*
@@ -1320,6 +1245,26 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		WarmupConnectionCreatorPg warmupCreator = new WarmupConnectionCreatorPg();
 
 		public ConnectionPool(RetargetableDataSource dataSource) {
+		}
+
+		boolean availableForCurrentThread(Member member) {
+			return member.threads.isEmpty() || member.threads.stream()
+					.allMatch(t -> t == Thread.currentThread());
+		}
+
+		synchronized void drain() {
+			members.forEach(Member::close);
+			members.clear();
+			synchronized (this) {
+				notifyAll();
+			}
+		}
+
+		synchronized Connection getConnection() {
+			Member member = getMember();
+			Preconditions.checkState(availableForCurrentThread(member));
+			member.threads.add(Thread.currentThread());
+			return member.connection;
 		}
 
 		private Member getMember() {
@@ -1369,26 +1314,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return Optional.of(member);
 			}
 			return Optional.empty();
-		}
-
-		boolean availableForCurrentThread(Member member) {
-			return member.threads.isEmpty() || member.threads.stream()
-					.allMatch(t -> t == Thread.currentThread());
-		}
-
-		synchronized void drain() {
-			members.forEach(Member::close);
-			members.clear();
-			synchronized (this) {
-				notifyAll();
-			}
-		}
-
-		synchronized Connection getConnection() {
-			Member member = getMember();
-			Preconditions.checkState(availableForCurrentThread(member));
-			member.threads.add(Thread.currentThread());
-			return member.connection;
 		}
 
 		synchronized void markInvalidConnection(Connection connection) {
@@ -1578,11 +1503,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			return ensureRs(0);
 		}
 
-		@Override
-		public Iterator<ValueContainer[]> iterator() {
-			return rsReuse.getIterator(this, itr);
-		}
-
 		private ResultSet ensureRs(int pass) {
 			rsSql = null;
 			try {
@@ -1632,6 +1552,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				Ax.out("rs sql:\n\t%s", rsSql);
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		@Override
+		public Iterator<ValueContainer[]> iterator() {
+			return rsReuse.getIterator(this, itr);
 		}
 
 		public static final class Builder {
@@ -1715,6 +1640,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				createValueContainersForRow();
 			}
 
+			protected void createValueContainersForRow() {
+				int length = joinTable ? 2 : columnDescriptors.size();
+				current = new ValueContainer[length];
+				for (int idx = 0; idx < length; idx++) {
+					current[idx] = new ValueContainer();
+				}
+			}
+
 			@Override
 			public boolean hasNext() {
 				peekNext();
@@ -1729,11 +1662,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				peekNext();
 				peeked = false;
 				return current;
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
 			}
 
 			private void peekNext() {
@@ -1777,12 +1705,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 			}
 
-			protected void createValueContainersForRow() {
-				int length = joinTable ? 2 : columnDescriptors.size();
-				current = new ValueContainer[length];
-				for (int idx = 0; idx < length; idx++) {
-					current[idx] = new ValueContainer();
-				}
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
 			}
 		}
 	}
@@ -1804,6 +1729,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		boolean handles(PdOperator pdOperator);
 
 		Object resolveCustom(PdOperator pdOperator, Ref item);
+	}
+
+	public static interface DomainStoreJoinHandler {
+		public String getTargetSql();
+
+		public void injectValue(String stringValue, Entity source);
 	}
 
 	class EntityRefs {
@@ -1848,6 +1779,140 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		void resolve(DomainSegmentLoader segmentLoader) {
 			this.segmentLoader = segmentLoader;
 			doResolve();
+		}
+
+		class Ref {
+			long id;
+
+			PdOperator pdOperator;
+
+			HasId source;
+
+			HasId target;
+
+			Ref() {
+			}
+
+			Ref(HasId target, PdOperator pd, HasId source) {
+				this.target = target;
+				this.pdOperator = pd;
+				this.source = source;
+			}
+
+			Ref(long id, PdOperator pd, HasId source) {
+				this.id = id;
+				this.pdOperator = pd;
+				this.source = source;
+			}
+		}
+
+		class RefList extends AbstractList<Ref> {
+			Ref view = new Ref();
+
+			LongArrayList ids = new LongArrayList();
+
+			List<PdOperator> pdOperators = new ArrayList<>();
+
+			List<HasId> sources = new ArrayList<>();
+
+			List<HasId> targets = new ArrayList<>();
+
+			void add(HasId target, PdOperator pd, HasId source) {
+				add(0L, pd, source, target);
+			}
+
+			@Override
+			public void add(int index, Ref element) {
+				throw new UnsupportedOperationException();
+			}
+
+			void add(long id, PdOperator pd, HasId source) {
+				add(id, pd, source, null);
+			}
+
+			private void add(long id, PdOperator pdOperator, HasId source,
+					HasId target) {
+				ids.add(id);
+				pdOperators.add(pdOperator);
+				sources.add(source);
+				targets.add(target);
+			}
+
+			@Override
+			public boolean add(Ref e) {
+				add(e.id, e.pdOperator, e.source, e.target);
+				return true;
+			}
+
+			@Override
+			public void clear() {
+				ids.clear();
+				pdOperators.clear();
+				sources.clear();
+				targets.clear();
+			}
+
+			@Override
+			public Ref get(int index) {
+				view.id = ids.getLong(index);
+				view.pdOperator = pdOperators.get(index);
+				view.source = sources.get(index);
+				view.target = targets.get(index);
+				return view;
+			}
+
+			@Override
+			public Iterator<Ref> iterator() {
+				return new Itr();
+			}
+
+			@Override
+			public int size() {
+				return ids.size();
+			}
+
+			private class Itr implements Iterator<Ref> {
+				/**
+				 * Index of element to be returned by subsequent call to next.
+				 */
+				int cursor = 0;
+
+				/**
+				 * The modCount value that the iterator believes that the
+				 * backing List should have. If this expectation is violated,
+				 * the iterator has detected concurrent modification.
+				 */
+				int expectedModCount = modCount;
+
+				final void checkForComodification() {
+					if (modCount != expectedModCount)
+						throw new ConcurrentModificationException();
+				}
+
+				@Override
+				public boolean hasNext() {
+					return cursor != size();
+				}
+
+				@Override
+				public Ref next() {
+					checkForComodification();
+					try {
+						int index = cursor;
+						get(index);
+						cursor = index + 1;
+						return view;
+					} catch (IndexOutOfBoundsException e) {
+						checkForComodification();
+						throw new NoSuchElementException();
+					}
+				}
+
+				@Override
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+			}
 		}
 
 		private final class ResolveRefsTask implements Callable<Void> {
@@ -2015,140 +2080,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return;
 			}
 		}
-
-		class Ref {
-			long id;
-
-			PdOperator pdOperator;
-
-			HasId source;
-
-			HasId target;
-
-			Ref() {
-			}
-
-			Ref(HasId target, PdOperator pd, HasId source) {
-				this.target = target;
-				this.pdOperator = pd;
-				this.source = source;
-			}
-
-			Ref(long id, PdOperator pd, HasId source) {
-				this.id = id;
-				this.pdOperator = pd;
-				this.source = source;
-			}
-		}
-
-		class RefList extends AbstractList<Ref> {
-			Ref view = new Ref();
-
-			LongArrayList ids = new LongArrayList();
-
-			List<PdOperator> pdOperators = new ArrayList<>();
-
-			List<HasId> sources = new ArrayList<>();
-
-			List<HasId> targets = new ArrayList<>();
-
-			@Override
-			public void add(int index, Ref element) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public boolean add(Ref e) {
-				add(e.id, e.pdOperator, e.source, e.target);
-				return true;
-			}
-
-			@Override
-			public void clear() {
-				ids.clear();
-				pdOperators.clear();
-				sources.clear();
-				targets.clear();
-			}
-
-			@Override
-			public Ref get(int index) {
-				view.id = ids.getLong(index);
-				view.pdOperator = pdOperators.get(index);
-				view.source = sources.get(index);
-				view.target = targets.get(index);
-				return view;
-			}
-
-			@Override
-			public Iterator<Ref> iterator() {
-				return new Itr();
-			}
-
-			@Override
-			public int size() {
-				return ids.size();
-			}
-
-			private void add(long id, PdOperator pdOperator, HasId source,
-					HasId target) {
-				ids.add(id);
-				pdOperators.add(pdOperator);
-				sources.add(source);
-				targets.add(target);
-			}
-
-			void add(HasId target, PdOperator pd, HasId source) {
-				add(0L, pd, source, target);
-			}
-
-			void add(long id, PdOperator pd, HasId source) {
-				add(id, pd, source, null);
-			}
-
-			private class Itr implements Iterator<Ref> {
-				/**
-				 * Index of element to be returned by subsequent call to next.
-				 */
-				int cursor = 0;
-
-				/**
-				 * The modCount value that the iterator believes that the
-				 * backing List should have. If this expectation is violated,
-				 * the iterator has detected concurrent modification.
-				 */
-				int expectedModCount = modCount;
-
-				@Override
-				public boolean hasNext() {
-					return cursor != size();
-				}
-
-				@Override
-				public Ref next() {
-					checkForComodification();
-					try {
-						int index = cursor;
-						get(index);
-						cursor = index + 1;
-						return view;
-					} catch (IndexOutOfBoundsException e) {
-						checkForComodification();
-						throw new NoSuchElementException();
-					}
-				}
-
-				@Override
-				public void remove() {
-					throw new UnsupportedOperationException();
-				}
-
-				final void checkForComodification() {
-					if (modCount != expectedModCount)
-						throw new ConcurrentModificationException();
-				}
-			}
-		}
 	}
 
 	class Interns {
@@ -2183,14 +2114,65 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			return this.rotating;
 		}
 
+		private synchronized void rotate() {
+			if (map.size() > 0) {
+				map = new ConcurrentHashMap<>();
+			}
+		}
+
 		public void setRotating(boolean rotating) {
 			rotate();
 			this.rotating = rotating;
 		}
+	}
 
-		private synchronized void rotate() {
-			if (map.size() > 0) {
-				map = new ConcurrentHashMap<>();
+	private class IVersionableLoaderTask implements Callable<Void> {
+		private Class<Entity> clazz;
+
+		private Collection<EntityCollation> collations;
+
+		private Connection conn;
+
+		public IVersionableLoaderTask(Connection conn, Class<Entity> clazz,
+				List<EntityCollation> collations) {
+			this.conn = conn;
+			this.clazz = clazz;
+			this.collations = collations;
+		}
+
+		@Override
+		public Void call() {
+			try {
+				EntityRefs entityRefs = new EntityRefs();
+				String sql = Ax.format(
+						"select id,%s,%s from %s where id in %s ",
+						createDateClause("creationDate"),
+						createDateClause("lastModificationDate"),
+						clazz.getAnnotation(Table.class).name(),
+						EntityPersistenceHelper.toInClause(collations));
+				try (Statement statement = conn.createStatement()) {
+					ResultSet rs = SqlUtils.executeQuery(statement, sql);
+					Map<EntityLocator, EntityCollation> locatorCollation = collations
+							.stream().collect(AlcinaCollectors
+									.toKeyMap(EntityCollation::getLocator));
+					while (rs.next()) {
+						VersionableEntity persistentSource = (VersionableEntity) Reflections
+								.newInstance(clazz);
+						persistentSource.setId(rs.getLong("id"));
+						persistentSource.setCreationDate(
+								utcTimeToDate(rs.getLong("creationDate")));
+						persistentSource.setLastModificationDate(utcTimeToDate(
+								rs.getLong("lastModificationDate")));
+						EntityCollation collation = locatorCollation
+								.get(persistentSource.toLocator());
+						((DomainTransformEventPersistent) collation.last())
+								.populateDbMetadata(persistentSource);
+					}
+					return null;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new WrappedRuntimeException(e);
 			}
 		}
 	}
@@ -2211,48 +2193,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		private boolean resolveRefs;
 
 		boolean ignoreDoubleCreationDueToFilter = false;
-
-		public Loader withClazz(Class clazz) {
-			this.clazz = clazz;
-			return this;
-		}
-
-		public Loader withConnection(Connection connection) {
-			this.connection = connection;
-			return this;
-		}
-
-		public Loader withEntityRefs(EntityRefs entityRefs) {
-			this.entityRefs = entityRefs;
-			return this;
-		}
-
-		public Loader withIgnoreDoubleCreationDueToFilter(
-				boolean ignoreDoubleCreationDueToFilter) {
-			this.ignoreDoubleCreationDueToFilter = ignoreDoubleCreationDueToFilter;
-			return this;
-		}
-
-		public Loader withPopulateLazyPropertyValues(
-				boolean populateLazyPropertyValues) {
-			this.populateLazyPropertyValues = populateLazyPropertyValues;
-			return this;
-		}
-
-		public Loader withResolveRefs(boolean resolveRefs) {
-			this.resolveRefs = resolveRefs;
-			return this;
-		}
-
-		public Loader withReturnResults(boolean returnResults) {
-			this.returnResults = returnResults;
-			return this;
-		}
-
-		public Loader withSqlFilter(String sqlFilter) {
-			this.sqlFilter = sqlFilter;
-			return this;
-		}
 
 		private List<HasId> load0() throws Exception {
 			List<HasId> loaded = new ArrayList<>();
@@ -2343,6 +2283,48 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			List<HasId> result = load0();
 			return result;
 		}
+
+		public Loader withClazz(Class clazz) {
+			this.clazz = clazz;
+			return this;
+		}
+
+		public Loader withConnection(Connection connection) {
+			this.connection = connection;
+			return this;
+		}
+
+		public Loader withEntityRefs(EntityRefs entityRefs) {
+			this.entityRefs = entityRefs;
+			return this;
+		}
+
+		public Loader withIgnoreDoubleCreationDueToFilter(
+				boolean ignoreDoubleCreationDueToFilter) {
+			this.ignoreDoubleCreationDueToFilter = ignoreDoubleCreationDueToFilter;
+			return this;
+		}
+
+		public Loader withPopulateLazyPropertyValues(
+				boolean populateLazyPropertyValues) {
+			this.populateLazyPropertyValues = populateLazyPropertyValues;
+			return this;
+		}
+
+		public Loader withResolveRefs(boolean resolveRefs) {
+			this.resolveRefs = resolveRefs;
+			return this;
+		}
+
+		public Loader withReturnResults(boolean returnResults) {
+			this.returnResults = returnResults;
+			return this;
+		}
+
+		public Loader withSqlFilter(String sqlFilter) {
+			this.sqlFilter = sqlFilter;
+			return this;
+		}
 	}
 
 	class PdOperator {
@@ -2407,6 +2389,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 		}
 
+		void set(HasId hasId, Object object) throws Exception {
+			if (store.initialising) {
+				field.set(hasId, object);
+			} else {
+				writeMethod.invoke(hasId, new Object[] { object });
+			}
+		}
+
 		public void setValue(HasId hasId, ValueContainer value, Class<?> type)
 				throws Exception {
 			if (store.initialising) {
@@ -2440,14 +2430,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		public String toString() {
 			return Ax.format("%s.%s [%s]", clazz.getSimpleName(), name,
 					readMethod.getReturnType().getSimpleName());
-		}
-
-		void set(HasId hasId, Object object) throws Exception {
-			if (store.initialising) {
-				field.set(hasId, object);
-			} else {
-				writeMethod.invoke(hasId, new Object[] { object });
-			}
 		}
 
 		class ResolveHelper {
@@ -2538,6 +2520,24 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return "long: " + l;
 			} else {
 				return "(object)";
+			}
+		}
+	}
+
+	private class WarmupTxCallable implements Callable {
+		private Callable delegate;
+
+		WarmupTxCallable(Object delegate) {
+			this.delegate = (Callable) delegate;
+		}
+
+		@Override
+		public Object call() throws Exception {
+			try {
+				Transaction.join(warmupTransaction);
+				return delegate.call();
+			} finally {
+				Transaction.split();
 			}
 		}
 	}

@@ -64,8 +64,22 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 		this.to = to;
 	}
 
+	private SyncContainer createDummyContainer0() {
+		TreeSync<T>.SyncPosition position = new SyncPosition(null, null);
+		position.left.position = position;
+		return position.left;
+	}
+
 	public Predicate<Node> getExitTest() {
 		return this.exitTest;
+	}
+
+	private void init() {
+		SyncPosition firstPosition = new SyncPosition(from, to);
+		syncProcess = new TreeProcess(this);
+		Node rootNode = syncProcess.getSelectedNode();
+		Node firstPosNode = rootNode.add(firstPosition);
+		firstPosNode.select(null);
 	}
 
 	public boolean isModificationOccurred() {
@@ -79,30 +93,6 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 		} finally {
 			LooseContext.pop();
 		}
-	}
-
-	public void setExitTest(Predicate<Node> exitTest) {
-		this.exitTest = exitTest;
-	}
-
-	public TreeSync<T> withTreeFilter(
-			Predicate<Class<? extends TreeSyncable>> treeFilter) {
-		this.treeFilter = treeFilter;
-		return this;
-	}
-
-	private SyncContainer createDummyContainer0() {
-		TreeSync<T>.SyncPosition position = new SyncPosition(null, null);
-		position.left.position = position;
-		return position.left;
-	}
-
-	private void init() {
-		SyncPosition firstPosition = new SyncPosition(from, to);
-		syncProcess = new TreeProcess(this);
-		Node rootNode = syncProcess.getSelectedNode();
-		Node firstPosNode = rootNode.add(firstPosition);
-		firstPosNode.select(null);
 	}
 
 	private void process0() {
@@ -124,6 +114,16 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			pos.process(cursor);
 			cursor = cursor.next();
 		}
+	}
+
+	public void setExitTest(Predicate<Node> exitTest) {
+		this.exitTest = exitTest;
+	}
+
+	public TreeSync<T> withTreeFilter(
+			Predicate<Class<? extends TreeSyncable>> treeFilter) {
+		this.treeFilter = treeFilter;
+		return this;
 	}
 
 	public static class Builder<T extends TreeSyncable> {
@@ -251,6 +251,21 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			this.left = left;
 		}
 
+		private void addWithFilter(List<SyncContainer> list,
+				SyncContainer child) {
+			if (child.isTreeSyncable()) {
+				if (!treeFilter
+						.test((Class<? extends TreeSyncable>) child.syncable
+								.getClass())) {
+					treeFilter
+							.test((Class<? extends TreeSyncable>) child.syncable
+									.getClass());
+					return;
+				}
+			}
+			list.add(child);
+		}
+
 		public <A extends TreeSyncable> A ancestorSyncable() {
 			SyncContainer cursor = parent;
 			while (true) {
@@ -286,56 +301,6 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
-		}
-
-		@Override
-		public String equivalenceString() {
-			if (syncable == null) {
-				return null;
-			}
-			if (syncable instanceof Collection) {
-				return field.getName();
-			}
-			return ((TreeSyncable) syncable).equivalenceString();
-		}
-
-		public void prepare(Preparer preparer) {
-			if (syncable == null) {
-				return;
-			}
-			TreeSyncable updated = preparer.prepare(this, treeSyncable(), left);
-			if (updated != syncable) {
-				// replace. but this depends on how we model parent paths
-				throw new UnsupportedOperationException();
-			}
-		}
-
-		@Override
-		public String toString() {
-			FormatBuilder fb = new FormatBuilder().separator(" : ");
-			fb.appendIfNotBlank(field);
-			fb.append(syncable);
-			return fb.toString();
-		}
-
-		public SyncContainer withParent(SyncContainer parent) {
-			this.parent = parent;
-			return this;
-		}
-
-		private void addWithFilter(List<SyncContainer> list,
-				SyncContainer child) {
-			if (child.isTreeSyncable()) {
-				if (!treeFilter
-						.test((Class<? extends TreeSyncable>) child.syncable
-								.getClass())) {
-					treeFilter
-							.test((Class<? extends TreeSyncable>) child.syncable
-									.getClass());
-					return;
-				}
-			}
-			list.add(child);
 		}
 
 		private List<SyncContainer> computeChildren0() throws Exception {
@@ -374,12 +339,47 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			return result;
 		}
 
+		@Override
+		public String equivalenceString() {
+			if (syncable == null) {
+				return null;
+			}
+			if (syncable instanceof Collection) {
+				return field.getName();
+			}
+			return ((TreeSyncable) syncable).equivalenceString();
+		}
+
 		boolean isTreeSyncable() {
 			return syncable instanceof TreeSyncable;
 		}
 
+		public void prepare(Preparer preparer) {
+			if (syncable == null) {
+				return;
+			}
+			TreeSyncable updated = preparer.prepare(this, treeSyncable(), left);
+			if (updated != syncable) {
+				// replace. but this depends on how we model parent paths
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder fb = new FormatBuilder().separator(" : ");
+			fb.appendIfNotBlank(field);
+			fb.append(syncable);
+			return fb.toString();
+		}
+
 		TreeSyncable treeSyncable() {
 			return (TreeSyncable) syncable;
+		}
+
+		public SyncContainer withParent(SyncContainer parent) {
+			this.parent = parent;
+			return this;
 		}
 	}
 
@@ -503,6 +503,16 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 		}
 	}
 
+	private class SyncObserver
+			implements ProcessObserver<TreeSync.Syncer.Operation> {
+		
+		@Override
+		public void topicPublished(TreeSync.Syncer.Operation operation) {
+			modificationOccurred |= operation.action.performed
+					&& operation.action.type.performable();
+		}
+	}
+
 	// naming - SyncPair is used - and this is also a 'position in the sync
 	// tree'
 	public class SyncPosition {
@@ -529,6 +539,53 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			this.left = fromNode;
 			this.right = toNode;
 			this.orderingAction = orderingAction;
+		}
+
+		private int deleteBeforeCreateOrdinal() {
+			switch (orderingAction) {
+			case CREATE:
+				return 1;
+			case DELETE:
+				return -1;
+			default:
+				return 0;
+			}
+		}
+
+		int depth() {
+			return node.depth();
+		}
+
+		private Class getClazz() {
+			if (left.syncable == null) {
+				return right.syncable.getClass();
+			}
+			if (right.syncable == null) {
+				return left.syncable.getClass();
+			}
+			Preconditions.checkState(
+					left.syncable.getClass() == right.syncable.getClass());
+			return left.syncable.getClass();
+		}
+
+		boolean isTreeSyncable() {
+			return left.isTreeSyncable() || right.isTreeSyncable();
+		}
+
+		String pathSegment() {
+			if (left.field != null) {
+				return left.field.getName();
+			}
+			if (right.field != null) {
+				return right.field.getName();
+			}
+			if (left.syncable != null) {
+				return left.syncable.getClass().getSimpleName();
+			}
+			if (right.syncable != null) {
+				return right.syncable.getClass().getSimpleName();
+			}
+			throw new IllegalStateException();
 		}
 
 		// a la dirndl -- obj.field.[collection-index].obj...
@@ -598,58 +655,6 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			}
 		}
 
-		@Override
-		public String toString() {
-			return Ax.format("[%s :: %s]", left, right);
-		}
-
-		private int deleteBeforeCreateOrdinal() {
-			switch (orderingAction) {
-			case CREATE:
-				return 1;
-			case DELETE:
-				return -1;
-			default:
-				return 0;
-			}
-		}
-
-		private Class getClazz() {
-			if (left.syncable == null) {
-				return right.syncable.getClass();
-			}
-			if (right.syncable == null) {
-				return left.syncable.getClass();
-			}
-			Preconditions.checkState(
-					left.syncable.getClass() == right.syncable.getClass());
-			return left.syncable.getClass();
-		}
-
-		int depth() {
-			return node.depth();
-		}
-
-		boolean isTreeSyncable() {
-			return left.isTreeSyncable() || right.isTreeSyncable();
-		}
-
-		String pathSegment() {
-			if (left.field != null) {
-				return left.field.getName();
-			}
-			if (right.field != null) {
-				return right.field.getName();
-			}
-			if (left.syncable != null) {
-				return left.syncable.getClass().getSimpleName();
-			}
-			if (right.syncable != null) {
-				return right.syncable.getClass().getSimpleName();
-			}
-			throw new IllegalStateException();
-		}
-
 		void sync(Syncer syncer) {
 			action = syncer.sync(this);
 			if (action.performed) {
@@ -657,6 +662,11 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 					logger.info(action.message);
 				}
 			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("[%s :: %s]", left, right);
 		}
 
 		public class Processed implements ProcessObservable {
@@ -697,16 +707,6 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			public String toString() {
 				return toOutputString(false);
 			}
-		}
-	}
-
-	private class SyncObserver
-			implements ProcessObserver<TreeSync.Syncer.Operation> {
-		
-		@Override
-		public void topicPublished(TreeSync.Syncer.Operation operation) {
-			modificationOccurred |= operation.action.performed
-					&& operation.action.type.performable();
 		}
 	}
 }

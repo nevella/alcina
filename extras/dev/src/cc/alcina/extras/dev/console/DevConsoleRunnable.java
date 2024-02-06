@@ -31,6 +31,10 @@ public abstract class DevConsoleRunnable extends PerformerTask {
 		return false;
 	}
 
+	protected void logJobResultFiles() {
+		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");
+	}
+
 	public boolean requiresDomainStore() {
 		return true;
 	}
@@ -64,10 +68,6 @@ public abstract class DevConsoleRunnable extends PerformerTask {
 	}
 
 	public abstract String[] tagStrings();
-
-	protected void logJobResultFiles() {
-		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");
-	}
 
 	protected String writeTempFile(Class clazz, String extension,
 			String content) throws IOException {

@@ -100,6 +100,17 @@ public class PathPrefixSet {
 		return didAdd;
 	}
 
+	private void assertValidAbstractDirectoryPathName(String name) {
+		assert (name != null);
+		assert (!name.startsWith("/"));
+	}
+
+	private void assertValidAbstractResourcePathName(String name) {
+		assert (name != null);
+		assert (!"".equals(name));
+		assert (!name.startsWith("/") && !name.endsWith("/"));
+	}
+
 	public int getSize() {
 		return prefixes.size();
 	}
@@ -252,17 +263,6 @@ public class PathPrefixSet {
 
 	public Collection<PathPrefix> values() {
 		return Collections.unmodifiableCollection(prefixes);
-	}
-
-	private void assertValidAbstractDirectoryPathName(String name) {
-		assert (name != null);
-		assert (!name.startsWith("/"));
-	}
-
-	private void assertValidAbstractResourcePathName(String name) {
-		assert (name != null);
-		assert (!"".equals(name));
-		assert (!name.startsWith("/") && !name.endsWith("/"));
 	}
 
 	private class TrieNode {

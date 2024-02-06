@@ -219,191 +219,6 @@ public class CustomScrollPanel extends ScrollPanel {
 	}
 
 	/**
-	 * Get the scrollbar used for horizontal scrolling.
-	 * 
-	 * @return the horizontal scrollbar, or null if none specified
-	 */
-	public HorizontalScrollbar getHorizontalScrollbar() {
-		return hScrollbar;
-	}
-
-	/**
-	 * Get the scrollbar used for vertical scrolling.
-	 * 
-	 * @return the vertical scrollbar, or null if none specified
-	 */
-	public VerticalScrollbar getVerticalScrollbar() {
-		return vScrollbar;
-	}
-
-	@Override
-	public void onBrowserEvent(Event event) {
-		// Align the scrollbars with the content.
-		if (Event.ONSCROLL == event.getTypeInt()) {
-			double curTime = Duration.currentTimeMillis();
-			if (curTime > ignoreContentUntil) {
-				ignoreScrollbarsUntil = curTime + IGNORE_SCROLL_TIMEOUT;
-				maybeUpdateScrollbarPositions();
-			}
-		}
-		super.onBrowserEvent(event);
-	}
-
-	@Override
-	public void onResize() {
-		maybeUpdateScrollbars();
-		super.onResize();
-	}
-
-	@Override
-	public boolean remove(Widget w) {
-		// Validate.
-		if (w.getParent() != this) {
-			return false;
-		}
-		if (w == getWidget()) {
-			// Remove the content widget.
-			boolean toRet = super.remove(w);
-			maybeUpdateScrollbars();
-			return toRet;
-		}
-		// Remove a scrollbar.
-		try {
-			// Orphan.
-			orphan(w);
-		} finally {
-			// Physical detach.
-			w.getElement().removeFromParent();
-			// Logical detach.
-			Widget hScrollbarWidget = (hScrollbar == null) ? null
-					: hScrollbar.asWidget();
-			Widget vScrollbarWidget = (vScrollbar == null) ? null
-					: vScrollbar.asWidget();
-			if (w == hScrollbarWidget) {
-				hScrollbar = null;
-				hScrollbarHandler.removeHandler();
-				hScrollbarHandler = null;
-				layout.removeChild(hScrollbarLayer);
-				hScrollbarLayer = null;
-			} else if (w == vScrollbarWidget) {
-				vScrollbar = null;
-				vScrollbarHandler.removeHandler();
-				vScrollbarHandler = null;
-				layout.removeChild(vScrollbarLayer);
-				vScrollbarLayer = null;
-			}
-		}
-		maybeUpdateScrollbars();
-		return true;
-	}
-
-	/**
-	 * Remove the {@link HorizontalScrollbar}, if one exists.
-	 */
-	public void removeHorizontalScrollbar() {
-		if (hScrollbar != null) {
-			remove(hScrollbar);
-		}
-	}
-
-	/**
-	 * Remove the {@link VerticalScrollbar}, if one exists.
-	 */
-	public void removeVerticalScrollbar() {
-		if (vScrollbar != null) {
-			remove(vScrollbar);
-		}
-	}
-
-	@Override
-	public void setAlwaysShowScrollBars(boolean alwaysShow) {
-		if (this.alwaysShowScrollbars != alwaysShow) {
-			this.alwaysShowScrollbars = alwaysShow;
-			maybeUpdateScrollbars();
-		}
-	}
-
-	/**
-	 * Set the scrollbar used for horizontal scrolling.
-	 * 
-	 * @param scrollbar
-	 *            the scrollbar, or null to clear it
-	 * @param height
-	 *            the height of the scrollbar in pixels
-	 */
-	public void setHorizontalScrollbar(final HorizontalScrollbar scrollbar,
-			int height) {
-		// Physical attach.
-		hScrollbarLayer = add(scrollbar, hScrollbar, hScrollbarLayer);
-		// Logical attach.
-		hScrollbar = scrollbar;
-		hScrollbarHeight = height;
-		// Initialize the new scrollbar.
-		if (scrollbar != null) {
-			hScrollbarHandler = scrollbar.addScrollHandler(new ScrollHandler() {
-				@Override
-				public void onScroll(ScrollEvent event) {
-					double curTime = Duration.currentTimeMillis();
-					if (curTime > ignoreScrollbarsUntil) {
-						ignoreContentUntil = curTime + IGNORE_SCROLL_TIMEOUT;
-						int hPos = scrollbar.getHorizontalScrollPosition();
-						if (getHorizontalScrollPosition() != hPos) {
-							setHorizontalScrollPosition(hPos);
-						}
-					}
-				}
-			});
-		}
-		maybeUpdateScrollbars();
-	}
-
-	/**
-	 * Set the scrollbar used for vertical scrolling.
-	 * 
-	 * @param scrollbar
-	 *            the scrollbar, or null to clear it
-	 * @param width
-	 *            the width of the scrollbar in pixels
-	 */
-	public void setVerticalScrollbar(final VerticalScrollbar scrollbar,
-			int width) {
-		// Physical attach.
-		vScrollbarLayer = add(scrollbar, vScrollbar, vScrollbarLayer);
-		// Logical attach.
-		vScrollbar = scrollbar;
-		vScrollbarWidth = width;
-		// Initialize the new scrollbar.
-		if (scrollbar != null) {
-			vScrollbarHandler = scrollbar.addScrollHandler(new ScrollHandler() {
-				@Override
-				public void onScroll(ScrollEvent event) {
-					double curTime = Duration.currentTimeMillis();
-					if (curTime > ignoreScrollbarsUntil) {
-						ignoreContentUntil = curTime + IGNORE_SCROLL_TIMEOUT;
-						int vPos = scrollbar.getVerticalScrollPosition();
-						int v = getVerticalScrollPosition();
-						if (getVerticalScrollPosition() != vPos) {
-							setVerticalScrollPosition(vPos);
-						}
-					}
-				}
-			});
-		}
-		maybeUpdateScrollbars();
-	}
-
-	@Override
-	public void setWidget(Widget w) {
-		// Early exit if the widget is unchanged. Avoids updating the
-		// scrollbars.
-		if (w == getWidget()) {
-			return;
-		}
-		super.setWidget(w);
-		maybeUpdateScrollbars();
-	}
-
-	/**
 	 * Add a widget to the panel in the specified layer. Note that this method
 	 * does not do the logical attach.
 	 * 
@@ -435,6 +250,36 @@ public class CustomScrollPanel extends ScrollPanel {
 			adopt(w.asWidget());
 		}
 		return toRet;
+	}
+
+	@Override
+	protected void doAttachChildren() {
+		AttachDetachException.tryCommand(AttachDetachException.attachCommand,
+				getWidget(), hScrollbar, vScrollbar);
+	}
+
+	@Override
+	protected void doDetachChildren() {
+		AttachDetachException.tryCommand(AttachDetachException.detachCommand,
+				getWidget(), hScrollbar, vScrollbar);
+	}
+
+	/**
+	 * Get the scrollbar used for horizontal scrolling.
+	 * 
+	 * @return the horizontal scrollbar, or null if none specified
+	 */
+	public HorizontalScrollbar getHorizontalScrollbar() {
+		return hScrollbar;
+	}
+
+	/**
+	 * Get the scrollbar used for vertical scrolling.
+	 * 
+	 * @return the vertical scrollbar, or null if none specified
+	 */
+	public VerticalScrollbar getVerticalScrollbar() {
+		return vScrollbar;
 	}
 
 	/**
@@ -592,22 +437,23 @@ public class CustomScrollPanel extends ScrollPanel {
 	}
 
 	@Override
-	protected void doAttachChildren() {
-		AttachDetachException.tryCommand(AttachDetachException.attachCommand,
-				getWidget(), hScrollbar, vScrollbar);
-	}
-
-	@Override
-	protected void doDetachChildren() {
-		AttachDetachException.tryCommand(AttachDetachException.detachCommand,
-				getWidget(), hScrollbar, vScrollbar);
-	}
-
-	@Override
 	protected void onAttach() {
 		super.onAttach();
 		containerResizeImpl.onAttach();
 		layout.onAttach();
+	}
+
+	@Override
+	public void onBrowserEvent(Event event) {
+		// Align the scrollbars with the content.
+		if (Event.ONSCROLL == event.getTypeInt()) {
+			double curTime = Duration.currentTimeMillis();
+			if (curTime > ignoreContentUntil) {
+				ignoreScrollbarsUntil = curTime + IGNORE_SCROLL_TIMEOUT;
+				maybeUpdateScrollbarPositions();
+			}
+		}
+		super.onBrowserEvent(event);
 	}
 
 	@Override
@@ -626,6 +472,160 @@ public class CustomScrollPanel extends ScrollPanel {
 				maybeUpdateScrollbars();
 			}
 		});
+	}
+
+	@Override
+	public void onResize() {
+		maybeUpdateScrollbars();
+		super.onResize();
+	}
+
+	@Override
+	public boolean remove(Widget w) {
+		// Validate.
+		if (w.getParent() != this) {
+			return false;
+		}
+		if (w == getWidget()) {
+			// Remove the content widget.
+			boolean toRet = super.remove(w);
+			maybeUpdateScrollbars();
+			return toRet;
+		}
+		// Remove a scrollbar.
+		try {
+			// Orphan.
+			orphan(w);
+		} finally {
+			// Physical detach.
+			w.getElement().removeFromParent();
+			// Logical detach.
+			Widget hScrollbarWidget = (hScrollbar == null) ? null
+					: hScrollbar.asWidget();
+			Widget vScrollbarWidget = (vScrollbar == null) ? null
+					: vScrollbar.asWidget();
+			if (w == hScrollbarWidget) {
+				hScrollbar = null;
+				hScrollbarHandler.removeHandler();
+				hScrollbarHandler = null;
+				layout.removeChild(hScrollbarLayer);
+				hScrollbarLayer = null;
+			} else if (w == vScrollbarWidget) {
+				vScrollbar = null;
+				vScrollbarHandler.removeHandler();
+				vScrollbarHandler = null;
+				layout.removeChild(vScrollbarLayer);
+				vScrollbarLayer = null;
+			}
+		}
+		maybeUpdateScrollbars();
+		return true;
+	}
+
+	/**
+	 * Remove the {@link HorizontalScrollbar}, if one exists.
+	 */
+	public void removeHorizontalScrollbar() {
+		if (hScrollbar != null) {
+			remove(hScrollbar);
+		}
+	}
+
+	/**
+	 * Remove the {@link VerticalScrollbar}, if one exists.
+	 */
+	public void removeVerticalScrollbar() {
+		if (vScrollbar != null) {
+			remove(vScrollbar);
+		}
+	}
+
+	@Override
+	public void setAlwaysShowScrollBars(boolean alwaysShow) {
+		if (this.alwaysShowScrollbars != alwaysShow) {
+			this.alwaysShowScrollbars = alwaysShow;
+			maybeUpdateScrollbars();
+		}
+	}
+
+	/**
+	 * Set the scrollbar used for horizontal scrolling.
+	 * 
+	 * @param scrollbar
+	 *            the scrollbar, or null to clear it
+	 * @param height
+	 *            the height of the scrollbar in pixels
+	 */
+	public void setHorizontalScrollbar(final HorizontalScrollbar scrollbar,
+			int height) {
+		// Physical attach.
+		hScrollbarLayer = add(scrollbar, hScrollbar, hScrollbarLayer);
+		// Logical attach.
+		hScrollbar = scrollbar;
+		hScrollbarHeight = height;
+		// Initialize the new scrollbar.
+		if (scrollbar != null) {
+			hScrollbarHandler = scrollbar.addScrollHandler(new ScrollHandler() {
+				@Override
+				public void onScroll(ScrollEvent event) {
+					double curTime = Duration.currentTimeMillis();
+					if (curTime > ignoreScrollbarsUntil) {
+						ignoreContentUntil = curTime + IGNORE_SCROLL_TIMEOUT;
+						int hPos = scrollbar.getHorizontalScrollPosition();
+						if (getHorizontalScrollPosition() != hPos) {
+							setHorizontalScrollPosition(hPos);
+						}
+					}
+				}
+			});
+		}
+		maybeUpdateScrollbars();
+	}
+
+	/**
+	 * Set the scrollbar used for vertical scrolling.
+	 * 
+	 * @param scrollbar
+	 *            the scrollbar, or null to clear it
+	 * @param width
+	 *            the width of the scrollbar in pixels
+	 */
+	public void setVerticalScrollbar(final VerticalScrollbar scrollbar,
+			int width) {
+		// Physical attach.
+		vScrollbarLayer = add(scrollbar, vScrollbar, vScrollbarLayer);
+		// Logical attach.
+		vScrollbar = scrollbar;
+		vScrollbarWidth = width;
+		// Initialize the new scrollbar.
+		if (scrollbar != null) {
+			vScrollbarHandler = scrollbar.addScrollHandler(new ScrollHandler() {
+				@Override
+				public void onScroll(ScrollEvent event) {
+					double curTime = Duration.currentTimeMillis();
+					if (curTime > ignoreScrollbarsUntil) {
+						ignoreContentUntil = curTime + IGNORE_SCROLL_TIMEOUT;
+						int vPos = scrollbar.getVerticalScrollPosition();
+						int v = getVerticalScrollPosition();
+						if (getVerticalScrollPosition() != vPos) {
+							setVerticalScrollPosition(vPos);
+						}
+					}
+				}
+			});
+		}
+		maybeUpdateScrollbars();
+	}
+
+	@Override
+	public void setWidget(Widget w) {
+		// Early exit if the widget is unchanged. Avoids updating the
+		// scrollbars.
+		if (w == getWidget()) {
+			return;
+		}
+		super.setWidget(w);
+		maybeUpdateScrollbars();
 	}
 
 	/**

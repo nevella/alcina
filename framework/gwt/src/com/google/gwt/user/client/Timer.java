@@ -48,15 +48,6 @@ public abstract class Timer {
 
 	private static boolean closingWindow = false;
 
-	public static void scheduleDelayed(Runnable runnable, long delay) {
-		new Timer() {
-			@Override
-			public void run() {
-				runnable.run();
-			}
-		}.schedule((int) delay);
-	}
-
 	private static native void clearInterval(int id) /*-{
     $wnd.clearInterval(id);
 	}-*/;
@@ -94,6 +85,15 @@ public abstract class Timer {
 		});
 	}
 
+	public static void scheduleDelayed(Runnable runnable, long delay) {
+		new Timer() {
+			@Override
+			public void run() {
+				runnable.run();
+			}
+		}.schedule((int) delay);
+	}
+
 	private boolean isRepeating;
 
 	private int timerId;
@@ -114,6 +114,19 @@ public abstract class Timer {
 				throw e;
 			}
 		}
+	}
+
+	/*
+	 * Called by native code when this timer fires.
+	 */
+	final void fire() {
+		// If this is a one-shot timer, remove it from the timer list. This will
+		// allow it to be garbage collected.
+		if (!isRepeating) {
+			timers.remove(this);
+		}
+		// Run the timer's code.
+		run();
 	}
 
 	/**
@@ -153,18 +166,5 @@ public abstract class Timer {
 		isRepeating = true;
 		timerId = createInterval(this, periodMillis);
 		timers.add(this);
-	}
-
-	/*
-	 * Called by native code when this timer fires.
-	 */
-	final void fire() {
-		// If this is a one-shot timer, remove it from the timer list. This will
-		// allow it to be garbage collected.
-		if (!isRepeating) {
-			timers.remove(this);
-		}
-		// Run the timer's code.
-		run();
 	}
 }

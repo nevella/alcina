@@ -14,10 +14,6 @@ public class RegistryKey implements Comparable<RegistryKey> {
 	public RegistryKey() {
 	}
 
-	public int compareTo(RegistryKey o) {
-		return name().compareTo(o.name());
-	}
-
 	public RegistryKey(Class clazz) {
 		this.clazz = clazz;
 		this.name = clazz.getName();
@@ -25,6 +21,17 @@ public class RegistryKey implements Comparable<RegistryKey> {
 
 	public RegistryKey(String name) {
 		this.name = name;
+	}
+
+	Class clazz() {
+		if (clazz == null) {
+			clazz = Reflections.forName(name);
+		}
+		return clazz;
+	}
+
+	public int compareTo(RegistryKey o) {
+		return name().compareTo(o.name());
 	}
 
 	@Override
@@ -55,12 +62,5 @@ public class RegistryKey implements Comparable<RegistryKey> {
 	@Override
 	public String toString() {
 		return name + " (rk)";
-	}
-
-	Class clazz() {
-		if (clazz == null) {
-			clazz = Reflections.forName(name);
-		}
-		return clazz;
 	}
 }

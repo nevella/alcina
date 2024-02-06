@@ -27,19 +27,8 @@ import cc.alcina.framework.common.client.util.Callback;
 public class TreeNodeWalker {
 	private boolean cancelled;
 
-	public void walk(Tree tree, Callback callback) {
-		Stack<TreeItem> items = new Stack<TreeItem>();
-		int itemCount = tree.getItemCount();
-		for (int i = 0; i < itemCount; i++) {
-			items.push(tree.getItem(i));
-		}
-		walk(items, callback);
-	}
-
-	public void walk(TreeItem item, Callback callback) {
-		Stack<TreeItem> items = new Stack<TreeItem>();
-		items.push(item);
-		walk(items, callback);
+	protected void cancel() {
+		this.cancelled = true;
 	}
 
 	private void walk(Stack<TreeItem> items, Callback callback) {
@@ -58,8 +47,19 @@ public class TreeNodeWalker {
 		}
 	}
 
-	protected void cancel() {
-		this.cancelled = true;
+	public void walk(Tree tree, Callback callback) {
+		Stack<TreeItem> items = new Stack<TreeItem>();
+		int itemCount = tree.getItemCount();
+		for (int i = 0; i < itemCount; i++) {
+			items.push(tree.getItem(i));
+		}
+		walk(items, callback);
+	}
+
+	public void walk(TreeItem item, Callback callback) {
+		Stack<TreeItem> items = new Stack<TreeItem>();
+		items.push(item);
+		walk(items, callback);
 	}
 
 	public abstract static class TreeNodeWalkerCallback

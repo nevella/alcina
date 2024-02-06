@@ -200,9 +200,47 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 			Ax.out(notShallow);
 		}
 
+		private long getShallowObjectSize(Object o) {
+			if (o == null) {
+				return 0;
+			}
+			return objectSizeCalculator.getSize(o);
+		}
+
 		@Override
 		public boolean isMemoryStatProvider(Class<? extends Object> clazz) {
 			return MemoryStatProvider.class.isAssignableFrom(clazz);
+		}
+
+		private boolean shallowOnly(Class<? extends Object> clazz) {
+			return shallowResult.computeIfAbsent(clazz, this::shallowOnly0);
+		}
+
+		private boolean shallowOnly0(Class<? extends Object> clazz) {
+			if (Map.class.isAssignableFrom(clazz)
+					|| Collection.class.isAssignableFrom(clazz)
+					|| Date.class.isAssignableFrom(clazz)) {
+				return false;
+			}
+			boolean drop = false;
+			if (clazz.getName().matches(
+					"(java.(nio|security|io|beans)|javax|com.sun|sun.|javassist.|org.postgresql|org.slf4j|com.github|org.apache|"
+							+ "java.util.(GregorianCalendar|Timer)|"
+							+ "java.lang.(ref|Thread)|"
+							+ "java.util.concurrent.(locks|Thread|atomic)).*")) {
+				drop = true;
+			}
+			if (clazz == Thread.class || clazz == ThreadGroup.class
+					|| clazz == Timer.class) {
+				drop = true;
+			}
+			if (drop) {
+				shallowOnly.add(clazz.getName());
+				return true;
+			} else {
+				notShallow.add(clazz.getName());
+				return false;
+			}
 		}
 
 		@Override
@@ -272,44 +310,6 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 			}
 		}
 
-		private long getShallowObjectSize(Object o) {
-			if (o == null) {
-				return 0;
-			}
-			return objectSizeCalculator.getSize(o);
-		}
-
-		private boolean shallowOnly(Class<? extends Object> clazz) {
-			return shallowResult.computeIfAbsent(clazz, this::shallowOnly0);
-		}
-
-		private boolean shallowOnly0(Class<? extends Object> clazz) {
-			if (Map.class.isAssignableFrom(clazz)
-					|| Collection.class.isAssignableFrom(clazz)
-					|| Date.class.isAssignableFrom(clazz)) {
-				return false;
-			}
-			boolean drop = false;
-			if (clazz.getName().matches(
-					"(java.(nio|security|io|beans)|javax|com.sun|sun.|javassist.|org.postgresql|org.slf4j|com.github|org.apache|"
-							+ "java.util.(GregorianCalendar|Timer)|"
-							+ "java.lang.(ref|Thread)|"
-							+ "java.util.concurrent.(locks|Thread|atomic)).*")) {
-				drop = true;
-			}
-			if (clazz == Thread.class || clazz == ThreadGroup.class
-					|| clazz == Timer.class) {
-				drop = true;
-			}
-			if (drop) {
-				shallowOnly.add(clazz.getName());
-				return true;
-			} else {
-				notShallow.add(clazz.getName());
-				return false;
-			}
-		}
-
 		private static class ShallowObjectSizeCalculator {
 			private static long getPrimitiveFieldSize(final Class<?> type) {
 				if (type == boolean.class || type == byte.class) {
@@ -347,25 +347,6 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 				}
 			}
 
-			public long getSize(Object o) {
-				Class<? extends Object> clazz = o.getClass();
-				if (clazz.isArray()) {
-					final Class<?> arrayClass = clazz;
-					final Class<?> componentType = arrayClass
-							.getComponentType();
-					final int length = Array.getLength(o);
-					if (componentType.isPrimitive()) {
-						return arraySize(length,
-								getPrimitiveFieldSize(componentType));
-					} else {
-						return arraySize(length, referenceSize);
-					}
-				} else {
-					return instanceSize.computeIfAbsent(clazz,
-							this::getClassInstanceSize);
-				}
-			}
-
 			private long arraySize(final int length, final long elementSize) {
 				return roundTo(arrayHeaderSize + length * elementSize,
 						objectPadding);
@@ -389,6 +370,25 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 				} catch (NoClassDefFoundError ncdfe) {
 					Ax.simpleExceptionOut(ncdfe);
 					return 0L;
+				}
+			}
+
+			public long getSize(Object o) {
+				Class<? extends Object> clazz = o.getClass();
+				if (clazz.isArray()) {
+					final Class<?> arrayClass = clazz;
+					final Class<?> componentType = arrayClass
+							.getComponentType();
+					final int length = Array.getLength(o);
+					if (componentType.isPrimitive()) {
+						return arraySize(length,
+								getPrimitiveFieldSize(componentType));
+					} else {
+						return arraySize(length, referenceSize);
+					}
+				} else {
+					return instanceSize.computeIfAbsent(clazz,
+							this::getClassInstanceSize);
 				}
 			}
 

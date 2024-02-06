@@ -20,6 +20,23 @@ package com.google.gwt.dom.client;
  * {@link com.google.gwt.dom.client.DOMImplStandardBase}.
  */
 class DOMImplIE9 extends DOMImplStandardBase {
+	@Override
+	protected int getAbsoluteLeft(Element elem) {
+		double left = getBoundingClientRectLeft(elem)
+				+ getDocumentScrollLeftImpl();
+		if (isRTL(elem)) { // in RTL, account for the scroll bar shift if
+							// present
+			left += getParentOffsetDelta(elem);
+		}
+		return toInt32(left);
+	}
+
+	@Override
+	protected int getAbsoluteTop(Element elem) {
+		return toInt32(
+				getBoundingClientRectTop(elem) + getDocumentScrollTopImpl());
+	}
+
 	private native double getBoundingClientRectLeft(Element multiplex) /*-{
     var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
     // getBoundingClientRect() throws a JS exception if the elem is not attached
@@ -52,42 +69,6 @@ class DOMImplIE9 extends DOMImplStandardBase {
     return $wnd.pageYOffset;
 	}-*/;
 
-	private native double getParentOffsetDelta(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    var offsetParent = elem.offsetParent;
-    if (offsetParent) {
-      return offsetParent.offsetWidth - offsetParent.clientWidth;
-    }
-    return 0;
-	}-*/;
-
-	private native double getScrollLeftImpl(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    return elem.scrollLeft || 0;
-	}-*/;
-
-	private native void setScrollLeftImpl(Element multiplex, int left) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    elem.scrollLeft = left;
-	}-*/;
-
-	@Override
-	protected int getAbsoluteLeft(Element elem) {
-		double left = getBoundingClientRectLeft(elem)
-				+ getDocumentScrollLeftImpl();
-		if (isRTL(elem)) { // in RTL, account for the scroll bar shift if
-							// present
-			left += getParentOffsetDelta(elem);
-		}
-		return toInt32(left);
-	}
-
-	@Override
-	protected int getAbsoluteTop(Element elem) {
-		return toInt32(
-				getBoundingClientRectTop(elem) + getDocumentScrollTopImpl());
-	}
-
 	/**
 	 * Coerce numeric values a string. In IE, some values can be stored as
 	 * numeric types.
@@ -96,6 +77,15 @@ class DOMImplIE9 extends DOMImplStandardBase {
 	protected native String getNumericStyleProperty(StyleRemote style,
 			String name) /*-{
     return typeof (style[name]) == "number" ? "" + style[name] : style[name];
+	}-*/;
+
+	private native double getParentOffsetDelta(Element multiplex) /*-{
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    var offsetParent = elem.offsetParent;
+    if (offsetParent) {
+      return offsetParent.offsetWidth - offsetParent.clientWidth;
+    }
+    return 0;
 	}-*/;
 
 	@Override
@@ -111,6 +101,11 @@ class DOMImplIE9 extends DOMImplStandardBase {
 		}
 		return left;
 	}
+
+	private native double getScrollLeftImpl(Element multiplex) /*-{
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    return elem.scrollLeft || 0;
+	}-*/;
 
 	@Override
 	protected int getScrollTop(DocumentJso doc) {
@@ -150,4 +145,9 @@ class DOMImplIE9 extends DOMImplStandardBase {
 		}
 		setScrollLeftImpl(elem, left);
 	}
+
+	private native void setScrollLeftImpl(Element multiplex, int left) /*-{
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    elem.scrollLeft = left;
+	}-*/;
 }

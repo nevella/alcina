@@ -16,6 +16,10 @@ import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 public class LoginAttempts {
+	protected boolean checkLockedOut() {
+		return false;
+	}
+
 	public boolean checkLockedOut(LoginModel loginModel) {
 		List<LoginAttempt> attempts = (List) Domain.listByProperty(
 				PersistentImpl.getImplementation(LoginAttempt.class),
@@ -31,10 +35,6 @@ public class LoginAttempts {
 						- a.getDate().getTime()) < maxAttemptsPeriodMins
 								* TimeConstants.ONE_MINUTE_MS)
 				.count() != maxAttempts;
-	}
-
-	protected boolean checkLockedOut() {
-		return false;
 	}
 
 	protected void handleLoginResult(LoginModel loginModel) {

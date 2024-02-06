@@ -20,20 +20,6 @@ public class IdLookup<T, E extends Entity> extends DomainLookup<T, E> {
 		super(descriptor);
 	}
 
-	public E getObject(T key) {
-		E value = null;
-		Set<E> values = get(key);
-		if (CommonUtils.isNotNullOrEmpty(values)) {
-			return values.iterator().next();
-		} else {
-			return null;
-		}
-	}
-
-	public boolean isUnique(T key) {
-		return !duplicateKeys.contains(key);
-	}
-
 	@Override
 	protected boolean add(T key, E value) {
 		if (key == null || key == Long.valueOf(0)) {
@@ -49,5 +35,19 @@ public class IdLookup<T, E extends Entity> extends DomainLookup<T, E> {
 			duplicateKeys.add(key);
 		}
 		return result;
+	}
+
+	public E getObject(T key) {
+		E value = null;
+		Set<E> values = get(key);
+		if (CommonUtils.isNotNullOrEmpty(values)) {
+			return values.iterator().next();
+		} else {
+			return null;
+		}
+	}
+
+	public boolean isUnique(T key) {
+		return !duplicateKeys.contains(key);
 	}
 }

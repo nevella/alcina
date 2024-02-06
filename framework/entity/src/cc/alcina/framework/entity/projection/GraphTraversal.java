@@ -30,19 +30,6 @@ public class GraphTraversal {
 
 	private GraphProjection projectionHelper = new GraphProjection();
 
-	public void traverse(Object from, Consumer<?> consumer) {
-		try {
-			traverse0(from, consumer);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public GraphTraversal withFilter(Predicate<Class> filter) {
-		this.filter = filter;
-		return this;
-	}
-
 	private void add(Object object) {
 		if (object == null) {
 			return;
@@ -61,6 +48,14 @@ public class GraphTraversal {
 		}
 		if (!reached.containsKey(object)) {
 			pending.push(object);
+		}
+	}
+
+	public void traverse(Object from, Consumer<?> consumer) {
+		try {
+			traverse0(from, consumer);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -92,5 +87,10 @@ public class GraphTraversal {
 				}
 			}
 		}
+	}
+
+	public GraphTraversal withFilter(Predicate<Class> filter) {
+		this.filter = filter;
+		return this;
 	}
 }

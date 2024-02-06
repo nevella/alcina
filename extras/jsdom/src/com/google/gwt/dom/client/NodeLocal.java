@@ -30,6 +30,10 @@ public abstract class NodeLocal implements LocalDomNode {
 		return newChild;
 	}
 
+	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
+
+	abstract void appendTextContent(StringBuilder builder);
+
 	@Override
 	public void callMethod(String methodName) {
 		ClientDomNodeStatic.callMethod(this, methodName);
@@ -56,6 +60,13 @@ public abstract class NodeLocal implements LocalDomNode {
 	@Override
 	public NodeList<Node> getChildNodes() {
 		return new NodeList(new NodeListLocal(getChildren()));
+	}
+
+	protected List<NodeLocal> getChildren() {
+		if (children == null) {
+			children = new ArrayList<>();
+		}
+		return children;
 	}
 
 	@Override
@@ -190,41 +201,6 @@ public abstract class NodeLocal implements LocalDomNode {
 		return provideLocalDomTree0(new StringBuilder(), 0).toString();
 	}
 
-	@Override
-	public Node removeAllChildren() {
-		// respects local/remote; OK
-		return ClientDomNodeStatic.removeAllChildren(this);
-	}
-
-	@Override
-	public Node removeChild(Node oldChild) {
-		((NodeLocal) oldChild.local()).setParentNode(null);
-		getChildren().remove(oldChild.local());
-		return oldChild;
-	}
-
-	@Override
-	public void removeFromParent() {
-		ClientDomNodeStatic.removeFromParent(this);
-	}
-
-	@Override
-	public Node replaceChild(Node newChild, Node oldChild) {
-		insertBefore(newChild, oldChild);
-		oldChild.local().removeFromParent();
-		return newChild;
-	}
-
-	@Override
-	public abstract void setNodeValue(String nodeValue);
-
-	public void walk(Consumer<NodeLocal> consumer) {
-		consumer.accept(this);
-		for (int idx = 0; idx < getChildren().size(); idx++) {
-			getChildren().get(idx).walk(consumer);
-		}
-	}
-
 	private StringBuilder provideLocalDomTree0(StringBuilder buf, int depth) {
 		for (int idx = 0; idx < depth; idx++) {
 			buf.append(' ');
@@ -257,16 +233,33 @@ public abstract class NodeLocal implements LocalDomNode {
 		return buf;
 	}
 
-	protected List<NodeLocal> getChildren() {
-		if (children == null) {
-			children = new ArrayList<>();
-		}
-		return children;
+	@Override
+	public Node removeAllChildren() {
+		// respects local/remote; OK
+		return ClientDomNodeStatic.removeAllChildren(this);
 	}
 
-	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
+	@Override
+	public Node removeChild(Node oldChild) {
+		((NodeLocal) oldChild.local()).setParentNode(null);
+		getChildren().remove(oldChild.local());
+		return oldChild;
+	}
 
-	abstract void appendTextContent(StringBuilder builder);
+	@Override
+	public void removeFromParent() {
+		ClientDomNodeStatic.removeFromParent(this);
+	}
+
+	@Override
+	public Node replaceChild(Node newChild, Node oldChild) {
+		insertBefore(newChild, oldChild);
+		oldChild.local().removeFromParent();
+		return newChild;
+	}
+
+	@Override
+	public abstract void setNodeValue(String nodeValue);
 
 	void setParentNode(NodeLocal local) {
 		if (parentNode != local && parentNode != null && local != null) {
@@ -275,5 +268,12 @@ public abstract class NodeLocal implements LocalDomNode {
 			parentNode.getChildren().remove(this);
 		}
 		parentNode = local;
+	}
+
+	public void walk(Consumer<NodeLocal> consumer) {
+		consumer.accept(this);
+		for (int idx = 0; idx < getChildren().size(); idx++) {
+			getChildren().get(idx).walk(consumer);
+		}
 	}
 }

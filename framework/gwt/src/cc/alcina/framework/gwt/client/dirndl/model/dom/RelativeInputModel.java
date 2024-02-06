@@ -70,37 +70,31 @@ public class RelativeInputModel {
 		}
 	}
 
-	public DomNode focusNode() {
-		return focusDomNode.asDomNode();
-	}
-
-	public int getFocusOffset() {
-		return this.focusOffset;
-	}
-
-	public Optional<DomNode> getFocusNodePartiallySelectedAncestor(
-			Predicate<DomNode> predicate) {
-		Optional<DomNode> ancestor = focusNode().ancestors().match(predicate);
-		if (ancestor.isEmpty()) {
-			return Optional.empty();
+	/*
+	 * Translates x.end to x.lastText.endOfTextRunOffset
+	 *
+	 * FIXME - Feature_Dirndl_ContentDecorator - also insert empty text if
+	 * needed at end
+	 */
+	Location caretLocation(Location location) {
+		if (!location.after) {
+			return location;
 		}
-		if (collapsed) {
-			return ancestor;
+		DomNode containingNode = location.containingNode;
+		DomNodeTree tree = containingNode.tree();
+		DomNode cursor = containingNode.children.lastNode();
+		tree.setCurrentNode(cursor);
+		while ((cursor = tree.currentNode()) != containingNode) {
+			if (cursor.isText() && !cursor.isEmptyTextContent()) {
+				Location result = cursor.asLocation().clone();
+				result.index += cursor.textContent().length();
+				return result;
+			}
+			tree.previousLogicalNode();
 		}
-		Location.Range ancestorRange = ancestor.get().asRange();
-		return !range.contains(ancestorRange) ? ancestor : Optional.empty();
-	}
-
-	public boolean hasAncestorFocusTag(String tag) {
-		return focusNode().ancestors().get(tag) != null;
-	}
-
-	public boolean isTriggerable() {
-		return triggerable;
-	}
-
-	public String relativeString(int startOffset, int endOffset) {
-		return focusLocation.content().relativeString(startOffset, endOffset);
+		// contains no text,so for now return self (later, create an empty text
+		// node after self)
+		return location;
 	}
 
 	public void extendSelectionToIncludeAllOf(DomNode node) {
@@ -148,6 +142,39 @@ public class RelativeInputModel {
 		}
 	}
 
+	public DomNode focusNode() {
+		return focusDomNode.asDomNode();
+	}
+
+	public Optional<DomNode> getFocusNodePartiallySelectedAncestor(
+			Predicate<DomNode> predicate) {
+		Optional<DomNode> ancestor = focusNode().ancestors().match(predicate);
+		if (ancestor.isEmpty()) {
+			return Optional.empty();
+		}
+		if (collapsed) {
+			return ancestor;
+		}
+		Location.Range ancestorRange = ancestor.get().asRange();
+		return !range.contains(ancestorRange) ? ancestor : Optional.empty();
+	}
+
+	public int getFocusOffset() {
+		return this.focusOffset;
+	}
+
+	public boolean hasAncestorFocusTag(String tag) {
+		return focusNode().ancestors().get(tag) != null;
+	}
+
+	public boolean isTriggerable() {
+		return triggerable;
+	}
+
+	public String relativeString(int startOffset, int endOffset) {
+		return focusLocation.content().relativeString(startOffset, endOffset);
+	}
+
 	public void setTriggerable(boolean triggerable) {
 		this.triggerable = triggerable;
 	}
@@ -167,32 +194,5 @@ public class RelativeInputModel {
 	@Override
 	public String toString() {
 		return FormatBuilder.keyValues("range", range);
-	}
-
-	/*
-	 * Translates x.end to x.lastText.endOfTextRunOffset
-	 *
-	 * FIXME - Feature_Dirndl_ContentDecorator - also insert empty text if
-	 * needed at end
-	 */
-	Location caretLocation(Location location) {
-		if (!location.after) {
-			return location;
-		}
-		DomNode containingNode = location.containingNode;
-		DomNodeTree tree = containingNode.tree();
-		DomNode cursor = containingNode.children.lastNode();
-		tree.setCurrentNode(cursor);
-		while ((cursor = tree.currentNode()) != containingNode) {
-			if (cursor.isText() && !cursor.isEmptyTextContent()) {
-				Location result = cursor.asLocation().clone();
-				result.index += cursor.textContent().length();
-				return result;
-			}
-			tree.previousLogicalNode();
-		}
-		// contains no text,so for now return self (later, create an empty text
-		// node after self)
-		return location;
 	}
 }

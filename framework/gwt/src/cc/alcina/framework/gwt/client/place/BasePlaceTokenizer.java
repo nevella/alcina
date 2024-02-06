@@ -39,6 +39,30 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	boolean mutable;
 
+	protected void addTokenPart(Enum part) {
+		if (part == null) {
+			return;
+		}
+		addTokenPart(part.toString().toLowerCase());
+	}
+
+	protected void addTokenPart(Long l) {
+		if (l == null) {
+			return;
+		}
+		addTokenPart(String.valueOf(l));
+	}
+
+	protected void addTokenPart(String part) {
+		if (Ax.isBlank(part)) {
+			return;
+		}
+		if (tokenBuilder.length() > 0) {
+			tokenBuilder.append("/");
+		}
+		tokenBuilder.append(part);
+	}
+
 	public P copyPlace(P place) {
 		String token = getToken(place);
 		return getPlace(token);
@@ -46,6 +70,19 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	public Place createDefaultPlace() {
 		return Reflections.newInstance(getTokenizedClass());
+	}
+
+	protected List<String> encodedValues() {
+		return Collections.emptyList();
+	}
+
+	protected <E extends Enum> E enumValue(Class<E> clazz, String value) {
+		return enumValue(clazz, value, null);
+	}
+
+	protected <E extends Enum> E enumValue(Class<E> clazz, String value,
+			E defaultValue) {
+		return CommonUtils.getEnumValueOrNull(clazz, value, true, defaultValue);
 	}
 
 	public boolean getBooleanParameter(String key) {
@@ -69,6 +106,11 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		return value == null ? null : CommonUtils.friendlyParseLong(value);
 	}
 
+	// for subclasses, to e.g. add a ? before the params string map
+	protected String getParameterPartPrefix() {
+		return "";
+	}
+
 	@Override
 	public P getPlace(String token) {
 		Preconditions.checkState(mutable);
@@ -85,6 +127,8 @@ public abstract class BasePlaceTokenizer<P extends Place>
 			}
 		}
 	}
+
+	protected abstract P getPlace0(String token);
 
 	public String getPrefix() {
 		String s = getTokenizedClass().getSimpleName().replaceFirst("(.+)Place",
@@ -110,12 +154,22 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		return tokenBuilder.toString();
 	}
 
+	protected abstract void getToken0(P place);
+
 	public Class<P> getTokenizedClass() {
 		return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
 	}
 
 	public boolean handles(String token) {
 		return true;
+	}
+
+	/**
+	 * @return true if the tokenizer instantiates place subclasses based on a
+	 *         token parameter
+	 */
+	protected boolean handlesPlaceSubclasses() {
+		return false;
 	}
 
 	public boolean hasDefaultPlace() {
@@ -126,8 +180,22 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		return true;
 	}
 
+	BasePlaceTokenizer mutableInstance() {
+		BasePlaceTokenizer instance = Reflections.newInstance(getClass());
+		instance.mutable = true;
+		return instance;
+	}
+
+	protected void parseMap(String s) {
+		params = AlcinaHistory.fromHash(s);
+	}
+
 	public void register(
 			Map<Class<? extends Entity>, BasePlaceTokenizer> tokenizersByModelClass) {
+	}
+
+	protected SearchDefinitionSerializer searchDefinitionSerializer() {
+		return Registry.impl(SearchDefinitionSerializer.class);
 	}
 
 	public void setParameter(String key, Object value) {
@@ -150,73 +218,5 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	public void setParameter(String key, Object value, boolean explicitBlanks) {
 		params.put(key, value == null ? null : value.toString());
-	}
-
-	protected void addTokenPart(Enum part) {
-		if (part == null) {
-			return;
-		}
-		addTokenPart(part.toString().toLowerCase());
-	}
-
-	protected void addTokenPart(Long l) {
-		if (l == null) {
-			return;
-		}
-		addTokenPart(String.valueOf(l));
-	}
-
-	protected void addTokenPart(String part) {
-		if (Ax.isBlank(part)) {
-			return;
-		}
-		if (tokenBuilder.length() > 0) {
-			tokenBuilder.append("/");
-		}
-		tokenBuilder.append(part);
-	}
-
-	protected List<String> encodedValues() {
-		return Collections.emptyList();
-	}
-
-	protected <E extends Enum> E enumValue(Class<E> clazz, String value) {
-		return enumValue(clazz, value, null);
-	}
-
-	protected <E extends Enum> E enumValue(Class<E> clazz, String value,
-			E defaultValue) {
-		return CommonUtils.getEnumValueOrNull(clazz, value, true, defaultValue);
-	}
-
-	// for subclasses, to e.g. add a ? before the params string map
-	protected String getParameterPartPrefix() {
-		return "";
-	}
-
-	protected abstract P getPlace0(String token);
-
-	protected abstract void getToken0(P place);
-
-	/**
-	 * @return true if the tokenizer instantiates place subclasses based on a
-	 *         token parameter
-	 */
-	protected boolean handlesPlaceSubclasses() {
-		return false;
-	}
-
-	protected void parseMap(String s) {
-		params = AlcinaHistory.fromHash(s);
-	}
-
-	protected SearchDefinitionSerializer searchDefinitionSerializer() {
-		return Registry.impl(SearchDefinitionSerializer.class);
-	}
-
-	BasePlaceTokenizer mutableInstance() {
-		BasePlaceTokenizer instance = Reflections.newInstance(getClass());
-		instance.mutable = true;
-		return instance;
 	}
 }

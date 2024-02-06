@@ -252,6 +252,20 @@ public abstract class DOMImplStandard extends DOMImpl {
 		return elem.getChildElement(index);
 	}
 
+	native ElementJso getChild0(ElementJso elem, int index) /*-{
+    var count = 0, child = elem.firstChild;
+    while (child) {
+      if (child.nodeType == 1) {
+        if (index == count)
+          return child;
+        ++count;
+      }
+      child = child.nextSibling;
+    }
+
+    return null;
+	}-*/;
+
 	@Override
 	public native int getChildCount(Element elem) /*-{
     var count = 0, child = elem.firstChild;
@@ -268,6 +282,43 @@ public abstract class DOMImplStandard extends DOMImpl {
 		throw new UnsupportedOperationException();
 		// return getChildIndex0(parent.typedRemote(), toFind.typedRemote());
 	}
+
+	native int getChildIndex0(ElementJso parent, ElementJso toFind) /*-{
+    var count = 0, child = parent.firstChild;
+    while (child) {
+      if (child === toFind) {
+        return count;
+      }
+      if (child.nodeType == 1) {
+        ++count;
+      }
+      child = child.nextSibling;
+    }
+    return -1;
+	}-*/;
+
+	@Override
+	protected native void initEventSystem() /*-{
+											// Ensure $entry for bitfull event dispatchers
+											@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent =
+											$entry(@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent(*));
+											
+											@com.google.gwt.user.client.impl.DOMImplStandard::dispatchUnhandledEvent =
+											$entry(@com.google.gwt.user.client.impl.DOMImplStandard::dispatchUnhandledEvent(*));
+											
+											var foreach = @com.google.gwt.user.client.impl.EventMap::foreach(*);
+											
+											// Ensure $entry for bitless event dispatchers
+											var bitlessEvents = @com.google.gwt.user.client.impl.DOMImplStandard::bitlessEventDispatchers;
+											foreach(bitlessEvents, function(e, fn) { bitlessEvents[e] = $entry(fn); });
+											
+											// Ensure $entry for capture event dispatchers
+											var captureEvents = @com.google.gwt.user.client.impl.DOMImplStandard::captureEventDispatchers;
+											foreach(captureEvents, function(e, fn) { captureEvents[e] = $entry(fn); });
+											
+											// Add capture event listeners
+											foreach(captureEvents, function(e, fn) { $wnd.addEventListener(e, fn, true); });
+											}-*/;
 
 	@Override
 	public native void insertChild(Element parent, Element toAdd, int index) /*-{
@@ -308,6 +359,13 @@ public abstract class DOMImplStandard extends DOMImpl {
 		}
 	}
 
+	protected native void sinkBitlessEventImpl(ElementJso elem,
+			String eventTypeName) /*-{
+    var dispatchMap = @com.google.gwt.user.client.impl.DOMImplStandard::bitlessEventDispatchers;
+    var dispatcher = dispatchMap[eventTypeName] || dispatchMap['_default_'];
+    elem.addEventListener(eventTypeName, dispatcher, false);
+	}-*/;
+
 	@Override
 	public void sinkEvents(Element elem, int bits) {
 		maybeInitializeEventSystem();
@@ -315,36 +373,6 @@ public abstract class DOMImplStandard extends DOMImpl {
 			sinkEventsImpl(elem.implAccess().jsoRemote(), bits);
 		}
 	}
-
-	@Override
-	protected native void initEventSystem() /*-{
-											// Ensure $entry for bitfull event dispatchers
-											@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent =
-											$entry(@com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent(*));
-											
-											@com.google.gwt.user.client.impl.DOMImplStandard::dispatchUnhandledEvent =
-											$entry(@com.google.gwt.user.client.impl.DOMImplStandard::dispatchUnhandledEvent(*));
-											
-											var foreach = @com.google.gwt.user.client.impl.EventMap::foreach(*);
-											
-											// Ensure $entry for bitless event dispatchers
-											var bitlessEvents = @com.google.gwt.user.client.impl.DOMImplStandard::bitlessEventDispatchers;
-											foreach(bitlessEvents, function(e, fn) { bitlessEvents[e] = $entry(fn); });
-											
-											// Ensure $entry for capture event dispatchers
-											var captureEvents = @com.google.gwt.user.client.impl.DOMImplStandard::captureEventDispatchers;
-											foreach(captureEvents, function(e, fn) { captureEvents[e] = $entry(fn); });
-											
-											// Add capture event listeners
-											foreach(captureEvents, function(e, fn) { $wnd.addEventListener(e, fn, true); });
-											}-*/;
-
-	protected native void sinkBitlessEventImpl(ElementJso elem,
-			String eventTypeName) /*-{
-    var dispatchMap = @com.google.gwt.user.client.impl.DOMImplStandard::bitlessEventDispatchers;
-    var dispatcher = dispatchMap[eventTypeName] || dispatchMap['_default_'];
-    elem.addEventListener(eventTypeName, dispatcher, false);
-	}-*/;
 
 	protected native void sinkEventsImpl(ElementJso elem, int bits) /*-{
     var chMask = (elem.__eventBits || 0) ^ bits;
@@ -433,33 +461,5 @@ public abstract class DOMImplStandard extends DOMImpl {
     if (chMask & 0x4000000)
       elem.ongestureend = (bits & 0x4000000) ? @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent
           : null;
-	}-*/;
-
-	native ElementJso getChild0(ElementJso elem, int index) /*-{
-    var count = 0, child = elem.firstChild;
-    while (child) {
-      if (child.nodeType == 1) {
-        if (index == count)
-          return child;
-        ++count;
-      }
-      child = child.nextSibling;
-    }
-
-    return null;
-	}-*/;
-
-	native int getChildIndex0(ElementJso parent, ElementJso toFind) /*-{
-    var count = 0, child = parent.firstChild;
-    while (child) {
-      if (child === toFind) {
-        return count;
-      }
-      if (child.nodeType == 1) {
-        ++count;
-      }
-      child = child.nextSibling;
-    }
-    return -1;
 	}-*/;
 }

@@ -45,6 +45,10 @@ public class ProcessStatus extends Model {
 		setMessages(new IdentityArrayList<>());
 	}
 
+	private void clearMessages() {
+		setMessages(new IdentityArrayList<>());
+	}
+
 	public void connectToTopics(Topic<Boolean> topicCallingRemote,
 			Topic<String> topicMessage) {
 		this.topicCallingRemote = topicCallingRemote;
@@ -72,10 +76,6 @@ public class ProcessStatus extends Model {
 		this.messages = messages;
 		propertyChangeSupport().firePropertyChange("messages", old_messages,
 				messages);
-	}
-
-	private void clearMessages() {
-		setMessages(new IdentityArrayList<>());
 	}
 
 	@Directed(

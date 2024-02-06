@@ -55,6 +55,25 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 		}
 	}
 
+	protected PathMapping define(PathMapping mapping) {
+		return mapper.addMapping(mapping);
+	}
+
+	protected PathMapping define(String both) {
+		return define(both, both);
+	}
+
+	protected PathMapping define(String leftPropertyName,
+			String rightPropertyName) {
+		return mapper.define(leftPropertyName, rightPropertyName);
+	}
+
+	protected PathMapping defineLeftCamel(String propertyName) {
+		return mapper.define(propertyName,
+				propertyName.substring(0, 1).toLowerCase()
+						+ propertyName.substring(1).replace("ID", "Id"));
+	}
+
 	public List<String> getLeftPropertyNames() {
 		return mapper.getMappings().stream().map(m -> m.getLeftName())
 				.collect(Collectors.toList());
@@ -75,25 +94,6 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 		result.rightSupplier = leftSupplier;
 		result.mapper = mapper.reverseMapper();
 		return result;
-	}
-
-	protected PathMapping define(PathMapping mapping) {
-		return mapper.addMapping(mapping);
-	}
-
-	protected PathMapping define(String both) {
-		return define(both, both);
-	}
-
-	protected PathMapping define(String leftPropertyName,
-			String rightPropertyName) {
-		return mapper.define(leftPropertyName, rightPropertyName);
-	}
-
-	protected PathMapping defineLeftCamel(String propertyName) {
-		return mapper.define(propertyName,
-				propertyName.substring(0, 1).toLowerCase()
-						+ propertyName.substring(1).replace("ID", "Id"));
 	}
 
 	public class BidiConverterAdapter implements BidiConverter<A, B> {

@@ -35,6 +35,18 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 
 	transient private String username;
 
+	@Override
+	protected void run1() throws Exception {
+		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
+		txLatch = new CountDownLatch(2);
+		tx1Latch1 = new CountDownLatch(1);
+		tx1Latch2 = new CountDownLatch(1);
+		tx2Latch1 = new CountDownLatch(1);
+		startTx1();
+		startTx2();
+		txLatch.await();
+	}
+
 	private void startTx1() {
 		new Thread("test-mvcc-1") {
 			@Override
@@ -96,17 +108,5 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 				}
 			}
 		}.start();
-	}
-
-	@Override
-	protected void run1() throws Exception {
-		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
-		txLatch = new CountDownLatch(2);
-		tx1Latch1 = new CountDownLatch(1);
-		tx1Latch2 = new CountDownLatch(1);
-		tx2Latch1 = new CountDownLatch(1);
-		startTx1();
-		startTx2();
-		txLatch.await();
 	}
 }

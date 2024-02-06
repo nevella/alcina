@@ -50,6 +50,12 @@ public class MostlySingleElementSet<E> extends AbstractSet<E>
 		}
 	}
 
+	private void checkMustDegenerate() {
+		if (map == null && mustDegenerate()) {
+			toDegenerateMap();
+		}
+	}
+
 	@Override
 	public boolean contains(Object o) {
 		if (map != null) {
@@ -59,6 +65,15 @@ public class MostlySingleElementSet<E> extends AbstractSet<E>
 			return false;
 		}
 		return Objects.equals(element, o);
+	}
+
+	protected Map<E, Boolean> createDegenerateMap(E soleValue,
+			boolean nonEmpty) {
+		LinkedHashMap<E, Boolean> map = new LinkedHashMap<>();
+		if (nonEmpty) {
+			map.put(soleValue, true);
+		}
+		return map;
 	}
 
 	@Override
@@ -71,6 +86,10 @@ public class MostlySingleElementSet<E> extends AbstractSet<E>
 		} else {
 			return Collections.singleton(element).iterator();
 		}
+	}
+
+	protected boolean mustDegenerate() {
+		return false;
 	}
 
 	@Override
@@ -96,25 +115,6 @@ public class MostlySingleElementSet<E> extends AbstractSet<E>
 			return map.size();
 		}
 		return size;
-	}
-
-	private void checkMustDegenerate() {
-		if (map == null && mustDegenerate()) {
-			toDegenerateMap();
-		}
-	}
-
-	protected Map<E, Boolean> createDegenerateMap(E soleValue,
-			boolean nonEmpty) {
-		LinkedHashMap<E, Boolean> map = new LinkedHashMap<>();
-		if (nonEmpty) {
-			map.put(soleValue, true);
-		}
-		return map;
-	}
-
-	protected boolean mustDegenerate() {
-		return false;
 	}
 
 	protected void toDegenerateMap() {

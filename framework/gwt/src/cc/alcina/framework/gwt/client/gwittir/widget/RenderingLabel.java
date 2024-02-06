@@ -160,6 +160,12 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 		return retValue;
 	}
 
+	private void init(String text) {
+		base = text == null ? new com.google.gwt.user.client.ui.Label()
+				: new com.google.gwt.user.client.ui.Label(text);
+		super.initWidget(base);
+	}
+
 	@Override
 	public boolean isVisible() {
 		boolean retValue;
@@ -266,11 +272,5 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	private void init(String text) {
-		base = text == null ? new com.google.gwt.user.client.ui.Label()
-				: new com.google.gwt.user.client.ui.Label(text);
-		super.initWidget(base);
 	}
 }

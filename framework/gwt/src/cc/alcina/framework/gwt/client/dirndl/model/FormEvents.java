@@ -26,10 +26,6 @@ public class FormEvents {
 			return getModel().toString();
 		}
 
-		public interface Handler extends NodeEvent.Handler {
-			void onBeanValidationChange(BeanValidationChange event);
-		}
-
 		static class Data {
 			FormValidation.State state;
 
@@ -49,6 +45,10 @@ public class FormEvents {
 				return FormatBuilder.keyValues("state", state,
 						"exceptionMessage", exceptionMessage);
 			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBeanValidationChange(BeanValidationChange event);
 		}
 	}
 

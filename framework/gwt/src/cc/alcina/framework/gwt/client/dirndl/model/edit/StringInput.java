@@ -81,44 +81,6 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		HasTag, DomEvents.Change.Handler, DomEvents.Input.Handler,
 		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
 		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler {
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface Placeholder {
-		/**
-		 * The placeholder
-		 */
-		String value();
-	}
-
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface FocusOnBind {
-	}
-
-	static class SelectionState {
-		int selectionStart;
-
-		int selectionEnd;
-
-		SelectionState() {
-		}
-
-		void apply(Element element) {
-			TextBoxImpl.setTextBoxSelectionRange(element, selectionStart,
-					selectionEnd - selectionStart);
-		}
-
-		SelectionState snapshot(Element element) {
-			selectionStart = element.getPropertyInt("selectionStart");
-			selectionEnd = element.getPropertyInt("selectionEnd");
-			return this;
-		}
-	}
-
 	private String value;
 
 	private String currentValue;
@@ -158,46 +120,6 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		setValue(value);
 	}
 
-	public boolean isDisabled() {
-		return disabled;
-	}
-
-	public void setDisabled(boolean disabled) {
-		this.disabled = disabled;
-	}
-
-	public boolean isMoveCaretToEndOnFocus() {
-		return moveCaretToEndOnFocus;
-	}
-
-	public void setMoveCaretToEndOnFocus(boolean moveCaretToEndOnFocus) {
-		this.moveCaretToEndOnFocus = moveCaretToEndOnFocus;
-	}
-
-	public boolean isCommitOnEnter() {
-		return commitOnEnter;
-	}
-
-	public void setCommitOnEnter(boolean commitOnEnter) {
-		this.commitOnEnter = commitOnEnter;
-	}
-
-	public boolean isEnsureAllLinesVisible() {
-		return ensureAllLinesVisible;
-	}
-
-	public void setEnsureAllLinesVisible(boolean ensureAllLinesVisible) {
-		this.ensureAllLinesVisible = ensureAllLinesVisible;
-	}
-
-	public String getRows() {
-		return rows;
-	}
-
-	public void setRows(String rows) {
-		this.rows = rows;
-	}
-
 	public void clear() {
 		setValue("");
 	}
@@ -205,6 +127,10 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	public void copyStateFrom(StringInput input) {
 		setValue(input.elementValue());
 		selectOnFocus = new SelectionState().snapshot(input.provideElement());
+	}
+
+	String elementValue() {
+		return provideElement().getPropertyString("value");
 	}
 
 	public void focus() {
@@ -226,6 +152,10 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		return this.placeholder;
 	}
 
+	public String getRows() {
+		return rows;
+	}
+
 	public String getSpellcheck() {
 		return this.spellcheck;
 	}
@@ -243,9 +173,25 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		return this.value;
 	}
 
+	public boolean isCommitOnEnter() {
+		return commitOnEnter;
+	}
+
+	public boolean isDisabled() {
+		return disabled;
+	}
+
+	public boolean isEnsureAllLinesVisible() {
+		return ensureAllLinesVisible;
+	}
+
 	@Override
 	public boolean isFocusOnBind() {
 		return focusOnBind;
+	}
+
+	public boolean isMoveCaretToEndOnFocus() {
+		return moveCaretToEndOnFocus;
 	}
 
 	public boolean isPreserveSelectionOverFocusChange() {
@@ -316,6 +262,22 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	}
 
 	@Override
+	public void onKeyDown(KeyDown event) {
+		Context context = event.getContext();
+		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
+		switch (domEvent.getNativeKeyCode()) {
+		case KeyCodes.KEY_ENTER:
+			if (commitOnEnter) {
+				value = getCurrentValue();
+				event.reemitAs(this, Commit.class);
+				domEvent.preventDefault();
+			}
+			// simulate a 'commit' event
+			break;
+		}
+	}
+
+	@Override
 	public String provideTag() {
 		return getTag();
 	}
@@ -324,8 +286,24 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		this.autocomplete = autocomplete;
 	}
 
+	public void setCommitOnEnter(boolean commitOnEnter) {
+		this.commitOnEnter = commitOnEnter;
+	}
+
+	public void setDisabled(boolean disabled) {
+		this.disabled = disabled;
+	}
+
+	public void setEnsureAllLinesVisible(boolean ensureAllLinesVisible) {
+		this.ensureAllLinesVisible = ensureAllLinesVisible;
+	}
+
 	public void setFocusOnBind(boolean focusOnBind) {
 		this.focusOnBind = focusOnBind;
+	}
+
+	public void setMoveCaretToEndOnFocus(boolean moveCaretToEndOnFocus) {
+		this.moveCaretToEndOnFocus = moveCaretToEndOnFocus;
 	}
 
 	public void setPlaceholder(String placeholder) {
@@ -335,6 +313,10 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	public void setPreserveSelectionOverFocusChange(
 			boolean preserveSelectionOverFocusChange) {
 		this.preserveSelectionOverFocusChange = preserveSelectionOverFocusChange;
+	}
+
+	public void setRows(String rows) {
+		this.rows = rows;
 	}
 
 	public void setSelectAllOnFocus(boolean selectAllOnBind) {
@@ -360,22 +342,6 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		String old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
-	}
-
-	@Override
-	public void onKeyDown(KeyDown event) {
-		Context context = event.getContext();
-		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
-		switch (domEvent.getNativeKeyCode()) {
-		case KeyCodes.KEY_ENTER:
-			if (commitOnEnter) {
-				value = getCurrentValue();
-				event.reemitAs(this, Commit.class);
-				domEvent.preventDefault();
-			}
-			// simulate a 'commit' event
-			break;
-		}
 	}
 
 	void updateHeight() {
@@ -413,7 +379,41 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		}
 	}
 
-	String elementValue() {
-		return provideElement().getPropertyString("value");
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface FocusOnBind {
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface Placeholder {
+		/**
+		 * The placeholder
+		 */
+		String value();
+	}
+
+	static class SelectionState {
+		int selectionStart;
+
+		int selectionEnd;
+
+		SelectionState() {
+		}
+
+		void apply(Element element) {
+			TextBoxImpl.setTextBoxSelectionRange(element, selectionStart,
+					selectionEnd - selectionStart);
+		}
+
+		SelectionState snapshot(Element element) {
+			selectionStart = element.getPropertyInt("selectionStart");
+			selectionEnd = element.getPropertyInt("selectionEnd");
+			return this;
+		}
 	}
 }

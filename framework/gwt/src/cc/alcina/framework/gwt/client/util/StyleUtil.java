@@ -6,12 +6,12 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Window;
 
 public class StyleUtil {
-	public static Query query(Element from) {
-		return new Query(from);
-	}
-
 	public static Action action(Element target) {
 		return new Action(target);
+	}
+
+	public static Query query(Element from) {
+		return new Query(from);
 	}
 
 	public static class Action {
@@ -21,11 +21,6 @@ public class StyleUtil {
 
 		public Action(Element target) {
 			this.target = target;
-		}
-
-		public Action withSmoothScroll(boolean smoothScroll) {
-			this.smoothScroll = smoothScroll;
-			return this;
 		}
 
 		public void ensureDistanceFromViewportBottom(int px) {
@@ -40,6 +35,11 @@ public class StyleUtil {
 				Window.scrollTo(Window.getScrollLeft(), to, smoothScroll);
 			}
 		}
+
+		public Action withSmoothScroll(boolean smoothScroll) {
+			this.smoothScroll = smoothScroll;
+			return this;
+		}
 	}
 
 	public static class Query {
@@ -51,16 +51,6 @@ public class StyleUtil {
 
 		public Query(Element from) {
 			this.from = from;
-		}
-
-		public Query withBlock(boolean block) {
-			this.block = block;
-			return this;
-		}
-
-		public Query withPositioningContainer(boolean positioningContainer) {
-			this.positioningContainer = positioningContainer;
-			return this;
 		}
 
 		public Element execute() {
@@ -81,6 +71,16 @@ public class StyleUtil {
 				cursor = cursor.getParentElement();
 			} while (cursor != null);
 			return null;
+		}
+
+		public Query withBlock(boolean block) {
+			this.block = block;
+			return this;
+		}
+
+		public Query withPositioningContainer(boolean positioningContainer) {
+			this.positioningContainer = positioningContainer;
+			return this;
 		}
 	}
 }

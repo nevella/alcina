@@ -37,9 +37,9 @@ public interface HasDecorators
 		// routes MouseUp events to decorators
 		DomEvents.MouseUp.Handler, KeyboardNavigation.Navigation.Handler,
 		FragmentModel.Has {
-	public List<ContentDecorator> getDecorators();
-
 	boolean canDecorate(RelativeInputModel relativeInput);
+
+	public List<ContentDecorator> getDecorators();
 
 	default boolean hasActiveDecorator() {
 		return getDecorators().stream().anyMatch(ContentDecorator::isActive);

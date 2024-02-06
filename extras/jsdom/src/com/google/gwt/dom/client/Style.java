@@ -350,6 +350,10 @@ public class Style implements ClientDomStyle {
 		local().cloneStyleFrom(style.local(), this);
 	}
 
+	void detachFromRemote() {
+		remote = StyleNull.INSTANCE;
+	}
+
 	@Override
 	public String getBackgroundColor() {
 		return local().getBackgroundColor();
@@ -605,9 +609,29 @@ public class Style implements ClientDomStyle {
 		return local().getZIndex();
 	}
 
+	boolean linkedToRemote() {
+		return remote != StyleNull.INSTANCE;
+	}
+
+	protected StyleLocal local() {
+		return local;
+	}
+
+	protected ClientDomStyle remote() {
+		element.ensureRemoteCheck();
+		if (!linkedToRemote() && element.linkedToRemote()) {
+			remote = element.jsoRemote().getStyleRemote();
+		}
+		return remote;
+	}
+
 	public void removePropertyImpl(String name) {
 		local().setProperty(name, "");
 		sync(() -> remote().setProperty(name, ""));
+	}
+
+	void resetRemote() {
+		remote = StyleNull.INSTANCE;
 	}
 
 	@Override
@@ -961,18 +985,6 @@ public class Style implements ClientDomStyle {
 		throw new UnsupportedOperationException();// do we need this?
 	}
 
-	protected StyleLocal local() {
-		return local;
-	}
-
-	protected ClientDomStyle remote() {
-		element.ensureRemoteCheck();
-		if (!linkedToRemote() && element.linkedToRemote()) {
-			remote = element.jsoRemote().getStyleRemote();
-		}
-		return remote;
-	}
-
 	protected void sync(Runnable runnable) {
 		if (remote() instanceof StyleNull) {
 			return;
@@ -983,18 +995,6 @@ public class Style implements ClientDomStyle {
 		} finally {
 			LocalDom.setSyncing(false);
 		}
-	}
-
-	void detachFromRemote() {
-		remote = StyleNull.INSTANCE;
-	}
-
-	boolean linkedToRemote() {
-		return remote != StyleNull.INSTANCE;
-	}
-
-	void resetRemote() {
-		remote = StyleNull.INSTANCE;
 	}
 
 	/**

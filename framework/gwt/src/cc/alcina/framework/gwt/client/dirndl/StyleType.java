@@ -16,11 +16,6 @@ public interface StyleType {
 		return widget;
 	}
 
-	default Widget removeFrom(Widget widget) {
-		widget.setStyleName(toName(), false);
-		return widget;
-	}
-
 	default boolean hasStyle(UIObject uiObject) {
 		String name = toName();
 		String current = uiObject.getStyleName();
@@ -29,6 +24,15 @@ public interface StyleType {
 		} else {
 			return false;
 		}
+	}
+
+	default String prefix() {
+		return "";
+	}
+
+	default Widget removeFrom(Widget widget) {
+		widget.setStyleName(toName(), false);
+		return widget;
 	}
 
 	default void set(Element element) {
@@ -45,9 +49,5 @@ public interface StyleType {
 
 	default String toName() {
 		return prefix() + toString().toLowerCase().replace("_", "-");
-	}
-
-	default String prefix() {
-		return "";
 	}
 }

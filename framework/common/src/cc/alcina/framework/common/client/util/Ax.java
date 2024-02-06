@@ -82,6 +82,10 @@ public class Ax {
 		return friendly(object);
 	}
 
+	public static boolean equals(Object... objects) {
+		return CommonUtils.equals(objects);
+	}
+
 	public static void err(Object object) {
 		System.err.println(object);
 	}
@@ -94,6 +98,12 @@ public class Ax {
 		return collection.size() == 0 ? null
 				: collection instanceof List ? ((List<T>) collection).get(0)
 						: collection.iterator().next();
+	}
+
+	public static String firstLine(String string) {
+		string = blankToEmpty(string);
+		int newlineIdx = string.indexOf("\n");
+		return newlineIdx == -1 ? string : string.substring(0, newlineIdx);
 	}
 
 	public static <T> Optional<T> firstOptional(Collection<T> collection) {
@@ -244,6 +254,10 @@ public class Ax {
 		System.err.println(CommonUtils.toSimpleExceptionMessage(t));
 	}
 
+	public static void stringBytes(String s) {
+		CommonUtils.dumpStringBytes(s);
+	}
+
 	public static void sysLogHigh(String template, Object... args) {
 		System.out.println(CommonUtils.highlightForLog(template, args));
 	}
@@ -296,19 +310,5 @@ public class Ax {
 		public void remove() {
 			listIterator.remove();
 		}
-	}
-
-	public static boolean equals(Object... objects) {
-		return CommonUtils.equals(objects);
-	}
-
-	public static void stringBytes(String s) {
-		CommonUtils.dumpStringBytes(s);
-	}
-
-	public static String firstLine(String string) {
-		string = blankToEmpty(string);
-		int newlineIdx = string.indexOf("\n");
-		return newlineIdx == -1 ? string : string.substring(0, newlineIdx);
 	}
 }

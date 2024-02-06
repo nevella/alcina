@@ -48,25 +48,6 @@ public class DispatchClassInfo {
 		clsId = classId;
 	}
 
-	public int getClassId() {
-		return clsId;
-	}
-
-	public Member getMember(int id) {
-		lazyInitTargetMembers();
-		id &= 0xffff;
-		return memberById.get(id);
-	}
-
-	public int getMemberId(String mangledMemberName) {
-		lazyInitTargetMembers();
-		Integer id = memberIdByName.get(mangledMemberName);
-		if (id == null) {
-			return -1;
-		}
-		return id.intValue();
-	}
-
 	private void addMember(
 			LinkedHashMap<String, LinkedHashMap<String, Member>> members,
 			Member member, String sig) {
@@ -150,6 +131,10 @@ public class DispatchClassInfo {
 		addMember(members, new SyntheticClassMember(targetClass), "class");
 	}
 
+	public int getClassId() {
+		return clsId;
+	}
+
 	private String getJsniSignature(Member member) {
 		String name;
 		Class<?>[] paramTypes;
@@ -178,6 +163,21 @@ public class DispatchClassInfo {
 		sb.append(")");
 		String mangledName = StringInterner.get().intern(sb.toString());
 		return mangledName;
+	}
+
+	public Member getMember(int id) {
+		lazyInitTargetMembers();
+		id &= 0xffff;
+		return memberById.get(id);
+	}
+
+	public int getMemberId(String mangledMemberName) {
+		lazyInitTargetMembers();
+		Integer id = memberIdByName.get(mangledMemberName);
+		if (id == null) {
+			return -1;
+		}
+		return id.intValue();
 	}
 
 	/*

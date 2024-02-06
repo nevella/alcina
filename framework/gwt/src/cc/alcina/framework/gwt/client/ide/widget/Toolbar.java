@@ -176,6 +176,15 @@ public class Toolbar extends Composite
 		}
 	}
 
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+		if (removeListenersOnDetach && !LooseContext
+				.getBoolean(CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH)) {
+			vetoableActionSupport.removeAllListeners();
+		}
+	}
+
 	public void processAvailableActions(
 			List<Class<? extends PermissibleAction>> avActions) {
 		if (actionButtons == null) {
@@ -190,51 +199,6 @@ public class Toolbar extends Composite
 			if (tb != null) {
 				tb.setEnabled(true);
 			}
-		}
-	}
-
-	@Override
-	public void
-			removeVetoableActionListener(PermissibleActionListener listener) {
-		this.vetoableActionSupport.removeVetoableActionListener(listener);
-	}
-
-	public void setActionGroup(ActionGroup actionGroup) {
-		setActionGroups(Collections.singletonList(actionGroup));
-	}
-
-	public void setActionGroups(List<ActionGroup> actionGroups) {
-		this.actionGroups = actionGroups;
-		redraw();
-	}
-
-	public void setActions(List<PermissibleAction> actions) {
-		this.actions = actions;
-		redraw();
-	}
-
-	public void setAsButton(boolean asButton) {
-		this.asButton = asButton;
-	}
-
-	public void setButtonStyleName(String buttonStyleName) {
-		this.buttonStyleName = buttonStyleName;
-	}
-
-	public void setHideUnpermittedActions(boolean hideUnpermittedActions) {
-		this.hideUnpermittedActions = hideUnpermittedActions;
-	}
-
-	public void setRemoveListenersOnDetach(boolean removeListenersOnDetach) {
-		this.removeListenersOnDetach = removeListenersOnDetach;
-	}
-
-	@Override
-	protected void onDetach() {
-		super.onDetach();
-		if (removeListenersOnDetach && !LooseContext
-				.getBoolean(CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH)) {
-			vetoableActionSupport.removeAllListeners();
 		}
 	}
 
@@ -290,6 +254,42 @@ public class Toolbar extends Composite
 				}
 			}
 		}
+	}
+
+	@Override
+	public void
+			removeVetoableActionListener(PermissibleActionListener listener) {
+		this.vetoableActionSupport.removeVetoableActionListener(listener);
+	}
+
+	public void setActionGroup(ActionGroup actionGroup) {
+		setActionGroups(Collections.singletonList(actionGroup));
+	}
+
+	public void setActionGroups(List<ActionGroup> actionGroups) {
+		this.actionGroups = actionGroups;
+		redraw();
+	}
+
+	public void setActions(List<PermissibleAction> actions) {
+		this.actions = actions;
+		redraw();
+	}
+
+	public void setAsButton(boolean asButton) {
+		this.asButton = asButton;
+	}
+
+	public void setButtonStyleName(String buttonStyleName) {
+		this.buttonStyleName = buttonStyleName;
+	}
+
+	public void setHideUnpermittedActions(boolean hideUnpermittedActions) {
+		this.hideUnpermittedActions = hideUnpermittedActions;
+	}
+
+	public void setRemoveListenersOnDetach(boolean removeListenersOnDetach) {
+		this.removeListenersOnDetach = removeListenersOnDetach;
 	}
 
 	public static interface HasDropdownPresenter {
@@ -452,11 +452,6 @@ public class Toolbar extends Composite
 			}
 		}
 
-		public ToolbarButton withCssClassName(String className) {
-			aWidget.setStyleName(className);
-			return this;
-		}
-
 		protected void showDropDown() {
 			Widget dropDown = null;
 			if (action instanceof HasDropdownPresenter) {
@@ -483,6 +478,11 @@ public class Toolbar extends Composite
 				rpp.addStyleName("child-actions");
 			}
 			rpp.addStyleName("toolbar-button-dropdown");
+		}
+
+		public ToolbarButton withCssClassName(String className) {
+			aWidget.setStyleName(className);
+			return this;
 		}
 	}
 }

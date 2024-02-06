@@ -119,152 +119,6 @@ public class XML {
 	}
 
 	/**
-	 * Convert a well-formed (but not necessarily valid) XML string into a
-	 * JSONObject. Some information may be lost in this transformation because
-	 * JSON is a data format and XML is a document format. XML uses elements,
-	 * attributes, and content text, while JSON uses unordered collections of
-	 * name/value pairs and arrays of values. JSON does not does not like to
-	 * distinguish between elements and attributes. Sequences of similar
-	 * elements are represented as JSONArrays. Content text may be placed in a
-	 * "content" member. Comments, prologs, DTDs, and <code>&lt;[ [ ]]></code>
-	 * are ignored.
-	 * 
-	 * @param string
-	 *            The source string.
-	 * @return A JSONObject containing the structured data from the XML string.
-	 * @throws JSONException
-	 */
-	public static JSONObject toJSONObject(String string) throws JSONException {
-		JSONObject o = new JSONObject();
-		XMLTokener x = new XMLTokener(string);
-		while (x.more() && x.skipPast("<")) {
-			parse(x, o, null);
-		}
-		return o;
-	}
-
-	/**
-	 * Convert a JSONObject into a well-formed, element-normal XML string.
-	 * 
-	 * @param o
-	 *            A JSONObject.
-	 * @return A string.
-	 * @throws JSONException
-	 */
-	public static String toString(Object o) throws JSONException {
-		return toString(o, null);
-	}
-
-	/**
-	 * Convert a JSONObject into a well-formed, element-normal XML string.
-	 * 
-	 * @param o
-	 *            A JSONObject.
-	 * @param tagName
-	 *            The optional name of the enclosing tag.
-	 * @return A string.
-	 * @throws JSONException
-	 */
-	public static String toString(Object o, String tagName)
-			throws JSONException {
-		StringBuffer b = new StringBuffer();
-		int i;
-		JSONArray ja;
-		JSONObject jo;
-		String k;
-		Iterator keys;
-		int len;
-		String s;
-		Object v;
-		if (o instanceof JSONObject) {
-			// Emit <tagName>
-			if (tagName != null) {
-				b.append('<');
-				b.append(tagName);
-				b.append('>');
-			}
-			// Loop thru the keys.
-			jo = (JSONObject) o;
-			keys = jo.keys();
-			while (keys.hasNext()) {
-				k = keys.next().toString();
-				v = jo.opt(k);
-				if (v == null) {
-					v = "";
-				}
-				if (v instanceof String) {
-					s = (String) v;
-				} else {
-					s = null;
-				}
-				// Emit content in body
-				if (k.equals("content")) {
-					if (v instanceof JSONArray) {
-						ja = (JSONArray) v;
-						len = ja.length();
-						for (i = 0; i < len; i += 1) {
-							if (i > 0) {
-								b.append('\n');
-							}
-							b.append(escape(ja.get(i).toString()));
-						}
-					} else {
-						b.append(escape(v.toString()));
-					}
-					// Emit an array of similar keys
-				} else if (v instanceof JSONArray) {
-					ja = (JSONArray) v;
-					len = ja.length();
-					for (i = 0; i < len; i += 1) {
-						v = ja.get(i);
-						if (v instanceof JSONArray) {
-							b.append('<');
-							b.append(k);
-							b.append('>');
-							b.append(toString(v));
-							b.append("</");
-							b.append(k);
-							b.append('>');
-						} else {
-							b.append(toString(v, k));
-						}
-					}
-				} else if (v.equals("")) {
-					b.append('<');
-					b.append(k);
-					b.append("/>");
-					// Emit a new tag <k>
-				} else {
-					b.append(toString(v, k));
-				}
-			}
-			if (tagName != null) {
-				// Emit the </tagname> close tag
-				b.append("</");
-				b.append(tagName);
-				b.append('>');
-			}
-			return b.toString();
-			// XML does not have good support for arrays. If an array appears in
-			// a place
-			// where XML is lacking, synthesize an <array> element.
-		} else if (o instanceof JSONArray) {
-			ja = (JSONArray) o;
-			len = ja.length();
-			for (i = 0; i < len; ++i) {
-				v = ja.opt(i);
-				b.append(toString(v, (tagName == null) ? "array" : tagName));
-			}
-			return b.toString();
-		} else {
-			s = (o == null) ? "null" : escape(o.toString());
-			return (tagName == null) ? "\"" + s + "\""
-					: (s.length() == 0) ? "<" + tagName + "/>"
-							: "<" + tagName + ">" + s + "</" + tagName + ">";
-		}
-	}
-
-	/**
 	 * Scan the content following the named tag, attaching it to the context.
 	 * 
 	 * @param x
@@ -411,6 +265,152 @@ public class XML {
 					throw x.syntaxError("Misshaped tag");
 				}
 			}
+		}
+	}
+
+	/**
+	 * Convert a well-formed (but not necessarily valid) XML string into a
+	 * JSONObject. Some information may be lost in this transformation because
+	 * JSON is a data format and XML is a document format. XML uses elements,
+	 * attributes, and content text, while JSON uses unordered collections of
+	 * name/value pairs and arrays of values. JSON does not does not like to
+	 * distinguish between elements and attributes. Sequences of similar
+	 * elements are represented as JSONArrays. Content text may be placed in a
+	 * "content" member. Comments, prologs, DTDs, and <code>&lt;[ [ ]]></code>
+	 * are ignored.
+	 * 
+	 * @param string
+	 *            The source string.
+	 * @return A JSONObject containing the structured data from the XML string.
+	 * @throws JSONException
+	 */
+	public static JSONObject toJSONObject(String string) throws JSONException {
+		JSONObject o = new JSONObject();
+		XMLTokener x = new XMLTokener(string);
+		while (x.more() && x.skipPast("<")) {
+			parse(x, o, null);
+		}
+		return o;
+	}
+
+	/**
+	 * Convert a JSONObject into a well-formed, element-normal XML string.
+	 * 
+	 * @param o
+	 *            A JSONObject.
+	 * @return A string.
+	 * @throws JSONException
+	 */
+	public static String toString(Object o) throws JSONException {
+		return toString(o, null);
+	}
+
+	/**
+	 * Convert a JSONObject into a well-formed, element-normal XML string.
+	 * 
+	 * @param o
+	 *            A JSONObject.
+	 * @param tagName
+	 *            The optional name of the enclosing tag.
+	 * @return A string.
+	 * @throws JSONException
+	 */
+	public static String toString(Object o, String tagName)
+			throws JSONException {
+		StringBuffer b = new StringBuffer();
+		int i;
+		JSONArray ja;
+		JSONObject jo;
+		String k;
+		Iterator keys;
+		int len;
+		String s;
+		Object v;
+		if (o instanceof JSONObject) {
+			// Emit <tagName>
+			if (tagName != null) {
+				b.append('<');
+				b.append(tagName);
+				b.append('>');
+			}
+			// Loop thru the keys.
+			jo = (JSONObject) o;
+			keys = jo.keys();
+			while (keys.hasNext()) {
+				k = keys.next().toString();
+				v = jo.opt(k);
+				if (v == null) {
+					v = "";
+				}
+				if (v instanceof String) {
+					s = (String) v;
+				} else {
+					s = null;
+				}
+				// Emit content in body
+				if (k.equals("content")) {
+					if (v instanceof JSONArray) {
+						ja = (JSONArray) v;
+						len = ja.length();
+						for (i = 0; i < len; i += 1) {
+							if (i > 0) {
+								b.append('\n');
+							}
+							b.append(escape(ja.get(i).toString()));
+						}
+					} else {
+						b.append(escape(v.toString()));
+					}
+					// Emit an array of similar keys
+				} else if (v instanceof JSONArray) {
+					ja = (JSONArray) v;
+					len = ja.length();
+					for (i = 0; i < len; i += 1) {
+						v = ja.get(i);
+						if (v instanceof JSONArray) {
+							b.append('<');
+							b.append(k);
+							b.append('>');
+							b.append(toString(v));
+							b.append("</");
+							b.append(k);
+							b.append('>');
+						} else {
+							b.append(toString(v, k));
+						}
+					}
+				} else if (v.equals("")) {
+					b.append('<');
+					b.append(k);
+					b.append("/>");
+					// Emit a new tag <k>
+				} else {
+					b.append(toString(v, k));
+				}
+			}
+			if (tagName != null) {
+				// Emit the </tagname> close tag
+				b.append("</");
+				b.append(tagName);
+				b.append('>');
+			}
+			return b.toString();
+			// XML does not have good support for arrays. If an array appears in
+			// a place
+			// where XML is lacking, synthesize an <array> element.
+		} else if (o instanceof JSONArray) {
+			ja = (JSONArray) o;
+			len = ja.length();
+			for (i = 0; i < len; ++i) {
+				v = ja.opt(i);
+				b.append(toString(v, (tagName == null) ? "array" : tagName));
+			}
+			return b.toString();
+		} else {
+			s = (o == null) ? "null" : escape(o.toString());
+			return (tagName == null) ? "\"" + s + "\""
+					: (s.length() == 0) ? "<" + tagName + "/>"
+							: "<" + tagName + ">" + s + "</" + tagName + ">";
 		}
 	}
 }

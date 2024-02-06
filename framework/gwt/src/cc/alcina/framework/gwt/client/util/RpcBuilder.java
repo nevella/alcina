@@ -25,6 +25,12 @@ public class RpcBuilder<T> {
 		callWithModal();
 	}
 
+	private void callWithModal() {
+		crd = new NonCancellableRemoteDialog(caption, null);
+		crd.show();
+		runnable.run();
+	}
+
 	public RpcBuilder<T> caption(String caption) {
 		this.caption = caption;
 		return this;
@@ -66,11 +72,5 @@ public class RpcBuilder<T> {
 				inner.accept(result);
 			}
 		};
-	}
-
-	private void callWithModal() {
-		crd = new NonCancellableRemoteDialog(caption, null);
-		crd.show();
-		runnable.run();
 	}
 }

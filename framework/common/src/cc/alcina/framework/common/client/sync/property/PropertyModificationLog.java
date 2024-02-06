@@ -21,6 +21,17 @@ public class PropertyModificationLog {
 		this.items = items;
 	}
 
+	private void ensureLookups() {
+		if (keyLookup == null) {
+			keyLookup = new UnsortedMultikeyMap<>(4);
+			for (PropertyModificationLogItem item : items) {
+				keyLookup.put(new Object[] { item.getObjectClassName(),
+						item.getObjectId(), item.getPropertyName(), item,
+						item });
+			}
+		}
+	}
+
 	public List<PropertyModificationLogItem> getItems() {
 		return this.items;
 	}
@@ -44,22 +55,11 @@ public class PropertyModificationLog {
 		return this;
 	}
 
-	public void setItems(List<PropertyModificationLogItem> items) {
-		this.items = items;
-	}
-
-	private void ensureLookups() {
-		if (keyLookup == null) {
-			keyLookup = new UnsortedMultikeyMap<>(4);
-			for (PropertyModificationLogItem item : items) {
-				keyLookup.put(new Object[] { item.getObjectClassName(),
-						item.getObjectId(), item.getPropertyName(), item,
-						item });
-			}
-		}
-	}
-
 	private void resetLookups() {
 		keyLookup = null;
+	}
+
+	public void setItems(List<PropertyModificationLogItem> items) {
+		this.items = items;
 	}
 }

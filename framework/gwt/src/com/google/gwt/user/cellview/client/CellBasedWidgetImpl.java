@@ -109,6 +109,19 @@ abstract class CellBasedWidgetImpl {
 	}
 
 	/**
+	 * Get the event bits to sink for an event type.
+	 *
+	 * @param widget
+	 *            the {@link Widget} that will handle the events
+	 * @param typeName
+	 *            the name of the event to sink
+	 * @return the event bits to sink, or -1 if no events to sink
+	 */
+	protected int sinkEvent(Widget widget, String typeName) {
+		return Event.getTypeInt(typeName);
+	}
+
+	/**
 	 * Sink events on the widget.
 	 *
 	 * @param widget
@@ -135,18 +148,5 @@ abstract class CellBasedWidgetImpl {
 		if (eventsToSink > 0) {
 			widget.sinkEvents(eventsToSink);
 		}
-	}
-
-	/**
-	 * Get the event bits to sink for an event type.
-	 *
-	 * @param widget
-	 *            the {@link Widget} that will handle the events
-	 * @param typeName
-	 *            the name of the event to sink
-	 * @return the event bits to sink, or -1 if no events to sink
-	 */
-	protected int sinkEvent(Widget widget, String typeName) {
-		return Event.getTypeInt(typeName);
 	}
 }

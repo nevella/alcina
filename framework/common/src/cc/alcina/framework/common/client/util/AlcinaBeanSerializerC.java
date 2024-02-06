@@ -48,17 +48,6 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		return (T) deserializeObject(obj);
 	}
 
-	@Override
-	public String serialize(Object bean) {
-		String string = serializeObject(bean).toString();
-		/*
-		 * make returned json identical to other (non-ws, normal) json
-		 * serializers - that and ordering needed for history token comparisons
-		 */
-		string = string.replace(", \"", ",\"");
-		return string;
-	}
-
 	private Object deserializeField(JSONValue jsonValue, Class type) {
 		if (jsonValue == null || jsonValue.isNull() != null) {
 			return null;
@@ -206,6 +195,17 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 	private String getPropertyFieldName(JSONObject jsonObj) {
 		return jsonObj.containsKey(PROPERTIES_SHORT) ? PROPERTIES_SHORT
 				: PROPERTIES;
+	}
+
+	@Override
+	public String serialize(Object bean) {
+		String string = serializeObject(bean).toString();
+		/*
+		 * make returned json identical to other (non-ws, normal) json
+		 * serializers - that and ordering needed for history token comparisons
+		 */
+		string = string.replace(", \"", ",\"");
+		return string;
 	}
 
 	/**

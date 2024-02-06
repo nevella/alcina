@@ -28,17 +28,6 @@ public abstract class GroupingParameters<GP extends GroupingParameters>
 		this.columnOrders = columnOrders;
 	}
 
-	// to satisfy GWT serialization constraint
-	// FIXME - reflective.serialization - explain why this isn't a constraint
-	// (essentially 'if an API facet is unused, don't force the creation a Noop
-	// object like this one just to make serialization happy'). Allow downstream
-	// consumers to handle this (by never using the serialized field)
-	//
-	//
-	public static class NoopGroupingParameters
-			extends GroupingParameters<NoopGroupingParameters> {
-	}
-
 	public abstract static class GroupingEnum<GP extends GroupingEnum, E extends Enum>
 			extends GroupingParameters<GP> {
 		private E grouping;
@@ -55,5 +44,16 @@ public abstract class GroupingParameters<GP extends GroupingParameters>
 			propertyChangeSupport().firePropertyChange("grouping", old_grouping,
 					grouping);
 		}
+	}
+
+	// to satisfy GWT serialization constraint
+	// FIXME - reflective.serialization - explain why this isn't a constraint
+	// (essentially 'if an API facet is unused, don't force the creation a Noop
+	// object like this one just to make serialization happy'). Allow downstream
+	// consumers to handle this (by never using the serialized field)
+	//
+	//
+	public static class NoopGroupingParameters
+			extends GroupingParameters<NoopGroupingParameters> {
 	}
 }

@@ -248,128 +248,6 @@ public class Base64 {
 	} // end decode
 
 	/**
-	 * Encodes a byte array into Base64 notation. Does not GZip-compress data.
-	 *
-	 * @param source
-	 *            The data to convert
-	 * @since 1.4
-	 */
-	public static String encodeBytes(byte[] source) {
-		return encodeBytes(source, 0, source.length, NO_OPTIONS);
-	} // end encodeBytes
-
-	/**
-	 * Encodes a byte array into Base64 notation.
-	 * <p>
-	 * Valid options:
-	 * 
-	 * <pre>
-	 *   GZIP: gzip-compresses object before encoding it.
-	 *   DONT_BREAK_LINES: don't break lines at 76 characters
-	 *     <i>Note: Technically, this makes your encoding non-compliant.</i>
-	 * </pre>
-	 * <p>
-	 * Example: <code>encodeBytes( myData, Base64.GZIP )</code> or
-	 * <p>
-	 * Example:
-	 * <code>encodeBytes( myData, Base64.GZIP | Base64.DONT_BREAK_LINES )</code>
-	 *
-	 *
-	 * @param source
-	 *            The data to convert
-	 * @param options
-	 *            Specified options
-	 * @see Base64#DONT_BREAK_LINES
-	 * @since 2.0
-	 */
-	public static String encodeBytes(byte[] source, int options) {
-		return encodeBytes(source, 0, source.length, options);
-	} // end encodeBytes
-
-	/**
-	 * Encodes a byte array into Base64 notation. Does not GZip-compress data.
-	 *
-	 * @param source
-	 *            The data to convert
-	 * @param off
-	 *            Offset in array where conversion should begin
-	 * @param len
-	 *            Length of data to convert
-	 * @since 1.4
-	 */
-	public static String encodeBytes(byte[] source, int off, int len) {
-		return encodeBytes(source, off, len, NO_OPTIONS);
-	} // end encodeBytes
-
-	/**
-	 * Encodes a byte array into Base64 notation.
-	 * <p>
-	 * Valid options:
-	 * 
-	 * <pre>
-	 *   GZIP: gzip-compresses object before encoding it.
-	 *   DONT_BREAK_LINES: don't break lines at 76 characters
-	 *     <i>Note: Technically, this makes your encoding non-compliant.</i>
-	 * </pre>
-	 * <p>
-	 * Example: <code>encodeBytes( myData, Base64.GZIP )</code> or
-	 * <p>
-	 * Example:
-	 * <code>encodeBytes( myData, Base64.GZIP | Base64.DONT_BREAK_LINES )</code>
-	 *
-	 *
-	 * @param source
-	 *            The data to convert
-	 * @param off
-	 *            Offset in array where conversion should begin
-	 * @param len
-	 *            Length of data to convert
-	 * @param options
-	 *            Specified options
-	 * @see Base64#DONT_BREAK_LINES
-	 * @since 2.0
-	 */
-	public static String encodeBytes(byte[] source, int off, int len,
-			int options) {
-		// Isolate options
-		int dontBreakLines = (options & DONT_BREAK_LINES);
-		// Else, don't compress. Better not to use streams at all then.
-		{
-			// Convert option to boolean in way that code likes it.
-			boolean breakLines = dontBreakLines == 0;
-			int len43 = len * 4 / 3;
-			byte[] outBuff = new byte[(len43) // Main 4:3
-					+ ((len % 3) > 0 ? 4 : 0) // Account for padding
-					+ (breakLines ? (len43 / MAX_LINE_LENGTH) : 0)]; // New
-																		// lines
-			int d = 0;
-			int e = 0;
-			int len2 = len - 2;
-			int lineLength = 0;
-			for (; d < len2; d += 3, e += 4) {
-				encode3to4(source, d + off, 3, outBuff, e);
-				lineLength += 4;
-				if (breakLines && lineLength == MAX_LINE_LENGTH) {
-					outBuff[e + 4] = NEW_LINE;
-					e++;
-					lineLength = 0;
-				} // end if: end of line
-			} // en dfor: each piece of array
-			if (d < len) {
-				encode3to4(source, d + off, len - d, outBuff, e);
-				e += 4;
-			} // end if: some padding needed
-				// Return value according to relevant encoding.
-			try {
-				return new String(outBuff, 0, e, PREFERRED_ENCODING);
-			} // end try
-			catch (java.io.UnsupportedEncodingException uue) {
-				return new String(outBuff, 0, e);
-			} // end catch
-		} // end else: don't compress
-	} // end encodeBytes
-
-	/**
 	 * Decodes four bytes from array <var>source</var> and writes the resulting
 	 * bytes (up to three of them) to <var>destination</var>. The source and
 	 * destination arrays can be manipulated anywhere along their length by
@@ -540,6 +418,128 @@ public class Base64 {
 			return destination;
 		} // end switch
 	} // end encode3to4
+
+	/**
+	 * Encodes a byte array into Base64 notation. Does not GZip-compress data.
+	 *
+	 * @param source
+	 *            The data to convert
+	 * @since 1.4
+	 */
+	public static String encodeBytes(byte[] source) {
+		return encodeBytes(source, 0, source.length, NO_OPTIONS);
+	} // end encodeBytes
+
+	/**
+	 * Encodes a byte array into Base64 notation.
+	 * <p>
+	 * Valid options:
+	 * 
+	 * <pre>
+	 *   GZIP: gzip-compresses object before encoding it.
+	 *   DONT_BREAK_LINES: don't break lines at 76 characters
+	 *     <i>Note: Technically, this makes your encoding non-compliant.</i>
+	 * </pre>
+	 * <p>
+	 * Example: <code>encodeBytes( myData, Base64.GZIP )</code> or
+	 * <p>
+	 * Example:
+	 * <code>encodeBytes( myData, Base64.GZIP | Base64.DONT_BREAK_LINES )</code>
+	 *
+	 *
+	 * @param source
+	 *            The data to convert
+	 * @param options
+	 *            Specified options
+	 * @see Base64#DONT_BREAK_LINES
+	 * @since 2.0
+	 */
+	public static String encodeBytes(byte[] source, int options) {
+		return encodeBytes(source, 0, source.length, options);
+	} // end encodeBytes
+
+	/**
+	 * Encodes a byte array into Base64 notation. Does not GZip-compress data.
+	 *
+	 * @param source
+	 *            The data to convert
+	 * @param off
+	 *            Offset in array where conversion should begin
+	 * @param len
+	 *            Length of data to convert
+	 * @since 1.4
+	 */
+	public static String encodeBytes(byte[] source, int off, int len) {
+		return encodeBytes(source, off, len, NO_OPTIONS);
+	} // end encodeBytes
+
+	/**
+	 * Encodes a byte array into Base64 notation.
+	 * <p>
+	 * Valid options:
+	 * 
+	 * <pre>
+	 *   GZIP: gzip-compresses object before encoding it.
+	 *   DONT_BREAK_LINES: don't break lines at 76 characters
+	 *     <i>Note: Technically, this makes your encoding non-compliant.</i>
+	 * </pre>
+	 * <p>
+	 * Example: <code>encodeBytes( myData, Base64.GZIP )</code> or
+	 * <p>
+	 * Example:
+	 * <code>encodeBytes( myData, Base64.GZIP | Base64.DONT_BREAK_LINES )</code>
+	 *
+	 *
+	 * @param source
+	 *            The data to convert
+	 * @param off
+	 *            Offset in array where conversion should begin
+	 * @param len
+	 *            Length of data to convert
+	 * @param options
+	 *            Specified options
+	 * @see Base64#DONT_BREAK_LINES
+	 * @since 2.0
+	 */
+	public static String encodeBytes(byte[] source, int off, int len,
+			int options) {
+		// Isolate options
+		int dontBreakLines = (options & DONT_BREAK_LINES);
+		// Else, don't compress. Better not to use streams at all then.
+		{
+			// Convert option to boolean in way that code likes it.
+			boolean breakLines = dontBreakLines == 0;
+			int len43 = len * 4 / 3;
+			byte[] outBuff = new byte[(len43) // Main 4:3
+					+ ((len % 3) > 0 ? 4 : 0) // Account for padding
+					+ (breakLines ? (len43 / MAX_LINE_LENGTH) : 0)]; // New
+																		// lines
+			int d = 0;
+			int e = 0;
+			int len2 = len - 2;
+			int lineLength = 0;
+			for (; d < len2; d += 3, e += 4) {
+				encode3to4(source, d + off, 3, outBuff, e);
+				lineLength += 4;
+				if (breakLines && lineLength == MAX_LINE_LENGTH) {
+					outBuff[e + 4] = NEW_LINE;
+					e++;
+					lineLength = 0;
+				} // end if: end of line
+			} // en dfor: each piece of array
+			if (d < len) {
+				encode3to4(source, d + off, len - d, outBuff, e);
+				e += 4;
+			} // end if: some padding needed
+				// Return value according to relevant encoding.
+			try {
+				return new String(outBuff, 0, e, PREFERRED_ENCODING);
+			} // end try
+			catch (java.io.UnsupportedEncodingException uue) {
+				return new String(outBuff, 0, e);
+			} // end catch
+		} // end else: don't compress
+	} // end encodeBytes
 
 	/** Defeats instantiation. */
 	private Base64() {

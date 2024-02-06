@@ -134,43 +134,6 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
 	}
 
-	/**
-	 * Called by the UI on a restart server event.
-	 */
-	@Override
-	public void onRestartServer(TreeLogger logger) {
-		try {
-			server.refresh();
-		} catch (UnableToCompleteException e) {
-			// ignore, problem already logged
-		}
-	}
-
-	private void validateServletTags(TreeLogger logger,
-			ServletValidator servletValidator, ServletWriter servletWriter,
-			ModuleDef module) {
-		String[] servletPaths = module.getServletPaths();
-		if (servletPaths.length == 0) {
-			return;
-		}
-		TreeLogger servletLogger = logger.branch(TreeLogger.DEBUG,
-				"Validating <servlet> tags for module '" + module.getName()
-						+ "'",
-				null, new InstalledHelpInfo("servletMappings.html"));
-		for (String servletPath : servletPaths) {
-			String servletClass = module.findServletForPath(servletPath);
-			assert (servletClass != null);
-			// Prefix module name to convert module mapping to global mapping.
-			servletPath = "/" + module.getName() + servletPath;
-			if (servletValidator == null) {
-				servletWriter.addMapping(servletClass, servletPath);
-			} else {
-				servletValidator.validate(servletLogger, servletClass,
-						servletPath);
-			}
-		}
-	}
-
 	@Override
 	protected HostedModeOptions createOptions() {
 		HostedModeOptionsImpl hostedModeOptions = new HostedModeOptionsImpl();
@@ -423,6 +386,18 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 		return listener.makeStartupUrl(url);
 	}
 
+	/**
+	 * Called by the UI on a restart server event.
+	 */
+	@Override
+	public void onRestartServer(TreeLogger logger) {
+		try {
+			server.refresh();
+		} catch (UnableToCompleteException e) {
+			// ignore, problem already logged
+		}
+	}
+
 	@Override
 	protected synchronized void produceOutput(TreeLogger logger,
 			StandardLinkerContext linkerStack, ArtifactSet artifacts,
@@ -431,25 +406,36 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 		listener.writeCompilerOutput(linkerStack, artifacts, module, isRelink);
 	}
 
+	private void validateServletTags(TreeLogger logger,
+			ServletValidator servletValidator, ServletWriter servletWriter,
+			ModuleDef module) {
+		String[] servletPaths = module.getServletPaths();
+		if (servletPaths.length == 0) {
+			return;
+		}
+		TreeLogger servletLogger = logger.branch(TreeLogger.DEBUG,
+				"Validating <servlet> tags for module '" + module.getName()
+						+ "'",
+				null, new InstalledHelpInfo("servletMappings.html"));
+		for (String servletPath : servletPaths) {
+			String servletClass = module.findServletForPath(servletPath);
+			assert (servletClass != null);
+			// Prefix module name to convert module mapping to global mapping.
+			servletPath = "/" + module.getName() + servletPath;
+			if (servletValidator == null) {
+				servletWriter.addMapping(servletClass, servletPath);
+			} else {
+				servletValidator.validate(servletLogger, servletClass,
+						servletPath);
+			}
+		}
+	}
+
 	@Override
 	protected void warnAboutNoStartupUrls() {
 		getTopLogger().log(TreeLogger.WARN,
 				"No startup URLs supplied and no plausible ones found -- use "
 						+ "-startupUrl");
-	}
-
-	/**
-	 * Handles the -superDevMode command line flag.
-	 */
-	public interface HostedModeOptions extends HostedModeBaseOptions,
-			CompilerOptions, OptionSuperDevMode, OptionModulePathPrefix {
-		ServletContainerLauncher getServletContainerLauncher();
-
-		String getServletContainerLauncherArgs();
-
-		void setServletContainerLauncher(ServletContainerLauncher scl);
-
-		void setServletContainerLauncherArgs(String args);
 	}
 
 	/**
@@ -628,6 +614,20 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 		protected String getName() {
 			return DevMode.class.getName();
 		}
+	}
+
+	/**
+	 * Handles the -superDevMode command line flag.
+	 */
+	public interface HostedModeOptions extends HostedModeBaseOptions,
+			CompilerOptions, OptionSuperDevMode, OptionModulePathPrefix {
+		ServletContainerLauncher getServletContainerLauncher();
+
+		String getServletContainerLauncherArgs();
+
+		void setServletContainerLauncher(ServletContainerLauncher scl);
+
+		void setServletContainerLauncherArgs(String args);
 	}
 
 	/**

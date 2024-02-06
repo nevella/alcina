@@ -57,6 +57,12 @@ public class FromOfflineConflictResolver {
 
 	private AsyncCallback<Void> completionCallback;
 
+	private String getText(TextItem key) {
+		return TextProvider.get().getUiObjectText(
+				FromOfflineConflictResolver.class, key.toString(),
+				key.getText());
+	}
+
 	public void notResolved() {
 		Window.alert(getText(TextItem.OFFLINE_NO_DISCARD_WARNING));
 		Window.Location.reload();
@@ -76,12 +82,6 @@ public class FromOfflineConflictResolver {
 		dialog.add(new ResolutionOptions());
 		dialog.center();
 		dialog.show();
-	}
-
-	private String getText(TextItem key) {
-		return TextProvider.get().getUiObjectText(
-				FromOfflineConflictResolver.class, key.toString(),
-				key.getText());
 	}
 
 	private class ResolutionOptions extends Composite implements ClickHandler {
@@ -122,6 +122,8 @@ public class FromOfflineConflictResolver {
 			}
 			initWidget(fp);
 		}
+
+		protected native void copy();
 
 		@Override
 		public void onClick(ClickEvent event) {
@@ -169,8 +171,6 @@ public class FromOfflineConflictResolver {
 			// copy();
 			// no browser permits this
 		}
-
-		protected native void copy();
 	}
 
 	enum TextItem {

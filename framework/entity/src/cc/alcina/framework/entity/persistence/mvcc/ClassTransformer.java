@@ -283,10 +283,6 @@ class ClassTransformer {
 			this.originalClass = clazz;
 		}
 
-		public void setTransformer(ClassTransformer transformer) {
-			this.transformer = transformer;
-		}
-
 		private void checkDuplicateFieldNames() {
 			Multimap<String, List<Field>> byName = SEUtilities
 					.allFields(originalClass).stream()
@@ -304,6 +300,51 @@ class ClassTransformer {
 										CommonUtils.joinWithNewlineTab(
 												e.getValue()))));
 					});
+		}
+
+		void checkFieldAndMethodAccess(boolean logWarnings,
+				boolean ignoreLastRun, MvccCorrectnessToken token) {
+			if (isSameSourceAsLastRun() && !ignoreLastRun) {
+				methodsWithProblematicAccess = lastRun.methodsWithProblematicAccess;
+				fieldsWithProblematicAccess = lastRun.fieldsWithProblematicAccess;
+			} else {
+				Ax.out("checking unit : %s", originalClass.getSimpleName());
+				checkFieldModifiers();
+				checkDuplicateFieldNames();
+				checkFieldsHaveGetters();
+				for (String source : classSources) {
+					if (token.checkedSources.add(source)) {
+						compilationUnit = StaticJavaParser.parse(source);
+						compilationUnit.findAll(TypeDeclaration.class)
+								.forEach(classDeclaration -> {
+									String typeName = classDeclaration.getName()
+											.asString();
+									if (logWarnings) {
+										Ax.out("checking correctness: %s",
+												typeName);
+									}
+									CheckAccessVisitor visitor = new CheckAccessVisitor();
+									classDeclaration.accept(visitor, null);
+								});
+					}
+				}
+			}
+			if (logWarnings) {
+				if (fieldsWithProblematicAccess.size() > 0) {
+					Ax.err("\n======================\nClass: %s\nFieldsWithProblematicAccess:\n======================",
+							originalClass.getName());
+					fieldsWithProblematicAccess.forEach(Ax::err);
+					Ax.out("\n");
+					invalid = true;
+				}
+				if (methodsWithProblematicAccess.size() > 0) {
+					Ax.err("\n======================\nClass: %s\nMethodsWithProblematicAccess:\n======================",
+							originalClass.getName());
+					methodsWithProblematicAccess.forEach(Ax::err);
+					Ax.out("\n");
+					invalid = true;
+				}
+			}
 		}
 
 		private void checkFieldModifiers() {
@@ -356,64 +397,6 @@ class ClassTransformer {
 			return SourceFinder.findSource(clazz);
 		}
 
-		private boolean isSameSourceAsLastRun() {
-			boolean sameSource = lastRun != null
-					&& Objects.equals(lastRun.classSources, classSources)
-					&& classSources.size() > 0;
-			// if (!sameSource && lastRun != null && lastRun.classSources !=
-			// null
-			// && lastRun.classSources.size() > 0) {
-			// ThreeWaySetResult<String> split = CommonUtils
-			// .threeWaySplit(lastRun.classSources, classSources);
-			// }
-			return sameSource;
-		}
-
-		void checkFieldAndMethodAccess(boolean logWarnings,
-				boolean ignoreLastRun, MvccCorrectnessToken token) {
-			if (isSameSourceAsLastRun() && !ignoreLastRun) {
-				methodsWithProblematicAccess = lastRun.methodsWithProblematicAccess;
-				fieldsWithProblematicAccess = lastRun.fieldsWithProblematicAccess;
-			} else {
-				Ax.out("checking unit : %s", originalClass.getSimpleName());
-				checkFieldModifiers();
-				checkDuplicateFieldNames();
-				checkFieldsHaveGetters();
-				for (String source : classSources) {
-					if (token.checkedSources.add(source)) {
-						compilationUnit = StaticJavaParser.parse(source);
-						compilationUnit.findAll(TypeDeclaration.class)
-								.forEach(classDeclaration -> {
-									String typeName = classDeclaration.getName()
-											.asString();
-									if (logWarnings) {
-										Ax.out("checking correctness: %s",
-												typeName);
-									}
-									CheckAccessVisitor visitor = new CheckAccessVisitor();
-									classDeclaration.accept(visitor, null);
-								});
-					}
-				}
-			}
-			if (logWarnings) {
-				if (fieldsWithProblematicAccess.size() > 0) {
-					Ax.err("\n======================\nClass: %s\nFieldsWithProblematicAccess:\n======================",
-							originalClass.getName());
-					fieldsWithProblematicAccess.forEach(Ax::err);
-					Ax.out("\n");
-					invalid = true;
-				}
-				if (methodsWithProblematicAccess.size() > 0) {
-					Ax.err("\n======================\nClass: %s\nMethodsWithProblematicAccess:\n======================",
-							originalClass.getName());
-					methodsWithProblematicAccess.forEach(Ax::err);
-					Ax.out("\n");
-					invalid = true;
-				}
-			}
-		}
-
 		void generateMvccClass() {
 			synchronized (ClassTransformer.class) {
 				if (isSameSourceAsLastRun()
@@ -461,6 +444,19 @@ class ClassTransformer {
 			}
 		}
 
+		private boolean isSameSourceAsLastRun() {
+			boolean sameSource = lastRun != null
+					&& Objects.equals(lastRun.classSources, classSources)
+					&& classSources.size() > 0;
+			// if (!sameSource && lastRun != null && lastRun.classSources !=
+			// null
+			// && lastRun.classSources.size() > 0) {
+			// ThreeWaySetResult<String> split = CommonUtils
+			// .threeWaySplit(lastRun.classSources, classSources);
+			// }
+			return sameSource;
+		}
+
 		synchronized void persist() {
 			if (isSameSourceAsLastRun()
 					&& lastRun.transformedClassBytes != null) {
@@ -472,6 +468,10 @@ class ClassTransformer {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		public void setTransformer(ClassTransformer transformer) {
+			this.transformer = transformer;
 		}
 
 		private class CheckAccessVisitor extends VoidVisitorAdapter<Void> {
@@ -492,6 +492,132 @@ class ClassTransformer {
 			private ClassOrInterfaceDeclaration classOrInterfaceDeclaration;
 
 			public CheckAccessVisitor() {
+			}
+
+			protected void addProblematicAccess(MvccCorrectnessIssueType type) {
+				Ax.out("Incorrect access: method '%s'", decorateLocation());
+				methodsWithProblematicAccess
+						.add(methodDeclaration == null ? "(constructor)"
+								: methodDeclaration.getDeclarationAsString());
+				correctnessIssueTopic.publish(new MvccCorrectnessIssue(type,
+						Ax.format("Incorrect access: method '%s'",
+								decorateLocation())));
+			}
+
+			String decorateLocation() {
+				return methodDeclaration == null ? "(no method)"
+						: methodDeclaration.getDeclarationAsString();
+			}
+
+			private TypeDeclaration getContainingDeclaration(Node node) {
+				while (node != null) {
+					if (node instanceof TypeDeclaration) {
+						return (TypeDeclaration) node;
+					}
+					node = node.getParentNode().get();
+				}
+				return null;
+			}
+
+			private Class getJvmClassFromTypeDeclaration(
+					ResolvedReferenceTypeDeclaration resolvedReferenceTypeDeclaration) {
+				try {
+					String qualifiedName = resolvedReferenceTypeDeclaration
+							.getQualifiedName();
+					FormatBuilder fb = new FormatBuilder().separator(".");
+					for (String part : qualifiedName.split("\\.")) {
+						fb.append(part);
+						if (part.matches("[A-Z].+")) {
+							fb.separator("$");
+						}
+					}
+					Class clazz = Class.forName(fb.toString());
+					return clazz;
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			private boolean isDefinedOk(Expression expr) {
+				boolean isInAnnotationExpression = false;
+				boolean mvccAccessCorrectAnnotationPresent = false;
+				Optional<Node> cursor = Optional.<Node> ofNullable(expr);
+				boolean debug = false;
+				expressionIsInNestedAnonymousType = false;
+				while (cursor.isPresent()) {
+					Node node = cursor.get();
+					if (debug) {
+						Ax.out(node.getClass().getSimpleName());
+					}
+					if (node instanceof MethodDeclaration) {
+						methodDeclaration = (MethodDeclaration) node;
+						mvccAccessCorrectAnnotationPresent = methodDeclaration
+								.getAnnotationByClass(MvccAccess.class)
+								.isPresent();
+					}
+					if (node instanceof ObjectCreationExpr
+							&& ((ObjectCreationExpr) node)
+									.getAnonymousClassBody().isPresent()) {
+						expressionIsInNestedAnonymousType = true;
+					}
+					if (node instanceof TypeDeclaration) {
+						typeDeclaration = (TypeDeclaration) node;
+						containingClassName = transformer.solver
+								.getTypeDeclaration(typeDeclaration)
+								.asReferenceType().getQualifiedName();
+						expressionIsInNestedType = typeDeclaration
+								.isNestedType();
+						break;
+					}
+					if (node instanceof NormalAnnotationExpr) {
+						isInAnnotationExpression = true;
+					}
+					cursor = node.getParentNode();
+				}
+				return isInAnnotationExpression
+						|| mvccAccessCorrectAnnotationPresent;
+			}
+
+			private boolean isInnerNonStatic(Class clazz) {
+				boolean innerNonStatic = false;
+				while (clazz.getEnclosingClass() != null) {
+					if ((clazz.getModifiers() & Modifier.STATIC) != 0) {
+						break;
+					}
+					clazz = clazz.getEnclosingClass();
+					if (clazz.getEnclosingClass() == null) {
+						innerNonStatic = true;
+						break;
+					}
+				}
+				return innerNonStatic;
+			}
+
+			private boolean isInStaticNonEntityInnerClass(Expression expr) {
+				TypeDeclaration containingDeclaration = getContainingDeclaration(
+						expr);
+				ResolvedReferenceTypeDeclaration creationTypeDeclaration = transformer.solver
+						.getTypeDeclaration(containingDeclaration);
+				Class clazz = getJvmClassFromTypeDeclaration(
+						creationTypeDeclaration);
+				boolean innerNonStatic = isInnerNonStatic(clazz);
+				return !innerNonStatic && !Entity.class.isAssignableFrom(clazz);
+			}
+
+			private void logSolverException(Expression expr,
+					RuntimeException e) {
+				if (expr.toString().matches("[A-Z].+?\\.[A-Z].+?")) {
+					// javaparser issue with nested static refs --
+					// TransformManager.Serializer.get() --
+					// ignore since we don't care about statics (much)
+				} else {
+					Ax.simpleExceptionOut(e);
+					Ax.sysLogHigh("%s:%s\nNot solved: %s", containingClassName,
+							(methodDeclaration == null ? null
+									: methodDeclaration.getName().toString()),
+							expr);
+					int debug = 3;
+				}
 			}
 
 			@Override
@@ -794,132 +920,6 @@ class ClassTransformer {
 				}
 			}
 
-			private TypeDeclaration getContainingDeclaration(Node node) {
-				while (node != null) {
-					if (node instanceof TypeDeclaration) {
-						return (TypeDeclaration) node;
-					}
-					node = node.getParentNode().get();
-				}
-				return null;
-			}
-
-			private Class getJvmClassFromTypeDeclaration(
-					ResolvedReferenceTypeDeclaration resolvedReferenceTypeDeclaration) {
-				try {
-					String qualifiedName = resolvedReferenceTypeDeclaration
-							.getQualifiedName();
-					FormatBuilder fb = new FormatBuilder().separator(".");
-					for (String part : qualifiedName.split("\\.")) {
-						fb.append(part);
-						if (part.matches("[A-Z].+")) {
-							fb.separator("$");
-						}
-					}
-					Class clazz = Class.forName(fb.toString());
-					return clazz;
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			private boolean isDefinedOk(Expression expr) {
-				boolean isInAnnotationExpression = false;
-				boolean mvccAccessCorrectAnnotationPresent = false;
-				Optional<Node> cursor = Optional.<Node> ofNullable(expr);
-				boolean debug = false;
-				expressionIsInNestedAnonymousType = false;
-				while (cursor.isPresent()) {
-					Node node = cursor.get();
-					if (debug) {
-						Ax.out(node.getClass().getSimpleName());
-					}
-					if (node instanceof MethodDeclaration) {
-						methodDeclaration = (MethodDeclaration) node;
-						mvccAccessCorrectAnnotationPresent = methodDeclaration
-								.getAnnotationByClass(MvccAccess.class)
-								.isPresent();
-					}
-					if (node instanceof ObjectCreationExpr
-							&& ((ObjectCreationExpr) node)
-									.getAnonymousClassBody().isPresent()) {
-						expressionIsInNestedAnonymousType = true;
-					}
-					if (node instanceof TypeDeclaration) {
-						typeDeclaration = (TypeDeclaration) node;
-						containingClassName = transformer.solver
-								.getTypeDeclaration(typeDeclaration)
-								.asReferenceType().getQualifiedName();
-						expressionIsInNestedType = typeDeclaration
-								.isNestedType();
-						break;
-					}
-					if (node instanceof NormalAnnotationExpr) {
-						isInAnnotationExpression = true;
-					}
-					cursor = node.getParentNode();
-				}
-				return isInAnnotationExpression
-						|| mvccAccessCorrectAnnotationPresent;
-			}
-
-			private boolean isInnerNonStatic(Class clazz) {
-				boolean innerNonStatic = false;
-				while (clazz.getEnclosingClass() != null) {
-					if ((clazz.getModifiers() & Modifier.STATIC) != 0) {
-						break;
-					}
-					clazz = clazz.getEnclosingClass();
-					if (clazz.getEnclosingClass() == null) {
-						innerNonStatic = true;
-						break;
-					}
-				}
-				return innerNonStatic;
-			}
-
-			private boolean isInStaticNonEntityInnerClass(Expression expr) {
-				TypeDeclaration containingDeclaration = getContainingDeclaration(
-						expr);
-				ResolvedReferenceTypeDeclaration creationTypeDeclaration = transformer.solver
-						.getTypeDeclaration(containingDeclaration);
-				Class clazz = getJvmClassFromTypeDeclaration(
-						creationTypeDeclaration);
-				boolean innerNonStatic = isInnerNonStatic(clazz);
-				return !innerNonStatic && !Entity.class.isAssignableFrom(clazz);
-			}
-
-			private void logSolverException(Expression expr,
-					RuntimeException e) {
-				if (expr.toString().matches("[A-Z].+?\\.[A-Z].+?")) {
-					// javaparser issue with nested static refs --
-					// TransformManager.Serializer.get() --
-					// ignore since we don't care about statics (much)
-				} else {
-					Ax.simpleExceptionOut(e);
-					Ax.sysLogHigh("%s:%s\nNot solved: %s", containingClassName,
-							(methodDeclaration == null ? null
-									: methodDeclaration.getName().toString()),
-							expr);
-					int debug = 3;
-				}
-			}
-
-			protected void addProblematicAccess(MvccCorrectnessIssueType type) {
-				Ax.out("Incorrect access: method '%s'", decorateLocation());
-				methodsWithProblematicAccess
-						.add(methodDeclaration == null ? "(constructor)"
-								: methodDeclaration.getDeclarationAsString());
-				correctnessIssueTopic.publish(new MvccCorrectnessIssue(type,
-						Ax.format("Incorrect access: method '%s'",
-								decorateLocation())));
-			}
-
-			String decorateLocation() {
-				return methodDeclaration == null ? "(no method)"
-						: methodDeclaration.getDeclarationAsString();
-			}
-
 			@SuppressWarnings("unused")
 			class T1 {
 				void yum(int a) {
@@ -945,6 +945,28 @@ class ClassTransformer {
 		 * 
 		 */
 		class ClassWriter {
+			private void checkCovariantReturnTypeMethods(
+					List<Method> allClassMethods) {
+				Multimap<MethodNameArgTypes, List<Method>> covariantBeanMethods = allClassMethods
+						.stream()
+						.filter(m -> m.getName().matches("(get|set|is)[A-Z].*"))
+						.sorted(Comparator.comparing(Method::getName))
+						.collect(AlcinaCollectors
+								.toKeyMultimap(MethodNameArgTypes::new));
+				covariantBeanMethods.entrySet()
+						.removeIf(e -> e.getValue().stream()
+								.map(Method::getReturnType).distinct()
+								.count() == 1);
+				if (covariantBeanMethods.size() > 0) {
+					Ax.err("Covariant methods (disallowed for mvcc)");
+					covariantBeanMethods.entrySet().stream().forEach(e -> {
+						Ax.out(e.getValue());
+						Ax.out("");
+					});
+					throw new IllegalStateException();
+				}
+			}
+
 			public void generateMvccClassTask() {
 				try {
 					ClassFile cf = new ClassFile(false,
@@ -1208,28 +1230,6 @@ class ClassTransformer {
 							.add(() -> ThrowingRunnable.runAll(tasks));
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			private void checkCovariantReturnTypeMethods(
-					List<Method> allClassMethods) {
-				Multimap<MethodNameArgTypes, List<Method>> covariantBeanMethods = allClassMethods
-						.stream()
-						.filter(m -> m.getName().matches("(get|set|is)[A-Z].*"))
-						.sorted(Comparator.comparing(Method::getName))
-						.collect(AlcinaCollectors
-								.toKeyMultimap(MethodNameArgTypes::new));
-				covariantBeanMethods.entrySet()
-						.removeIf(e -> e.getValue().stream()
-								.map(Method::getReturnType).distinct()
-								.count() == 1);
-				if (covariantBeanMethods.size() > 0) {
-					Ax.err("Covariant methods (disallowed for mvcc)");
-					covariantBeanMethods.entrySet().stream().forEach(e -> {
-						Ax.out(e.getValue());
-						Ax.out("");
-					});
-					throw new IllegalStateException();
 				}
 			}
 

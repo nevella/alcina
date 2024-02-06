@@ -150,19 +150,6 @@ public class StandardSymbolData implements SymbolData {
 		return methodSig != null;
 	}
 
-	public void setFragmentNumber(int fragNum) {
-		fragmentNumber = fragNum;
-	}
-
-	public void setSymbolName(String symbolName) {
-		this.symbolName = symbolName;
-	}
-
-	@Override
-	public String toString() {
-		return isClass() ? className : getJsniIdent();
-	}
-
 	private void readObject(ObjectInputStream in)
 			throws IOException, ClassNotFoundException {
 		className = (String) in.readObject();
@@ -184,6 +171,19 @@ public class StandardSymbolData implements SymbolData {
 		symbolName = in.readUTF();
 		typeId = (String) in.readObject();
 		fragmentNumber = in.readInt();
+	}
+
+	public void setFragmentNumber(int fragNum) {
+		fragmentNumber = fragNum;
+	}
+
+	public void setSymbolName(String symbolName) {
+		this.symbolName = symbolName;
+	}
+
+	@Override
+	public String toString() {
+		return isClass() ? className : getJsniIdent();
 	}
 
 	/**

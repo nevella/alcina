@@ -18,6 +18,20 @@ public class ProcessingInstructionLocal extends NodeLocal
 	}
 
 	@Override
+	void appendOuterHtml(UnsafeHtmlBuilder builder) {
+		builder.appendEscapedNoQuotes(data);
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		builder.append(getData());
+	}
+
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		builder.appendUnsafeHtml(data);
+	}
+
+	@Override
 	public Node cloneNode(boolean deep) {
 		return getOwnerDocument().createProcessingInstruction(getTarget(),
 				getData());
@@ -53,6 +67,10 @@ public class ProcessingInstructionLocal extends NodeLocal
 		return textNode;
 	}
 
+	void putProcessingInstruction(ProcessingInstruction textNode) {
+		this.textNode = textNode;
+	}
+
 	@Override
 	public void setData(String data) {
 		this.data = data;
@@ -66,23 +84,5 @@ public class ProcessingInstructionLocal extends NodeLocal
 	@Override
 	public String toString() {
 		return Ax.format("#TEXT[%s]", getData());
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendEscapedNoQuotes(data);
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		builder.append(getData());
-	}
-
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
-		builder.appendUnsafeHtml(data);
-	}
-
-	void putProcessingInstruction(ProcessingInstruction textNode) {
-		this.textNode = textNode;
 	}
 }

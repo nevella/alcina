@@ -66,6 +66,17 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		return this.searchOrders;
 	}
 
+	protected void init() {
+		TypeSerialization typeSerialization = Reflections.at(getClass())
+				.annotation(TypeSerialization.class);
+		Class<? extends EntityCriteriaGroup> ecgClass = Arrays
+				.stream(typeSerialization.properties())
+				.filter(ps -> ps.name().equals("criteriaGroups")).findFirst()
+				.get().types()[0];
+		getCriteriaGroups().add(Reflections.newInstance(ecgClass));
+		setResultsPerPage(50);
+	}
+
 	public boolean provideHasNoCriteria() {
 		assert getCriteriaGroups().size() == 1;
 		return getCriteriaGroups().iterator().next().provideIsEmpty();
@@ -147,17 +158,6 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 
 	public <G extends GroupingParameters> G typedGroupingParameters() {
 		return (G) groupingParameters;
-	}
-
-	protected void init() {
-		TypeSerialization typeSerialization = Reflections.at(getClass())
-				.annotation(TypeSerialization.class);
-		Class<? extends EntityCriteriaGroup> ecgClass = Arrays
-				.stream(typeSerialization.properties())
-				.filter(ps -> ps.name().equals("criteriaGroups")).findFirst()
-				.get().types()[0];
-		getCriteriaGroups().add(Reflections.newInstance(ecgClass));
-		setResultsPerPage(50);
 	}
 
 	@Reflected

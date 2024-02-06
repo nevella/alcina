@@ -40,17 +40,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensit
  */
 @Reflected
 public abstract class DirectedRenderer {
-	public static String tagName(Class clazz) {
-		return Ax.cssify(clazz.getSimpleName());
-	}
-
-	protected void applyCssClass(Node node, Element element) {
-		String cssClass = node.directed.className();
-		if (cssClass.length() > 0) {
-			element.addStyleName(cssClass);
-		}
-	}
-
 	public static String defaultGetTag(Node node, String defaultTag) {
 		String tag = null;
 		/*
@@ -94,11 +83,26 @@ public abstract class DirectedRenderer {
 		return Ax.blankTo(directedTag, tagName(modelClass));
 	}
 
+	public static String tagName(Class clazz) {
+		return Ax.cssify(clazz.getSimpleName());
+	}
+
+	protected void applyCssClass(Node node, Element element) {
+		String cssClass = node.directed.className();
+		if (cssClass.length() > 0) {
+			element.addStyleName(cssClass);
+		}
+	}
+
 	protected String getTag(Node node, String defaultTag) {
 		return defaultGetTag(node, defaultTag);
 	}
 
 	protected abstract void render(DirectedLayout.RendererInput input);
+
+	public cc.alcina.framework.common.client.dom.DomNodeType rendersAsType() {
+		return cc.alcina.framework.common.client.dom.DomNodeType.ELEMENT;
+	}
 
 	/**
 	 * Renders a container widget for the Bindable instance and layout nodes for
@@ -214,6 +218,68 @@ public abstract class DirectedRenderer {
 		}
 	}
 
+	interface GeneratesPropertyInputs {
+		default void generatePropertyInputs(RendererInput input) {
+			for (Property property : Reflections.at((input.model))
+					.properties()) {
+				Property directedProperty = input.resolver
+						.resolveDirectedProperty(property);
+				if (directedProperty != null) {
+					Object childModel = property.get(input.model);
+					// add input even if childModel==null
+					Class locationType = childModel == null ? void.class
+							: childModel.getClass();
+					input.enqueueInput(input.resolver, childModel,
+							new AnnotationLocation(locationType,
+									directedProperty, input.resolver),
+							null, input.node);
+				}
+			}
+		}
+	}
+
+	interface GeneratesTransformModel {
+		default Object transformModel(RendererInput input, Object model,
+				boolean collectionElements) {
+			Directed.Transform transform = collectionElements ? null
+					: input.location.getAnnotation(Directed.Transform.class);
+			Directed.TransformElements transformElements = collectionElements
+					? input.location
+							.getAnnotation(Directed.TransformElements.class)
+					: null;
+			if (transform == null && transformElements == null) {
+				return model;
+			}
+			if (transform != null) {
+				if (model == null && !transform.transformsNull()) {
+					// null output
+					return null;
+				}
+				ModelTransform modelTransform = (ModelTransform) Reflections
+						.newInstance(transform.value());
+				if (modelTransform instanceof ContextSensitiveTransform) {
+					((ContextSensitiveTransform) modelTransform)
+							.withContextNode(input.node);
+				}
+				Object transformedModel = modelTransform.apply(model);
+				return transformedModel;
+			} else {
+				if (model == null && !transformElements.transformsNull()) {
+					// null output
+					return null;
+				}
+				ModelTransform modelTransform = (ModelTransform) Reflections
+						.newInstance(transformElements.value());
+				if (modelTransform instanceof ContextSensitiveTransform) {
+					((ContextSensitiveTransform) modelTransform)
+							.withContextNode(input.node);
+				}
+				Object transformedModel = modelTransform.apply(model);
+				return transformedModel;
+			}
+		}
+	}
+
 	/*
 	 * Indicates that the annotation/resolution chain does not define a
 	 * renderer. Fall back on the model class
@@ -223,6 +289,12 @@ public abstract class DirectedRenderer {
 		protected void render(RendererInput input) {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	/*
+	 * Renderer will attempt to render null
+	 */
+	interface RendersNull {
 	}
 
 	/**
@@ -316,77 +388,5 @@ public abstract class DirectedRenderer {
 			Widget model = (Widget) input.model;
 			input.resolver.linkRenderedObject(input.node, input.model);
 		}
-	}
-
-	interface GeneratesPropertyInputs {
-		default void generatePropertyInputs(RendererInput input) {
-			for (Property property : Reflections.at((input.model))
-					.properties()) {
-				Property directedProperty = input.resolver
-						.resolveDirectedProperty(property);
-				if (directedProperty != null) {
-					Object childModel = property.get(input.model);
-					// add input even if childModel==null
-					Class locationType = childModel == null ? void.class
-							: childModel.getClass();
-					input.enqueueInput(input.resolver, childModel,
-							new AnnotationLocation(locationType,
-									directedProperty, input.resolver),
-							null, input.node);
-				}
-			}
-		}
-	}
-
-	interface GeneratesTransformModel {
-		default Object transformModel(RendererInput input, Object model,
-				boolean collectionElements) {
-			Directed.Transform transform = collectionElements ? null
-					: input.location.getAnnotation(Directed.Transform.class);
-			Directed.TransformElements transformElements = collectionElements
-					? input.location
-							.getAnnotation(Directed.TransformElements.class)
-					: null;
-			if (transform == null && transformElements == null) {
-				return model;
-			}
-			if (transform != null) {
-				if (model == null && !transform.transformsNull()) {
-					// null output
-					return null;
-				}
-				ModelTransform modelTransform = (ModelTransform) Reflections
-						.newInstance(transform.value());
-				if (modelTransform instanceof ContextSensitiveTransform) {
-					((ContextSensitiveTransform) modelTransform)
-							.withContextNode(input.node);
-				}
-				Object transformedModel = modelTransform.apply(model);
-				return transformedModel;
-			} else {
-				if (model == null && !transformElements.transformsNull()) {
-					// null output
-					return null;
-				}
-				ModelTransform modelTransform = (ModelTransform) Reflections
-						.newInstance(transformElements.value());
-				if (modelTransform instanceof ContextSensitiveTransform) {
-					((ContextSensitiveTransform) modelTransform)
-							.withContextNode(input.node);
-				}
-				Object transformedModel = modelTransform.apply(model);
-				return transformedModel;
-			}
-		}
-	}
-
-	public cc.alcina.framework.common.client.dom.DomNodeType rendersAsType() {
-		return cc.alcina.framework.common.client.dom.DomNodeType.ELEMENT;
-	}
-
-	/*
-	 * Renderer will attempt to render null
-	 */
-	interface RendersNull {
 	}
 }

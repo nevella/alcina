@@ -36,6 +36,12 @@ public class EntityCleaner {
 		readEntityFile();
 	}
 
+	private void append(String html, StringBuilder buf, int i, int j) {
+		for (int idx = i; idx < j; idx++) {
+			buf.append(html.charAt(idx));
+		}
+	}
+
 	public String htmlToUnicodeEntities(String html) {
 		return this.htmlToUnicodeEntities(html, false);
 	}
@@ -135,12 +141,6 @@ public class EntityCleaner {
 			}
 		}
 		return buf.toString();
-	}
-
-	private void append(String html, StringBuilder buf, int i, int j) {
-		for (int idx = i; idx < j; idx++) {
-			buf.append(html.charAt(idx));
-		}
 	}
 
 	private void readEntityFile() {

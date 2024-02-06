@@ -50,6 +50,20 @@ public class StringTrieProjection<E extends Entity>
 	}
 
 	@Override
+	protected List<String> extractSubKeys(String key) {
+		if (usesSubstrings) {
+			List<String> subKeys = new ArrayList<>();
+			for (int idx = 0; idx < key.length() - minSubstringLength; idx++) {
+				int to = Math.min(maxSubstringLength, key.length() - idx);
+				subKeys.add(key.substring(idx, idx + to));
+			}
+			return subKeys;
+		} else {
+			return Collections.emptyList();
+		}
+	}
+
+	@Override
 	public Stream<E> getSubstringMatches(String prefix) {
 		String normalisedPrefix = normalise(prefix);
 		if (usesSubstrings) {
@@ -74,6 +88,11 @@ public class StringTrieProjection<E extends Entity>
 		}
 	}
 
+	@Override
+	protected String normalise(String key) {
+		return key == null ? null : key.toLowerCase();
+	}
+
 	public <STP extends StringTrieProjection> STP withInternalSubstrings(
 			int minSubstringLength, int maxSubstringLength) {
 		this.minSubstringLength = minSubstringLength;
@@ -86,24 +105,5 @@ public class StringTrieProjection<E extends Entity>
 			withMinimumNonExactLength(int minimumNonExactLength) {
 		this.minimumNonExactLength = minimumNonExactLength;
 		return (STP) this;
-	}
-
-	@Override
-	protected List<String> extractSubKeys(String key) {
-		if (usesSubstrings) {
-			List<String> subKeys = new ArrayList<>();
-			for (int idx = 0; idx < key.length() - minSubstringLength; idx++) {
-				int to = Math.min(maxSubstringLength, key.length() - idx);
-				subKeys.add(key.substring(idx, idx + to));
-			}
-			return subKeys;
-		} else {
-			return Collections.emptyList();
-		}
-	}
-
-	@Override
-	protected String normalise(String key) {
-		return key == null ? null : key.toLowerCase();
 	}
 }

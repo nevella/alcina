@@ -126,6 +126,11 @@ public class ImgUtil {
 		return out;
 	}
 
+	private static IndexColorModel getBlackAndWhiteColorModel() {
+		return new IndexColorModel(1, 2, new byte[] { 0, -1 },
+				new byte[] { 0, -1 }, new byte[] { 0, -1 }, 1);
+	}
+
 	public static BufferedImage resizeToMaxWidth(BufferedImage src,
 			int maxWidth) {
 		if (src.getWidth() > maxWidth) {
@@ -323,11 +328,6 @@ public class ImgUtil {
 			throws IOException {
 		ImageIO.write(img, "png", os);
 		os.close();
-	}
-
-	private static IndexColorModel getBlackAndWhiteColorModel() {
-		return new IndexColorModel(1, 2, new byte[] { 0, -1 },
-				new byte[] { 0, -1 }, new byte[] { 0, -1 }, 1);
 	}
 
 	private static void writeWIthImageIo(BufferedImage img, OutputStream os,

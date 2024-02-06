@@ -272,6 +272,27 @@ public class ImplementClassLiteralsAsFields {
 	 */
 	public enum ClassLiteralFactoryMethod {
 		CREATE_FOR_ENUM() {
+			@Override
+			JMethodCall createCall(SourceInfo info, JProgram program,
+					JType type, JLiteral superclassLiteral) {
+				JEnumType enumType = type.isEnumOrSubclass();
+				assert enumType != null;
+				// createForEnum(packageName, typeName, runtimeTypeReference,
+				// Enum.class, type.values(),
+				// type.valueOf(java/lang/String));
+				JMethodCall call = createBaseCall(info, program, type,
+						"Class.createForEnum");
+				call.addArg(new JRuntimeTypeReference(info,
+						program.getTypeJavaLangObject(),
+						(JReferenceType) type));
+				call.addArg(superclassLiteral);
+				call.addArg(getStandardMethodAsArg(info, program, type,
+						"values()"));
+				call.addArg(getStandardMethodAsArg(info, program, type,
+						"valueOf(Ljava/lang/String;)"));
+				return call;
+			}
+
 			private JExpression getStandardMethodAsArg(SourceInfo info,
 					JProgram program, JType type, String methodSignature) {
 				JEnumType enumType = type.isEnumOrSubclass();
@@ -293,27 +314,6 @@ public class ImplementClassLiteralsAsFields {
 				}
 				// The method was pruned.
 				return JNullLiteral.INSTANCE;
-			}
-
-			@Override
-			JMethodCall createCall(SourceInfo info, JProgram program,
-					JType type, JLiteral superclassLiteral) {
-				JEnumType enumType = type.isEnumOrSubclass();
-				assert enumType != null;
-				// createForEnum(packageName, typeName, runtimeTypeReference,
-				// Enum.class, type.values(),
-				// type.valueOf(java/lang/String));
-				JMethodCall call = createBaseCall(info, program, type,
-						"Class.createForEnum");
-				call.addArg(new JRuntimeTypeReference(info,
-						program.getTypeJavaLangObject(),
-						(JReferenceType) type));
-				call.addArg(superclassLiteral);
-				call.addArg(getStandardMethodAsArg(info, program, type,
-						"values()"));
-				call.addArg(getStandardMethodAsArg(info, program, type,
-						"valueOf(Ljava/lang/String;)"));
-				return call;
 			}
 		},
 		CREATE_FOR_CLASS() {

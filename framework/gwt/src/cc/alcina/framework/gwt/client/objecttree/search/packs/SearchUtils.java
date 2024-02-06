@@ -99,6 +99,16 @@ public class SearchUtils {
 		return entity != null && toId(query) == entity.getId();
 	}
 
+	private static boolean matchesIds(String query, Entity entity) {
+		if (idsHelper.matches(query, entity)) {
+			return true;
+		}
+		if (regexpHelper.matches(query, entity)) {
+			return true;
+		}
+		return false;
+	}
+
 	public static boolean matchesIdsQuery(String query) {
 		return query.matches(IDS_REGEX);
 	}
@@ -145,16 +155,6 @@ public class SearchUtils {
 			txtCriterion.setTextCriterionType(TextCriterionType.CONTAINS);
 			def.addCriterionToSoleCriteriaGroup(txtCriterion);
 		}
-	}
-
-	private static boolean matchesIds(String query, Entity entity) {
-		if (idsHelper.matches(query, entity)) {
-			return true;
-		}
-		if (regexpHelper.matches(query, entity)) {
-			return true;
-		}
-		return false;
 	}
 
 	public static class SearchTextMatcher {
@@ -241,14 +241,14 @@ public class SearchUtils {
 			return ids;
 		}
 
+		protected Map<String, Set<Long>> getMap() {
+			return new LinkedHashMap<>();
+		}
+
 		@Override
 		public boolean matches(String query, Entity entity) {
 			Set<Long> ids = getIds(query);
 			return entity != null && ids.contains(entity.getId());
-		}
-
-		protected Map<String, Set<Long>> getMap() {
-			return new LinkedHashMap<>();
 		}
 	}
 
@@ -269,6 +269,10 @@ public class SearchUtils {
 								"i"),
 				getMap());
 
+		protected Map<String, RegExp> getMap() {
+			return new LinkedHashMap<>();
+		}
+
 		@Override
 		public boolean matches(String query, Entity entity) {
 			if (entity == null) {
@@ -282,10 +286,6 @@ public class SearchUtils {
 				return false;
 			}
 			return regExp.exec(entity.toString()) != null;
-		}
-
-		protected Map<String, RegExp> getMap() {
-			return new LinkedHashMap<>();
 		}
 	}
 }

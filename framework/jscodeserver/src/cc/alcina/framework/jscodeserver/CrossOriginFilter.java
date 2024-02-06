@@ -160,6 +160,52 @@ public class CrossOriginFilter implements Filter {
 
 	private boolean chainPreflight;
 
+	private boolean areHeadersAllowed(HttpServletRequest request) {
+		String accessControlRequestHeaders = request
+				.getHeader(ACCESS_CONTROL_REQUEST_HEADERS_HEADER);
+		LOG.debug("{} is {}", ACCESS_CONTROL_REQUEST_HEADERS_HEADER,
+				accessControlRequestHeaders);
+		boolean result = true;
+		if (accessControlRequestHeaders != null) {
+			String[] headers = accessControlRequestHeaders.split(",");
+			for (String header : headers) {
+				boolean headerAllowed = false;
+				for (String allowedHeader : allowedHeaders) {
+					if (header.trim().equalsIgnoreCase(allowedHeader.trim())) {
+						headerAllowed = true;
+						break;
+					}
+				}
+				if (!headerAllowed) {
+					result = false;
+					break;
+				}
+			}
+		}
+		LOG.debug(
+				"Headers [{}] are" + (result ? "" : " not")
+						+ " among allowed headers {}",
+				accessControlRequestHeaders, allowedHeaders);
+		return result;
+	}
+
+	private String commify(List<String> strings) {
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < strings.size(); ++i) {
+			if (i > 0)
+				builder.append(",");
+			String string = strings.get(i);
+			builder.append(string);
+		}
+		return builder.toString();
+	}
+
+	private Matcher createMatcher(String origin, String allowedOrigin) {
+		String regex = parseAllowedWildcardOriginToRegex(allowedOrigin);
+		Pattern pattern = Pattern.compile(regex);
+		return pattern.matcher(origin);
+	}
+
 	@Override
 	public void destroy() {
 		anyOriginAllowed = false;
@@ -175,6 +221,74 @@ public class CrossOriginFilter implements Filter {
 			FilterChain chain) throws IOException, ServletException {
 		handle((HttpServletRequest) request, (HttpServletResponse) response,
 				chain);
+	}
+
+	private void handle(HttpServletRequest request,
+			HttpServletResponse response, FilterChain chain)
+			throws IOException, ServletException {
+		String origin = request.getHeader(ORIGIN_HEADER);
+		// Is it a cross origin request ?
+		if (origin != null && isEnabled(request)) {
+			if (originMatches(origin)) {
+				if (isSimpleRequest(request)) {
+					LOG.debug(
+							"Cross-origin request to {} is a simple cross-origin request",
+							request.getRequestURI());
+					handleSimpleResponse(request, response, origin);
+				} else if (isPreflightRequest(request)) {
+					LOG.debug(
+							"Cross-origin request to {} is a preflight cross-origin request",
+							request.getRequestURI());
+					handlePreflightResponse(request, response, origin);
+					if (chainPreflight)
+						LOG.debug(
+								"Preflight cross-origin request to {} forwarded to application",
+								request.getRequestURI());
+					else
+						return;
+				} else {
+					LOG.debug(
+							"Cross-origin request to {} is a non-simple cross-origin request",
+							request.getRequestURI());
+					handleSimpleResponse(request, response, origin);
+				}
+			} else {
+				LOG.debug("Cross-origin request to " + request.getRequestURI()
+						+ " with origin " + origin
+						+ " does not match allowed origins " + allowedOrigins);
+			}
+		}
+		chain.doFilter(request, response);
+	}
+
+	private void handlePreflightResponse(HttpServletRequest request,
+			HttpServletResponse response, String origin) {
+		boolean methodAllowed = isMethodAllowed(request);
+		if (!methodAllowed)
+			return;
+		boolean headersAllowed = areHeadersAllowed(request);
+		if (!headersAllowed)
+			return;
+		response.setHeader(ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, origin);
+		if (allowCredentials)
+			response.setHeader(ACCESS_CONTROL_ALLOW_CREDENTIALS_HEADER, "true");
+		if (preflightMaxAge > 0)
+			response.setHeader(ACCESS_CONTROL_MAX_AGE_HEADER,
+					String.valueOf(preflightMaxAge));
+		response.setHeader(ACCESS_CONTROL_ALLOW_METHODS_HEADER,
+				commify(allowedMethods));
+		response.setHeader(ACCESS_CONTROL_ALLOW_HEADERS_HEADER,
+				commify(allowedHeaders));
+	}
+
+	private void handleSimpleResponse(HttpServletRequest request,
+			HttpServletResponse response, String origin) {
+		response.setHeader(ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, origin);
+		if (allowCredentials)
+			response.setHeader(ACCESS_CONTROL_ALLOW_CREDENTIALS_HEADER, "true");
+		if (!exposedHeaders.isEmpty())
+			response.setHeader(ACCESS_CONTROL_EXPOSE_HEADERS_HEADER,
+					commify(exposedHeaders));
 	}
 
 	@Override
@@ -252,118 +366,24 @@ public class CrossOriginFilter implements Filter {
 		}
 	}
 
-	private boolean areHeadersAllowed(HttpServletRequest request) {
-		String accessControlRequestHeaders = request
-				.getHeader(ACCESS_CONTROL_REQUEST_HEADERS_HEADER);
-		LOG.debug("{} is {}", ACCESS_CONTROL_REQUEST_HEADERS_HEADER,
-				accessControlRequestHeaders);
-		boolean result = true;
-		if (accessControlRequestHeaders != null) {
-			String[] headers = accessControlRequestHeaders.split(",");
-			for (String header : headers) {
-				boolean headerAllowed = false;
-				for (String allowedHeader : allowedHeaders) {
-					if (header.trim().equalsIgnoreCase(allowedHeader.trim())) {
-						headerAllowed = true;
-						break;
-					}
-				}
-				if (!headerAllowed) {
-					result = false;
-					break;
+	protected boolean isEnabled(HttpServletRequest request) {
+		// WebSocket clients such as Chrome 5 implement a version of the
+		// WebSocket
+		// protocol that does not accept extra response headers on the upgrade
+		// response
+		for (Enumeration connections = request
+				.getHeaders("Connection"); connections.hasMoreElements();) {
+			String connection = (String) connections.nextElement();
+			if ("Upgrade".equalsIgnoreCase(connection)) {
+				for (Enumeration upgrades = request
+						.getHeaders("Upgrade"); upgrades.hasMoreElements();) {
+					String upgrade = (String) upgrades.nextElement();
+					if ("WebSocket".equalsIgnoreCase(upgrade))
+						return false;
 				}
 			}
 		}
-		LOG.debug(
-				"Headers [{}] are" + (result ? "" : " not")
-						+ " among allowed headers {}",
-				accessControlRequestHeaders, allowedHeaders);
-		return result;
-	}
-
-	private String commify(List<String> strings) {
-		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < strings.size(); ++i) {
-			if (i > 0)
-				builder.append(",");
-			String string = strings.get(i);
-			builder.append(string);
-		}
-		return builder.toString();
-	}
-
-	private Matcher createMatcher(String origin, String allowedOrigin) {
-		String regex = parseAllowedWildcardOriginToRegex(allowedOrigin);
-		Pattern pattern = Pattern.compile(regex);
-		return pattern.matcher(origin);
-	}
-
-	private void handle(HttpServletRequest request,
-			HttpServletResponse response, FilterChain chain)
-			throws IOException, ServletException {
-		String origin = request.getHeader(ORIGIN_HEADER);
-		// Is it a cross origin request ?
-		if (origin != null && isEnabled(request)) {
-			if (originMatches(origin)) {
-				if (isSimpleRequest(request)) {
-					LOG.debug(
-							"Cross-origin request to {} is a simple cross-origin request",
-							request.getRequestURI());
-					handleSimpleResponse(request, response, origin);
-				} else if (isPreflightRequest(request)) {
-					LOG.debug(
-							"Cross-origin request to {} is a preflight cross-origin request",
-							request.getRequestURI());
-					handlePreflightResponse(request, response, origin);
-					if (chainPreflight)
-						LOG.debug(
-								"Preflight cross-origin request to {} forwarded to application",
-								request.getRequestURI());
-					else
-						return;
-				} else {
-					LOG.debug(
-							"Cross-origin request to {} is a non-simple cross-origin request",
-							request.getRequestURI());
-					handleSimpleResponse(request, response, origin);
-				}
-			} else {
-				LOG.debug("Cross-origin request to " + request.getRequestURI()
-						+ " with origin " + origin
-						+ " does not match allowed origins " + allowedOrigins);
-			}
-		}
-		chain.doFilter(request, response);
-	}
-
-	private void handlePreflightResponse(HttpServletRequest request,
-			HttpServletResponse response, String origin) {
-		boolean methodAllowed = isMethodAllowed(request);
-		if (!methodAllowed)
-			return;
-		boolean headersAllowed = areHeadersAllowed(request);
-		if (!headersAllowed)
-			return;
-		response.setHeader(ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, origin);
-		if (allowCredentials)
-			response.setHeader(ACCESS_CONTROL_ALLOW_CREDENTIALS_HEADER, "true");
-		if (preflightMaxAge > 0)
-			response.setHeader(ACCESS_CONTROL_MAX_AGE_HEADER,
-					String.valueOf(preflightMaxAge));
-		response.setHeader(ACCESS_CONTROL_ALLOW_METHODS_HEADER,
-				commify(allowedMethods));
-		response.setHeader(ACCESS_CONTROL_ALLOW_HEADERS_HEADER,
-				commify(allowedHeaders));
-	}
-
-	private void handleSimpleResponse(HttpServletRequest request,
-			HttpServletResponse response, String origin) {
-		response.setHeader(ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, origin);
-		if (allowCredentials)
-			response.setHeader(ACCESS_CONTROL_ALLOW_CREDENTIALS_HEADER, "true");
-		if (!exposedHeaders.isEmpty())
-			response.setHeader(ACCESS_CONTROL_EXPOSE_HEADERS_HEADER,
-					commify(exposedHeaders));
+		return true;
 	}
 
 	private boolean isMethodAllowed(HttpServletRequest request) {
@@ -432,25 +452,5 @@ public class CrossOriginFilter implements Filter {
 		return regex.replace("*", ".*"); // we want to be greedy here to match
 											// multiple subdomains, thus we use
 											// .*
-	}
-
-	protected boolean isEnabled(HttpServletRequest request) {
-		// WebSocket clients such as Chrome 5 implement a version of the
-		// WebSocket
-		// protocol that does not accept extra response headers on the upgrade
-		// response
-		for (Enumeration connections = request
-				.getHeaders("Connection"); connections.hasMoreElements();) {
-			String connection = (String) connections.nextElement();
-			if ("Upgrade".equalsIgnoreCase(connection)) {
-				for (Enumeration upgrades = request
-						.getHeaders("Upgrade"); upgrades.hasMoreElements();) {
-					String upgrade = (String) upgrades.nextElement();
-					if ("WebSocket".equalsIgnoreCase(upgrade))
-						return false;
-				}
-			}
-		}
-		return true;
 	}
 }

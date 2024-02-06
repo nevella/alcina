@@ -383,6 +383,24 @@ public abstract class Model extends Bindable implements
 			addListener(listener);
 		}
 
+		private ListenerBinding asBinding(
+				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
+			return new ListenerBinding() {
+				private HandlerRegistration reference;
+
+				@Override
+				public void bind() {
+					reference = handlerRegistrationSupplier.get();
+				}
+
+				@Override
+				public void unbind() {
+					reference.removeHandler();
+					reference = null;
+				}
+			};
+		}
+
 		public void bind() {
 			Preconditions.checkState(!bound);
 			binding.bind();
@@ -398,8 +416,24 @@ public abstract class Model extends Bindable implements
 			return binding.from(source);
 		}
 
+		public <TE> ModelBinding<TE> from(Topic<TE> topic) {
+			ModelBinding binding = new ModelBinding(this);
+			modelBindings.add(binding);
+			return binding.from(topic);
+		}
+
+		private SourcesPropertyChangeEvents getSource() {
+			SourcesPropertyChangeEvents left = fieldless ? propertyChangeSource
+					: Model.this;
+			return left;
+		}
+
 		public boolean isFieldless() {
 			return this.fieldless;
+		}
+
+		Model model() {
+			return Model.this;
 		}
 
 		public void setFieldless(boolean fieldless) {
@@ -423,30 +457,6 @@ public abstract class Model extends Bindable implements
 			String propertyNameString = PropertyEnum
 					.asPropertyName(propertyName);
 			return (T) values.get(propertyNameString);
-		}
-
-		private ListenerBinding asBinding(
-				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
-			return new ListenerBinding() {
-				private HandlerRegistration reference;
-
-				@Override
-				public void bind() {
-					reference = handlerRegistrationSupplier.get();
-				}
-
-				@Override
-				public void unbind() {
-					reference.removeHandler();
-					reference = null;
-				}
-			};
-		}
-
-		private SourcesPropertyChangeEvents getSource() {
-			SourcesPropertyChangeEvents left = fieldless ? propertyChangeSource
-					: Model.this;
-			return left;
 		}
 
 		public class MapBackedProperty extends Property {
@@ -475,16 +485,6 @@ public abstract class Model extends Bindable implements
 						.property(propertyName);
 				return new MapBackedProperty(property);
 			}
-		}
-
-		Model model() {
-			return Model.this;
-		}
-
-		public <TE> ModelBinding<TE> from(Topic<TE> topic) {
-			ModelBinding binding = new ModelBinding(this);
-			modelBindings.add(binding);
-			return binding.from(topic);
 		}
 	}
 

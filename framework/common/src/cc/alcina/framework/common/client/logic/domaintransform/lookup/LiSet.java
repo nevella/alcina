@@ -39,12 +39,6 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 
 	public static transient DegenerateCreator degenerateCreator = new DegenerateCreator();
 
-	public static <H extends Entity> LiSet<H> of(H h) {
-		LiSet<H> result = new LiSet<>();
-		result.add(h);
-		return result;
-	}
-
 	private static int compare(Entity o1, Entity o2) {
 		if (o1.getLocalId() != 0 || o2.getLocalId() != 0) {
 			if (o2.getLocalId() == 0) {
@@ -63,6 +57,12 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 			return 1;
 		}
 		return 0;
+	}
+
+	public static <H extends Entity> LiSet<H> of(H h) {
+		LiSet<H> result = new LiSet<>();
+		result.add(h);
+		return result;
 	}
 
 	private transient Entity[] elementData;
@@ -177,6 +177,44 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		return o.equals(elementData[idx]);
 	}
 
+	/*
+	 * If elementData contains e, returns the index of e. If not, return index
+	 * of least f gt e (or value of field 'size' if no f gt e)
+	 * 
+	 */
+	private int indexOf(Entity e) {
+		int rangeMin = 0;
+		// open range - i.e. rangeMax is guaranteed gt target index (unless
+		// target index==size)
+		int rangeMax = size;
+		int arrayPos = 0;
+		int res = 0;
+		if (size == 0) {
+			return 0;
+		}
+		while (true) {
+			arrayPos = (rangeMax - rangeMin) / 2 + rangeMin;
+			Entity f = elementData[arrayPos];
+			res = compare(e, f);
+			if (res == 0) {
+				return arrayPos;
+			}
+			if (rangeMax == rangeMin) {
+				return arrayPos;
+			} else {
+				if (res < 0) {
+					rangeMax = arrayPos;
+				} else {
+					rangeMin = arrayPos + 1;
+				}
+				if (rangeMin >= size) {
+					// no elt f gt e
+					return size;
+				}
+			}
+		}
+	}
+
 	@Override
 	public Iterator<H> iterator() {
 		if (degenerate != null) {
@@ -228,44 +266,6 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		return size;
 	}
 
-	/*
-	 * If elementData contains e, returns the index of e. If not, return index
-	 * of least f gt e (or value of field 'size' if no f gt e)
-	 * 
-	 */
-	private int indexOf(Entity e) {
-		int rangeMin = 0;
-		// open range - i.e. rangeMax is guaranteed gt target index (unless
-		// target index==size)
-		int rangeMax = size;
-		int arrayPos = 0;
-		int res = 0;
-		if (size == 0) {
-			return 0;
-		}
-		while (true) {
-			arrayPos = (rangeMax - rangeMin) / 2 + rangeMin;
-			Entity f = elementData[arrayPos];
-			res = compare(e, f);
-			if (res == 0) {
-				return arrayPos;
-			}
-			if (rangeMax == rangeMin) {
-				return arrayPos;
-			} else {
-				if (res < 0) {
-					rangeMax = arrayPos;
-				} else {
-					rangeMin = arrayPos + 1;
-				}
-				if (rangeMin >= size) {
-					// no elt f gt e
-					return size;
-				}
-			}
-		}
-	}
-
 	protected void toDegenerate() {
 		Set degenerate = degenerateCreator.create();
 		degenerate.addAll(this);
@@ -281,17 +281,6 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 
 		public Set create() {
 			return new LinkedHashSet<>();
-		}
-	}
-
-	public interface NonDomainNotifier {
-		public void notifyNonDomain(LiSet liSet, Entity e);
-	}
-
-	public static class TestComparator implements Comparator<Entity> {
-		@Override
-		public int compare(Entity o1, Entity o2) {
-			return LiSet.compare(o1, o2);
 		}
 	}
 
@@ -330,6 +319,17 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 			LiSet.this.remove(elementData[--idx]);
 			itrModCount++;
 			nextCalled = false;
+		}
+	}
+
+	public interface NonDomainNotifier {
+		public void notifyNonDomain(LiSet liSet, Entity e);
+	}
+
+	public static class TestComparator implements Comparator<Entity> {
+		@Override
+		public int compare(Entity o1, Entity o2) {
+			return LiSet.compare(o1, o2);
 		}
 	}
 }

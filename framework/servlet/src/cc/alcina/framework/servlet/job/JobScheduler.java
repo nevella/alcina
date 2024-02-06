@@ -168,33 +168,21 @@ public class JobScheduler {
 		return canModify;
 	}
 
-	public Stream<Job> getToAbortOrReassign(
-			List<ClientInstance> activeInstances, String visibleInstanceRegex,
-			Date cutoff) {
-		Date consistencyCutoff = SEUtilities
-				.toOldDate(LocalDateTime.now().minusMinutes(120));
-		return JobDomain.get().getIncompleteJobs()
-				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
-				.filter(job -> job.getCreator().toString()
-						.matches(visibleInstanceRegex))
-				.filter(job -> job.getConsistencyPriority() == null
-						|| (job.getStartTime() != null && job.getStartTime()
-								.before(consistencyCutoff)))
-				.filter(job -> (job.getPerformer() == null
-						&& !activeInstances.contains(job.getCreator())
-						&& /*
-							 * don't abort if the creator has moved on but we
-							 * have a still-active related processor (edge case)
-							 */
-						!job.provideRelatedSequential().stream()
-								.anyMatch(relatedJob -> activeInstances
-										.contains(relatedJob.getPerformer())))
-						|| (job.getPerformer() != null && !activeInstances
-								.contains(job.getPerformer())));
+	ScheduleEvent enqueueEvent(ScheduleEvent event) {
+		events.add(event);
+		return event;
 	}
 
-	public void stopService() {
-		events.add(new ScheduleEvent(ScheduleEventType.SHUTDOWN));
+	void enqueueLeaderChangedEvent() {
+		MethodContext.instance().withWrappingTransaction()
+				.call(() -> enqueueEvent(
+						new ScheduleEvent(ScheduleEventType.LEADER_CHANGED)));
+	}
+
+	void fireWakeup() {
+		MethodContext.instance().withWrappingTransaction()
+				.run(() -> enqueueEvent(
+						new ScheduleEvent(ScheduleEventType.WAKEUP)));
 	}
 
 	private void futuresToPending(ScheduleEvent event) {
@@ -226,6 +214,31 @@ public class JobScheduler {
 								job);
 					}
 				});
+	}
+
+	public Stream<Job> getToAbortOrReassign(
+			List<ClientInstance> activeInstances, String visibleInstanceRegex,
+			Date cutoff) {
+		Date consistencyCutoff = SEUtilities
+				.toOldDate(LocalDateTime.now().minusMinutes(120));
+		return JobDomain.get().getIncompleteJobs()
+				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
+				.filter(job -> job.getCreator().toString()
+						.matches(visibleInstanceRegex))
+				.filter(job -> job.getConsistencyPriority() == null
+						|| (job.getStartTime() != null && job.getStartTime()
+								.before(consistencyCutoff)))
+				.filter(job -> (job.getPerformer() == null
+						&& !activeInstances.contains(job.getCreator())
+						&& /*
+							 * don't abort if the creator has moved on but we
+							 * have a still-active related processor (edge case)
+							 */
+						!job.provideRelatedSequential().stream()
+								.anyMatch(relatedJob -> activeInstances
+										.contains(relatedJob.getPerformer())))
+						|| (job.getPerformer() != null && !activeInstances
+								.contains(job.getPerformer())));
 	}
 
 	private void processEvent(ScheduleEvent event) {
@@ -308,97 +321,6 @@ public class JobScheduler {
 		eventOcurred.publish(null);
 	}
 
-	private void refreshFutures(ScheduleEvent event) {
-		LocalDateTime wakeup = LocalDateTime.now().plusYears(1);
-		List<Class<? extends Task>> taskClasses = (List) Registry.query()
-				.setKeys(Schedule.class).childKeys()
-				.collect(Collectors.toList());
-		for (Class<? extends Task> key : taskClasses) {
-			Schedule schedule = Schedule.forTaskClass(key);
-			if (schedule == null) {
-				continue;
-			}
-			LocalDateTime nextForTaskClass = schedule.getNext(
-					event.type == ScheduleEventType.APPLICATION_STARTUP);
-			if (nextForTaskClass == null) {
-				continue;
-			}
-			Optional<Job> earliestIncompleteScheduled = JobDomain.get()
-					.getEarliestIncompleteScheduled(key, schedule.isVmLocal());
-			Optional<Job> earliestFuture = JobDomain.get()
-					.getEarliestFuture(key, schedule.isVmLocal());
-			if (earliestFuture.isPresent()) {
-				Date nextDate = SEUtilities.toOldDate(nextForTaskClass);
-				if (earliestFuture.get().getRunAt().after(nextDate)) {
-					if (SchedulingPermissions
-							.canModifyFuture(earliestFuture.get())) {
-						logger.info("Changed next run of {} to {}",
-								earliestFuture.get(), nextForTaskClass);
-						earliestFuture.get().setRunAt(nextDate);
-					}
-				} else {
-					if (SchedulingPermissions.canFutureToPending()) {
-						nextForTaskClass = SEUtilities.toLocalDateTime(
-								earliestFuture.get().getRunAt());
-					}
-				}
-			} else {
-				Job test = PersistentImpl
-						.getNewImplementationInstance(Job.class);
-				test.setTask(Reflections.newInstance(key));
-				if (SchedulingPermissions.canCreateFuture(schedule)) {
-					Job job = JobRegistry.createBuilder()
-							.withTask(Reflections.newInstance(key))
-							.withRunAt(nextForTaskClass).create();
-					logger.info("Schedule new future job - {} to {}", job,
-							nextForTaskClass);
-				}
-			}
-			/*
-			 * If there's an incomplete job of this task class, don't schedule a
-			 * wakeup (otherwise we'll end up in a nasty perpetual-wakup loop)
-			 */
-			if (nextForTaskClass.isBefore(wakeup)
-					&& !earliestIncompleteScheduled.isPresent()) {
-				wakeup = nextForTaskClass;
-			}
-		}
-		if (nextScheduledWakeup == null
-				|| wakeup.isBefore(nextScheduledWakeup)) {
-			if (wakeup.isBefore(LocalDateTime.now())) {
-				logger.info("Firing wakeup - wakeup time {} is before now",
-						wakeup);
-				events.add(new ScheduleEvent(ScheduleEventType.WAKEUP));
-			} else {
-				timer.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						fireWakeup();
-					}
-				}, SEUtilities.toOldDate(wakeup));
-				logger.debug("Scheduled wakeup for {}", wakeup);
-			}
-			nextScheduledWakeup = wakeup;
-		}
-	}
-
-	ScheduleEvent enqueueEvent(ScheduleEvent event) {
-		events.add(event);
-		return event;
-	}
-
-	void enqueueLeaderChangedEvent() {
-		MethodContext.instance().withWrappingTransaction()
-				.call(() -> enqueueEvent(
-						new ScheduleEvent(ScheduleEventType.LEADER_CHANGED)));
-	}
-
-	void fireWakeup() {
-		MethodContext.instance().withWrappingTransaction()
-				.run(() -> enqueueEvent(
-						new ScheduleEvent(ScheduleEventType.WAKEUP)));
-	}
-
 	void processOrphans() {
 		if (jobRegistry.jobExecutors.isHighestBuildNumberInCluster()) {
 			JobDomain.get().getUndeserializableJobs().forEach(Job::delete);
@@ -477,6 +399,92 @@ public class JobScheduler {
 		}
 	}
 
+	private void refreshFutures(ScheduleEvent event) {
+		LocalDateTime wakeup = LocalDateTime.now().plusYears(1);
+		List<Class<? extends Task>> taskClasses = (List) Registry.query()
+				.setKeys(Schedule.class).childKeys()
+				.collect(Collectors.toList());
+		for (Class<? extends Task> key : taskClasses) {
+			Schedule schedule = Schedule.forTaskClass(key);
+			if (schedule == null) {
+				continue;
+			}
+			LocalDateTime nextForTaskClass = schedule.getNext(
+					event.type == ScheduleEventType.APPLICATION_STARTUP);
+			if (nextForTaskClass == null) {
+				continue;
+			}
+			Optional<Job> earliestIncompleteScheduled = JobDomain.get()
+					.getEarliestIncompleteScheduled(key, schedule.isVmLocal());
+			Optional<Job> earliestFuture = JobDomain.get()
+					.getEarliestFuture(key, schedule.isVmLocal());
+			if (earliestFuture.isPresent()) {
+				Date nextDate = SEUtilities.toOldDate(nextForTaskClass);
+				if (earliestFuture.get().getRunAt().after(nextDate)) {
+					if (SchedulingPermissions
+							.canModifyFuture(earliestFuture.get())) {
+						logger.info("Changed next run of {} to {}",
+								earliestFuture.get(), nextForTaskClass);
+						earliestFuture.get().setRunAt(nextDate);
+					}
+				} else {
+					if (SchedulingPermissions.canFutureToPending()) {
+						nextForTaskClass = SEUtilities.toLocalDateTime(
+								earliestFuture.get().getRunAt());
+					}
+				}
+			} else {
+				Job test = PersistentImpl
+						.getNewImplementationInstance(Job.class);
+				test.setTask(Reflections.newInstance(key));
+				if (SchedulingPermissions.canCreateFuture(schedule)) {
+					Job job = JobRegistry.createBuilder()
+							.withTask(Reflections.newInstance(key))
+							.withRunAt(nextForTaskClass).create();
+					logger.info("Schedule new future job - {} to {}", job,
+							nextForTaskClass);
+				}
+			}
+			/*
+			 * If there's an incomplete job of this task class, don't schedule a
+			 * wakeup (otherwise we'll end up in a nasty perpetual-wakup loop)
+			 */
+			if (nextForTaskClass.isBefore(wakeup)
+					&& !earliestIncompleteScheduled.isPresent()) {
+				wakeup = nextForTaskClass;
+			}
+		}
+		if (nextScheduledWakeup == null
+				|| wakeup.isBefore(nextScheduledWakeup)) {
+			if (wakeup.isBefore(LocalDateTime.now())) {
+				logger.info("Firing wakeup - wakeup time {} is before now",
+						wakeup);
+				events.add(new ScheduleEvent(ScheduleEventType.WAKEUP));
+			} else {
+				timer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						fireWakeup();
+					}
+				}, SEUtilities.toOldDate(wakeup));
+				logger.debug("Scheduled wakeup for {}", wakeup);
+			}
+			nextScheduledWakeup = wakeup;
+		}
+	}
+
+	public void stopService() {
+		events.add(new ScheduleEvent(ScheduleEventType.SHUTDOWN));
+	}
+
+	static class CurrentThreadExecutorServiceProvider
+			implements ExecutorServiceProvider {
+		@Override
+		public ExecutorService getService(AllocationQueue queue) {
+			return new CurrentThreadExecutorService();
+		}
+	}
+
 	@Registration(
 		value = ExecutionConstraints.class,
 		implementation = Registration.Implementation.FACTORY)
@@ -546,6 +554,10 @@ public class JobScheduler {
 			return false;
 		}
 
+		protected T provideTask() {
+			return (T) queue.job.getTask();
+		}
+
 		public ExecutionConstraints withDescendantExecutorServiceProvider(
 				ExecutorServiceProvider descendantExcutorServiceProvider) {
 			this.descendantExecutorServiceProvider = descendantExcutorServiceProvider;
@@ -561,10 +573,6 @@ public class JobScheduler {
 		private ExecutionConstraints withQueue(AllocationQueue queue) {
 			this.queue = queue;
 			return this;
-		}
-
-		protected T provideTask() {
-			return (T) queue.job.getTask();
 		}
 
 		private static class AdHocExecutorServiceProvider
@@ -648,12 +656,6 @@ public class JobScheduler {
 			return new ResubmitNTimesPolicy(nTimes);
 		}
 
-		public void visit(Job job) {
-			if (shouldResubmit(job)) {
-				resubmit(job);
-			}
-		}
-
 		protected Logger logger() {
 			return LoggerFactory.getLogger(getClass());
 		}
@@ -674,6 +676,12 @@ public class JobScheduler {
 			return job.provideIsTopLevel() && job.getRunAt() != null
 					&& job.getState().isResubmittable();
 		}
+
+		public void visit(Job job) {
+			if (shouldResubmit(job)) {
+				resubmit(job);
+			}
+		}
 	}
 
 	@Registration(RetentionPolicy.class)
@@ -682,6 +690,15 @@ public class JobScheduler {
 			logger().info("RetentionPolicy {} - deleting job {}",
 					getClass().getSimpleName(), job);
 			job.delete();
+		}
+
+		protected int getRetentionDays() {
+			return Configuration.getInt(JobScheduler.class,
+					"defaultRetentionDays");
+		}
+
+		protected Logger logger() {
+			return LoggerFactory.getLogger(getClass());
 		}
 
 		public boolean retain(Job job) {
@@ -701,15 +718,6 @@ public class JobScheduler {
 				return days <= 3;
 			}
 			return days < getRetentionDays();
-		}
-
-		protected int getRetentionDays() {
-			return Configuration.getInt(JobScheduler.class,
-					"defaultRetentionDays");
-		}
-
-		protected Logger logger() {
-			return LoggerFactory.getLogger(getClass());
 		}
 	}
 
@@ -760,49 +768,6 @@ public class JobScheduler {
 		}
 	}
 
-	public class ScheduleJobsThread extends Thread {
-		@Override
-		public void run() {
-			setName("Schedule-jobs-queue-"
-					+ EntityLayerUtils.getLocalHostName());
-			while (!finished) {
-				try {
-					ScheduleEvent event = events.take();
-					/*
-					 * We'll reach this point because a schedule event was fired
-					 * during transform request processing. Wait until that
-					 * event is completely processed (and visible to this
-					 * thread/tx).
-					 */
-					environment.waitUntilCurrentRequestsProcessed();
-					processEvent(event);
-				} catch (Throwable e) {
-					e.printStackTrace();
-				} finally {
-					try {
-						Transaction.ensureEnded();
-					} catch (Exception e) {
-						if (TransformManager.get() == null) {
-							// shutting down
-						} else {
-							logger.warn(
-									"DEVEX::0 - job scheduler cleanup exception",
-									e);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	static class CurrentThreadExecutorServiceProvider
-			implements ExecutorServiceProvider {
-		@Override
-		public ExecutorService getService(AllocationQueue queue) {
-			return new CurrentThreadExecutorService();
-		}
-	}
-
 	class ScheduleEvent {
 		AllocationQueue.Event queueEvent;
 
@@ -847,6 +812,41 @@ public class JobScheduler {
 				return true;
 			}
 			return false;
+		}
+	}
+
+	public class ScheduleJobsThread extends Thread {
+		@Override
+		public void run() {
+			setName("Schedule-jobs-queue-"
+					+ EntityLayerUtils.getLocalHostName());
+			while (!finished) {
+				try {
+					ScheduleEvent event = events.take();
+					/*
+					 * We'll reach this point because a schedule event was fired
+					 * during transform request processing. Wait until that
+					 * event is completely processed (and visible to this
+					 * thread/tx).
+					 */
+					environment.waitUntilCurrentRequestsProcessed();
+					processEvent(event);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				} finally {
+					try {
+						Transaction.ensureEnded();
+					} catch (Exception e) {
+						if (TransformManager.get() == null) {
+							// shutting down
+						} else {
+							logger.warn(
+									"DEVEX::0 - job scheduler cleanup exception",
+									e);
+						}
+					}
+				}
+			}
 		}
 	}
 }

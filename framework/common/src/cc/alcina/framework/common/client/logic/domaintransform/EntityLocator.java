@@ -293,6 +293,15 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return toRecoverableNumericString0('/');
 	}
 
+	private String toRecoverableNumericString0(char separator) {
+		if (id != 0) {
+			return String.valueOf(id);
+		}
+		return Ax.format("%s%s%s",
+				PermissionsManager.get().getClientInstanceId(), separator,
+				localId);
+	}
+
 	public String toRecoverableString(long clientInstanceId) {
 		if (id != 0) {
 			return toString();
@@ -320,14 +329,5 @@ public class EntityLocator implements Serializable, TreeSerializable {
 
 	public boolean wasRemoved() {
 		return find() == null;
-	}
-
-	private String toRecoverableNumericString0(char separator) {
-		if (id != 0) {
-			return String.valueOf(id);
-		}
-		return Ax.format("%s%s%s",
-				PermissionsManager.get().getClientInstanceId(), separator,
-				localId);
 	}
 }

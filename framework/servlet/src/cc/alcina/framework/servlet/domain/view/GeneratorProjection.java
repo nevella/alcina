@@ -90,15 +90,6 @@ public class GeneratorProjection<E> {
 		}
 
 		@Override
-		public Class<? extends E> getListenedClass() {
-			throw new UnsupportedOperationException();
-		}
-
-		private Class<?> getType(int i) {
-			return i == size() ? clazz : GeneratorProjection.this.types.get(i);
-		}
-
-		@Override
 		protected MultikeyMap<E> createLookup() {
 			CollectionCreators.MapCreator[] sortingCreators = IntStream
 					.range(0, getDepth())
@@ -116,6 +107,15 @@ public class GeneratorProjection<E> {
 		@Override
 		protected int getDepth() {
 			return size() + 1;
+		}
+
+		@Override
+		public Class<? extends E> getListenedClass() {
+			throw new UnsupportedOperationException();
+		}
+
+		private Class<?> getType(int i) {
+			return i == size() ? clazz : GeneratorProjection.this.types.get(i);
 		}
 
 		@Override

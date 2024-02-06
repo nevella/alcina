@@ -72,6 +72,37 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public JacksonJsonObjectSerializer() {
 	}
 
+	ObjectMapper createObjectMapper() {
+		ObjectMapper mapper = new ObjectMapper();
+		if (withTypeInfo) {
+			// default to using
+			mapper.enableDefaultTyping();
+			// DefaultTyping.OBJECT_AND_NON_CONCRETE
+			mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+		}
+		if (withAllowUnknownProperties) {
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+					false);
+		}
+		if (withWrapRootValue) {
+			mapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+		}
+		if (withIdRefs) {
+			mapper.setVisibility(mapper.getSerializationConfig()
+					.getDefaultVisibilityChecker()
+					.withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+					.withGetterVisibility(JsonAutoDetect.Visibility.ANY)
+					.withSetterVisibility(JsonAutoDetect.Visibility.NONE)
+					.withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+			mapper.setAnnotationIntrospector(new AddIdAnnotationIntrospector());
+		}
+		if (!withDefaults) {
+			mapper.setSerializationInclusion(Include.NON_DEFAULT);
+		}
+		mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		return mapper;
+	}
+
 	public <T> T deserialize(Reader reader, Class<T> clazz) {
 		return runWithObjectMapper(mapper -> {
 			try {
@@ -105,6 +136,27 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		});
 	}
 
+	private <T> T deserialize_v1(String json, Class<T> clazz) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			if (withTypeInfo) {
+				// default to using
+				mapper.enableDefaultTyping();
+				// DefaultTyping.OBJECT_AND_NON_CONCRETE
+				mapper.enableDefaultTyping(
+						ObjectMapper.DefaultTyping.NON_FINAL);
+			}
+			if (withAllowUnknownProperties) {
+				mapper.configure(
+						DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+						false);
+			}
+			return mapper.readValue(json, clazz);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public JsonNode deserializeJson(String deserJson) {
 		return runWithObjectMapper(mapper -> {
 			String json = deserJson;
@@ -131,11 +183,43 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		}
 	}
 
+	private boolean hasDuplicateIds(JsonNode root) {
+		Set<String> refIds = new LinkedHashSet<>();
+		Stack<JsonNode> nodes = new Stack<>();
+		nodes.push(root);
+		while (nodes.size() > 0) {
+			JsonNode node = nodes.pop();
+			if (node.has("ref_id")) {
+				if (!refIds.add(node.get("ref_id").asText())) {
+					return true;
+				}
+			}
+			node.elements().forEachRemaining(nodes::push);
+		}
+		return false;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(withIdRefs, withTypeInfo,
 				withAllowUnknownProperties, withBase64Encoding, withPrettyPrint,
 				withDefaults, withWrapRootValue);
+	}
+
+	private <T> T
+			runWithObjectMapper(Function<ObjectMapper, T> mapperFunction) {
+		if (LooseContext.is(CONTEXT_WITHOUT_MAPPER_POOL) || !usePool) {
+			ObjectMapper mapper = createObjectMapper();
+			return mapperFunction.apply(mapper);
+		} else {
+			ObjectMapperPool pool = objectMappersPool.get(this);
+			ObjectMapper mapper = pool.borrow();
+			try {
+				return mapperFunction.apply(mapper);
+			} finally {
+				pool.returnObject(mapper);
+			}
+		}
 	}
 
 	@Override
@@ -242,90 +326,6 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		return this;
 	}
 
-	private <T> T deserialize_v1(String json, Class<T> clazz) {
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			if (withTypeInfo) {
-				// default to using
-				mapper.enableDefaultTyping();
-				// DefaultTyping.OBJECT_AND_NON_CONCRETE
-				mapper.enableDefaultTyping(
-						ObjectMapper.DefaultTyping.NON_FINAL);
-			}
-			if (withAllowUnknownProperties) {
-				mapper.configure(
-						DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-						false);
-			}
-			return mapper.readValue(json, clazz);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private boolean hasDuplicateIds(JsonNode root) {
-		Set<String> refIds = new LinkedHashSet<>();
-		Stack<JsonNode> nodes = new Stack<>();
-		nodes.push(root);
-		while (nodes.size() > 0) {
-			JsonNode node = nodes.pop();
-			if (node.has("ref_id")) {
-				if (!refIds.add(node.get("ref_id").asText())) {
-					return true;
-				}
-			}
-			node.elements().forEachRemaining(nodes::push);
-		}
-		return false;
-	}
-
-	private <T> T
-			runWithObjectMapper(Function<ObjectMapper, T> mapperFunction) {
-		if (LooseContext.is(CONTEXT_WITHOUT_MAPPER_POOL) || !usePool) {
-			ObjectMapper mapper = createObjectMapper();
-			return mapperFunction.apply(mapper);
-		} else {
-			ObjectMapperPool pool = objectMappersPool.get(this);
-			ObjectMapper mapper = pool.borrow();
-			try {
-				return mapperFunction.apply(mapper);
-			} finally {
-				pool.returnObject(mapper);
-			}
-		}
-	}
-
-	ObjectMapper createObjectMapper() {
-		ObjectMapper mapper = new ObjectMapper();
-		if (withTypeInfo) {
-			// default to using
-			mapper.enableDefaultTyping();
-			// DefaultTyping.OBJECT_AND_NON_CONCRETE
-			mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-		}
-		if (withAllowUnknownProperties) {
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-					false);
-		}
-		if (withWrapRootValue) {
-			mapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
-		}
-		if (withIdRefs) {
-			mapper.setVisibility(mapper.getSerializationConfig()
-					.getDefaultVisibilityChecker()
-					.withFieldVisibility(JsonAutoDetect.Visibility.ANY)
-					.withGetterVisibility(JsonAutoDetect.Visibility.ANY)
-					.withSetterVisibility(JsonAutoDetect.Visibility.NONE)
-					.withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
-			mapper.setAnnotationIntrospector(new AddIdAnnotationIntrospector());
-		}
-		if (!withDefaults) {
-			mapper.setSerializationInclusion(Include.NON_DEFAULT);
-		}
-		mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		return mapper;
-	}
-
 	public static class AddIdAnnotationIntrospector
 			extends JacksonAnnotationIntrospector {
 		@Override
@@ -407,16 +407,6 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 			objectPool.setMaxTotal(10);
 		}
 
-		public void returnObject(ObjectMapper objectMapper) {
-			if (objectPool != null) {
-				try {
-					objectPool.returnObject(objectMapper);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
 		synchronized ObjectMapper borrow() {
 			try {
 				if (objectPool == null) {
@@ -426,6 +416,16 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		public void returnObject(ObjectMapper objectMapper) {
+			if (objectPool != null) {
+				try {
+					objectPool.returnObject(objectMapper);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 

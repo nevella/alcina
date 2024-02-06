@@ -148,59 +148,6 @@ public class BackendTransformQueue {
 	public BackendTransformQueue() {
 	}
 
-	public void createBackendQueue(String queueName, long maxDelayMs) {
-		Preconditions.checkState(!queues.containsKey(queueName));
-		String normaliseQueueName = normaliseQueueName(queueName);
-		queues.put(normaliseQueueName,
-				new Queue(normaliseQueueName, maxDelayMs));
-	}
-
-	public int enqueue(List<DomainTransformEvent> transforms,
-			String queueName) {
-		long now = System.currentTimeMillis();
-		events.add(new Event(transforms, normaliseQueueName(queueName), now));
-		removeFromLocalEviction(transforms);
-		return transforms.size();
-	}
-
-	public int enqueue(Runnable runnable, String queueName) {
-		CollectingListener collectingListener = new CollectingListener();
-		try {
-			TransformManager.get()
-					.addDomainTransformListener(collectingListener);
-			runnable.run();
-			List<DomainTransformEvent> transforms = collectingListener.transforms;
-			collectingListener.transforms
-					.forEach(TransformManager.get()::removeTransform);
-			return enqueue(collectingListener.transforms, queueName);
-		} finally {
-			TransformManager.get()
-					.removeDomainTransformListener(collectingListener);
-		}
-	}
-
-	// for testing, forces a commit()
-	public void flush() {
-		Preconditions.checkState(Ax.isTest());
-		events.add(new Event(null, null, 0L));
-	}
-
-	public void start() {
-		int loopDelay = Configuration.getInt("loopDelay");
-		createBackendQueue(DEFAULT_QUEUE_NAME, loopDelay);
-		eventThread = new EventThread();
-		eventThread.start();
-		DomainStore.writableStore().getPersistenceEvents()
-				.addDomainTransformPersistenceListener(transformInterpolator);
-	}
-
-	public void stop() {
-		finished = true;
-		if (eventThread != null) {
-			eventThread.interrupt();
-		}
-	}
-
 	private void commit() {
 		TransformCollation committingCollation;
 		List<DomainTransformEvent> pendingTransforms = new ArrayList<>();
@@ -241,16 +188,53 @@ public class BackendTransformQueue {
 		Transaction.end();
 	}
 
-	private String normaliseQueueName(String queueName) {
-		return Ax.blankTo(queueName, DEFAULT_QUEUE_NAME);
-	}
-
 	long computeDelay() {
 		long now = System.currentTimeMillis();
 		// doesn't lock all queues, but worst case (of queue modification during
 		// stream) is just a spurious commit() event which causes an commit noop
 		return queues.values().stream().map(q -> q.computeDelay(now))
 				.min(Comparator.naturalOrder()).orElse(Long.MAX_VALUE);
+	}
+
+	public void createBackendQueue(String queueName, long maxDelayMs) {
+		Preconditions.checkState(!queues.containsKey(queueName));
+		String normaliseQueueName = normaliseQueueName(queueName);
+		queues.put(normaliseQueueName,
+				new Queue(normaliseQueueName, maxDelayMs));
+	}
+
+	public int enqueue(List<DomainTransformEvent> transforms,
+			String queueName) {
+		long now = System.currentTimeMillis();
+		events.add(new Event(transforms, normaliseQueueName(queueName), now));
+		removeFromLocalEviction(transforms);
+		return transforms.size();
+	}
+
+	public int enqueue(Runnable runnable, String queueName) {
+		CollectingListener collectingListener = new CollectingListener();
+		try {
+			TransformManager.get()
+					.addDomainTransformListener(collectingListener);
+			runnable.run();
+			List<DomainTransformEvent> transforms = collectingListener.transforms;
+			collectingListener.transforms
+					.forEach(TransformManager.get()::removeTransform);
+			return enqueue(collectingListener.transforms, queueName);
+		} finally {
+			TransformManager.get()
+					.removeDomainTransformListener(collectingListener);
+		}
+	}
+
+	// for testing, forces a commit()
+	public void flush() {
+		Preconditions.checkState(Ax.isTest());
+		events.add(new Event(null, null, 0L));
+	}
+
+	private String normaliseQueueName(String queueName) {
+		return Ax.blankTo(queueName, DEFAULT_QUEUE_NAME);
 	}
 
 	void removeFromLocalEviction(List<DomainTransformEvent> transforms) {
@@ -260,6 +244,22 @@ public class BackendTransformQueue {
 				.forEach(Transaction.current()::removeFromLocalEviction);
 	}
 
+	public void start() {
+		int loopDelay = Configuration.getInt("loopDelay");
+		createBackendQueue(DEFAULT_QUEUE_NAME, loopDelay);
+		eventThread = new EventThread();
+		eventThread.start();
+		DomainStore.writableStore().getPersistenceEvents()
+				.addDomainTransformPersistenceListener(transformInterpolator);
+	}
+
+	public void stop() {
+		finished = true;
+		if (eventThread != null) {
+			eventThread.interrupt();
+		}
+	}
+
 	private static class CollectingListener implements DomainTransformListener {
 		List<DomainTransformEvent> transforms = new ArrayList<>();
 
@@ -267,6 +267,30 @@ public class BackendTransformQueue {
 		public void domainTransform(DomainTransformEvent evt)
 				throws DomainTransformException {
 			transforms.add(evt);
+		}
+	}
+
+	class Event {
+		List<DomainTransformEvent> transforms;
+
+		String queueName;
+
+		long time;
+
+		long id;
+
+		Event(List<DomainTransformEvent> transforms, String queueName,
+				long time) {
+			this.id = idCounter.incrementAndGet();
+			this.transforms = transforms;
+			this.queueName = queueName;
+			this.time = time;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s :: %s :: %s transforms", id, queueName,
+					time, transforms.size());
 		}
 	}
 
@@ -332,25 +356,19 @@ public class BackendTransformQueue {
 			}
 		}
 
-		public synchronized void
-				flushAndClear(List<DomainTransformEvent> pendingTransforms) {
-			pendingTransforms.addAll(events);
-			firstEventTime = -1;
-			events.clear();
-		}
-
-		@Override
-		public synchronized String toString() {
-			return Ax.format("[%s] - %s transforms; next fire: %s ms", name,
-					events.size(), computeDelay(System.currentTimeMillis()));
-		}
-
 		private synchronized long computeDelay(long fromTime) {
 			if (firstEventTime == -1) {
 				return Long.MAX_VALUE;
 			} else {
 				return firstEventTime + maxDelayMs - fromTime;
 			}
+		}
+
+		public synchronized void
+				flushAndClear(List<DomainTransformEvent> pendingTransforms) {
+			pendingTransforms.addAll(events);
+			firstEventTime = -1;
+			events.clear();
 		}
 
 		/*
@@ -375,6 +393,12 @@ public class BackendTransformQueue {
 						transforms.size(), name);
 			}
 		}
+
+		@Override
+		public synchronized String toString() {
+			return Ax.format("[%s] - %s transforms; next fire: %s ms", name,
+					events.size(), computeDelay(System.currentTimeMillis()));
+		}
 	}
 
 	private class TransformInterpolator
@@ -382,6 +406,35 @@ public class BackendTransformQueue {
 		private Map<String, PersistenceEventAffects> affects = new LinkedHashMap<>();
 
 		AtomicInteger sequenceIdCounter = new AtomicInteger();
+
+		// called from synchronized
+		private void checkTimedoutAffects() {
+			Iterator<Entry<String, PersistenceEventAffects>> itr = affects
+					.entrySet().iterator();
+			long now = System.currentTimeMillis();
+			while (itr.hasNext()) {
+				Entry<String, PersistenceEventAffects> next = itr.next();
+				if (next.getValue().isTimedOut(now)) {
+					logger.warn("Timed-out-waiting-for-backend-queue : {}",
+							next.getValue());
+					itr.remove();
+				} else {
+					break;
+				}
+			}
+		}
+
+		private PersistenceEventAffects createAffects(
+				DomainTransformPersistenceEvent event, boolean backend) {
+			Optional<String> firstUuid = event.getFirstUuid();
+			if (firstUuid.isEmpty()) {
+				return null;
+			}
+			PersistenceEventAffects result = new PersistenceEventAffects(event,
+					backend, sequenceIdCounter.incrementAndGet());
+			affects.put(firstUuid.get(), result);
+			return result;
+		}
 
 		@Override
 		public synchronized void onDomainTransformRequestPersistence(
@@ -413,35 +466,6 @@ public class BackendTransformQueue {
 			default:
 				return;
 			}
-		}
-
-		// called from synchronized
-		private void checkTimedoutAffects() {
-			Iterator<Entry<String, PersistenceEventAffects>> itr = affects
-					.entrySet().iterator();
-			long now = System.currentTimeMillis();
-			while (itr.hasNext()) {
-				Entry<String, PersistenceEventAffects> next = itr.next();
-				if (next.getValue().isTimedOut(now)) {
-					logger.warn("Timed-out-waiting-for-backend-queue : {}",
-							next.getValue());
-					itr.remove();
-				} else {
-					break;
-				}
-			}
-		}
-
-		private PersistenceEventAffects createAffects(
-				DomainTransformPersistenceEvent event, boolean backend) {
-			Optional<String> firstUuid = event.getFirstUuid();
-			if (firstUuid.isEmpty()) {
-				return null;
-			}
-			PersistenceEventAffects result = new PersistenceEventAffects(event,
-					backend, sequenceIdCounter.incrementAndGet());
-			affects.put(firstUuid.get(), result);
-			return result;
 		}
 
 		private synchronized void
@@ -491,25 +515,6 @@ public class BackendTransformQueue {
 				this.creationTime = System.currentTimeMillis();
 			}
 
-			public boolean isTimedOut(long currentTimeMillis) {
-				return currentTimeMillis - creationTime > 10
-						* TimeConstants.ONE_SECOND_MS;
-			}
-
-			@Override
-			public String toString() {
-				FormatBuilder fb = new FormatBuilder().separator(" - ");
-				fb.format("Thread: %s", thread.getName());
-				fb.format("Backend: %s", backend);
-				fb.format("SequenceId: %s", sequenceId);
-				fb.format("Event: %s",
-						event.getFirstUuid().orElse("<no uuid>"));
-				fb.format("CreationTime: %s", creationTime);
-				fb.format("Conflicts: %s",
-						getConflictingLocators().collect(Collectors.toList()));
-				return fb.toString();
-			}
-
 			private boolean conflictsWith(PersistenceEventAffects other) {
 				AdjunctTransformCollation collation = event
 						.getPreProcessCollation();
@@ -548,30 +553,25 @@ public class BackendTransformQueue {
 								&& pea.sequenceId < sequenceId)
 						.noneMatch(pea -> pea.conflictsWith(this));
 			}
-		}
-	}
 
-	class Event {
-		List<DomainTransformEvent> transforms;
+			public boolean isTimedOut(long currentTimeMillis) {
+				return currentTimeMillis - creationTime > 10
+						* TimeConstants.ONE_SECOND_MS;
+			}
 
-		String queueName;
-
-		long time;
-
-		long id;
-
-		Event(List<DomainTransformEvent> transforms, String queueName,
-				long time) {
-			this.id = idCounter.incrementAndGet();
-			this.transforms = transforms;
-			this.queueName = queueName;
-			this.time = time;
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s :: %s :: %s :: %s transforms", id, queueName,
-					time, transforms.size());
+			@Override
+			public String toString() {
+				FormatBuilder fb = new FormatBuilder().separator(" - ");
+				fb.format("Thread: %s", thread.getName());
+				fb.format("Backend: %s", backend);
+				fb.format("SequenceId: %s", sequenceId);
+				fb.format("Event: %s",
+						event.getFirstUuid().orElse("<no uuid>"));
+				fb.format("CreationTime: %s", creationTime);
+				fb.format("Conflicts: %s",
+						getConflictingLocators().collect(Collectors.toList()));
+				return fb.toString();
+			}
 		}
 	}
 }

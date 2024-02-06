@@ -32,6 +32,28 @@ public class DriveAccessor {
 
 	private Drive service;
 
+	void ensureDrive() {
+		if (service != null) {
+			return;
+		}
+		try {
+			// final NetHttpTransport httpTransport = GoogleNetHttpTransport
+			// .newTrustedTransport();
+			// override GoogleNetHttpTransport - use default truststore
+			final NetHttpTransport httpTransport = new NetHttpTransport.Builder()
+					// .trustCertificates(GoogleUtils.getCertificateTrustStore())
+					.build();
+			// final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport
+			// .newTrustedTransport();
+			service = new Drive.Builder(httpTransport, JSON_FACTORY,
+					getCredentials(httpTransport))
+							.setApplicationName(driveAccess.applicationName)
+							.build();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public File ensureFolder(String folderPath) throws IOException {
 		String parentId = driveAccess.folderId;
 		File file = null;
@@ -59,6 +81,25 @@ public class DriveAccessor {
 			parentId = file.getId();
 		}
 		return file;
+	}
+
+	private Credential getCredentials(NetHttpTransport transport)
+			throws IOException {
+		// Load client secrets.
+		InputStream in = new FileInputStream(driveAccess.credentialsPath);
+		GoogleClientSecrets clientSecrets = GoogleClientSecrets
+				.load(JSON_FACTORY, new InputStreamReader(in));
+		// Build flow and trigger user authorization request.
+		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+				transport, JSON_FACTORY, clientSecrets, driveAccess.scopes)
+						.setDataStoreFactory(
+								new FileDataStoreFactory(new java.io.File(
+										driveAccess.credentialsStorageLocalPath)))
+						.setAccessType("offline").build();
+		LocalServerReceiver receiver = new LocalServerReceiver.Builder()
+				.setPort(8888).build();
+		return new AuthorizationCodeInstalledApp(flow, receiver)
+				.authorize("user");
 	}
 
 	public File rootFolder() throws IOException {
@@ -111,47 +152,6 @@ public class DriveAccessor {
 	public DriveAccessor withDriveAccess(DriveAccess sheetAccess) {
 		this.driveAccess = sheetAccess;
 		return this;
-	}
-
-	private Credential getCredentials(NetHttpTransport transport)
-			throws IOException {
-		// Load client secrets.
-		InputStream in = new FileInputStream(driveAccess.credentialsPath);
-		GoogleClientSecrets clientSecrets = GoogleClientSecrets
-				.load(JSON_FACTORY, new InputStreamReader(in));
-		// Build flow and trigger user authorization request.
-		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-				transport, JSON_FACTORY, clientSecrets, driveAccess.scopes)
-						.setDataStoreFactory(
-								new FileDataStoreFactory(new java.io.File(
-										driveAccess.credentialsStorageLocalPath)))
-						.setAccessType("offline").build();
-		LocalServerReceiver receiver = new LocalServerReceiver.Builder()
-				.setPort(8888).build();
-		return new AuthorizationCodeInstalledApp(flow, receiver)
-				.authorize("user");
-	}
-
-	void ensureDrive() {
-		if (service != null) {
-			return;
-		}
-		try {
-			// final NetHttpTransport httpTransport = GoogleNetHttpTransport
-			// .newTrustedTransport();
-			// override GoogleNetHttpTransport - use default truststore
-			final NetHttpTransport httpTransport = new NetHttpTransport.Builder()
-					// .trustCertificates(GoogleUtils.getCertificateTrustStore())
-					.build();
-			// final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport
-			// .newTrustedTransport();
-			service = new Drive.Builder(httpTransport, JSON_FACTORY,
-					getCredentials(httpTransport))
-							.setApplicationName(driveAccess.applicationName)
-							.build();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	public static class DriveAccess {

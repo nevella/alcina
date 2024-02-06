@@ -130,6 +130,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return getConn(false, false);
 	}
 
+	protected Connection getConn(boolean forceNewLocal) throws Exception {
+		return getConn(true, false);
+	}
+
 	public Connection getConn(boolean forceNewLocal, boolean forceRemote)
 			throws Exception {
 		boolean remote = forceRemote
@@ -189,14 +193,47 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	public abstract String getDescription();
 
+	protected int getIntArg(String[] argv, int argIndex, int defaultValue) {
+		return argv.length <= argIndex ? defaultValue
+				: Integer.parseInt(argv[argIndex]);
+	}
+
+	protected int getIntArg(String[] argv, String argName, int defaultValue) {
+		String stringArg = getStringArg(argv, argName, null);
+		return stringArg == null ? defaultValue : Integer.parseInt(stringArg);
+	}
+
 	public Class<? extends DevConsoleCommand> getShellClass() {
 		return DevConsoleCommand.class;
+	}
+
+	protected String getStringArg(String[] argv, int argIndex,
+			String defaultValue) {
+		return argv.length <= argIndex ? defaultValue : argv[argIndex];
+	}
+
+	protected String getStringArg(String[] argv, String argName,
+			String defaultValue) {
+		Pattern argMatcher = Pattern.compile(String.format("%s=(.+)", argName));
+		for (String arg : argv) {
+			Matcher m = argMatcher.matcher(arg);
+			if (m.matches()) {
+				return m.group(1);
+			}
+		}
+		return defaultValue;
 	}
 
 	public abstract String getUsage();
 
 	public boolean ignoreForCommandHistory() {
 		return false;
+	}
+
+	protected void println(String string) {
+		System.out.println(string);
+		commandOutputBuffer.append(string);
+		commandOutputBuffer.append("\n");
 	}
 
 	public void printUsage() {
@@ -222,43 +259,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	public boolean silent() {
 		return false;
-	}
-
-	protected Connection getConn(boolean forceNewLocal) throws Exception {
-		return getConn(true, false);
-	}
-
-	protected int getIntArg(String[] argv, int argIndex, int defaultValue) {
-		return argv.length <= argIndex ? defaultValue
-				: Integer.parseInt(argv[argIndex]);
-	}
-
-	protected int getIntArg(String[] argv, String argName, int defaultValue) {
-		String stringArg = getStringArg(argv, argName, null);
-		return stringArg == null ? defaultValue : Integer.parseInt(stringArg);
-	}
-
-	protected String getStringArg(String[] argv, int argIndex,
-			String defaultValue) {
-		return argv.length <= argIndex ? defaultValue : argv[argIndex];
-	}
-
-	protected String getStringArg(String[] argv, String argName,
-			String defaultValue) {
-		Pattern argMatcher = Pattern.compile(String.format("%s=(.+)", argName));
-		for (String arg : argv) {
-			Matcher m = argMatcher.matcher(arg);
-			if (m.matches()) {
-				return m.group(1);
-			}
-		}
-		return defaultValue;
-	}
-
-	protected void println(String string) {
-		System.out.println(string);
-		commandOutputBuffer.append(string);
-		commandOutputBuffer.append("\n");
 	}
 
 	protected String simpleParserName(Object parser) {
@@ -359,6 +359,19 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return "profile [load|save] name";
 		}
 
+		private void listProfiles() {
+			File[] files = console.profileFolder.listFiles(new FileFilter() {
+				@Override
+				public boolean accept(File f) {
+					return f.isDirectory();
+				}
+			});
+			System.out.println("Profiles:");
+			for (File file : files) {
+				System.out.format("\t%s\n", file.getName());
+			}
+		}
+
 		@Override
 		public String run(String[] argv) throws Exception {
 			if (argv.length < 2) {
@@ -405,19 +418,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			}
 			return load ? String.format("Loaded config from profile '%s'", name)
 					: String.format("Saved config to profile '%s'", name);
-		}
-
-		private void listProfiles() {
-			File[] files = console.profileFolder.listFiles(new FileFilter() {
-				@Override
-				public boolean accept(File f) {
-					return f.isDirectory();
-				}
-			});
-			System.out.println("Profiles:");
-			for (File file : files) {
-				System.out.format("\t%s\n", file.getName());
-			}
 		}
 	}
 
@@ -1127,6 +1127,13 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return "rsync  [get|put] local remote";
 		}
 
+		private void importViaRsync(String arg1, String remotePort, String from,
+				String to) throws Exception {
+			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
+					"--progress", "--partial", arg1, remotePort, from, to };
+			new Shell().runProcessCatchOutputAndWait(cmdAndArgs);
+		}
+
 		@Override
 		public String run(String[] argv) throws Exception {
 			String homeDir = (System.getenv("USERPROFILE") != null)
@@ -1147,13 +1154,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String f2 = put ? remotePath : localPath;
 			importViaRsync("--rsh", remotePortStr, f1, f2);
 			return String.format("%s -> %s", f1, f2);
-		}
-
-		private void importViaRsync(String arg1, String remotePort, String from,
-				String to) throws Exception {
-			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
-					"--progress", "--partial", arg1, remotePort, from, to };
-			new Shell().runProcessCatchOutputAndWait(cmdAndArgs);
 		}
 	}
 
@@ -1278,6 +1278,22 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	}
 
 	public static class CmdSetProp extends DevConsoleCommand {
+		private void dumpProps(Map<String, Field> fieldsByAnnName)
+				throws Exception {
+			System.out.format("%-30s%-50s%s\n", "Property", "Value",
+					"Description");
+			System.out.println(CommonUtils.padStringLeft("", 100, "-"));
+			String descPad = "\n" + CommonUtils.padStringLeft("", 83, " ");
+			for (String key : fieldsByAnnName.keySet()) {
+				Field field = fieldsByAnnName.get(key);
+				SetPropInfo ann = field.getAnnotation(SetPropInfo.class);
+				String desc = ann.description();
+				desc = desc.replace("\n", descPad);
+				System.out.format("%-30s%-50s%s\n", ann.key(),
+						field.get(console.getProps()), desc);
+			}
+		}
+
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "prop" };
@@ -1330,22 +1346,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				dumpProps(fieldsByAnnName);
 			}
 			return "";
-		}
-
-		private void dumpProps(Map<String, Field> fieldsByAnnName)
-				throws Exception {
-			System.out.format("%-30s%-50s%s\n", "Property", "Value",
-					"Description");
-			System.out.println(CommonUtils.padStringLeft("", 100, "-"));
-			String descPad = "\n" + CommonUtils.padStringLeft("", 83, " ");
-			for (String key : fieldsByAnnName.keySet()) {
-				Field field = fieldsByAnnName.get(key);
-				SetPropInfo ann = field.getAnnotation(SetPropInfo.class);
-				String desc = ann.description();
-				desc = desc.replace("\n", descPad);
-				System.out.format("%-30s%-50s%s\n", ann.key(),
-						field.get(console.getProps()), desc);
-			}
 		}
 	}
 
@@ -1442,6 +1442,14 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return "tag a|d|l|lt name tags content";
 		}
 
+		private void printFullUsage() {
+			System.out.println("a: add (name, tags, content)");
+			System.out.println("c: copy to clipboard (name)");
+			System.out.println("d: delete (name)");
+			System.out.println("l: list matching (tags)");
+			System.out.println("lt: list tags");
+		}
+
 		@Override
 		public String run(String[] argv) throws Exception {
 			if (argv.length == 0) {
@@ -1493,14 +1501,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			}
 			console.saveConfig();
 			return "";
-		}
-
-		private void printFullUsage() {
-			System.out.println("a: add (name, tags, content)");
-			System.out.println("c: copy to clipboard (name)");
-			System.out.println("d: delete (name)");
-			System.out.println("l: list matching (tags)");
-			System.out.println("lt: list tags");
 		}
 	}
 

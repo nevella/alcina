@@ -41,6 +41,22 @@ public class AppController {
 		super();
 	}
 
+	protected void addObjectCriterion(Object model, EntityPlace place) {
+		// for subclasses
+	}
+
+	private void afterDeleteSuccess(VersionableEntity object) {
+		MessageManager.get().showMessage(Ax.format("Deleted %s %s",
+				object.getClass().getSimpleName(), object.getId()));
+		AppViewModel.get().resetProviderFor(object.getClass());
+		Client.refreshCurrentPlace();
+	}
+
+	protected void delete0(VersionableEntity object) {
+		object.delete();
+		flushPostDelete(object);
+	}
+
 	public void deleteMultiple(List<? extends VersionableEntity> list) {
 		MessageManager.get().showMessage(Ax.format("Deleting %s",
 				CommonUtils.pluralise("record", list.size(), true)));
@@ -125,6 +141,11 @@ public class AppController {
 		throw new UnsupportedOperationException();
 	}
 
+	protected void flushPostDelete(VersionableEntity object) {
+		CommitToStorageTransformListener
+				.flushAndRun(() -> afterDeleteSuccess(object));
+	}
+
 	public String getPlaceSubToken(Enum value) {
 		BasePlace place = RegistryHistoryMapper.get().getPlaceBySubPlace(value);
 		return place.toTokenString();
@@ -173,35 +194,6 @@ public class AppController {
 		}
 	}
 
-	public void toggleCurrentPlaceEditing(boolean edit) {
-		Place current = Client.currentPlace();
-		Place copy = RegistryHistoryMapper.get().copyPlace(current);
-		((HasEntityAction) copy)
-				.setAction(edit ? EntityAction.EDIT : EntityAction.VIEW);
-		Client.goTo(copy);
-	}
-
-	private void afterDeleteSuccess(VersionableEntity object) {
-		MessageManager.get().showMessage(Ax.format("Deleted %s %s",
-				object.getClass().getSimpleName(), object.getId()));
-		AppViewModel.get().resetProviderFor(object.getClass());
-		Client.refreshCurrentPlace();
-	}
-
-	protected void addObjectCriterion(Object model, EntityPlace place) {
-		// for subclasses
-	}
-
-	protected void delete0(VersionableEntity object) {
-		object.delete();
-		flushPostDelete(object);
-	}
-
-	protected void flushPostDelete(VersionableEntity object) {
-		CommitToStorageTransformListener
-				.flushAndRun(() -> afterDeleteSuccess(object));
-	}
-
 	protected void maybeSetId(BindablePlace place,
 			Set<? extends VersionableEntity> collection) {
 		if (collection.size() == 1) {
@@ -211,6 +203,14 @@ public class AppController {
 				place.def.clearAllCriteria();
 			}
 		}
+	}
+
+	public void toggleCurrentPlaceEditing(boolean edit) {
+		Place current = Client.currentPlace();
+		Place copy = RegistryHistoryMapper.get().copyPlace(current);
+		((HasEntityAction) copy)
+				.setAction(edit ? EntityAction.EDIT : EntityAction.VIEW);
+		Client.goTo(copy);
 	}
 
 	protected boolean validateDelete(VersionableEntity object) {

@@ -33,6 +33,21 @@ import cc.alcina.framework.servlet.dom.RemoteUi;
 public class FeatureTree {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	static class ClientImpl extends ClientRemoteImpl {
+		@Override
+		protected void createPlaceController() {
+			placeController = new PlaceController(eventBus);
+		}
+
+		@Override
+		public void setupPlaceMapping() {
+			historyHandler = new PlaceHistoryHandler(
+					new RegistryHistoryMapperImpl());
+			historyHandler.register(placeController, eventBus,
+					() -> Place.NOWHERE);
+		}
+	}
+
 	@Registration(RemoteComponent.class)
 	public static class Component implements RemoteComponent {
 		@Override
@@ -69,17 +84,13 @@ public class FeatureTree {
 
 		Environment environment;
 
-		public Environment getEnvironment() {
-			return environment;
-		}
-
-		public void setEnvironment(Environment environment) {
-			this.environment = environment;
-		}
-
 		@Override
 		public Client createClient() {
 			return new ClientImpl();
+		}
+
+		public Environment getEnvironment() {
+			return environment;
 		}
 
 		public String getMainCaption() {
@@ -97,20 +108,9 @@ public class FeatureTree {
 			new DirectedLayout().render(new Page()).getRendered()
 					.appendToRoot();
 		}
-	}
 
-	static class ClientImpl extends ClientRemoteImpl {
-		@Override
-		public void setupPlaceMapping() {
-			historyHandler = new PlaceHistoryHandler(
-					new RegistryHistoryMapperImpl());
-			historyHandler.register(placeController, eventBus,
-					() -> Place.NOWHERE);
-		}
-
-		@Override
-		protected void createPlaceController() {
-			placeController = new PlaceController(eventBus);
+		public void setEnvironment(Environment environment) {
+			this.environment = environment;
 		}
 	}
 }

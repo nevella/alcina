@@ -140,6 +140,11 @@ public class MutationRecord {
 		return record;
 	}
 
+	static boolean hasContextFlag(Class<? extends Flag> flag) {
+		List<Class<? extends Flag>> flags = LooseContext.get(CONTEXT_FLAGS);
+		return flags != null && flags.contains(flag);
+	}
+
 	public static void runWithFlag(Class<? extends Flag> flag,
 			Runnable runnable) {
 	}
@@ -153,11 +158,6 @@ public class MutationRecord {
 			MutationRecord.deltaFlag(flag, false);
 			LooseContext.pop();
 		}
-	}
-
-	static boolean hasContextFlag(Class<? extends Flag> flag) {
-		List<Class<? extends Flag>> flags = LooseContext.get(CONTEXT_FLAGS);
-		return flags != null && flags.contains(flag);
 	}
 
 	transient MutationRecordJso jso;
@@ -250,47 +250,6 @@ public class MutationRecord {
 		}
 	}
 
-	public boolean hasFlag(Class<? extends Flag> flag) {
-		return flags != null && flags.contains(flag);
-	}
-
-	public boolean provideIsStructuralMutation() {
-		return type == Type.childList;
-	}
-
-	@Override
-	public String toString() {
-		FormatBuilder format = new FormatBuilder().separator("\n");
-		format.appendIfNotBlankKv("target", target);
-		format.appendIfNotBlankKv("type", type);
-		format.appendIfNotBlankKv("  previous", previousSibling);
-		format.appendIfNotBlankKv("  next", nextSibling);
-		format.appendIfNotBlankKv("  attributeName", attributeName);
-		format.appendIfNotBlankKv("  oldValue", oldValue);
-		format.appendIfNotBlankKv("  newValue", newValue);
-		if (!addedNodes.isEmpty()) {
-			format.append("  addedNodes:");
-			addedNodes.forEach(n -> format
-					.append("    " + n.toString().replace("\n", "\n    ")));
-		}
-		if (!removedNodes.isEmpty()) {
-			format.append("  removedNodes:");
-			removedNodes.forEach(n -> format
-					.append("    " + n.toString().replace("\n", "\n    ")));
-		}
-		format.newLine();
-		return format.toString();
-	}
-
-	private String stringOrNull(JsonObject jsonObj, String string) {
-		JsonValue jsonValue = jsonObj.get(string);
-		if (jsonValue instanceof JsonNull) {
-			return null;
-		} else {
-			return jsonValue.asString();
-		}
-	}
-
 	void apply(ApplyTo applyTo) {
 		ApplyDirection applyDirection = applyTo.direction();
 		MutationRecord record = this;
@@ -367,19 +326,49 @@ public class MutationRecord {
 		removedNodes.forEach(this::connectMutationNodeRef);
 	}
 
+	public boolean hasFlag(Class<? extends Flag> flag) {
+		return flags != null && flags.contains(flag);
+	}
+
 	MutationNode mutationNode(NodeJso nodeJso) {
 		return sync.mutationNode(nodeJso);
 	}
 
-	public interface Flag {
+	public boolean provideIsStructuralMutation() {
+		return type == Type.childList;
 	}
 
-	public interface FlagTransportMarkupTree extends Flag {
+	private String stringOrNull(JsonObject jsonObj, String string) {
+		JsonValue jsonValue = jsonObj.get(string);
+		if (jsonValue instanceof JsonNull) {
+			return null;
+		} else {
+			return jsonValue.asString();
+		}
 	}
 
-	@Reflected
-	public enum Type {
-		attributes, characterData, childList
+	@Override
+	public String toString() {
+		FormatBuilder format = new FormatBuilder().separator("\n");
+		format.appendIfNotBlankKv("target", target);
+		format.appendIfNotBlankKv("type", type);
+		format.appendIfNotBlankKv("  previous", previousSibling);
+		format.appendIfNotBlankKv("  next", nextSibling);
+		format.appendIfNotBlankKv("  attributeName", attributeName);
+		format.appendIfNotBlankKv("  oldValue", oldValue);
+		format.appendIfNotBlankKv("  newValue", newValue);
+		if (!addedNodes.isEmpty()) {
+			format.append("  addedNodes:");
+			addedNodes.forEach(n -> format
+					.append("    " + n.toString().replace("\n", "\n    ")));
+		}
+		if (!removedNodes.isEmpty()) {
+			format.append("  removedNodes:");
+			removedNodes.forEach(n -> format
+					.append("    " + n.toString().replace("\n", "\n    ")));
+		}
+		format.newLine();
+		return format.toString();
 	}
 
 	enum ApplyDirection {
@@ -399,5 +388,16 @@ public class MutationRecord {
 				throw new UnsupportedOperationException();
 			}
 		}
+	}
+
+	public interface Flag {
+	}
+
+	public interface FlagTransportMarkupTree extends Flag {
+	}
+
+	@Reflected
+	public enum Type {
+		attributes, characterData, childList
 	}
 }

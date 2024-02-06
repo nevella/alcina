@@ -34,13 +34,6 @@ public class LongValidator implements Validator {
 		return true;
 	}
 
-	public static class Primitive extends LongValidator {
-		@Override
-		protected boolean allowNull() {
-			return false;
-		}
-	}
-
 	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
@@ -61,5 +54,12 @@ public class LongValidator implements Validator {
 					LongValidator.class);
 		}
 		return l;
+	}
+
+	public static class Primitive extends LongValidator {
+		@Override
+		protected boolean allowNull() {
+			return false;
+		}
 	}
 }

@@ -70,6 +70,35 @@ public class KnownRenderableNode implements Serializable {
 		return byPath(path, true);
 	}
 
+	private KnownRenderableNode byPath(String path, boolean first) {
+		if (path == null) {
+			return name == null ? this : null;
+		}
+		String segment = path;
+		String remainder = null;
+		int idx = path.indexOf(".");
+		if (idx != -1) {
+			segment = path.substring(0, idx);
+			remainder = path.substring(idx + 1);
+		}
+		if (segment.equals(name) && first) {
+			return byPath(remainder, false);
+		}
+		String f_segment = segment;
+		Optional<KnownRenderableNode> o_child = children.stream()
+				.filter(child -> child.name.equals(f_segment)).findFirst();
+		if (o_child.isPresent()) {
+			KnownRenderableNode child = o_child.get();
+			if (remainder == null) {
+				return child;
+			} else {
+				return child.byPath(remainder, false);
+			}
+		} else {
+			return null;
+		}
+	}
+
 	public KnownTag calculateStatus() {
 		if (status() != null) {
 			return status();
@@ -159,6 +188,11 @@ public class KnownRenderableNode implements Serializable {
 		if (clusterDelta.getAdded().size() == 1) {
 			children.addAll(clusterDelta.getAdded().get(0).children);
 		}
+	}
+
+	private Optional<KnownRenderableNode> namedChild(String childName) {
+		return children.stream().filter(child -> child.name.equals(childName))
+				.findFirst();
 	}
 
 	public String path() {
@@ -266,39 +300,5 @@ public class KnownRenderableNode implements Serializable {
 			return (T) namedChild.opStatusValue;
 		}
 		return (T) childValue;
-	}
-
-	private KnownRenderableNode byPath(String path, boolean first) {
-		if (path == null) {
-			return name == null ? this : null;
-		}
-		String segment = path;
-		String remainder = null;
-		int idx = path.indexOf(".");
-		if (idx != -1) {
-			segment = path.substring(0, idx);
-			remainder = path.substring(idx + 1);
-		}
-		if (segment.equals(name) && first) {
-			return byPath(remainder, false);
-		}
-		String f_segment = segment;
-		Optional<KnownRenderableNode> o_child = children.stream()
-				.filter(child -> child.name.equals(f_segment)).findFirst();
-		if (o_child.isPresent()) {
-			KnownRenderableNode child = o_child.get();
-			if (remainder == null) {
-				return child;
-			} else {
-				return child.byPath(remainder, false);
-			}
-		} else {
-			return null;
-		}
-	}
-
-	private Optional<KnownRenderableNode> namedChild(String childName) {
-		return children.stream().filter(child -> child.name.equals(childName))
-				.findFirst();
 	}
 }

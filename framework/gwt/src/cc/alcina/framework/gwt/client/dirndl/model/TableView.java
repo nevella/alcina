@@ -23,6 +23,29 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 @Directed
 public class TableView extends
 		AbstractContextSensitiveModelTransform<Collection<? extends Bindable>, TableContainer> {
+	@Override
+	public TableContainer apply(Collection<? extends Bindable> bindables) {
+		TableModel tableModel = new TableModel();
+		TableContainer tableContainer = new TableContainer(tableModel);
+		tableModel.init(node);
+		if (bindables.size() == 0) {
+			tableModel.setEmptyResults(new LeafModel.TagTextModel(
+					"empty-results", "No matching results found"));
+		} else {
+			Bindable first = bindables.iterator().next();
+			Class<? extends Bindable> resultClass = first.getClass();
+			List<Field> fields = BeanFields.query().forClass(resultClass)
+					.forMultipleWidgetContainer(true).forBean(first)
+					.withResolver(node.getResolver()).listFields();
+			fields.stream().map(TableColumn::new)
+					.forEach(tableModel.header.getColumns()::add);
+			bindables.stream()
+					.map(bindable -> new TableRow(tableModel, bindable))
+					.forEach(tableModel.rows::add);
+		}
+		return tableContainer;
+	}
+
 	@Directed.Delegating
 	class TableContainer extends Model.All
 			implements TableEvents.SortTable.Handler {
@@ -73,28 +96,5 @@ public class TableView extends
 					.collect(Collectors.toList());
 			tableModel.setRows(sorted);
 		}
-	}
-
-	@Override
-	public TableContainer apply(Collection<? extends Bindable> bindables) {
-		TableModel tableModel = new TableModel();
-		TableContainer tableContainer = new TableContainer(tableModel);
-		tableModel.init(node);
-		if (bindables.size() == 0) {
-			tableModel.setEmptyResults(new LeafModel.TagTextModel(
-					"empty-results", "No matching results found"));
-		} else {
-			Bindable first = bindables.iterator().next();
-			Class<? extends Bindable> resultClass = first.getClass();
-			List<Field> fields = BeanFields.query().forClass(resultClass)
-					.forMultipleWidgetContainer(true).forBean(first)
-					.withResolver(node.getResolver()).listFields();
-			fields.stream().map(TableColumn::new)
-					.forEach(tableModel.header.getColumns()::add);
-			bindables.stream()
-					.map(bindable -> new TableRow(tableModel, bindable))
-					.forEach(tableModel.rows::add);
-		}
-		return tableContainer;
 	}
 }

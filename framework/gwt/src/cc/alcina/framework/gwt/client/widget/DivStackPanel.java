@@ -96,6 +96,48 @@ public class DivStackPanel extends ComplexPanel {
 	}
 
 	/**
+	 * @return a header element
+	 */
+	Element createHeaderElem() {
+		return DOM.createDiv();
+	}
+
+	private int findDividerIndex(Element elem) {
+		while (elem != getElement()) {
+			String expando = DOM.getElementPropertyOrAttribute(elem, "__index");
+			if (expando != null) {
+				// Make sure it belongs to me!
+				String hashString = DOM.getElementPropertyOrAttribute(elem,
+						"__owner");
+				int ownerHash = hashString.length() > 0
+						? Integer.parseInt(hashString)
+						: -1;
+				if (ownerHash == hashCode()) {
+					// Yes, it's mine.
+					return Integer.parseInt(expando);
+				} else {
+					// It must belong to some nested StackPanel.
+					return -1;
+				}
+			}
+			elem = DOM.getParent(elem);
+		}
+		return -1;
+	}
+
+	/**
+	 * Get the element that holds the header text given the header element
+	 * created by #createHeaderElement.
+	 * 
+	 * @param headerElem
+	 *            the header element
+	 * @return the element around the header text
+	 */
+	Element getHeaderTextElem(Element headerElem) {
+		return headerElem;
+	}
+
+	/**
 	 * Gets the currently selected child index.
 	 * 
 	 * @return selected child
@@ -173,6 +215,22 @@ public class DivStackPanel extends ComplexPanel {
 		}
 	}
 
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-text# = The element around the header at the specified index.</li>
+	 * <li>-text-wrapper# = The element around the header at the specified
+	 * index.</li>
+	 * <li>-content# = The element around the body at the specified index.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+	}
+
 	@Override
 	public boolean remove(int index) {
 		return remove(getWidget(index), index);
@@ -181,6 +239,34 @@ public class DivStackPanel extends ComplexPanel {
 	@Override
 	public boolean remove(Widget child) {
 		return remove(child, getWidgetIndex(child));
+	}
+
+	private boolean remove(Widget child, int index) {
+		// Make sure to call this before disconnecting the DOM.
+		boolean removed = super.remove(child);
+		if (removed) {
+			// Calculate which internal table elements to remove.
+			int rowIndex = 2 * index;
+			Element tr = DOM.getChild(body, rowIndex);
+			DOM.removeChild(body, tr);
+			tr = DOM.getChild(body, rowIndex);
+			DOM.removeChild(body, tr);
+			// Correct visible stack for new location.
+			if (visibleStack == index) {
+				visibleStack = -1;
+			} else if (visibleStack > index) {
+				--visibleStack;
+			}
+			// Update indices of all elements to the right.
+			updateIndicesFrom(index);
+		}
+		return removed;
+	}
+
+	private void setStackContentVisible(int index, boolean visible) {
+		Element tr = DOM.getChild(body, (index * 2) + 1);
+		UIObject.setVisible(tr, visible);
+		getWidget(index).setVisible(visible);
 	}
 
 	/**
@@ -219,76 +305,6 @@ public class DivStackPanel extends ComplexPanel {
 		}
 	}
 
-	/**
-	 * Shows the widget at the specified child index.
-	 * 
-	 * @param index
-	 *            the index of the child to be shown
-	 */
-	public void showStack(int index) {
-		if ((index >= getWidgetCount()) || (index < 0)
-				|| (index == visibleStack)) {
-			return;
-		}
-		int oldIndex = visibleStack;
-		if (visibleStack >= 0) {
-			setStackVisible(visibleStack, false);
-		}
-		visibleStack = index;
-		setStackVisible(visibleStack, true);
-	}
-
-	private int findDividerIndex(Element elem) {
-		while (elem != getElement()) {
-			String expando = DOM.getElementPropertyOrAttribute(elem, "__index");
-			if (expando != null) {
-				// Make sure it belongs to me!
-				String hashString = DOM.getElementPropertyOrAttribute(elem,
-						"__owner");
-				int ownerHash = hashString.length() > 0
-						? Integer.parseInt(hashString)
-						: -1;
-				if (ownerHash == hashCode()) {
-					// Yes, it's mine.
-					return Integer.parseInt(expando);
-				} else {
-					// It must belong to some nested StackPanel.
-					return -1;
-				}
-			}
-			elem = DOM.getParent(elem);
-		}
-		return -1;
-	}
-
-	private boolean remove(Widget child, int index) {
-		// Make sure to call this before disconnecting the DOM.
-		boolean removed = super.remove(child);
-		if (removed) {
-			// Calculate which internal table elements to remove.
-			int rowIndex = 2 * index;
-			Element tr = DOM.getChild(body, rowIndex);
-			DOM.removeChild(body, tr);
-			tr = DOM.getChild(body, rowIndex);
-			DOM.removeChild(body, tr);
-			// Correct visible stack for new location.
-			if (visibleStack == index) {
-				visibleStack = -1;
-			} else if (visibleStack > index) {
-				--visibleStack;
-			}
-			// Update indices of all elements to the right.
-			updateIndicesFrom(index);
-		}
-		return removed;
-	}
-
-	private void setStackContentVisible(int index, boolean visible) {
-		Element tr = DOM.getChild(body, (index * 2) + 1);
-		UIObject.setVisible(tr, visible);
-		getWidget(index).setVisible(visible);
-	}
-
 	private void setStackVisible(int index, boolean visible) {
 		// Get the first table row containing the widget's selector item.
 		Element tr = DOM.getChild(body, (index * 2));
@@ -308,6 +324,25 @@ public class DivStackPanel extends ComplexPanel {
 		}
 	}
 
+	/**
+	 * Shows the widget at the specified child index.
+	 * 
+	 * @param index
+	 *            the index of the child to be shown
+	 */
+	public void showStack(int index) {
+		if ((index >= getWidgetCount()) || (index < 0)
+				|| (index == visibleStack)) {
+			return;
+		}
+		int oldIndex = visibleStack;
+		if (visibleStack >= 0) {
+			setStackVisible(visibleStack, false);
+		}
+		visibleStack = index;
+		setStackVisible(visibleStack, true);
+	}
+
 	private void updateIndicesFrom(int beforeIndex) {
 		for (int i = beforeIndex, c = getWidgetCount(); i < c; ++i) {
 			Element childTR = DOM.getChild(body, i * 2);
@@ -320,41 +355,6 @@ public class DivStackPanel extends ComplexPanel {
 				setStyleName(childTD, DEFAULT_ITEM_STYLENAME + "-first", false);
 			}
 		}
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-text# = The element around the header at the specified index.</li>
-	 * <li>-text-wrapper# = The element around the header at the specified
-	 * index.</li>
-	 * <li>-content# = The element around the body at the specified index.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-	}
-
-	/**
-	 * @return a header element
-	 */
-	Element createHeaderElem() {
-		return DOM.createDiv();
-	}
-
-	/**
-	 * Get the element that holds the header text given the header element
-	 * created by #createHeaderElement.
-	 * 
-	 * @param headerElem
-	 *            the header element
-	 * @return the element around the header text
-	 */
-	Element getHeaderTextElem(Element headerElem) {
-		return headerElem;
 	}
 
 	public static class CollapsableDivStackPanel extends DivStackPanel

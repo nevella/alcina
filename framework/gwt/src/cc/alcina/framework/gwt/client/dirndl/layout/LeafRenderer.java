@@ -151,6 +151,24 @@ public abstract class LeafRenderer extends DirectedRenderer {
 		}
 	}
 
+	/**
+	 * Renders the input model as a DOM processing instruction node. Requires
+	 * the input model implement HasStringValue
+	 */
+	public static class ProcessingInstructionNode extends DirectedRenderer {
+		@Override
+		protected void render(RendererInput input) {
+			String contents = ((HasStringValue) input.model).getStringValue();
+			input.resolver.renderNode(input.node, rendersAsType(),
+					input.soleDirected().tag(), contents);
+		}
+
+		@Override
+		public DomNodeType rendersAsType() {
+			return DomNodeType.PROCESSING_INSTRUCTION;
+		}
+	}
+
 	public static class SafeHtml extends LeafRenderer {
 		@Override
 		protected String getTag(Node node, String defaultTag) {
@@ -194,34 +212,16 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	 */
 	public static class TextNode extends DirectedRenderer {
 		@Override
-		public DomNodeType rendersAsType() {
-			return DomNodeType.TEXT;
-		}
-
-		@Override
 		protected void render(RendererInput input) {
 			String contents = input.model instanceof String
 					? input.model.toString()
 					: "";
 			input.resolver.renderText(input.node, contents);
 		}
-	}
 
-	/**
-	 * Renders the input model as a DOM processing instruction node. Requires
-	 * the input model implement HasStringValue
-	 */
-	public static class ProcessingInstructionNode extends DirectedRenderer {
 		@Override
 		public DomNodeType rendersAsType() {
-			return DomNodeType.PROCESSING_INSTRUCTION;
-		}
-
-		@Override
-		protected void render(RendererInput input) {
-			String contents = ((HasStringValue) input.model).getStringValue();
-			input.resolver.renderNode(input.node, rendersAsType(),
-					input.soleDirected().tag(), contents);
+			return DomNodeType.TEXT;
 		}
 	}
 }

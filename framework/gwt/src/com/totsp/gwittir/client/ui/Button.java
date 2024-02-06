@@ -89,11 +89,6 @@ public class Button extends AbstractBoundWidget<String>
 	}
 
 	@Override
-	public PropertyChangeListener[] propertyChangeListeners() {
-		return changes.getPropertyChangeListeners();
-	}
-
-	@Override
 	public String getStyleName() {
 		String retValue;
 		retValue = this.base.getStyleName();
@@ -133,6 +128,15 @@ public class Button extends AbstractBoundWidget<String>
 		this.base.addClickListener(listener);
 	}
 
+	public boolean isEnabled() {
+		return this.base.isEnabled();
+	}
+
+	@Override
+	public PropertyChangeListener[] propertyChangeListeners() {
+		return changes.getPropertyChangeListeners();
+	}
+
 	@Override
 	public void removeClickListener(ClickListener listener) {
 		this.base.removeClickListener(listener);
@@ -157,6 +161,11 @@ public class Button extends AbstractBoundWidget<String>
 	public void removePropertyChangeListener(String propertyName,
 			PropertyChangeListener l) {
 		changes.removePropertyChangeListener(propertyName, l);
+	}
+
+	@Override
+	public void setAccessKey(char key) {
+		this.base.setAccessKey(key);
 	}
 
 	public void setEnabled(boolean enabled) {
@@ -193,14 +202,5 @@ public class Button extends AbstractBoundWidget<String>
 		String old = this.value;
 		this.setText(value);
 		this.changes.firePropertyChange("value", old, value);
-	}
-
-	public boolean isEnabled() {
-		return this.base.isEnabled();
-	}
-
-	@Override
-	public void setAccessKey(char key) {
-		this.base.setAccessKey(key);
 	}
 }

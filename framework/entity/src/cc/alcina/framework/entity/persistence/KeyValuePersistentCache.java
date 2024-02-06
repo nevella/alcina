@@ -61,6 +61,10 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 		return clazz;
 	}
 
+	protected String joinPath(String path) {
+		return Ax.format("%s/%s/%s", getClass().getSimpleName(), base, path);
+	}
+
 	@Override
 	public Optional<Long> lastModified(String path) {
 		return optionalKvp(path, false)
@@ -80,6 +84,13 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 		return KeyValuePersistent.byParentKey(parentPath).stream()
 				.map(kvp -> kvp.getKey().substring(joinPath("").length()))
 				.collect(Collectors.toList());
+	}
+
+	protected Optional<KeyValuePersistent> optionalKvp(String path,
+			boolean populate) {
+		Optional<KeyValuePersistent> kvp = KeyValuePersistent
+				.byKey(joinPath(path), populate);
+		return kvp;
 	}
 
 	@Override
@@ -122,16 +133,5 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 	public PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory) {
 		// shouldn't be retained
 		throw new UnsupportedOperationException();
-	}
-
-	protected String joinPath(String path) {
-		return Ax.format("%s/%s/%s", getClass().getSimpleName(), base, path);
-	}
-
-	protected Optional<KeyValuePersistent> optionalKvp(String path,
-			boolean populate) {
-		Optional<KeyValuePersistent> kvp = KeyValuePersistent
-				.byKey(joinPath(path), populate);
-		return kvp;
 	}
 }

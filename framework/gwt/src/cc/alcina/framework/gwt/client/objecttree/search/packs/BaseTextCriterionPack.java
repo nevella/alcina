@@ -18,8 +18,6 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 public class BaseTextCriterionPack {
 	public interface BaseTextCriterionHandler<SC extends TextCriterion, T>
 			extends DomainCriterionFilter<SC> {
-		public boolean test(T t, String text);
-
 		@Override
 		default DomainFilter getFilter(SC sc) {
 			String text = TextUtils.normalisedLcKey(sc.getValue());
@@ -34,6 +32,8 @@ public class BaseTextCriterionPack {
 			}).invertIf(sc
 					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
 		}
+
+		public boolean test(T t, String text);
 	}
 
 	public static abstract class BaseTextCriterionSearchable

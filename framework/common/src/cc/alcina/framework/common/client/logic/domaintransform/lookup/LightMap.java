@@ -91,6 +91,15 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 		return idx == -1 ? null : (V) elementData[idx * 2 + 1];
 	}
 
+	private int getIndex(Object key) {
+		for (int idx = 0; idx < size; idx++) {
+			if (Objects.equals(key, elementData[idx * 2])) {
+				return idx;
+			}
+		}
+		return -1;
+	}
+
 	@Override
 	public boolean isEmpty() {
 		return size() == 0;
@@ -273,15 +282,6 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 				return LightMap.this.size();
 			}
 		};
-	}
-
-	private int getIndex(Object key) {
-		for (int idx = 0; idx < size; idx++) {
-			if (Objects.equals(key, elementData[idx * 2])) {
-				return idx;
-			}
-		}
-		return -1;
 	}
 
 	public class EntryIterator implements Iterator<Map.Entry<K, V>> {

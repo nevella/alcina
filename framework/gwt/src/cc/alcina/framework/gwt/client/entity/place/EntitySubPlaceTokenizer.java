@@ -7,15 +7,6 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 
 public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity, SD extends EntitySearchDefinition, P extends EntitySubPlace<E, SD>>
 		extends EntityPlaceTokenizer<ENT, SD, P> {
-	public E getSub() {
-		return Reflections.at(getTokenizedClass()).templateInstance().getSub();
-	}
-
-	@Override
-	public Class<P> getTokenizedClass() {
-		return Reflections.at(getClass()).getGenericBounds().bounds.get(3);
-	}
-
 	@Override
 	protected P getPlace0(String token) {
 		P place = Reflections.newInstance(getTokenizedClass());
@@ -53,6 +44,10 @@ public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity
 		return place;
 	}
 
+	public E getSub() {
+		return Reflections.at(getTokenizedClass()).templateInstance().getSub();
+	}
+
 	@Override
 	protected void getToken0(P place) {
 		if (place.provideIsDefaultDefs()) {
@@ -72,5 +67,10 @@ public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity
 		if (place.fromClass != null) {
 			addTokenPart(place.fromClass);
 		}
+	}
+
+	@Override
+	public Class<P> getTokenizedClass() {
+		return Reflections.at(getClass()).getGenericBounds().bounds.get(3);
 	}
 }

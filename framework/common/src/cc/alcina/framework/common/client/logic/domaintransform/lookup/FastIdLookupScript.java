@@ -22,6 +22,14 @@ public class FastIdLookupScript implements FastIdLookup {
 	}
 
 	@Override
+	public void changeMapping(Entity entity, long id, long localId) {
+		remove(id, false);
+		remove(localId, true);
+		int localIdi = LongWrapperHash.fastIntValue(localId);
+		localIdToPromoted.put(localIdi, entity);
+	}
+
+	@Override
 	public Entity get(long id, boolean local) {
 		int idi = LongWrapperHash.fastIntValue(id);
 		if (local) {
@@ -33,6 +41,12 @@ public class FastIdLookupScript implements FastIdLookup {
 		} else {
 			return idLookup.get(idi);
 		}
+	}
+
+	int getApplicableId(Entity entity, boolean local) {
+		long id = local ? entity.getLocalId() : entity.getId();
+		int idi = LongWrapperHash.fastIntValue(id);
+		return idi;
 	}
 
 	@Override
@@ -71,12 +85,6 @@ public class FastIdLookupScript implements FastIdLookup {
 	@Override
 	public Collection<Entity> values() {
 		return values;
-	}
-
-	int getApplicableId(Entity entity, boolean local) {
-		long id = local ? entity.getLocalId() : entity.getId();
-		int idi = LongWrapperHash.fastIntValue(id);
-		return idi;
 	}
 
 	class FastIdLookupScriptValues extends AbstractCollection<Entity> {
@@ -125,13 +133,5 @@ public class FastIdLookupScript implements FastIdLookup {
 		public int size() {
 			return localIdLookup.size() + idLookup.size();
 		}
-	}
-
-	@Override
-	public void changeMapping(Entity entity, long id, long localId) {
-		remove(id, false);
-		remove(localId, true);
-		int localIdi = LongWrapperHash.fastIntValue(localId);
-		localIdToPromoted.put(localIdi, entity);
 	}
 }

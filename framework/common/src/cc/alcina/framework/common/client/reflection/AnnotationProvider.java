@@ -17,6 +17,20 @@ public interface AnnotationProvider {
 		return getAnnotation(annotationClass) != null;
 	}
 
+	public static class EmptyProvider implements AnnotationProvider {
+		@Override
+		public <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass) {
+			return null;
+		}
+
+		@Override
+		public <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass) {
+			return List.of();
+		}
+	}
+
 	public static class LookupProvider implements AnnotationProvider {
 		Map<Class, Annotation> annotations = CollectionCreators.Bootstrap
 				.createConcurrentClassMap();
@@ -43,20 +57,6 @@ public interface AnnotationProvider {
 		public <A extends Annotation> List<A>
 				getAnnotations(Class<A> annotationClass) {
 			return (List<A>) repeatedAnnotations.get(annotationClass);
-		}
-	}
-
-	public static class EmptyProvider implements AnnotationProvider {
-		@Override
-		public <A extends Annotation> A
-				getAnnotation(Class<A> annotationClass) {
-			return null;
-		}
-
-		@Override
-		public <A extends Annotation> List<A>
-				getAnnotations(Class<A> annotationClass) {
-			return List.of();
 		}
 	}
 }

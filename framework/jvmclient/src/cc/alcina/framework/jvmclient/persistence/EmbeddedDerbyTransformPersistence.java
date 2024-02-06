@@ -55,11 +55,6 @@ public class EmbeddedDerbyTransformPersistence
 		}
 	}
 
-	@Override
-	public String getPersistenceStoreName() {
-		return "Apache Derby";
-	}
-
 	private boolean checkDbVersionOK() {
 		try (Connection conn = DriverManager
 				.getConnection(getConnectionUrl())) {
@@ -99,5 +94,10 @@ public class EmbeddedDerbyTransformPersistence
 				+ "  transform_event_protocol varchar(50),\n"
 				+ "  tag varchar(50) ,\nchunk_uuid varchar(200) ,\n"
 				+ "  PRIMARY KEY (id)\n" + ") \n";
+	}
+
+	@Override
+	public String getPersistenceStoreName() {
+		return "Apache Derby";
 	}
 }

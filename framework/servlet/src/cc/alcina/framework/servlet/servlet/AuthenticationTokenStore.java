@@ -8,11 +8,17 @@ import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 public interface AuthenticationTokenStore {
+	void addHeader(String name, String value);
+
 	String getCookieValue(String cookieName);
 
 	String getHeaderValue(String headerName);
 
+	String getReferrer();
+
 	String getRemoteAddress();
+
+	String getUrl();
 
 	String getUserAgent();
 
@@ -22,13 +28,14 @@ public interface AuthenticationTokenStore {
 			implements AuthenticationTokenStore {
 		private String userAgent;
 
-		public void setUserAgent(String userAgent) {
-			this.userAgent = userAgent;
-		}
-
 		private StringMap cookieValues = new StringMap();
 
 		private StringMap headerValues = new StringMap();
+
+		@Override
+		public void addHeader(String name, String value) {
+			headerValues.put(name, value);
+		}
 
 		@Override
 		public String getCookieValue(String cookieName) {
@@ -41,23 +48,13 @@ public interface AuthenticationTokenStore {
 		}
 
 		@Override
+		public String getReferrer() {
+			return null;
+		}
+
+		@Override
 		public String getRemoteAddress() {
 			return "0.0.0.0";
-		}
-
-		@Override
-		public String getUserAgent() {
-			return userAgent;
-		}
-
-		@Override
-		public void setCookieValue(String name, String value) {
-			cookieValues.put(name, value);
-		}
-
-		@Override
-		public void addHeader(String name, String value) {
-			headerValues.put(name, value);
 		}
 
 		@Override
@@ -66,8 +63,8 @@ public interface AuthenticationTokenStore {
 		}
 
 		@Override
-		public String getReferrer() {
-			return null;
+		public String getUserAgent() {
+			return userAgent;
 		}
 
 		public void initFromClientInstanceValues(Long clientInstanceId,
@@ -96,11 +93,14 @@ public interface AuthenticationTokenStore {
 			}
 			AuthenticationManager.get().initialiseContext(this);
 		}
+
+		@Override
+		public void setCookieValue(String name, String value) {
+			cookieValues.put(name, value);
+		}
+
+		public void setUserAgent(String userAgent) {
+			this.userAgent = userAgent;
+		}
 	}
-
-	void addHeader(String name, String value);
-
-	String getUrl();
-
-	String getReferrer();
 }

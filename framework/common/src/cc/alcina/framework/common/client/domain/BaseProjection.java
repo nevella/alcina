@@ -61,6 +61,10 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		return (MultikeyMap<T>) lookup.asMap(objects);
 	}
 
+	protected MultikeyMap<T> createLookup() {
+		return new BaseProjectionLookupBuilder(this).createMultikeyMap();
+	}
+
 	public List<Object[]> deltaReturnChanges(T t, boolean insert) {
 		if (insert) {
 			return insertReturnChanges(t);
@@ -85,6 +89,8 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 	public <V> V get(Object... objects) {
 		return (V) lookup.get(objects);
 	}
+
+	protected abstract int getDepth();
 
 	public MultikeyMap<T> getLookup() {
 		return this.lookup;
@@ -168,6 +174,12 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		return items == null ? Collections.EMPTY_LIST : items;
 	}
 
+	protected void logDuplicateMapping(Object[] values, T existing) {
+		logger.warn(Ax.format(
+				"Warning - duplicate mapping of a unique projection - %s: %s : %s",
+				this, Arrays.asList(values), existing));
+	}
+
 	public boolean matches(T t, Object[] keys) {
 		Object[] tKeys = project(t);
 		if (keys == null || tKeys == null) {
@@ -180,6 +192,8 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		}
 		return true;
 	}
+
+	protected abstract Object[] project(T t);
 
 	@Override
 	public void remove(T t) {
@@ -234,18 +248,4 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		Collection<V> items = lookup.items(objects);
 		return (Stream<V>) items(objects).stream();
 	}
-
-	protected MultikeyMap<T> createLookup() {
-		return new BaseProjectionLookupBuilder(this).createMultikeyMap();
-	}
-
-	protected abstract int getDepth();
-
-	protected void logDuplicateMapping(Object[] values, T existing) {
-		logger.warn(Ax.format(
-				"Warning - duplicate mapping of a unique projection - %s: %s : %s",
-				this, Arrays.asList(values), existing));
-	}
-
-	protected abstract Object[] project(T t);
 }

@@ -200,6 +200,64 @@ public final class JsValueGlue {
 				+ TypeInfo.getSourceRepresentation(type));
 	}
 
+	private static int getIntRange(JsValue value, int low, int high,
+			String typeName, String msgPrefix) {
+		int intVal;
+		if (value.isInt()) {
+			intVal = value.getInt();
+			if (intVal < low || intVal > high) {
+				throw new HostedModeException(msgPrefix + ": JS int value "
+						+ intVal + " out of range for a " + typeName);
+			}
+		} else if (value.isNumber()) {
+			double doubleVal = value.getNumber();
+			if (doubleVal < low || doubleVal > high) {
+				throw new HostedModeException(msgPrefix + ": JS double value "
+						+ doubleVal + " out of range for a " + typeName);
+			}
+			intVal = (int) doubleVal;
+			if (intVal != doubleVal) {
+				ModuleSpace.getLogger().log(TreeLogger.WARN,
+						msgPrefix + ": Rounding double (" + doubleVal
+								+ ") to int for " + typeName,
+						null);
+			}
+		} else {
+			throw new HostedModeException(msgPrefix + ": JS value of type "
+					+ value.getTypeString() + ", expected " + typeName);
+		}
+		return intVal;
+	}
+
+	/**
+	 * Returns the underlying JsValue from a JavaScriptObject instance.
+	 *
+	 * The tricky part is that it is in a different ClassLoader so therefore
+	 * can't be specified directly. The type is specified as Object, and
+	 * reflection is used to retrieve the reference field.
+	 *
+	 * @param jso
+	 *            the instance of JavaScriptObject to retrieve the JsValue from.
+	 * @return the JsValue representing the JavaScript object
+	 */
+	private static JsValue getUnderlyingObject(Object jso) {
+		Throwable caught;
+		try {
+			Field referenceField = jso.getClass()
+					.getField(HOSTED_MODE_REFERENCE);
+			referenceField.setAccessible(true);
+			return (JsValue) referenceField.get(jso);
+		} catch (IllegalAccessException e) {
+			caught = e;
+		} catch (SecurityException e) {
+			caught = e;
+		} catch (NoSuchFieldException e) {
+			caught = e;
+		}
+		throw new RuntimeException("Error reading " + HOSTED_MODE_REFERENCE,
+				caught);
+	}
+
 	/**
 	 * Set the underlying value.
 	 *
@@ -264,64 +322,6 @@ public final class JsValueGlue {
 				value.setWrappedJavaObject(cl, obj);
 			}
 		}
-	}
-
-	private static int getIntRange(JsValue value, int low, int high,
-			String typeName, String msgPrefix) {
-		int intVal;
-		if (value.isInt()) {
-			intVal = value.getInt();
-			if (intVal < low || intVal > high) {
-				throw new HostedModeException(msgPrefix + ": JS int value "
-						+ intVal + " out of range for a " + typeName);
-			}
-		} else if (value.isNumber()) {
-			double doubleVal = value.getNumber();
-			if (doubleVal < low || doubleVal > high) {
-				throw new HostedModeException(msgPrefix + ": JS double value "
-						+ doubleVal + " out of range for a " + typeName);
-			}
-			intVal = (int) doubleVal;
-			if (intVal != doubleVal) {
-				ModuleSpace.getLogger().log(TreeLogger.WARN,
-						msgPrefix + ": Rounding double (" + doubleVal
-								+ ") to int for " + typeName,
-						null);
-			}
-		} else {
-			throw new HostedModeException(msgPrefix + ": JS value of type "
-					+ value.getTypeString() + ", expected " + typeName);
-		}
-		return intVal;
-	}
-
-	/**
-	 * Returns the underlying JsValue from a JavaScriptObject instance.
-	 *
-	 * The tricky part is that it is in a different ClassLoader so therefore
-	 * can't be specified directly. The type is specified as Object, and
-	 * reflection is used to retrieve the reference field.
-	 *
-	 * @param jso
-	 *            the instance of JavaScriptObject to retrieve the JsValue from.
-	 * @return the JsValue representing the JavaScript object
-	 */
-	private static JsValue getUnderlyingObject(Object jso) {
-		Throwable caught;
-		try {
-			Field referenceField = jso.getClass()
-					.getField(HOSTED_MODE_REFERENCE);
-			referenceField.setAccessible(true);
-			return (JsValue) referenceField.get(jso);
-		} catch (IllegalAccessException e) {
-			caught = e;
-		} catch (SecurityException e) {
-			caught = e;
-		} catch (NoSuchFieldException e) {
-			caught = e;
-		}
-		throw new RuntimeException("Error reading " + HOSTED_MODE_REFERENCE,
-				caught);
 	}
 
 	private JsValueGlue() {

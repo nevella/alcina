@@ -56,17 +56,6 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 		return this.results;
 	}
 
-	public void renderContent(D contentDefinition, M publicationContent,
-			V deliveryModel, long publicationId, long publicationUserId)
-			throws Exception {
-		this.contentDefinition = contentDefinition;
-		this.publicationContent = publicationContent;
-		this.deliveryModel = deliveryModel;
-		results = new ContentRendererResults();
-		doc = XmlUtils.createDocument();
-		renderContent(publicationId, publicationUserId);
-	}
-
 	protected TransformerFactoryConfigurator
 			getTransformerFactoryConfigurator() {
 		return new TransformerConfigurator();
@@ -80,6 +69,17 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 		if (logDocXml) {
 			DomDocument.from(doc).logPretty();
 		}
+	}
+
+	public void renderContent(D contentDefinition, M publicationContent,
+			V deliveryModel, long publicationId, long publicationUserId)
+			throws Exception {
+		this.contentDefinition = contentDefinition;
+		this.publicationContent = publicationContent;
+		this.deliveryModel = deliveryModel;
+		results = new ContentRendererResults();
+		doc = XmlUtils.createDocument();
+		renderContent(publicationId, publicationUserId);
 	}
 
 	protected abstract void renderContent(long publicationId,

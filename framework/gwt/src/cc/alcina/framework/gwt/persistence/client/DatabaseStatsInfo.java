@@ -24,6 +24,12 @@ public class DatabaseStatsInfo implements Serializable {
 
 	private int version = 0;
 
+	private int estimatedBytes() {
+		return transformCounts.sum() * 100 + transformTexts.sum() * 2
+				+ logSizes.size() * 100 + logSizes.sum() * 2
+				+ deltaCounts.size() * 300 + deltaSizes.sum() * 2;
+	}
+
 	public long getCollectionTimeMs() {
 		return this.collectionTimeMs;
 	}
@@ -122,11 +128,5 @@ public class DatabaseStatsInfo implements Serializable {
 				CommonUtils.padStringRight("Stat time: ", 20, ' '),
 				collectionTimeMs);
 		return out;
-	}
-
-	private int estimatedBytes() {
-		return transformCounts.sum() * 100 + transformTexts.sum() * 2
-				+ logSizes.size() * 100 + logSizes.sum() * 2
-				+ deltaCounts.size() * 300 + deltaSizes.sum() * 2;
 	}
 }

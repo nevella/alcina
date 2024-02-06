@@ -117,10 +117,37 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	FragmentRoot fragmentRoot;
 
+	public final Events events = new Events();
+
 	public FragmentModel(Model rootModel) {
 		this.rootModel = rootModel;
 		fragmentRoot = new FragmentRoot(this, rootModel);
 		addDefaultModelledTypes();
+	}
+
+	protected void addDefaultModelledTypes() {
+		addModelled(List.of(FragmentNode.TextNode.class,
+				FragmentNode.GenericElement.class,
+				FragmentNode.GenericProcessingInstruction.class,
+				FragmentNode.GenericComment.class));
+	}
+
+	void addDescent(DomNode node) {
+		DomNode.DomNodeTraversal traversal = new DomNode.DomNodeTraversal(node);
+		traversal.forEach(n -> {
+			NodeTransformer transformer = domNodeTransformer.get(n);
+			if (transformer == null) {
+				NodeTransformer parentTransformer = domNodeTransformer
+						.get(n.parent());
+				/*
+				 * Where the domNode -> model creation, attach to the
+				 * DirectedLayout.Node structure occurs
+				 */
+				transformer = parentTransformer.createChildTransformer(n);
+				transformer.apply(parentTransformer.getLayoutNode());
+				registerTransformer(n, transformer);
+			}
+		});
 	}
 
 	public void addModelled(Class<? extends FragmentNode> type) {
@@ -142,8 +169,24 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	@Override
+	public Stream<? extends FragmentNode> children() {
+		return fragmentRoot.children();
+	}
+
+	public FragmentNode copyExternal(FragmentNode external) {
+		FragmentNode copy = Reflections.newInstance(external.getClass());
+		copy.copyFromExternal(external);
+		return copy;
+	}
+
+	@Override
 	public NodeTransformer createNodeTransformer(DomNode node) {
 		return transformerMatcher.createNodeTransformer(node);
+	}
+
+	NodeTransformer deregisterTransformer(DomNode n) {
+		NodeTransformer transformer = domNodeTransformer.remove(n);
+		return transformer;
 	}
 
 	public void domToModel() {
@@ -155,6 +198,21 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		currentModelMutation = new ModelMutation(this);
 		addDescent(node);
 		scheduleEmitMutationEvent();
+	}
+
+	void emitMutationEvent() {
+		NodeEvent.Context.fromNode(rootModel.provideNode())
+				.dispatch(ModelMutation.class, currentModelMutation.getData());
+		currentModelMutation = new ModelMutation();
+		eventScheduled = false;
+	}
+
+	@Override
+	public void ensureComputedNodes() {
+		fragmentRoot.ensureComputedNodes();
+	}
+
+	public void ensureComputedNodes(FragmentNode fragmentNode) {
 	}
 
 	/*
@@ -189,6 +247,16 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		}
 	}
 
+	public void onChildNodesNotification(FragmentNodeOps parent,
+			Notification notification) {
+		if (notification.postMutation) {
+			currentModelMutation.addEntry(parent,
+					((DirectedLayout.Node) notification.delta).getModel(),
+					notification.add ? ModelMutation.Type.ADD
+							: ModelMutation.Type.REMOVE);
+		}
+	}
+
 	@Override
 	public void onMutation(Mutation event) {
 		currentModelMutation = new ModelMutation(this);
@@ -213,6 +281,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		scheduleEmitMutationEvent();
 	}
 
+	void onNotification(NotifyingList.Notification notification) {
+		onChildNodesNotification(fragmentRoot, notification);
+	}
+
 	public Resolver provideResolver() {
 		return rootModel.provideNode().getResolver();
 	}
@@ -229,54 +301,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		node.children().forEach(this::register);
 	}
 
-	public DomNode rootDomNode() {
-		return rootModel.provideElement().asDomNode();
-	}
-
-	protected void addDefaultModelledTypes() {
-		addModelled(List.of(FragmentNode.TextNode.class,
-				FragmentNode.GenericElement.class,
-				FragmentNode.GenericProcessingInstruction.class,
-				FragmentNode.GenericComment.class));
-	}
-
-	void addDescent(DomNode node) {
-		DomNode.DomNodeTraversal traversal = new DomNode.DomNodeTraversal(node);
-		traversal.forEach(n -> {
-			NodeTransformer transformer = domNodeTransformer.get(n);
-			if (transformer == null) {
-				NodeTransformer parentTransformer = domNodeTransformer
-						.get(n.parent());
-				/*
-				 * Where the domNode -> model creation, attach to the
-				 * DirectedLayout.Node structure occurs
-				 */
-				transformer = parentTransformer.createChildTransformer(n);
-				transformer.apply(parentTransformer.getLayoutNode());
-				registerTransformer(n, transformer);
-			}
-		});
-	}
-
-	NodeTransformer deregisterTransformer(DomNode n) {
-		NodeTransformer transformer = domNodeTransformer.remove(n);
-		return transformer;
-	}
-
-	void emitMutationEvent() {
-		NodeEvent.Context.fromNode(rootModel.provideNode())
-				.dispatch(ModelMutation.class, currentModelMutation.getData());
-		currentModelMutation = new ModelMutation();
-		eventScheduled = false;
-	}
-
 	NodeTransformer registerTransformer(DomNode n,
 			NodeTransformer transformer) {
 		return domNodeTransformer.put(n, transformer);
-	}
-
-	void onNotification(NotifyingList.Notification notification) {
-		onChildNodesNotification(fragmentRoot, notification);
 	}
 
 	void removeDescent(DomNode node) {
@@ -294,6 +321,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		topTransformer.getLayoutNode().remove(false);
 	}
 
+	public DomNode rootDomNode() {
+		return rootModel.provideElement().asDomNode();
+	}
+
 	void scheduleEmitMutationEvent() {
 		if (eventScheduled) {
 			return;
@@ -302,108 +333,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		eventScheduled = true;
 	}
 
-	public final Events events = new Events();
+	interface FlagMutating extends MutationRecord.Flag {
+	}
 
 	public interface Has {
 		FragmentModel provideFragmentModel();
-	}
-
-	public static class ModelMutation
-			extends ModelEvent<ModelMutation.Data, ModelMutation.Handler> {
-		public ModelMutation() {
-			setModel(new Data());
-		}
-
-		public ModelMutation(FragmentModel fragmentModel) {
-			this();
-			getData().fragmentModel = fragmentModel;
-		}
-
-		public void addEntry(FragmentNodeOps parent, Model model, Type type) {
-			getData().add(new Entry(parent, model, type));
-		}
-
-		@Override
-		public void dispatch(ModelMutation.Handler handler) {
-			handler.onModelMutation(this);
-		}
-
-		public Data getData() {
-			return super.getModel();
-		}
-
-		UpdateRecord ensure(Node w3cNode) {
-			return getData().updateRecords.computeIfAbsent(w3cNode,
-					n -> getData().fragmentModel.new UpdateRecord(n));
-		}
-
-		public static class Data {
-			Map<Node, UpdateRecord> updateRecords = AlcinaCollections
-					.newUnqiueMap();
-
-			Set<Model> modifiedOrChildrenModified = AlcinaCollections
-					.newUniqueSet();
-
-			public List<Entry> entries = new ArrayList<>();
-
-			FragmentModel fragmentModel;
-
-			@Override
-			public String toString() {
-				FormatBuilder format = new FormatBuilder().separator("\n");
-				format.appendIfNotBlank(entries);
-				return format.toString();
-			}
-
-			public void add(Entry entry) {
-				entries.add(entry);
-			}
-
-			public Set<FragmentNodeOps> provideAffectedFragmentNodes() {
-				Set<FragmentNodeOps> result = new LinkedHashSet<>();
-				entries.forEach(e -> {
-					result.add(e.parent);
-					Model m = e.model;
-					if (m instanceof FragmentNode) {
-						result.add((FragmentNode) m);
-					}
-				});
-				return result;
-			}
-		}
-
-		public static class Entry {
-			public Model model;
-
-			public Type type;
-
-			public FragmentNodeOps parent;
-
-			Entry(FragmentNodeOps parent, Model model, Type type) {
-				this.parent = parent;
-				this.model = model;
-				this.type = type;
-			}
-
-			@Override
-			public String toString() {
-				FormatBuilder format = new FormatBuilder();
-				format.appendPadRight(8, type);
-				format.append(NestedName.get(model));
-				return format.toString();
-			}
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onModelMutation(ModelMutation event);
-		}
-
-		public enum Type {
-			ADD, REMOVE, CHANGE
-		}
-	}
-
-	interface FlagMutating extends MutationRecord.Flag {
 	}
 
 	class MinimalAncestorSet {
@@ -439,6 +373,101 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				}
 			});
 			toRemove.forEach(nodes::remove);
+		}
+	}
+
+	public static class ModelMutation
+			extends ModelEvent<ModelMutation.Data, ModelMutation.Handler> {
+		public ModelMutation() {
+			setModel(new Data());
+		}
+
+		public ModelMutation(FragmentModel fragmentModel) {
+			this();
+			getData().fragmentModel = fragmentModel;
+		}
+
+		public void addEntry(FragmentNodeOps parent, Model model, Type type) {
+			getData().add(new Entry(parent, model, type));
+		}
+
+		@Override
+		public void dispatch(ModelMutation.Handler handler) {
+			handler.onModelMutation(this);
+		}
+
+		UpdateRecord ensure(Node w3cNode) {
+			return getData().updateRecords.computeIfAbsent(w3cNode,
+					n -> getData().fragmentModel.new UpdateRecord(n));
+		}
+
+		public Data getData() {
+			return super.getModel();
+		}
+
+		public static class Data {
+			Map<Node, UpdateRecord> updateRecords = AlcinaCollections
+					.newUnqiueMap();
+
+			Set<Model> modifiedOrChildrenModified = AlcinaCollections
+					.newUniqueSet();
+
+			public List<Entry> entries = new ArrayList<>();
+
+			FragmentModel fragmentModel;
+
+			public void add(Entry entry) {
+				entries.add(entry);
+			}
+
+			public Set<FragmentNodeOps> provideAffectedFragmentNodes() {
+				Set<FragmentNodeOps> result = new LinkedHashSet<>();
+				entries.forEach(e -> {
+					result.add(e.parent);
+					Model m = e.model;
+					if (m instanceof FragmentNode) {
+						result.add((FragmentNode) m);
+					}
+				});
+				return result;
+			}
+
+			@Override
+			public String toString() {
+				FormatBuilder format = new FormatBuilder().separator("\n");
+				format.appendIfNotBlank(entries);
+				return format.toString();
+			}
+		}
+
+		public static class Entry {
+			public Model model;
+
+			public Type type;
+
+			public FragmentNodeOps parent;
+
+			Entry(FragmentNodeOps parent, Model model, Type type) {
+				this.parent = parent;
+				this.model = model;
+				this.type = type;
+			}
+
+			@Override
+			public String toString() {
+				FormatBuilder format = new FormatBuilder();
+				format.appendPadRight(8, type);
+				format.append(NestedName.get(model));
+				return format.toString();
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onModelMutation(ModelMutation event);
+		}
+
+		public enum Type {
+			ADD, REMOVE, CHANGE
 		}
 	}
 
@@ -498,34 +527,5 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			removes.nodes.stream().map(DomNode::from)
 					.forEach(FragmentModel.this::removeDescent);
 		}
-	}
-
-	public FragmentNode copyExternal(FragmentNode external) {
-		FragmentNode copy = Reflections.newInstance(external.getClass());
-		copy.copyFromExternal(external);
-		return copy;
-	}
-
-	public void onChildNodesNotification(FragmentNodeOps parent,
-			Notification notification) {
-		if (notification.postMutation) {
-			currentModelMutation.addEntry(parent,
-					((DirectedLayout.Node) notification.delta).getModel(),
-					notification.add ? ModelMutation.Type.ADD
-							: ModelMutation.Type.REMOVE);
-		}
-	}
-
-	public void ensureComputedNodes(FragmentNode fragmentNode) {
-	}
-
-	@Override
-	public Stream<? extends FragmentNode> children() {
-		return fragmentRoot.children();
-	}
-
-	@Override
-	public void ensureComputedNodes() {
-		fragmentRoot.ensureComputedNodes();
 	}
 }

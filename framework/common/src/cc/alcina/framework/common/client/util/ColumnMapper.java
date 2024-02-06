@@ -21,6 +21,11 @@ public abstract class ColumnMapper<T> {
 		totalBuilder = new ColumnsBuilder<List<T>>(null, null);
 	}
 
+	protected abstract void defineMappings();
+
+	protected void defineTotalMappings() {
+	}
+
 	public List<ColumnsBuilder<T>.ColumnBuilder> getMappings() {
 		if (builder.getPending().isEmpty()) {
 			defineMappings();
@@ -33,11 +38,6 @@ public abstract class ColumnMapper<T> {
 			defineTotalMappings();
 		}
 		return totalBuilder.getPending();
-	}
-
-	protected abstract void defineMappings();
-
-	protected void defineTotalMappings() {
 	}
 
 	protected abstract Class<T> mappedClass();

@@ -76,15 +76,11 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 	}
 
 	@Override
-	public <T> Collection<T> reverseKeys(Object... objects) {
-		throw new UnsupportedOperationException(
-				"Use a sorted multikey map, or reverse yourself");
-	}
-
-	@Override
-	public <T> Collection<T> reverseValues(Object... objects) {
-		throw new UnsupportedOperationException(
-				"Use a sorted multikey map, or reverse yourself");
+	protected DelegateMapCreator ensureDelegateMapCreator() {
+		if (this.delegateMapCreator == null) {
+			this.delegateMapCreator = new CollectionCreators.UnsortedMapCreator();
+		}
+		return delegateMapCreator;
 	}
 
 	@GwtIncompatible
@@ -95,11 +91,15 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 	}
 
 	@Override
-	protected DelegateMapCreator ensureDelegateMapCreator() {
-		if (this.delegateMapCreator == null) {
-			this.delegateMapCreator = new CollectionCreators.UnsortedMapCreator();
-		}
-		return delegateMapCreator;
+	public <T> Collection<T> reverseKeys(Object... objects) {
+		throw new UnsupportedOperationException(
+				"Use a sorted multikey map, or reverse yourself");
+	}
+
+	@Override
+	public <T> Collection<T> reverseValues(Object... objects) {
+		throw new UnsupportedOperationException(
+				"Use a sorted multikey map, or reverse yourself");
 	}
 
 	/*

@@ -60,6 +60,38 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 
 	protected String ignoreClassnameRegex;
 
+	protected abstract T createMetadata(String className, ClassMetadata found);
+
+	protected ClassMetadataCache getCached(File cacheFile) {
+		ClassMetadataCache cache = MethodContext.instance()
+				.withContextTrue(
+						JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL)
+				.withContextClassloader(getClass().getClassLoader())
+				.call(() -> {
+					try {
+						return Io.read().file(cacheFile).asObject();
+					} catch (Exception e) {
+						if (cacheFile.exists()) {
+							cacheFile.delete();
+						}
+						if (CommonUtils.extractCauseOfClass(e,
+								FileNotFoundException.class) != null) {
+							logger.info("No cache found, creating");
+						}
+						return new ClassMetadataCache();
+					}
+				});
+		if (cache.version != ClassMetadataCache.CURRENT_VERSION) {
+			cache = new ClassMetadataCache<>();
+			cache.version = ClassMetadataCache.CURRENT_VERSION;
+		}
+		return cache;
+	}
+
+	protected File getHomeDir() {
+		return EntityLayerObjects.get().getDataFolder();
+	}
+
 	public InputStream getStreamForMd5(ClassMetadata classMetadata)
 			throws Exception {
 		try {
@@ -69,6 +101,47 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 			return new JarHelper().openStream(classMetadata.url());
 		}
 	}
+
+	protected Class loadClass(List<ClassLoader> classLoaders, String className)
+			throws ClassNotFoundException, Error {
+		Class c = null;
+		for (int idx = 0; idx < classLoaders.size(); idx++) {
+			long nt = System.nanoTime();
+			ClassLoader classLoader = classLoaders.get(idx);
+			try {
+				c = classLoader.loadClass(className);
+				loadClassNanos += (System.nanoTime() - nt);
+				break;
+			} catch (ClassNotFoundException e) {
+				loadClassErrNanos += (System.nanoTime() - nt);
+				if (idx < classLoaders.size() - 1) {
+					continue;
+				} else {
+					throw e;
+				}
+			} catch (Error eiie) {
+				loadClassErrNanos += (System.nanoTime() - nt);
+				if (idx < classLoaders.size() - 1) {
+					continue;
+				} else {
+					throw eiie;
+				}
+			}
+		}
+		return c;
+	}
+
+	private void maybeLog(Throwable throwable, String className) {
+		if (Ax.notBlank(debugClassloaderExceptionRegex)
+				&& className.matches(debugClassloaderExceptionRegex)) {
+			Ax.out("Exception logging caching scanner class resolution: \n\t%s",
+					className);
+			throwable.printStackTrace();
+		}
+	}
+
+	protected abstract T process(Class clazz, String className,
+			ClassMetadata found);
 
 	public void scan(ClassMetadataCache<ClassMetadata> classpathCache,
 			String cachePath) throws Exception {
@@ -167,15 +240,6 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		serialize(cacheFile);
 	}
 
-	private void maybeLog(Throwable throwable, String className) {
-		if (Ax.notBlank(debugClassloaderExceptionRegex)
-				&& className.matches(debugClassloaderExceptionRegex)) {
-			Ax.out("Exception logging caching scanner class resolution: \n\t%s",
-					className);
-			throwable.printStackTrace();
-		}
-	}
-
 	private void serialize(File cacheFile) {
 		new Thread(Ax.format("caching-scanner-write-%s", cacheFile.getName())) {
 			@Override
@@ -185,68 +249,4 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 			};
 		}.start();
 	}
-
-	protected abstract T createMetadata(String className, ClassMetadata found);
-
-	protected ClassMetadataCache getCached(File cacheFile) {
-		ClassMetadataCache cache = MethodContext.instance()
-				.withContextTrue(
-						JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL)
-				.withContextClassloader(getClass().getClassLoader())
-				.call(() -> {
-					try {
-						return Io.read().file(cacheFile).asObject();
-					} catch (Exception e) {
-						if (cacheFile.exists()) {
-							cacheFile.delete();
-						}
-						if (CommonUtils.extractCauseOfClass(e,
-								FileNotFoundException.class) != null) {
-							logger.info("No cache found, creating");
-						}
-						return new ClassMetadataCache();
-					}
-				});
-		if (cache.version != ClassMetadataCache.CURRENT_VERSION) {
-			cache = new ClassMetadataCache<>();
-			cache.version = ClassMetadataCache.CURRENT_VERSION;
-		}
-		return cache;
-	}
-
-	protected File getHomeDir() {
-		return EntityLayerObjects.get().getDataFolder();
-	}
-
-	protected Class loadClass(List<ClassLoader> classLoaders, String className)
-			throws ClassNotFoundException, Error {
-		Class c = null;
-		for (int idx = 0; idx < classLoaders.size(); idx++) {
-			long nt = System.nanoTime();
-			ClassLoader classLoader = classLoaders.get(idx);
-			try {
-				c = classLoader.loadClass(className);
-				loadClassNanos += (System.nanoTime() - nt);
-				break;
-			} catch (ClassNotFoundException e) {
-				loadClassErrNanos += (System.nanoTime() - nt);
-				if (idx < classLoaders.size() - 1) {
-					continue;
-				} else {
-					throw e;
-				}
-			} catch (Error eiie) {
-				loadClassErrNanos += (System.nanoTime() - nt);
-				if (idx < classLoaders.size() - 1) {
-					continue;
-				} else {
-					throw eiie;
-				}
-			}
-		}
-		return c;
-	}
-
-	protected abstract T process(Class clazz, String className,
-			ClassMetadata found);
 }

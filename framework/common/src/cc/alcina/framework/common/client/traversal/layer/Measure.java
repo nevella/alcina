@@ -40,6 +40,8 @@ import cc.alcina.framework.common.client.util.NestedName;
 public class Measure extends Location.Range {
 	public static final Object NEGATED_MATCH = new Object();
 
+	static IdCounter counter = new IdCounter(false);
+
 	public static Measure fromNode(DomNode node, Token token) {
 		return fromRange(node.asRange(), token);
 	}
@@ -50,37 +52,12 @@ public class Measure extends Location.Range {
 
 	public final Token token;
 
-	public Token getToken() {
-		return token;
-	}
-
-	public void log() {
-		Ax.out("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
-	}
-
 	/**
 	 * Additional match information
 	 */
 	private Object data;
 
 	private Measure aliasedFrom;
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), token.hashCode(), data,
-				aliasedFrom);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Measure) {
-			Measure o = (Measure) obj;
-			return Ax.equals(start, o.start, end, o.end, token, o.token, data,
-					o.data, aliasedFrom, o.aliasedFrom);
-		} else {
-			return super.equals(obj);
-		}
-	}
 
 	public Measure(Location start, Location end, Token token) {
 		super(start, end);
@@ -128,12 +105,33 @@ public class Measure extends Location.Range {
 		return order.compare(token, o.token) <= 0;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Measure) {
+			Measure o = (Measure) obj;
+			return Ax.equals(start, o.start, end, o.end, token, o.token, data,
+					o.data, aliasedFrom, o.aliasedFrom);
+		} else {
+			return super.equals(obj);
+		}
+	}
+
 	public Object getData() {
 		return this.data;
 	}
 
-	public <T> T typedData() {
-		return (T) getData();
+	public Token getToken() {
+		return token;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), token.hashCode(), data,
+				aliasedFrom);
+	}
+
+	public void log() {
+		Ax.out("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
 	}
 
 	public void setData(Object data) {
@@ -160,6 +158,29 @@ public class Measure extends Location.Range {
 		return subMeasure;
 	}
 
+	public String toDebugString() {
+		String aliasMarker = aliasedFrom != null ? ":: (alias)" : "";
+		String tokenString = token.toString();
+		if (tokenString.contains(token.getClass().getName())) {
+			tokenString = token.getClass().getSimpleName();
+		}
+		tokenString = CommonUtils.padStringRight(tokenString, 28, ' ');
+		String tokenData = getData() == null ? "" : getData().toString();
+		tokenData = CommonUtils.padStringRight(tokenData, 16, ' ');
+		return Ax.format("[%s,%s]%s :: %s :: %s :: %s",
+				Ax.padLeft(start.index, 8), Ax.padLeft(end.index, 8),
+				aliasMarker, tokenString, tokenData, Ax.trimForLogging(text()));
+	}
+
+	public String toPathSegment() {
+		String tokenString = token.toString();
+		if (tokenString.contains(token.getClass().getName())) {
+			tokenString = token.getClass().getSimpleName();
+		}
+		return Ax.format("[%s,%s] %s #%s", Ax.padLeft(start.index, 8),
+				Ax.padLeft(end.index, 8), tokenString, counter.nextId());
+	}
+
 	@Override
 	public String toString() {
 		String tokenString = token.toString();
@@ -179,18 +200,8 @@ public class Measure extends Location.Range {
 		return Ax.format("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
 	}
 
-	public String toDebugString() {
-		String aliasMarker = aliasedFrom != null ? ":: (alias)" : "";
-		String tokenString = token.toString();
-		if (tokenString.contains(token.getClass().getName())) {
-			tokenString = token.getClass().getSimpleName();
-		}
-		tokenString = CommonUtils.padStringRight(tokenString, 28, ' ');
-		String tokenData = getData() == null ? "" : getData().toString();
-		tokenData = CommonUtils.padStringRight(tokenData, 16, ' ');
-		return Ax.format("[%s,%s]%s :: %s :: %s :: %s",
-				Ax.padLeft(start.index, 8), Ax.padLeft(end.index, 8),
-				aliasMarker, tokenString, tokenData, Ax.trimForLogging(text()));
+	public <T> T typedData() {
+		return (T) getData();
 	}
 
 	/**
@@ -200,6 +211,14 @@ public class Measure extends Location.Range {
 	 *
 	 */
 	public interface Token {
+		/*
+		 * Logical boundary tokens are non-dom - when matched, they do not move
+		 * the match cursor forward
+		 */
+		default boolean isNonDomToken() {
+			return false;
+		}
+
 		/**
 		 * This will be overridden if the token is an enum
 		 * 
@@ -207,6 +226,25 @@ public class Measure extends Location.Range {
 		 */
 		default String name() {
 			return NestedName.get(this);
+		}
+
+		/*
+		 * Containment is generally based on a linear ordering. But tokens which
+		 * can correspond to measures with recursive containment should
+		 * implement this interface and allow appropriate containments
+		 */
+		public interface AllowsContainment {
+			boolean allowsContainment(Token otherToken);
+		}
+
+		/*
+		 * For transport measures where the token is unused
+		 */
+		public static class Generic implements Measure.Token {
+			public static final Generic TYPE = new Generic();
+
+			Generic() {
+			}
 		}
 
 		/*
@@ -234,26 +272,17 @@ public class Measure extends Location.Range {
 		}
 
 		/*
-		 * Containment is generally based on a linear ordering. But tokens which
-		 * can correspond to measures with recursive containment should
-		 * implement this interface and allow appropriate containments
-		 */
-		public interface AllowsContainment {
-			boolean allowsContainment(Token otherToken);
-		}
-
-		/*
 		 * Used in output containment ordering
 		 */
 		public interface NoPossibleChildren extends Token {
 		}
 
 		public interface Order extends Comparator<Token> {
-			Order withIgnoreNoPossibleChildren();
-
 			default Order copy() {
 				return Reflections.newInstance(getClass());
 			}
+
+			Order withIgnoreNoPossibleChildren();
 
 			public interface Has {
 				Order getOrder();
@@ -263,11 +292,9 @@ public class Measure extends Location.Range {
 			public abstract static class Simple implements Order {
 				boolean ignoreNoPossibleChildren = false;
 
-				@Override
-				public Order withIgnoreNoPossibleChildren() {
-					ignoreNoPossibleChildren = true;
-					return this;
-				}
+				protected abstract int classOrdering(
+						Class<? extends Token> class1,
+						Class<? extends Token> class2);
 
 				@Override
 				public int compare(Token o1, Token o2) {
@@ -288,39 +315,12 @@ public class Measure extends Location.Range {
 					return o instanceof NoPossibleChildren ? 1 : 0;
 				}
 
-				protected abstract int classOrdering(
-						Class<? extends Token> class1,
-						Class<? extends Token> class2);
+				@Override
+				public Order withIgnoreNoPossibleChildren() {
+					ignoreNoPossibleChildren = true;
+					return this;
+				}
 			}
 		}
-
-		/*
-		 * For transport measures where the token is unused
-		 */
-		public static class Generic implements Measure.Token {
-			public static final Generic TYPE = new Generic();
-
-			Generic() {
-			}
-		}
-
-		/*
-		 * Logical boundary tokens are non-dom - when matched, they do not move
-		 * the match cursor forward
-		 */
-		default boolean isNonDomToken() {
-			return false;
-		}
-	}
-
-	static IdCounter counter = new IdCounter(false);
-
-	public String toPathSegment() {
-		String tokenString = token.toString();
-		if (tokenString.contains(token.getClass().getName())) {
-			tokenString = token.getClass().getSimpleName();
-		}
-		return Ax.format("[%s,%s] %s #%s", Ax.padLeft(start.index, 8),
-				Ax.padLeft(end.index, 8), tokenString, counter.nextId());
 	}
 }

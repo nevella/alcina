@@ -10,16 +10,26 @@ import cc.alcina.framework.entity.XmlUtils;
 public interface ParserToken<C extends ParserContext, S extends AbstractParserSlice> {
 	public static final Topic<Void> topicResetTokenPatterns = Topic.create();
 
+	boolean canFollow(C context);
+
 	public S createSlice(C context, XmlUtils.DOMLocation start,
 			XmlUtils.DOMLocation end, int startOffsetInRun);
 
 	public S createSlice(Node node);
+
+	S currentRangeAsSliceAndIncrementOffset(C context, int trimFromEnd);
 
 	public S extractSubstringAndMatch(C context);
 
 	public Class getCategory();
 
 	public abstract Pattern getPattern(C context);
+
+	/*
+	 * Indicates would prefer to start new token sequence if not contiguous with
+	 * existing sequence
+	 */
+	boolean isGreedy(C context, S bestMatch);
 
 	public boolean isIgnoreable(C context);
 
@@ -35,21 +45,11 @@ public interface ParserToken<C extends ParserContext, S extends AbstractParserSl
 
 	public abstract boolean overridesAtSameLocation(S slice);
 
+	default void resetPattern() {
+	}
+
 	public boolean shouldStartNewSequence(C context);
 
 	public boolean skipMatchingWhitespace(C context, String stringToMatch,
 			int start);
-
-	boolean canFollow(C context);
-
-	S currentRangeAsSliceAndIncrementOffset(C context, int trimFromEnd);
-
-	/*
-	 * Indicates would prefer to start new token sequence if not contiguous with
-	 * existing sequence
-	 */
-	boolean isGreedy(C context, S bestMatch);
-
-	default void resetPattern() {
-	}
 }

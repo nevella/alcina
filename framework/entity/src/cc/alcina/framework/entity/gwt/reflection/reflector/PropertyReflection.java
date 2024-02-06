@@ -160,6 +160,22 @@ public class PropertyReflection extends ReflectionElement
 		this.propertyType = erased;
 	}
 
+	class AnnotationProviderImpl implements AnnotationProvider {
+		@Override
+		public <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass) {
+			return getter == null ? null
+					: getter.getAnnotation(annotationClass);
+		}
+
+		@Override
+		public <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass) {
+			return getter == null ? List.of()
+					: (List<A>) getter.getAnnotations(annotationClass);
+		}
+	}
+
 	public static abstract class PropertyAccessor
 			implements ProvidesPropertyMethod {
 		String propertyName;
@@ -175,7 +191,13 @@ public class PropertyReflection extends ReflectionElement
 			this.firePropertyChangeEvents = firePropertyChangeEvents;
 		}
 
+		protected abstract <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass);
+
 		public abstract Annotation[] getAnnotations();
+
+		protected abstract <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass);
 
 		public abstract JClassType getEnclosingType();
 
@@ -186,12 +208,6 @@ public class PropertyReflection extends ReflectionElement
 		public boolean has(Class<? extends Annotation> annotationClass) {
 			return getAnnotation(annotationClass) != null;
 		}
-
-		protected abstract <A extends Annotation> A
-				getAnnotation(Class<A> annotationClass);
-
-		protected abstract <A extends Annotation> List<A>
-				getAnnotations(Class<A> annotationClass);
 
 		protected abstract boolean isOverriddenBy(PropertyAccessor getter2);
 
@@ -205,8 +221,20 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected <A extends Annotation> A
+					getAnnotation(Class<A> annotationClass) {
+				return field.getAnnotation(annotationClass);
+			}
+
+			@Override
 			public Annotation[] getAnnotations() {
 				return field.getAnnotations();
+			}
+
+			@Override
+			protected <A extends Annotation> List<A>
+					getAnnotations(Class<A> annotationClass) {
+				return field.getAnnotations(annotationClass);
 			}
 
 			@Override
@@ -225,28 +253,16 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected boolean isOverriddenBy(PropertyAccessor test) {
+				return test != null;
+			}
+
+			@Override
 			public cc.alcina.framework.common.client.reflection.Method
 					providePropertyMethod(boolean getter,
 							boolean firePropertyChangeEvents) {
 				return ((ProvidesPropertyMethod) field).providePropertyMethod(
 						getter, firePropertyChangeEvents);
-			}
-
-			@Override
-			protected <A extends Annotation> A
-					getAnnotation(Class<A> annotationClass) {
-				return field.getAnnotation(annotationClass);
-			}
-
-			@Override
-			protected <A extends Annotation> List<A>
-					getAnnotations(Class<A> annotationClass) {
-				return field.getAnnotations(annotationClass);
-			}
-
-			@Override
-			protected boolean isOverriddenBy(PropertyAccessor test) {
-				return test != null;
 			}
 		}
 
@@ -259,8 +275,20 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected <A extends Annotation> A
+					getAnnotation(Class<A> annotationClass) {
+				return method.getAnnotation(annotationClass);
+			}
+
+			@Override
 			public Annotation[] getAnnotations() {
 				return method.getAnnotations();
+			}
+
+			@Override
+			protected <A extends Annotation> List<A>
+					getAnnotations(Class<A> annotationClass) {
+				return method.getAnnotations(annotationClass);
 			}
 
 			@Override
@@ -283,29 +311,17 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected boolean isOverriddenBy(PropertyAccessor test) {
+				return test != null && getEnclosingType()
+						.isAssignableFrom(test.getEnclosingType());
+			}
+
+			@Override
 			public cc.alcina.framework.common.client.reflection.Method
 					providePropertyMethod(boolean getter,
 							boolean firePropertyChangeEvents) {
 				return ((ProvidesPropertyMethod) method).providePropertyMethod(
 						getter, firePropertyChangeEvents);
-			}
-
-			@Override
-			protected <A extends Annotation> A
-					getAnnotation(Class<A> annotationClass) {
-				return method.getAnnotation(annotationClass);
-			}
-
-			@Override
-			protected <A extends Annotation> List<A>
-					getAnnotations(Class<A> annotationClass) {
-				return method.getAnnotations(annotationClass);
-			}
-
-			@Override
-			protected boolean isOverriddenBy(PropertyAccessor test) {
-				return test != null && getEnclosingType()
-						.isAssignableFrom(test.getEnclosingType());
 			}
 		}
 	}
@@ -323,21 +339,5 @@ public class PropertyReflection extends ReflectionElement
 
 		Method providePropertyMethod(boolean getter,
 				boolean providePropertyMethod);
-	}
-
-	class AnnotationProviderImpl implements AnnotationProvider {
-		@Override
-		public <A extends Annotation> A
-				getAnnotation(Class<A> annotationClass) {
-			return getter == null ? null
-					: getter.getAnnotation(annotationClass);
-		}
-
-		@Override
-		public <A extends Annotation> List<A>
-				getAnnotations(Class<A> annotationClass) {
-			return getter == null ? List.of()
-					: (List<A>) getter.getAnnotations(annotationClass);
-		}
 	}
 }

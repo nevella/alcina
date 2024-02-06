@@ -81,6 +81,19 @@ public class StatusPanel extends Composite {
 		}
 	}
 
+	private void adoptNotifiersFromCurrent() {
+		if (current != null && current != this) {
+			for (StatusPanelModalNotifier notifier : current.logNotifiers) {
+				notifier.panel = this;
+				logNotifiers.add(notifier);
+			}
+			for (StatusPanelModalNotifier notifier : current.notifiers) {
+				notifier.panel = this;
+				notifiers.add(notifier);
+			}
+		}
+	}
+
 	public void clear() {
 		for (StatusPanelModalNotifier notifier : new ArrayList<StatusPanelModalNotifier>(
 				notifiers)) {
@@ -147,6 +160,32 @@ public class StatusPanel extends Composite {
 		}
 	}
 
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		if (current == null) {
+			current = this;
+		} else {
+		}
+		updateHandlers(true);
+	}
+
+	@Override
+	protected void onDetach() {
+		updateHandlers(false);
+		if (current == this) {
+			current = null;
+		}
+		super.onDetach();
+	}
+
+	protected void previewNativeEvent(NativePreviewEvent event) {
+		// if (modal) {
+		// event.cancel();
+		// return;
+		// }
+	}
+
 	public void removeNotifier(StatusPanelModalNotifier notifier) {
 		if (notifiers.remove(notifier) && keepNotifiersAsLog) {
 			logNotifiers.add(notifier);
@@ -156,6 +195,19 @@ public class StatusPanel extends Composite {
 
 	public void setContent(String html) {
 		setContent(html, true);
+	}
+
+	private void setContent(String html, boolean makeCurrent) {
+		setVisible(CommonUtils.isNotNullOrEmpty(html));
+		if (current != this && makeCurrent) {
+			if (current != null) {
+				current.updateHandlers(false);
+			}
+			adoptNotifiersFromCurrent();
+			current = this;
+		}
+		content.setHTML(html);
+		setShowingProblem(false);
 	}
 
 	public void setKeepNotifiersAsLog(boolean keepNotifiersAsLog) {
@@ -199,32 +251,6 @@ public class StatusPanel extends Composite {
 		setStyleName(problemStyleName, b);
 	}
 
-	private void adoptNotifiersFromCurrent() {
-		if (current != null && current != this) {
-			for (StatusPanelModalNotifier notifier : current.logNotifiers) {
-				notifier.panel = this;
-				logNotifiers.add(notifier);
-			}
-			for (StatusPanelModalNotifier notifier : current.notifiers) {
-				notifier.panel = this;
-				notifiers.add(notifier);
-			}
-		}
-	}
-
-	private void setContent(String html, boolean makeCurrent) {
-		setVisible(CommonUtils.isNotNullOrEmpty(html));
-		if (current != this && makeCurrent) {
-			if (current != null) {
-				current.updateHandlers(false);
-			}
-			adoptNotifiersFromCurrent();
-			current = this;
-		}
-		content.setHTML(html);
-		setShowingProblem(false);
-	}
-
 	private void updateHandlers(boolean show) {
 		// Remove any existing handlers.
 		if (nativePreviewHandlerRegistration != null) {
@@ -241,32 +267,6 @@ public class StatusPanel extends Composite {
 						}
 					});
 		}
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		if (current == null) {
-			current = this;
-		} else {
-		}
-		updateHandlers(true);
-	}
-
-	@Override
-	protected void onDetach() {
-		updateHandlers(false);
-		if (current == this) {
-			current = null;
-		}
-		super.onDetach();
-	}
-
-	protected void previewNativeEvent(NativePreviewEvent event) {
-		// if (modal) {
-		// event.cancel();
-		// return;
-		// }
 	}
 
 	public static class StatusPanelModalNotifier implements ModalNotifier {

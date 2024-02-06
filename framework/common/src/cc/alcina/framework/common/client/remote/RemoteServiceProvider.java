@@ -7,6 +7,15 @@ import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 
 public abstract class RemoteServiceProvider<S> {
+	protected String adjustEndpoint(String endpoint) {
+		if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)) {
+			endpoint += "-not";
+		}
+		return endpoint;
+	}
+
+	protected abstract S createAndIntialiseEndpoint();
+
 	public AlcinaRpcRequestBuilder getRequestBuilder() {
 		return new AlcinaRpcRequestBuilder();
 	}
@@ -22,13 +31,4 @@ public abstract class RemoteServiceProvider<S> {
 		((ServiceDefTarget) service).setRpcRequestBuilder(builder);
 		return service;
 	}
-
-	protected String adjustEndpoint(String endpoint) {
-		if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)) {
-			endpoint += "-not";
-		}
-		return endpoint;
-	}
-
-	protected abstract S createAndIntialiseEndpoint();
 }

@@ -15,6 +15,10 @@ public interface JobExecutors {
 
 	List<ClientInstance> getActiveServers();
 
+	default Timestamp getJobMetadataLockTimestamp(String path) {
+		return null;
+	}
+
 	default int getMaxConsistencyJobCount() {
 		return 0;
 	}
@@ -26,8 +30,4 @@ public interface JobExecutors {
 	boolean isCurrentScheduledJobExecutor();
 
 	boolean isHighestBuildNumberInCluster();
-
-	default Timestamp getJobMetadataLockTimestamp(String path) {
-		return null;
-	}
 }

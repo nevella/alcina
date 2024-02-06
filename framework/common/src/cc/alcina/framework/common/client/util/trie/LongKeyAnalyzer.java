@@ -42,16 +42,6 @@ public class LongKeyAnalyzer extends AbstractKeyAnalyzer<Long>
 	}
 
 	@Override
-	public int lengthInBits(Long key) {
-		return Long.SIZE;
-	}
-
-	@Override
-	public boolean isBitSet(Long key, int bitIndex) {
-		return (key & mask(bitIndex)) != 0;
-	}
-
-	@Override
 	public int bitIndex(Long key, Long otherKey) {
 		long keyValue = key.longValue();
 		if (keyValue == 0) {
@@ -70,7 +60,17 @@ public class LongKeyAnalyzer extends AbstractKeyAnalyzer<Long>
 	}
 
 	@Override
+	public boolean isBitSet(Long key, int bitIndex) {
+		return (key & mask(bitIndex)) != 0;
+	}
+
+	@Override
 	public boolean isPrefix(Long key, Long prefix) {
 		return key.equals(prefix);
+	}
+
+	@Override
+	public int lengthInBits(Long key) {
+		return Long.SIZE;
 	}
 }

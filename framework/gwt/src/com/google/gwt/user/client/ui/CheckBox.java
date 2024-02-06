@@ -93,6 +93,34 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 		setStyleName("gwt-CheckBox");
 	}
 
+	protected CheckBox(Element elem) {
+		super(withLabelDecoration ? Document.get().createLabelElement() : elem);
+		inputElem = InputElement.as(elem);
+		if (withLabelDecoration) {
+			checkMarkElem = Document.get().createSpanElement();
+			checkMarkElem.setClassName("checkmark");
+			// because we're now wrapping in a Label, this could be a span...but
+			// no
+			// need
+			labelElem = Document.get().createLabelElement();
+			getElement().appendChild(inputElem);
+			getElement().appendChild(checkMarkElem);
+			getElement().appendChild(labelElem);
+			String uid = DOM.createUniqueId();
+			inputElem.setPropertyString("id", uid);
+			labelElem.setHtmlFor(uid);
+			directionalTextHelper = new DirectionalTextHelper(labelElem, true);
+		} else {
+			directionalTextHelper = new DirectionalTextHelper(inputElem, true);
+		}
+		// Accessibility: setting tab index to be 0 by default, ensuring element
+		// appears in tab sequence. FocusWidget's setElement method already
+		// calls setTabIndex, which is overridden below. However, at the time
+		// that this call is made, inputElem has not been created. So, we have
+		// to call setTabIndex again, once inputElem has been created.
+		setTabIndex(0);
+	}
+
 	/**
 	 * Creates a check box with the specified text label.
 	 *
@@ -195,34 +223,6 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 		setText(label);
 	}
 
-	protected CheckBox(Element elem) {
-		super(withLabelDecoration ? Document.get().createLabelElement() : elem);
-		inputElem = InputElement.as(elem);
-		if (withLabelDecoration) {
-			checkMarkElem = Document.get().createSpanElement();
-			checkMarkElem.setClassName("checkmark");
-			// because we're now wrapping in a Label, this could be a span...but
-			// no
-			// need
-			labelElem = Document.get().createLabelElement();
-			getElement().appendChild(inputElem);
-			getElement().appendChild(checkMarkElem);
-			getElement().appendChild(labelElem);
-			String uid = DOM.createUniqueId();
-			inputElem.setPropertyString("id", uid);
-			labelElem.setHtmlFor(uid);
-			directionalTextHelper = new DirectionalTextHelper(labelElem, true);
-		} else {
-			directionalTextHelper = new DirectionalTextHelper(inputElem, true);
-		}
-		// Accessibility: setting tab index to be 0 by default, ensuring element
-		// appears in tab sequence. FocusWidget's setElement method already
-		// calls setTabIndex, which is overridden below. However, at the time
-		// that this call is made, inputElem has not been created. So, we have
-		// to call setTabIndex again, once inputElem has been created.
-		setTabIndex(0);
-	}
-
 	@Override
 	public HandlerRegistration
 			addValueChangeHandler(ValueChangeHandler<Boolean> handler) {
@@ -240,6 +240,18 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 			editor = TakesValueEditor.of(this);
 		}
 		return editor;
+	}
+
+	protected void ensureDomEventHandlers() {
+		addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				// Checkboxes always toggle their value, no need to compare
+				// with old value. Radio buttons are not so lucky, see
+				// overrides in RadioButton
+				ValueChangeEvent.fire(CheckBox.this, getValue());
+			}
+		});
 	}
 
 	@Override
@@ -325,6 +337,96 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	@Override
 	public boolean isEnabled() {
 		return !inputElem.isDisabled();
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-label = label next to checkbox.</li>
+	 * </ul>
+	 *
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+		ensureDebugId(labelElem, baseID, "label");
+		ensureDebugId(inputElem, baseID, "input");
+		labelElem.setHtmlFor(inputElem.getId());
+	}
+
+	/**
+	 * This method is called when a widget is attached to the browser's
+	 * document. onAttach needs special handling for the CheckBox case. Must
+	 * still call {@link Widget#onAttach()} to preserve the
+	 * <code>onAttach</code> contract.
+	 */
+	@Override
+	protected void onLoad() {
+		DOM.setEventListener(inputElem, this);
+	}
+
+	/**
+	 * This method is called when a widget is detached from the browser's
+	 * document. Overridden because of IE bug that throws away checked state and
+	 * in order to clear the event listener off of the <code>inputElem</code>.
+	 */
+	@Override
+	protected void onUnload() {
+		// Clear out the inputElem's event listener (breaking the circular
+		// reference between it and the widget).
+		DOM.setEventListener(inputElem, null);
+		setValue(getValue());
+	}
+
+	/**
+	 * @deprecated Call and use {@link replaceInputElement(Element)} instead.
+	 */
+	@Deprecated
+	protected void
+			replaceInputElement(com.google.gwt.user.client.Element elem) {
+		InputElement newInputElem = InputElement.as(elem);
+		// Collect information we need to set
+		int tabIndex = getTabIndex();
+		boolean checked = getValue();
+		boolean enabled = isEnabled();
+		String formValue = getFormValue();
+		String uid = inputElem.getId();
+		String accessKey = inputElem.getAccessKey();
+		int sunkEvents = Event.getEventsSunk(inputElem);
+		// Clear out the old input element
+		DOM.setEventListener(inputElem, null);
+		getElement().replaceChild(newInputElem, inputElem);
+		// Sink events on the new element
+		Event.sinkEvents(elem, Event.getEventsSunk(inputElem));
+		Event.sinkEvents(inputElem, 0);
+		inputElem = newInputElem;
+		// Setup the new element
+		Event.sinkEvents(inputElem, sunkEvents);
+		inputElem.setId(uid);
+		if (!"".equals(accessKey)) {
+			inputElem.setAccessKey(accessKey);
+		}
+		setTabIndex(tabIndex);
+		setValue(checked);
+		setEnabled(enabled);
+		setFormValue(formValue);
+		// Set the event listener
+		if (isAttached()) {
+			DOM.setEventListener(inputElem, this);
+		}
+	}
+
+	/**
+	 * Replace the current input element with a new one. Preserves all state
+	 * except for the name property, for nasty reasons related to radio button
+	 * grouping. (See implementation of {@link RadioButton#setName}.)
+	 *
+	 * @param elem
+	 *            the new input element
+	 */
+	protected void replaceInputElement(Element elem) {
+		replaceInputElement(DOM.asOld(elem));
 	}
 
 	@Override
@@ -499,107 +601,5 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	public void sinkEvents(int eventBitsToAdd) {
 		Event.sinkEvents(inputElem,
 				eventBitsToAdd | Event.getEventsSunk(inputElem));
-	}
-
-	protected void ensureDomEventHandlers() {
-		addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				// Checkboxes always toggle their value, no need to compare
-				// with old value. Radio buttons are not so lucky, see
-				// overrides in RadioButton
-				ValueChangeEvent.fire(CheckBox.this, getValue());
-			}
-		});
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-label = label next to checkbox.</li>
-	 * </ul>
-	 *
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-		ensureDebugId(labelElem, baseID, "label");
-		ensureDebugId(inputElem, baseID, "input");
-		labelElem.setHtmlFor(inputElem.getId());
-	}
-
-	/**
-	 * This method is called when a widget is attached to the browser's
-	 * document. onAttach needs special handling for the CheckBox case. Must
-	 * still call {@link Widget#onAttach()} to preserve the
-	 * <code>onAttach</code> contract.
-	 */
-	@Override
-	protected void onLoad() {
-		DOM.setEventListener(inputElem, this);
-	}
-
-	/**
-	 * This method is called when a widget is detached from the browser's
-	 * document. Overridden because of IE bug that throws away checked state and
-	 * in order to clear the event listener off of the <code>inputElem</code>.
-	 */
-	@Override
-	protected void onUnload() {
-		// Clear out the inputElem's event listener (breaking the circular
-		// reference between it and the widget).
-		DOM.setEventListener(inputElem, null);
-		setValue(getValue());
-	}
-
-	/**
-	 * @deprecated Call and use {@link replaceInputElement(Element)} instead.
-	 */
-	@Deprecated
-	protected void
-			replaceInputElement(com.google.gwt.user.client.Element elem) {
-		InputElement newInputElem = InputElement.as(elem);
-		// Collect information we need to set
-		int tabIndex = getTabIndex();
-		boolean checked = getValue();
-		boolean enabled = isEnabled();
-		String formValue = getFormValue();
-		String uid = inputElem.getId();
-		String accessKey = inputElem.getAccessKey();
-		int sunkEvents = Event.getEventsSunk(inputElem);
-		// Clear out the old input element
-		DOM.setEventListener(inputElem, null);
-		getElement().replaceChild(newInputElem, inputElem);
-		// Sink events on the new element
-		Event.sinkEvents(elem, Event.getEventsSunk(inputElem));
-		Event.sinkEvents(inputElem, 0);
-		inputElem = newInputElem;
-		// Setup the new element
-		Event.sinkEvents(inputElem, sunkEvents);
-		inputElem.setId(uid);
-		if (!"".equals(accessKey)) {
-			inputElem.setAccessKey(accessKey);
-		}
-		setTabIndex(tabIndex);
-		setValue(checked);
-		setEnabled(enabled);
-		setFormValue(formValue);
-		// Set the event listener
-		if (isAttached()) {
-			DOM.setEventListener(inputElem, this);
-		}
-	}
-
-	/**
-	 * Replace the current input element with a new one. Preserves all state
-	 * except for the name property, for nasty reasons related to radio button
-	 * grouping. (See implementation of {@link RadioButton#setName}.)
-	 *
-	 * @param elem
-	 *            the new input element
-	 */
-	protected void replaceInputElement(Element elem) {
-		replaceInputElement(DOM.asOld(elem));
 	}
 }

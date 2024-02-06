@@ -58,9 +58,105 @@ public class ElementLocal extends NodeLocal
 		return ClientDomElementStatic.addClassName(this, className);
 	}
 
+	private void appendChildContents(UnsafeHtmlBuilder builder) {
+		if (containsUnescapedText()) {
+			checkSplitTextNodesForBrowserCompatibility();
+			getChildren().stream().forEach(
+					node -> ((TextLocal) node).appendUnescaped(builder));
+		} else {
+			getChildren().stream()
+					.forEach(child -> child.appendOuterHtml(builder));
+		}
+	}
+
+	@Override
+	void appendOuterHtml(UnsafeHtmlBuilder builder) {
+		if (eventBits != 0) {
+			// FIXME - dirndl 1x1e - can probably get the local element very
+			// quickly from [remote-index-in-parent] -- so remove (with LDM2)
+			ensureId();
+		}
+		builder.appendHtmlConstantNoCheck("<");
+		builder.appendHtmlConstant(tagName);
+		String styleAttributeValue = attributes.get("style");
+		if (!attributes.isEmpty()) {
+			boolean applyStyleAttribute = !element.hasStyle()
+					|| hasUnparsedStyle && getStyle().local.isEmpty();
+			attributes.entrySet().forEach(e -> {
+				// ignore if we have a valid style object
+				if (e.getKey().equals("style") && !applyStyleAttribute) {
+					return;
+				}
+				builder.appendHtmlConstantNoCheck(" ");
+				// invalid attr names will die on the voine
+				builder.appendEscaped(e.getKey());
+				builder.appendHtmlConstantNoCheck("=\"");
+				builder.appendEscaped(e.getValue());
+				builder.appendHtmlConstantNoCheck("\"");
+			});
+		}
+		if (element.getStyle() != null
+				&& !element.getStyle().local().isEmpty()) {
+			builder.appendHtmlConstantNoCheck(" style=\"");
+			if (Ax.notBlank(styleAttributeValue)) {
+				builder.appendUnsafeHtml(styleAttributeValue);
+				builder.appendHtmlConstantNoCheck("; ");
+			}
+			((StyleLocal) element.getStyle().local()).properties.entrySet()
+					.forEach(e -> {
+						builder.appendEscaped(
+								LocalDom.declarativeCssName(e.getKey()));
+						builder.appendHtmlConstantNoCheck(":");
+						builder.appendEscaped(e.getValue());
+						builder.appendHtmlConstantNoCheck("; ");
+					});
+			builder.appendHtmlConstantNoCheck("\"");
+		}
+		builder.appendHtmlConstantNoCheck(">");
+		appendChildContents(builder);
+		if (!HtmlParser.isSelfClosingTag(tagName)) {
+			builder.appendHtmlConstantNoCheck("</");
+			builder.appendHtmlConstant(tagName);
+			builder.appendHtmlConstantNoCheck(">");
+		}
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		getChildren().stream().forEach(node -> node.appendTextContent(builder));
+	}
+
 	@Override
 	public void blur() {
 		ClientDomElementStatic.blur(this);
+	}
+
+	private void checkSplitTextNodesForBrowserCompatibility() {
+		if (getChildren().stream().noneMatch(t -> t.getNodeValue()
+				.length() > LocalDom.maxCharsPerTextNode)) {
+			return;
+		}
+		List<NodeLocal> toReplace = new ArrayList<>(getChildren());
+		for (int idx = toReplace.size() - 1; idx >= 0; idx--) {
+			element.getChild(idx).removeFromParent();
+		}
+		List<TextLocal> out = new ArrayList<>();
+		// copied from HtmlParser.emitText
+		toReplace.forEach(n -> {
+			String string = n.getNodeValue();
+			int idx = 0;
+			int length = string.length();
+			while (idx < length) {
+				int segmentLength = length - idx;
+				segmentLength = Math.min(segmentLength,
+						LocalDom.maxCharsPerTextNode);
+				String segment = idx == 0 && segmentLength == length ? string
+						: string.substring(idx, idx + segmentLength);
+				Text text = Document.get().createTextNode(segment);
+				element.appendChild(text);
+				idx += segmentLength;
+			}
+		});
 	}
 
 	public void clearChildrenAndAttributes0() {
@@ -81,6 +177,17 @@ public class ElementLocal extends NodeLocal
 					.forEach(cn -> clone.appendChild(cn.cloneNode(true)));
 		}
 		return clone;
+	}
+
+	private boolean containsUnescapedText() {
+		if (tagName.equalsIgnoreCase("style")
+				|| tagName.equalsIgnoreCase("script")) {
+			Preconditions.checkState(getChildren().stream()
+					.allMatch(c -> c.getNodeType() == Node.TEXT_NODE));
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
@@ -145,6 +252,30 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public LightMap<String, String> getAttributeMap() {
+		return attributes;
+	}
+
+	Map<String, String> getAttributeMapIncludingStyles() {
+		if (element.getStyle() == null
+				|| element.getStyle().local().isEmpty()) {
+			return this.attributes;
+		}
+		LightMap<String, String> attributes = this.attributes.clone();
+		StringBuilder styleBuilder = new StringBuilder();
+		String styleAttributeValue = attributes.get("style");
+		if (Ax.notBlank(styleAttributeValue)) {
+			styleBuilder.append(styleAttributeValue);
+			styleBuilder.append("; ");
+		}
+		((StyleLocal) element.getStyle().local()).properties.entrySet()
+				.forEach(e -> {
+					styleBuilder
+							.append(LocalDom.declarativeCssName(e.getKey()));
+					styleBuilder.append(":");
+					styleBuilder.append(e.getValue());
+					styleBuilder.append("; ");
+				});
+		attributes.put("style", styleBuilder.toString());
 		return attributes;
 	}
 
@@ -405,6 +536,16 @@ public class ElementLocal extends NodeLocal
 		return element;
 	}
 
+	int orSunkEventsOfAllChildren(int sunk) {
+		for (NodeLocal child : getChildren()) {
+			if (child instanceof ElementLocal) {
+				sunk = ((ElementLocal) child).orSunkEventsOfAllChildren(sunk);
+			}
+		}
+		sunk |= eventBits;
+		return sunk;
+	}
+
 	public void putElement(Element element) {
 		this.element = element;
 	}
@@ -589,6 +730,17 @@ public class ElementLocal extends NodeLocal
 	}
 
 	@Override
+	void setParentNode(NodeLocal local) {
+		super.setParentNode(local);
+		if (local instanceof ElementLocal) {
+			ElementLocal elementLocal = (ElementLocal) local;
+			element.setAttached(elementLocal.element.attached);
+		} else {
+			element.setAttached(false);
+		}
+	}
+
+	@Override
 	public void setPropertyBoolean(String name, boolean value) {
 		setPropertyString(name, String.valueOf(value));
 	}
@@ -661,158 +813,6 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public String toString() {
 		return super.toString() + "\n\t" + getTagName();
-	}
-
-	private void appendChildContents(UnsafeHtmlBuilder builder) {
-		if (containsUnescapedText()) {
-			checkSplitTextNodesForBrowserCompatibility();
-			getChildren().stream().forEach(
-					node -> ((TextLocal) node).appendUnescaped(builder));
-		} else {
-			getChildren().stream()
-					.forEach(child -> child.appendOuterHtml(builder));
-		}
-	}
-
-	private void checkSplitTextNodesForBrowserCompatibility() {
-		if (getChildren().stream().noneMatch(t -> t.getNodeValue()
-				.length() > LocalDom.maxCharsPerTextNode)) {
-			return;
-		}
-		List<NodeLocal> toReplace = new ArrayList<>(getChildren());
-		for (int idx = toReplace.size() - 1; idx >= 0; idx--) {
-			element.getChild(idx).removeFromParent();
-		}
-		List<TextLocal> out = new ArrayList<>();
-		// copied from HtmlParser.emitText
-		toReplace.forEach(n -> {
-			String string = n.getNodeValue();
-			int idx = 0;
-			int length = string.length();
-			while (idx < length) {
-				int segmentLength = length - idx;
-				segmentLength = Math.min(segmentLength,
-						LocalDom.maxCharsPerTextNode);
-				String segment = idx == 0 && segmentLength == length ? string
-						: string.substring(idx, idx + segmentLength);
-				Text text = Document.get().createTextNode(segment);
-				element.appendChild(text);
-				idx += segmentLength;
-			}
-		});
-	}
-
-	private boolean containsUnescapedText() {
-		if (tagName.equalsIgnoreCase("style")
-				|| tagName.equalsIgnoreCase("script")) {
-			Preconditions.checkState(getChildren().stream()
-					.allMatch(c -> c.getNodeType() == Node.TEXT_NODE));
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		if (eventBits != 0) {
-			// FIXME - dirndl 1x1e - can probably get the local element very
-			// quickly from [remote-index-in-parent] -- so remove (with LDM2)
-			ensureId();
-		}
-		builder.appendHtmlConstantNoCheck("<");
-		builder.appendHtmlConstant(tagName);
-		String styleAttributeValue = attributes.get("style");
-		if (!attributes.isEmpty()) {
-			boolean applyStyleAttribute = !element.hasStyle()
-					|| hasUnparsedStyle && getStyle().local.isEmpty();
-			attributes.entrySet().forEach(e -> {
-				// ignore if we have a valid style object
-				if (e.getKey().equals("style") && !applyStyleAttribute) {
-					return;
-				}
-				builder.appendHtmlConstantNoCheck(" ");
-				// invalid attr names will die on the voine
-				builder.appendEscaped(e.getKey());
-				builder.appendHtmlConstantNoCheck("=\"");
-				builder.appendEscaped(e.getValue());
-				builder.appendHtmlConstantNoCheck("\"");
-			});
-		}
-		if (element.getStyle() != null
-				&& !element.getStyle().local().isEmpty()) {
-			builder.appendHtmlConstantNoCheck(" style=\"");
-			if (Ax.notBlank(styleAttributeValue)) {
-				builder.appendUnsafeHtml(styleAttributeValue);
-				builder.appendHtmlConstantNoCheck("; ");
-			}
-			((StyleLocal) element.getStyle().local()).properties.entrySet()
-					.forEach(e -> {
-						builder.appendEscaped(
-								LocalDom.declarativeCssName(e.getKey()));
-						builder.appendHtmlConstantNoCheck(":");
-						builder.appendEscaped(e.getValue());
-						builder.appendHtmlConstantNoCheck("; ");
-					});
-			builder.appendHtmlConstantNoCheck("\"");
-		}
-		builder.appendHtmlConstantNoCheck(">");
-		appendChildContents(builder);
-		if (!HtmlParser.isSelfClosingTag(tagName)) {
-			builder.appendHtmlConstantNoCheck("</");
-			builder.appendHtmlConstant(tagName);
-			builder.appendHtmlConstantNoCheck(">");
-		}
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		getChildren().stream().forEach(node -> node.appendTextContent(builder));
-	}
-
-	Map<String, String> getAttributeMapIncludingStyles() {
-		if (element.getStyle() == null
-				|| element.getStyle().local().isEmpty()) {
-			return this.attributes;
-		}
-		LightMap<String, String> attributes = this.attributes.clone();
-		StringBuilder styleBuilder = new StringBuilder();
-		String styleAttributeValue = attributes.get("style");
-		if (Ax.notBlank(styleAttributeValue)) {
-			styleBuilder.append(styleAttributeValue);
-			styleBuilder.append("; ");
-		}
-		((StyleLocal) element.getStyle().local()).properties.entrySet()
-				.forEach(e -> {
-					styleBuilder
-							.append(LocalDom.declarativeCssName(e.getKey()));
-					styleBuilder.append(":");
-					styleBuilder.append(e.getValue());
-					styleBuilder.append("; ");
-				});
-		attributes.put("style", styleBuilder.toString());
-		return attributes;
-	}
-
-	int orSunkEventsOfAllChildren(int sunk) {
-		for (NodeLocal child : getChildren()) {
-			if (child instanceof ElementLocal) {
-				sunk = ((ElementLocal) child).orSunkEventsOfAllChildren(sunk);
-			}
-		}
-		sunk |= eventBits;
-		return sunk;
-	}
-
-	@Override
-	void setParentNode(NodeLocal local) {
-		super.setParentNode(local);
-		if (local instanceof ElementLocal) {
-			ElementLocal elementLocal = (ElementLocal) local;
-			element.setAttached(elementLocal.element.attached);
-		} else {
-			element.setAttached(false);
-		}
 	}
 
 	class AttributeMap implements NamedNodeMap {
@@ -918,16 +918,6 @@ public class ElementLocal extends NodeLocal
 		}
 
 		@Override
-		public Node node() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void setValue(String value) throws DOMException {
-			entry.setValue(value);
-		}
-
-		@Override
 		protected NodeJso jsoRemote() {
 			throw new UnsupportedOperationException();
 		}
@@ -939,6 +929,11 @@ public class ElementLocal extends NodeLocal
 
 		@Override
 		protected <T extends NodeLocal> T local() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Node node() {
 			throw new UnsupportedOperationException();
 		}
 
@@ -955,6 +950,11 @@ public class ElementLocal extends NodeLocal
 		@Override
 		protected void resetRemote0() {
 			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setValue(String value) throws DOMException {
+			entry.setValue(value);
 		}
 	}
 

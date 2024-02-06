@@ -90,6 +90,17 @@ public class GCLogParser {
 
 		CharSequence contents;
 
+		private ZonedDateTime consumeDate(MatcherCounter c) {
+			LocalDateTime ldt = LocalDateTime.of(c.nint(), c.nint(), c.nint(),
+					c.nint(), c.nint(), c.nint(), c.nint() * 1000000);
+			ZoneOffset offset = ZoneOffset.of(c.next());
+			return ZonedDateTime.ofInstant(ldt, offset, ZoneId.systemDefault());
+		}
+
+		private double consumeTime(MatcherCounter c) {
+			return Double.parseDouble(c.next());
+		}
+
 		public void parseEnd(Matcher m, CharSequence contents) {
 			this.contents = contents;
 			MatcherCounter c = new MatcherCounter(m);
@@ -118,17 +129,6 @@ public class GCLogParser {
 			return fb.toString();
 		}
 
-		private ZonedDateTime consumeDate(MatcherCounter c) {
-			LocalDateTime ldt = LocalDateTime.of(c.nint(), c.nint(), c.nint(),
-					c.nint(), c.nint(), c.nint(), c.nint() * 1000000);
-			ZoneOffset offset = ZoneOffset.of(c.next());
-			return ZonedDateTime.ofInstant(ldt, offset, ZoneId.systemDefault());
-		}
-
-		private double consumeTime(MatcherCounter c) {
-			return Double.parseDouble(c.next());
-		}
-
 		static class MatcherCounter {
 			private Matcher m;
 
@@ -138,12 +138,12 @@ public class GCLogParser {
 				this.m = m;
 			}
 
-			public int nint() {
-				return Integer.parseInt(next());
-			}
-
 			String next() {
 				return m.group(groupCounter++);
+			}
+
+			public int nint() {
+				return Integer.parseInt(next());
 			}
 		}
 	}

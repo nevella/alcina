@@ -39,6 +39,14 @@ public abstract class DocumentSelection extends MeasureSelection
 		documentToMeasure();
 	}
 
+	private Measure documentToMeasure() {
+		Location.Range documentRange = document.getLocationRange();
+		Measure measure = new Measure(documentRange.start, documentRange.end,
+				DocumentToken.TYPE);
+		set(measure);
+		return measure;
+	}
+
 	public DomDocument ensureDocument() {
 		try {
 			if (document == null) {
@@ -62,12 +70,10 @@ public abstract class DocumentSelection extends MeasureSelection
 		}
 	}
 
-	private Measure documentToMeasure() {
-		Location.Range documentRange = document.getLocationRange();
-		Measure measure = new Measure(documentRange.start, documentRange.end,
-				DocumentToken.TYPE);
-		set(measure);
-		return measure;
+	@Override
+	public void releaseResources() {
+		super.releaseResources();
+		document = null;
 	}
 
 	public static class DocumentToken implements Measure.Token {
@@ -75,12 +81,6 @@ public abstract class DocumentSelection extends MeasureSelection
 
 		private DocumentToken() {
 		}
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		document = null;
 	}
 
 	public interface Loader<S extends Selection> {

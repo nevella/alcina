@@ -27,34 +27,6 @@ class SerializationSupport {
 	// context transience.
 	static SerializationSupport deserializationInstance = new SerializationSupport();
 
-	public static Class solePossibleImplementation(Class type) {
-		Class<?> clazz = Domain.resolveEntityClass(type);
-		return solePossibleImplementation.computeIfAbsent(clazz, valueClass -> {
-			boolean effectivelyFinal = Reflections.isEffectivelyFinal(clazz);
-			if (!effectivelyFinal) {
-				ClassReflector<?> classReflector = Reflections.at(clazz);
-				effectivelyFinal = classReflector.isFinal()
-						|| (Reflections.isAssignableFrom(Entity.class, clazz) &&
-				// FXIME - reflection - Modifiers.nonAbstract emul
-				// non-abstract entity classes have no serializable subclasses
-				// (but
-				// do have mvcc subclass...)
-				//
-				// so this code says "yes, effectively final if a non-abstract
-				// entity subclass
-				//
-				!classReflector.isAbstract());
-			}
-			if (effectivelyFinal) {
-				return valueClass;
-			} else if (PersistentImpl.hasImplementation(clazz)) {
-				return PersistentImpl.getImplementation(clazz);
-			} else {
-				return null;
-			}
-		});
-	}
-
 	static PropertySerialization getPropertySerialization(Property property) {
 		Class<?> clazz = property.getOwningType();
 		TypeSerialization typeSerialization = Annotations.resolve(clazz,
@@ -90,6 +62,34 @@ class SerializationSupport {
 		return support;
 	}
 
+	public static Class solePossibleImplementation(Class type) {
+		Class<?> clazz = Domain.resolveEntityClass(type);
+		return solePossibleImplementation.computeIfAbsent(clazz, valueClass -> {
+			boolean effectivelyFinal = Reflections.isEffectivelyFinal(clazz);
+			if (!effectivelyFinal) {
+				ClassReflector<?> classReflector = Reflections.at(clazz);
+				effectivelyFinal = classReflector.isFinal()
+						|| (Reflections.isAssignableFrom(Entity.class, clazz) &&
+				// FXIME - reflection - Modifiers.nonAbstract emul
+				// non-abstract entity classes have no serializable subclasses
+				// (but
+				// do have mvcc subclass...)
+				//
+				// so this code says "yes, effectively final if a non-abstract
+				// entity subclass
+				//
+				!classReflector.isAbstract());
+			}
+			if (effectivelyFinal) {
+				return valueClass;
+			} else if (PersistentImpl.hasImplementation(clazz)) {
+				return PersistentImpl.getImplementation(clazz);
+			} else {
+				return null;
+			}
+		});
+	}
+
 	private Map<Class, List<Property>> serializationProperties = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
@@ -101,15 +101,8 @@ class SerializationSupport {
 	private SerializationSupport() {
 	}
 
-	public Property getProperty(Class<?> clazz, String propertyName) {
-		Map<String, Property> map = serializationPropertiesByName
-				.computeIfAbsent(clazz, c -> {
-					return getProperties0(c).stream()
-							.collect(Collectors.toMap(Property::getName,
-									p -> (Property) Reflections.at(c)
-											.property(p.getName())));
-				});
-		return map.get(propertyName);
+	List<Property> getProperties(Class type) {
+		return getProperties0(type);
 	}
 
 	private List<Property> getProperties0(Class forClass) {
@@ -145,8 +138,15 @@ class SerializationSupport {
 		});
 	}
 
-	List<Property> getProperties(Class type) {
-		return getProperties0(type);
+	public Property getProperty(Class<?> clazz, String propertyName) {
+		Map<String, Property> map = serializationPropertiesByName
+				.computeIfAbsent(clazz, c -> {
+					return getProperties0(c).stream()
+							.collect(Collectors.toMap(Property::getName,
+									p -> (Property) Reflections.at(c)
+											.property(p.getName())));
+				});
+		return map.get(propertyName);
 	}
 
 	static final class PropertyComparator implements Comparator<Property> {

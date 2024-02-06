@@ -27,6 +27,10 @@ import cc.alcina.framework.common.client.util.ComparableComparator;
 public abstract class LocalSearchDefinition extends SearchDefinition {
 	private Class resultClass;
 
+	protected Predicate buildFilter() {
+		return null;
+	}
+
 	public Class getResultClass() {
 		return resultClass;
 	}
@@ -39,9 +43,5 @@ public abstract class LocalSearchDefinition extends SearchDefinition {
 
 	public void setResultClass(Class resultClass) {
 		this.resultClass = resultClass;
-	}
-
-	protected Predicate buildFilter() {
-		return null;
 	}
 }

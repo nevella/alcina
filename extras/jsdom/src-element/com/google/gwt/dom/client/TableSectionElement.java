@@ -89,6 +89,18 @@ public class TableSectionElement extends Element {
 	}
 
 	/**
+	 * Delete a row from this section.
+	 * 
+	 * @param index
+	 *            The index of the row to be deleted, or -1 to delete the last
+	 *            row. This index starts from 0 and is relative only to the rows
+	 *            contained inside this section, not all the rows in the table.
+	 */
+	native void deleteRow0(ElementJso elt, int index) /*-{
+															elt.deleteRow(index);
+															}-*/;
+
+	/**
 	 * Horizontal alignment of data in cells. See the align attribute for
 	 * HTMLTheadElement for details.
 	 */
@@ -131,6 +143,10 @@ public class TableSectionElement extends Element {
 		}
 		return new NodeList<>((NodeListWrapped) new NodeListWrapped<>(nodes));
 	}
+
+	private final native NodeListJso getRows0(ElementJso elem) /*-{
+																		return elem.rows;
+																		}-*/;
 
 	/**
 	 * Vertical alignment of data in cells. See the valign attribute for
@@ -197,20 +213,4 @@ public class TableSectionElement extends Element {
 	public void setVAlign(String vAlign) {
 		this.setPropertyString("vAlign", vAlign);
 	}
-
-	private final native NodeListJso getRows0(ElementJso elem) /*-{
-																		return elem.rows;
-																		}-*/;
-
-	/**
-	 * Delete a row from this section.
-	 * 
-	 * @param index
-	 *            The index of the row to be deleted, or -1 to delete the last
-	 *            row. This index starts from 0 and is relative only to the rows
-	 *            contained inside this section, not all the rows in the table.
-	 */
-	native void deleteRow0(ElementJso elt, int index) /*-{
-															elt.deleteRow(index);
-															}-*/;
 }

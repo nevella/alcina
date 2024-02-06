@@ -149,6 +149,25 @@ public class StatusDisplayer {
 		}
 	}
 
+	enum Channel {
+		CALL_MADE, CENTER_MESSAGE_PUBLISHED, MESSAGE_PUBLISHED,
+		ICY_MESSAGE_PUBLISHED, ICY_CENTER_MESSAGE_PUBLISHED,
+		EXCEPTION_MESSAGE_PUBLISHED, APP_MESSAGE_PUBLISHED;
+
+		String getCssClassName() {
+			switch (this) {
+			case ICY_MESSAGE_PUBLISHED:
+				return "icy";
+			case ICY_CENTER_MESSAGE_PUBLISHED:
+				return "icy-center";
+			case CENTER_MESSAGE_PUBLISHED:
+				return "sd-center-notification";
+			default:
+				return null;
+			}
+		}
+	}
+
 	private class FaderAnimation extends Animation {
 		private final SimplePanel holder;
 
@@ -169,25 +188,6 @@ public class StatusDisplayer {
 				int opacityPercent = (int) (100
 						* (1 - (progress - preFade) / (1 - preFade)));
 				WidgetUtils.setOpacity(holder, opacityPercent);
-			}
-		}
-	}
-
-	enum Channel {
-		CALL_MADE, CENTER_MESSAGE_PUBLISHED, MESSAGE_PUBLISHED,
-		ICY_MESSAGE_PUBLISHED, ICY_CENTER_MESSAGE_PUBLISHED,
-		EXCEPTION_MESSAGE_PUBLISHED, APP_MESSAGE_PUBLISHED;
-
-		String getCssClassName() {
-			switch (this) {
-			case ICY_MESSAGE_PUBLISHED:
-				return "icy";
-			case ICY_CENTER_MESSAGE_PUBLISHED:
-				return "icy-center";
-			case CENTER_MESSAGE_PUBLISHED:
-				return "sd-center-notification";
-			default:
-				return null;
 			}
 		}
 	}

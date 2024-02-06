@@ -85,6 +85,19 @@ public class GwittirUtils {
 		return vList;
 	}
 
+	private static void getAllValidators(Validator v, List<Validator> vList) {
+		if (v == null) {
+			return;
+		}
+		if (v instanceof CompositeValidator) {
+			CompositeValidator cv = (CompositeValidator) v;
+			for (Validator v2 : cv.getValidators()) {
+				getAllValidators(v2, vList);
+			}
+		}
+		vList.add(v);
+	}
+
 	public static SetBasedListBox getForEnumAndRenderer(
 			Class<? extends Enum> clazz, Renderer renderer) {
 		return getForEnumAndRenderer(clazz, renderer, new ArrayList());
@@ -275,19 +288,6 @@ public class GwittirUtils {
 			result.addAll(m.get(key));
 		}
 		return result;
-	}
-
-	private static void getAllValidators(Validator v, List<Validator> vList) {
-		if (v == null) {
-			return;
-		}
-		if (v instanceof CompositeValidator) {
-			CompositeValidator cv = (CompositeValidator) v;
-			for (Validator v2 : cv.getValidators()) {
-				getAllValidators(v2, vList);
-			}
-		}
-		vList.add(v);
 	}
 
 	public enum FormFieldTypeForRefresh {

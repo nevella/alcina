@@ -60,6 +60,10 @@ public class DevStats {
 			return category;
 		}
 
+		protected Class<? extends StatCategory> endCategory() {
+			return end;
+		}
+
 		@Override
 		public String findEndLine() {
 			Matcher matcher = getMatcher(endCategory());
@@ -78,6 +82,24 @@ public class DevStats {
 			} else {
 				return null;
 			}
+		}
+
+		private void flush(int lastStart, int lastEnd, int start,
+				List<String> result) {
+			if (lastStart == -1 || lastEnd == -1) {
+				return;
+			}
+			if (start == -1 || lastEnd < start) {
+				result.add(getLogProvider().getLog().substring(lastStart,
+						lastEnd));
+			}
+		}
+
+		private Matcher getMatcher(Class<? extends StatCategory> category) {
+			String regex = Ax.format(
+					"[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} .*\\[alc-%s\\].+",
+					category.getCanonicalName());
+			return Pattern.compile(regex).matcher(getLogProvider().getLog());
 		}
 
 		public List<String> listStats() {
@@ -99,28 +121,6 @@ public class DevStats {
 			}
 			flush(lastStart, lastEnd, -1, result);
 			return result;
-		}
-
-		private void flush(int lastStart, int lastEnd, int start,
-				List<String> result) {
-			if (lastStart == -1 || lastEnd == -1) {
-				return;
-			}
-			if (start == -1 || lastEnd < start) {
-				result.add(getLogProvider().getLog().substring(lastStart,
-						lastEnd));
-			}
-		}
-
-		private Matcher getMatcher(Class<? extends StatCategory> category) {
-			String regex = Ax.format(
-					"[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} .*\\[alc-%s\\].+",
-					category.getCanonicalName());
-			return Pattern.compile(regex).matcher(getLogProvider().getLog());
-		}
-
-		protected Class<? extends StatCategory> endCategory() {
-			return end;
 		}
 
 		protected Class<? extends StatCategory> startCategory() {
@@ -150,11 +150,47 @@ public class DevStats {
 		}
 	}
 
+	static class Stat implements Comparable<Stat> {
+		public StatProvider provider;
+
+		long start;
+
+		long end;
+
+		long childDuration;
+
+		@Override
+		public int compareTo(Stat o) {
+			int compareStart = CommonUtils.compareLongs(start, o.start);
+			if (compareStart != 0) {
+				return compareStart;
+			}
+			int compareEnd = CommonUtils.compareLongs(end, o.end);
+			return -compareEnd;
+		}
+
+		public int depth() {
+			return provider.depth();
+		}
+
+		public long duration() {
+			return end - start;
+		}
+
+		public String name() {
+			return provider.category().name();
+		}
+	}
+
 	@Registration(StatProvider.class)
 	public static abstract class StatProvider {
 		private LogProvider logProvider;
 
 		public abstract StatCategory category();
+
+		protected int depth() {
+			return category().depth();
+		}
 
 		public abstract String findEndLine();
 
@@ -178,14 +214,6 @@ public class DevStats {
 			return this.logProvider;
 		}
 
-		public void setLogProvider(LogProvider logProvider) {
-			this.logProvider = logProvider;
-		}
-
-		protected int depth() {
-			return category().depth();
-		}
-
 		protected boolean isParallel() {
 			return false;
 		}
@@ -197,6 +225,10 @@ public class DevStats {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		public void setLogProvider(LogProvider logProvider) {
+			this.logProvider = logProvider;
 		}
 	}
 
@@ -262,38 +294,6 @@ public class DevStats {
 		}
 
 		public void save() {
-		}
-	}
-
-	static class Stat implements Comparable<Stat> {
-		public StatProvider provider;
-
-		long start;
-
-		long end;
-
-		long childDuration;
-
-		@Override
-		public int compareTo(Stat o) {
-			int compareStart = CommonUtils.compareLongs(start, o.start);
-			if (compareStart != 0) {
-				return compareStart;
-			}
-			int compareEnd = CommonUtils.compareLongs(end, o.end);
-			return -compareEnd;
-		}
-
-		public int depth() {
-			return provider.depth();
-		}
-
-		public long duration() {
-			return end - start;
-		}
-
-		public String name() {
-			return provider.category().name();
 		}
 	}
 }

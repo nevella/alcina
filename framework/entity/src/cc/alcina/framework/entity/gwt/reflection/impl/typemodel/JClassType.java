@@ -73,6 +73,13 @@ public abstract class JClassType<T extends Type>
 		throw new UnsupportedOperationException();
 	}
 
+	private Members ensureMembers() {
+		if (members == null) {
+			members = new Members();
+		}
+		return members;
+	}
+
 	@Override
 	public <A extends Annotation> A
 			findAnnotationInTypeHierarchy(Class<A> annotationType) {
@@ -430,13 +437,6 @@ public abstract class JClassType<T extends Type>
 		return getQualifiedSourceName();
 	}
 
-	private Members ensureMembers() {
-		if (members == null) {
-			members = new Members();
-		}
-		return members;
-	}
-
 	class Members {
 		List<JField> fields;
 
@@ -462,21 +462,6 @@ public abstract class JClassType<T extends Type>
 			} catch (Throwable e) {
 				throw e;
 			}
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("Members: %s", JClassType.this.toString());
-		}
-
-		private List<JMethod>
-				getDirectInheritableMethods(List<JMethod> methods) {
-			Multimap<NameCallingSignature, List<JMethod>> candidates = methods
-					.stream().filter(m -> !m.isPrivate())
-					.map(resolution::resolve).collect(AlcinaCollectors
-							.toKeyMultimap(NameCallingSignature::new));
-			return candidates.values().stream().map(this::findMostSpecific)
-					.collect(Collectors.toList());
 		}
 
 		boolean assignableComparable(JClassType o1, JClassType o2) {
@@ -580,6 +565,16 @@ public abstract class JClassType<T extends Type>
 			}
 		}
 
+		private List<JMethod>
+				getDirectInheritableMethods(List<JMethod> methods) {
+			Multimap<NameCallingSignature, List<JMethod>> candidates = methods
+					.stream().filter(m -> !m.isPrivate())
+					.map(resolution::resolve).collect(AlcinaCollectors
+							.toKeyMultimap(NameCallingSignature::new));
+			return candidates.values().stream().map(this::findMostSpecific)
+					.collect(Collectors.toList());
+		}
+
 		void init() {
 			resolution = new TypeParameterResolution(JClassType.this);
 			fields = Arrays.stream(clazz.getDeclaredFields())
@@ -651,6 +646,11 @@ public abstract class JClassType<T extends Type>
 			}
 			// only allow exact (not covariant) matches
 			return m1.getReturnType() == m2.getReturnType();
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Members: %s", JClassType.this.toString());
 		}
 
 		class ExternalOrderFieldComparator implements Comparator<JField> {
@@ -777,41 +777,6 @@ public abstract class JClassType<T extends Type>
 			}
 		}
 
-		private JClassType resolve(JType jType) {
-			JClassType classType = (JClassType) jType;
-			Type cursor = ((JClassType) jType).type;
-			while (cursor instanceof TypeVariable) {
-				Type test = resolvedTypeParameters.get(cursor);
-				if (test != null) {
-					cursor = test;
-				} else {
-					break;
-				}
-			}
-			if (cursor != null) {
-				return jClassType.typeOracle.getType(cursor);
-			} else {
-				return classType;
-			}
-		}
-
-		private void resolveIfParameterized(Type possiblyParameterizedType) {
-			if (!(possiblyParameterizedType instanceof ParameterizedType)) {
-				return;
-			}
-			ParameterizedType parameterizedType = (ParameterizedType) possiblyParameterizedType;
-			Type[] actualTypeArguments = parameterizedType
-					.getActualTypeArguments();
-			Class rawType = (Class) parameterizedType.getRawType();
-			TypeVariable[] typeParameters = rawType.getTypeParameters();
-			Preconditions.checkState(
-					actualTypeArguments.length == typeParameters.length);
-			for (int idx = 0; idx < actualTypeArguments.length; idx++) {
-				resolvedTypeParameters.putIfAbsent(typeParameters[idx],
-						actualTypeArguments[idx]);
-			}
-		}
-
 		Class checkableClass(Type type) {
 			if (type instanceof Class) {
 				return (Class) type;
@@ -854,6 +819,41 @@ public abstract class JClassType<T extends Type>
 				return clone;
 			} else {
 				return method;
+			}
+		}
+
+		private JClassType resolve(JType jType) {
+			JClassType classType = (JClassType) jType;
+			Type cursor = ((JClassType) jType).type;
+			while (cursor instanceof TypeVariable) {
+				Type test = resolvedTypeParameters.get(cursor);
+				if (test != null) {
+					cursor = test;
+				} else {
+					break;
+				}
+			}
+			if (cursor != null) {
+				return jClassType.typeOracle.getType(cursor);
+			} else {
+				return classType;
+			}
+		}
+
+		private void resolveIfParameterized(Type possiblyParameterizedType) {
+			if (!(possiblyParameterizedType instanceof ParameterizedType)) {
+				return;
+			}
+			ParameterizedType parameterizedType = (ParameterizedType) possiblyParameterizedType;
+			Type[] actualTypeArguments = parameterizedType
+					.getActualTypeArguments();
+			Class rawType = (Class) parameterizedType.getRawType();
+			TypeVariable[] typeParameters = rawType.getTypeParameters();
+			Preconditions.checkState(
+					actualTypeArguments.length == typeParameters.length);
+			for (int idx = 0; idx < actualTypeArguments.length; idx++) {
+				resolvedTypeParameters.putIfAbsent(typeParameters[idx],
+						actualTypeArguments[idx]);
 			}
 		}
 	}

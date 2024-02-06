@@ -15,6 +15,16 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 	}
 
 	@Override
+	void appendOuterHtml(UnsafeHtmlBuilder builder) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final AnchorElement createAnchorElement() {
 		return ClientDomDocumentStatic.createAnchorElement(this);
 	}
@@ -733,16 +743,6 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 
 	@Override
 	public void setTitle(String title) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
 		throw new UnsupportedOperationException();
 	}
 }

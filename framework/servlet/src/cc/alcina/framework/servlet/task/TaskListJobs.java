@@ -54,6 +54,195 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 
 	private int limit;
 
+	protected void addActive(DomDocument doc, String sectionFilterName,
+			Predicate<Job> sectionFilter) {
+		{
+			doc.html().body().builder().tag("h2")
+					.text("Active and pending jobs (%s)", sectionFilterName)
+					.append();
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
+					.accept(Utils::large).cell("Started").accept(Utils::date)
+					.cell("Thread").accept(Utils::medium).cell("Performer")
+					.accept(Utils::instance).cell("Links").accept(Utils::links);
+			Predicate<Job> textFilter = job -> filter.test(job)
+					&& filter(job.getTaskClassName(), job.getTaskSerialized());
+			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
+					.filter(textFilter).filter(sectionFilter);
+			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
+			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
+					() -> streamRef.get().collect(Collectors.toList()),
+					streamRef, true);
+			jobs.forEach(job -> {
+				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+						.cell(String.valueOf(job.getId()))
+						.cell(job.provideName()).accept(Utils::large)
+						.cell(timestamp(job.getStartTime()))
+						.cell(JobRegistry.get().getPerformerThreadName(job))
+						.accept(Utils::medium).cell(job.getPerformer())
+						.accept(Utils::instance);
+				DomNode td = cellBuilder.append();
+				{
+					String href = JobServlet.createTaskUrl(
+							new TaskLogJobDetails().withJobId(job.getId()));
+					td.html().addLink("Details", href, "_blank");
+				}
+				td.builder().text(" - ").tag("span").append();
+				{
+					String href = JobServlet.createTaskUrl(
+							new TaskCancelJob().withJobId(job.getId()));
+					td.html().addLink("Cancel", href, "_blank");
+				}
+			});
+		}
+	}
+
+	protected void addCompleted(DomDocument doc, String sectionFilterName,
+			boolean topLevel, int limit) {
+		{
+			doc.html().body().builder().tag("h2")
+					.text("Recently completed jobs %s", sectionFilterName)
+					.append();
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
+					.accept(Utils::large).cell("Started").accept(Utils::date)
+					.cell("Finished").accept(Utils::date).cell("Performer")
+					.accept(Utils::instance).cell("Link").accept(Utils::links);
+			Predicate<Job> textFilter = job -> filter.test(job)
+					&& filter(job.getTaskClassName(), job.getTaskSerialized(),
+							Optional.ofNullable(job.getPerformer())
+									.map(ClientInstance::toString)
+									.orElse("--unmatched--"));
+			Predicate<? extends Job> topLevelAdditional = topLevel
+					? Job::provideIsFirstInSequence
+					: job -> true;
+			Stream<? extends Job> recentlyCompletedJobs = JobDomain.get()
+					.getRecentlyCompletedJobs(topLevel);
+			if (filter.active) {
+				recentlyCompletedJobs = recentlyCompletedJobs.parallel();
+			}
+			Stream<? extends Job> stream = recentlyCompletedJobs
+					.filter(textFilter).filter((Predicate) topLevelAdditional)
+					.limit(limit);
+			boolean parallel = false;
+			if (filter.active) {
+				stream = stream.sorted(
+						Comparator.comparing(Job::getEndTime).reversed());
+				parallel = true;
+			}
+			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
+			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
+					() -> streamRef.get().collect(Collectors.toList()),
+					streamRef, parallel);
+			jobs.forEach(job -> {
+				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+						.cell(String.valueOf(job.getId()))
+						.cell(job.provideName()).accept(Utils::large)
+						.accept(b -> this.applyCompletedResultStyle(b, job))
+						.cell(timestamp(job.getStartTime()))
+						.cell(timestamp(job.getEndTime()))
+						.cell(job.getPerformer()).accept(Utils::instance);
+				DomNode td = cellBuilder.append();
+				String href = JobServlet.createTaskUrl(
+						new TaskLogJobDetails().withJobId(job.getId()));
+				td.html().addLink("Details", href, "_blank");
+			});
+		}
+	}
+
+	private void addConsistency(DomDocument doc) {
+		doc.html().body().builder().tag("h2")
+				.text("Active consistency jobs (this jvm)").append();
+		JobRegistry.get().getActiveConsistencyJobs().forEach(j -> {
+			doc.html().body().builder().tag("div").text(j.toString()).append();
+		});
+		doc.html().body().builder().tag("h2").text("Consistency job stats")
+				.append();
+		{
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			Map<Class<? extends Task>, Integer> counts = JobDomain.get()
+					.getFutureConsistencyTaskCountByTaskClass();
+			builder.row().cell("Task").cell("Count")
+					.accept(Utils::numericRight);
+			counts.forEach((taskClass, count) -> {
+				builder.row().cell(taskClass.getSimpleName()).cell(count)
+						.accept(Utils::numericRight);
+			});
+			builder.row().cell("Total")
+					.cell(counts.values().stream()
+							.collect(Collectors.summingInt(i -> i)))
+					.accept(Utils::numericRight);
+		}
+		if (listConsistencyJobs) {
+			doc.html().body().builder().tag("h2")
+					.text("Pending consistency jobs").append();
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
+					.accept(Utils::large).cell("Creation date")
+					.accept(Utils::date).cell("Priority").cell("Cause")
+					.accept(Utils::large).cell("Links").accept(Utils::links);
+			CountingMap<Class<? extends Task>> loggedCountsByTaskClass = new CountingMap<>();
+			Stream<Job> futureConsistencyJobs = JobDomain.get()
+					.getFutureConsistencyJobs();
+			futureConsistencyJobs.forEach(job -> {
+				Class<? extends Task> taskClass = job.provideTaskClass();
+				int count = loggedCountsByTaskClass.add(taskClass);
+				if (count > 10) {
+					return;
+				}
+				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+						.cell(String.valueOf(job.getId()))
+						.cell(job.provideName()).accept(Utils::large)
+						.cell(job.getCreationDate()).accept(Utils::date)
+						.cell(job.getConsistencyPriority()).cell(job.getCause())
+						.accept(Utils::large);
+				DomNode td = cellBuilder.append();
+				{
+					String href = JobServlet.createTaskUrl(
+							new TaskLogJobDetails().withJobId(job.getId()));
+					td.html().addLink("Details", href, "_blank");
+				}
+				td.builder().text(" - ").tag("span").append();
+				{
+					String href = JobServlet.createTaskUrl(
+							new TaskCancelJob().withJobId(job.getId()));
+					td.html().addLink("Cancel", href, "_blank");
+				}
+			});
+		}
+	}
+
+	private DomNodeHtmlTableCellBuilder applyCompletedResultStyle(
+			DomNodeHtmlTableCellBuilder builder, Job job) {
+		if (job.getResultType() != JobResultType.OK
+				|| !job.getState().isCompletedNormally()) {
+			DomNode lastNode = builder.previousElement();
+			lastNode.addClassName("imperfect-state");
+			if (job.getResultType().isFail()) {
+				lastNode.addClassName("error-state");
+			}
+			lastNode.setAttr("title",
+					Ax.format("%s - %s - %s", lastNode.textContent(),
+							job.getState(), job.getResultType()));
+		}
+		return builder;
+	}
+
+	boolean filter(String... tests) {
+		if (filterText == null) {
+			return true;
+		}
+		if (filterPattern == null) {
+			filterPattern = Pattern.compile(filterText);
+		}
+		return Arrays.stream(tests).filter(Objects::nonNull)
+				.anyMatch(test -> filterPattern.matcher(test).find());
+	}
+
 	public String getFilterText() {
 		return this.filterText;
 	}
@@ -170,195 +359,6 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 
 	public void setScheduled(Boolean scheduled) {
 		this.scheduled = scheduled;
-	}
-
-	private void addConsistency(DomDocument doc) {
-		doc.html().body().builder().tag("h2")
-				.text("Active consistency jobs (this jvm)").append();
-		JobRegistry.get().getActiveConsistencyJobs().forEach(j -> {
-			doc.html().body().builder().tag("div").text(j.toString()).append();
-		});
-		doc.html().body().builder().tag("h2").text("Consistency job stats")
-				.append();
-		{
-			DomNodeHtmlTableBuilder builder = doc.html().body().html()
-					.tableBuilder();
-			Map<Class<? extends Task>, Integer> counts = JobDomain.get()
-					.getFutureConsistencyTaskCountByTaskClass();
-			builder.row().cell("Task").cell("Count")
-					.accept(Utils::numericRight);
-			counts.forEach((taskClass, count) -> {
-				builder.row().cell(taskClass.getSimpleName()).cell(count)
-						.accept(Utils::numericRight);
-			});
-			builder.row().cell("Total")
-					.cell(counts.values().stream()
-							.collect(Collectors.summingInt(i -> i)))
-					.accept(Utils::numericRight);
-		}
-		if (listConsistencyJobs) {
-			doc.html().body().builder().tag("h2")
-					.text("Pending consistency jobs").append();
-			DomNodeHtmlTableBuilder builder = doc.html().body().html()
-					.tableBuilder();
-			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
-					.accept(Utils::large).cell("Creation date")
-					.accept(Utils::date).cell("Priority").cell("Cause")
-					.accept(Utils::large).cell("Links").accept(Utils::links);
-			CountingMap<Class<? extends Task>> loggedCountsByTaskClass = new CountingMap<>();
-			Stream<Job> futureConsistencyJobs = JobDomain.get()
-					.getFutureConsistencyJobs();
-			futureConsistencyJobs.forEach(job -> {
-				Class<? extends Task> taskClass = job.provideTaskClass();
-				int count = loggedCountsByTaskClass.add(taskClass);
-				if (count > 10) {
-					return;
-				}
-				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-						.cell(String.valueOf(job.getId()))
-						.cell(job.provideName()).accept(Utils::large)
-						.cell(job.getCreationDate()).accept(Utils::date)
-						.cell(job.getConsistencyPriority()).cell(job.getCause())
-						.accept(Utils::large);
-				DomNode td = cellBuilder.append();
-				{
-					String href = JobServlet.createTaskUrl(
-							new TaskLogJobDetails().withJobId(job.getId()));
-					td.html().addLink("Details", href, "_blank");
-				}
-				td.builder().text(" - ").tag("span").append();
-				{
-					String href = JobServlet.createTaskUrl(
-							new TaskCancelJob().withJobId(job.getId()));
-					td.html().addLink("Cancel", href, "_blank");
-				}
-			});
-		}
-	}
-
-	private DomNodeHtmlTableCellBuilder applyCompletedResultStyle(
-			DomNodeHtmlTableCellBuilder builder, Job job) {
-		if (job.getResultType() != JobResultType.OK
-				|| !job.getState().isCompletedNormally()) {
-			DomNode lastNode = builder.previousElement();
-			lastNode.addClassName("imperfect-state");
-			if (job.getResultType().isFail()) {
-				lastNode.addClassName("error-state");
-			}
-			lastNode.setAttr("title",
-					Ax.format("%s - %s - %s", lastNode.textContent(),
-							job.getState(), job.getResultType()));
-		}
-		return builder;
-	}
-
-	protected void addActive(DomDocument doc, String sectionFilterName,
-			Predicate<Job> sectionFilter) {
-		{
-			doc.html().body().builder().tag("h2")
-					.text("Active and pending jobs (%s)", sectionFilterName)
-					.append();
-			DomNodeHtmlTableBuilder builder = doc.html().body().html()
-					.tableBuilder();
-			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
-					.accept(Utils::large).cell("Started").accept(Utils::date)
-					.cell("Thread").accept(Utils::medium).cell("Performer")
-					.accept(Utils::instance).cell("Links").accept(Utils::links);
-			Predicate<Job> textFilter = job -> filter.test(job)
-					&& filter(job.getTaskClassName(), job.getTaskSerialized());
-			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
-					.filter(textFilter).filter(sectionFilter);
-			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
-			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
-					() -> streamRef.get().collect(Collectors.toList()),
-					streamRef, true);
-			jobs.forEach(job -> {
-				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-						.cell(String.valueOf(job.getId()))
-						.cell(job.provideName()).accept(Utils::large)
-						.cell(timestamp(job.getStartTime()))
-						.cell(JobRegistry.get().getPerformerThreadName(job))
-						.accept(Utils::medium).cell(job.getPerformer())
-						.accept(Utils::instance);
-				DomNode td = cellBuilder.append();
-				{
-					String href = JobServlet.createTaskUrl(
-							new TaskLogJobDetails().withJobId(job.getId()));
-					td.html().addLink("Details", href, "_blank");
-				}
-				td.builder().text(" - ").tag("span").append();
-				{
-					String href = JobServlet.createTaskUrl(
-							new TaskCancelJob().withJobId(job.getId()));
-					td.html().addLink("Cancel", href, "_blank");
-				}
-			});
-		}
-	}
-
-	protected void addCompleted(DomDocument doc, String sectionFilterName,
-			boolean topLevel, int limit) {
-		{
-			doc.html().body().builder().tag("h2")
-					.text("Recently completed jobs %s", sectionFilterName)
-					.append();
-			DomNodeHtmlTableBuilder builder = doc.html().body().html()
-					.tableBuilder();
-			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
-					.accept(Utils::large).cell("Started").accept(Utils::date)
-					.cell("Finished").accept(Utils::date).cell("Performer")
-					.accept(Utils::instance).cell("Link").accept(Utils::links);
-			Predicate<Job> textFilter = job -> filter.test(job)
-					&& filter(job.getTaskClassName(), job.getTaskSerialized(),
-							Optional.ofNullable(job.getPerformer())
-									.map(ClientInstance::toString)
-									.orElse("--unmatched--"));
-			Predicate<? extends Job> topLevelAdditional = topLevel
-					? Job::provideIsFirstInSequence
-					: job -> true;
-			Stream<? extends Job> recentlyCompletedJobs = JobDomain.get()
-					.getRecentlyCompletedJobs(topLevel);
-			if (filter.active) {
-				recentlyCompletedJobs = recentlyCompletedJobs.parallel();
-			}
-			Stream<? extends Job> stream = recentlyCompletedJobs
-					.filter(textFilter).filter((Predicate) topLevelAdditional)
-					.limit(limit);
-			boolean parallel = false;
-			if (filter.active) {
-				stream = stream.sorted(
-						Comparator.comparing(Job::getEndTime).reversed());
-				parallel = true;
-			}
-			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
-			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
-					() -> streamRef.get().collect(Collectors.toList()),
-					streamRef, parallel);
-			jobs.forEach(job -> {
-				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-						.cell(String.valueOf(job.getId()))
-						.cell(job.provideName()).accept(Utils::large)
-						.accept(b -> this.applyCompletedResultStyle(b, job))
-						.cell(timestamp(job.getStartTime()))
-						.cell(timestamp(job.getEndTime()))
-						.cell(job.getPerformer()).accept(Utils::instance);
-				DomNode td = cellBuilder.append();
-				String href = JobServlet.createTaskUrl(
-						new TaskLogJobDetails().withJobId(job.getId()));
-				td.html().addLink("Details", href, "_blank");
-			});
-		}
-	}
-
-	boolean filter(String... tests) {
-		if (filterText == null) {
-			return true;
-		}
-		if (filterPattern == null) {
-			filterPattern = Pattern.compile(filterText);
-		}
-		return Arrays.stream(tests).filter(Objects::nonNull)
-				.anyMatch(test -> filterPattern.matcher(test).find());
 	}
 
 	String timestamp(Date date) {

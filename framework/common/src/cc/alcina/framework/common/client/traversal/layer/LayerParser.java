@@ -37,17 +37,82 @@ import cc.alcina.framework.common.client.util.Topic;
  * text-based
  */
 public class LayerParser {
+	ParserState parserState;
+
+	MeasureSelection selection;
+
+	LayerParserPeer parserPeer;
+
+	ExtendedState extendedState;
+
+	boolean forwardsTraversalOrder = true;
+
+	public LayerParser(MeasureSelection selection, LayerParserPeer parserPeer) {
+		this.selection = selection;
+		this.parserPeer = parserPeer;
+		parserState = new ParserState(selection.get());
+	}
+
+	public void detachMeasures() {
+		selection.get().detach();
+		parserState.matches.forEach(Measure::detach);
+	}
+
+	public DomNode getContainerNode() {
+		return selection.get().containingNode();
+	}
+
+	public ExtendedState getExtendedState() {
+		return extendedState;
+	}
+
+	public Stream<Measure> getMatches() {
+		return getSentences().stream().flatMap(b -> b.toResult().measures());
+	}
+
+	public ParserResults getParserResults() {
+		return new ParserResults();
+	}
+
+	public ParserState getParserState() {
+		return parserState;
+	}
+
+	public MeasureSelection getSelection() {
+		return this.selection;
+	}
+
+	public List<BranchingParser.Branch> getSentences() {
+		return parserState.sentenceBranches;
+	}
+
+	public boolean hadMatches() {
+		return parserState.matches.size() > 0;
+	}
+
+	public boolean isForwardsTraversalOrder() {
+		return this.forwardsTraversalOrder;
+	}
+
+	/*
+	 * FIXME - upa - changes - this is self contained, just talks to layer
+	 */
+	public void parse() {
+		parserState.parse();
+	}
+
+	public void setForwardsTraversalOrder(boolean forwardsTraversalOrder) {
+		this.forwardsTraversalOrder = forwardsTraversalOrder;
+	}
+
+	public LayerParser withExtendedState(ExtendedState extendedState) {
+		extendedState.setParser(this);
+		this.extendedState = extendedState;
+		return this;
+	}
+
 	public abstract static class ExtendedState {
 		public ParserState parserState;
-
-		public void setParser(LayerParser layerParser) {
-			parserState = layerParser.parserState;
-		}
-
-		// convenience method
-		public Location getLocation() {
-			return parserState.getLocation();
-		}
 
 		public DomNode domNode() {
 			return getLocation().containingNode;
@@ -62,9 +127,37 @@ public class LayerParser {
 			return parserState.branchingParser.state.evaluatingBranch;
 		}
 
+		// convenience method
+		public Location getLocation() {
+			return parserState.getLocation();
+		}
+
+		public void setParser(LayerParser layerParser) {
+			parserState = layerParser.parserState;
+		}
+
 		@Override
 		public String toString() {
 			return parserState.toString();
+		}
+	}
+
+	public class ParserResults {
+		public Stream<Measure> getMatches() {
+			return LayerParser.this.getMatches();
+		}
+
+		public <LPP extends LayerParserPeer> LPP getParserPeer() {
+			return (LPP) parserPeer;
+		}
+
+		public Stream<Branch> getSentenceBranches() {
+			return getParserState().getSentenceBranches().stream();
+		}
+
+		public Stream<Measure> getSentenceMeasures() {
+			return getParserState().getSentenceBranches().stream()
+					.map(b -> b.toResult().rootMeasure());
 		}
 	}
 
@@ -72,30 +165,218 @@ public class LayerParser {
 	 * Corresponds to a ParserContext in (preceding approach) TokenParser
 	 */
 	public class ParserState {
-		class ParserEnvironment {
-			class SuccessorFollowingNoMatch {
-				Location get(
-						BranchingParser.State.LookaheadMatches lookaheadMatches) {
-					if (forwardsTraversalOrder) {
-						Location nextLocationAfterNoMatch = lookaheadMatches == null
-								? null
-								: lookaheadMatches.nextLocationAfterNoMatch;
-						if (nextLocationAfterNoMatch == null
-								|| !location.isTextNode()) {
-							return location.relativeLocation(
-									RelativeDirection.NEXT_LOCATION,
-									TextTraversal.EXIT_NODE);
-						} else {
-							return nextLocationAfterNoMatch;
-						}
-					} else {
-						return location.relativeLocation(
-								RelativeDirection.PREVIOUS_LOCATION,
-								TextTraversal.TO_START_OF_NODE);
+		Topic<Void> topicSentenceMatched = Topic.create();
+
+		TrieMatcher trieMatcher = new TrieMatcher(this);
+
+		PatternMatcher patternMatcher = new PatternMatcher(this);
+
+		XpathMatcher xpathMatcher = new XpathMatcher(this);
+
+		public Measure input;
+
+		Location location;
+
+		Measure bestMatch;
+
+		List<Measure> matches = new ArrayList<>();
+
+		List<BranchingParser.Branch> sentenceBranches = new ArrayList<>();
+
+		Multimap<Measure.Token, List<Measure>> matchesByToken = new Multimap<>();
+
+		CharSequenceArray baseContent = null;
+
+		public boolean finished;
+
+		DocumentMatcher documentMatcher = new DocumentMatcher(this);
+
+		Map<Range, CharSequence> inputSubSequences = AlcinaCollections
+				.newLinkedHashMap();
+
+		BranchingParser branchingParser;
+
+		public ParserState(Measure input) {
+			this.input = input;
+		}
+
+		public String absoluteHref(String relativeHref) {
+			return selection.ancestorSelection(AbstractUrlSelection.class)
+					.absoluteHref(relativeHref);
+		}
+
+		public boolean contains(Location other) {
+			return location.isBefore(other);
+		}
+
+		public DocumentMatcher documentMatcher() {
+			return documentMatcher;
+		}
+
+		public <C extends ExtendedState> C extendedState() {
+			return (C) extendedState;
+		}
+
+		public DocumentSelection getDocument() {
+			return selection.ancestorSelection(DocumentSelection.class);
+		}
+
+		public Location getLocation() {
+			return location;
+		}
+
+		public List<Measure> getMatches() {
+			return this.matches;
+		}
+
+		public int getOffsetInInput() {
+			return location.index - input.start.index;
+		}
+
+		public MeasureSelection getSelection() {
+			return selection;
+		}
+
+		public List<BranchingParser.Branch> getSentenceBranches() {
+			return sentenceBranches;
+		}
+
+		public boolean has(Measure.Token token) {
+			return matchesByToken.containsKey(token);
+		}
+
+		public boolean hasSelectedOrMatched(Measure.Token token) {
+			if (has(token)) {
+				return true;
+			}
+			// FIXME - upa - can cache between selection updates
+			return parserPeer.traversal
+					.getSelections(MeasureSelection.class, true).stream()
+					.anyMatch(sel -> sel.get().token == token);
+		}
+
+		public CharSequence inputContent() {
+			return inputContent(new Range(location, input.end));
+		}
+
+		public CharSequence inputContent(Range range) {
+			if (baseContent == null) {
+				char[] charArray = input.text().toCharArray();
+				baseContent = new CharSequenceArray(charArray, 0,
+						charArray.length);
+			}
+			return inputSubSequences.computeIfAbsent(range,
+					r -> baseContent.subSequence(
+							r.start.index - input.start.index,
+							r.end.index - input.start.index));
+		}
+
+		public boolean isAtEnd(Measure match) {
+			if (match == null) {
+				return false;
+			}
+			return match.end.index == input.end.index;
+		}
+
+		Measure match(BranchToken token) {
+			boolean atEndBoundary = forwardsTraversalOrder ? location.after
+					: !location.after;
+			// text traversal is only at start location
+			if (!location.containingNode.isText()) {
+				switch (token.matchesBoundary()) {
+				case ANY:
+					break;
+				case START:
+					if (atEndBoundary) {
+						return null;
 					}
+					break;
+				case END:
+					if (!atEndBoundary) {
+						return null;
+					}
+					break;
 				}
 			}
+			return token.match(this);
+		}
 
+		Measure match(Location location, BranchToken token) {
+			Location restoreTo = this.location;
+			try {
+				this.location = location;
+				return match(token);
+			} finally {
+				this.location = restoreTo;
+			}
+		}
+
+		public DomNode node() {
+			return location.containingNode;
+		}
+
+		void onBeforeTokenMatch() {
+			bestMatch = null;
+		}
+
+		/*
+		 * Essentially there are two matching nodes - since some tokens (text
+		 * matching, xpath matching) look ahead over the text view of the dom,
+		 * wheras others inspect node-by-node
+		 *
+		 * Currently a mix of the two is not supported - but that's certainly a
+		 * goal
+		 *
+		 */
+		void parse() {
+			try {
+				registerMatchers(true);
+				this.location = forwardsTraversalOrder ? input.start
+						: input.end.relativeLocation(
+								RelativeDirection.PREVIOUS_DOMNODE_START);
+				ParserEnvironment env = new ParserEnvironment();
+				parserPeer.parser = LayerParser.this;
+				parserState.branchingParser = new BranchingParser(
+						LayerParser.this);
+				parserState.branchingParser.parse(env);
+				parserPeer.onSequenceComplete(parserState);
+			} finally {
+				registerMatchers(false);
+			}
+		}
+
+		public PatternMatcher patternMatcher() {
+			return patternMatcher;
+		}
+
+		void registerMatchers(boolean register) {
+			patternMatcher.register(register);
+			trieMatcher.register(register);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format(
+			// @formatter:off
+				"Initial state: %s"
+				+ "\nCurrent - tx: [%s] : %s"
+				+ "\nCurrent - nd: %s - %s"
+				+ "\nMatches: %s",
+				Ax.ntrim(Ax.trim(input.toString(), 50)), getOffsetInInput(),
+				Ax.ntrim(Ax.trim(inputContent().toString(), 50)), location,
+				Ax.ntrim(Ax.trim(location.containingNode.toString(), 50)), matches);
+			// @formatter:on
+		}
+
+		public TrieMatcher trieMatcher() {
+			return trieMatcher;
+		}
+
+		public XpathMatcher xpathMatcher() {
+			return xpathMatcher;
+		}
+
+		class ParserEnvironment {
 			Predicate<Measure> isBetterMatch;
 
 			Function<Measure, Location> successorFollowingMatch;
@@ -148,310 +429,29 @@ public class LayerParser {
 						: location.compareTo(boundary) <= 0;
 				atTraversalBoundary = () -> location.compareTo(boundary) == 0;
 			}
-		}
 
-		Topic<Void> topicSentenceMatched = Topic.create();
-
-		TrieMatcher trieMatcher = new TrieMatcher(this);
-
-		PatternMatcher patternMatcher = new PatternMatcher(this);
-
-		XpathMatcher xpathMatcher = new XpathMatcher(this);
-
-		public Measure input;
-
-		Location location;
-
-		Measure bestMatch;
-
-		List<Measure> matches = new ArrayList<>();
-
-		List<BranchingParser.Branch> sentenceBranches = new ArrayList<>();
-
-		Multimap<Measure.Token, List<Measure>> matchesByToken = new Multimap<>();
-
-		CharSequenceArray baseContent = null;
-
-		public boolean finished;
-
-		DocumentMatcher documentMatcher = new DocumentMatcher(this);
-
-		Map<Range, CharSequence> inputSubSequences = AlcinaCollections
-				.newLinkedHashMap();
-
-		BranchingParser branchingParser;
-
-		public ParserState(Measure input) {
-			this.input = input;
-		}
-
-		public Location getLocation() {
-			return location;
-		}
-
-		public List<BranchingParser.Branch> getSentenceBranches() {
-			return sentenceBranches;
-		}
-
-		public String absoluteHref(String relativeHref) {
-			return selection.ancestorSelection(AbstractUrlSelection.class)
-					.absoluteHref(relativeHref);
-		}
-
-		public boolean contains(Location other) {
-			return location.isBefore(other);
-		}
-
-		public <C extends ExtendedState> C extendedState() {
-			return (C) extendedState;
-		}
-
-		public DocumentSelection getDocument() {
-			return selection.ancestorSelection(DocumentSelection.class);
-		}
-
-		public List<Measure> getMatches() {
-			return this.matches;
-		}
-
-		public int getOffsetInInput() {
-			return location.index - input.start.index;
-		}
-
-		public MeasureSelection getSelection() {
-			return selection;
-		}
-
-		public boolean has(Measure.Token token) {
-			return matchesByToken.containsKey(token);
-		}
-
-		public boolean hasSelectedOrMatched(Measure.Token token) {
-			if (has(token)) {
-				return true;
-			}
-			// FIXME - upa - can cache between selection updates
-			return parserPeer.traversal
-					.getSelections(MeasureSelection.class, true).stream()
-					.anyMatch(sel -> sel.get().token == token);
-		}
-
-		public CharSequence inputContent() {
-			return inputContent(new Range(location, input.end));
-		}
-
-		public CharSequence inputContent(Range range) {
-			if (baseContent == null) {
-				char[] charArray = input.text().toCharArray();
-				baseContent = new CharSequenceArray(charArray, 0,
-						charArray.length);
-			}
-			return inputSubSequences.computeIfAbsent(range,
-					r -> baseContent.subSequence(
-							r.start.index - input.start.index,
-							r.end.index - input.start.index));
-		}
-
-		public boolean isAtEnd(Measure match) {
-			if (match == null) {
-				return false;
-			}
-			return match.end.index == input.end.index;
-		}
-
-		public PatternMatcher patternMatcher() {
-			return patternMatcher;
-		}
-
-		public TrieMatcher trieMatcher() {
-			return trieMatcher;
-		}
-
-		public XpathMatcher xpathMatcher() {
-			return xpathMatcher;
-		}
-
-		public DomNode node() {
-			return location.containingNode;
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format(
-			// @formatter:off
-				"Initial state: %s"
-				+ "\nCurrent - tx: [%s] : %s"
-				+ "\nCurrent - nd: %s - %s"
-				+ "\nMatches: %s",
-				Ax.ntrim(Ax.trim(input.toString(), 50)), getOffsetInInput(),
-				Ax.ntrim(Ax.trim(inputContent().toString(), 50)), location,
-				Ax.ntrim(Ax.trim(location.containingNode.toString(), 50)), matches);
-			// @formatter:on
-		}
-
-		public DocumentMatcher documentMatcher() {
-			return documentMatcher;
-		}
-
-		Measure match(BranchToken token) {
-			boolean atEndBoundary = forwardsTraversalOrder ? location.after
-					: !location.after;
-			// text traversal is only at start location
-			if (!location.containingNode.isText()) {
-				switch (token.matchesBoundary()) {
-				case ANY:
-					break;
-				case START:
-					if (atEndBoundary) {
-						return null;
+			class SuccessorFollowingNoMatch {
+				Location get(
+						BranchingParser.State.LookaheadMatches lookaheadMatches) {
+					if (forwardsTraversalOrder) {
+						Location nextLocationAfterNoMatch = lookaheadMatches == null
+								? null
+								: lookaheadMatches.nextLocationAfterNoMatch;
+						if (nextLocationAfterNoMatch == null
+								|| !location.isTextNode()) {
+							return location.relativeLocation(
+									RelativeDirection.NEXT_LOCATION,
+									TextTraversal.EXIT_NODE);
+						} else {
+							return nextLocationAfterNoMatch;
+						}
+					} else {
+						return location.relativeLocation(
+								RelativeDirection.PREVIOUS_LOCATION,
+								TextTraversal.TO_START_OF_NODE);
 					}
-					break;
-				case END:
-					if (!atEndBoundary) {
-						return null;
-					}
-					break;
 				}
 			}
-			return token.match(this);
 		}
-
-		void onBeforeTokenMatch() {
-			bestMatch = null;
-		}
-
-		/*
-		 * Essentially there are two matching nodes - since some tokens (text
-		 * matching, xpath matching) look ahead over the text view of the dom,
-		 * wheras others inspect node-by-node
-		 *
-		 * Currently a mix of the two is not supported - but that's certainly a
-		 * goal
-		 *
-		 */
-		void parse() {
-			try {
-				registerMatchers(true);
-				this.location = forwardsTraversalOrder ? input.start
-						: input.end.relativeLocation(
-								RelativeDirection.PREVIOUS_DOMNODE_START);
-				ParserEnvironment env = new ParserEnvironment();
-				parserPeer.parser = LayerParser.this;
-				parserState.branchingParser = new BranchingParser(
-						LayerParser.this);
-				parserState.branchingParser.parse(env);
-				parserPeer.onSequenceComplete(parserState);
-			} finally {
-				registerMatchers(false);
-			}
-		}
-
-		void registerMatchers(boolean register) {
-			patternMatcher.register(register);
-			trieMatcher.register(register);
-		}
-
-		Measure match(Location location, BranchToken token) {
-			Location restoreTo = this.location;
-			try {
-				this.location = location;
-				return match(token);
-			} finally {
-				this.location = restoreTo;
-			}
-		}
-	}
-
-	public class ParserResults {
-		public Stream<Measure> getMatches() {
-			return LayerParser.this.getMatches();
-		}
-
-		public <LPP extends LayerParserPeer> LPP getParserPeer() {
-			return (LPP) parserPeer;
-		}
-
-		public Stream<Measure> getSentenceMeasures() {
-			return getParserState().getSentenceBranches().stream()
-					.map(b -> b.toResult().rootMeasure());
-		}
-
-		public Stream<Branch> getSentenceBranches() {
-			return getParserState().getSentenceBranches().stream();
-		}
-	}
-
-	ParserState parserState;
-
-	MeasureSelection selection;
-
-	LayerParserPeer parserPeer;
-
-	ExtendedState extendedState;
-
-	boolean forwardsTraversalOrder = true;
-
-	public LayerParser(MeasureSelection selection, LayerParserPeer parserPeer) {
-		this.selection = selection;
-		this.parserPeer = parserPeer;
-		parserState = new ParserState(selection.get());
-	}
-
-	public ParserState getParserState() {
-		return parserState;
-	}
-
-	public void detachMeasures() {
-		selection.get().detach();
-		parserState.matches.forEach(Measure::detach);
-	}
-
-	public DomNode getContainerNode() {
-		return selection.get().containingNode();
-	}
-
-	public List<BranchingParser.Branch> getSentences() {
-		return parserState.sentenceBranches;
-	}
-
-	public MeasureSelection getSelection() {
-		return this.selection;
-	}
-
-	public boolean hadMatches() {
-		return parserState.matches.size() > 0;
-	}
-
-	public boolean isForwardsTraversalOrder() {
-		return this.forwardsTraversalOrder;
-	}
-
-	/*
-	 * FIXME - upa - changes - this is self contained, just talks to layer
-	 */
-	public void parse() {
-		parserState.parse();
-	}
-
-	public void setForwardsTraversalOrder(boolean forwardsTraversalOrder) {
-		this.forwardsTraversalOrder = forwardsTraversalOrder;
-	}
-
-	public LayerParser withExtendedState(ExtendedState extendedState) {
-		extendedState.setParser(this);
-		this.extendedState = extendedState;
-		return this;
-	}
-
-	public ExtendedState getExtendedState() {
-		return extendedState;
-	}
-
-	public Stream<Measure> getMatches() {
-		return getSentences().stream().flatMap(b -> b.toResult().measures());
-	}
-
-	public ParserResults getParserResults() {
-		return new ParserResults();
 	}
 }

@@ -67,157 +67,6 @@ public final class Array {
 
 	private static final int TYPE_PRIMITIVE_BOOLEAN = 16;
 
-	public static Object ensureNotNull(Object array) {
-		return checkNotNull(array);
-	}
-
-	/**
-	 * Creates an array like "new T[a][b][c][][]" by passing in a native JSON
-	 * array, [a, b, c].
-	 *
-	 * @param leafClassLiteral
-	 *            the class literal for the leaf class
-	 * @param castableTypeMapExprs
-	 *            the JSON castableTypeMap of each dimension, from highest to
-	 *            lowest
-	 * @param elementTypeIds
-	 *            the elementTypeId of each dimension, from highest to lowest
-	 * @param leafElementTypeCategory
-	 *            whether the element type is java.lang.Object
-	 *            ({@link TYPE_JAVA_LANG_OBJECT}), is guaranteed to be a java
-	 *            object ({@link TYPE_JAVA_OBJECT}), is guaranteed to be a JSO
-	 *            ({@link TYPE_JSO}), can be either
-	 *            ({@link TYPE_JAVA_OBJECT_OR_JSO}) or or some primitive type
-	 *            {@link TYPE_PRIMITIVE_BOOLEAN}, {@link TYPE_PRIMITIVE_LONG} or
-	 *            {@link TYPE_PRIMITIVE_NUMBER}.
-	 * @param dimExprs
-	 *            the length of each dimension, from highest to lower
-	 * @return the new array
-	 */
-	public static Object initMultidimensionalArray(Class<?> leafClassLiteral,
-			JavaScriptObject[] castableTypeMapExprs,
-			JavaScriptObject[] elementTypeIds, int leafElementTypeCategory,
-			int[] dimExprs, int count) {
-		return initMultidimensionalArray(leafClassLiteral, castableTypeMapExprs,
-				elementTypeIds, leafElementTypeCategory, dimExprs, 0, count);
-	}
-
-	/**
-	 * Creates an array like "new T[a][b][c][][]" by passing in a native JSON
-	 * array, [a, b, c].
-	 *
-	 * @param leafClassLiteral
-	 *            the class literal for the leaf class
-	 * @param castableTypeMap
-	 *            the map of types to which this array can be casted, in the
-	 *            form of a JSON map object
-	 * @param elementTypeId
-	 *            the typeId of array elements
-	 * @param elementTypeCategory
-	 *            whether the element type is java.lang.Object
-	 *            ({@link TYPE_JAVA_LANG_OBJECT}), is guaranteed to be a java
-	 *            object ({@link TYPE_JAVA_OBJECT}), is guaranteed to be a JSO
-	 *            ({@link TYPE_JSO}), can be either
-	 *            ({@link TYPE_JAVA_OBJECT_OR_JSO}) or or some primitive type
-	 *            {@link TYPE_PRIMITIVE_BOOLEAN}, {@link TYPE_PRIMITIVE_LONG} or
-	 *            {@link TYPE_PRIMITIVE_NUMBER}.
-	 * @param length
-	 *            the length of the array
-	 * @param dimensions
-	 *            the number of dimensions of the array
-	 * @return the new array
-	 */
-	public static Object initUnidimensionalArray(Class<?> leafClassLiteral,
-			JavaScriptObject castableTypeMap, JavaScriptObject elementTypeId,
-			int length, int elementTypeCategory, int dimensions) {
-		Object result = initializeArrayElementsWithDefaults(elementTypeCategory,
-				length);
-		if (elementTypeCategory != TYPE_JS_UNKNOWN_NATIVE) {
-			stampJavaTypeInfo(
-					getClassLiteralForArray(leafClassLiteral, dimensions),
-					castableTypeMap, elementTypeId, elementTypeCategory,
-					result);
-		}
-		return result;
-	}
-
-	/**
-	 * Performs an array assignment, after validating the type of the value
-	 * being stored. The form of the type check depends on the value of
-	 * elementTypeId and elementTypeCategory as follows:
-	 * <p>
-	 * If the elementTypeCategory is {@link TYPE_JAVA_OBJECT}, this indicates a
-	 * normal cast check should be performed, using the elementTypeId as the
-	 * cast destination type. JavaScriptObjects cannot be stored in this case.
-	 * <p>
-	 * If the elementTypeId is {@link TYPE_JAVA_LANG_OBJECT}, this is the cast
-	 * target for the Object type, in which case all types can be stored,
-	 * including JavaScriptObject.
-	 * <p>
-	 * If the elementTypeId is {@link TYPE_JSO}, this indicates that only
-	 * JavaScriptObjects can be stored.
-	 * <p>
-	 * If the elementTypeId is {@link TYPE_JAVA_OBJECT_OR_JSO}, this indicates
-	 * that both JavaScriptObjects, and Java types can be stored. In the case of
-	 * Java types, a normal cast check should be performed, using the
-	 * elementTypeId as the cast destination type. This case is provided to
-	 * support arrays declared with an interface type, which has dual
-	 * implementations (i.e. interface types which have both Java and
-	 * JavaScriptObject implementations).
-	 * <p>
-	 * Attempting to store an object that cannot satisfy the castability check
-	 * throws an {@link ArrayStoreException}.
-	 */
-	public static Object setCheck(Object array, int index, Object value) {
-		checkArrayType(value == null || canSet(array, value));
-		return set(array, index, value);
-	}
-
-	/**
-	 * Creates an array like "new T[][]{a,b,c,d}" by passing in a native JSON
-	 * array, [a, b, c, d].
-	 *
-	 * @param arrayClass
-	 *            the class of the array
-	 * @param castableTypeMap
-	 *            the map of types to which this array can be casted, in the
-	 *            form of a JSON map object
-	 * @param elementTypeId
-	 *            the typeId of array elements
-	 * @param elementTypeCategory
-	 *            whether the element type is java.lang.Object
-	 *            ({@link TYPE_JAVA_LANG_OBJECT}), is guaranteed to be a java
-	 *            object ({@link TYPE_JAVA_OBJECT}), is guaranteed to be a JSO
-	 *            ({@link TYPE_JSO}), can be either
-	 *            ({@link TYPE_JAVA_OBJECT_OR_JSO}) or or some primitive type
-	 *            {@link TYPE_PRIMITIVE_BOOLEAN}, {@link TYPE_PRIMITIVE_LONG} or
-	 *            {@link TYPE_PRIMITIVE_NUMBER}.
-	 * @param array
-	 *            the JSON array that will be transformed into a GWT array
-	 * @return values; having wrapped it for GWT
-	 */
-	public static Object stampJavaTypeInfo(Class<?> arrayClass,
-			JavaScriptObject castableTypeMap, JavaScriptObject elementTypeId,
-			int elementTypeCategory, Object array) {
-		setClass(array, arrayClass);
-		Util.setCastableTypeMap(array, castableTypeMap);
-		Util.setTypeMarker(array);
-		Array.setElementTypeId(array, elementTypeId);
-		Array.setElementTypeCategory(array, elementTypeCategory);
-		return array;
-	}
-
-	public static <T> T[] stampJavaTypeInfo(Object array, T[] referenceType) {
-		if (Array.getElementTypeCategory(
-				referenceType) != TYPE_JS_UNKNOWN_NATIVE) {
-			stampJavaTypeInfo(referenceType.getClass(),
-					Util.getCastableTypeMap(referenceType),
-					Array.getElementTypeId(referenceType),
-					Array.getElementTypeCategory(referenceType), array);
-		}
-		return Array.asArray(array);
-	}
-
 	/**
 	 * Use JSNI to effect a castless type change.
 	 */
@@ -250,6 +99,24 @@ public final class Array {
 		default:
 			return true;
 		}
+	}
+
+	public static Object ensureNotNull(Object array) {
+		return checkNotNull(array);
+	}
+
+	// This method is package protected so that it is indexed. {@link
+	// ImplementClassLiteralsAsFields}
+	// will insert calls to this method when array class literals are
+	// constructed.
+	//
+	// Inlining is prevented on this very hot method to avoid a subtantial
+	// increase in
+	// {@link JsInliner} execution time.
+	@DoNotInline
+	static <T> Class<T> getClassLiteralForArray(Class<?> clazz,
+			int dimensions) {
+		return getClassLiteralForArrayImpl(clazz, dimensions);
 	}
 
 	// DO NOT INLINE this method into {@link getClassLiteralForArray}.
@@ -297,6 +164,37 @@ public final class Array {
 													return array;
 													}-*/;
 
+	/**
+	 * Creates an array like "new T[a][b][c][][]" by passing in a native JSON
+	 * array, [a, b, c].
+	 *
+	 * @param leafClassLiteral
+	 *            the class literal for the leaf class
+	 * @param castableTypeMapExprs
+	 *            the JSON castableTypeMap of each dimension, from highest to
+	 *            lowest
+	 * @param elementTypeIds
+	 *            the elementTypeId of each dimension, from highest to lowest
+	 * @param leafElementTypeCategory
+	 *            whether the element type is java.lang.Object
+	 *            ({@link TYPE_JAVA_LANG_OBJECT}), is guaranteed to be a java
+	 *            object ({@link TYPE_JAVA_OBJECT}), is guaranteed to be a JSO
+	 *            ({@link TYPE_JSO}), can be either
+	 *            ({@link TYPE_JAVA_OBJECT_OR_JSO}) or or some primitive type
+	 *            {@link TYPE_PRIMITIVE_BOOLEAN}, {@link TYPE_PRIMITIVE_LONG} or
+	 *            {@link TYPE_PRIMITIVE_NUMBER}.
+	 * @param dimExprs
+	 *            the length of each dimension, from highest to lower
+	 * @return the new array
+	 */
+	public static Object initMultidimensionalArray(Class<?> leafClassLiteral,
+			JavaScriptObject[] castableTypeMapExprs,
+			JavaScriptObject[] elementTypeIds, int leafElementTypeCategory,
+			int[] dimExprs, int count) {
+		return initMultidimensionalArray(leafClassLiteral, castableTypeMapExprs,
+				elementTypeIds, leafElementTypeCategory, dimExprs, 0, count);
+	}
+
 	private static Object initMultidimensionalArray(Class<?> leafClassLiteral,
 			JavaScriptObject[] castableTypeMapExprs,
 			JavaScriptObject[] elementTypeIds, int leafElementTypeCategory,
@@ -327,39 +225,42 @@ public final class Array {
 	}
 
 	/**
-	 * Sets a value in the array.
+	 * Creates an array like "new T[a][b][c][][]" by passing in a native JSON
+	 * array, [a, b, c].
+	 *
+	 * @param leafClassLiteral
+	 *            the class literal for the leaf class
+	 * @param castableTypeMap
+	 *            the map of types to which this array can be casted, in the
+	 *            form of a JSON map object
+	 * @param elementTypeId
+	 *            the typeId of array elements
+	 * @param elementTypeCategory
+	 *            whether the element type is java.lang.Object
+	 *            ({@link TYPE_JAVA_LANG_OBJECT}), is guaranteed to be a java
+	 *            object ({@link TYPE_JAVA_OBJECT}), is guaranteed to be a JSO
+	 *            ({@link TYPE_JSO}), can be either
+	 *            ({@link TYPE_JAVA_OBJECT_OR_JSO}) or or some primitive type
+	 *            {@link TYPE_PRIMITIVE_BOOLEAN}, {@link TYPE_PRIMITIVE_LONG} or
+	 *            {@link TYPE_PRIMITIVE_NUMBER}.
+	 * @param length
+	 *            the length of the array
+	 * @param dimensions
+	 *            the number of dimensions of the array
+	 * @return the new array
 	 */
-	private static native Object set(Object array, int index, Object value) /*-{
-							return array[index] = value;
-							}-*/;
-
-	// violator pattern so that the field remains private
-	private static native void setClass(Object o, Class<?> clazz) /*-{
-																	o.@java.lang.Object::___clazz = clazz;
-																	}-*/;
-
-	private static native void setElementTypeCategory(Object array,
-			int elementTypeCategory) /*-{
-										array.__elementTypeCategory$ = elementTypeCategory;
-										}-*/;
-
-	private static native void setElementTypeId(Object array,
-			JavaScriptObject elementTypeId) /*-{
-											array.__elementTypeId$ = elementTypeId;
-											}-*/;
-
-	// This method is package protected so that it is indexed. {@link
-	// ImplementClassLiteralsAsFields}
-	// will insert calls to this method when array class literals are
-	// constructed.
-	//
-	// Inlining is prevented on this very hot method to avoid a subtantial
-	// increase in
-	// {@link JsInliner} execution time.
-	@DoNotInline
-	static <T> Class<T> getClassLiteralForArray(Class<?> clazz,
-			int dimensions) {
-		return getClassLiteralForArrayImpl(clazz, dimensions);
+	public static Object initUnidimensionalArray(Class<?> leafClassLiteral,
+			JavaScriptObject castableTypeMap, JavaScriptObject elementTypeId,
+			int length, int elementTypeCategory, int dimensions) {
+		Object result = initializeArrayElementsWithDefaults(elementTypeCategory,
+				length);
+		if (elementTypeCategory != TYPE_JS_UNKNOWN_NATIVE) {
+			stampJavaTypeInfo(
+					getClassLiteralForArray(leafClassLiteral, dimensions),
+					castableTypeMap, elementTypeId, elementTypeCategory,
+					result);
+		}
+		return result;
 	}
 
 	/**
@@ -377,7 +278,7 @@ public final class Array {
 		int elementTypeCategory = getElementTypeCategory(array);
 		return elementTypeCategory >= TYPE_PRIMITIVE_LONG
 				&& elementTypeCategory <= TYPE_PRIMITIVE_BOOLEAN;
-	};
+	}
 
 	/**
 	 * Returns an untyped uninitialized array.
@@ -385,6 +286,105 @@ public final class Array {
 	static native Object[] newArray(int size) /*-{
 												return new Array(size);
 												}-*/;
+
+	/**
+	 * Sets a value in the array.
+	 */
+	private static native Object set(Object array, int index, Object value) /*-{
+							return array[index] = value;
+							}-*/;
+
+	/**
+	 * Performs an array assignment, after validating the type of the value
+	 * being stored. The form of the type check depends on the value of
+	 * elementTypeId and elementTypeCategory as follows:
+	 * <p>
+	 * If the elementTypeCategory is {@link TYPE_JAVA_OBJECT}, this indicates a
+	 * normal cast check should be performed, using the elementTypeId as the
+	 * cast destination type. JavaScriptObjects cannot be stored in this case.
+	 * <p>
+	 * If the elementTypeId is {@link TYPE_JAVA_LANG_OBJECT}, this is the cast
+	 * target for the Object type, in which case all types can be stored,
+	 * including JavaScriptObject.
+	 * <p>
+	 * If the elementTypeId is {@link TYPE_JSO}, this indicates that only
+	 * JavaScriptObjects can be stored.
+	 * <p>
+	 * If the elementTypeId is {@link TYPE_JAVA_OBJECT_OR_JSO}, this indicates
+	 * that both JavaScriptObjects, and Java types can be stored. In the case of
+	 * Java types, a normal cast check should be performed, using the
+	 * elementTypeId as the cast destination type. This case is provided to
+	 * support arrays declared with an interface type, which has dual
+	 * implementations (i.e. interface types which have both Java and
+	 * JavaScriptObject implementations).
+	 * <p>
+	 * Attempting to store an object that cannot satisfy the castability check
+	 * throws an {@link ArrayStoreException}.
+	 */
+	public static Object setCheck(Object array, int index, Object value) {
+		checkArrayType(value == null || canSet(array, value));
+		return set(array, index, value);
+	}
+
+	// violator pattern so that the field remains private
+	private static native void setClass(Object o, Class<?> clazz) /*-{
+																	o.@java.lang.Object::___clazz = clazz;
+																	}-*/;
+
+	private static native void setElementTypeCategory(Object array,
+			int elementTypeCategory) /*-{
+										array.__elementTypeCategory$ = elementTypeCategory;
+										}-*/;
+
+	private static native void setElementTypeId(Object array,
+			JavaScriptObject elementTypeId) /*-{
+											array.__elementTypeId$ = elementTypeId;
+											}-*/;
+
+	/**
+	 * Creates an array like "new T[][]{a,b,c,d}" by passing in a native JSON
+	 * array, [a, b, c, d].
+	 *
+	 * @param arrayClass
+	 *            the class of the array
+	 * @param castableTypeMap
+	 *            the map of types to which this array can be casted, in the
+	 *            form of a JSON map object
+	 * @param elementTypeId
+	 *            the typeId of array elements
+	 * @param elementTypeCategory
+	 *            whether the element type is java.lang.Object
+	 *            ({@link TYPE_JAVA_LANG_OBJECT}), is guaranteed to be a java
+	 *            object ({@link TYPE_JAVA_OBJECT}), is guaranteed to be a JSO
+	 *            ({@link TYPE_JSO}), can be either
+	 *            ({@link TYPE_JAVA_OBJECT_OR_JSO}) or or some primitive type
+	 *            {@link TYPE_PRIMITIVE_BOOLEAN}, {@link TYPE_PRIMITIVE_LONG} or
+	 *            {@link TYPE_PRIMITIVE_NUMBER}.
+	 * @param array
+	 *            the JSON array that will be transformed into a GWT array
+	 * @return values; having wrapped it for GWT
+	 */
+	public static Object stampJavaTypeInfo(Class<?> arrayClass,
+			JavaScriptObject castableTypeMap, JavaScriptObject elementTypeId,
+			int elementTypeCategory, Object array) {
+		setClass(array, arrayClass);
+		Util.setCastableTypeMap(array, castableTypeMap);
+		Util.setTypeMarker(array);
+		Array.setElementTypeId(array, elementTypeId);
+		Array.setElementTypeCategory(array, elementTypeCategory);
+		return array;
+	};
+
+	public static <T> T[] stampJavaTypeInfo(Object array, T[] referenceType) {
+		if (Array.getElementTypeCategory(
+				referenceType) != TYPE_JS_UNKNOWN_NATIVE) {
+			stampJavaTypeInfo(referenceType.getClass(),
+					Util.getCastableTypeMap(referenceType),
+					Array.getElementTypeId(referenceType),
+					Array.getElementTypeCategory(referenceType), array);
+		}
+		return Array.asArray(array);
+	}
 
 	private Array() {
 	}

@@ -49,6 +49,19 @@ public class StandaloneObjectStoreClient extends StandaloneObjectStore {
 		this.listener = listener;
 	}
 
+	synchronized void addObjectOrCollectionToEndOfQueue(Object o) {
+		if (o == null) {
+			return;
+		}
+		if (o instanceof Collection) {
+			for (Entity child : (Collection<Entity>) o) {
+				toRegister.add(child);
+			}
+		} else {
+			toRegister.add((Entity) o);
+		}
+	}
+
 	@Override
 	public synchronized Set<Entity> allValues() {
 		return super.allValues();
@@ -67,6 +80,11 @@ public class StandaloneObjectStoreClient extends StandaloneObjectStore {
 	@Override
 	public synchronized void deregister(Entity entity) {
 		super.deregister(entity);
+	}
+
+	@Override
+	protected synchronized FastIdLookup ensureLookup(Class c) {
+		return super.ensureLookup(c);
 	}
 
 	@Override
@@ -90,6 +108,15 @@ public class StandaloneObjectStoreClient extends StandaloneObjectStore {
 		super.invalidate(clazz);
 	}
 
+	synchronized boolean iterateRegistration() {
+		registerCounter = 0;
+		while (!toRegister.isEmpty()
+				&& (postRegisterCommand == null || registerCounter++ < 500)) {
+			mapObjectFromFrontOfQueue();
+		}
+		return !toRegister.isEmpty();
+	}
+
 	@Override
 	public synchronized void mapObject(Entity obj) {
 		mappedObjects = new PerClassLookup();
@@ -100,6 +127,29 @@ public class StandaloneObjectStoreClient extends StandaloneObjectStore {
 		// using a
 		// complicated handshake, say, where code can map objects while a big
 		// block is still being registered)
+	}
+
+	private synchronized void mapObjectFromFrontOfQueue() {
+		Entity entity = toRegister.removeFirst();
+		if ((entity.getId() == 0 && entity.getLocalId() == 0)
+				|| mappedObjects.contains(entity)) {
+			return;
+		}
+		Class<? extends Entity> clazz = entity.getClass();
+		FastIdLookup lookup = ensureLookup(clazz);
+		lookup.put(entity, entity.getId() == 0);
+		entity.removePropertyChangeListener(listener);
+		entity.addPropertyChangeListener(listener);
+		List<Property> childRegisterReflectors = registerChildren
+				.computeIfAbsent(clazz,
+						c0 -> Reflections.at(clazz).properties().stream()
+								.filter(p -> p.has(DomainProperty.class)
+										&& p.annotation(DomainProperty.class)
+												.registerChildren())
+								.collect(Collectors.toList()));
+		childRegisterReflectors.stream().map(p -> p.get(entity))
+				.forEach(this::addObjectOrCollectionToEndOfQueue);
+		mappedObjects.put(entity);
 	}
 
 	public synchronized void registerAsync(Collection registerableDomainObjects,
@@ -139,56 +189,6 @@ public class StandaloneObjectStoreClient extends StandaloneObjectStore {
 			addObjectOrCollectionToEndOfQueue(o);
 		}
 		iterateRegistration();
-	}
-
-	private synchronized void mapObjectFromFrontOfQueue() {
-		Entity entity = toRegister.removeFirst();
-		if ((entity.getId() == 0 && entity.getLocalId() == 0)
-				|| mappedObjects.contains(entity)) {
-			return;
-		}
-		Class<? extends Entity> clazz = entity.getClass();
-		FastIdLookup lookup = ensureLookup(clazz);
-		lookup.put(entity, entity.getId() == 0);
-		entity.removePropertyChangeListener(listener);
-		entity.addPropertyChangeListener(listener);
-		List<Property> childRegisterReflectors = registerChildren
-				.computeIfAbsent(clazz,
-						c0 -> Reflections.at(clazz).properties().stream()
-								.filter(p -> p.has(DomainProperty.class)
-										&& p.annotation(DomainProperty.class)
-												.registerChildren())
-								.collect(Collectors.toList()));
-		childRegisterReflectors.stream().map(p -> p.get(entity))
-				.forEach(this::addObjectOrCollectionToEndOfQueue);
-		mappedObjects.put(entity);
-	}
-
-	@Override
-	protected synchronized FastIdLookup ensureLookup(Class c) {
-		return super.ensureLookup(c);
-	}
-
-	synchronized void addObjectOrCollectionToEndOfQueue(Object o) {
-		if (o == null) {
-			return;
-		}
-		if (o instanceof Collection) {
-			for (Entity child : (Collection<Entity>) o) {
-				toRegister.add(child);
-			}
-		} else {
-			toRegister.add((Entity) o);
-		}
-	}
-
-	synchronized boolean iterateRegistration() {
-		registerCounter = 0;
-		while (!toRegister.isEmpty()
-				&& (postRegisterCommand == null || registerCounter++ < 500)) {
-			mapObjectFromFrontOfQueue();
-		}
-		return !toRegister.isEmpty();
 	}
 
 	public static class AsyncRegistrationException extends RuntimeException {

@@ -108,6 +108,10 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
 		};
 	}
 
+	private Object map(Object key) {
+		return keyUniquenessMapper.apply(key);
+	}
+
 	@Override
 	public V put(K key, V value) {
 		return (V) lookup.put(map(key), value);
@@ -121,6 +125,38 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
 	@Override
 	public V remove(Object key) {
 		return (V) lookup.remove(map(key));
+	}
+
+	private void setupMappers(Class keyClass) {
+		if (keyClass == int.class) {
+			intLookup = true;
+			return;
+		}
+		if (keyClass.isEnum()) {
+			return;
+		}
+		if (keyClass == String.class || keyClass == Class.class) {
+			return;
+		}
+		// if (keyClass == Entity.class) {
+		// intLookup = true;
+		// return h -> h == null ? 0
+		// : LongWrapperHash
+		// .fastIntValue(((Entity) h).getId());
+		// }
+		if (keyClass == Long.class) {
+			intLookup = true;
+			reverseKeyMapper = new Function<Integer, Long>() {
+				@Override
+				public Long apply(Integer t) {
+					return LongWrapperHash.fastLongValue(t);
+				}
+			};
+			keyUniquenessMapper = h -> h == null ? 0
+					: LongWrapperHash.fastIntValue(((Long) h).longValue());
+			return;
+		}
+		throw new RuntimeException("Not js-unique keyable");
 	}
 
 	@Override
@@ -175,40 +211,21 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
 		};
 	}
 
-	private Object map(Object key) {
-		return keyUniquenessMapper.apply(key);
-	}
+	class EntrySet extends AbstractSet<Map.Entry<K, V>> {
+		@Override
+		public void clear() {
+			JsUniqueMap.this.clear();
+		}
 
-	private void setupMappers(Class keyClass) {
-		if (keyClass == int.class) {
-			intLookup = true;
-			return;
+		@Override
+		public Iterator<Map.Entry<K, V>> iterator() {
+			return new TypedEntryIterator();
 		}
-		if (keyClass.isEnum()) {
-			return;
+
+		@Override
+		public int size() {
+			return JsUniqueMap.this.size();
 		}
-		if (keyClass == String.class || keyClass == Class.class) {
-			return;
-		}
-		// if (keyClass == Entity.class) {
-		// intLookup = true;
-		// return h -> h == null ? 0
-		// : LongWrapperHash
-		// .fastIntValue(((Entity) h).getId());
-		// }
-		if (keyClass == Long.class) {
-			intLookup = true;
-			reverseKeyMapper = new Function<Integer, Long>() {
-				@Override
-				public Long apply(Integer t) {
-					return LongWrapperHash.fastLongValue(t);
-				}
-			};
-			keyUniquenessMapper = h -> h == null ? 0
-					: LongWrapperHash.fastIntValue(((Long) h).longValue());
-			return;
-		}
-		throw new RuntimeException("Not js-unique keyable");
 	}
 
 	public class TypedEntryIterator implements Iterator<Map.Entry<K, V>> {
@@ -262,23 +279,6 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
 				this.value = value;
 				return old;
 			}
-		}
-	}
-
-	class EntrySet extends AbstractSet<Map.Entry<K, V>> {
-		@Override
-		public void clear() {
-			JsUniqueMap.this.clear();
-		}
-
-		@Override
-		public Iterator<Map.Entry<K, V>> iterator() {
-			return new TypedEntryIterator();
-		}
-
-		@Override
-		public int size() {
-			return JsUniqueMap.this.size();
 		}
 	}
 }

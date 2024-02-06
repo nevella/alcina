@@ -110,6 +110,10 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 		this.multiple = multiple;
 	}
 
+	public void setProvider(HasValue<Collection> provider) {
+		this.provider = provider;
+	}
+
 	public void setRenderer(Renderer renderer) {
 		this.renderer = renderer;
 	}
@@ -120,9 +124,5 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 
 	public void setWithNull(boolean withNull) {
 		this.withNull = withNull;
-	}
-
-	public void setProvider(HasValue<Collection> provider) {
-		this.provider = provider;
 	}
 }

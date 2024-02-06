@@ -58,6 +58,11 @@ public class PopupShownEvent extends GwtEvent<PopupShownHandler> {
 		this.shown = shown;
 	}
 
+	@Override
+	protected void dispatch(PopupShownHandler handler) {
+		handler.onPopupShown(this);
+	}
+
 	// The instance knows its of type T, but the TYPE
 	// field itself does not, so we have to do an unsafe cast here.
 	@Override
@@ -67,11 +72,6 @@ public class PopupShownEvent extends GwtEvent<PopupShownHandler> {
 
 	public boolean isShown() {
 		return this.shown;
-	}
-
-	@Override
-	protected void dispatch(PopupShownHandler handler) {
-		handler.onPopupShown(this);
 	}
 
 	public interface HasPopupShownHandlers extends HasHandlers {

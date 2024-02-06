@@ -21,6 +21,10 @@ public class InitLayoutPlayer extends RunnablePlayer {
 		addProvides(HandshakeState.MAIN_LAYOUT_INITIALISED);
 	}
 
+	protected void fireCurrentHistoryState() {
+		History.fireCurrentHistoryState();
+	}
+
 	@Override
 	public void run() {
 		if (PermissionsManager.get().getOnlineState() == OnlineState.ONLINE) {
@@ -47,9 +51,5 @@ public class InitLayoutPlayer extends RunnablePlayer {
 		ClientState.get().setUiInitialised(true);
 		Ui1LayoutEvents.get().fireRequiresGlobalRelayout();
 		Ui1LayoutEvents.get().fireDeferredGlobalRelayout();
-	}
-
-	protected void fireCurrentHistoryState() {
-		History.fireCurrentHistoryState();
 	}
 }

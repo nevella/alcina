@@ -270,6 +270,42 @@ public class StackTrace {
 		return Utilities.split(functionNames, ",", true);
 	}
 
+	native private static String
+			getCallStackFunctionNames0(final JavaScriptObject functions)/*-{
+																		var names = "";
+																		
+																		for( var i = 0; i < functions.length; i++ ){
+																		var s = functions[ i ];
+																		var n = null;
+																		
+																		while( true ){
+																		if( s.name ){
+																		n = s.name;
+																		break;
+																		}
+																		
+																		n = s.toString().match(/function ([$\w]*)/);
+																		if( ! n ){
+																		n = "anonymous";
+																		break;
+																		}
+																		
+																		n = n[ 1 ];
+																		if( ! n ){
+																		n = "anonymous";
+																		break;
+																		}
+																		
+																		break;
+																		}
+																		if( names.length > 0 ){
+																		names = names + ",";
+																		}
+																		names = names + n;
+																		}
+																		return names;
+																		}-*/;
+
 	/**
 	 * Builds and returns an array of function objects for each level of the
 	 * callstack.
@@ -311,41 +347,11 @@ public class StackTrace {
 																	return elements;        
 																	}-*/;
 
-	native private static String
-			getCallStackFunctionNames0(final JavaScriptObject functions)/*-{
-																		var names = "";
-																		
-																		for( var i = 0; i < functions.length; i++ ){
-																		var s = functions[ i ];
-																		var n = null;
-																		
-																		while( true ){
-																		if( s.name ){
-																		n = s.name;
-																		break;
-																		}
-																		
-																		n = s.toString().match(/function ([$\w]*)/);
-																		if( ! n ){
-																		n = "anonymous";
-																		break;
-																		}
-																		
-																		n = n[ 1 ];
-																		if( ! n ){
-																		n = "anonymous";
-																		break;
-																		}
-																		
-																		break;
-																		}
-																		if( names.length > 0 ){
-																		names = names + ",";
-																		}
-																		names = names + n;
-																		}
-																		return names;
-																		}-*/;
+	protected static String[] getFunctionNames(final JavaScriptObject context) {
+		Checker.notNull("parameter:context", context);
+		final String functionNames = StackTrace.getFunctionNames0(context);
+		return Utilities.split(functionNames, ",", true);
+	}
 
 	/**
 	 * This method visits the stacktrace within the given context object.
@@ -383,10 +389,4 @@ public class StackTrace {
 																
 																return names;
 																}-*/;
-
-	protected static String[] getFunctionNames(final JavaScriptObject context) {
-		Checker.notNull("parameter:context", context);
-		final String functionNames = StackTrace.getFunctionNames0(context);
-		return Utilities.split(functionNames, ",", true);
-	}
 }

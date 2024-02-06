@@ -130,21 +130,6 @@ class DOMImplStandardBase extends DOMImplStandard {
     return elem.getBoundingClientRect && elem.getBoundingClientRect();
 	}-*/;
 
-	private native NativeEventJso createKeyEvent(DocumentJso doc, String type,
-			boolean canBubble, boolean cancelable, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey) /*-{
-    // WebKit's KeyboardEvent cannot set or even initialize charCode, keyCode, etc.
-    // And UIEvent's charCode and keyCode are read-only.
-    // So we "fake" an event using a raw Event and expandos
-    var evt = doc.createEvent('Event');
-    evt.initEvent(type, canBubble, cancelable);
-    evt.ctrlKey = ctrlKey;
-    evt.altKey = altKey;
-    evt.shiftKey = shiftKey;
-    evt.metaKey = metaKey;
-    return evt;
-	}-*/;
-
 	/**
 	 * The type property on a button Element_Dom is read-only in safari, so we
 	 * need to set it using setAttribute.
@@ -163,6 +148,21 @@ class DOMImplStandardBase extends DOMImplStandard {
 			boolean metaKey, int keyCode) /*-{
     var evt = this.@com.google.gwt.dom.client.DOMImplStandardBase::createKeyEvent(Lcom/google/gwt/dom/client/DocumentJso;Ljava/lang/String;ZZZZZZ)(doc, type, true, true, ctrlKey, altKey, shiftKey, metaKey)
     evt.keyCode = keyCode;
+    return evt;
+	}-*/;
+
+	private native NativeEventJso createKeyEvent(DocumentJso doc, String type,
+			boolean canBubble, boolean cancelable, boolean ctrlKey,
+			boolean altKey, boolean shiftKey, boolean metaKey) /*-{
+    // WebKit's KeyboardEvent cannot set or even initialize charCode, keyCode, etc.
+    // And UIEvent's charCode and keyCode are read-only.
+    // So we "fake" an event using a raw Event and expandos
+    var evt = doc.createEvent('Event');
+    evt.initEvent(type, canBubble, cancelable);
+    evt.ctrlKey = ctrlKey;
+    evt.altKey = altKey;
+    evt.shiftKey = shiftKey;
+    evt.metaKey = metaKey;
     return evt;
 	}-*/;
 

@@ -55,17 +55,6 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 	}
 
 	/**
-	 * Creates a new scroll panel with the given child widget.
-	 * 
-	 * @param child
-	 *            the widget to be wrapped by the scroll panel
-	 */
-	public ScrollPanel(Widget child) {
-		this();
-		setWidget(child);
-	}
-
-	/**
 	 * Creates an empty scroll panel using the specified root, scrollable, and
 	 * container elements.
 	 * 
@@ -82,6 +71,17 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 		this.scrollableElem = scrollable;
 		this.containerElem = container;
 		initialize();
+	}
+
+	/**
+	 * Creates a new scroll panel with the given child widget.
+	 * 
+	 * @param child
+	 *            the widget to be wrapped by the scroll panel
+	 */
+	public ScrollPanel(Widget child) {
+		this();
+		setWidget(child);
 	}
 
 	@Override
@@ -115,6 +115,25 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 		Element scroll = getScrollableElement();
 		Element element = item.getElement();
 		ensureVisibleImpl(scroll, element);
+	}
+
+	private native void ensureVisibleImpl(Element scroll, Element e) /*-{
+																		if (!e)
+																		return;
+																		
+																		var item = e;
+																		var realOffset = 0;
+																		while (item && (item != scroll)) {
+																		realOffset += item.offsetTop;
+																		item = item.offsetParent;
+																		}
+																		
+																		scroll.scrollTop = realOffset - scroll.offsetHeight / 2;
+																		}-*/;
+
+	@Override
+	protected Element getContainerElement() {
+		return DOM.asOld(containerElem);
 	}
 
 	/**
@@ -151,6 +170,16 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 	}
 
 	/**
+	 * Get the scrollable element. That is the element with its overflow set to
+	 * 'auto' or 'scroll'.
+	 * 
+	 * @return the scrollable element
+	 */
+	protected Element getScrollableElement() {
+		return DOM.asOld(scrollableElem);
+	}
+
+	/**
 	 * Gets the vertical scroll position.
 	 * 
 	 * @return the vertical scroll position, in pixels
@@ -168,6 +197,29 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 	}
 
 	/**
+	 * Initialize the widget.
+	 */
+	private void initialize() {
+		setAlwaysShowScrollBars(false);
+		// Prevent IE standard mode bug when a AbsolutePanel is contained.
+		scrollableElem.getStyle().setPosition(Position.RELATIVE);
+		containerElem.getStyle().setPosition(Position.RELATIVE);
+		// Hack to account for the IE6/7 scrolling bug described here:
+		// http://stackoverflow.com/questions/139000/div-with-overflowauto-and-a-100-wide-table-problem
+		// goodbye IE
+		// scrollableElem.getStyle().setProperty("zoom", "1");
+		// containerElem.getStyle().setProperty("zoom", "1");
+		// Enable touch scrolling.
+		setTouchScrollingDisabled(false);
+		// Initialize the scrollable element.
+		Scheduler.get().scheduleFinally(() -> {
+			scrollableElem.implAccess().ensureJsoRemote();
+			containerElem.implAccess().ensureJsoRemote();
+			ScrollImpl.get().initialize(scrollableElem, containerElem);
+		});
+	}
+
+	/**
 	 * Check whether or not touch based scrolling is disabled. This method
 	 * always returns false on devices that do not support touch scrolling.
 	 * 
@@ -175,6 +227,28 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 	 */
 	public boolean isTouchScrollingDisabled() {
 		return touchScroller == null;
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		/*
+		 * Attach the event listener in onAttach instead of onLoad so users
+		 * cannot accidentally override it. If the scrollable element is the
+		 * same as the root element, then we set the event listener twice (once
+		 * in super.onAttach() and once here), which is fine.
+		 */
+		Event.setEventListener(getScrollableElement(), this);
+	}
+
+	@Override
+	protected void onDetach() {
+		/*
+		 * Detach the event listener in onDetach instead of onUnload so users
+		 * cannot accidentally override it.
+		 */
+		Event.setEventListener(getScrollableElement(), null);
+		super.onDetach();
 	}
 
 	@Override
@@ -328,79 +402,5 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 	@Override
 	public void setWidth(String width) {
 		super.setWidth(width);
-	}
-
-	private native void ensureVisibleImpl(Element scroll, Element e) /*-{
-																		if (!e)
-																		return;
-																		
-																		var item = e;
-																		var realOffset = 0;
-																		while (item && (item != scroll)) {
-																		realOffset += item.offsetTop;
-																		item = item.offsetParent;
-																		}
-																		
-																		scroll.scrollTop = realOffset - scroll.offsetHeight / 2;
-																		}-*/;
-
-	/**
-	 * Initialize the widget.
-	 */
-	private void initialize() {
-		setAlwaysShowScrollBars(false);
-		// Prevent IE standard mode bug when a AbsolutePanel is contained.
-		scrollableElem.getStyle().setPosition(Position.RELATIVE);
-		containerElem.getStyle().setPosition(Position.RELATIVE);
-		// Hack to account for the IE6/7 scrolling bug described here:
-		// http://stackoverflow.com/questions/139000/div-with-overflowauto-and-a-100-wide-table-problem
-		// goodbye IE
-		// scrollableElem.getStyle().setProperty("zoom", "1");
-		// containerElem.getStyle().setProperty("zoom", "1");
-		// Enable touch scrolling.
-		setTouchScrollingDisabled(false);
-		// Initialize the scrollable element.
-		Scheduler.get().scheduleFinally(() -> {
-			scrollableElem.implAccess().ensureJsoRemote();
-			containerElem.implAccess().ensureJsoRemote();
-			ScrollImpl.get().initialize(scrollableElem, containerElem);
-		});
-	}
-
-	@Override
-	protected Element getContainerElement() {
-		return DOM.asOld(containerElem);
-	}
-
-	/**
-	 * Get the scrollable element. That is the element with its overflow set to
-	 * 'auto' or 'scroll'.
-	 * 
-	 * @return the scrollable element
-	 */
-	protected Element getScrollableElement() {
-		return DOM.asOld(scrollableElem);
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		/*
-		 * Attach the event listener in onAttach instead of onLoad so users
-		 * cannot accidentally override it. If the scrollable element is the
-		 * same as the root element, then we set the event listener twice (once
-		 * in super.onAttach() and once here), which is fine.
-		 */
-		Event.setEventListener(getScrollableElement(), this);
-	}
-
-	@Override
-	protected void onDetach() {
-		/*
-		 * Detach the event listener in onDetach instead of onUnload so users
-		 * cannot accidentally override it.
-		 */
-		Event.setEventListener(getScrollableElement(), null);
-		super.onDetach();
 	}
 }

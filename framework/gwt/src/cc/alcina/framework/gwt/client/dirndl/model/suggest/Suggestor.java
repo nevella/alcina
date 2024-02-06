@@ -52,6 +52,157 @@ public class Suggestor extends Model
 		implements SuggestorEvents.EditorAsk.Handler,
 		ModelEvents.SelectionChanged.Handler, HasSelectedValue,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler {
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	protected Editor editor;
+
+	protected Suggestions suggestions;
+
+	Object nonOverlaySuggestionResults;
+
+	Builder builder;
+
+	private Object value;
+
+	private Suggestor(Builder builder) {
+		this.builder = builder;
+		initFields();
+	}
+
+	public void clear() {
+		editor.clear();
+	}
+
+	public void closeSuggestions() {
+		suggestions.close();
+	}
+
+	public void copyEditorInputFrom(Suggestor suggestor) {
+		editor.copyInputFrom(suggestor.editor);
+	}
+
+	public void focus() {
+		editor.focus();
+	}
+
+	public Builder getBuilder() {
+		return this.builder;
+	}
+
+	@Directed(tag = "editor")
+	public Editor getEditor() {
+		return this.editor;
+	}
+
+	@Directed
+	public Object getNonOverlaySuggestionResults() {
+		return this.nonOverlaySuggestionResults;
+	}
+
+	public Suggestions getSuggestions() {
+		return this.suggestions;
+	}
+
+	/**
+	 * The suggested value(s)
+	 */
+	public Object getValue() {
+		return this.value;
+	}
+
+	protected void initFields() {
+		editor = builder.editorSupplier.get();
+		editor.withSuggestor(this);
+		suggestions = new SuggestionChoices(this);
+	}
+
+	protected void onAnswers(Answers answers) {
+		suggestions.toState(State.LOADED);
+		suggestions.onAnswers(answers);
+	}
+
+	protected void onAskException(Throwable throwsable) {
+		suggestions.toState(State.EXCEPTION);
+		suggestions.onAskException(throwsable);
+	}
+
+	@Override
+	public void onBind(LayoutEvents.Bind event) {
+		if (!event.isBound()) {
+			suggestions.toState(State.UNBOUND);
+		} else {
+			if (builder.isSuggestOnBind()) {
+				Client.eventBus().queued().lambda(() -> editor.emitAsk())
+						.dispatch();
+			}
+		}
+		super.onBind(event);
+	}
+
+	@Override
+	public void onClosed(Closed event) {
+		if (event.checkReemitted(this)) {
+			return;
+		}
+		suggestions.onClosed(event);
+		event.reemit();
+	}
+
+	@Override
+	public void onEditorAsk(EditorAsk event) {
+		suggestions.toState(State.LOADING);
+		builder.answer.ask(event.getModel(), this::onAnswers,
+				this::onAskException);
+	}
+
+	@Override
+	public void onNavigation(Navigation event) {
+		if (suggestions instanceof KeyboardNavigation.Navigation.Handler) {
+			((KeyboardNavigation.Navigation.Handler) suggestions)
+					.onNavigation(event);
+		}
+	}
+
+	@Override
+	public void onSelectionChanged(SelectionChanged event) {
+		if (event.checkReemitted(this)) {
+			return;
+		}
+		setChosenSuggestions(suggestions.provideSelectedValue());
+		event.reemit();
+	}
+
+	@Override
+	public Object provideSelectedValue() {
+		return getValue();
+	}
+
+	void setChosenSuggestions(Object value) {
+		if (value == null) {
+			setValue(null);
+		} else if (value instanceof Suggestion) {
+			setValue(((Suggestion) value).getModel());
+		} else {
+			setValue(((List<Suggestion>) value).stream()
+					.map(Suggestion::getModel).collect(Collectors.toList()));
+		}
+	}
+
+	public void
+			setNonOverlaySuggestionResults(Object nonOverlaySuggestionResults) {
+		set("nonOverlaySuggestionResults", this.nonOverlaySuggestionResults,
+				nonOverlaySuggestionResults,
+				() -> this.nonOverlaySuggestionResults = nonOverlaySuggestionResults);
+	}
+
+	public void setValue(Object value) {
+		var old_value = this.value;
+		this.value = value;
+		propertyChangeSupport().firePropertyChange("value", old_value, value);
+	}
+
 	// FIXME - dirndl 1x1e - add a default impl, which routes via a Debounce
 	// (which doesn't send if inflight, but has a timeout)
 	public interface Answer<A extends Ask> {
@@ -148,11 +299,6 @@ public class Suggestor extends Model
 		 */
 		int showSpinnerDelay = 1000;
 
-		public Builder withShowSpinnerDelay(int showSpinnerDelay) {
-			this.showSpinnerDelay = showSpinnerDelay;
-			return this;
-		}
-
 		public Suggestor build() {
 			return new Suggestor(this);
 		}
@@ -237,6 +383,11 @@ public class Suggestor extends Model
 			return this;
 		}
 
+		public Builder withShowSpinnerDelay(int showSpinnerDelay) {
+			this.showSpinnerDelay = showSpinnerDelay;
+			return this;
+		}
+
 		public Builder withSuggestionXAlign(
 				OverlayPosition.Position suggestionXAlign) {
 			this.suggestionXAlign = suggestionXAlign;
@@ -299,6 +450,25 @@ public class Suggestor extends Model
 	 * Marker for the payload of a Suggestion
 	 */
 	public interface Suggestion {
+		/*
+		 * Typed model (for rendering, either this or markup)
+		 *
+		 * FIXME - dirndl 1x1g - reflection - rather, specify a reflective hook
+		 * to define what is a valid model here (for refl. ser) - e.g.
+		 * {IGroup.class, IUser.class}. These general reflective reachability
+		 * questions (and there aren't many - say this and 'what is a valid
+		 * SearchResult row'?) are *not* necessarily answered best by
+		 * annotations, since once of the answers might be...String.class. But
+		 * this'll do for a bit
+		 */
+		// FIXME - today - check reachability against this
+		Object getModel();
+
+		/*
+		 * Is the suggestion keyboard/mouse selectable? Or a guide?
+		 */
+		boolean isMatch();
+
 		@Directed(
 			tag = "suggestion",
 			bindings = @Binding(from = "markup", type = Type.INNER_HTML))
@@ -366,25 +536,6 @@ public class Suggestor extends Model
 				return match;
 			}
 		}
-
-		/*
-		 * Typed model (for rendering, either this or markup)
-		 *
-		 * FIXME - dirndl 1x1g - reflection - rather, specify a reflective hook
-		 * to define what is a valid model here (for refl. ser) - e.g.
-		 * {IGroup.class, IUser.class}. These general reflective reachability
-		 * questions (and there aren't many - say this and 'what is a valid
-		 * SearchResult row'?) are *not* necessarily answered best by
-		 * annotations, since once of the answers might be...String.class. But
-		 * this'll do for a bit
-		 */
-		// FIXME - today - check reachability against this
-		Object getModel();
-
-		/*
-		 * Is the suggestion keyboard/mouse selectable? Or a guide?
-		 */
-		boolean isMatch();
 	}
 
 	public interface SuggestionModel {
@@ -393,10 +544,6 @@ public class Suggestor extends Model
 	@Directed(emits = ModelEvents.SelectionChanged.class)
 	public interface Suggestions
 			extends HasSelectedValue, ModelEvents.Closed.Handler {
-		public static enum State {
-			LOADING, LOADED, EXCEPTION, UNBOUND
-		}
-
 		void close();
 
 		void onAnswers(Answers answers);
@@ -406,156 +553,9 @@ public class Suggestor extends Model
 		}
 
 		void toState(State state);
-	}
 
-	public static Builder builder() {
-		return new Builder();
-	}
-
-	protected Editor editor;
-
-	protected Suggestions suggestions;
-
-	Object nonOverlaySuggestionResults;
-
-	Builder builder;
-
-	private Object value;
-
-	private Suggestor(Builder builder) {
-		this.builder = builder;
-		initFields();
-	}
-
-	public void clear() {
-		editor.clear();
-	}
-
-	public void closeSuggestions() {
-		suggestions.close();
-	}
-
-	public void copyEditorInputFrom(Suggestor suggestor) {
-		editor.copyInputFrom(suggestor.editor);
-	}
-
-	public void focus() {
-		editor.focus();
-	}
-
-	public Builder getBuilder() {
-		return this.builder;
-	}
-
-	@Directed(tag = "editor")
-	public Editor getEditor() {
-		return this.editor;
-	}
-
-	@Directed
-	public Object getNonOverlaySuggestionResults() {
-		return this.nonOverlaySuggestionResults;
-	}
-
-	public Suggestions getSuggestions() {
-		return this.suggestions;
-	}
-
-	/**
-	 * The suggested value(s)
-	 */
-	public Object getValue() {
-		return this.value;
-	}
-
-	@Override
-	public void onBind(LayoutEvents.Bind event) {
-		if (!event.isBound()) {
-			suggestions.toState(State.UNBOUND);
-		} else {
-			if (builder.isSuggestOnBind()) {
-				Client.eventBus().queued().lambda(() -> editor.emitAsk())
-						.dispatch();
-			}
-		}
-		super.onBind(event);
-	}
-
-	@Override
-	public void onClosed(Closed event) {
-		if (event.checkReemitted(this)) {
-			return;
-		}
-		suggestions.onClosed(event);
-		event.reemit();
-	}
-
-	@Override
-	public void onEditorAsk(EditorAsk event) {
-		suggestions.toState(State.LOADING);
-		builder.answer.ask(event.getModel(), this::onAnswers,
-				this::onAskException);
-	}
-
-	@Override
-	public void onNavigation(Navigation event) {
-		if (suggestions instanceof KeyboardNavigation.Navigation.Handler) {
-			((KeyboardNavigation.Navigation.Handler) suggestions)
-					.onNavigation(event);
-		}
-	}
-
-	@Override
-	public void onSelectionChanged(SelectionChanged event) {
-		if (event.checkReemitted(this)) {
-			return;
-		}
-		setChosenSuggestions(suggestions.provideSelectedValue());
-		event.reemit();
-	}
-
-	@Override
-	public Object provideSelectedValue() {
-		return getValue();
-	}
-
-	public void
-			setNonOverlaySuggestionResults(Object nonOverlaySuggestionResults) {
-		set("nonOverlaySuggestionResults", this.nonOverlaySuggestionResults,
-				nonOverlaySuggestionResults,
-				() -> this.nonOverlaySuggestionResults = nonOverlaySuggestionResults);
-	}
-
-	public void setValue(Object value) {
-		var old_value = this.value;
-		this.value = value;
-		propertyChangeSupport().firePropertyChange("value", old_value, value);
-	}
-
-	protected void initFields() {
-		editor = builder.editorSupplier.get();
-		editor.withSuggestor(this);
-		suggestions = new SuggestionChoices(this);
-	}
-
-	protected void onAnswers(Answers answers) {
-		suggestions.toState(State.LOADED);
-		suggestions.onAnswers(answers);
-	}
-
-	protected void onAskException(Throwable throwsable) {
-		suggestions.toState(State.EXCEPTION);
-		suggestions.onAskException(throwsable);
-	}
-
-	void setChosenSuggestions(Object value) {
-		if (value == null) {
-			setValue(null);
-		} else if (value instanceof Suggestion) {
-			setValue(((Suggestion) value).getModel());
-		} else {
-			setValue(((List<Suggestion>) value).stream()
-					.map(Suggestion::getModel).collect(Collectors.toList()));
+		public static enum State {
+			LOADING, LOADED, EXCEPTION, UNBOUND
 		}
 	}
 }

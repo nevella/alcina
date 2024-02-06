@@ -124,6 +124,12 @@ public class TourManagerWd extends TourManager {
 		return new ConditionEvaluationContextWd(currentTour);
 	}
 
+	@Override
+	protected void onNext() {
+		token.getProperties().put(PROP_FIRST_SUITE_STEP_PERFORMED,
+				Boolean.toString(true));
+	}
+
 	public void registerDebugHandler(Runnable runnable) {
 		getElementException.add(runnable);
 		beforePopup.add(e -> {
@@ -140,12 +146,6 @@ public class TourManagerWd extends TourManager {
 				runnable.run();
 			}
 		});
-	}
-
-	@Override
-	protected void onNext() {
-		token.getProperties().put(PROP_FIRST_SUITE_STEP_PERFORMED,
-				Boolean.toString(true));
 	}
 
 	@Override
@@ -171,6 +171,10 @@ public class TourManagerWd extends TourManager {
 		}
 	}
 
+	@JsonDeserialize(as = TourImpl.ConditionImpl.class)
+	static abstract class ConditionMixin {
+	}
+
 	public static class EnumDeserializer extends JsonDeserializer<Enum> {
 		@Override
 		public Enum deserialize(final JsonParser parser,
@@ -193,6 +197,11 @@ public class TourManagerWd extends TourManager {
 							descriptor.getPropertyType().getSimpleName()));
 			return value;
 		}
+	}
+
+	@JsonSerialize(using = EnumSerializer.class)
+	@JsonDeserialize(using = EnumDeserializer.class)
+	static abstract class EnumMixin {
 	}
 
 	public static class EnumSerializer extends JsonSerializer<Enum> {
@@ -228,15 +237,6 @@ public class TourManagerWd extends TourManager {
 				return string;
 			}
 		}
-	}
-
-	@JsonDeserialize(as = TourImpl.ConditionImpl.class)
-	static abstract class ConditionMixin {
-	}
-
-	@JsonSerialize(using = EnumSerializer.class)
-	@JsonDeserialize(using = EnumDeserializer.class)
-	static abstract class EnumMixin {
 	}
 
 	@JsonDeserialize(as = TourImpl.RelativeToImpl.class)

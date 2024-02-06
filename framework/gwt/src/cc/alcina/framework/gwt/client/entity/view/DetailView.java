@@ -41,6 +41,10 @@ public abstract class DetailView<DVM extends DetailViewModel>
 		});
 	}
 
+	protected void clearDetail() {
+		fp.clear();
+	}
+
 	public void displayDetail() {
 		fp.clear();
 		topicDetailModelObjectSet.publish(model.getModelObject());
@@ -48,6 +52,8 @@ public abstract class DetailView<DVM extends DetailViewModel>
 		renderNotificationBox();
 		renderForm();
 	}
+
+	protected abstract String getPanelCssName();
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
@@ -62,12 +68,6 @@ public abstract class DetailView<DVM extends DetailViewModel>
 			}
 		}
 	}
-
-	protected void clearDetail() {
-		fp.clear();
-	}
-
-	protected abstract String getPanelCssName();
 
 	protected abstract void renderForm();
 

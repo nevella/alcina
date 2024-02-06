@@ -38,11 +38,11 @@ public abstract class Player<D> {
 
 	private long start;
 
-	public Player(Runnable runnable) {
-		this.runnable = runnable;
+	protected Player() {
 	}
 
-	protected Player() {
+	public Player(Runnable runnable) {
+		this.runnable = runnable;
 	}
 
 	public void addProvides(D state) {
@@ -62,6 +62,10 @@ public abstract class Player<D> {
 
 	public Consort<D> getConsort() {
 		return this.consort;
+	}
+
+	protected Logger getLogger() {
+		return consort.logger;
 	}
 
 	public Collection<D> getPreconditions() {
@@ -109,6 +113,10 @@ public abstract class Player<D> {
 		return getProvides().isEmpty();
 	}
 
+	protected void logToInfo(String string, Object... args) {
+		consort.logger.info(string, args);
+	}
+
 	public void onFailure(Throwable caught) {
 		consort.onFailure(caught);
 	}
@@ -143,14 +151,6 @@ public abstract class Player<D> {
 
 	public String shortName() {
 		return CommonUtils.simpleClassName(getClass());
-	}
-
-	protected Logger getLogger() {
-		return consort.logger;
-	}
-
-	protected void logToInfo(String string, Object... args) {
-		consort.logger.info(string, args);
 	}
 
 	protected void wasPlayed() {

@@ -126,6 +126,11 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		}
 	}
 
+	@Override
+	protected void removePerThreadContext0() {
+		threadLocalInstance.remove();
+	}
+
 	public void
 			runThrowingWithPushedSystemUserIfNeeded(ThrowingRunnable runnable) {
 		try {
@@ -159,10 +164,5 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	@Override
-	protected void removePerThreadContext0() {
-		threadLocalInstance.remove();
 	}
 }

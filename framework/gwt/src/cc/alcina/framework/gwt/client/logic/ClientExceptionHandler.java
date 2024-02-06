@@ -76,6 +76,12 @@ public class ClientExceptionHandler
 		return extraInfo;
 	}
 
+	protected String getStandardErrorText() {
+		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
+				+ ""
+				+ " If the problem recurs, please try refreshing your browser";
+	}
+
 	/*
 	 * called at points in code where the exception's not actually uncaught, but
 	 * might as well give to centralised "arggh" handler
@@ -126,11 +132,5 @@ public class ClientExceptionHandler
 		errorBuffer.append(extraInfoForExceptionText());
 		return new WebException(
 				"(Wrapped GWT exception) : " + errorBuffer.toString());
-	}
-
-	protected String getStandardErrorText() {
-		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
-				+ ""
-				+ " If the problem recurs, please try refreshing your browser";
 	}
 }

@@ -82,18 +82,103 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * 
  */
 public class BranchingParser {
-	public class BeforeTokenMatch implements ProcessObservable {
-		public Branch branch;
+	public static transient boolean debugLoggingEnabled;
 
-		public Token token;
+	State state;
 
-		public BeforeTokenMatch(Branch branch, Token token) {
-			this.branch = branch;
-			this.token = token;
-		}
+	ParserEnvironment env;
 
-		public ParserState getParserState() {
-			return parserState;
+	LayerParserPeer peer;
+
+	LayerParser layerParser;
+
+	List<BranchToken> rootTokens;
+
+	ParserState parserState;
+
+	ConditionalLogger conditionalLogger;
+
+	List<Group> sentenceGroups;
+
+	List<BranchToken> primitiveTokens;
+
+	List<BranchToken> primitiveInitialTokens;
+
+	Logger logger;
+
+	BranchingParser(LayerParser layerParser) {
+		this.layerParser = layerParser;
+		parserState = layerParser.parserState;
+		peer = (LayerParserPeer) layerParser.parserPeer;
+		logger = LoggerFactory.getLogger(getClass());
+		conditionalLogger = new ConditionalLogger(logger,
+				this::isDebugLoggingEnabled);
+	}
+
+	void computeInvariants() {
+		rootTokens = (List) layerParser.parserPeer.tokens;
+		sentenceGroups = rootTokens.stream().map(Group::of)
+				.collect(Collectors.toList());
+		sentenceGroups.forEach(
+				g -> conditionalLogger.debug("sentence group: {}", () -> g));
+		primitiveTokens = sentenceGroups.stream()
+				.flatMap(Group::primitiveTokens).distinct()
+				.collect(Collectors.toList());
+		primitiveInitialTokens = sentenceGroups.stream()
+				.flatMap(Group::primitiveTokens).distinct()
+				.filter(BranchToken::isInitial).collect(Collectors.toList());
+	}
+
+	boolean isDebugLoggingEnabled() {
+		return debugLoggingEnabled;
+	}
+
+	// similar to LayerParser.linearParse -- but *dissimilar* enough to not try
+	// and extend
+	void parse(ParserEnvironment env) {
+		this.env = env;
+		this.state = new State();
+		computeInvariants();
+		while (parserState.location != null && !env.afterTraversalBoundary.get()
+				&& !parserState.finished) {
+			state.onBeforeTokenMatch();
+			if (peer.filter == null || peer.filter.test(parserState.location)) {
+				if (layerParser.forwardsTraversalOrder) {
+					state.computeFirstMatchedLocation();
+					Measure next = state.lookaheadMatches.next;
+					if (next != null) {
+						/*
+						 * Move the location/cursor to this match iff it's an
+						 * offset within the current text node. If there is such
+						 * a match, post-branch evaluation movement changes - to
+						 * be 'go to next char' rather than 'go to next
+						 * location'
+						 */
+						if (next.start.treeIndex == parserState.location.treeIndex) {
+							parserState.location = next.start;
+						} else {
+							state.lookaheadMatches.nextLocationAfterNoMatch = null;
+						}
+					}
+				}
+				state.evaluateBranches();
+			}
+			/*
+			 * Location advancement is more complex with partial matches
+			 */
+			if (parserState.bestMatch != null) {
+				parserState.matches.add(parserState.bestMatch);
+				parserState.matchesByToken.add(parserState.bestMatch.token,
+						parserState.bestMatch);
+				parserState.sentenceBranches.add(state.bestMatch);
+				parserState.topicSentenceMatched.signal();
+				parserState.location = env.successorFollowingMatch
+						.apply(parserState.bestMatch);
+				peer.onSentenceMatched(state.bestMatch);
+			} else {
+				parserState.location = env.successorFollowingNoMatch
+						.get(state.lookaheadMatches);
+			}
 		}
 	}
 
@@ -109,264 +194,18 @@ public class BranchingParser {
 		}
 	}
 
-	public static class Result implements Comparable<Result> {
-		public class Entry {
-			public BranchLocation branchLocation;
+	public class BeforeTokenMatch implements ProcessObservable {
+		public Branch branch;
 
-			public Entry parent;
+		public Token token;
 
-			public List<Entry> children = new LinkedList<>();
-
-			public Measure match;
-
-			Entry(BranchLocation branchLocation) {
-				this.branchLocation = branchLocation;
-			}
-
-			@Override
-			public String toString() {
-				return Ax.format("%s - %s children - %s", branchLocation,
-						children.size(), match);
-			}
-
-			public int depth() {
-				return branchLocation.depth();
-			}
-
-			public boolean isNegated() {
-				return branchLocation.group().negated;
-			}
-
-			List<Entry> children() {
-				return children;
-			}
-		}
-
-		public class BranchLocation {
-			class LevelLocation {
-				Group group;
-
-				int indexInGroup;
-
-				int repetitionIndex;
-
-				LevelLocation(Branch branch, int repetitionIndexOffset) {
-					group = branch.group;
-					indexInGroup = branch.indexInGroup;
-					repetitionIndex = branch.repetitionIndex
-							+ repetitionIndexOffset;
-				}
-
-				@Override
-				public int hashCode() {
-					return Objects.hash(group, indexInGroup, repetitionIndex);
-				}
-
-				@Override
-				public boolean equals(Object obj) {
-					if (obj instanceof LevelLocation) {
-						LevelLocation o = (LevelLocation) obj;
-						return Ax.equals(group, o.group, indexInGroup,
-								o.indexInGroup, repetitionIndex,
-								o.repetitionIndex);
-					} else {
-						return false;
-					}
-				}
-
-				@Override
-				public String toString() {
-					return Ax.format("[%s,%s,%s]", groupIndex(group),
-							repetitionIndex, indexInGroup);
-				}
-			}
-
-			List<LevelLocation> locations = new ArrayList<>();
-
-			int hash = 0;
-
-			BranchLocation(Branch branch, int repetitionIndexOffset) {
-				Branch cursor = branch;
-				while (cursor != null) {
-					locations.add(
-							new LevelLocation(cursor, repetitionIndexOffset));
-					repetitionIndexOffset = 0;
-					cursor = cursor.parent;
-				}
-				Collections.reverse(locations);
-			}
-
-			public int depth() {
-				return locations.size() - 1;
-			}
-
-			@Override
-			public int hashCode() {
-				if (hash == 0) {
-					hash = locations.hashCode();
-					if (hash == 0) {
-						hash = -1;
-					}
-				}
-				return hash;
-			}
-
-			@Override
-			public boolean equals(Object obj) {
-				if (obj instanceof BranchLocation) {
-					BranchLocation o = (BranchLocation) obj;
-					return locations.equals(o.locations);
-				} else {
-					return false;
-				}
-			}
-
-			@Override
-			public String toString() {
-				return locations.toString();
-			}
-
-			Group group() {
-				return Ax.last(locations).group;
-			}
-
-			int groupIndex(Group group) {
-				return groupIndicies.computeIfAbsent(group,
-						g -> groupIndicies.size());
-			}
-		}
-
-		public Result parent;
-
-		Map<BranchLocation, Entry> branchEntry = AlcinaCollections.newHashMap();
-
-		Map<Group, Integer> groupIndicies = AlcinaCollections.newHashMap();
-
-		Entry root;
-
-		Branch branch;
-
-		Result(Branch branch) {
+		public BeforeTokenMatch(Branch branch, Token token) {
 			this.branch = branch;
-			populate();
-			stream().filter(r -> r.match == null).forEach(r -> {
-				if (r.children.isEmpty()) {
-					// zero-length anon group, ignore
-				} else {
-					Entry first = r.children.stream()
-							.filter(r2 -> r2.match != null).findFirst()
-							.orElse(null);
-					if (first == null) {
-						// TODO - repeated application of this process may work?
-					} else {
-						Entry last = r.children.stream()
-								.filter(r2 -> r2.match != null)
-								.reduce(Ax.last()).orElse(null);
-						Range range = Range.fromPossiblyReversedEndpoints(
-								first.match, last.match);
-						r.match = Measure.fromRange(range,
-								BranchToken.Standard.ANON);
-					}
-				}
-			});
+			this.token = token;
 		}
 
-		public Stream<Entry> stream() {
-			return new DepthFirstTraversal<>(root, Entry::children).stream();
-		}
-
-		public Stream<Measure> measures() {
-			return stream().filter(e -> !e.isNegated() && e.match != null)
-					// the root result will occur twice, so dedupe
-					.map(e -> e.match).distinct();
-		}
-
-		public Measure rootMeasure() {
-			return measures().findFirst().get();
-		}
-
-		public Measure measure(Token token) {
-			List<Measure> list = measures(token).collect(Collectors.toList());
-			Preconditions.checkState(list.size() < 2);
-			return Ax.first(list);
-		}
-
-		public Stream<Measure> measures(Token token) {
-			return measures().filter(m -> m.token == token);
-		}
-
-		public String toStructuredString() {
-			FormatBuilder builder = new FormatBuilder();
-			stream().filter(r -> r.match != null).forEach(r -> {
-				builder.indent((r.depth() - 1) * 2);
-				Measure measure = r.match;
-				String negated = r.isNegated() ? "!" : "";
-				builder.line("%s%s", negated, measure);
-			});
-			return builder.toString();
-		}
-
-		@Override
-		public int compareTo(Result o) {
-			Branch b1 = branch;
-			Branch b2 = o.branch;
-			Preconditions.checkArgument(b1.group == b2.group);
-			{
-				int cmp = b1.repetitionIndex - b2.repetitionIndex;
-				if (cmp != 0) {
-					return cmp;
-				}
-			}
-			return b1.indexInGroup - b2.indexInGroup;
-		}
-
-		void populate() {
-			Branch cursor = branch;
-			while (true) {
-				Entry entry = ensureEntry(cursor);
-				cursor = cursor.predecessor;
-				if (cursor == null) {
-					root = entry;
-					break;
-				}
-			}
-		}
-
-		Entry ensureEntry0(Branch cursor, int repetitionIndexOffset) {
-			BranchLocation branchLocation = new BranchLocation(cursor,
-					repetitionIndexOffset);
-			return branchEntry.computeIfAbsent(branchLocation, Entry::new);
-		}
-
-		Entry ensureEntry(Branch cursor) {
-			Entry entry = ensureEntry0(cursor, 0);
-			if (cursor.match != null) {
-				// if cursor is at repetitionIndex zero, it will be a leaf, so
-				// the match applies to it,
-				// otherwise to the repetition index predecessor
-				if (cursor.repetitionIndex == 0) {
-					entry.match = cursor.match;
-				} else {
-					Entry matchRecipient = ensureEntry0(cursor, -1);
-					Preconditions.checkState(matchRecipient.match == null);
-					matchRecipient.match = cursor.match;
-				}
-			}
-			if (cursor.parent != null && entry.parent == null) {
-				entry.parent = ensureEntry0(cursor.parent, 0);
-				entry.parent.children.add(0, entry);
-			}
-			return entry;
-		}
-
-		int depth() {
-			int depth = 0;
-			Result cursor = this;
-			while (cursor.parent != null) {
-				cursor = cursor.parent;
-				depth++;
-			}
-			return depth;
+		public ParserState getParserState() {
+			return parserState;
 		}
 	}
 
@@ -398,12 +237,6 @@ public class BranchingParser {
 
 		boolean backtracking;
 
-		// top-level (sentence matcher) constructor
-		Branch(Group group, Location location) {
-			this.group = group;
-			this.location = location;
-		}
-
 		Branch(Branch parent, Branch predecessor, Group group, int indexInGroup,
 				int repetitionIndex) {
 			this.parent = parent;
@@ -414,96 +247,21 @@ public class BranchingParser {
 			this.repetitionIndex = repetitionIndex;
 		}
 
-		public Result toResult() {
-			return new Result(this);
+		// top-level (sentence matcher) constructor
+		Branch(Group group, Location location) {
+			this.group = group;
+			this.location = location;
 		}
 
-		@Override
-		public String toString() {
-			String leafMatch = match != null ? Ax.format(" %s", match) : "";
-			String dir = backtracking ? "<" : ">";
-			return Ax.format("%s %s [%s][%s]%s", dir, group, repetitionIndex,
-					indexInGroup, leafMatch);
-		}
-
-		/**
-		 * Used by process observer debuggers
-		 * 
-		 * @return prior matches, determined by walking the predecessor chain
-		 */
-		public Stream<Measure> priorMatches() {
-			List<Measure> matches = new ArrayList<>();
-			Branch cursor = this;
-			while (cursor != null) {
-				matches.add(cursor.match);
-				cursor = cursor.predecessor;
+		void emitBranch(Branch parent, Branch predecessor, Group group,
+				int indexInGroup, int repetitionIndex) {
+			Branch branch = new Branch(parent, predecessor, group, indexInGroup,
+					repetitionIndex);
+			if (predecessor.match != null) {
+				branch.location = env.successorFollowingMatch
+						.apply(predecessor.match);
 			}
-			return matches.stream().filter(Objects::nonNull).distinct();
-		}
-
-		public Measure getLastMeasure() {
-			Branch cursor = this;
-			while (cursor != null) {
-				if (cursor.match != null) {
-					return cursor.match;
-				}
-				cursor = cursor.predecessor;
-			}
-			return null;
-		}
-
-		BranchToken getBranchToken() {
-			return group.token;
-		}
-
-		void onTokenMatched(Measure match) {
-			this.match = match;
-			conditionalLogger.debug("Matched: {}{}",
-					() -> new Object[] { group.negated ? "!" : "", match });
-			parent.onChildSatisfied(this);
-		}
-
-		void onChildSatisfied(Branch child) {
-			childBranchesSatisfied++;
-			childBranchesReturned++;
-			int nextIndexInGroup = indexInGroup + 1;
-			int nextRepetitionIndex = repetitionIndex;
-			if (nextIndexInGroup == group.getTermCount()) {
-				nextIndexInGroup = 0;
-				nextRepetitionIndex++;
-			}
-			emitBranch(parent, child, group, nextIndexInGroup,
-					nextRepetitionIndex);
-		}
-
-		/*
-		 * Test as to whether the branch should emit a backtracking
-		 * branch/onchildnotsatisfied
-		 */
-		void onChildNotSatisfied(Branch child) {
-			childBranchesReturned++;
-			boolean notSatisfied = false;
-			switch (group.order) {
-			case ANY:
-				notSatisfied = childBranchesSatisfied == 0
-						&& childBranchesReturned == group.groups.size();
-				break;
-			case SEQUENCE:
-				notSatisfied = true;
-				break;
-			}
-			if (!notSatisfied) {
-				return;
-			}
-			Branch cursor = this;
-			while (cursor != null) {
-				if (!cursor.backtracking) {
-					cursor.backtracking = true;
-					state.edgeBranches.add(cursor);
-					return;
-				}
-				cursor = cursor.predecessor;
-			}
+			state.edgeBranches.add(branch);
 		}
 
 		void enter() {
@@ -660,11 +418,39 @@ public class BranchingParser {
 			}
 		}
 
-		void onTokenNotMatched() {
-			if (backtracking) {
-				return;
+		BranchToken getBranchToken() {
+			return group.token;
+		}
+
+		public Measure getLastMeasure() {
+			Branch cursor = this;
+			while (cursor != null) {
+				if (cursor.match != null) {
+					return cursor.match;
+				}
+				cursor = cursor.predecessor;
 			}
-			parent.onChildNotSatisfied(this);
+			return null;
+		}
+
+		/*
+		 * A completed branch can not be extended (matched to tokens, which
+		 * implies group descent if this branch is non-primitive) for a given
+		 * backtracking state
+		 * 
+		 */
+		boolean isComplete() {
+			switch (group.quantifier) {
+			case POSSESSIVE:
+				return backtracking ? true : repetitionIndex == group.max;
+			case GREEDY:
+				return backtracking ? true : repetitionIndex == group.max;
+			case RELUCTANT:
+				return backtracking ? repetitionIndex == group.max
+						: repetitionIndex == group.min;
+			default:
+				throw new UnsupportedOperationException();
+			}
 		}
 
 		/*
@@ -697,39 +483,420 @@ public class BranchingParser {
 			}
 		}
 
-		void emitBranch(Branch parent, Branch predecessor, Group group,
-				int indexInGroup, int repetitionIndex) {
-			Branch branch = new Branch(parent, predecessor, group, indexInGroup,
-					repetitionIndex);
-			if (predecessor.match != null) {
-				branch.location = env.successorFollowingMatch
-						.apply(predecessor.match);
+		/*
+		 * Test as to whether the branch should emit a backtracking
+		 * branch/onchildnotsatisfied
+		 */
+		void onChildNotSatisfied(Branch child) {
+			childBranchesReturned++;
+			boolean notSatisfied = false;
+			switch (group.order) {
+			case ANY:
+				notSatisfied = childBranchesSatisfied == 0
+						&& childBranchesReturned == group.groups.size();
+				break;
+			case SEQUENCE:
+				notSatisfied = true;
+				break;
 			}
-			state.edgeBranches.add(branch);
+			if (!notSatisfied) {
+				return;
+			}
+			Branch cursor = this;
+			while (cursor != null) {
+				if (!cursor.backtracking) {
+					cursor.backtracking = true;
+					state.edgeBranches.add(cursor);
+					return;
+				}
+				cursor = cursor.predecessor;
+			}
 		}
 
-		/*
-		 * A completed branch can not be extended (matched to tokens, which
-		 * implies group descent if this branch is non-primitive) for a given
-		 * backtracking state
+		void onChildSatisfied(Branch child) {
+			childBranchesSatisfied++;
+			childBranchesReturned++;
+			int nextIndexInGroup = indexInGroup + 1;
+			int nextRepetitionIndex = repetitionIndex;
+			if (nextIndexInGroup == group.getTermCount()) {
+				nextIndexInGroup = 0;
+				nextRepetitionIndex++;
+			}
+			emitBranch(parent, child, group, nextIndexInGroup,
+					nextRepetitionIndex);
+		}
+
+		void onTokenMatched(Measure match) {
+			this.match = match;
+			conditionalLogger.debug("Matched: {}{}",
+					() -> new Object[] { group.negated ? "!" : "", match });
+			parent.onChildSatisfied(this);
+		}
+
+		void onTokenNotMatched() {
+			if (backtracking) {
+				return;
+			}
+			parent.onChildNotSatisfied(this);
+		}
+
+		/**
+		 * Used by process observer debuggers
 		 * 
+		 * @return prior matches, determined by walking the predecessor chain
 		 */
-		boolean isComplete() {
-			switch (group.quantifier) {
-			case POSSESSIVE:
-				return backtracking ? true : repetitionIndex == group.max;
-			case GREEDY:
-				return backtracking ? true : repetitionIndex == group.max;
-			case RELUCTANT:
-				return backtracking ? repetitionIndex == group.max
-						: repetitionIndex == group.min;
-			default:
-				throw new UnsupportedOperationException();
+		public Stream<Measure> priorMatches() {
+			List<Measure> matches = new ArrayList<>();
+			Branch cursor = this;
+			while (cursor != null) {
+				matches.add(cursor.match);
+				cursor = cursor.predecessor;
+			}
+			return matches.stream().filter(Objects::nonNull).distinct();
+		}
+
+		public Result toResult() {
+			return new Result(this);
+		}
+
+		@Override
+		public String toString() {
+			String leafMatch = match != null ? Ax.format(" %s", match) : "";
+			String dir = backtracking ? "<" : ">";
+			return Ax.format("%s %s [%s][%s]%s", dir, group, repetitionIndex,
+					indexInGroup, leafMatch);
+		}
+	}
+
+	/*
+	 * Order by start-low, end-high
+	 */
+	class BranchOrdering implements Comparator<Branch> {
+		@Override
+		public int compare(Branch o1, Branch o2) {
+			Measure m1 = o1.match;
+			Measure m2 = o2.match;
+			{
+				int cmp = m1.start.compareTo(m2.start);
+				if (cmp != 0) {
+					return cmp;
+				}
+			}
+			{
+				int cmp = m1.end.compareTo(m2.end);
+				if (cmp != 0) {
+					return -cmp;
+				}
+			}
+			return 0;
+		}
+	}
+
+	public static class Result implements Comparable<Result> {
+		public Result parent;
+
+		Map<BranchLocation, Entry> branchEntry = AlcinaCollections.newHashMap();
+
+		Map<Group, Integer> groupIndicies = AlcinaCollections.newHashMap();
+
+		Entry root;
+
+		Branch branch;
+
+		Result(Branch branch) {
+			this.branch = branch;
+			populate();
+			stream().filter(r -> r.match == null).forEach(r -> {
+				if (r.children.isEmpty()) {
+					// zero-length anon group, ignore
+				} else {
+					Entry first = r.children.stream()
+							.filter(r2 -> r2.match != null).findFirst()
+							.orElse(null);
+					if (first == null) {
+						// TODO - repeated application of this process may work?
+					} else {
+						Entry last = r.children.stream()
+								.filter(r2 -> r2.match != null)
+								.reduce(Ax.last()).orElse(null);
+						Range range = Range.fromPossiblyReversedEndpoints(
+								first.match, last.match);
+						r.match = Measure.fromRange(range,
+								BranchToken.Standard.ANON);
+					}
+				}
+			});
+		}
+
+		@Override
+		public int compareTo(Result o) {
+			Branch b1 = branch;
+			Branch b2 = o.branch;
+			Preconditions.checkArgument(b1.group == b2.group);
+			{
+				int cmp = b1.repetitionIndex - b2.repetitionIndex;
+				if (cmp != 0) {
+					return cmp;
+				}
+			}
+			return b1.indexInGroup - b2.indexInGroup;
+		}
+
+		int depth() {
+			int depth = 0;
+			Result cursor = this;
+			while (cursor.parent != null) {
+				cursor = cursor.parent;
+				depth++;
+			}
+			return depth;
+		}
+
+		Entry ensureEntry(Branch cursor) {
+			Entry entry = ensureEntry0(cursor, 0);
+			if (cursor.match != null) {
+				// if cursor is at repetitionIndex zero, it will be a leaf, so
+				// the match applies to it,
+				// otherwise to the repetition index predecessor
+				if (cursor.repetitionIndex == 0) {
+					entry.match = cursor.match;
+				} else {
+					Entry matchRecipient = ensureEntry0(cursor, -1);
+					Preconditions.checkState(matchRecipient.match == null);
+					matchRecipient.match = cursor.match;
+				}
+			}
+			if (cursor.parent != null && entry.parent == null) {
+				entry.parent = ensureEntry0(cursor.parent, 0);
+				entry.parent.children.add(0, entry);
+			}
+			return entry;
+		}
+
+		Entry ensureEntry0(Branch cursor, int repetitionIndexOffset) {
+			BranchLocation branchLocation = new BranchLocation(cursor,
+					repetitionIndexOffset);
+			return branchEntry.computeIfAbsent(branchLocation, Entry::new);
+		}
+
+		public Measure measure(Token token) {
+			List<Measure> list = measures(token).collect(Collectors.toList());
+			Preconditions.checkState(list.size() < 2);
+			return Ax.first(list);
+		}
+
+		public Stream<Measure> measures() {
+			return stream().filter(e -> !e.isNegated() && e.match != null)
+					// the root result will occur twice, so dedupe
+					.map(e -> e.match).distinct();
+		}
+
+		public Stream<Measure> measures(Token token) {
+			return measures().filter(m -> m.token == token);
+		}
+
+		void populate() {
+			Branch cursor = branch;
+			while (true) {
+				Entry entry = ensureEntry(cursor);
+				cursor = cursor.predecessor;
+				if (cursor == null) {
+					root = entry;
+					break;
+				}
+			}
+		}
+
+		public Measure rootMeasure() {
+			return measures().findFirst().get();
+		}
+
+		public Stream<Entry> stream() {
+			return new DepthFirstTraversal<>(root, Entry::children).stream();
+		}
+
+		public String toStructuredString() {
+			FormatBuilder builder = new FormatBuilder();
+			stream().filter(r -> r.match != null).forEach(r -> {
+				builder.indent((r.depth() - 1) * 2);
+				Measure measure = r.match;
+				String negated = r.isNegated() ? "!" : "";
+				builder.line("%s%s", negated, measure);
+			});
+			return builder.toString();
+		}
+
+		public class BranchLocation {
+			List<LevelLocation> locations = new ArrayList<>();
+
+			int hash = 0;
+
+			BranchLocation(Branch branch, int repetitionIndexOffset) {
+				Branch cursor = branch;
+				while (cursor != null) {
+					locations.add(
+							new LevelLocation(cursor, repetitionIndexOffset));
+					repetitionIndexOffset = 0;
+					cursor = cursor.parent;
+				}
+				Collections.reverse(locations);
+			}
+
+			public int depth() {
+				return locations.size() - 1;
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof BranchLocation) {
+					BranchLocation o = (BranchLocation) obj;
+					return locations.equals(o.locations);
+				} else {
+					return false;
+				}
+			}
+
+			Group group() {
+				return Ax.last(locations).group;
+			}
+
+			int groupIndex(Group group) {
+				return groupIndicies.computeIfAbsent(group,
+						g -> groupIndicies.size());
+			}
+
+			@Override
+			public int hashCode() {
+				if (hash == 0) {
+					hash = locations.hashCode();
+					if (hash == 0) {
+						hash = -1;
+					}
+				}
+				return hash;
+			}
+
+			@Override
+			public String toString() {
+				return locations.toString();
+			}
+
+			class LevelLocation {
+				Group group;
+
+				int indexInGroup;
+
+				int repetitionIndex;
+
+				LevelLocation(Branch branch, int repetitionIndexOffset) {
+					group = branch.group;
+					indexInGroup = branch.indexInGroup;
+					repetitionIndex = branch.repetitionIndex
+							+ repetitionIndexOffset;
+				}
+
+				@Override
+				public boolean equals(Object obj) {
+					if (obj instanceof LevelLocation) {
+						LevelLocation o = (LevelLocation) obj;
+						return Ax.equals(group, o.group, indexInGroup,
+								o.indexInGroup, repetitionIndex,
+								o.repetitionIndex);
+					} else {
+						return false;
+					}
+				}
+
+				@Override
+				public int hashCode() {
+					return Objects.hash(group, indexInGroup, repetitionIndex);
+				}
+
+				@Override
+				public String toString() {
+					return Ax.format("[%s,%s,%s]", groupIndex(group),
+							repetitionIndex, indexInGroup);
+				}
+			}
+		}
+
+		public class Entry {
+			public BranchLocation branchLocation;
+
+			public Entry parent;
+
+			public List<Entry> children = new LinkedList<>();
+
+			public Measure match;
+
+			Entry(BranchLocation branchLocation) {
+				this.branchLocation = branchLocation;
+			}
+
+			List<Entry> children() {
+				return children;
+			}
+
+			public int depth() {
+				return branchLocation.depth();
+			}
+
+			public boolean isNegated() {
+				return branchLocation.group().negated;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s - %s children - %s", branchLocation,
+						children.size(), match);
 			}
 		}
 	}
 
 	class State {
+		List<Branch> edgeBranches = new LinkedList<>();
+
+		List<Branch> matchedSentenceBranches = new ArrayList<>();
+
+		Branch bestMatch;
+
+		Branch evaluatingBranch;
+
+		LookaheadMatches lookaheadMatches;
+
+		void computeFirstMatchedLocation() {
+			lookaheadMatches = new LookaheadMatches();
+		}
+
+		void evaluateBranches() {
+			conditionalLogger.debug("Evaluating at location {}",
+					() -> parserState.location);
+			conditionalLogger.debug("Text at location: {}",
+					() -> Ax.trim(parserState.inputContent().toString(), 400));
+			matchedSentenceBranches.clear();
+			sentenceGroups.stream()
+					.map(g -> new Branch(g, parserState.location))
+					.forEach(edgeBranches::add);
+			while (edgeBranches.size() > 0) {
+				Branch branch = edgeBranches.remove(0);
+				conditionalLogger.debug("Entering branch {} at {}",
+						() -> new Object[] { branch, branch.location });
+				evaluatingBranch = branch;
+				branch.enter();
+				evaluatingBranch = null;
+			}
+			bestMatch = matchedSentenceBranches.stream()
+					.sorted(new BranchOrdering()).findFirst().orElse(null);
+			if (bestMatch != null) {
+				parserState.bestMatch = bestMatch.match;
+			}
+		}
+
+		void onBeforeTokenMatch() {
+			parserState.onBeforeTokenMatch();
+			lookaheadMatches = null;
+		}
+
 		class LookaheadMatches {
 			List<Measure> matches;
 
@@ -775,172 +942,5 @@ public class BranchingParser {
 						.orElse(endOfStartingAtCurrentLocation);
 			}
 		}
-
-		List<Branch> edgeBranches = new LinkedList<>();
-
-		List<Branch> matchedSentenceBranches = new ArrayList<>();
-
-		Branch bestMatch;
-
-		Branch evaluatingBranch;
-
-		LookaheadMatches lookaheadMatches;
-
-		void evaluateBranches() {
-			conditionalLogger.debug("Evaluating at location {}",
-					() -> parserState.location);
-			conditionalLogger.debug("Text at location: {}",
-					() -> Ax.trim(parserState.inputContent().toString(), 400));
-			matchedSentenceBranches.clear();
-			sentenceGroups.stream()
-					.map(g -> new Branch(g, parserState.location))
-					.forEach(edgeBranches::add);
-			while (edgeBranches.size() > 0) {
-				Branch branch = edgeBranches.remove(0);
-				conditionalLogger.debug("Entering branch {} at {}",
-						() -> new Object[] { branch, branch.location });
-				evaluatingBranch = branch;
-				branch.enter();
-				evaluatingBranch = null;
-			}
-			bestMatch = matchedSentenceBranches.stream()
-					.sorted(new BranchOrdering()).findFirst().orElse(null);
-			if (bestMatch != null) {
-				parserState.bestMatch = bestMatch.match;
-			}
-		}
-
-		void computeFirstMatchedLocation() {
-			lookaheadMatches = new LookaheadMatches();
-		}
-
-		void onBeforeTokenMatch() {
-			parserState.onBeforeTokenMatch();
-			lookaheadMatches = null;
-		}
-	}
-
-	/*
-	 * Order by start-low, end-high
-	 */
-	class BranchOrdering implements Comparator<Branch> {
-		@Override
-		public int compare(Branch o1, Branch o2) {
-			Measure m1 = o1.match;
-			Measure m2 = o2.match;
-			{
-				int cmp = m1.start.compareTo(m2.start);
-				if (cmp != 0) {
-					return cmp;
-				}
-			}
-			{
-				int cmp = m1.end.compareTo(m2.end);
-				if (cmp != 0) {
-					return -cmp;
-				}
-			}
-			return 0;
-		}
-	}
-
-	State state;
-
-	ParserEnvironment env;
-
-	LayerParserPeer peer;
-
-	LayerParser layerParser;
-
-	List<BranchToken> rootTokens;
-
-	ParserState parserState;
-
-	ConditionalLogger conditionalLogger;
-
-	List<Group> sentenceGroups;
-
-	List<BranchToken> primitiveTokens;
-
-	List<BranchToken> primitiveInitialTokens;
-
-	Logger logger;
-
-	public static transient boolean debugLoggingEnabled;
-
-	BranchingParser(LayerParser layerParser) {
-		this.layerParser = layerParser;
-		parserState = layerParser.parserState;
-		peer = (LayerParserPeer) layerParser.parserPeer;
-		logger = LoggerFactory.getLogger(getClass());
-		conditionalLogger = new ConditionalLogger(logger,
-				this::isDebugLoggingEnabled);
-	}
-
-	boolean isDebugLoggingEnabled() {
-		return debugLoggingEnabled;
-	}
-
-	// similar to LayerParser.linearParse -- but *dissimilar* enough to not try
-	// and extend
-	void parse(ParserEnvironment env) {
-		this.env = env;
-		this.state = new State();
-		computeInvariants();
-		while (parserState.location != null && !env.afterTraversalBoundary.get()
-				&& !parserState.finished) {
-			state.onBeforeTokenMatch();
-			if (peer.filter == null || peer.filter.test(parserState.location)) {
-				if (layerParser.forwardsTraversalOrder) {
-					state.computeFirstMatchedLocation();
-					Measure next = state.lookaheadMatches.next;
-					if (next != null) {
-						/*
-						 * Move the location/cursor to this match iff it's an
-						 * offset within the current text node. If there is such
-						 * a match, post-branch evaluation movement changes - to
-						 * be 'go to next char' rather than 'go to next
-						 * location'
-						 */
-						if (next.start.treeIndex == parserState.location.treeIndex) {
-							parserState.location = next.start;
-						} else {
-							state.lookaheadMatches.nextLocationAfterNoMatch = null;
-						}
-					}
-				}
-				state.evaluateBranches();
-			}
-			/*
-			 * Location advancement is more complex with partial matches
-			 */
-			if (parserState.bestMatch != null) {
-				parserState.matches.add(parserState.bestMatch);
-				parserState.matchesByToken.add(parserState.bestMatch.token,
-						parserState.bestMatch);
-				parserState.sentenceBranches.add(state.bestMatch);
-				parserState.topicSentenceMatched.signal();
-				parserState.location = env.successorFollowingMatch
-						.apply(parserState.bestMatch);
-				peer.onSentenceMatched(state.bestMatch);
-			} else {
-				parserState.location = env.successorFollowingNoMatch
-						.get(state.lookaheadMatches);
-			}
-		}
-	}
-
-	void computeInvariants() {
-		rootTokens = (List) layerParser.parserPeer.tokens;
-		sentenceGroups = rootTokens.stream().map(Group::of)
-				.collect(Collectors.toList());
-		sentenceGroups.forEach(
-				g -> conditionalLogger.debug("sentence group: {}", () -> g));
-		primitiveTokens = sentenceGroups.stream()
-				.flatMap(Group::primitiveTokens).distinct()
-				.collect(Collectors.toList());
-		primitiveInitialTokens = sentenceGroups.stream()
-				.flatMap(Group::primitiveTokens).distinct()
-				.filter(BranchToken::isInitial).collect(Collectors.toList());
 	}
 }

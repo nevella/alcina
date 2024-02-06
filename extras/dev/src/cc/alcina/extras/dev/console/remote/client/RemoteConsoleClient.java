@@ -20,14 +20,14 @@ import cc.alcina.framework.gwt.client.Client;
  */
 // @formatter:on
 public class RemoteConsoleClient implements EntryPoint {
+	private void init0() {
+		new RemoteConsoleInit().init();
+		RemoteConsoleLayout.get().init();
+	}
+
 	@Override
 	public void onModuleLoad() {
 		Client.Init.init();
 		Scheduler.get().scheduleDeferred(() -> init0());
-	}
-
-	private void init0() {
-		new RemoteConsoleInit().init();
-		RemoteConsoleLayout.get().init();
 	}
 }

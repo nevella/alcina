@@ -215,6 +215,14 @@ public class RadioButton extends CheckBox {
 	}
 
 	/**
+	 * No-op. CheckBox's click handler is no good for radio button, so don't use
+	 * it. Our event handling is all done in {@link #onBrowserEvent}
+	 */
+	@Override
+	protected void ensureDomEventHandlers() {
+	}
+
+	/**
 	 * Overridden to send ValueChangeEvents only when appropriate.
 	 */
 	@Override
@@ -280,13 +288,5 @@ public class RadioButton extends CheckBox {
 			Event.sinkEvents(labelElem,
 					eventBitsToAdd | Event.getEventsSunk(labelElem));
 		}
-	}
-
-	/**
-	 * No-op. CheckBox's click handler is no good for radio button, so don't use
-	 * it. Our event handling is all done in {@link #onBrowserEvent}
-	 */
-	@Override
-	protected void ensureDomEventHandlers() {
 	}
 }

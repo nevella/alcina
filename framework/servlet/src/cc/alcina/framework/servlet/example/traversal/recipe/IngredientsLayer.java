@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParser;
 import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
 import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
-import cc.alcina.framework.servlet.example.traversal.recipe.IngredientsLayer.RawIngredientSelection;
 
 class IngredientsLayer extends Layer<DocumentLayer.Document> {
 	@Override
@@ -21,16 +20,16 @@ class IngredientsLayer extends Layer<DocumentLayer.Document> {
 				.forEach(this::select);
 	}
 
-	static class RawIngredientSelection extends MeasureSelection {
-		public RawIngredientSelection(Selection parent, Measure measure) {
-			super(parent, measure);
-		}
-	}
-
 	static class ParserPeer extends LayerParserPeer {
 		public ParserPeer(SelectionTraversal selectionTraversal) {
 			super(selectionTraversal);
 			add(BranchToken.Standard.LINE);
+		}
+	}
+
+	static class RawIngredientSelection extends MeasureSelection {
+		public RawIngredientSelection(Selection parent, Measure measure) {
+			super(parent, measure);
 		}
 	}
 }

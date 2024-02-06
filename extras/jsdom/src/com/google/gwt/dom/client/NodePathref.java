@@ -81,6 +81,10 @@ public abstract class NodePathref implements ClientDomNode {
 		throw new UnsupportedOperationException();
 	}
 
+	void emitMutation(MutationRecord mutation) {
+		getOwnerDocument().implAccess().pathrefRemote().emitMutation(mutation);
+	}
+
 	@Override
 	public Node getChild(int index) {
 		throw new UnsupportedOperationException();
@@ -214,17 +218,13 @@ public abstract class NodePathref implements ClientDomNode {
 		throw new UnsupportedOperationException();
 	}
 
+	void setParentNode(NodeLocalNull local) {
+		throw new UnsupportedOperationException();
+	}
+
 	@Override
 	public String toString() {
 		return Ax.format("%s: null::remote-placeholder",
 				getClass().getSimpleName());
-	}
-
-	void emitMutation(MutationRecord mutation) {
-		getOwnerDocument().implAccess().pathrefRemote().emitMutation(mutation);
-	}
-
-	void setParentNode(NodeLocalNull local) {
-		throw new UnsupportedOperationException();
 	}
 }

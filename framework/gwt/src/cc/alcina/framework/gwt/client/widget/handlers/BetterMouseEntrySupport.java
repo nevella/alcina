@@ -25,6 +25,13 @@ public class BetterMouseEntrySupport
 		((HasMouseMoveHandlers) widget).addMouseMoveHandler(this);
 	}
 
+	private void ensurePreview() {
+		if (this.nativePreviewHandlerRegistration == null) {
+			this.nativePreviewHandlerRegistration = Event
+					.addNativePreviewHandler(this);
+		}
+	}
+
 	public boolean isOver() {
 		return nativePreviewHandlerRegistration != null;
 	}
@@ -49,13 +56,6 @@ public class BetterMouseEntrySupport
 			if (!widget.getElement().isOrHasChild(Element.as(target))) {
 				removePreviewHandler();
 			}
-		}
-	}
-
-	private void ensurePreview() {
-		if (this.nativePreviewHandlerRegistration == null) {
-			this.nativePreviewHandlerRegistration = Event
-					.addNativePreviewHandler(this);
 		}
 	}
 

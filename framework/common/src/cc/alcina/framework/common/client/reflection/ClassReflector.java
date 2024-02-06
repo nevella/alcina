@@ -112,6 +112,10 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	private transient List<Class> allInterfaces;
 
+	protected ClassReflector() {
+		init0();
+	}
+
 	public ClassReflector(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
@@ -121,10 +125,6 @@ public class ClassReflector<T> implements HasAnnotations {
 		init(reflectedClass, properties, byName, annotationResolver,
 				constructor, assignableTo, interfaces, genericBounds,
 				isAbstract, isFinal);
-	}
-
-	protected ClassReflector() {
-		init0();
 	}
 
 	@Override
@@ -168,6 +168,49 @@ public class ClassReflector<T> implements HasAnnotations {
 		return byName.containsKey(propertyName);
 	}
 
+	protected void init(Class<T> reflectedClass, List<Property> properties,
+			Map<String, Property> byName, AnnotationProvider annotationProvider,
+			Supplier<T> constructor, Predicate<Class> assignableTo,
+			List<Class> interfaces, TypeBounds genericBounds,
+			boolean isAbstract, boolean isFinal) {
+		this.reflectedClass = reflectedClass;
+		this.properties = properties;
+		this.byName = byName;
+		this.annotationProvider = annotationProvider;
+		this.noArgsConstructor = constructor;
+		this.assignableTo = assignableTo;
+		this.genericBounds = genericBounds;
+		this.isAbstract = isAbstract;
+		this.interfaces = interfaces;
+		this.isFinal = isFinal;
+		this.primitive = ClassReflector.primitives.contains(reflectedClass);
+	}
+
+	protected void init0() {
+		// Overriden by generated subclasses
+	}
+
+	public Object invoke(Object bean, String methodName,
+			List<Class> argumentTypes, List<?> arguments) {
+		String beanRegex = "(get|set|is)(.)(.+)";
+		RegExp regExp = RegExp.compile(beanRegex);
+		MatchResult matchResult = regExp.exec(methodName);
+		if (matchResult == null) {
+			throw new IllegalArgumentException(
+					Ax.format("Not bean method format: %s", methodName));
+		}
+		boolean get = !matchResult.getGroup(1).equals("set");
+		String propertyName = Ax.format("%s%s",
+				matchResult.getGroup(2).toLowerCase(), matchResult.getGroup(3));
+		Property property = property(propertyName);
+		if (get) {
+			return property.get(bean);
+		} else {
+			property.set(bean, arguments.get(0));
+			return null;
+		}
+	}
+
 	public boolean isAbstract() {
 		return isAbstract;
 	}
@@ -192,10 +235,6 @@ public class ClassReflector<T> implements HasAnnotations {
 		return this.properties;
 	}
 
-	public Property property(PropertyEnum name) {
-		return byName.get(name.name());
-	}
-
 	public Property property(Object stringOrPropertyEnum) {
 		if (stringOrPropertyEnum instanceof String) {
 			return property((String) stringOrPropertyEnum);
@@ -204,6 +243,10 @@ public class ClassReflector<T> implements HasAnnotations {
 		} else {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	public Property property(PropertyEnum name) {
+		return byName.get(name.name());
 	}
 
 	public Property property(String name) {
@@ -254,48 +297,5 @@ public class ClassReflector<T> implements HasAnnotations {
 	@Override
 	public String toString() {
 		return reflectedClass.toString();
-	}
-
-	protected void init(Class<T> reflectedClass, List<Property> properties,
-			Map<String, Property> byName, AnnotationProvider annotationProvider,
-			Supplier<T> constructor, Predicate<Class> assignableTo,
-			List<Class> interfaces, TypeBounds genericBounds,
-			boolean isAbstract, boolean isFinal) {
-		this.reflectedClass = reflectedClass;
-		this.properties = properties;
-		this.byName = byName;
-		this.annotationProvider = annotationProvider;
-		this.noArgsConstructor = constructor;
-		this.assignableTo = assignableTo;
-		this.genericBounds = genericBounds;
-		this.isAbstract = isAbstract;
-		this.interfaces = interfaces;
-		this.isFinal = isFinal;
-		this.primitive = ClassReflector.primitives.contains(reflectedClass);
-	}
-
-	protected void init0() {
-		// Overriden by generated subclasses
-	}
-
-	public Object invoke(Object bean, String methodName,
-			List<Class> argumentTypes, List<?> arguments) {
-		String beanRegex = "(get|set|is)(.)(.+)";
-		RegExp regExp = RegExp.compile(beanRegex);
-		MatchResult matchResult = regExp.exec(methodName);
-		if (matchResult == null) {
-			throw new IllegalArgumentException(
-					Ax.format("Not bean method format: %s", methodName));
-		}
-		boolean get = !matchResult.getGroup(1).equals("set");
-		String propertyName = Ax.format("%s%s",
-				matchResult.getGroup(2).toLowerCase(), matchResult.getGroup(3));
-		Property property = property(propertyName);
-		if (get) {
-			return property.get(bean);
-		} else {
-			property.set(bean, arguments.get(0));
-			return null;
-		}
 	}
 }

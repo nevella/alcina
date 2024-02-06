@@ -234,6 +234,68 @@ public class UserStories {
 		html = doc.prettyToString();
 	}
 
+	private String getDelta(IUserStory incoming, IUserStory story) {
+		String s1 = incoming.getStory();
+		String s2 = story.getStory();
+		List<String> lines1 = Arrays
+				.asList(Ax.blankToEmpty(incoming.getStory()).split("\n"));
+		List<String> lines2 = Arrays
+				.asList(Ax.blankToEmpty(story.getStory()).split("\n"));
+		return lines1.subList(lines2.size(), lines1.size()).stream()
+				.collect(Collectors.joining("\n"));
+	}
+
+	protected <T extends Entity & IUserStory> Class<T> getImplementation() {
+		return (Class<T>) PersistentImpl.getImplementation(IUserStory.class);
+	}
+
+	private Optional<? extends IUserStory> getUserStory(
+			ClientInstance clientInstance, String clientInstanceUid) {
+		return ThreadedPermissionsManager.cast()
+				.callWithPushedSystemUserIfNeededNoThrow(() -> {
+					Predicate<IUserStory> predicate = us -> clientInstanceUid != null
+							? clientInstanceUid
+									.equals(us.getClientInstanceUid())
+							: us.getClientInstanceId() == clientInstance
+									.getId();
+					return Domain.query(getImplementation())
+							.filter((Predicate) predicate).stream().findFirst();
+				});
+	}
+
+	protected List<String> getUserStoryPropertiesNotPopulatedByClient() {
+		List<String> properties = Domain.DOMAIN_BASE_VERSIONABLE_PROPERTY_NAMES
+				.stream().collect(Collectors.toList());
+		properties.add("date");
+		properties.add("iid");
+		return properties;
+	}
+
+	protected Message parseMessage(ClientLogRecord record) {
+		Message out = new Message();
+		String text = record.getMessage();
+		{
+			String regex = ".+(/.+?/.+) :: .+value :: (.*)";
+			if (text.matches(regex)) {
+				out.path = text.replaceFirst(regex, "$1");
+				out.text = text.replaceFirst(regex, "$2");
+				return out;
+			}
+		}
+		{
+			String regex = ".+(/.+?/.+) :: \\[(.+)\\].*";
+			if (text.matches(regex)) {
+				out.path = text.replaceFirst(regex, "$1");
+				out.text = text.replaceFirst(regex, "$2");
+				out.text = untilFirstCamel(out.text);
+				out.textIsLocator = true;
+				return out;
+			}
+		}
+		out.text = text;
+		return out;
+	}
+
 	public void persist(IUserStory incoming) {
 		if (Configuration.is("disabled")) {
 			return;
@@ -275,29 +337,9 @@ public class UserStories {
 				anonymous, userName, story));
 	}
 
-	private String getDelta(IUserStory incoming, IUserStory story) {
-		String s1 = incoming.getStory();
-		String s2 = story.getStory();
-		List<String> lines1 = Arrays
-				.asList(Ax.blankToEmpty(incoming.getStory()).split("\n"));
-		List<String> lines2 = Arrays
-				.asList(Ax.blankToEmpty(story.getStory()).split("\n"));
-		return lines1.subList(lines2.size(), lines1.size()).stream()
-				.collect(Collectors.joining("\n"));
-	}
-
-	private Optional<? extends IUserStory> getUserStory(
-			ClientInstance clientInstance, String clientInstanceUid) {
-		return ThreadedPermissionsManager.cast()
-				.callWithPushedSystemUserIfNeededNoThrow(() -> {
-					Predicate<IUserStory> predicate = us -> clientInstanceUid != null
-							? clientInstanceUid
-									.equals(us.getClientInstanceUid())
-							: us.getClientInstanceId() == clientInstance
-									.getId();
-					return Domain.query(getImplementation())
-							.filter((Predicate) predicate).stream().findFirst();
-				});
+	protected void postCreateStory(IUserStory story,
+			ClientInstance clientInstance) {
+		story.setDate(new Date());
 	}
 
 	private String untilFirstCamel(String text) {
@@ -316,46 +358,12 @@ public class UserStories {
 		return out.stream().collect(Collectors.joining(" "));
 	}
 
-	protected <T extends Entity & IUserStory> Class<T> getImplementation() {
-		return (Class<T>) PersistentImpl.getImplementation(IUserStory.class);
-	}
+	static class Message {
+		String path;
 
-	protected List<String> getUserStoryPropertiesNotPopulatedByClient() {
-		List<String> properties = Domain.DOMAIN_BASE_VERSIONABLE_PROPERTY_NAMES
-				.stream().collect(Collectors.toList());
-		properties.add("date");
-		properties.add("iid");
-		return properties;
-	}
+		String text;
 
-	protected Message parseMessage(ClientLogRecord record) {
-		Message out = new Message();
-		String text = record.getMessage();
-		{
-			String regex = ".+(/.+?/.+) :: .+value :: (.*)";
-			if (text.matches(regex)) {
-				out.path = text.replaceFirst(regex, "$1");
-				out.text = text.replaceFirst(regex, "$2");
-				return out;
-			}
-		}
-		{
-			String regex = ".+(/.+?/.+) :: \\[(.+)\\].*";
-			if (text.matches(regex)) {
-				out.path = text.replaceFirst(regex, "$1");
-				out.text = text.replaceFirst(regex, "$2");
-				out.text = untilFirstCamel(out.text);
-				out.textIsLocator = true;
-				return out;
-			}
-		}
-		out.text = text;
-		return out;
-	}
-
-	protected void postCreateStory(IUserStory story,
-			ClientInstance clientInstance) {
-		story.setDate(new Date());
+		public boolean textIsLocator;
 	}
 
 	public static class UserStoryDelta {
@@ -383,13 +391,5 @@ public class UserStories {
 			this.storyId = ((Entity) story).getId();
 			this.trigger = story.getTrigger();
 		}
-	}
-
-	static class Message {
-		String path;
-
-		String text;
-
-		public boolean textIsLocator;
 	}
 }

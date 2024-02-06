@@ -46,6 +46,13 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		return getId() == 0;
 	}
 
+	private Map<EntityLocator, String> ensureClientDisplayTexts() {
+		if (clientDisplayTexts == null) {
+			clientDisplayTexts = new LinkedHashMap<>();
+		}
+		return clientDisplayTexts;
+	}
+
 	public E ensurePlaceholderObject() {
 		if (value == null && id != 0) {
 			value = Reflections.newInstance(getObjectClass());
@@ -99,6 +106,10 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	public void populateValue() {
 	}
 
+	protected String provideDisplayTextFor(E value) {
+		return value == null ? null : value.toString();
+	}
+
 	public String provideTypeDisplayName() {
 		return CommonUtils.titleCase(
 				CommonUtils.deInfix(getObjectClass().getSimpleName()));
@@ -134,16 +145,5 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	public <T extends TruncatedObjectCriterion<E>> T withObject(E withValue) {
 		setValue(withValue);
 		return (T) this;
-	}
-
-	private Map<EntityLocator, String> ensureClientDisplayTexts() {
-		if (clientDisplayTexts == null) {
-			clientDisplayTexts = new LinkedHashMap<>();
-		}
-		return clientDisplayTexts;
-	}
-
-	protected String provideDisplayTextFor(E value) {
-		return value == null ? null : value.toString();
 	}
 }

@@ -27,10 +27,10 @@ import java.util.function.Function;
  *         Cooper</a>
  */
 public interface Renderer<T, R> extends Function<T, R> {
-	public R render(T o);
-
 	@Override
 	default R apply(T t) {
 		return render(t);
 	}
+
+	public R render(T o);
 }

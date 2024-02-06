@@ -45,6 +45,10 @@ public class CheckboxInput extends Model.Value<Boolean>
 		setValue(value);
 	}
 
+	private boolean elementValue() {
+		return provideElement().getPropertyBoolean("checked");
+	}
+
 	@Override
 	@Binding(type = Type.PROPERTY, to = "checked")
 	public Boolean getValue() {
@@ -60,9 +64,5 @@ public class CheckboxInput extends Model.Value<Boolean>
 	@Override
 	public void setValue(Boolean value) {
 		set(VALUE, this.value, value, () -> this.value = value);
-	}
-
-	private boolean elementValue() {
-		return provideElement().getPropertyBoolean("checked");
 	}
 }

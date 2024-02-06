@@ -69,6 +69,10 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 		return (V) set;
 	}
 
+	protected V createNewSet() {
+		return (V) new LiSet();
+	}
+
 	public void dumpDensity() {
 		Ax.out("All values: %s", size());
 		CountingMap<Integer> sizeCount = new CountingMap<>();
@@ -115,8 +119,21 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 		this.loadingOnly = loadingOnly;
 	}
 
-	protected V createNewSet() {
-		return (V) new LiSet();
+	class LoadingCache {
+		private Map<K, Set<Entity>> cache = new LinkedHashMap<>();
+
+		public boolean addCached(K key, Entity item) {
+			if (!cache.containsKey(key)) {
+				cache.put(key, (Set<Entity>) createNewSet());
+			}
+			return cache.get(key).add(item);
+		}
+
+		public void pushToTrie() {
+			cache.entrySet().forEach(e -> {
+				put(e.getKey(), (V) e.getValue());
+			});
+		}
 	}
 
 	public static class MultiTrieResult<K, V> {
@@ -137,23 +154,6 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 						.collect(Collectors.summingInt(v -> ((Set) v).size()));
 			}
 			return size;
-		}
-	}
-
-	class LoadingCache {
-		private Map<K, Set<Entity>> cache = new LinkedHashMap<>();
-
-		public boolean addCached(K key, Entity item) {
-			if (!cache.containsKey(key)) {
-				cache.put(key, (Set<Entity>) createNewSet());
-			}
-			return cache.get(key).add(item);
-		}
-
-		public void pushToTrie() {
-			cache.entrySet().forEach(e -> {
-				put(e.getKey(), (V) e.getValue());
-			});
 		}
 	}
 }

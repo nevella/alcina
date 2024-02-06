@@ -219,6 +219,8 @@ public class MutationsTests {
 				this.color = color;
 			}
 
+			protected abstract void mutate();
+
 			@Override
 			public void run() {
 				try {
@@ -257,8 +259,6 @@ public class MutationsTests {
 					throw e;
 				}
 			}
-
-			protected abstract void mutate();
 		}
 
 		class TEST_INSERTION extends Test {

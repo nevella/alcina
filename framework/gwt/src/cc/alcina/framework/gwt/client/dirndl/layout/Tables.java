@@ -52,17 +52,19 @@ public class Tables {
 		}
 	}
 
-	/**
-	 * Used in the generated gridTemplateColumns style attribute of a generated
-	 * grid
-	 *
-	 */
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface ColumnWidth {
-		public String value();
+	@Directed
+	static class ColumnName extends Model.Fields {
+		@Binding(type = Type.INNER_TEXT)
+		String text;
+
+		// for css selection
+		@Binding(type = Type.PROPERTY)
+		String name;
+
+		ColumnName(String name) {
+			this.name = name;
+			this.text = name;
+		}
 	}
 
 	/**
@@ -73,6 +75,19 @@ public class Tables {
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	public @interface ColumnsWidth {
+		public String value();
+	}
+
+	/**
+	 * Used in the generated gridTemplateColumns style attribute of a generated
+	 * grid
+	 *
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface ColumnWidth {
 		public String value();
 	}
 
@@ -280,21 +295,6 @@ public class Tables {
 					this.value = value;
 				}
 			}
-		}
-	}
-
-	@Directed
-	static class ColumnName extends Model.Fields {
-		@Binding(type = Type.INNER_TEXT)
-		String text;
-
-		// for css selection
-		@Binding(type = Type.PROPERTY)
-		String name;
-
-		ColumnName(String name) {
-			this.name = name;
-			this.text = name;
 		}
 	}
 }

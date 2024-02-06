@@ -184,12 +184,12 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return other == null ? false : other.equals(intersection(other));
 	}
 
-	public boolean containsExBoundaries(IntPair other) {
-		return contains(other) && i1 < other.i1 && i2 > other.i2;
-	}
-
 	public boolean containsExAtLeastOneBoundary(IntPair other) {
 		return contains(other) && (i1 < other.i1 || i2 > other.i2);
+	}
+
+	public boolean containsExBoundaries(IntPair other) {
+		return contains(other) && i1 < other.i1 && i2 > other.i2;
 	}
 
 	public boolean containsExEnd(int i) {
@@ -268,12 +268,6 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return result.i1 <= result.i2 ? result : null;
 	}
 
-	public boolean overlapsWith(IntPair other) {
-		IntPair intersection = intersection(other);
-		return intersection != null && !Objects.equals(intersection, this)
-				&& !Objects.equals(intersection, other);
-	}
-
 	public IntPair intersectionOrZero(IntPair other) {
 		IntPair result = intersection(other);
 		return result == null ? new IntPair(0, 0) : result;
@@ -322,6 +316,12 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return Math.min(Math.abs(other.i1 - i2), Math.abs(other.i2 - i1));
 	}
 
+	public boolean overlapsWith(IntPair other) {
+		IntPair intersection = intersection(other);
+		return intersection != null && !Objects.equals(intersection, this)
+				&& !Objects.equals(intersection, other);
+	}
+
 	public void setI1(int i1) {
 		this.i1 = i1;
 	}
@@ -357,6 +357,14 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 
 	public String toDashStringOrPoint() {
 		return isPoint() ? String.valueOf(i1) : i1 + "-" + i2;
+	}
+
+	public IntPair toEndPoint() {
+		return new IntPair(i2, i2);
+	}
+
+	public IntPair toStartPoint() {
+		return new IntPair(i1, i1);
 	}
 
 	@Override
@@ -404,13 +412,5 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 	public static enum IntPairRelation {
 		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
 		CONTAINS_END
-	}
-
-	public IntPair toStartPoint() {
-		return new IntPair(i1, i1);
-	}
-
-	public IntPair toEndPoint() {
-		return new IntPair(i2, i2);
 	}
 }

@@ -54,40 +54,6 @@ public class CharArrayKeyAnalyzer extends AbstractKeyAnalyzer<char[]>
 	}
 
 	@Override
-	public int compare(char[] o1, char[] o2) {
-		if (o1 == null) {
-			return (o2 == null) ? 0 : -1;
-		} else if (o2 == null) {
-			return (o1 == null) ? 0 : 1;
-		}
-		if (o1.length != o2.length) {
-			return o1.length - o2.length;
-		}
-		for (int i = 0; i < o1.length; i++) {
-			int diff = (o1[i] & 0xFF) - (o2[i] & 0xFF);
-			if (diff != 0) {
-				return diff;
-			}
-		}
-		return 0;
-	}
-
-	@Override
-	public int lengthInBits(char[] key) {
-		return key.length * size;
-	}
-
-	@Override
-	public boolean isBitSet(char[] key, int bitIndex) {
-		if (bitIndex >= lengthInBits(key)) {
-			return false;
-		}
-		int index = (int) (bitIndex / size);
-		int bit = (int) (bitIndex % size);
-		return (key[index] & mask(bit)) != 0;
-	}
-
-	@Override
 	public int bitIndex(char[] key, char[] otherKey) {
 		int length = Math.max(key.length, otherKey.length);
 		boolean allNull = true;
@@ -113,6 +79,35 @@ public class CharArrayKeyAnalyzer extends AbstractKeyAnalyzer<char[]>
 	}
 
 	@Override
+	public int compare(char[] o1, char[] o2) {
+		if (o1 == null) {
+			return (o2 == null) ? 0 : -1;
+		} else if (o2 == null) {
+			return (o1 == null) ? 0 : 1;
+		}
+		if (o1.length != o2.length) {
+			return o1.length - o2.length;
+		}
+		for (int i = 0; i < o1.length; i++) {
+			int diff = (o1[i] & 0xFF) - (o2[i] & 0xFF);
+			if (diff != 0) {
+				return diff;
+			}
+		}
+		return 0;
+	}
+
+	@Override
+	public boolean isBitSet(char[] key, int bitIndex) {
+		if (bitIndex >= lengthInBits(key)) {
+			return false;
+		}
+		int index = (int) (bitIndex / size);
+		int bit = (int) (bitIndex % size);
+		return (key[index] & mask(bit)) != 0;
+	}
+
+	@Override
 	public boolean isPrefix(char[] key, char[] prefix) {
 		if (key.length < prefix.length) {
 			return false;
@@ -123,6 +118,11 @@ public class CharArrayKeyAnalyzer extends AbstractKeyAnalyzer<char[]>
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public int lengthInBits(char[] key) {
+		return key.length * size;
 	}
 
 	/**

@@ -111,6 +111,30 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		return Registry.impl(AppLifecycleServletBase.class);
 	}
 
+	public static void initLifecycleServiceClasses(
+			Class<? extends LifecycleService> typeFilter) {
+		/*
+		 * If custom LifecycleService impl init is required, call it earlier
+		 * (initCustom) and don't override LifecycleService.onApplicationStartup
+		 */
+		Registry.query(LifecycleService.class).registrations()
+				.filter(typeFilter::isAssignableFrom).
+				/*
+				 * each class implementing LifecycleService must also have a
+				 * 
+				 * @Registration.Singleton
+				 */
+				map(Registry::impl).forEach(service -> {
+					try {
+						service.onApplicationStartup();
+					} catch (Exception e) {
+						Ax.sysLogHigh("Exception starting up %s",
+								service.getClass().getSimpleName());
+						e.printStackTrace();
+					}
+				});
+	}
+
 	public static void setupAppServerBootstrapJvmServices() {
 		Registry.Internals.setProvider(new ClassLoaderAwareRegistryProvider());
 	}
@@ -122,6 +146,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected ServletClassMetadataCacheProvider classMetadataCacheProvider = new CachingServletClassMetadataCacheProvider();
 
 	private SerializationSignatureListener serializationSignatureListener;
+
+	protected void addImmutableSecurityProperties() {
+		Configuration.properties.addImmutablePropertyKey(
+				RemoteDebugHandler.immutableSecurityProperty());
+	}
 
 	public void clearJarCache() {
 		try {
@@ -166,6 +195,20 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
+		}
+	}
+
+	protected void createServletTransformClientInstance() {
+		if (EntityLayerObjects.get().getServerAsClientInstance() != null) {
+			throw new IllegalStateException();
+		}
+		try {
+			Transaction.begin();
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			AuthenticationPersistence.get().createBootstrapClientInstance();
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+			Transaction.end();
 		}
 	}
 
@@ -214,6 +257,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		return this.startupTime;
 	}
 
+	protected AppServletStatusNotifier getStatusNotifier() {
+		return new AppServletStatusNotifier();
+	}
+
 	@Override
 	public void init(ServletConfig servletConfig) throws ServletException {
 		MetricLogging.get().start("Web app startup");
@@ -249,84 +296,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 		MetricLogging.get().end("Web app startup");
 		getStatusNotifier().ready();
-	}
-
-	public void loadCustomProperties() {
-		try {
-			/*
-			 * note that this *does* clear custom property keys added since
-			 * startup
-			 *
-			 */
-			Configuration.properties.load(() -> {
-				String loggerLevels = getDefaultLoggerLevels();
-				Configuration.properties.register(loggerLevels);
-				File propertiesFile = new File(
-						AlcinaWebappConfig.get().getCustomPropertiesFilePath());
-				if (propertiesFile.exists()) {
-					Configuration.properties.register(
-							Io.read().file(propertiesFile).asString());
-				} else {
-					File propertiesListFile = SEUtilities.getChildFile(
-							propertiesFile.getParentFile(),
-							"alcina-properties-files.txt");
-					if (propertiesListFile.exists()) {
-						String[] paths = Io.read().file(propertiesListFile)
-								.asString().split("\n");
-						int idx = 0;
-						for (String path : paths) {
-							String file = Io.read().path(path).asString();
-							if (idx++ == 0) {
-								if (file.contains("include.resource=")) {
-									Configuration.properties.setUseSets(true);
-									Configuration.properties.setClassLoader(
-											getClass().getClassLoader());
-									// re-register in v2 mode
-									Configuration.properties
-											.register(loggerLevels);
-								}
-							}
-							Configuration.properties.register(file);
-						}
-					}
-				}
-			});
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@Override
-	public void service(ServletRequest arg0, ServletResponse arg1)
-			throws ServletException, IOException {
-	}
-
-	public void setStartupTime(Date startupTime) {
-		this.startupTime = startupTime;
-	}
-
-	protected void addImmutableSecurityProperties() {
-		Configuration.properties.addImmutablePropertyKey(
-				RemoteDebugHandler.immutableSecurityProperty());
-	}
-
-	protected void createServletTransformClientInstance() {
-		if (EntityLayerObjects.get().getServerAsClientInstance() != null) {
-			throw new IllegalStateException();
-		}
-		try {
-			Transaction.begin();
-			ThreadedPermissionsManager.cast().pushSystemUser();
-			AuthenticationPersistence.get().createBootstrapClientInstance();
-		} finally {
-			ThreadedPermissionsManager.cast().popSystemUser();
-			Transaction.end();
-		}
-	}
-
-	protected AppServletStatusNotifier getStatusNotifier() {
-		return new AppServletStatusNotifier();
 	}
 
 	protected void initBootstrapRegistry() {
@@ -569,6 +538,52 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		EntityLayerLogging.setLogLevelsFromCustomProperties();
 	}
 
+	public void loadCustomProperties() {
+		try {
+			/*
+			 * note that this *does* clear custom property keys added since
+			 * startup
+			 *
+			 */
+			Configuration.properties.load(() -> {
+				String loggerLevels = getDefaultLoggerLevels();
+				Configuration.properties.register(loggerLevels);
+				File propertiesFile = new File(
+						AlcinaWebappConfig.get().getCustomPropertiesFilePath());
+				if (propertiesFile.exists()) {
+					Configuration.properties.register(
+							Io.read().file(propertiesFile).asString());
+				} else {
+					File propertiesListFile = SEUtilities.getChildFile(
+							propertiesFile.getParentFile(),
+							"alcina-properties-files.txt");
+					if (propertiesListFile.exists()) {
+						String[] paths = Io.read().file(propertiesListFile)
+								.asString().split("\n");
+						int idx = 0;
+						for (String path : paths) {
+							String file = Io.read().path(path).asString();
+							if (idx++ == 0) {
+								if (file.contains("include.resource=")) {
+									Configuration.properties.setUseSets(true);
+									Configuration.properties.setClassLoader(
+											getClass().getClassLoader());
+									// re-register in v2 mode
+									Configuration.properties
+											.register(loggerLevels);
+								}
+							}
+							Configuration.properties.register(file);
+						}
+					}
+				}
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	protected void onAppServletInitialised() {
 		ReadonlySupportServletLayer.get();
 		if (usesJobs()) {
@@ -587,30 +602,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					.addDomainTransformPersistenceListener(
 							serializationSignatureListener);
 		}
-	}
-
-	public static void initLifecycleServiceClasses(
-			Class<? extends LifecycleService> typeFilter) {
-		/*
-		 * If custom LifecycleService impl init is required, call it earlier
-		 * (initCustom) and don't override LifecycleService.onApplicationStartup
-		 */
-		Registry.query(LifecycleService.class).registrations()
-				.filter(typeFilter::isAssignableFrom).
-				/*
-				 * each class implementing LifecycleService must also have a
-				 * 
-				 * @Registration.Singleton
-				 */
-				map(Registry::impl).forEach(service -> {
-					try {
-						service.onApplicationStartup();
-					} catch (Exception e) {
-						Ax.sysLogHigh("Exception starting up %s",
-								service.getClass().getSimpleName());
-						e.printStackTrace();
-					}
-				});
 	}
 
 	protected void runFinalPreInitTasks() throws Exception {
@@ -656,22 +647,32 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
+	@Override
+	public void service(ServletRequest arg0, ServletResponse arg1)
+			throws ServletException, IOException {
+	}
+
+	public void setStartupTime(Date startupTime) {
+		this.startupTime = startupTime;
+	}
+
 	protected boolean usesJobs() {
 		return true;
 	}
 
-	public static class TimezoneDataProviderServlet
-			implements TimezoneData.Provider {
+	static class CachingServletClassMetadataCacheProvider
+			extends ServletClassMetadataCacheProvider {
+		public CachingServletClassMetadataCacheProvider() {
+		}
+
 		@Override
-		public TimezoneData getTimezoneData() {
-			TimezoneData localData = new TimezoneData();
-			TimeZone tz = TimeZone.getDefault();
-			Calendar cal = GregorianCalendar.getInstance(tz);
-			// minus normalises to how .js defines it
-			int offsetInMillis = -tz.getOffset(cal.getTimeInMillis());
-			localData.setTimeZone(tz.getDisplayName());
-			localData.setUtcMinutes(offsetInMillis / 60 / 1000);
-			return localData;
+		public ClassMetadataCache getClassInfo(Logger mainLogger,
+				boolean entityLayer) throws Exception {
+			return new ServletClasspathScanner("*", true, false, mainLogger,
+					Registry.MARKER_RESOURCE,
+					entityLayer ? Arrays.asList(
+							new String[] { "WEB-INF/classes", "WEB-INF/lib" })
+							: Arrays.asList(new String[] {})).getClasses();
 		}
 	}
 
@@ -717,19 +718,18 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
-	static class CachingServletClassMetadataCacheProvider
-			extends ServletClassMetadataCacheProvider {
-		public CachingServletClassMetadataCacheProvider() {
-		}
-
+	public static class TimezoneDataProviderServlet
+			implements TimezoneData.Provider {
 		@Override
-		public ClassMetadataCache getClassInfo(Logger mainLogger,
-				boolean entityLayer) throws Exception {
-			return new ServletClasspathScanner("*", true, false, mainLogger,
-					Registry.MARKER_RESOURCE,
-					entityLayer ? Arrays.asList(
-							new String[] { "WEB-INF/classes", "WEB-INF/lib" })
-							: Arrays.asList(new String[] {})).getClasses();
+		public TimezoneData getTimezoneData() {
+			TimezoneData localData = new TimezoneData();
+			TimeZone tz = TimeZone.getDefault();
+			Calendar cal = GregorianCalendar.getInstance(tz);
+			// minus normalises to how .js defines it
+			int offsetInMillis = -tz.getOffset(cal.getTimeInMillis());
+			localData.setTimeZone(tz.getDisplayName());
+			localData.setUtcMinutes(offsetInMillis / 60 / 1000);
+			return localData;
 		}
 	}
 }

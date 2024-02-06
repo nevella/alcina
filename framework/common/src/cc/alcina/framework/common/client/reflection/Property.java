@@ -87,6 +87,10 @@ public class Property implements HasAnnotations {
 		return this.declaringType;
 	}
 
+	public Method getMethod(boolean get) {
+		return get ? getter : setter;
+	}
+
 	public String getName() {
 		return this.name;
 	}
@@ -160,6 +164,16 @@ public class Property implements HasAnnotations {
 		return isReadable() && provideNotDefaultIgnoreable();
 	}
 
+	protected Method resolveGetter(Object bean) {
+		return bean.getClass() == owningType ? getter
+				: Reflections.at(bean).property(name).getter;
+	}
+
+	protected Method resolveSetter(Object bean) {
+		return bean.getClass() == owningType ? setter
+				: Reflections.at(bean).property(name).setter;
+	}
+
 	public void set(Object bean, Object newValue) {
 		resolveSetter(bean).invoke(bean, new Object[] { newValue });
 	}
@@ -172,16 +186,6 @@ public class Property implements HasAnnotations {
 	public String toString() {
 		return Ax.format("%s.%s : %s", owningType.getSimpleName(), name,
 				type.getSimpleName());
-	}
-
-	protected Method resolveGetter(Object bean) {
-		return bean.getClass() == owningType ? getter
-				: Reflections.at(bean).property(name).getter;
-	}
-
-	protected Method resolveSetter(Object bean) {
-		return bean.getClass() == owningType ? setter
-				: Reflections.at(bean).property(name).setter;
 	}
 
 	public static class NameComparator implements Comparator<Property> {
@@ -200,9 +204,5 @@ public class Property implements HasAnnotations {
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public @interface Not {
-	}
-
-	public Method getMethod(boolean get) {
-		return get ? getter : setter;
 	}
 }

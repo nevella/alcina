@@ -58,6 +58,11 @@ public class Knowns {
 
 	private static String debugStatusPath = null;
 
+	private static synchronized KnownRenderableNode
+			fromPersistent(KnownNode node) {
+		return node.persistence.fromPersistent(node);
+	}
+
 	public static Object fromStringValue(String path, String value, Field field,
 			ValueType valueType) throws ParseException {
 		Class type = field.getType();
@@ -227,10 +232,24 @@ public class Knowns {
 		root.persist();
 	}
 
+	static KnownRenderableNode renderableRoot() {
+		try {
+			LooseContext.pushWithTrue(
+					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
+			return fromPersistent(Knowns.root);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
 	public static void shutdown() {
 		synchronized (reachableKnownsModificationNotifier) {
 			reachableKnownsModificationNotifier.notifyAll();
 		}
+	}
+
+	private static synchronized void toPersistent(KnownNode node) {
+		node.persistence.toPersistent(node);
 	}
 
 	public static String toStringValue(Object value, Field field,
@@ -255,25 +274,6 @@ public class Knowns {
 			return DateTimeFormatter.ISO_DATE_TIME.format(zdt);
 		}
 		throw new RuntimeException("not implemented");
-	}
-
-	private static synchronized KnownRenderableNode
-			fromPersistent(KnownNode node) {
-		return node.persistence.fromPersistent(node);
-	}
-
-	private static synchronized void toPersistent(KnownNode node) {
-		node.persistence.toPersistent(node);
-	}
-
-	static KnownRenderableNode renderableRoot() {
-		try {
-			LooseContext.pushWithTrue(
-					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
-			return fromPersistent(Knowns.root);
-		} finally {
-			LooseContext.pop();
-		}
 	}
 
 	/**

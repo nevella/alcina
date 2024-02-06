@@ -10,6 +10,11 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 public abstract class MvccEntityTransactionTest extends PerformerTask {
 	transient private Exception lastThreadException;
 
+	protected void notifyThreadException(Exception e) {
+		TransformManager.get().clearTransforms();
+		lastThreadException = e;
+	}
+
 	@Override
 	public void run() throws Exception {
 		try {
@@ -29,11 +34,6 @@ public abstract class MvccEntityTransactionTest extends PerformerTask {
 			Transaction.endAndBeginNew();
 			LooseContext.pop();
 		}
-	}
-
-	protected void notifyThreadException(Exception e) {
-		TransformManager.get().clearTransforms();
-		lastThreadException = e;
 	}
 
 	protected abstract void run1() throws Exception;

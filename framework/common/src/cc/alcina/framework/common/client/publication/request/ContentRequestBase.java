@@ -61,12 +61,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	private String suggestedFileName = "";
 
-	public void ensureSuggestedFilename(String filename) {
-		if (Ax.isBlank(getSuggestedFileName())) {
-			setSuggestedFileName(filename);
-		}
-	}
-
 	private String emailSubject = "";
 
 	private String emailSubjectForRequestor = null;
@@ -126,6 +120,12 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	private List<MultipleDeliveryEntry> multipleDeliveryEntries = new ArrayList<>();
 
 	private RepositoryConnection repositoryConnection = new RepositoryConnection();
+
+	public void ensureSuggestedFilename(String filename) {
+		if (Ax.isBlank(getSuggestedFileName())) {
+			setSuggestedFileName(filename);
+		}
+	}
 
 	@Override
 	public String getAttachmentMessage() {
@@ -224,13 +224,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return this.propertiesSerialized;
 	}
 
-	@Override
-	@Transient
-	@AlcinaTransient
-	public PropertyChangeListener[] propertyChangeListeners() {
-		return this.propertyChangeSupport().getPropertyChangeListeners();
-	}
-
 	public PublicationRange getPublicationRange() {
 		return publicationRange;
 	}
@@ -309,6 +302,13 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	@XmlTransient
 	public boolean isTest() {
 		return test;
+	}
+
+	@Override
+	@Transient
+	@AlcinaTransient
+	public PropertyChangeListener[] propertyChangeListeners() {
+		return this.propertyChangeSupport().getPropertyChangeListeners();
 	}
 
 	@Override
@@ -589,28 +589,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return new Customiser(this);
 	}
 
-	public static class TestContentDefinition implements ContentDefinition {
-		@Override
-		public String getPublicationType() {
-			return "test";
-		}
-	}
-
-	@TypeSerialization(flatSerializable = false)
-	public static class TestContentRequest
-			extends ContentRequestBase<TestContentDefinition> {
-		@Override
-		public TestContentDefinition getContentDefinition() {
-			return this.contentDefinition;
-		}
-
-		@Override
-		public void
-				setContentDefinition(TestContentDefinition contentDefinition) {
-			this.contentDefinition = contentDefinition;
-		}
-	}
-
 	private static class Customiser
 			extends TreeSerializable.Customiser<ContentRequestBase> {
 		public Customiser(ContentRequestBase serializable) {
@@ -658,6 +636,28 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 				serializable.contentDefinition.treeSerializationCustomiser()
 						.onBeforeTreeSerialize();
 			}
+		}
+	}
+
+	public static class TestContentDefinition implements ContentDefinition {
+		@Override
+		public String getPublicationType() {
+			return "test";
+		}
+	}
+
+	@TypeSerialization(flatSerializable = false)
+	public static class TestContentRequest
+			extends ContentRequestBase<TestContentDefinition> {
+		@Override
+		public TestContentDefinition getContentDefinition() {
+			return this.contentDefinition;
+		}
+
+		@Override
+		public void
+				setContentDefinition(TestContentDefinition contentDefinition) {
+			this.contentDefinition = contentDefinition;
 		}
 	}
 }

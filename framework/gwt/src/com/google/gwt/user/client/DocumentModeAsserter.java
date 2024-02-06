@@ -50,6 +50,10 @@ public class DocumentModeAsserter implements EntryPoint {
 	 */
 	private static final String STANDARDS_MODE_CSS1_COMPAT = "CSS1Compat";
 
+	final native String getCompatMode() /*-{
+    return $doc.compatMode;
+	}-*/;
+
 	@Override
 	public void onModuleLoad() {
 		DocumentModeProperty impl = GWT.create(DocumentModeProperty.class);
@@ -97,10 +101,6 @@ public class DocumentModeAsserter implements EntryPoint {
 		// Warning compiled out in Production Mode
 		GWT.log(message);
 	}
-
-	final native String getCompatMode() /*-{
-    return $doc.compatMode;
-	}-*/;
 
 	/**
 	 * Interface to provide {@value #PROPERTY_DOCUMENT_COMPATMODE} configuration

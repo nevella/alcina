@@ -17,6 +17,11 @@ public class CheckSoleOfflineTabPlayer
 		addRequires(LoadObjectDataState.HELLO_OFFLINE);
 	}
 
+	protected void checkFailed() {
+		Registry.impl(ClientNotifications.class)
+				.getModalNotifier("Only one offline tab permitted");
+	}
+
 	@Override
 	public void onSuccess(Boolean result) {
 		if (result) {
@@ -30,10 +35,5 @@ public class CheckSoleOfflineTabPlayer
 	@Override
 	public void run() {
 		ClientSession.get().checkSoleOpenTab(this);
-	}
-
-	protected void checkFailed() {
-		Registry.impl(ClientNotifications.class)
-				.getModalNotifier("Only one offline tab permitted");
 	}
 }

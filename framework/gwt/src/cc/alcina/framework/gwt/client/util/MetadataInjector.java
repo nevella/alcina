@@ -14,8 +14,20 @@ public class MetadataInjector {
 		this.metadata = metadata;
 	}
 
+	public void detach() {
+		JavascriptInjector.removeScriptElement(metadataElement);
+		metadataElement = null;
+	}
+
 	public String getMetadata() {
 		return metadata;
+	}
+
+	public void inject() {
+		if (metadataElement != null) {
+			detach();
+		}
+		metadataElement = JavascriptInjector.injectJsonLd(metadata);
 	}
 
 	public boolean isInjected() {
@@ -27,17 +39,5 @@ public class MetadataInjector {
 			detach();
 		}
 		this.metadata = metadata;
-	}
-
-	public void inject() {
-		if (metadataElement != null) {
-			detach();
-		}
-		metadataElement = JavascriptInjector.injectJsonLd(metadata);
-	}
-
-	public void detach() {
-		JavascriptInjector.removeScriptElement(metadataElement);
-		metadataElement = null;
 	}
 }

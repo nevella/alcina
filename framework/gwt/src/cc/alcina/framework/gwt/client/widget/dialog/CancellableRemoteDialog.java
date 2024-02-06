@@ -100,6 +100,10 @@ public class CancellableRemoteDialog extends GlassDialogBox
 		return retryButton;
 	}
 
+	protected boolean initialAnimationEnabled() {
+		return true;
+	}
+
 	@Override
 	public void modalOff() {
 		hide();
@@ -138,9 +142,5 @@ public class CancellableRemoteDialog extends GlassDialogBox
 				: Ax.format("%s - %s% complete", status,
 						CommonUtils.padTwo((int) Math.round(progress * 100))));
 		center();
-	}
-
-	protected boolean initialAnimationEnabled() {
-		return true;
 	}
 }

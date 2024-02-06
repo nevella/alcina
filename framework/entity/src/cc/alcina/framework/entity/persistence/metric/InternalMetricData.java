@@ -56,6 +56,17 @@ public class InternalMetricData {
 		threadHistory = new ThreadHistory();
 	}
 
+	void addSlice(ThreadInfo info, StackTraceElement[] stackTrace,
+			long activeDomainStoreLockTime, long domainStoreWaitTime,
+			DomainStoreLockState domainStoreLockState,
+			DomainStoreWaitStats waitStats) {
+		int maxStackLines = type.maxStackLines();
+		int maxFrames = type.maxFrames();
+		threadHistory.addElement(info, stackTrace, activeDomainStoreLockTime,
+				domainStoreWaitTime, domainStoreLockState, maxStackLines,
+				maxFrames, waitStats);
+	}
+
 	public InternalMetric asMetric() {
 		if (persistent == null) {
 			try {
@@ -95,6 +106,13 @@ public class InternalMetricData {
 				new Date(startTime), persistentId, callContext);
 	}
 
+	public void setPersistentId(long id) {
+		persistentId = id;
+		if (persistent != null) {
+			persistent.setId(id);
+		}
+	}
+
 	public int sliceCount() {
 		return threadHistory.getElementCount();
 	}
@@ -111,28 +129,10 @@ public class InternalMetricData {
 		}
 	}
 
-	void addSlice(ThreadInfo info, StackTraceElement[] stackTrace,
-			long activeDomainStoreLockTime, long domainStoreWaitTime,
-			DomainStoreLockState domainStoreLockState,
-			DomainStoreWaitStats waitStats) {
-		int maxStackLines = type.maxStackLines();
-		int maxFrames = type.maxFrames();
-		threadHistory.addElement(info, stackTrace, activeDomainStoreLockTime,
-				domainStoreWaitTime, domainStoreLockState, maxStackLines,
-				maxFrames, waitStats);
-	}
-
 	public void updateContext(String context) {
 		callContextProvider = () -> context;
 		if (persistent != null) {
 			persistent.setObfuscatedArgs(context);
-		}
-	}
-
-	public void setPersistentId(long id) {
-		persistentId = id;
-		if (persistent != null) {
-			persistent.setId(id);
 		}
 	}
 }

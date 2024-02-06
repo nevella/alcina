@@ -11,7 +11,7 @@ import com.totsp.gwittir.client.beans.Binding;
  * @author kebernet
  */
 public interface Finish {
-	public Binding toBinding();
-
 	public SetLeft and();
+
+	public Binding toBinding();
 }

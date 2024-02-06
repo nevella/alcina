@@ -881,41 +881,6 @@ public class JSONArray {
 	}
 
 	/**
-	 * Write the contents of the JSONArray as JSON text to a writer. For
-	 * compactness, no whitespace is added.
-	 * <p>
-	 * Warning: This method assumes that the data structure is acyclical.
-	 *
-	 * @return The writer.
-	 * @throws JSONException
-	 */
-	public Writer write(Writer writer) throws JSONException {
-		try {
-			boolean b = false;
-			int len = length();
-			writer.write('[');
-			for (int i = 0; i < len; i += 1) {
-				if (b) {
-					writer.write(',');
-				}
-				Object v = this.myArrayList.get(i);
-				if (v instanceof JSONObject) {
-					((JSONObject) v).write(writer);
-				} else if (v instanceof JSONArray) {
-					((JSONArray) v).write(writer);
-				} else {
-					writer.write(JSONObject.valueToString(v));
-				}
-				b = true;
-			}
-			writer.write(']');
-			return writer;
-		} catch (IOException e) {
-			throw new JSONException(e);
-		}
-	}
-
-	/**
 	 * Make a prettyprinted JSON text of this JSONArray. Warning: This method
 	 * assumes that the data structure is acyclical.
 	 *
@@ -958,5 +923,40 @@ public class JSONArray {
 		}
 		sb.append(']');
 		return sb.toString();
+	}
+
+	/**
+	 * Write the contents of the JSONArray as JSON text to a writer. For
+	 * compactness, no whitespace is added.
+	 * <p>
+	 * Warning: This method assumes that the data structure is acyclical.
+	 *
+	 * @return The writer.
+	 * @throws JSONException
+	 */
+	public Writer write(Writer writer) throws JSONException {
+		try {
+			boolean b = false;
+			int len = length();
+			writer.write('[');
+			for (int i = 0; i < len; i += 1) {
+				if (b) {
+					writer.write(',');
+				}
+				Object v = this.myArrayList.get(i);
+				if (v instanceof JSONObject) {
+					((JSONObject) v).write(writer);
+				} else if (v instanceof JSONArray) {
+					((JSONArray) v).write(writer);
+				} else {
+					writer.write(JSONObject.valueToString(v));
+				}
+				b = true;
+			}
+			writer.write(']');
+			return writer;
+		} catch (IOException e) {
+			throw new JSONException(e);
+		}
 	}
 }

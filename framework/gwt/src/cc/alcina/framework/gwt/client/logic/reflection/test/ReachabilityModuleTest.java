@@ -20,6 +20,13 @@ public class ReachabilityModuleTest {
 		Module2.get(m2 -> m2.log());
 	}
 
+	static class Leftover {
+		public void log(String string) {
+			RootPanel.get().add(new Label(string));
+			Registry.impl(LeftoverReflect.class).log();
+		}
+	}
+
 	@Registration(LeftoverReflect.class)
 	public static class LeftoverReflect {
 		public void log() {
@@ -52,14 +59,14 @@ public class ReachabilityModuleTest {
 			new Leftover().log("asef");
 		}
 
-		public void log() {
-			new Leftover().log("asef");
-			Registry.impl(Module1Reflect.class).log();
-		}
-
 		@Override
 		protected ModuleReflector createClientReflector() {
 			return GWT.create(Module1Reflector.class);
+		}
+
+		public void log() {
+			new Leftover().log("asef");
+			Registry.impl(Module1Reflect.class).log();
 		}
 
 		@ReflectionModule("Module1")
@@ -95,14 +102,14 @@ public class ReachabilityModuleTest {
 			}
 		}
 
-		public void log() {
-			new Leftover().log("asefjj");
-			Registry.impl(Module2Reflect.class).log();
-		}
-
 		@Override
 		protected ModuleReflector createClientReflector() {
 			return GWT.create(Module2Reflector.class);
+		}
+
+		public void log() {
+			new Leftover().log("asefjj");
+			Registry.impl(Module2Reflect.class).log();
 		}
 
 		@ReflectionModule("Module2")
@@ -114,13 +121,6 @@ public class ReachabilityModuleTest {
 	public static class Module2Reflect {
 		public void log() {
 			RootPanel.get().add(new Label(getClass().getName()));
-		}
-	}
-
-	static class Leftover {
-		public void log(String string) {
-			RootPanel.get().add(new Label(string));
-			Registry.impl(LeftoverReflect.class).log();
 		}
 	}
 }

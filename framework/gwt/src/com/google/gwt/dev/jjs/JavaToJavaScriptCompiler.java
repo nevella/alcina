@@ -1015,6 +1015,51 @@ public final class JavaToJavaScriptCompiler {
 	}
 
 	/**
+	 * Transform patterns that can't be represented in JS (such as multiple
+	 * catch blocks) into equivalent but compatible patterns and take JVM
+	 * semantics (such as numeric casts) that are not explicit in the AST and
+	 * make them explicit.<br />
+	 *
+	 * These passes can not be reordering because of subtle interdependencies.
+	 */
+	protected TypeMapper<?> normalizeSemantics() {
+		Event event = SpeedTracerLogger
+				.start(CompilerEventType.JAVA_NORMALIZERS);
+		try {
+			Devirtualizer.exec(jprogram);
+			CatchBlockNormalizer.exec(jprogram);
+			PostOptimizationCompoundAssignmentNormalizer.exec(jprogram);
+			LongCastNormalizer.exec(jprogram);
+			LongEmulationNormalizer.exec(jprogram);
+			TypeCoercionNormalizer.exec(jprogram);
+			if (options.isIncrementalCompileEnabled()) {
+				// Per file compilation reuses type JS even as references (like
+				// casts) in other files
+				// change, which means all legal casts need to be allowed now
+				// before they are actually
+				// used later.
+				ComputeExhaustiveCastabilityInformation.exec(jprogram);
+			} else {
+				// If trivial casts are pruned then one can use smaller runtime
+				// castmaps.
+				ComputeCastabilityInformation.exec(jprogram,
+						!shouldOptimize() /* recordTrivialCasts */);
+			}
+			ImplementCastsAndTypeChecks.exec(jprogram,
+					shouldOptimize() /* pruneTrivialCasts */);
+			ImplementJsVarargs.exec(jprogram);
+			ArrayNormalizer.exec(jprogram);
+			EqualityNormalizer.exec(jprogram);
+			TypeMapper<?> typeMapper = getTypeMapper();
+			ResolveRuntimeTypeReferences.exec(jprogram, typeMapper,
+					getTypeOrder());
+			return typeMapper;
+		} finally {
+			event.end();
+		}
+	}
+
+	/**
 	 * Open an emitted artifact and gunzip its contents.
 	 */
 	private InputStream openWithGunzip(EmittedArtifact artifact)
@@ -1561,51 +1606,6 @@ public final class JavaToJavaScriptCompiler {
 		}
 		unifyAst.exec();
 		event.end();
-	}
-
-	/**
-	 * Transform patterns that can't be represented in JS (such as multiple
-	 * catch blocks) into equivalent but compatible patterns and take JVM
-	 * semantics (such as numeric casts) that are not explicit in the AST and
-	 * make them explicit.<br />
-	 *
-	 * These passes can not be reordering because of subtle interdependencies.
-	 */
-	protected TypeMapper<?> normalizeSemantics() {
-		Event event = SpeedTracerLogger
-				.start(CompilerEventType.JAVA_NORMALIZERS);
-		try {
-			Devirtualizer.exec(jprogram);
-			CatchBlockNormalizer.exec(jprogram);
-			PostOptimizationCompoundAssignmentNormalizer.exec(jprogram);
-			LongCastNormalizer.exec(jprogram);
-			LongEmulationNormalizer.exec(jprogram);
-			TypeCoercionNormalizer.exec(jprogram);
-			if (options.isIncrementalCompileEnabled()) {
-				// Per file compilation reuses type JS even as references (like
-				// casts) in other files
-				// change, which means all legal casts need to be allowed now
-				// before they are actually
-				// used later.
-				ComputeExhaustiveCastabilityInformation.exec(jprogram);
-			} else {
-				// If trivial casts are pruned then one can use smaller runtime
-				// castmaps.
-				ComputeCastabilityInformation.exec(jprogram,
-						!shouldOptimize() /* recordTrivialCasts */);
-			}
-			ImplementCastsAndTypeChecks.exec(jprogram,
-					shouldOptimize() /* pruneTrivialCasts */);
-			ImplementJsVarargs.exec(jprogram);
-			ArrayNormalizer.exec(jprogram);
-			EqualityNormalizer.exec(jprogram);
-			TypeMapper<?> typeMapper = getTypeMapper();
-			ResolveRuntimeTypeReferences.exec(jprogram, typeMapper,
-					getTypeOrder());
-			return typeMapper;
-		} finally {
-			event.end();
-		}
 	}
 
 	private static class PermutationResultImpl implements PermutationResult {

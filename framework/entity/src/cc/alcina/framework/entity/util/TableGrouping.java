@@ -20,46 +20,12 @@ public abstract class TableGrouping<T> {
 
 	private String prefix = "";
 
-	public List<ArrayList<String>> doConvert(List<T> objects) {
-		List list = objects.stream().map(r -> apply(r))
-				.collect(Collectors.toList());
-		doTotal(objects, list);
-		return list;
-	}
-
-	public void doTotal(List<T> objects, List list) {
-	}
-
 	public List<String> apply(T t) {
 		List<String> result = new ArrayList<>();
 		for (Mapping mapping : mappings) {
 			result.add(mapping.stringValue(t));
 		}
 		return result;
-	}
-
-	public String getPrefix() {
-		return this.prefix;
-	}
-
-	public List<String> headers() {
-		return mappings.stream().map(m -> prefix + (m.getName()))
-				.collect(Collectors.toList());
-	}
-
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
-	}
-
-	private int getHeaderIndex(String headerName) {
-		int idx = 0;
-		for (Mapping mapping : mappings) {
-			if (mapping.nameIs(headerName)) {
-				return idx;
-			}
-			idx++;
-		}
-		return -1;
 	}
 
 	protected Mapping define(String propertyPath) {
@@ -113,10 +79,44 @@ public abstract class TableGrouping<T> {
 		}
 	}
 
+	public List<ArrayList<String>> doConvert(List<T> objects) {
+		List list = objects.stream().map(r -> apply(r))
+				.collect(Collectors.toList());
+		doTotal(objects, list);
+		return list;
+	}
+
+	public void doTotal(List<T> objects, List list) {
+	}
+
 	protected void generateTotalRow(List list) {
 		List<String> totalRow = new ArrayList<>();
 		mappings.forEach(m -> totalRow.add(""));
 		list.add(totalRow);
+	}
+
+	private int getHeaderIndex(String headerName) {
+		int idx = 0;
+		for (Mapping mapping : mappings) {
+			if (mapping.nameIs(headerName)) {
+				return idx;
+			}
+			idx++;
+		}
+		return -1;
+	}
+
+	public String getPrefix() {
+		return this.prefix;
+	}
+
+	public List<String> headers() {
+		return mappings.stream().map(m -> prefix + (m.getName()))
+				.collect(Collectors.toList());
+	}
+
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
 	}
 
 	// protected void loadFromColumnMappings(

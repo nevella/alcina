@@ -27,7 +27,7 @@ package com.totsp.gwittir.client.ui;
 public interface HasDefaultBinding {
 	public void bind();
 
-	public void unbind();
-
 	public void set();
+
+	public void unbind();
 }

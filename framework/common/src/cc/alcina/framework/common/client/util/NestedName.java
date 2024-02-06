@@ -8,6 +8,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @Registration.Singleton
 public class NestedName {
+	private static NestedName get() {
+		return Registry.impl(NestedName.class);
+	}
+
 	public static String get(Class clazz) {
 		return get().getNestedSimpleName(clazz);
 	}
@@ -15,20 +19,6 @@ public class NestedName {
 	public static String get(Object object) {
 		return object == null ? "null"
 				: get().getNestedSimpleName(object.getClass());
-	}
-
-	private static NestedName get() {
-		return Registry.impl(NestedName.class);
-	}
-
-	public String getNestedSimpleName(Class clazz) {
-		String name = clazz.getName();
-		int idx = name.lastIndexOf(".");
-		if (idx == -1) {
-			return name;
-		} else {
-			return name.substring(idx + 1).replace("$", ".");
-		}
 	}
 
 	public static String packageSegments(Object object, int segmentCount) {
@@ -39,5 +29,15 @@ public class NestedName {
 		return segments.stream()
 				.skip(Math.max(0, segments.size() - segmentCount))
 				.limit(segmentCount).collect(Collectors.joining("."));
+	}
+
+	public String getNestedSimpleName(Class clazz) {
+		String name = clazz.getName();
+		int idx = name.lastIndexOf(".");
+		if (idx == -1) {
+			return name;
+		} else {
+			return name.substring(idx + 1).replace("$", ".");
+		}
 	}
 }

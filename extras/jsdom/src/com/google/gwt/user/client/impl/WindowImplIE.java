@@ -55,36 +55,6 @@ public class WindowImplIE extends WindowImpl {
 											return (questionLoc > 0) ? href.substring(questionLoc) : "";
 											}-*/;
 
-	@Override
-	public void initWindowCloseHandler() {
-		initHandler(Resources.INSTANCE.initWindowCloseHandler().getText(),
-				new ScheduledCommand() {
-					public void execute() {
-						initWindowCloseHandlerImpl();
-					}
-				});
-	}
-
-	@Override
-	public void initWindowResizeHandler() {
-		initHandler(Resources.INSTANCE.initWindowResizeHandler().getText(),
-				new ScheduledCommand() {
-					public void execute() {
-						initWindowResizeHandlerImpl();
-					}
-				});
-	}
-
-	@Override
-	public void initWindowScrollHandler() {
-		initHandler(Resources.INSTANCE.initWindowScrollHandler().getText(),
-				new ScheduledCommand() {
-					public void execute() {
-						initWindowScrollHandlerImpl();
-					}
-				});
-	}
-
 	/**
 	 * IE6 does not allow direct access to event handlers on the parent window,
 	 * so we must embed a script in the parent window that will set the event
@@ -109,16 +79,46 @@ public class WindowImplIE extends WindowImpl {
 		}
 	}
 
+	@Override
+	public void initWindowCloseHandler() {
+		initHandler(Resources.INSTANCE.initWindowCloseHandler().getText(),
+				new ScheduledCommand() {
+					public void execute() {
+						initWindowCloseHandlerImpl();
+					}
+				});
+	}
+
 	private native void initWindowCloseHandlerImpl() /*-{
 														$wnd.__gwt_initWindowCloseHandler(
 														$entry(@com.google.gwt.user.client.Window::onClosing()),
 														$entry(@com.google.gwt.user.client.Window::onClosed()));
 														}-*/;
 
+	@Override
+	public void initWindowResizeHandler() {
+		initHandler(Resources.INSTANCE.initWindowResizeHandler().getText(),
+				new ScheduledCommand() {
+					public void execute() {
+						initWindowResizeHandlerImpl();
+					}
+				});
+	}
+
 	private native void initWindowResizeHandlerImpl() /*-{
 														$wnd
 														.__gwt_initWindowResizeHandler($entry(@com.google.gwt.user.client.Window::onResize()));
 														}-*/;
+
+	@Override
+	public void initWindowScrollHandler() {
+		initHandler(Resources.INSTANCE.initWindowScrollHandler().getText(),
+				new ScheduledCommand() {
+					public void execute() {
+						initWindowScrollHandlerImpl();
+					}
+				});
+	}
 
 	private native void initWindowScrollHandlerImpl() /*-{
 														$wnd

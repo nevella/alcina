@@ -177,6 +177,13 @@ public class SchedulerImpl extends Scheduler {
 	private boolean shouldBeRunning = false;
 
 	/**
+	 * there for testing
+	 */
+	Duration createDuration() {
+		return new Duration();
+	}
+
+	/**
 	 * Called by {@link Impl#entry(JavaScriptObject)}.
 	 */
 	public void flushEntryCommands() {
@@ -208,48 +215,26 @@ public class SchedulerImpl extends Scheduler {
 		}
 	}
 
-	@Override
-	public void scheduleDeferred(ScheduledCommand cmd) {
-		deferredCommands = push(deferredCommands, Task.create(cmd));
-		maybeSchedulePostEventPumpCommands();
+	/**
+	 * Called by Flusher.
+	 */
+	void flushPostEventPumpCommands() {
+		if (deferredCommands != null) {
+			List<Task> oldDeferred = deferredCommands;
+			deferredCommands = null;
+			/* We might not have any incremental commands queued. */
+			if (incrementalCommands == null) {
+				incrementalCommands = createQueue();
+			}
+			runScheduledTasks(oldDeferred, incrementalCommands);
+		}
+		if (incrementalCommands != null) {
+			incrementalCommands = runRepeatingTasks(incrementalCommands);
+		}
 	}
 
-	@Override
-	public void scheduleEntry(RepeatingCommand cmd) {
-		entryCommands = push(entryCommands, Task.create(cmd));
-	}
-
-	@Override
-	public void scheduleEntry(ScheduledCommand cmd) {
-		entryCommands = push(entryCommands, Task.create(cmd));
-	}
-
-	@Override
-	public void scheduleFinally(RepeatingCommand cmd) {
-		finallyCommands = push(finallyCommands, Task.create(cmd));
-	}
-
-	@Override
-	public void scheduleFinally(ScheduledCommand cmd) {
-		finallyCommands = push(finallyCommands, Task.create(cmd));
-	}
-
-	@Override
-	public void scheduleFixedDelay(RepeatingCommand cmd, int delayMs) {
-		scheduleFixedDelayImpl(cmd, delayMs);
-	}
-
-	@Override
-	public void scheduleFixedPeriod(RepeatingCommand cmd, int delayMs) {
-		scheduleFixedPeriodImpl(cmd, delayMs);
-	}
-
-	@Override
-	public void scheduleIncremental(RepeatingCommand cmd) {
-		// Push repeating commands onto the same initial queue for relative
-		// order
-		deferredCommands = push(deferredCommands, Task.create(cmd));
-		maybeSchedulePostEventPumpCommands();
+	boolean isWorkQueued() {
+		return deferredCommands != null || incrementalCommands != null;
 	}
 
 	private void maybeSchedulePostEventPumpCommands() {
@@ -317,33 +302,48 @@ public class SchedulerImpl extends Scheduler {
 		}
 	}
 
-	/**
-	 * there for testing
-	 */
-	Duration createDuration() {
-		return new Duration();
+	@Override
+	public void scheduleDeferred(ScheduledCommand cmd) {
+		deferredCommands = push(deferredCommands, Task.create(cmd));
+		maybeSchedulePostEventPumpCommands();
 	}
 
-	/**
-	 * Called by Flusher.
-	 */
-	void flushPostEventPumpCommands() {
-		if (deferredCommands != null) {
-			List<Task> oldDeferred = deferredCommands;
-			deferredCommands = null;
-			/* We might not have any incremental commands queued. */
-			if (incrementalCommands == null) {
-				incrementalCommands = createQueue();
-			}
-			runScheduledTasks(oldDeferred, incrementalCommands);
-		}
-		if (incrementalCommands != null) {
-			incrementalCommands = runRepeatingTasks(incrementalCommands);
-		}
+	@Override
+	public void scheduleEntry(RepeatingCommand cmd) {
+		entryCommands = push(entryCommands, Task.create(cmd));
 	}
 
-	boolean isWorkQueued() {
-		return deferredCommands != null || incrementalCommands != null;
+	@Override
+	public void scheduleEntry(ScheduledCommand cmd) {
+		entryCommands = push(entryCommands, Task.create(cmd));
+	}
+
+	@Override
+	public void scheduleFinally(RepeatingCommand cmd) {
+		finallyCommands = push(finallyCommands, Task.create(cmd));
+	}
+
+	@Override
+	public void scheduleFinally(ScheduledCommand cmd) {
+		finallyCommands = push(finallyCommands, Task.create(cmd));
+	}
+
+	@Override
+	public void scheduleFixedDelay(RepeatingCommand cmd, int delayMs) {
+		scheduleFixedDelayImpl(cmd, delayMs);
+	}
+
+	@Override
+	public void scheduleFixedPeriod(RepeatingCommand cmd, int delayMs) {
+		scheduleFixedPeriodImpl(cmd, delayMs);
+	}
+
+	@Override
+	public void scheduleIncremental(RepeatingCommand cmd) {
+		// Push repeating commands onto the same initial queue for relative
+		// order
+		deferredCommands = push(deferredCommands, Task.create(cmd));
+		maybeSchedulePostEventPumpCommands();
 	}
 
 	/**

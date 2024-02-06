@@ -88,11 +88,18 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	protected BindingsCache bindingsCache;
 
+	protected Ref<Consumer<Runnable>> dispatch = null;
+
+	protected Map<Class<? extends ContextService>, Optional<? extends ContextService>> services = AlcinaCollections
+			.newUnqiueMap();
+
 	public ContextResolver() {
 		initCaches();
 	}
 
-	protected Ref<Consumer<Runnable>> dispatch = null;
+	public void appendToRoot(Rendered rendered) {
+		Registry.impl(RootModifier.class).appendToRoot(rendered);
+	}
 
 	public Ref<Consumer<Runnable>> dispatch() {
 		if (dispatch == null) {
@@ -105,10 +112,6 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		return dispatch;
 	}
 
-	public void appendToRoot(Rendered rendered) {
-		Registry.impl(RootModifier.class).appendToRoot(rendered);
-	}
-
 	public List<Binding> getBindings(Directed directed, Object model) {
 		return bindingsCache.getBindings(directed, model.getClass());
 	}
@@ -117,8 +120,40 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		return (T) this.rootModel;
 	}
 
+	public <T extends ContextService> Optional<T>
+			getService(Class<T> serviceType) {
+		Optional<T> service = (Optional<T>) services.get(serviceType);
+		if (service != null) {
+		} else {
+			if (parent != null) {
+				service = parent.getService(serviceType);
+			} else {
+				service = Optional.empty();
+			}
+			services.put(serviceType, service);
+		}
+		return service;
+	}
+
 	public <T> T impl(Class<T> clazz) {
 		return Registry.impl(clazz);
+	}
+
+	protected void init(ContextResolver parent, DirectedLayout layout,
+			Object rootModel) {
+		this.parent = parent;
+		this.layout = layout;
+		this.rootModel = rootModel;
+	}
+
+	protected void init(DirectedLayout.Node node) {
+		init(node.getResolver(), node.parent.resolver.layout,
+				this.rootModel = node.getModel());
+	}
+
+	protected void initCaches() {
+		annotationResolver = new DefaultAnnotationResolver();
+		bindingsCache = new BindingsCache();
 	}
 
 	/**
@@ -143,6 +178,10 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	@Override
 	public void onBeforeRender(BeforeRender event) {
 		// generally, setup child bindings for complex structures
+	}
+
+	protected void register(ContextService service) {
+		services.put(service.registration(), Optional.of(service));
 	}
 
 	public void renderElement(DirectedLayout.Node layoutNode, String tagName) {
@@ -188,28 +227,6 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		Registry.impl(RootModifier.class).replaceRoot(rendered);
 	}
 
-	// FIXME - dirndl 1x2 - remove
-	public <T> T resolveRenderContextProperty(String key) {
-		return null;
-	}
-
-	protected void init(ContextResolver parent, DirectedLayout layout,
-			Object rootModel) {
-		this.parent = parent;
-		this.layout = layout;
-		this.rootModel = rootModel;
-	}
-
-	protected void init(DirectedLayout.Node node) {
-		init(node.getResolver(), node.parent.resolver.layout,
-				this.rootModel = node.getModel());
-	}
-
-	protected void initCaches() {
-		annotationResolver = new DefaultAnnotationResolver();
-		bindingsCache = new BindingsCache();
-	}
-
 	@Override
 	protected <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location) {
@@ -217,6 +234,17 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		// does not use merge strategies)
 		return annotationResolver.resolveAnnotations0(annotationClass, location,
 				this::resolveLocationClass, this);
+	}
+
+	/**
+	 * This method is sometimes simpler for controlling the annotations exposed
+	 * than {@link #resolveAnnotations0}, since it returns a property that will
+	 * be used to evaluate *all* annotations at a node. Implementations are only
+	 * reachable from {@link DirectedRenderer.GeneratesPropertyInputs} and
+	 * {@link BridgingValueRenderer}via the package/protected access route
+	 */
+	Property resolveDirectedProperty(Property property) {
+		return resolveDirectedProperty0(property);
 	}
 
 	protected Property resolveDirectedProperty0(Property property) {
@@ -261,99 +289,9 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		return model;
 	}
 
-	/**
-	 * This method is sometimes simpler for controlling the annotations exposed
-	 * than {@link #resolveAnnotations0}, since it returns a property that will
-	 * be used to evaluate *all* annotations at a node. Implementations are only
-	 * reachable from {@link DirectedRenderer.GeneratesPropertyInputs} and
-	 * {@link BridgingValueRenderer}via the package/protected access route
-	 */
-	Property resolveDirectedProperty(Property property) {
-		return resolveDirectedProperty0(property);
-	}
-
-	protected Map<Class<? extends ContextService>, Optional<? extends ContextService>> services = AlcinaCollections
-			.newUnqiueMap();
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target(ElementType.TYPE)
-	@Inherited
-	public @interface ServiceRegistration {
-		Class<? extends ContextService> value();
-	}
-
-	public interface ContextService<T extends ContextService> {
-		void register(ContextResolver resolver);
-
-		default Class<T> registration() {
-			return (Class<T>) Reflections.at(this)
-					.annotation(ServiceRegistration.class).value();
-		}
-
-		@Reflected
-		public static abstract class Base<T extends ContextService>
-				implements ContextService<T> {
-			ContextResolver resolver;
-
-			@Override
-			public void register(ContextResolver resolver) {
-				this.resolver = resolver;
-				resolver.register(this);
-			}
-
-			protected Optional<T> ancestorService() {
-				return resolver.parent == null ? Optional.empty()
-						: resolver.parent.getService(registration());
-			}
-		}
-	}
-
-	public <T extends ContextService> Optional<T>
-			getService(Class<T> serviceType) {
-		Optional<T> service = (Optional<T>) services.get(serviceType);
-		if (service != null) {
-		} else {
-			if (parent != null) {
-				service = parent.getService(serviceType);
-			} else {
-				service = Optional.empty();
-			}
-			services.put(serviceType, service);
-		}
-		return service;
-	}
-
-	protected void register(ContextService service) {
-		services.put(service.registration(), Optional.of(service));
-	}
-
-	/**
-	 * Used for getting the default app top-level resolver
-	 *
-	 *
-	 *
-	 */
-	@Registration.Singleton
-	public static class Default {
-		public static ContextResolver.Default get() {
-			return Registry.impl(ContextResolver.Default.class);
-		}
-
-		private Class<? extends ContextResolver> defaultResolver = ContextResolver.class;
-
-		public ContextResolver createResolver() {
-			return Reflections.newInstance(defaultResolver);
-		}
-
-		public Class<? extends ContextResolver> getDefaultResolver() {
-			return this.defaultResolver;
-		}
-
-		public void setDefaultResolver(
-				Class<? extends ContextResolver> defaultResolver) {
-			this.defaultResolver = defaultResolver;
-		}
+	// FIXME - dirndl 1x2 - remove
+	public <T> T resolveRenderContextProperty(String key) {
+		return null;
 	}
 
 	class BindingsCache {
@@ -411,5 +349,67 @@ public class ContextResolver extends AnnotationLocation.Resolver
 				return Objects.hash(clazz, directed);
 			}
 		}
+	}
+
+	public interface ContextService<T extends ContextService> {
+		void register(ContextResolver resolver);
+
+		default Class<T> registration() {
+			return (Class<T>) Reflections.at(this)
+					.annotation(ServiceRegistration.class).value();
+		}
+
+		@Reflected
+		public static abstract class Base<T extends ContextService>
+				implements ContextService<T> {
+			ContextResolver resolver;
+
+			protected Optional<T> ancestorService() {
+				return resolver.parent == null ? Optional.empty()
+						: resolver.parent.getService(registration());
+			}
+
+			@Override
+			public void register(ContextResolver resolver) {
+				this.resolver = resolver;
+				resolver.register(this);
+			}
+		}
+	}
+
+	/**
+	 * Used for getting the default app top-level resolver
+	 *
+	 *
+	 *
+	 */
+	@Registration.Singleton
+	public static class Default {
+		public static ContextResolver.Default get() {
+			return Registry.impl(ContextResolver.Default.class);
+		}
+
+		private Class<? extends ContextResolver> defaultResolver = ContextResolver.class;
+
+		public ContextResolver createResolver() {
+			return Reflections.newInstance(defaultResolver);
+		}
+
+		public Class<? extends ContextResolver> getDefaultResolver() {
+			return this.defaultResolver;
+		}
+
+		public void setDefaultResolver(
+				Class<? extends ContextResolver> defaultResolver) {
+			this.defaultResolver = defaultResolver;
+		}
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.TYPE)
+	@Inherited
+	public @interface ServiceRegistration {
+		Class<? extends ContextService> value();
 	}
 }

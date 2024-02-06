@@ -35,6 +35,8 @@ public abstract class LoginArea extends DirectedActivity {
 		loginConsort.start();
 	}
 
+	protected abstract LoginConsort createLoginConsort();
+
 	@Directed
 	public Object getContents() {
 		return this.contents;
@@ -46,6 +48,4 @@ public abstract class LoginArea extends DirectedActivity {
 		propertyChangeSupport().firePropertyChange("contents", old_contents,
 				contents);
 	}
-
-	protected abstract LoginConsort createLoginConsort();
 }

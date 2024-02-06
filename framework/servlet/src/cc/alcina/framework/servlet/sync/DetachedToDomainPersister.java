@@ -20,15 +20,37 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 
 public class DetachedToDomainPersister<T extends Entity>
 		implements DeltaItemPersister<T> {
+	protected Map<Entity, Entity> detachedToPersisted;
+
+	private List<ReparentInstruction> reparentInstructions = new ArrayList<>();
+
 	public DetachedToDomainPersister() {
 		detachedToPersisted = new LinkedHashMap<>();
+	}
+
+	protected <V> void addReparentInstruction(Function<T, V> supplier,
+			BiConsumer<T, V> reparentFunction, BiConsumer<T, V> putter) {
+		reparentInstructions.add(
+				new ReparentInstruction(supplier, reparentFunction, putter));
+	}
+
+	protected boolean detachedToDomainHasDelta(T object) {
+		return detachedToDomainHasDelta(object, null);
+	}
+
+	protected boolean detachedToDomainHasDelta(T object,
+			List<String> ignorePropertyNames) {
+		int preCount = TransformManager.get().getTransforms().size();
+		reparentInstructions.forEach(i -> i.prepare(object));
+		T attached = (T) Domain.detachedToDomain(object, ignorePropertyNames);
+		detachedToPersisted.put(object, attached);
+		reparentInstructions.forEach(i -> i.withAttached(attached));
+		return TransformManager.get().getTransforms().size() != preCount;
 	}
 
 	public void mergePersisted(DetachedToDomainPersister other) {
 		detachedToPersisted.putAll(other.detachedToPersisted);
 	}
-
-	protected Map<Entity, Entity> detachedToPersisted;
 
 	@Override
 	public FlatDeltaPersisterResultType performSyncAction(SyncAction syncAction,
@@ -53,14 +75,6 @@ public class DetachedToDomainPersister<T extends Entity>
 		default:
 			throw new UnsupportedOperationException();
 		}
-	}
-
-	private List<ReparentInstruction> reparentInstructions = new ArrayList<>();
-
-	protected <V> void addReparentInstruction(Function<T, V> supplier,
-			BiConsumer<T, V> reparentFunction, BiConsumer<T, V> putter) {
-		reparentInstructions.add(
-				new ReparentInstruction(supplier, reparentFunction, putter));
 	}
 
 	public class ReparentInstruction<V> {
@@ -110,19 +124,5 @@ public class DetachedToDomainPersister<T extends Entity>
 				detachedToPersisted.put(adb, toDomain);
 			});
 		}
-	}
-
-	protected boolean detachedToDomainHasDelta(T object) {
-		return detachedToDomainHasDelta(object, null);
-	}
-
-	protected boolean detachedToDomainHasDelta(T object,
-			List<String> ignorePropertyNames) {
-		int preCount = TransformManager.get().getTransforms().size();
-		reparentInstructions.forEach(i -> i.prepare(object));
-		T attached = (T) Domain.detachedToDomain(object, ignorePropertyNames);
-		detachedToPersisted.put(object, attached);
-		reparentInstructions.forEach(i -> i.withAttached(attached));
-		return TransformManager.get().getTransforms().size() != preCount;
 	}
 }

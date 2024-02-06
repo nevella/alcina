@@ -57,26 +57,6 @@ public class TaskReportDevMetrics extends PerformerTask {
 		return this.withMissed;
 	}
 
-	public void setFrom(Date from) {
-		this.from = from;
-	}
-
-	public void setKeyedStatClassName(String keyedStatClassName) {
-		this.keyedStatClassName = keyedStatClassName;
-	}
-
-	public void setMostRecent(boolean mostRecent) {
-		this.mostRecent = mostRecent;
-	}
-
-	public void setTo(Date to) {
-		this.to = to;
-	}
-
-	public void setWithMissed(boolean withMissed) {
-		this.withMissed = withMissed;
-	}
-
 	@Override
 	public void run() throws Exception  {
 		DomDocument doc = DomDocument.basicHtmlDoc();
@@ -133,6 +113,26 @@ public class TaskReportDevMetrics extends PerformerTask {
 		});
 		JobContext.get().getJob().setLargeResult(doc.prettyToString());
 		logger.info("Log output to job.largeResult");
+	}
+
+	public void setFrom(Date from) {
+		this.from = from;
+	}
+
+	public void setKeyedStatClassName(String keyedStatClassName) {
+		this.keyedStatClassName = keyedStatClassName;
+	}
+
+	public void setMostRecent(boolean mostRecent) {
+		this.mostRecent = mostRecent;
+	}
+
+	public void setTo(Date to) {
+		this.to = to;
+	}
+
+	public void setWithMissed(boolean withMissed) {
+		this.withMissed = withMissed;
 	}
 
 	@Registration(DevMetricLogSearcher.class)

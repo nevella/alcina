@@ -149,33 +149,6 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		return sb;
 	}
 
-	public String getDomainTransformEventMarker() {
-		return DOMAIN_TRANSFORM_EVENT_MARKER;
-	}
-
-	public int getOffset() {
-		return asyncParser == null ? 0 : asyncParser.getOffset();
-	}
-
-	public String handlesVersion() {
-		return VERSION;
-	}
-
-	public String serialize(List<DomainTransformEvent> events) {
-		StringBuffer sb2 = new StringBuffer();
-		StringBuffer sb1 = new StringBuffer();
-		int i = 0;
-		for (DomainTransformEvent dte : events) {
-			if (++i % 200 == 0) {
-				sb2.append(sb1.toString());
-				sb1 = new StringBuffer();
-			}
-			appendTo(dte, sb1);
-		}
-		sb2.append(sb1.toString());
-		return sb2.toString();
-	}
-
 	/*
 	 * Note - the way client handshake works, if this is called from a
 	 * "from-offline upload" (partialdtruploader)we won't have any classrefs -
@@ -227,5 +200,32 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			dte.setNewStringValue(null);
 		}
 		return dte;
+	}
+
+	public String getDomainTransformEventMarker() {
+		return DOMAIN_TRANSFORM_EVENT_MARKER;
+	}
+
+	public int getOffset() {
+		return asyncParser == null ? 0 : asyncParser.getOffset();
+	}
+
+	public String handlesVersion() {
+		return VERSION;
+	}
+
+	public String serialize(List<DomainTransformEvent> events) {
+		StringBuffer sb2 = new StringBuffer();
+		StringBuffer sb1 = new StringBuffer();
+		int i = 0;
+		for (DomainTransformEvent dte : events) {
+			if (++i % 200 == 0) {
+				sb2.append(sb1.toString());
+				sb1 = new StringBuffer();
+			}
+			appendTo(dte, sb1);
+		}
+		sb2.append(sb1.toString());
+		return sb2.toString();
 	}
 }

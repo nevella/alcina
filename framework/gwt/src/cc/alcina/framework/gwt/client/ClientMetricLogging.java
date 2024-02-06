@@ -95,6 +95,21 @@ public class ClientMetricLogging {
 		return this.muted;
 	}
 
+	private String keyWithParents(String key, boolean end) {
+		if (end) {
+			return keyToKeyWithParents.get(key);
+		}
+		String withParents = "";
+		for (String parentKey : metricStartTimes.keySet()) {
+			if (!terminated.contains(parentKey)) {
+				withParents = parentKey + "/";
+			}
+		}
+		withParents += key;
+		keyToKeyWithParents.put(key, withParents);
+		return withParents;
+	}
+
 	public void reset() {
 		terminated = new HashSet<String>();
 		metricStartTimes = new LinkedHashMap<String, Long>();
@@ -111,20 +126,5 @@ public class ClientMetricLogging {
 		key = keyWithParents(key, false);
 		metricStartTimes.put(key, System.currentTimeMillis());
 		terminated.remove(key);
-	}
-
-	private String keyWithParents(String key, boolean end) {
-		if (end) {
-			return keyToKeyWithParents.get(key);
-		}
-		String withParents = "";
-		for (String parentKey : metricStartTimes.keySet()) {
-			if (!terminated.contains(parentKey)) {
-				withParents = parentKey + "/";
-			}
-		}
-		withParents += key;
-		keyToKeyWithParents.put(key, withParents);
-		return withParents;
 	}
 }

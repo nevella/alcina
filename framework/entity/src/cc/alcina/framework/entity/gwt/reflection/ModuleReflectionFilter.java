@@ -59,6 +59,15 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 				&& moduleTypes.permit(type, ReflectionModule.UNKNOWN);
 	}
 
+	LegacyModuleAssignments
+			getLegacyModuleAssignments(Stream<JClassType> compilationTypes) {
+		LegacyModuleAssignments assignments = new LegacyModuleAssignments();
+		peer.getLegacyModuleTypeAssignments(compilationTypes).entrySet()
+				.forEach(e -> e.getValue()
+						.forEach(t -> assignments.addType(t, e.getKey())));
+		return assignments;
+	}
+
 	public void init(TreeLogger logger, GeneratorContext context,
 			String moduleName, boolean reflectUnknownInInitialModule)
 			throws Exception {
@@ -85,6 +94,15 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 		}
 		moduleTypes.ensureTypeList(moduleName);
 		moduleTypes.generateLookup();
+	}
+
+	private boolean isInitial() {
+		return moduleName.equals(ReflectionModule.INITIAL);
+	}
+
+	@Override
+	public boolean isVisibleType(JType type) {
+		return peer.isVisibleType(type);
 	}
 
 	@Override
@@ -124,23 +142,5 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 			}
 		}
 		moduleTypes.generateLookup();
-	}
-
-	private boolean isInitial() {
-		return moduleName.equals(ReflectionModule.INITIAL);
-	}
-
-	LegacyModuleAssignments
-			getLegacyModuleAssignments(Stream<JClassType> compilationTypes) {
-		LegacyModuleAssignments assignments = new LegacyModuleAssignments();
-		peer.getLegacyModuleTypeAssignments(compilationTypes).entrySet()
-				.forEach(e -> e.getValue()
-						.forEach(t -> assignments.addType(t, e.getKey())));
-		return assignments;
-	}
-
-	@Override
-	public boolean isVisibleType(JType type) {
-		return peer.isVisibleType(type);
 	}
 }

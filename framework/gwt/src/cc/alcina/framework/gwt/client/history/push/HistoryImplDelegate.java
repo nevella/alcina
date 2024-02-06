@@ -66,6 +66,16 @@ public class HistoryImplDelegate extends HistoryImpl {
 		return History.encodeHistoryToken(targetHistoryToken);
 	}
 
+	private void ensureImpl() {
+		if (impl == null) {
+			if (isHtml5()) {
+				impl = new HistoryImplPushState();
+			} else {
+				impl = new HistoryImpl();
+			}
+		}
+	}
+
 	@Override
 	public void fireHistoryChangedImpl(String token) {
 		impl.fireHistoryChangedImpl(token);
@@ -99,15 +109,5 @@ public class HistoryImplDelegate extends HistoryImpl {
 	@Override
 	public void setToken(String token) {
 		impl.setToken(token);
-	}
-
-	private void ensureImpl() {
-		if (impl == null) {
-			if (isHtml5()) {
-				impl = new HistoryImplPushState();
-			} else {
-				impl = new HistoryImpl();
-			}
-		}
 	}
 }

@@ -102,6 +102,10 @@ public class ExpandableLabel extends AbstractBoundWidget {
 		fp.setStyleName("alcina-expandableLabel");
 	}
 
+	private int getMaxLength() {
+		return maxLength;
+	}
+
 	public Renderer getRenderer() {
 		return this.renderer;
 	}
@@ -236,9 +240,5 @@ public class ExpandableLabel extends AbstractBoundWidget {
 			hideLink.addClickHandler(showHideListener);
 			showLink.addClickHandler(showHideListener);
 		}
-	}
-
-	private int getMaxLength() {
-		return maxLength;
 	}
 }

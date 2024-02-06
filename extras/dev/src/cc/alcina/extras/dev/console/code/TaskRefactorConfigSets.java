@@ -71,6 +71,17 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		appPropertyFileEntries.add(configurationFile);
 	}
 
+	private void checkConfigurationFilesValid() {
+		List<ConfigurationFile> nonNamespaced = classpathConfigurationFiles
+				.stream()
+				.filter(ConfigurationFile::provideContainsNonNamespaced)
+				.collect(Collectors.toList());
+		if (nonNamespaced.size() > 0) {
+			Ax.out(nonNamespaced);
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	public List<Configuration.ConfigurationFile> getAppPropertyFileEntries() {
 		return this.appPropertyFileEntries;
 	}
@@ -110,85 +121,6 @@ public class TaskRefactorConfigSets extends PerformerTask {
 
 	public boolean isRefresh() {
 		return this.refresh;
-	}
-
-	@Override
-	public void run() throws Exception {
-		locateConfigurationFiles();
-		if (justBundleTree) {
-			//
-		} else {
-			checkConfigurationFilesValid();
-			scanCodeRefs();
-		}
-		populateTree();
-		String csv = tree.asCsv();
-		Io.write().string(csv).toPath("/tmp/tree.csv");
-		if (justBundleTree) {
-			//
-		} else {
-			List<String> keys = tree.allKeys();
-			ThreeWaySetResult<String> split = CommonUtils.threeWaySplit(keys,
-					seenKeys);
-			Io.write()
-					.string(split.firstOnly.stream()
-							.collect(Collectors.joining("\n")))
-					.toPath("/tmp/not-seen.txt");
-		}
-	}
-
-	public void setAppPropertyFileEntries(
-			List<Configuration.ConfigurationFile> appPropertyFileEntries) {
-		this.appPropertyFileEntries = appPropertyFileEntries;
-	}
-
-	public void setClasspathConfigurationFileFilter(
-			String classpathConfigurationFileFilter) {
-		this.classpathConfigurationFileFilter = classpathConfigurationFileFilter;
-	}
-
-	public void setClasspathConfigurationFileIgnorePackageFilter(
-			String classpathConfigurationFileIgnorePackageFilter) {
-		this.classpathConfigurationFileIgnorePackageFilter = classpathConfigurationFileIgnorePackageFilter;
-	}
-
-	public void setClasspathEntries(List<String> classpathEntries) {
-		this.classpathEntries = classpathEntries;
-	}
-
-	public void setDirtyWriteLimit(int dirtyWriteLimit) {
-		this.dirtyWriteLimit = dirtyWriteLimit;
-	}
-
-	public void setJustBundleTree(boolean justBundleTree) {
-		this.justBundleTree = justBundleTree;
-	}
-
-	public void setNameResolver(NameResolver nameResolver) {
-		this.nameResolver = nameResolver;
-	}
-
-	public void setPreserveKeys(List<String> preserveKeys) {
-		this.preserveKeys = preserveKeys;
-	}
-
-	public void setRefresh(boolean refresh) {
-		this.refresh = refresh;
-	}
-
-	public void setRemoveKeys(List<String> removeKeys) {
-		this.removeKeys = removeKeys;
-	}
-
-	private void checkConfigurationFilesValid() {
-		List<ConfigurationFile> nonNamespaced = classpathConfigurationFiles
-				.stream()
-				.filter(ConfigurationFile::provideContainsNonNamespaced)
-				.collect(Collectors.toList());
-		if (nonNamespaced.size() > 0) {
-			Ax.out(nonNamespaced);
-			throw new UnsupportedOperationException();
-		}
 	}
 
 	/*
@@ -237,6 +169,31 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		tree.removeKeys(trulyRemove);
 	}
 
+	@Override
+	public void run() throws Exception {
+		locateConfigurationFiles();
+		if (justBundleTree) {
+			//
+		} else {
+			checkConfigurationFilesValid();
+			scanCodeRefs();
+		}
+		populateTree();
+		String csv = tree.asCsv();
+		Io.write().string(csv).toPath("/tmp/tree.csv");
+		if (justBundleTree) {
+			//
+		} else {
+			List<String> keys = tree.allKeys();
+			ThreeWaySetResult<String> split = CommonUtils.threeWaySplit(keys,
+					seenKeys);
+			Io.write()
+					.string(split.firstOnly.stream()
+							.collect(Collectors.joining("\n")))
+					.toPath("/tmp/not-seen.txt");
+		}
+	}
+
 	private void scanCodeRefs() throws Exception {
 		SingletonCache<CompilationUnits> cache = FsObjectCache
 				.singletonCache(CompilationUnits.class, getClass())
@@ -258,9 +215,47 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		}
 	}
 
-	public interface NameResolver {
-		public UnitType resolve(List<UnitType> choices, Object source,
-				String name);
+	public void setAppPropertyFileEntries(
+			List<Configuration.ConfigurationFile> appPropertyFileEntries) {
+		this.appPropertyFileEntries = appPropertyFileEntries;
+	}
+
+	public void setClasspathConfigurationFileFilter(
+			String classpathConfigurationFileFilter) {
+		this.classpathConfigurationFileFilter = classpathConfigurationFileFilter;
+	}
+
+	public void setClasspathConfigurationFileIgnorePackageFilter(
+			String classpathConfigurationFileIgnorePackageFilter) {
+		this.classpathConfigurationFileIgnorePackageFilter = classpathConfigurationFileIgnorePackageFilter;
+	}
+
+	public void setClasspathEntries(List<String> classpathEntries) {
+		this.classpathEntries = classpathEntries;
+	}
+
+	public void setDirtyWriteLimit(int dirtyWriteLimit) {
+		this.dirtyWriteLimit = dirtyWriteLimit;
+	}
+
+	public void setJustBundleTree(boolean justBundleTree) {
+		this.justBundleTree = justBundleTree;
+	}
+
+	public void setNameResolver(NameResolver nameResolver) {
+		this.nameResolver = nameResolver;
+	}
+
+	public void setPreserveKeys(List<String> preserveKeys) {
+		this.preserveKeys = preserveKeys;
+	}
+
+	public void setRefresh(boolean refresh) {
+		this.refresh = refresh;
+	}
+
+	public void setRemoveKeys(List<String> removeKeys) {
+		this.removeKeys = removeKeys;
 	}
 
 	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {
@@ -289,6 +284,11 @@ public class TaskRefactorConfigSets extends PerformerTask {
 			}
 			super.visit(node, arg);
 		}
+	}
+
+	public interface NameResolver {
+		public UnitType resolve(List<UnitType> choices, Object source,
+				String name);
 	}
 
 	class SourceHandler {
@@ -450,6 +450,30 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				}
 			}
 
+			UnitType declarationByName(String name) {
+				List<UnitType> types = compUnits.declarationByName(name);
+				if (types == null) {
+					switch (name) {
+					case "RemoteServiceServlet":
+					case "AbstractHandler":
+					case "HttpServlet":
+					case "TokenSecured":
+					case "GenericServlet":
+					case "Application":
+						// no key parent(s)
+						break;
+					default:
+						throw new UnsupportedOperationException();
+					}
+					return null;
+				} else if (types.size() == 1) {
+					return types.get(0);
+				} else {
+					return nameResolver.resolve(types, SourceHandler.this,
+							name);
+				}
+			}
+
 			private List<String>
 					getSuperclassNames(UnitType classParamWrapper) {
 				UnitType cursor = classParamWrapper;
@@ -476,30 +500,6 @@ public class TaskRefactorConfigSets extends PerformerTask {
 					}
 				}
 				return result;
-			}
-
-			UnitType declarationByName(String name) {
-				List<UnitType> types = compUnits.declarationByName(name);
-				if (types == null) {
-					switch (name) {
-					case "RemoteServiceServlet":
-					case "AbstractHandler":
-					case "HttpServlet":
-					case "TokenSecured":
-					case "GenericServlet":
-					case "Application":
-						// no key parent(s)
-						break;
-					default:
-						throw new UnsupportedOperationException();
-					}
-					return null;
-				} else if (types.size() == 1) {
-					return types.get(0);
-				} else {
-					return nameResolver.resolve(types, SourceHandler.this,
-							name);
-				}
 			}
 
 			void removeExplicitClassRef() {

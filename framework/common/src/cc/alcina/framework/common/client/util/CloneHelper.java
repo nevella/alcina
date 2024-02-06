@@ -140,17 +140,6 @@ public class CloneHelper {
 		return c;
 	}
 
-	public <T> T shallowishBeanClone(T o) {
-		try {
-			T ret = newInstance(o);
-			copyBeanProperties(o, ret, null);
-			return ret;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(
-					"Unable to clone: " + o.getClass(), e);
-		}
-	}
-
 	private Object deepObjectClone(Object o) throws Exception {
 		if (o instanceof Date) {
 			return ((Date) o).clone();
@@ -177,6 +166,17 @@ public class CloneHelper {
 	protected <T> T newInstance(T o) {
 		Class<? extends Object> clazz = o.getClass();
 		return (T) Reflections.newInstance(clazz);
+	}
+
+	public <T> T shallowishBeanClone(T o) {
+		try {
+			T ret = newInstance(o);
+			copyBeanProperties(o, ret, null);
+			return ret;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(
+					"Unable to clone: " + o.getClass(), e);
+		}
 	}
 
 	protected Object shallowishObjectClone(Object o) {

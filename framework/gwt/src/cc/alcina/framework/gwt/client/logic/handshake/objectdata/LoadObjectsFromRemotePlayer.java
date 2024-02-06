@@ -17,6 +17,8 @@ public abstract class LoadObjectsFromRemotePlayer extends
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOADED);
 	}
 
+	protected abstract void loadObjects(LoadObjectsRequest request);
+
 	@Override
 	public void onSuccess(LoadObjectsResponse result) {
 		HandshakeConsortModel.get().setLoadObjectsResponse(result);
@@ -29,6 +31,4 @@ public abstract class LoadObjectsFromRemotePlayer extends
 				.getLoadObjectsRequest();
 		loadObjects(request);
 	}
-
-	protected abstract void loadObjects(LoadObjectsRequest request);
 }

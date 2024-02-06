@@ -89,22 +89,6 @@ public class DomTokenStream implements Iterator<DomNode> {
 		}
 	}
 
-	public void skip(DomNode node) {
-		node.stream().map(DomNode::w3cNode).forEach(skip::add);
-	}
-
-	public void skipChildren() {
-		DomNode currentDomNode = doc.nodeFor(tw.getCurrentNode());
-		currentDomNode.descendants().map(DomNode::w3cNode)
-				.forEach(skip::add);
-	}
-
-	public void skipChildren(Predicate<DomNode> predicate) {
-		DomNode currentDomNode = doc.nodeFor(tw.getCurrentNode());
-		currentDomNode.descendants().filter(predicate).map(DomNode::w3cNode)
-				.forEach(skip::add);
-	}
-
 	private Node nextWithSkip() {
 		if (!rootIterated) {
 			Node currentNode = tw.getCurrentNode();
@@ -123,5 +107,21 @@ public class DomTokenStream implements Iterator<DomNode> {
 				return next;
 			}
 		}
+	}
+
+	public void skip(DomNode node) {
+		node.stream().map(DomNode::w3cNode).forEach(skip::add);
+	}
+
+	public void skipChildren() {
+		DomNode currentDomNode = doc.nodeFor(tw.getCurrentNode());
+		currentDomNode.descendants().map(DomNode::w3cNode)
+				.forEach(skip::add);
+	}
+
+	public void skipChildren(Predicate<DomNode> predicate) {
+		DomNode currentDomNode = doc.nodeFor(tw.getCurrentNode());
+		currentDomNode.descendants().filter(predicate).map(DomNode::w3cNode)
+				.forEach(skip::add);
 	}
 }

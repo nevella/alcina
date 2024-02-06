@@ -216,12 +216,6 @@ public class Domain {
 		public <V extends Entity> void async(Class<V> clazz, long objectId,
 				boolean create, Consumer<V> resultConsumer);
 
-		public <V extends Entity> V find(Class clazz, long id);
-
-		public <V extends Entity> V find(V v);
-
-		public <V extends Entity> Stream<V> stream(Class<V> clazz);
-
 		default <V extends Entity> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
 			Property property = Reflections.at(clazz).property(propertyName);
@@ -236,9 +230,13 @@ public class Domain {
 
 		<V extends Entity> V detachedVersion(V v);
 
+		public <V extends Entity> V find(Class clazz, long id);
+
 		default <V extends Entity> V find(EntityLocator locator) {
 			return find(locator.clazz, locator.id);
 		}
+
+		public <V extends Entity> V find(V v);
 
 		<V extends Entity> boolean isDomainVersion(V v);
 
@@ -266,6 +264,8 @@ public class Domain {
 		default <V extends Entity> int size(Class<V> clazz) {
 			return (int) stream(clazz).count();
 		}
+
+		public <V extends Entity> Stream<V> stream(Class<V> clazz);
 
 		default boolean wasRemoved(Entity entity) {
 			return false;

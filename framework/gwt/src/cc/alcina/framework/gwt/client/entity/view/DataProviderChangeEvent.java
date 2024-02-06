@@ -41,17 +41,17 @@ public class DataProviderChangeEvent<T>
 	}
 
 	@Override
+	protected void dispatch(Handler handler) {
+		handler.onDataChange(this);
+	}
+
+	@Override
 	public Type<Handler> getAssociatedType() {
 		return TYPE;
 	}
 
 	public List<T> getValues() {
 		return this.values;
-	}
-
-	@Override
-	protected void dispatch(Handler handler) {
-		handler.onDataChange(this);
 	}
 
 	public interface Handler extends EventHandler {

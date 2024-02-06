@@ -41,16 +41,6 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
-	public void inputsFromLayer(Layer inputsFromLayer) {
-		this.inputsFromLayer = inputsFromLayer;
-	}
-
-	public void inputsFromPreviousSiblingLayer() {
-		Layer<?> fromLayer = parent.children.get(parent.children.size() - 2);
-		this.inputsFromLayer = fromLayer;
-		fromLayer.inputsToLayer = this;
-	}
-
 	public Layer() {
 		List<Class> bounds = Reflections.at(getClass())
 				.getGenericBounds().bounds;
@@ -66,14 +56,6 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 		if (child instanceof InputsFromPreviousSibling) {
 			child.inputsFromPreviousSiblingLayer();
 		}
-	}
-
-	/**
-	 * Normally child layers are populated during the constructor, this allows a
-	 * builder pattern to specify attributes of the layer before child
-	 * population
-	 */
-	public void ensureChildren() {
 	}
 
 	public Collection<S> computeInputs() {
@@ -93,6 +75,14 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 			depth++;
 		}
 		return depth;
+	}
+
+	/**
+	 * Normally child layers are populated during the constructor, this allows a
+	 * builder pattern to specify attributes of the layer before child
+	 * population
+	 */
+	public void ensureChildren() {
 	}
 
 	public Layer findHandlingLayer(Class<? extends Selection> clazz) {
@@ -120,8 +110,38 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 		return this.children;
 	}
 
+	public String getFilterName() {
+		return getClass().getName();
+	}
+
+	public String getName() {
+		return NestedName.get(this);
+	}
+
 	public <S1 extends Selection> Stream<S1> getSelections(Class<S1> clazz) {
 		return state.traversalState.getSelections(clazz).stream();
+	}
+
+	public boolean hasReceivingLayer() {
+		return inputsToLayer != null;
+	}
+
+	public void inputsFromLayer(Layer inputsFromLayer) {
+		this.inputsFromLayer = inputsFromLayer;
+	}
+
+	public void inputsFromPreviousSiblingLayer() {
+		Layer<?> fromLayer = parent.children.get(parent.children.size() - 2);
+		this.inputsFromLayer = fromLayer;
+		fromLayer.inputsToLayer = this;
+	}
+
+	protected boolean isComplete() {
+		return state.complete;
+	}
+
+	protected boolean isSinglePass() {
+		return true;
 	}
 
 	@Override
@@ -142,8 +162,35 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 						.collect(Collectors.joining("."));
 	}
 
+	protected void onAfterInputsProcessed() {
+	}
+
+	/**
+	 * Called immediately after input traversal - subclasses should use this to
+	 * flush any state which might emit a final selection, then call
+	 * super.onAfterIteration()
+	 */
+	protected void onAfterIteration() {
+		state.complete = isSinglePass() || state.iterationSubmitted == 0;
+		state.iterationCount++;
+	}
+
+	protected void onAfterProcess(Selection selection) {
+	}
+
+	protected void onAfterTraversal() {
+	}
+
+	protected void onBeforeIteration() {
+		state.iterationSubmitted = 0;
+	}
+
 	public void onBeforeTraversal(SelectionTraversal.State traversalState) {
 		state = new State(traversalState);
+	}
+
+	void onSubmit(Selection selection) {
+		state.iterationSubmitted++;
 	}
 
 	public void process(S selection) throws Exception {
@@ -159,6 +206,18 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 		return cursor;
 	}
 
+	public void select(Selection selection) {
+		state.select(selection);
+	}
+
+	protected <T extends Selection> T selection(Class<T> clazz) {
+		return selections(clazz).iterator().next();
+	}
+
+	protected <T extends Selection> List<T> selections(Class<T> clazz) {
+		return state.traversalState.selections.get(clazz, false);
+	}
+
 	/*
 	 * Ensure a given input is only processed once
 	 */
@@ -168,6 +227,10 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 			onSubmit(selection);
 		}
 		return submitted;
+	}
+
+	protected boolean testFilter(S selection) {
+		return true;
 	}
 
 	public String toDebugString() {
@@ -184,54 +247,6 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	public void withParent(Layer parent) {
 		parent.children.add(this);
 		this.parent = parent;
-	}
-
-	protected boolean isComplete() {
-		return state.complete;
-	}
-
-	protected boolean isSinglePass() {
-		return true;
-	}
-
-	protected void onAfterInputsProcessed() {
-	}
-
-	/**
-	 * Called immediately after input traversal - subclasses should use this to
-	 * flush any state which might emit a final selection, then call
-	 * super.onAfterIteration()
-	 */
-	protected void onAfterIteration() {
-		state.complete = isSinglePass() || state.iterationSubmitted == 0;
-		state.iterationCount++;
-	}
-
-	protected void onAfterTraversal() {
-	}
-
-	protected void onBeforeIteration() {
-		state.iterationSubmitted = 0;
-	}
-
-	public void select(Selection selection) {
-		state.select(selection);
-	}
-
-	protected <T extends Selection> T selection(Class<T> clazz) {
-		return selections(clazz).iterator().next();
-	}
-
-	protected <T extends Selection> List<T> selections(Class<T> clazz) {
-		return state.traversalState.selections.get(clazz, false);
-	}
-
-	protected boolean testFilter(S selection) {
-		return true;
-	}
-
-	void onSubmit(Selection selection) {
-		state.iterationSubmitted++;
 	}
 
 	/*
@@ -255,15 +270,12 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 		Set<String> emittedWarnings = new LinkedHashSet<>();
 
-		public void warnOnce(String template, Object... args) {
-			String message = Ax.format(template, args);
-			if (emittedWarnings.add(message)) {
-				Ax.err(message);
-			}
-		}
-
 		public State(SelectionTraversal.State traversalState) {
 			this.traversalState = traversalState;
+		}
+
+		public <T> T context(Class<T> clazz) {
+			return traversalState.context(clazz);
 		}
 
 		public SelectionTraversal getTraversal() {
@@ -274,23 +286,11 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 			traversalState.select(selection);
 		}
 
-		public <T> T context(Class<T> clazz) {
-			return traversalState.context(clazz);
+		public void warnOnce(String template, Object... args) {
+			String message = Ax.format(template, args);
+			if (emittedWarnings.add(message)) {
+				Ax.err(message);
+			}
 		}
-	}
-
-	public String getName() {
-		return NestedName.get(this);
-	}
-
-	public boolean hasReceivingLayer() {
-		return inputsToLayer != null;
-	}
-
-	public String getFilterName() {
-		return getClass().getName();
-	}
-
-	protected void onAfterProcess(Selection selection) {
 	}
 }

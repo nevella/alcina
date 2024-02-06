@@ -98,8 +98,34 @@ public class CDATASection extends Node
 	}
 
 	@Override
+	protected CDATASectionJso jsoRemote() {
+		return (CDATASectionJso) remote();
+	}
+
+	@Override
+	protected boolean linkedToRemote() {
+		return remote != CDATASectionNull.INSTANCE;
+	}
+
+	@Override
+	protected CDATASectionLocal local() {
+		return local;
+	}
+
+	@Override
 	public Node node() {
 		return this;
+	}
+
+	@Override
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
+		Preconditions.checkState(wasSynced() == resolved);
+		this.remote = (ClientDomCDATASection) remote;
+	}
+
+	@Override
+	protected ClientDomCDATASection remote() {
+		return remote;
 	}
 
 	@Override
@@ -114,6 +140,11 @@ public class CDATASection extends Node
 			throws DOMException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	protected void resetRemote0() {
+		this.remote = CDATASectionNull.INSTANCE;
 	}
 
 	@Override
@@ -136,37 +167,6 @@ public class CDATASection extends Node
 	@Override
 	public String toString() {
 		return Ax.format("#TEXT[%s]", local().getData());
-	}
-
-	@Override
-	protected boolean linkedToRemote() {
-		return remote != CDATASectionNull.INSTANCE;
-	}
-
-	@Override
-	protected CDATASectionLocal local() {
-		return local;
-	}
-
-	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasSynced() == resolved);
-		this.remote = (ClientDomCDATASection) remote;
-	}
-
-	@Override
-	protected ClientDomCDATASection remote() {
-		return remote;
-	}
-
-	@Override
-	protected void resetRemote0() {
-		this.remote = CDATASectionNull.INSTANCE;
-	}
-
-	@Override
-	protected CDATASectionJso jsoRemote() {
-		return (CDATASectionJso) remote();
 	}
 
 	public class CDATASectionImplAccess extends Node.ImplAccess {

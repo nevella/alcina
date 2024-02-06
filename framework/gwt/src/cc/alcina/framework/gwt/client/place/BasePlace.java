@@ -91,6 +91,13 @@ public abstract class BasePlace extends Place
 				.removeAppPrefixAndLeadingSlashes(toTokenString());
 	}
 
+	/**
+	 * For copying resources which are constant when updating only parts of a
+	 * place (see EntityPlace)
+	 */
+	public void updateFrom(BasePlace outgoingPlace) {
+	}
+
 	@Registration.Singleton
 	public static class BasePlaceAbsoluteHrefSupplier {
 		public String getHref(BasePlace basePlace) {
@@ -112,12 +119,5 @@ public abstract class BasePlace extends Place
 
 	public interface PlaceNavigator {
 		void go(Place place);
-	}
-
-	/**
-	 * For copying resources which are constant when updating only parts of a
-	 * place (see EntityPlace)
-	 */
-	public void updateFrom(BasePlace outgoingPlace) {
 	}
 }

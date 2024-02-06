@@ -216,11 +216,19 @@ public abstract class DOMImplTrident extends DOMImpl {
 		releaseCaptureImpl(elem);
 	}
 
+	private native void releaseCaptureImpl(Element elem) /*-{
+															elem.releaseCapture();
+															}-*/;
+
 	@Override
 	public void setCapture(Element elem) {
 		maybeInitializeEventSystem();
 		setCaptureImpl(elem);
 	}
+
+	private native void setCaptureImpl(Element elem) /*-{
+														elem.setCapture();
+														}-*/;
 
 	@Override
 	public void sinkBitlessEvent(Element elem, String eventTypeName) {
@@ -232,14 +240,6 @@ public abstract class DOMImplTrident extends DOMImpl {
 		maybeInitializeEventSystem();
 		sinkEventsImpl(elem, bits);
 	}
-
-	private native void releaseCaptureImpl(Element elem) /*-{
-															elem.releaseCapture();
-															}-*/;
-
-	private native void setCaptureImpl(Element elem) /*-{
-														elem.setCapture();
-														}-*/;
 
 	private native void sinkEventsImpl(Element elem, int bits) /*-{
 																var chMask = (elem.__eventBits || 0) ^ bits;

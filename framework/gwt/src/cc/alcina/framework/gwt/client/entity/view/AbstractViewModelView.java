@@ -72,43 +72,6 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
 
 	private TopicListener<Void> modelChangedListener = v -> onModelChanged();
 
-	@Override
-	public VM getModel() {
-		return model;
-	}
-
-	public void handleRowClicked(int index) {
-		if (!isEditing()) {
-			if (model instanceof ViewModelWithDataProvider) {
-				ViewModelWithDataProvider castModel = (ViewModelWithDataProvider) model;
-				List allResults = castModel.dataProvider.getAllResults();
-				if (allResults.size() > index) {
-					VersionableEntity object = (VersionableEntity) allResults
-							.get(index);
-					AppController.get().doView(object);
-				}
-			}
-		}
-	}
-
-	public void onModelChanged() {
-	}
-
-	@Override
-	public void setModel(VM model) {
-		if (this.model != null) {
-			this.model.removePropertyChangeListener(this);
-			this.model.topicChanged().remove(modelChangedListener);
-		}
-		this.model = model;
-		this.model.addPropertyChangeListener(this);
-		this.model.topicChanged().add(modelChangedListener);
-	}
-
-	public void updateToolbar() {
-		throw new UnsupportedOperationException();
-	}
-
 	protected <C extends VersionableEntity> void asyncSelect(Class<C> clazz,
 			String id, AbstractCellTable<C> table) {
 		if (table == null || table.getSelectionModel() == null) {
@@ -157,12 +120,31 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
 		return builder;
 	}
 
+	@Override
+	public VM getModel() {
+		return model;
+	}
+
 	protected void handleDataProviderDisplay(PropertyChangeEvent evt,
 			HasData table) {
 		if (model instanceof ViewModelWithDataProvider) {
 			if ("place".equals(evt.getPropertyName())) {
 				ViewModelWithDataProvider castModel = (ViewModelWithDataProvider) model;
 				castModel.deltaDataProviderConnection(model.isActive(), table);
+			}
+		}
+	}
+
+	public void handleRowClicked(int index) {
+		if (!isEditing()) {
+			if (model instanceof ViewModelWithDataProvider) {
+				ViewModelWithDataProvider castModel = (ViewModelWithDataProvider) model;
+				List allResults = castModel.dataProvider.getAllResults();
+				if (allResults.size() > index) {
+					VersionableEntity object = (VersionableEntity) allResults
+							.get(index);
+					AppController.get().doView(object);
+				}
 			}
 		}
 	}
@@ -177,8 +159,22 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
 		return model != null && model.getAction() == EntityAction.EDIT;
 	}
 
+	public void onModelChanged() {
+	}
+
 	protected void refresh() {
 		Client.refreshCurrentPlace();
+	}
+
+	@Override
+	public void setModel(VM model) {
+		if (this.model != null) {
+			this.model.removePropertyChangeListener(this);
+			this.model.topicChanged().remove(modelChangedListener);
+		}
+		this.model = model;
+		this.model.addPropertyChangeListener(this);
+		this.model.topicChanged().add(modelChangedListener);
 	}
 
 	protected void showAdvancedActionMenu(ClickEvent c) {
@@ -206,5 +202,9 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
 		params.shiftX = -4;
 		RelativePopupPositioning.showPopup(params, popupPanel);
 		return popupPanel;
+	}
+
+	public void updateToolbar() {
+		throw new UnsupportedOperationException();
 	}
 }

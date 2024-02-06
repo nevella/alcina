@@ -159,6 +159,32 @@ public class ProgressBar extends Widget {
 	}
 
 	/**
+	 * Generate the text to display within the progress bar. Override this
+	 * function to change the default progress percent to a more informative
+	 * message, such as the number of kilobytes downloaded.
+	 * 
+	 * @param curProgress
+	 *            the current progress
+	 * @return the text to display in the progress bar
+	 */
+	protected String generateText(double curProgress) {
+		if (textFormatter != null) {
+			return textFormatter.getText(this, curProgress);
+		} else {
+			return (int) (100 * getPercent()) + "%";
+		}
+	}
+
+	/**
+	 * Get the bar element.
+	 * 
+	 * @return the bar element
+	 */
+	protected Element getBarElement() {
+		return barElement;
+	}
+
+	/**
 	 * Get the maximum progress.
 	 * 
 	 * @return the maximum progress
@@ -203,6 +229,15 @@ public class ProgressBar extends Widget {
 	}
 
 	/**
+	 * Get the text element.
+	 * 
+	 * @return the text element
+	 */
+	protected Element getTextElement() {
+		return textElement;
+	}
+
+	/**
 	 * Get the text formatter.
 	 * 
 	 * @return the text formatter
@@ -218,6 +253,17 @@ public class ProgressBar extends Widget {
 	 */
 	public boolean isTextVisible() {
 		return textVisible;
+	}
+
+	/**
+	 * This method is called immediately after a widget becomes attached to the
+	 * browser's document.
+	 */
+	@Override
+	protected void onLoad() {
+		// Reset the position attribute of the parent element
+		DOM.setStyleAttribute(getElement(), "position", "relative");
+		redraw();
 	}
 
 	/**
@@ -240,6 +286,10 @@ public class ProgressBar extends Widget {
 		}
 	}
 
+	@Override
+	protected void onUnload() {
+	}
+
 	/**
 	 * Redraw the progress bar when something changes the layout.
 	 */
@@ -250,6 +300,13 @@ public class ProgressBar extends Widget {
 					"clientHeight");
 			onResize(width, height);
 		}
+	}
+
+	/**
+	 * Reset the progress text based on the current min and max progress range.
+	 */
+	protected void resetProgress() {
+		setProgress(getProgress());
 	}
 
 	/**
@@ -330,63 +387,6 @@ public class ProgressBar extends Widget {
 		} else {
 			DOM.setStyleAttribute(textElement, "display", "none");
 		}
-	}
-
-	/**
-	 * Generate the text to display within the progress bar. Override this
-	 * function to change the default progress percent to a more informative
-	 * message, such as the number of kilobytes downloaded.
-	 * 
-	 * @param curProgress
-	 *            the current progress
-	 * @return the text to display in the progress bar
-	 */
-	protected String generateText(double curProgress) {
-		if (textFormatter != null) {
-			return textFormatter.getText(this, curProgress);
-		} else {
-			return (int) (100 * getPercent()) + "%";
-		}
-	}
-
-	/**
-	 * Get the bar element.
-	 * 
-	 * @return the bar element
-	 */
-	protected Element getBarElement() {
-		return barElement;
-	}
-
-	/**
-	 * Get the text element.
-	 * 
-	 * @return the text element
-	 */
-	protected Element getTextElement() {
-		return textElement;
-	}
-
-	/**
-	 * This method is called immediately after a widget becomes attached to the
-	 * browser's document.
-	 */
-	@Override
-	protected void onLoad() {
-		// Reset the position attribute of the parent element
-		DOM.setStyleAttribute(getElement(), "position", "relative");
-		redraw();
-	}
-
-	@Override
-	protected void onUnload() {
-	}
-
-	/**
-	 * Reset the progress text based on the current min and max progress range.
-	 */
-	protected void resetProgress() {
-		setProgress(getProgress());
 	}
 
 	/**

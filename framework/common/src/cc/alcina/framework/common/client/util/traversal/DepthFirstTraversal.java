@@ -94,6 +94,31 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 		return result;
 	}
 
+	private void prepareNext() {
+		next = current.next();
+	}
+
+	/*
+	 * Will only work with a structure which is not modified after init
+	 */
+	public void setNext(T t) {
+		current = null;
+		next = new TraversalNode(root);
+		iteratorConsumed = false;
+		for (;;) {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			if (next.value == t) {
+				if (current != null) {
+					current.modifiedSinceLastNext = false;
+				}
+				break;
+			}
+			next();
+		}
+	}
+
 	public Stream<T> stream() {
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
 				iterator(), Spliterator.ORDERED), false);
@@ -110,10 +135,6 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 			format.line(t);
 		}
 		return format.toString();
-	}
-
-	private void prepareNext() {
-		next = current.next();
 	}
 
 	// so named because often T is named Node
@@ -148,6 +169,20 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 			modifiedSinceLastNext = true;
 		}
 
+		int depth() {
+			TraversalNode cursor = this;
+			int depth = 0;
+			for (;;) {
+				if (cursor.parent == null) {
+					break;
+				} else {
+					cursor = cursor.parent;
+					depth++;
+				}
+			}
+			return depth;
+		}
+
 		public TraversalNode next() {
 			modifiedSinceLastNext = false;
 			// ensure children
@@ -174,41 +209,6 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 				return parent.next();
 			}
 			return null;
-		}
-
-		int depth() {
-			TraversalNode cursor = this;
-			int depth = 0;
-			for (;;) {
-				if (cursor.parent == null) {
-					break;
-				} else {
-					cursor = cursor.parent;
-					depth++;
-				}
-			}
-			return depth;
-		}
-	}
-
-	/*
-	 * Will only work with a structure which is not modified after init
-	 */
-	public void setNext(T t) {
-		current = null;
-		next = new TraversalNode(root);
-		iteratorConsumed = false;
-		for (;;) {
-			if (!hasNext()) {
-				throw new NoSuchElementException();
-			}
-			if (next.value == t) {
-				if (current != null) {
-					current.modifiedSinceLastNext = false;
-				}
-				break;
-			}
-			next();
 		}
 	}
 }

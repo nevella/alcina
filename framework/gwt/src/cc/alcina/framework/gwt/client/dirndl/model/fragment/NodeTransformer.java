@@ -134,16 +134,6 @@ public interface NodeTransformer {
 		}
 
 		@Override
-		public String toString() {
-			Directed directed = getDirected();
-			String classNameSuffix = Ax.isBlank(directed.className()) ? ""
-					: Ax.format(" class=\"%s\"", directed.className());
-			return Ax.format("Directed %s :: matches <%s%s>",
-					NestedName.get(fragmentNodeType), directed.tag(),
-					classNameSuffix);
-		}
-
-		@Override
 		public void apply(DirectedLayout.Node parentNode) {
 			Model model = (Model) Reflections.newInstance(fragmentNodeType);
 			setLayoutNode(
@@ -156,6 +146,16 @@ public interface NodeTransformer {
 			Directed directed = annotationLocation
 					.getAnnotation(Directed.class);
 			return directed;
+		}
+
+		@Override
+		public String toString() {
+			Directed directed = getDirected();
+			String classNameSuffix = Ax.isBlank(directed.className()) ? ""
+					: Ax.format(" class=\"%s\"", directed.className());
+			return Ax.format("Directed %s :: matches <%s%s>",
+					NestedName.get(fragmentNodeType), directed.tag(),
+					classNameSuffix);
 		}
 	}
 
@@ -177,6 +177,23 @@ public interface NodeTransformer {
 		@Override
 		public void refreshBindings() {
 			// NOOP (fragment root does not bind via mutations)
+		}
+	}
+
+	/**
+	 * Default, catchall comment transform (to a GenericDomModel)
+	 */
+	public static class GenericComment extends AbstractNodeTransformer {
+		@Override
+		public boolean appliesTo(DomNode node) {
+			return node.isComment();
+		}
+
+		@Override
+		public void apply(DirectedLayout.Node parentNode) {
+			FragmentNode.GenericComment model = new FragmentNode.GenericComment();
+			setLayoutNode(
+					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}
 	}
 
@@ -211,23 +228,6 @@ public interface NodeTransformer {
 		@Override
 		public void apply(DirectedLayout.Node parentNode) {
 			FragmentNode.GenericProcessingInstruction model = new FragmentNode.GenericProcessingInstruction();
-			setLayoutNode(
-					parentNode.insertFragmentChild(model, node.w3cNode()));
-		}
-	}
-
-	/**
-	 * Default, catchall comment transform (to a GenericDomModel)
-	 */
-	public static class GenericComment extends AbstractNodeTransformer {
-		@Override
-		public boolean appliesTo(DomNode node) {
-			return node.isComment();
-		}
-
-		@Override
-		public void apply(DirectedLayout.Node parentNode) {
-			FragmentNode.GenericComment model = new FragmentNode.GenericComment();
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}

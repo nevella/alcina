@@ -32,11 +32,9 @@ class DOMImplMozilla extends DOMImplStandard {
 																	}-*/;
 
 	@Override
-	public void sinkEvents(Element elem, int bits) {
-		super.sinkEvents(elem, bits);
-		if (elem.implAccess().linkedToRemote()) {
-			sinkEventsMozilla(elem.implAccess().jsoRemoteOrNull(), bits);
-		}
+	protected void initEventSystem() {
+		super.initEventSystem();
+		initSyntheticMouseUpEvents();
 	}
 
 	private native void initSyntheticMouseUpEvents() /*-{
@@ -60,9 +58,11 @@ class DOMImplMozilla extends DOMImplStandard {
 	}-*/;
 
 	@Override
-	protected void initEventSystem() {
-		super.initEventSystem();
-		initSyntheticMouseUpEvents();
+	public void sinkEvents(Element elem, int bits) {
+		super.sinkEvents(elem, bits);
+		if (elem.implAccess().linkedToRemote()) {
+			sinkEventsMozilla(elem.implAccess().jsoRemoteOrNull(), bits);
+		}
 	}
 
 	native void sinkEventsMozilla(ElementJso elem, int bits) /*-{

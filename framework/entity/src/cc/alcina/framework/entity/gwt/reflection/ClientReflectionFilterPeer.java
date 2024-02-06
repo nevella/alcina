@@ -51,14 +51,14 @@ public interface ClientReflectionFilterPeer {
 		}
 	}
 
+	default boolean isVisibleType(JType type) {
+		return ClassReflection.has((JClassType) type, Bean.class);
+	}
+
 	default boolean isWhitelistReflectable(JClassType t) {
 		return false;
 	}
 
 	public static class Default implements ClientReflectionFilterPeer {
-	}
-
-	default boolean isVisibleType(JType type) {
-		return ClassReflection.has((JClassType) type, Bean.class);
 	}
 }

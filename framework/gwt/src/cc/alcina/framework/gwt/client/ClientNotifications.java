@@ -31,6 +31,10 @@ public interface ClientNotifications extends LogWriter {
 
 	public abstract void confirm(String msg, final OkCallback callback);
 
+	default void enqueue(ClientNotification notification) {
+		throw new UnsupportedOperationException();
+	}
+
 	public abstract String getLogString();
 
 	public abstract ModalNotifier getModalNotifier(String message);
@@ -42,6 +46,10 @@ public interface ClientNotifications extends LogWriter {
 	@Override
 	public abstract void log(String s);
 
+	default void log(String s, Object... args) {
+		log(Ax.format(s, args));
+	}
+
 	public abstract void metricLogEnd(String key);
 
 	public abstract void metricLogStart(String key);
@@ -50,6 +58,24 @@ public interface ClientNotifications extends LogWriter {
 
 	public abstract void
 			setDialogAnimationEnabled(boolean dialogAnimationEnabled);
+
+	default Label showCodePopup(String popupText,
+			Optional<String> extraClassName) {
+		ScrollPanel sp = new ScrollPanel();
+		Label label = new InlineHTML(popupText);
+		sp.add(label);
+		sp.setStyleName("alcina-expandable-label-popup");
+		if (extraClassName.isPresent()) {
+			sp.addStyleName(extraClassName.get());
+		}
+		ClientNotifications.get().setDialogAnimationEnabled(false);
+		ClientNotifications.get().showMessage(sp);
+		ClientNotifications.get().setDialogAnimationEnabled(true);
+		return label;
+	}
+
+	default void showDevError(Throwable e) {
+	}
 
 	public abstract void showDialog(String captionHTML, Widget captionWidget,
 			String msg, MessageType messageType, List<Button> extraButtons);
@@ -71,36 +97,6 @@ public interface ClientNotifications extends LogWriter {
 	public abstract void showWarning(String msg);
 
 	public abstract void showWarning(String msg, String detail);
-
-	default void enqueue(ClientNotification notification) {
-		throw new UnsupportedOperationException();
-	}
-
-	default void log(String s, Object... args) {
-		log(Ax.format(s, args));
-	}
-
-	default Label showCodePopup(String popupText,
-			Optional<String> extraClassName) {
-		ScrollPanel sp = new ScrollPanel();
-		Label label = new InlineHTML(popupText);
-		sp.add(label);
-		sp.setStyleName("alcina-expandable-label-popup");
-		if (extraClassName.isPresent()) {
-			sp.addStyleName(extraClassName.get());
-		}
-		ClientNotifications.get().setDialogAnimationEnabled(false);
-		ClientNotifications.get().showMessage(sp);
-		ClientNotifications.get().setDialogAnimationEnabled(true);
-		return label;
-	}
-
-	default void showDevError(Throwable e) {
-	}
-
-	public enum Level {
-		LOG, INFO, WARNING, EXCEPTION
-	}
 
 	public static class ClientNotification {
 		private boolean showBeforeUiInitComplete;
@@ -185,5 +181,9 @@ public interface ClientNotifications extends LogWriter {
 			this.showBeforeUiInitComplete = showBeforeUiInitComplete;
 			return this;
 		}
+	}
+
+	public enum Level {
+		LOG, INFO, WARNING, EXCEPTION
 	}
 }

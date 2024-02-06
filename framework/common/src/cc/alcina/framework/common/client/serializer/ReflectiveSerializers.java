@@ -45,6 +45,92 @@ import elemental.json.JsonValue;
 
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializers {
+	static class ArrayIterator implements Iterator<GraphNode> {
+		int idx = -1;
+
+		boolean consumed = true;
+
+		GraphNode current;
+
+		GraphNode source;
+
+		Object deserializationState;
+
+		ArrayIterator(GraphNode source) {
+			this.source = source;
+		}
+
+		@Override
+		public boolean hasNext() {
+			if (consumed) {
+				if (idx < source.serialNode.length() - 1) {
+					idx++;
+					current = new GraphNode(source, null);
+					current.serialNode = source.serialNode.getChild(idx);
+					consumed = false;
+				} else {
+					current = null;
+				}
+			}
+			return current != null;
+		}
+
+		@Override
+		public GraphNode next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			consumed = true;
+			return current;
+		}
+	}
+
+	static class PropertyIterator implements Iterator<GraphNode> {
+		int idx = -1;
+
+		boolean consumed = true;
+
+		GraphNode current;
+
+		GraphNode source;
+
+		Object deserializationState;
+
+		String[] keys;
+
+		PropertyIterator(GraphNode source) {
+			this.source = source;
+			keys = source.serialNode.keys();
+		}
+
+		@Override
+		public boolean hasNext() {
+			if (consumed) {
+				if (idx < keys.length - 1) {
+					idx++;
+					String key = keys[idx];
+					PropertyNode propertyNode = source.typeNode
+							.propertyNode(key);
+					current = new GraphNode(source, propertyNode);
+					current.serialNode = source.serialNode.getChild(key);
+					consumed = false;
+				} else {
+					current = null;
+				}
+			}
+			return current != null;
+		}
+
+		@Override
+		public GraphNode next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			consumed = true;
+			return current;
+		}
+	}
+
 	public static class ReflectiveTypeSerializer_Entity
 			extends ReflectiveSerializer.ReflectiveTypeSerializer {
 		@Override
@@ -436,6 +522,12 @@ public class ReflectiveSerializers {
 	public static class ValueSerializerBasePlace
 			extends ReflectiveSerializer.ValueSerializer<BasePlace> {
 		@Override
+		protected BasePlace fromJson(Class clazz, JsonValue value) {
+			return (BasePlace) RegistryHistoryMapper.get()
+					.getPlaceOrThrow(value.asString());
+		}
+
+		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(BasePlace.class);
 		}
@@ -444,16 +536,15 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(BasePlace object) {
 			return Json.create(object.toTokenStringWithoutAppPrefix());
 		}
-
-		@Override
-		protected BasePlace fromJson(Class clazz, JsonValue value) {
-			return (BasePlace) RegistryHistoryMapper.get()
-					.getPlaceOrThrow(value.asString());
-		}
 	}
 
 	public static class ValueSerializerBoolean
 			extends ReflectiveSerializer.ValueSerializer<Boolean> {
+		@Override
+		protected Boolean fromJsonBoolean(JsonValue value) {
+			return value.asBoolean();
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Boolean.class, boolean.class);
@@ -463,15 +554,15 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(Boolean object) {
 			return Json.create(object);
 		}
-
-		@Override
-		protected Boolean fromJsonBoolean(JsonValue value) {
-			return value.asBoolean();
-		}
 	}
 
 	public static class ValueSerializerByte
 			extends ReflectiveSerializer.ValueSerializer<Byte> {
+		@Override
+		protected Byte fromJsonNumber(JsonValue value) {
+			return (byte) value.asNumber();
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Byte.class, byte.class);
@@ -481,15 +572,15 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(Byte object) {
 			return Json.create(object);
 		}
-
-		@Override
-		protected Byte fromJsonNumber(JsonValue value) {
-			return (byte) value.asNumber();
-		}
 	}
 
 	public static class ValueSerializerByteArray
 			extends ReflectiveSerializer.ValueSerializer<byte[]> {
+		@Override
+		protected byte[] fromJson(Class clazz, JsonValue value) {
+			return Base64.decode(value.asString());
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(byte[].class);
@@ -499,15 +590,16 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(byte[] object) {
 			return Json.create(Base64.encodeBytes(object));
 		}
-
-		@Override
-		protected byte[] fromJson(Class clazz, JsonValue value) {
-			return Base64.decode(value.asString());
-		}
 	}
 
 	public static class ValueSerializerClass
 			extends ReflectiveSerializer.ValueSerializer<Class> {
+		@Override
+		protected Class fromJson(Class<? extends Class> clazz,
+				JsonValue value) {
+			return Reflections.forName(value.asString());
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Class.class);
@@ -518,16 +610,18 @@ public class ReflectiveSerializers {
 			return Json.create(
 					ReflectiveSerializer.serializationClass(object).getName());
 		}
-
-		@Override
-		protected Class fromJson(Class<? extends Class> clazz,
-				JsonValue value) {
-			return Reflections.forName(value.asString());
-		}
 	}
 
 	public static class ValueSerializerDate
 			extends ReflectiveSerializer.ValueSerializer<Date> {
+		@Override
+		protected Date fromJson(Class clazz, JsonValue value) {
+			String asString = value.asString();
+			return asString.contains(".")
+					? new ValueSerializerTimestamp().fromJson(clazz, value)
+					: new Date(Long.parseLong(asString));
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Date.class);
@@ -537,18 +631,15 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(Date object) {
 			return Json.create(String.valueOf(object.getTime()));
 		}
-
-		@Override
-		protected Date fromJson(Class clazz, JsonValue value) {
-			String asString = value.asString();
-			return asString.contains(".")
-					? new ValueSerializerTimestamp().fromJson(clazz, value)
-					: new Date(Long.parseLong(asString));
-		}
 	}
 
 	public static class ValueSerializerDouble
 			extends ReflectiveSerializer.ValueSerializer<Double> {
+		@Override
+		protected Double fromJsonNumber(JsonValue value) {
+			return value.asNumber();
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Double.class, double.class);
@@ -558,15 +649,16 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(Double object) {
 			return Json.create(object);
 		}
-
-		@Override
-		protected Double fromJsonNumber(JsonValue value) {
-			return value.asNumber();
-		}
 	}
 
 	public static class ValueSerializerEnum
 			extends ReflectiveSerializer.ValueSerializer<Enum> {
+		@Override
+		protected Enum fromJsonString(Class<? extends Enum> clazz,
+				JsonValue value) {
+			return CommonUtils.getEnumValueOrNull(clazz, value.asString());
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Enum.class);
@@ -576,16 +668,16 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(Enum object) {
 			return Json.create(object.toString());
 		}
-
-		@Override
-		protected Enum fromJsonString(Class<? extends Enum> clazz,
-				JsonValue value) {
-			return CommonUtils.getEnumValueOrNull(clazz, value.asString());
-		}
 	}
 
 	public static class ValueSerializerExtensibleEnum
 			extends ReflectiveSerializer.ValueSerializer<ExtensibleEnum> {
+		@Override
+		protected ExtensibleEnum fromJsonString(
+				Class<? extends ExtensibleEnum> clazz, JsonValue value) {
+			return ExtensibleEnum.valueOf(clazz, value.asString());
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(ExtensibleEnum.class);
@@ -595,16 +687,15 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(ExtensibleEnum object) {
 			return Json.create(object.toString());
 		}
-
-		@Override
-		protected ExtensibleEnum fromJsonString(
-				Class<? extends ExtensibleEnum> clazz, JsonValue value) {
-			return ExtensibleEnum.valueOf(clazz, value.asString());
-		}
 	}
 
 	public static class ValueSerializerFloat
 			extends ReflectiveSerializer.ValueSerializer<Float> {
+		@Override
+		protected Float fromJsonNumber(JsonValue value) {
+			return (float) value.asNumber();
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Float.class, float.class);
@@ -614,15 +705,15 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(Float object) {
 			return Json.create(object);
 		}
-
-		@Override
-		protected Float fromJsonNumber(JsonValue value) {
-			return (float) value.asNumber();
-		}
 	}
 
 	public static class ValueSerializerInteger
 			extends ReflectiveSerializer.ValueSerializer<Integer> {
+		@Override
+		protected Integer fromJsonNumber(JsonValue value) {
+			return (int) value.asNumber();
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Integer.class, int.class);
@@ -632,15 +723,15 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(Integer object) {
 			return Json.create(object);
 		}
-
-		@Override
-		protected Integer fromJsonNumber(JsonValue value) {
-			return (int) value.asNumber();
-		}
 	}
 
 	public static class ValueSerializerLong
 			extends ReflectiveSerializer.ValueSerializer<Long> {
+		@Override
+		protected Long fromJson(Class clazz, JsonValue value) {
+			return Long.parseLong(value.asString());
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Long.class, long.class);
@@ -650,15 +741,15 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(Long object) {
 			return Json.create(object.toString());
 		}
-
-		@Override
-		protected Long fromJson(Class clazz, JsonValue value) {
-			return Long.parseLong(value.asString());
-		}
 	}
 
 	public static class ValueSerializerShort
 			extends ReflectiveSerializer.ValueSerializer<Short> {
+		@Override
+		protected Short fromJsonNumber(JsonValue value) {
+			return (short) value.asNumber();
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Short.class, short.class);
@@ -668,15 +759,16 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(Short object) {
 			return Json.create(object);
 		}
-
-		@Override
-		protected Short fromJsonNumber(JsonValue value) {
-			return (short) value.asNumber();
-		}
 	}
 
 	public static class ValueSerializerString
 			extends ReflectiveSerializer.ValueSerializer<String> {
+		@Override
+		protected String fromJson(Class<? extends String> clazz,
+				JsonValue value) {
+			return value.asString();
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(String.class);
@@ -686,16 +778,18 @@ public class ReflectiveSerializers {
 		public JsonValue toJson(String object) {
 			return Json.create(object);
 		}
-
-		@Override
-		protected String fromJson(Class<? extends String> clazz,
-				JsonValue value) {
-			return value.asString();
-		}
 	}
 
 	public static class ValueSerializerTimestamp
 			extends ReflectiveSerializer.ValueSerializer<Timestamp> {
+		@Override
+		protected Timestamp fromJson(Class clazz, JsonValue value) {
+			String[] parts = value.asString().split("\\.");
+			Timestamp timestamp = new Timestamp(Long.parseLong(parts[0]));
+			timestamp.setNanos(Integer.parseInt(parts[1]));
+			return timestamp;
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Timestamp.class);
@@ -706,18 +800,15 @@ public class ReflectiveSerializers {
 			return Json.create(
 					Ax.format("%s.%s", object.getTime(), object.getNanos()));
 		}
-
-		@Override
-		protected Timestamp fromJson(Class clazz, JsonValue value) {
-			String[] parts = value.asString().split("\\.");
-			Timestamp timestamp = new Timestamp(Long.parseLong(parts[0]));
-			timestamp.setNanos(Integer.parseInt(parts[1]));
-			return timestamp;
-		}
 	}
 
 	public static class ValueSerializerUUID
 			extends ReflectiveSerializer.ValueSerializer<UUID> {
+		@Override
+		protected UUID fromJson(Class<? extends UUID> clazz, JsonValue value) {
+			return UUID.fromString(value.asString());
+		}
+
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(UUID.class);
@@ -726,97 +817,6 @@ public class ReflectiveSerializers {
 		@Override
 		public JsonValue toJson(UUID object) {
 			return Json.create(object.toString());
-		}
-
-		@Override
-		protected UUID fromJson(Class<? extends UUID> clazz, JsonValue value) {
-			return UUID.fromString(value.asString());
-		}
-	}
-
-	static class ArrayIterator implements Iterator<GraphNode> {
-		int idx = -1;
-
-		boolean consumed = true;
-
-		GraphNode current;
-
-		GraphNode source;
-
-		Object deserializationState;
-
-		ArrayIterator(GraphNode source) {
-			this.source = source;
-		}
-
-		@Override
-		public boolean hasNext() {
-			if (consumed) {
-				if (idx < source.serialNode.length() - 1) {
-					idx++;
-					current = new GraphNode(source, null);
-					current.serialNode = source.serialNode.getChild(idx);
-					consumed = false;
-				} else {
-					current = null;
-				}
-			}
-			return current != null;
-		}
-
-		@Override
-		public GraphNode next() {
-			if (!hasNext()) {
-				throw new NoSuchElementException();
-			}
-			consumed = true;
-			return current;
-		}
-	}
-
-	static class PropertyIterator implements Iterator<GraphNode> {
-		int idx = -1;
-
-		boolean consumed = true;
-
-		GraphNode current;
-
-		GraphNode source;
-
-		Object deserializationState;
-
-		String[] keys;
-
-		PropertyIterator(GraphNode source) {
-			this.source = source;
-			keys = source.serialNode.keys();
-		}
-
-		@Override
-		public boolean hasNext() {
-			if (consumed) {
-				if (idx < keys.length - 1) {
-					idx++;
-					String key = keys[idx];
-					PropertyNode propertyNode = source.typeNode
-							.propertyNode(key);
-					current = new GraphNode(source, propertyNode);
-					current.serialNode = source.serialNode.getChild(key);
-					consumed = false;
-				} else {
-					current = null;
-				}
-			}
-			return current != null;
-		}
-
-		@Override
-		public GraphNode next() {
-			if (!hasNext()) {
-				throw new NoSuchElementException();
-			}
-			consumed = true;
-			return current;
 		}
 	}
 }

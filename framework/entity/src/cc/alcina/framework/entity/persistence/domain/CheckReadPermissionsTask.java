@@ -18,25 +18,6 @@ public class CheckReadPermissionsTask<T extends Entity>
 	}
 
 	@Override
-	public boolean test(T t) {
-		if (t == null) {
-			return false;
-		}
-		ObjectPermissions op = t.getClass()
-				.getAnnotation(ObjectPermissions.class);
-		return PermissionsManager.get().checkEffectivePropertyPermission(op,
-				null, t, true);
-	}
-
-	@Override
-	public Stream<T> wrap(Stream<T> stream) {
-		if (PermissionsManager.get().isRoot()) {
-			return stream;
-		}
-		return stream.filter(this);
-	}
-
-	@Override
 	protected boolean checkShouldLazyLoad(List<T> toLoad) {
 		return false;
 	}
@@ -58,5 +39,24 @@ public class CheckReadPermissionsTask<T extends Entity>
 	@Override
 	protected synchronized List requireLazyLoad(Collection objects) {
 		return (List) objects.stream().distinct().collect(Collectors.toList());
+	}
+
+	@Override
+	public boolean test(T t) {
+		if (t == null) {
+			return false;
+		}
+		ObjectPermissions op = t.getClass()
+				.getAnnotation(ObjectPermissions.class);
+		return PermissionsManager.get().checkEffectivePropertyPermission(op,
+				null, t, true);
+	}
+
+	@Override
+	public Stream<T> wrap(Stream<T> stream) {
+		if (PermissionsManager.get().isRoot()) {
+			return stream;
+		}
+		return stream.filter(this);
 	}
 }

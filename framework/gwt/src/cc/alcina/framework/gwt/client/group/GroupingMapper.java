@@ -62,6 +62,14 @@ public class GroupingMapper<V> {
 		return result;
 	}
 
+	private String applyNameRenderer(Function<Object, String> nameRenderer,
+			Comparable key) {
+		if (key == null) {
+			return "Total";
+		}
+		return nameRenderer.apply(key);
+	}
+
 	public List<V> filter(List<V> list, String rowKey, String colKey,
 			boolean debugTest) {
 		return list.stream().filter(v -> {
@@ -74,6 +82,43 @@ public class GroupingMapper<V> {
 					&& Objects.equals(columnClassifier.classify(v).toString(),
 							colKey);
 		}).collect(Collectors.toList());
+	}
+
+	void generateCells(GroupingMapperRow<V> row) {
+		List<V> values = row.tuple.values;
+		Multimap<Comparable, List<V>> byColumn = values.stream()
+				.collect(AlcinaCollectors.toKeyMultimap(columnClassifier));
+		List<GroupedTuple<V>> columns = byColumn.entrySet().stream()
+				.map(GroupedTuple::new).sorted().collect(Collectors.toList());
+		{
+			Cell cell = new Cell();
+			cell.setValue(applyNameRenderer(rowNameRenderer, row.tuple.key));
+			row.getCells().add(cell);
+		}
+		if (totalColumn) {
+			Cell cell = new Cell();
+			cell.rawValue = valueTotaller.apply(values);
+			if (cell.rawValue instanceof Number) {
+				cell.setNumericValue(((Number) cell.rawValue).doubleValue());
+			}
+			cell.setValue(valueRenderer.apply(cell.rawValue));
+			row.getCells().add(cell);
+		}
+		for (Comparable columnKey : columnKeys) {
+			Cell cell = new Cell();
+			cell.rawValue = valueTotaller
+					.apply(byColumn.getAndEnsure(columnKey));
+			if (cell.rawValue instanceof Number) {
+				cell.setNumericValue(((Number) cell.rawValue).doubleValue());
+			}
+			cell.setValue(valueRenderer.apply(cell.rawValue));
+			row.getCells().add(cell);
+			// TODO - place/href function
+		}
+		if (sectionClassifier != null) {
+			Comparable sectionKey = sectionClassifier.apply((V) row.in);
+			row.setSection(applyNameRenderer(sectionNameRenderer, sectionKey));
+		}
 	}
 
 	public GroupingMapper<V> withColumnClassifier(
@@ -116,75 +161,6 @@ public class GroupingMapper<V> {
 		return this;
 	}
 
-	private String applyNameRenderer(Function<Object, String> nameRenderer,
-			Comparable key) {
-		if (key == null) {
-			return "Total";
-		}
-		return nameRenderer.apply(key);
-	}
-
-	void generateCells(GroupingMapperRow<V> row) {
-		List<V> values = row.tuple.values;
-		Multimap<Comparable, List<V>> byColumn = values.stream()
-				.collect(AlcinaCollectors.toKeyMultimap(columnClassifier));
-		List<GroupedTuple<V>> columns = byColumn.entrySet().stream()
-				.map(GroupedTuple::new).sorted().collect(Collectors.toList());
-		{
-			Cell cell = new Cell();
-			cell.setValue(applyNameRenderer(rowNameRenderer, row.tuple.key));
-			row.getCells().add(cell);
-		}
-		if (totalColumn) {
-			Cell cell = new Cell();
-			cell.rawValue = valueTotaller.apply(values);
-			if (cell.rawValue instanceof Number) {
-				cell.setNumericValue(((Number) cell.rawValue).doubleValue());
-			}
-			cell.setValue(valueRenderer.apply(cell.rawValue));
-			row.getCells().add(cell);
-		}
-		for (Comparable columnKey : columnKeys) {
-			Cell cell = new Cell();
-			cell.rawValue = valueTotaller
-					.apply(byColumn.getAndEnsure(columnKey));
-			if (cell.rawValue instanceof Number) {
-				cell.setNumericValue(((Number) cell.rawValue).doubleValue());
-			}
-			cell.setValue(valueRenderer.apply(cell.rawValue));
-			row.getCells().add(cell);
-			// TODO - place/href function
-		}
-		if (sectionClassifier != null) {
-			Comparable sectionKey = sectionClassifier.apply((V) row.in);
-			row.setSection(applyNameRenderer(sectionNameRenderer, sectionKey));
-		}
-	}
-
-	public interface GroupingHrefSupplier {
-		public String href(GroupKey rowKey, GroupKey colKey);
-	}
-
-	public static class GroupingMapperResult {
-		public Stream<GroupingMapperRow> rowModels;
-
-		public ColumnMapper<GroupingMapperRow> columnMapper;
-
-		public Function<GroupingMapperRow, GroupKey> keyMapper = gmr -> gmr
-				.getKey();
-	}
-
-	public static class GroupingMapperRow<V> extends Row {
-		private transient GroupedTuple<V> tuple;
-
-		public GroupingMapperRow() {
-		}
-
-		public GroupingMapperRow(GroupedTuple<V> tuple) {
-			this.tuple = tuple;
-		}
-	}
-
 	static class GroupedTuple<V> implements Comparable {
 		static <V> GroupedTuple<V> totalRow(List<V> values) {
 			GroupedTuple<V> tuple = new GroupedTuple<>();
@@ -216,14 +192,6 @@ public class GroupingMapper<V> {
 	}
 
 	class GroupingColumnMapper extends ColumnMapper<GroupingMapperRow> {
-		private Function<GroupingMapperRow, String>
-				hrefFunction(GroupKey columnKey) {
-			if (hrefSupplier == null) {
-				return null;
-			}
-			return row -> hrefSupplier.href(row.getKey(), columnKey);
-		}
-
 		@Override
 		protected void defineMappings() {
 			int idx = 0;
@@ -253,9 +221,41 @@ public class GroupingMapper<V> {
 			}
 		}
 
+		private Function<GroupingMapperRow, String>
+				hrefFunction(GroupKey columnKey) {
+			if (hrefSupplier == null) {
+				return null;
+			}
+			return row -> hrefSupplier.href(row.getKey(), columnKey);
+		}
+
 		@Override
 		protected Class<GroupingMapperRow> mappedClass() {
 			return GroupingMapperRow.class;
+		}
+	}
+
+	public interface GroupingHrefSupplier {
+		public String href(GroupKey rowKey, GroupKey colKey);
+	}
+
+	public static class GroupingMapperResult {
+		public Stream<GroupingMapperRow> rowModels;
+
+		public ColumnMapper<GroupingMapperRow> columnMapper;
+
+		public Function<GroupingMapperRow, GroupKey> keyMapper = gmr -> gmr
+				.getKey();
+	}
+
+	public static class GroupingMapperRow<V> extends Row {
+		private transient GroupedTuple<V> tuple;
+
+		public GroupingMapperRow() {
+		}
+
+		public GroupingMapperRow(GroupedTuple<V> tuple) {
+			this.tuple = tuple;
 		}
 	}
 }

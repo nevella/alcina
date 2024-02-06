@@ -58,6 +58,20 @@ public abstract class LooseContext {
 		return getInstance().getContext0();
 	}
 
+	/*
+	 * Named 'getInstance' rather than 'get' because we want get to be Map.get
+	 */
+	protected static LooseContext getInstance() {
+		if (factoryInstance == null) {
+			factoryInstance = new ClientLooseContextProvider();
+		}
+		LooseContext perThreadInstance = factoryInstance.getT();
+		if (perThreadInstance != null) {
+			return perThreadInstance;
+		}
+		return factoryInstance;
+	}
+
 	public static Integer getInteger(String key) {
 		return getContext().getInteger(key);
 	}
@@ -170,23 +184,7 @@ public abstract class LooseContext {
 		getContext().setBoolean(key);
 	}
 
-	/*
-	 * Named 'getInstance' rather than 'get' because we want get to be Map.get
-	 */
-	protected static LooseContext getInstance() {
-		if (factoryInstance == null) {
-			factoryInstance = new ClientLooseContextProvider();
-		}
-		LooseContext perThreadInstance = factoryInstance.getT();
-		if (perThreadInstance != null) {
-			return perThreadInstance;
-		}
-		return factoryInstance;
-	}
-
 	protected LooseContextInstance context;
-
-	public abstract LooseContext getT();
 
 	protected LooseContextInstance getContext0() {
 		if (context == null) {
@@ -194,6 +192,8 @@ public abstract class LooseContext {
 		}
 		return context;
 	}
+
+	public abstract LooseContext getT();
 
 	protected void removePerThreadContext0() {
 	}

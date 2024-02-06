@@ -79,11 +79,11 @@ public class LuxContainer extends Composite {
 		add(label);
 	}
 
-	public void clear() {
-		container.clear();
-	}
-
 	public void addTo(ComplexPanel complexPanel) {
 		complexPanel.add(this);
+	}
+
+	public void clear() {
+		container.clear();
 	}
 }

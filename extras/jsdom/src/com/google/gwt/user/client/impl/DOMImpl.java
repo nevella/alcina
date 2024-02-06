@@ -42,15 +42,6 @@ public abstract class DOMImpl {
 		return elem.eventListener;
 	}
 
-	public static void setEventListener(Element elem, EventListener listener) {
-		ElementJso remote = elem.implAccess().jsoRemoteOrNull();
-		if (remote != null) {
-			setEventListener0(remote, listener);
-		} else {
-			elem.eventListener = listener;
-		}
-	}
-
 	private static native EventListener getEventListener0(ElementJso elem) /*-{
     // Return elem.__listener if and only if it was assigned from our module
     var maybeListener = elem.__listener;
@@ -87,6 +78,15 @@ public abstract class DOMImpl {
 		 */
 		return !(object instanceof JavaScriptObject)
 				&& (object instanceof com.google.gwt.user.client.EventListener);
+	}
+
+	public static void setEventListener(Element elem, EventListener listener) {
+		ElementJso remote = elem.implAccess().jsoRemoteOrNull();
+		if (remote != null) {
+			setEventListener0(remote, listener);
+		} else {
+			elem.eventListener = listener;
+		}
 	}
 
 	private static native void setEventListener0(ElementJso elem,
@@ -192,6 +192,15 @@ public abstract class DOMImpl {
 		}
 	}
 
+	native int getEventsSunk0(ElementJso elem) /*-{
+    return elem.__eventBits || 0;
+	}-*/;
+
+	/**
+	 * Initializes the event dispatch system.
+	 */
+	protected abstract void initEventSystem();
+
 	public abstract void insertChild(Element parent, Element child, int index);
 
 	public void maybeInitializeEventSystem() {
@@ -208,13 +217,4 @@ public abstract class DOMImpl {
 	public abstract void sinkBitlessEvent(Element elem, String eventTypeName);
 
 	public abstract void sinkEvents(Element elem, int eventBits);
-
-	/**
-	 * Initializes the event dispatch system.
-	 */
-	protected abstract void initEventSystem();
-
-	native int getEventsSunk0(ElementJso elem) /*-{
-    return elem.__eventBits || 0;
-	}-*/;
 }

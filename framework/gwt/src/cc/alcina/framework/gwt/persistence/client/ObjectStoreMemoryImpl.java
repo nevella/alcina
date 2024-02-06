@@ -25,6 +25,15 @@ public class ObjectStoreMemoryImpl
 
 	int idCtr = 0;
 
+	protected void _put(String key, String value,
+			AsyncCallback<Integer> idCallback, int id) {
+		keys.put(id, key);
+		values.put(id, value);
+		reverseKeys.subtract(key, id);
+		reverseKeys.add(key, id);
+		idCallback.onSuccess(id);
+	}
+
 	@Override
 	public void add(String key, String value,
 			AsyncCallback<Integer> idCallback) {
@@ -67,6 +76,20 @@ public class ObjectStoreMemoryImpl
 		valueCallback.onSuccess(value);
 	}
 
+	private int getFirstId(String key) {
+		List<Integer> ids = reverseKeys.getAndEnsure(key);
+		int id = 0;
+		if (ids.size() > 0) {
+			id = ids.get(0);
+		}
+		return id;
+	}
+
+	@SuppressWarnings("unused")
+	private synchronized int getId() {
+		return idCtr;
+	}
+
 	@Override
 	public void getIdRange(AsyncCallback<IntPair> completedCallback) {
 		IntPair range = keys.isEmpty() ? new IntPair()
@@ -94,6 +117,10 @@ public class ObjectStoreMemoryImpl
 		return null;
 	}
 
+	private synchronized int nextId() {
+		return ++idCtr;
+	}
+
 	@Override
 	public void put(int id, String value, AsyncCallback<Void> idCallback) {
 		_put(keys.get(id), value,
@@ -114,6 +141,14 @@ public class ObjectStoreMemoryImpl
 			put(e.getKey(), e.getValue(), new AsyncCallbackNull());
 		}
 		callback.onSuccess(null);
+	}
+
+	protected void remove(int id) {
+		String kv = keys.remove(id);
+		values.remove(id);
+		if (kv != null) {
+			reverseKeys.subtract(kv, id);
+		}
 	}
 
 	@Override
@@ -140,41 +175,6 @@ public class ObjectStoreMemoryImpl
 			remove(id);
 		}
 		completedCallback.onSuccess(null);
-	}
-
-	private int getFirstId(String key) {
-		List<Integer> ids = reverseKeys.getAndEnsure(key);
-		int id = 0;
-		if (ids.size() > 0) {
-			id = ids.get(0);
-		}
-		return id;
-	}
-
-	@SuppressWarnings("unused")
-	private synchronized int getId() {
-		return idCtr;
-	}
-
-	private synchronized int nextId() {
-		return ++idCtr;
-	}
-
-	protected void _put(String key, String value,
-			AsyncCallback<Integer> idCallback, int id) {
-		keys.put(id, key);
-		values.put(id, value);
-		reverseKeys.subtract(key, id);
-		reverseKeys.add(key, id);
-		idCallback.onSuccess(id);
-	}
-
-	protected void remove(int id) {
-		String kv = keys.remove(id);
-		values.remove(id);
-		if (kv != null) {
-			reverseKeys.subtract(kv, id);
-		}
 	}
 
 	protected String valueForKey(String key) {

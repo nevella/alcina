@@ -704,9 +704,27 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 	}
 
+	private Optional<? extends JobRelation> provideToAntecedentRelation() {
+		if (getToRelations().isEmpty()) {
+			return Optional.empty();
+		}
+		return getToRelations().stream()
+				.filter(rel -> rel.getType() != JobRelationType.RESUBMIT)
+				.findFirst();
+	}
+
 	public Job provideTopLevelAncestor() {
 		return provideIsTopLevel() ? domainIdentity()
 				: provideParent().get().provideTopLevelAncestor();
+	}
+
+	private Optional<? extends JobRelation> provideToResubmitRelation() {
+		if (getToRelations().isEmpty()) {
+			return Optional.empty();
+		}
+		return getToRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.RESUBMIT)
+				.findFirst();
 	}
 
 	public Stream<Job> provideUncompletedChildren() {
@@ -722,6 +740,23 @@ public abstract class Job extends VersionableEntity<Job>
 		return resolveCompletionDate0(0);
 	}
 
+	private Date resolveCompletionDate0(int depth) {
+		if (depth > 10) {
+			throw new RuntimeException("Invalid job depth - maybe a loop?");
+		}
+		if (this.state == null) {
+			return null;
+		}
+		if (this.state.isComplete()) {
+			return this.endTime;
+		}
+		Optional<Job> parent = provideFirstInSequence().provideParent();
+		if (parent.isPresent()) {
+			return parent.get().resolveCompletionDate0(depth + 1);
+		}
+		return null;
+	}
+
 	public Date resolveCompletionDateOrLastModificationDate() {
 		Date completionDate = resolveCompletionDate();
 		if (completionDate != null) {
@@ -735,6 +770,26 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public JobState resolveState() {
 		return resolveState0(0);
+	}
+
+	private JobState resolveState0(int depth) {
+		if (depth > 10) {
+			throw new RuntimeException("Invalid job depth - maybe a loop?");
+		}
+		if (this.state == null) {
+			return null;
+		}
+		if (this.state.isComplete()) {
+			return this.state;
+		}
+		Optional<Job> parent = provideFirstInSequence().provideParent();
+		if (parent.isPresent()) {
+			JobState parentState = parent.get().resolveState0(depth + 1);
+			if (parentState != null && parentState.isComplete()) {
+				return parentState;
+			}
+		}
+		return this.state;
 	}
 
 	public Job root() {
@@ -936,76 +991,6 @@ public abstract class Job extends VersionableEntity<Job>
 		return cachedDisplayName;
 	}
 
-	@Override
-	public String toString() {
-		return toDisplayName() + " - " + resolveState();
-	}
-
-	public String toStringFull() {
-		return Ax.format("%s - %s - %s from: %s to: %s", toLocator(),
-				provideName(), resolveState(), toString(getFromRelations()),
-				toString(getToRelations()));
-	}
-
-	public void writeLargeObject() {
-		Registry.impl(DebugLogWriter.class).write(domainIdentity());
-	}
-
-	private Optional<? extends JobRelation> provideToAntecedentRelation() {
-		if (getToRelations().isEmpty()) {
-			return Optional.empty();
-		}
-		return getToRelations().stream()
-				.filter(rel -> rel.getType() != JobRelationType.RESUBMIT)
-				.findFirst();
-	}
-
-	private Optional<? extends JobRelation> provideToResubmitRelation() {
-		if (getToRelations().isEmpty()) {
-			return Optional.empty();
-		}
-		return getToRelations().stream()
-				.filter(rel -> rel.getType() == JobRelationType.RESUBMIT)
-				.findFirst();
-	}
-
-	private Date resolveCompletionDate0(int depth) {
-		if (depth > 10) {
-			throw new RuntimeException("Invalid job depth - maybe a loop?");
-		}
-		if (this.state == null) {
-			return null;
-		}
-		if (this.state.isComplete()) {
-			return this.endTime;
-		}
-		Optional<Job> parent = provideFirstInSequence().provideParent();
-		if (parent.isPresent()) {
-			return parent.get().resolveCompletionDate0(depth + 1);
-		}
-		return null;
-	}
-
-	private JobState resolveState0(int depth) {
-		if (depth > 10) {
-			throw new RuntimeException("Invalid job depth - maybe a loop?");
-		}
-		if (this.state == null) {
-			return null;
-		}
-		if (this.state.isComplete()) {
-			return this.state;
-		}
-		Optional<Job> parent = provideFirstInSequence().provideParent();
-		if (parent.isPresent()) {
-			JobState parentState = parent.get().resolveState0(depth + 1);
-			if (parentState != null && parentState.isComplete()) {
-				return parentState;
-			}
-		}
-		return this.state;
-	}
-
 	private String toDisplayName0() {
 		if (getTaskClassName() == null) {
 			return Ax.format("%s - <null task>",
@@ -1022,6 +1007,11 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 	}
 
+	@Override
+	public String toString() {
+		return toDisplayName() + " - " + resolveState();
+	}
+
 	private String toString(Set<? extends JobRelation> relations) {
 		String suffix = relations.size() > 4
 				? Ax.format(" (%s)", relations.size())
@@ -1029,6 +1019,16 @@ public abstract class Job extends VersionableEntity<Job>
 		return relations.stream().limit(4)
 				.map(rel -> rel.toStringOther(domainIdentity()))
 				.collect(Collectors.joining(", ")) + suffix;
+	}
+
+	public String toStringFull() {
+		return Ax.format("%s - %s - %s from: %s to: %s", toLocator(),
+				provideName(), resolveState(), toString(getFromRelations()),
+				toString(getToRelations()));
+	}
+
+	public void writeLargeObject() {
+		Registry.impl(DebugLogWriter.class).write(domainIdentity());
 	}
 
 	public static abstract class ClientInstanceLoadOracle

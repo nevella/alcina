@@ -267,6 +267,47 @@ public class EncryptionUtils {
 		return this.publicKeyBytes;
 	}
 
+	private Key getSymmetricKey(byte[] encodedInfo) {
+		try {
+			int keylen = DESedeKeySpec.DES_EDE_KEY_LEN;
+			if (encodedInfo.length < keylen) {
+				byte[] newKey = new byte[keylen];
+				Arrays.fill(newKey, (byte) 0);
+				System.arraycopy(encodedInfo, 0, newKey, 0,
+						getPassphrase().length);
+				encodedInfo = newKey;
+			} else {
+				byte[] newKey = new byte[keylen];
+				Arrays.fill(newKey, (byte) 0);
+				System.arraycopy(encodedInfo, 0, newKey, 0, keylen);
+				encodedInfo = newKey;
+			}
+			DESedeKeySpec pass = new DESedeKeySpec(encodedInfo);
+			SecretKeyFactory skf = SecretKeyFactory.getInstance("DESede");
+			SecretKey s = skf.generateSecret(pass);
+			return s;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	byte[] gunzipBytes(byte[] bytes) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+		GZIPInputStream gzis = new GZIPInputStream(bais);
+		Io.Streams.copy(gzis, baos);
+		return baos.toByteArray();
+	}
+
+	byte[] gzipBytes(byte[] bytes) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		GZIPOutputStream gzos = new GZIPOutputStream(baos);
+		gzos.write(bytes, 0, bytes.length);
+		gzos.flush();
+		gzos.close();
+		return baos.toByteArray();
+	}
+
 	public void keyPairFromBytes() throws Exception {
 		X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(publicKeyBytes);
 		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -361,47 +402,6 @@ public class EncryptionUtils {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	private Key getSymmetricKey(byte[] encodedInfo) {
-		try {
-			int keylen = DESedeKeySpec.DES_EDE_KEY_LEN;
-			if (encodedInfo.length < keylen) {
-				byte[] newKey = new byte[keylen];
-				Arrays.fill(newKey, (byte) 0);
-				System.arraycopy(encodedInfo, 0, newKey, 0,
-						getPassphrase().length);
-				encodedInfo = newKey;
-			} else {
-				byte[] newKey = new byte[keylen];
-				Arrays.fill(newKey, (byte) 0);
-				System.arraycopy(encodedInfo, 0, newKey, 0, keylen);
-				encodedInfo = newKey;
-			}
-			DESedeKeySpec pass = new DESedeKeySpec(encodedInfo);
-			SecretKeyFactory skf = SecretKeyFactory.getInstance("DESede");
-			SecretKey s = skf.generateSecret(pass);
-			return s;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	byte[] gunzipBytes(byte[] bytes) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-		GZIPInputStream gzis = new GZIPInputStream(bais);
-		Io.Streams.copy(gzis, baos);
-		return baos.toByteArray();
-	}
-
-	byte[] gzipBytes(byte[] bytes) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		GZIPOutputStream gzos = new GZIPOutputStream(baos);
-		gzos.write(bytes, 0, bytes.length);
-		gzos.flush();
-		gzos.close();
-		return baos.toByteArray();
 	}
 
 	private class MessageDigestFactory

@@ -64,14 +64,6 @@ class ReachabilityData {
 
 	static Class<? extends ReachabilityLinkerPeer> linkerPeerClass;
 
-	public static <T> T newInstance(Class<? extends T> clazz) {
-		try {
-			return clazz.getConstructor().newInstance();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	private static Set<JClassType> computeImplementations(
 			JTypeParameter typeParameter,
 			Multiset<JClassType, Set<JClassType>> subtypes) {
@@ -92,14 +84,6 @@ class ReachabilityData {
 			Ax.out(" -- %s", typeParameter);
 		}
 		return result;
-	}
-
-	@SuppressWarnings("deprecation")
-	private static byte[] toJsonBytes(Object object) {
-		String json = new JacksonJsonObjectSerializer().withDefaults(false)
-				.withPrettyPrint().withIdRefs().withAllowUnknownProperties()
-				.serialize(object);
-		return json.getBytes(StandardCharsets.UTF_8);
 	}
 
 	static <T> T deserialize(Class<T> clazz, File file) {
@@ -141,6 +125,14 @@ class ReachabilityData {
 				.equals(Object.class.getCanonicalName());
 	}
 
+	public static <T> T newInstance(Class<? extends T> clazz) {
+		try {
+			return clazz.getConstructor().newInstance();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	static <T> void serializeReachabilityFile(TreeLogger logger,
 			Object contents, File file) {
 		String existing = file.exists() ? Io.read().file(file).asString()
@@ -154,6 +146,14 @@ class ReachabilityData {
 				Io.write().string(json).toFile(file);
 			}
 		}
+	}
+
+	@SuppressWarnings("deprecation")
+	private static byte[] toJsonBytes(Object object) {
+		String json = new JacksonJsonObjectSerializer().withDefaults(false)
+				.withPrettyPrint().withIdRefs().withAllowUnknownProperties()
+				.serialize(object);
+		return json.getBytes(StandardCharsets.UTF_8);
 	}
 
 	static Stream<JClassType> toReachableConcreteTypes(JType type,
@@ -280,6 +280,10 @@ class ReachabilityData {
 						.collect(Collectors.toList());
 			}
 
+			boolean isVisible(Set<Type> types) {
+				return types.containsAll(keys);
+			}
+
 			public boolean retainRegistrations(Set<Registration> retain) {
 				return retain.contains(registration);
 			}
@@ -287,10 +291,6 @@ class ReachabilityData {
 			@Override
 			public String toString() {
 				return String.format("%-50s <-- %s", registered, keys);
-			}
-
-			boolean isVisible(Set<Type> types) {
-				return types.containsAll(keys);
 			}
 		}
 	}
@@ -349,13 +349,13 @@ class ReachabilityData {
 
 		Map<String, List<Type>> byModule = new LinkedHashMap<>();
 
-		public boolean hasAssignments() {
-			return byModule.size() > 0;
-		}
-
 		void addType(JClassType t, String moduleName) {
 			byModule.computeIfAbsent(moduleName, name -> new ArrayList<>())
 					.add(Type.get(t));
+		}
+
+		public boolean hasAssignments() {
+			return byModule.size() > 0;
 		}
 
 		boolean isAssignedToModule(Type t, String moduleName) {
@@ -392,36 +392,6 @@ class ReachabilityData {
 
 		transient Map<Type, String> typeModule = new LinkedHashMap<>();
 
-		public boolean permit(JClassType type, String moduleName) {
-			Type t = typeFor(type.getQualifiedSourceName());
-			return t != null && typeModule.get(t).equals(moduleName);
-		}
-
-		public Set<Type> typesFor(List<String> moduleNames) {
-			return moduleLists.stream()
-					.filter(ml -> moduleNames.contains(ml.moduleName))
-					.flatMap(tl -> tl.types.stream()).sorted()
-					.collect(AlcinaCollectors.toLinkedHashSet());
-		}
-
-		public boolean unknownToNotReached() {
-			TypeList unknown = ensureTypeList(ReflectionModule.UNKNOWN);
-			TypeList notReached = ensureTypeList(ReflectionModule.NOT_REACHED);
-			List<Type> preAssignTypes = notReached.types;
-			Set<Type> notReachedComputed = Stream
-					.concat(preAssignTypes.stream(), unknown.types.stream())
-					.collect(AlcinaCollectors.toLinkedHashSet());
-			unknown.types.clear();
-			moduleLists.stream()
-					.filter(tl -> ReflectionModule.Modules
-							.provideIsFragment(tl.moduleName))
-					.forEach(
-							tl -> tl.types.forEach(notReachedComputed::remove));
-			notReached.types = notReachedComputed.stream()
-					.collect(Collectors.toList());
-			return !(notReached.types.equals(preAssignTypes));
-		}
-
 		boolean doesNotContain(JClassType type) {
 			return typeFor(type.getQualifiedSourceName()) == null;
 		}
@@ -454,8 +424,38 @@ class ReachabilityData {
 			return typeModule.get(type);
 		}
 
+		public boolean permit(JClassType type, String moduleName) {
+			Type t = typeFor(type.getQualifiedSourceName());
+			return t != null && typeModule.get(t).equals(moduleName);
+		}
+
 		Type typeFor(String qualifiedSourceName) {
 			return sourceNameType.get(qualifiedSourceName);
+		}
+
+		public Set<Type> typesFor(List<String> moduleNames) {
+			return moduleLists.stream()
+					.filter(ml -> moduleNames.contains(ml.moduleName))
+					.flatMap(tl -> tl.types.stream()).sorted()
+					.collect(AlcinaCollectors.toLinkedHashSet());
+		}
+
+		public boolean unknownToNotReached() {
+			TypeList unknown = ensureTypeList(ReflectionModule.UNKNOWN);
+			TypeList notReached = ensureTypeList(ReflectionModule.NOT_REACHED);
+			List<Type> preAssignTypes = notReached.types;
+			Set<Type> notReachedComputed = Stream
+					.concat(preAssignTypes.stream(), unknown.types.stream())
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			unknown.types.clear();
+			moduleLists.stream()
+					.filter(tl -> ReflectionModule.Modules
+							.provideIsFragment(tl.moduleName))
+					.forEach(
+							tl -> tl.types.forEach(notReachedComputed::remove));
+			notReached.types = notReachedComputed.stream()
+					.collect(Collectors.toList());
+			return !(notReached.types.equals(preAssignTypes));
 		}
 
 		static class TypeList {
@@ -669,6 +669,13 @@ class ReachabilityData {
 			this.rpcSerializableTypes = asList(classType, rpcSerializableTypes);
 		}
 
+		private List<Type> asList(JClassType classType,
+				Multiset<JClassType, Set<JClassType>> associated) {
+			return associated.containsKey(classType) ? associated.get(classType)
+					.stream().map(Type::get).collect(Collectors.toList())
+					: new ArrayList<>();
+		}
+
 		public Stream<Type> subtypes() {
 			return this.subtypes.stream();
 		}
@@ -676,13 +683,6 @@ class ReachabilityData {
 		@Override
 		public String toString() {
 			return Ax.format("Hieararchy: %s", type);
-		}
-
-		private List<Type> asList(JClassType classType,
-				Multiset<JClassType, Set<JClassType>> associated) {
-			return associated.containsKey(classType) ? associated.get(classType)
-					.stream().map(Type::get).collect(Collectors.toList())
-					: new ArrayList<>();
 		}
 
 		Stream<Type> typeAndSuperTypes() {
@@ -735,11 +735,6 @@ class ReachabilityData {
 
 		transient Map<Reason, TypesReason> byReason = new LinkedHashMap<>();
 
-		public void sort() {
-			Collections.sort(typesReasons);
-			typesReasons.forEach(tr -> Collections.sort(tr.types));
-		}
-
 		void add(Reason reason, Type type) {
 			TypesReason typesReason = byReason.get(reason);
 			if (typesReason == null) {
@@ -753,6 +748,11 @@ class ReachabilityData {
 
 		void generateLookup() {
 			typesReasons.forEach(tr -> byReason.put(tr.reason, tr));
+		}
+
+		public void sort() {
+			Collections.sort(typesReasons);
+			typesReasons.forEach(tr -> Collections.sort(tr.types));
 		}
 	}
 }

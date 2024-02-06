@@ -45,54 +45,22 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 		search.addPopupShownHandler(this::handlePopupShown);
 	}
 
-	public void clearFilter() {
-		search.getFilter().clear();
-	}
-
-	public void focus() {
-		search.checkShowPopup(true);
-	}
-
-	public String getFilterText() {
-		return getTextBox().getText();
-	}
-
-	public String getLastFilterText() {
-		return search.getFilter().getLastText();
-	}
-
-	public TextBox getTextBox() {
-		return search.getFilter().getTextBox();
-	}
-
-	@Override
-	public boolean isMultiline() {
-		return false;
-	}
-
-	@Override
-	public void redrawGrid() {
-		super.redrawGrid();
-		grid.addStyleName("flat-search");
-		grid.getRowFormatter().getElement(1).getStyle()
-				.setDisplay(Display.NONE);
-	}
-
-	public void setFilterText(String lastFilterText) {
-		getTextBox().setValue(lastFilterText);
-	}
-
-	public void showOptions() {
-		search.checkShowPopup(false);
-	}
-
 	protected boolean allowsEmptySelection() {
 		return maxSelectedItems > 1;
+	}
+
+	public void clearFilter() {
+		search.getFilter().clear();
 	}
 
 	@Override
 	protected void createResults() {
 		results = new SelectWithSearch() {
+			@Override
+			protected void addGroupHeading(HasWidgets itemHolder, Label l) {
+				// ignore
+			};
+
 			@Override
 			public HasClickHandlers createItem(Object item, boolean asHTML,
 					int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
@@ -106,11 +74,6 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 					link.addClickHandler(evt -> search.checkShowPopup(true));
 					return link;
 				}
-			};
-
-			@Override
-			protected void addGroupHeading(HasWidgets itemHolder, Label l) {
-				// ignore
 			}
 		};
 	}
@@ -136,6 +99,39 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 		results.addWidgetClickHandler(c -> search.checkShowPopup(true));
 	}
 
+	public void focus() {
+		search.checkShowPopup(true);
+	}
+
+	public String getFilterText() {
+		return getTextBox().getText();
+	}
+
+	public String getLastFilterText() {
+		return search.getFilter().getLastText();
+	}
+
+	public TextBox getTextBox() {
+		return search.getFilter().getTextBox();
+	}
+
+	void handlePopupShown(PopupShownEvent event) {
+		setStyleName("with-focus", event.isShown());
+	}
+
+	@Override
+	public boolean isMultiline() {
+		return false;
+	}
+
+	@Override
+	public void redrawGrid() {
+		super.redrawGrid();
+		grid.addStyleName("flat-search");
+		grid.getRowFormatter().getElement(1).getStyle()
+				.setDisplay(Display.NONE);
+	}
+
 	@Override
 	protected void resultItemSelected(Object item) {
 		if (maxSelectedItems == 1) {
@@ -144,16 +140,15 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 		super.resultItemSelected(item);
 	}
 
-	void handlePopupShown(PopupShownEvent event) {
-		setStyleName("with-focus", event.isShown());
+	public void setFilterText(String lastFilterText) {
+		getTextBox().setValue(lastFilterText);
+	}
+
+	public void showOptions() {
+		search.checkShowPopup(false);
 	}
 
 	private class LazyDataExclusive implements LazyDataProvider {
-		@Override
-		public void getData(AsyncCallback callback) {
-			callback.onSuccess(dataRequired());
-		}
-
 		private LazyData dataRequired() {
 			LazyData lazyData = new LazyData();
 			Map map = createObjectMap();
@@ -167,6 +162,11 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 			lazyData.keys = new ArrayList(map.keySet());
 			lazyData.data = map;
 			return lazyData;
+		}
+
+		@Override
+		public void getData(AsyncCallback callback) {
+			callback.onSuccess(dataRequired());
 		}
 	}
 }

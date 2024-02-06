@@ -135,6 +135,20 @@ public class DomainSearchHandler {
 		return modelSearchResults;
 	}
 
+	private <T> T project(T object, ModelSearchResults modelSearchResults,
+			boolean projectAsSingleEntityDataObjects) {
+		SearchResultProjector projector = Registry
+				.impl(SearchResultProjector.class);
+		projector.setProjectAsSingleEntityDataObjects(
+				projectAsSingleEntityDataObjects);
+		Class<? extends Bindable> projectedClass = projector
+				.getProjectedClass(modelSearchResults);
+		if (projectedClass != null) {
+			modelSearchResults.setResultClassName(projectedClass.getName());
+		}
+		return projector.project(object);
+	}
+
 	public ModelSearchResults searchModel(BindableSearchDefinition def) {
 		if (def.getGroupingParameters() != null) {
 			def.setResultsPerPage(99999999);
@@ -237,20 +251,6 @@ public class DomainSearchHandler {
 		return result;
 	}
 
-	private <T> T project(T object, ModelSearchResults modelSearchResults,
-			boolean projectAsSingleEntityDataObjects) {
-		SearchResultProjector projector = Registry
-				.impl(SearchResultProjector.class);
-		projector.setProjectAsSingleEntityDataObjects(
-				projectAsSingleEntityDataObjects);
-		Class<? extends Bindable> projectedClass = projector
-				.getProjectedClass(modelSearchResults);
-		if (projectedClass != null) {
-			modelSearchResults.setResultClassName(projectedClass.getName());
-		}
-		return projector.project(object);
-	}
-
 	@Registration.NonGenericSubtypes(CustomSearchHandler.class)
 	public static abstract class CustomSearchHandler<BSD extends BindableSearchDefinition> {
 		private SearchContext searchContext;
@@ -259,16 +259,16 @@ public class DomainSearchHandler {
 			// TODO Auto-generated method stub
 		}
 
+		protected BSD getSearchDefinition() {
+			return (BSD) searchContext.def;
+		}
+
 		public void prepareContext(SearchContext searchContext) {
 		}
 
 		public ModelSearchResults searchModel(SearchContext searchContext) {
 			this.searchContext = searchContext;
 			return searchModel0();
-		}
-
-		protected BSD getSearchDefinition() {
-			return (BSD) searchContext.def;
 		}
 
 		protected abstract ModelSearchResults searchModel0();

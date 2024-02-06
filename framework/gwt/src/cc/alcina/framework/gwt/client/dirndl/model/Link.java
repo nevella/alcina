@@ -272,6 +272,13 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		return this;
 	}
 
+	public Link withNoLink(boolean noLink) {
+		if (noLink) {
+			setHref("");
+		}
+		return this;
+	}
+
 	public Link withNonstandardObjectAction(
 			Class<? extends PermissibleAction> clazz) {
 		this.nonStandardObjectAction = clazz;
@@ -309,13 +316,6 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	public Link withTitle(String title) {
 		this.title = title;
-		return this;
-	}
-
-	public Link withNoLink(boolean noLink) {
-		if (noLink) {
-			setHref("");
-		}
 		return this;
 	}
 

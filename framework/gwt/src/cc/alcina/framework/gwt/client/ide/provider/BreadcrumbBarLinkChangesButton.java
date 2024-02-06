@@ -57,6 +57,19 @@ public class BreadcrumbBarLinkChangesButton extends BreadcrumbBarButton
 		return this.linked;
 	}
 
+	private void maybeAttachToTable() {
+		if (this.table != null) {
+			this.table.addCollectionPropertyChangeListener(
+					collectionPropertyChangeListener);
+		}
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		maybeAttachToTable();
+	}
+
 	@Override
 	public void onClick(ClickEvent event) {
 		setLinked(!linked);
@@ -72,20 +85,7 @@ public class BreadcrumbBarLinkChangesButton extends BreadcrumbBarButton
 		maybeAttachToTable();
 	}
 
-	private void maybeAttachToTable() {
-		if (this.table != null) {
-			this.table.addCollectionPropertyChangeListener(
-					collectionPropertyChangeListener);
-		}
-	}
-
 	private void updateText() {
 		setText(linked ? "Unlink column changes" : "Link column changes");
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		maybeAttachToTable();
 	}
 }

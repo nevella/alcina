@@ -133,6 +133,38 @@ public abstract class DevHelper {
 		super();
 	}
 
+	protected void copyTemplate(String nonTemplatePath) {
+		{
+			if (nonTemplatePath == null) {
+				// not yet configured
+				return;
+			}
+			File nonTemplateFile = new File(nonTemplatePath);
+			if (!nonTemplateFile.exists()) {
+				try {
+					Ax.out("Copying template %s", nonTemplateFile.getName());
+					SEUtilities.copyFile(
+							new File(nonTemplatePath + ".template"),
+							nonTemplateFile);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+	}
+
+	protected void copyTemplates() {
+		copyTemplate(getNonVcsJavaTaskFilePath());
+		copyTemplate(getNonVcsJavaProcessObserverFilePath());
+		copyTemplate(getNonVcsJavaDevmodeProcessObserverFilePath());
+	}
+
+	protected TransformManager createTransformManager() {
+		return TransformCommit.isTestTransformCascade()
+				? new ThreadlocalTransformManager()
+				: new TestTransformManager();
+	}
+
 	public void deleteClasspathCacheFiles() throws Exception {
 		File cacheFile = SEUtilities.getChildFile(getDataFolder(),
 				"servlet-classpath.ser");
@@ -216,6 +248,8 @@ public abstract class DevHelper {
 		return actionLogger;
 	}
 
+	protected abstract String getConfigFilePath();
+
 	public Connection getConnDev() throws Exception {
 		if (connDev == null) {
 			Class.forName("org.postgresql.Driver");
@@ -251,6 +285,12 @@ public abstract class DevHelper {
 		return file;
 	}
 
+	private File getFile(String lkpName, boolean gz) {
+		File cacheFile = new File(getTestFolder().getPath() + File.separator
+				+ lkpName + ".ser" + (gz ? ".gz" : ""));
+		return cacheFile;
+	}
+
 	public Set<Long> getIds(String fileName) throws Exception {
 		String idStr = Io.read().path(fileName).asString();
 		Pattern p = Pattern.compile("\\d+");
@@ -264,6 +304,18 @@ public abstract class DevHelper {
 
 	public MessagingWriter getMessagingWriter() {
 		return this.messagingWriter;
+	}
+
+	protected String getNonVcsJavaDevmodeProcessObserverFilePath() {
+		return null;
+	}
+
+	protected String getNonVcsJavaProcessObserverFilePath() {
+		return null;
+	}
+
+	protected String getNonVcsJavaTaskFilePath() {
+		return null;
 	}
 
 	public File getTestFolder() {
@@ -312,6 +364,8 @@ public abstract class DevHelper {
 		AppDebug.register();
 	}
 
+	protected abstract void initCustomServicesFirstHalf();
+
 	public void initDataFolder() {
 		EntityLayerObjects.get().setDataFolder(getDataFolder());
 		ServletLayerObjects.get().setDataFolder(getDataFolder());
@@ -319,6 +373,11 @@ public abstract class DevHelper {
 
 	public void initDummyServices() {
 		TransformManager.register(new ClientTransformManagerCommon());
+	}
+
+	void initLifecycleServices() {
+		AppLifecycleServletBase
+				.initLifecycleServiceClasses(LifecycleService.AlsoDev.class);
 	}
 
 	public void initLightweightServices() {
@@ -357,6 +416,10 @@ public abstract class DevHelper {
 	}
 
 	public abstract void initPostObjectServices();
+
+	protected boolean isUsesSets() {
+		return true;
+	}
 
 	public final void loadConfig() {
 		String configPath = getConfigFilePath();
@@ -409,6 +472,8 @@ public abstract class DevHelper {
 		return readObject(template, template.getClass().getSimpleName(), true);
 	}
 
+	protected abstract void registerNames(AlcinaWebappConfig config);
+
 	public void scanRegistry() {
 		try {
 			Logger logger = getTestLogger();
@@ -428,11 +493,6 @@ public abstract class DevHelper {
 
 	public void setupJobsToSysout() {
 		AlcinaTopics.jobCompletion.add(jobCompletionLister);
-	}
-
-	void initLifecycleServices() {
-		AppLifecycleServletBase
-				.initLifecycleServiceClasses(LifecycleService.AlsoDev.class);
 	}
 
 	public void writeObject(Object obj) {
@@ -463,66 +523,6 @@ public abstract class DevHelper {
 	public void writeObjectGz(Object obj) {
 		writeObject(obj, obj.getClass().getSimpleName(), true);
 	}
-
-	private File getFile(String lkpName, boolean gz) {
-		File cacheFile = new File(getTestFolder().getPath() + File.separator
-				+ lkpName + ".ser" + (gz ? ".gz" : ""));
-		return cacheFile;
-	}
-
-	protected void copyTemplate(String nonTemplatePath) {
-		{
-			if (nonTemplatePath == null) {
-				// not yet configured
-				return;
-			}
-			File nonTemplateFile = new File(nonTemplatePath);
-			if (!nonTemplateFile.exists()) {
-				try {
-					Ax.out("Copying template %s", nonTemplateFile.getName());
-					SEUtilities.copyFile(
-							new File(nonTemplatePath + ".template"),
-							nonTemplateFile);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-	}
-
-	protected void copyTemplates() {
-		copyTemplate(getNonVcsJavaTaskFilePath());
-		copyTemplate(getNonVcsJavaProcessObserverFilePath());
-		copyTemplate(getNonVcsJavaDevmodeProcessObserverFilePath());
-	}
-
-	protected TransformManager createTransformManager() {
-		return TransformCommit.isTestTransformCascade()
-				? new ThreadlocalTransformManager()
-				: new TestTransformManager();
-	}
-
-	protected abstract String getConfigFilePath();
-
-	protected String getNonVcsJavaDevmodeProcessObserverFilePath() {
-		return null;
-	}
-
-	protected String getNonVcsJavaProcessObserverFilePath() {
-		return null;
-	}
-
-	protected String getNonVcsJavaTaskFilePath() {
-		return null;
-	}
-
-	protected abstract void initCustomServicesFirstHalf();
-
-	protected boolean isUsesSets() {
-		return true;
-	}
-
-	protected abstract void registerNames(AlcinaWebappConfig config);
 
 	public static class ConsolePrompter implements StringPrompter {
 		private String defaultValue;

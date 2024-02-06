@@ -39,7 +39,6 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ResettingCounter;
 import cc.alcina.framework.entity.Configuration;
@@ -51,7 +50,6 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.util.AnalyseThreadDump;
-import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
@@ -117,10 +115,106 @@ public class InternalMetrics {
 
 	private Map<Thread, StackTraceElement[]> allStackTraces;
 
+	private void addMetric(MetricType type, String string) {
+		synchronized (blackboxData) {
+			blackboxData.metrics.add(type, string);
+			List<String> list = blackboxData.metrics.get(type);
+			if (list.size() > 5) {
+				list.remove(0);
+			}
+		}
+	}
+
+	private void addSlice(boolean debugMonitors,
+			Map<Long, ThreadInfo> threadInfoById, InternalMetricData imd) {
+		synchronized (imd) {
+			imd.lastSliceTime = System.currentTimeMillis();
+			if (imd.type == InternalMetricTypeAlcina.health) {
+				if (healthNotificationCounter.incrementAndGet() % 20 == 0) {
+				} else {
+					// this is an expansive op (get all threads) -
+					// so only do 1/sec
+					return;
+				}
+				logger.info("Internal health metrics monitoring:\n\t{}",
+						getMemoryStats());
+				long[] allIds = threadMxBean.getAllThreadIds();
+				ThreadInfo[] threadInfos = threadMxBean.getThreadInfo(allIds,
+						debugMonitors, debugMonitors);
+				imd.threadHistory.clearElements();
+				Map<Thread, StackTraceElement[]> allStackTraces = Thread
+						.getAllStackTraces();
+				StringBuilder allThreadBuilder = new StringBuilder();
+				for (Entry<Thread, StackTraceElement[]> entry : allStackTraces
+						.entrySet()) {
+					allThreadBuilder.append(entry.getKey());
+					allThreadBuilder.append("\n");
+					StackTraceElement[] value = entry.getValue();
+					for (StackTraceElement stackTraceElement : value) {
+						allThreadBuilder.append("\t");
+						allThreadBuilder.append(stackTraceElement);
+						allThreadBuilder.append("\n");
+					}
+				}
+				for (ThreadInfo threadInfo : threadInfos) {
+					if (threadInfo == null) {
+						continue;
+					}
+					if (threadInfo.getThreadId() == Thread.currentThread()
+							.getId()) {
+						continue;
+					}
+					StackTraceElement[] stackTrace = allStackTraces.entrySet()
+							.stream()
+							.filter(e -> e.getKey().getId() == threadInfo
+									.getThreadId())
+							.findFirst().map(e -> e.getValue())
+							.orElse(new StackTraceElement[0]);
+					imd.addSlice(threadInfo, stackTrace, 0, 0,
+							DomainStoreLockState.NO_LOCK,
+							new DomainStoreWaitStats());
+				}
+				AnalyseThreadDump.TdModel model = AnalyseThreadDump.TdModel
+						.parse(allThreadBuilder.toString(), false);
+				String dumpDistinct = model.dumpDistinct();
+				if (Ax.notBlank(dumpDistinct)) {
+					logger.info("Internal health metrics monitoring"
+							+ "\n\n----------------------------------------------------------------"
+							+ " Start health metric traces "
+							+ "----------------------------------------------------------------\n"
+							+ "{}"
+							+ "\n----------------------------------------------------------------"
+							+ " End health metric traces "
+							+ "----------------------------------------------------------------\n",
+							dumpDistinct);
+				}
+				return;
+			}
+			try {
+				Thread thread = imd.thread;
+				ThreadInfo threadInfo = threadInfoById.get(thread.getId());
+				if (threadInfo != null) {
+					StackTraceElement[] stackTrace = thread.getStackTrace();
+					imd.addSlice(threadInfo, stackTrace, 0L, 0L,
+							DomainStoreLockState.NO_LOCK,
+							new DomainStoreWaitStats());
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	public void changeTrackerContext(Object marker, String context) {
 		InternalMetricData metricData = trackers.get(marker);
 		if (metricData != null) {
 			metricData.updateContext(context);
+		}
+	}
+
+	void doProfilerLoop() {
+		while (isEnabled() && started) {
+			profile();
 		}
 	}
 
@@ -149,6 +243,23 @@ public class InternalMetrics {
 		}
 	}
 
+	String getBlackboxData() {
+		return JacksonUtils.serialize(blackboxData);
+	}
+
+	String getMemoryStats() {
+		try {
+			return String.format("Heap used: %.2fmb\t\tHeap max: %.2fmb",
+					((double) memoryMxBean.getHeapMemoryUsage().getUsed())
+							/ 1000000,
+					((double) memoryMxBean.getHeapMemoryUsage().getMax())
+							/ 1000000);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "Exception";
+		}
+	}
+
 	public InternalMetric getMetric(long clientInstanceId, Connection conn,
 			String callName) {
 		try {
@@ -167,6 +278,10 @@ public class InternalMetrics {
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
 		}
+	}
+
+	private boolean isEnabled() {
+		return Configuration.is("enabled");
 	}
 
 	public boolean isHighFrequencyProfiling() {
@@ -190,8 +305,179 @@ public class InternalMetrics {
 				System.currentTimeMillis()));
 	}
 
+	protected synchronized void persist() {
+		if (!isEnabled() || !Configuration.is("persistEnabled")) {
+			return;
+		}
+		LinkedHashMap<InternalMetricData, InternalMetric> toPersist = null;
+		List<InternalMetricData> toRemove = trackers.values().stream()
+				.filter(imd -> imd.isFinished() && imd.sliceCount() == 0)
+				.collect(Collectors.toList());
+		boolean persistAllMetrics = Configuration.is("persistAllMetrics");
+		Predicate<InternalMetricData> requiresSliceFilter = persistAllMetrics
+				? imd -> true
+				: imd -> imd.sliceCount() > 0;
+		if (persistAllMetrics) {
+			toRemove.clear();
+		}
+		toPersist = trackers.values().stream().filter(requiresSliceFilter)
+				.filter(imd -> imd.isFinished()
+						|| imd.lastPersistTime < imd.lastSliceTime)
+				.map(imd -> imd.syncCopyForPersist())
+				.collect(Collectors.toMap(imd -> imd, imd -> imd.asMetric(),
+						AlcinaCollectors.throwingMerger(), LinkedHashMap::new));
+		if (toPersist.size() > 0) {
+			logger.debug("persist internal metric: [%s]",
+					toPersist.keySet().stream().map(imd -> imd.thread.getName())
+							.collect(Collectors.joining("; ")));
+			List<InternalMetric> toPersistList = toPersist.values().stream()
+					.collect(Collectors.toList());
+			CommonPersistenceProvider.get().getCommonPersistence()
+					.persistInternalMetrics(toPersistList);
+			for (InternalMetric internalMetric : toPersistList) {
+				InternalMetricData owner = toPersist.entrySet().stream()
+						.filter(e -> e.getValue() == internalMetric).findFirst()
+						.get().getKey();
+				trackers.values().stream()
+						.filter(imd -> imd.thread == owner.thread).findFirst()
+						.ifPresent(imd -> {
+							synchronized (imd) {
+								if (imd.persistent != null
+										&& imd.persistent.getId() == 0) {
+									imd.setPersistentId(internalMetric.getId());
+								}
+							}
+						});
+				if (owner.isFinished()) {
+					logger.info(
+							"removing after finished/persist: {} {} : id {}",
+							owner.metricName, owner.thread,
+							owner.thread.getId());
+					trackers.entrySet()
+							.removeIf(e -> e.getValue().thread == owner.thread);
+				}
+			}
+		}
+		trackers.entrySet().removeIf(e -> toRemove.contains(e.getValue()));
+	}
+
+	private void profile() {
+		String profilerPath = Configuration.get("profilerPath");
+		String alloc = "--alloc 100k -t -d 5 -e alloc ";
+		String cpu = "-d 5 --cstack no -t -e cpu ";
+		try {
+			if (Configuration.is("profilerEnabled")) {
+				int frequency = highFrequencyProfiling ? 50 : 200;
+				MetricType type = nextIsAlloc
+						|| !Configuration.is("cpuProfilingEnabled")
+								? MetricType.alloc
+								: MetricType.cpu;
+				String params = type == MetricType.alloc ? alloc : cpu;
+				String pid = "jps";
+				if (Ax.isTest()) {
+					String name = ManagementFactory.getRuntimeMXBean()
+							.getName();
+					pid = name.replaceFirst("(.+)@.+", "$1");
+				}
+				String cmd = Ax.format("%s %s -i %sus %s", profilerPath, params,
+						frequency, pid);
+				Output wrapper = new Shell().noLogging().runBashScript(cmd);
+				addMetric(type, wrapper.output);
+				String runningMetrics = trackers.values().stream()
+						.filter(imd -> !imd.isFinished())
+						.map(InternalMetricData::logForBlackBox)
+						.collect(Collectors.joining("\n"));
+				StringBuilder sb = new StringBuilder();
+				String transactionDump = "";
+				if (highFrequencyProfiling) {
+					if (allThreadsRefresher.check()) {
+						allStackTraces = Thread.getAllStackTraces();
+					}
+					if (allStackTraces != null) {
+						for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces
+								.entrySet()) {
+							sb.append(entry.getKey());
+							sb.append("\n");
+							StackTraceElement[] value = entry.getValue();
+							for (StackTraceElement stackTraceElement : value) {
+								sb.append("\t");
+								sb.append(stackTraceElement);
+								sb.append("\n");
+							}
+						}
+					}
+					transactionDump = Transactions.stats()
+							.describeTransactions();
+				}
+				String threadDump = sb.toString();
+				String state = Ax.format(
+						"%s\nTrackers:\n%s\n\nJobs:\n%s\n\nThreads:\n%s\n\nTransactions:\n%s"
+								+ "\n\nFatal:\n%s\n",
+						ContainerProvider.get().getContainerState(),
+						runningMetrics, ContainerProvider.get().getJobsState(),
+						threadDump, transactionDump, fatalExceptionString);
+				addMetric(MetricType.metrics, state);
+				String gcLogFile = "/opt/jboss/gc.log";
+				if (new File(gcLogFile).exists()) {
+					GCLogParser.Events events = new GCLogParser().parse(
+							gcLogFile, parseGcLogFrom,
+							Configuration.getInt("gcEventThresholdMillis"));
+					addMetric(MetricType.gc, events.toString());
+					parseGcLogFrom = events.end;
+				}
+				nextIsAlloc = !nextIsAlloc;
+			} else {
+				Thread.sleep(1000);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void setHighFrequencyProfiling(boolean highFrequencyProfiling) {
 		this.highFrequencyProfiling = highFrequencyProfiling;
+	}
+
+	private boolean shouldSlice(InternalMetricData imd) {
+		return sliceOracle.shouldSlice(imd);
+	}
+
+	private void slice() {
+		if (!isEnabled()) {
+			return;
+		}
+		if (trackers.isEmpty()) {
+			return;
+		}
+		boolean noSliceBecauseNoLongRunningMetrics = sliceOracle
+				.noSliceBecauseNoLongRunningMetrics(trackers.values());
+		if (noSliceBecauseNoLongRunningMetrics) {
+			return;
+		}
+		long time = System.currentTimeMillis();
+		sliceOracle.beforeSlicePass(threadMxBean);
+		List<Long> ids = trackers.values().stream()
+				.filter(imd -> !imd.isFinished())
+				.filter(imd -> shouldSlice(imd)).map(imd -> imd.thread.getId())
+				.collect(Collectors.toList());
+		Map<Long, InternalMetricData> metricDataByThreadId = trackers.values()
+				.stream()
+				.collect(AlcinaCollectors.toKeyMap(imd -> imd.thread.getId()));
+		long[] idArray = toLong(ids);
+		boolean debugMonitors = sliceOracle.shouldCheckDeadlocks();
+		String key = "internalmetrics-extthreadinfo";
+		// MetricLogging.get().start(key);
+		ThreadInfo[] threadInfos = threadMxBean.getThreadInfo(idArray,
+				debugMonitors, debugMonitors);
+		// MetricLogging.get().end(key);
+		Map<Long, ThreadInfo> threadInfoById = Arrays.stream(threadInfos)
+				.filter(Objects::nonNull)
+				.collect(AlcinaCollectors.toKeyMap(ti -> ti.getThreadId()));
+		trackers.values().stream().filter(imd -> !imd.isFinished())
+				.filter(imd -> shouldSlice(imd)).forEach(imd -> {
+					addSlice(debugMonitors, threadInfoById, imd);
+					// }
+				});
 	}
 
 	public void startService() {
@@ -342,294 +628,6 @@ public class InternalMetrics {
 			sliceExecutor.shutdown();
 			profilerExecutor.shutdown();
 			persistExecutor.shutdown();
-		}
-	}
-
-	private void addMetric(MetricType type, String string) {
-		synchronized (blackboxData) {
-			blackboxData.metrics.add(type, string);
-			List<String> list = blackboxData.metrics.get(type);
-			if (list.size() > 5) {
-				list.remove(0);
-			}
-		}
-	}
-
-	private void addSlice(boolean debugMonitors,
-			Map<Long, ThreadInfo> threadInfoById, InternalMetricData imd) {
-		synchronized (imd) {
-			imd.lastSliceTime = System.currentTimeMillis();
-			if (imd.type == InternalMetricTypeAlcina.health) {
-				if (healthNotificationCounter.incrementAndGet() % 20 == 0) {
-				} else {
-					// this is an expansive op (get all threads) -
-					// so only do 1/sec
-					return;
-				}
-				logger.info("Internal health metrics monitoring:\n\t{}",
-						getMemoryStats());
-				long[] allIds = threadMxBean.getAllThreadIds();
-				ThreadInfo[] threadInfos = threadMxBean.getThreadInfo(allIds,
-						debugMonitors, debugMonitors);
-				imd.threadHistory.clearElements();
-				Map<Thread, StackTraceElement[]> allStackTraces = Thread
-						.getAllStackTraces();
-				StringBuilder allThreadBuilder = new StringBuilder();
-				for (Entry<Thread, StackTraceElement[]> entry : allStackTraces
-						.entrySet()) {
-					allThreadBuilder.append(entry.getKey());
-					allThreadBuilder.append("\n");
-					StackTraceElement[] value = entry.getValue();
-					for (StackTraceElement stackTraceElement : value) {
-						allThreadBuilder.append("\t");
-						allThreadBuilder.append(stackTraceElement);
-						allThreadBuilder.append("\n");
-					}
-				}
-				for (ThreadInfo threadInfo : threadInfos) {
-					if (threadInfo == null) {
-						continue;
-					}
-					if (threadInfo.getThreadId() == Thread.currentThread()
-							.getId()) {
-						continue;
-					}
-					StackTraceElement[] stackTrace = allStackTraces.entrySet()
-							.stream()
-							.filter(e -> e.getKey().getId() == threadInfo
-									.getThreadId())
-							.findFirst().map(e -> e.getValue())
-							.orElse(new StackTraceElement[0]);
-					imd.addSlice(threadInfo, stackTrace, 0, 0,
-							DomainStoreLockState.NO_LOCK,
-							new DomainStoreWaitStats());
-				}
-				AnalyseThreadDump.TdModel model = AnalyseThreadDump.TdModel
-						.parse(allThreadBuilder.toString(), false);
-				String dumpDistinct = model.dumpDistinct();
-				if (Ax.notBlank(dumpDistinct)) {
-					logger.info("Internal health metrics monitoring"
-							+ "\n\n----------------------------------------------------------------"
-							+ " Start health metric traces "
-							+ "----------------------------------------------------------------\n"
-							+ "{}"
-							+ "\n----------------------------------------------------------------"
-							+ " End health metric traces "
-							+ "----------------------------------------------------------------\n",
-							dumpDistinct);
-				}
-				return;
-			}
-			try {
-				Thread thread = imd.thread;
-				ThreadInfo threadInfo = threadInfoById.get(thread.getId());
-				if (threadInfo != null) {
-					StackTraceElement[] stackTrace = thread.getStackTrace();
-					imd.addSlice(threadInfo, stackTrace, 0L, 0L,
-							DomainStoreLockState.NO_LOCK,
-							new DomainStoreWaitStats());
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	private boolean isEnabled() {
-		return Configuration.is("enabled");
-	}
-
-	private void profile() {
-		String profilerPath = Configuration.get("profilerPath");
-		String alloc = "--alloc 100k -t -d 5 -e alloc ";
-		String cpu = "-d 5 --cstack no -t -e cpu ";
-		try {
-			if (Configuration.is("profilerEnabled")) {
-				int frequency = highFrequencyProfiling ? 50 : 200;
-				MetricType type = nextIsAlloc
-						|| !Configuration.is("cpuProfilingEnabled")
-								? MetricType.alloc
-								: MetricType.cpu;
-				String params = type == MetricType.alloc ? alloc : cpu;
-				String pid = "jps";
-				if (Ax.isTest()) {
-					String name = ManagementFactory.getRuntimeMXBean()
-							.getName();
-					pid = name.replaceFirst("(.+)@.+", "$1");
-				}
-				String cmd = Ax.format("%s %s -i %sus %s", profilerPath, params,
-						frequency, pid);
-				Output wrapper = new Shell().noLogging().runBashScript(cmd);
-				addMetric(type, wrapper.output);
-				String runningMetrics = trackers.values().stream()
-						.filter(imd -> !imd.isFinished())
-						.map(InternalMetricData::logForBlackBox)
-						.collect(Collectors.joining("\n"));
-				StringBuilder sb = new StringBuilder();
-				String transactionDump = "";
-				if (highFrequencyProfiling) {
-					if (allThreadsRefresher.check()) {
-						allStackTraces = Thread.getAllStackTraces();
-					}
-					if (allStackTraces != null) {
-						for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces
-								.entrySet()) {
-							sb.append(entry.getKey());
-							sb.append("\n");
-							StackTraceElement[] value = entry.getValue();
-							for (StackTraceElement stackTraceElement : value) {
-								sb.append("\t");
-								sb.append(stackTraceElement);
-								sb.append("\n");
-							}
-						}
-					}
-					transactionDump = Transactions.stats()
-							.describeTransactions();
-				}
-				String threadDump = sb.toString();
-				String state = Ax.format(
-						"%s\nTrackers:\n%s\n\nJobs:\n%s\n\nThreads:\n%s\n\nTransactions:\n%s"
-								+ "\n\nFatal:\n%s\n",
-						ContainerProvider.get().getContainerState(),
-						runningMetrics, ContainerProvider.get().getJobsState(),
-						threadDump, transactionDump, fatalExceptionString);
-				addMetric(MetricType.metrics, state);
-				String gcLogFile = "/opt/jboss/gc.log";
-				if (new File(gcLogFile).exists()) {
-					GCLogParser.Events events = new GCLogParser().parse(
-							gcLogFile, parseGcLogFrom,
-							Configuration.getInt("gcEventThresholdMillis"));
-					addMetric(MetricType.gc, events.toString());
-					parseGcLogFrom = events.end;
-				}
-				nextIsAlloc = !nextIsAlloc;
-			} else {
-				Thread.sleep(1000);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private boolean shouldSlice(InternalMetricData imd) {
-		return sliceOracle.shouldSlice(imd);
-	}
-
-	private void slice() {
-		if (!isEnabled()) {
-			return;
-		}
-		if (trackers.isEmpty()) {
-			return;
-		}
-		boolean noSliceBecauseNoLongRunningMetrics = sliceOracle
-				.noSliceBecauseNoLongRunningMetrics(trackers.values());
-		if (noSliceBecauseNoLongRunningMetrics) {
-			return;
-		}
-		long time = System.currentTimeMillis();
-		sliceOracle.beforeSlicePass(threadMxBean);
-		List<Long> ids = trackers.values().stream()
-				.filter(imd -> !imd.isFinished())
-				.filter(imd -> shouldSlice(imd)).map(imd -> imd.thread.getId())
-				.collect(Collectors.toList());
-		Map<Long, InternalMetricData> metricDataByThreadId = trackers.values()
-				.stream()
-				.collect(AlcinaCollectors.toKeyMap(imd -> imd.thread.getId()));
-		long[] idArray = toLong(ids);
-		boolean debugMonitors = sliceOracle.shouldCheckDeadlocks();
-		String key = "internalmetrics-extthreadinfo";
-		// MetricLogging.get().start(key);
-		ThreadInfo[] threadInfos = threadMxBean.getThreadInfo(idArray,
-				debugMonitors, debugMonitors);
-		// MetricLogging.get().end(key);
-		Map<Long, ThreadInfo> threadInfoById = Arrays.stream(threadInfos)
-				.filter(Objects::nonNull)
-				.collect(AlcinaCollectors.toKeyMap(ti -> ti.getThreadId()));
-		trackers.values().stream().filter(imd -> !imd.isFinished())
-				.filter(imd -> shouldSlice(imd)).forEach(imd -> {
-					addSlice(debugMonitors, threadInfoById, imd);
-					// }
-				});
-	}
-
-	protected synchronized void persist() {
-		if (!isEnabled() || !Configuration.is("persistEnabled")) {
-			return;
-		}
-		LinkedHashMap<InternalMetricData, InternalMetric> toPersist = null;
-		List<InternalMetricData> toRemove = trackers.values().stream()
-				.filter(imd -> imd.isFinished() && imd.sliceCount() == 0)
-				.collect(Collectors.toList());
-		boolean persistAllMetrics = Configuration.is("persistAllMetrics");
-		Predicate<InternalMetricData> requiresSliceFilter = persistAllMetrics
-				? imd -> true
-				: imd -> imd.sliceCount() > 0;
-		if (persistAllMetrics) {
-			toRemove.clear();
-		}
-		toPersist = trackers.values().stream().filter(requiresSliceFilter)
-				.filter(imd -> imd.isFinished()
-						|| imd.lastPersistTime < imd.lastSliceTime)
-				.map(imd -> imd.syncCopyForPersist())
-				.collect(Collectors.toMap(imd -> imd, imd -> imd.asMetric(),
-						AlcinaCollectors.throwingMerger(), LinkedHashMap::new));
-		if (toPersist.size() > 0) {
-			logger.debug("persist internal metric: [%s]",
-					toPersist.keySet().stream().map(imd -> imd.thread.getName())
-							.collect(Collectors.joining("; ")));
-			List<InternalMetric> toPersistList = toPersist.values().stream()
-					.collect(Collectors.toList());
-			CommonPersistenceProvider.get().getCommonPersistence()
-					.persistInternalMetrics(toPersistList);
-			for (InternalMetric internalMetric : toPersistList) {
-				InternalMetricData owner = toPersist.entrySet().stream()
-						.filter(e -> e.getValue() == internalMetric).findFirst()
-						.get().getKey();
-				trackers.values().stream()
-						.filter(imd -> imd.thread == owner.thread).findFirst()
-						.ifPresent(imd -> {
-							synchronized (imd) {
-								if (imd.persistent != null
-										&& imd.persistent.getId() == 0) {
-									imd.setPersistentId(internalMetric.getId());
-								}
-							}
-						});
-				if (owner.isFinished()) {
-					logger.info(
-							"removing after finished/persist: {} {} : id {}",
-							owner.metricName, owner.thread,
-							owner.thread.getId());
-					trackers.entrySet()
-							.removeIf(e -> e.getValue().thread == owner.thread);
-				}
-			}
-		}
-		trackers.entrySet().removeIf(e -> toRemove.contains(e.getValue()));
-	}
-
-	void doProfilerLoop() {
-		while (isEnabled() && started) {
-			profile();
-		}
-	}
-
-	String getBlackboxData() {
-		return JacksonUtils.serialize(blackboxData);
-	}
-
-	String getMemoryStats() {
-		try {
-			return String.format("Heap used: %.2fmb\t\tHeap max: %.2fmb",
-					((double) memoryMxBean.getHeapMemoryUsage().getUsed())
-							/ 1000000,
-					((double) memoryMxBean.getHeapMemoryUsage().getMax())
-							/ 1000000);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return "Exception";
 		}
 	}
 

@@ -58,6 +58,40 @@ public class TransformCollation {
 		return CommonUtils.hasIntersection(set1, set2);
 	}
 
+	protected void ensureLookups() {
+		if (perLocator == null) {
+			perClass = new UnsortedMultikeyMap<>(2);
+			perLocator = new HashMap<>();
+			allEvents.forEach(event -> {
+				{
+					EntityLocator locator = event.toObjectLocator();
+					if (locator.provideIsZeroIdAndLocalId()) {
+						// FIXME - mvcc.5 - DEVEX (probably on transform
+						// creation)
+					} else {
+						EntityCollation collation = perClass.ensure(
+								() -> new EntityCollation(locator),
+								locator.clazz, locator);
+						collation.transforms.add(event);
+						perLocator.put(locator, collation);
+					}
+				}
+				{
+					EntityLocator locator = event.toValueLocator();
+					if (locator == null
+							|| locator.provideIsZeroIdAndLocalId()) {
+					} else {
+						EntityCollation collation = perClass.ensure(
+								() -> new EntityCollation(locator),
+								locator.clazz, locator);
+						collation.valueTransforms.add(event);
+						perLocator.put(locator, collation);
+					}
+				}
+			});
+		}
+	}
+
 	public void filterNonpersistentTransforms() {
 		ensureLookups();
 		Set<DomainTransformEvent> events = allEvents.stream()
@@ -176,6 +210,13 @@ public class TransformCollation {
 		return new Query(entity);
 	}
 
+	protected void refresh(List<? extends DomainTransformEvent> allEvents) {
+		this.allEvents = (List<DomainTransformEvent>) allEvents.stream()
+				.collect(Collectors.toList());
+		perClass = null;
+		perLocator = null;
+	}
+
 	public Set<DomainTransformEvent>
 			removeConflictingTransforms(TransformCollation conflictingWith) {
 		Set<DomainTransformEvent> result = new LinkedHashSet<>();
@@ -191,6 +232,10 @@ public class TransformCollation {
 		throw new UnsupportedOperationException();
 	}
 
+	protected void removeTransformsFromRequest(QueryResult queryResult) {
+		queryResult.events.forEach(this::removeTransformFromRequest);
+	}
+
 	public void setPerClass(MultikeyMap<EntityCollation> perClass) {
 		this.perClass = perClass;
 	}
@@ -201,51 +246,6 @@ public class TransformCollation {
 		perClass.keySet().forEach(k -> statistics
 				.add(((Class) k).getSimpleName(), perClass.items(k).size()));
 		return statistics.toLinkedHashMap(true).entrySet().toString();
-	}
-
-	protected void ensureLookups() {
-		if (perLocator == null) {
-			perClass = new UnsortedMultikeyMap<>(2);
-			perLocator = new HashMap<>();
-			allEvents.forEach(event -> {
-				{
-					EntityLocator locator = event.toObjectLocator();
-					if (locator.provideIsZeroIdAndLocalId()) {
-						// FIXME - mvcc.5 - DEVEX (probably on transform
-						// creation)
-					} else {
-						EntityCollation collation = perClass.ensure(
-								() -> new EntityCollation(locator),
-								locator.clazz, locator);
-						collation.transforms.add(event);
-						perLocator.put(locator, collation);
-					}
-				}
-				{
-					EntityLocator locator = event.toValueLocator();
-					if (locator == null
-							|| locator.provideIsZeroIdAndLocalId()) {
-					} else {
-						EntityCollation collation = perClass.ensure(
-								() -> new EntityCollation(locator),
-								locator.clazz, locator);
-						collation.valueTransforms.add(event);
-						perLocator.put(locator, collation);
-					}
-				}
-			});
-		}
-	}
-
-	protected void refresh(List<? extends DomainTransformEvent> allEvents) {
-		this.allEvents = (List<DomainTransformEvent>) allEvents.stream()
-				.collect(Collectors.toList());
-		perClass = null;
-		perLocator = null;
-	}
-
-	protected void removeTransformsFromRequest(QueryResult queryResult) {
-		queryResult.events.forEach(this::removeTransformFromRequest);
 	}
 
 	public class EntityCollation implements HasId {
@@ -385,6 +385,29 @@ public class TransformCollation {
 			withFilter(e -> e.toObjectLocator().equals(entity.toLocator()));
 		}
 
+		private List<DomainTransformEvent> getEvents(EntityCollation ec) {
+			return ec.transforms.stream().filter(this::matches)
+					.collect(Collectors.toList());
+		}
+
+		boolean matches(DomainTransformEvent event) {
+			if (event.getObjectClass() != clazz) {
+				return false;
+			}
+			if (propertyName != null
+					&& !Objects.equals(propertyName, event.getPropertyName())) {
+				return false;
+			}
+			if (predicate != null && !predicate.test(event)) {
+				return false;
+			}
+			return true;
+		}
+
+		boolean matches(EntityCollation collation) {
+			return getEvents(collation).size() > 0;
+		}
+
 		public Stream<QueryResult> stream() {
 			ensureLookups();
 			if (!perClass.containsKey(clazz)) {
@@ -412,29 +435,6 @@ public class TransformCollation {
 			this.propertyName = propertyName;
 			return this;
 		}
-
-		private List<DomainTransformEvent> getEvents(EntityCollation ec) {
-			return ec.transforms.stream().filter(this::matches)
-					.collect(Collectors.toList());
-		}
-
-		boolean matches(DomainTransformEvent event) {
-			if (event.getObjectClass() != clazz) {
-				return false;
-			}
-			if (propertyName != null
-					&& !Objects.equals(propertyName, event.getPropertyName())) {
-				return false;
-			}
-			if (predicate != null && !predicate.test(event)) {
-				return false;
-			}
-			return true;
-		}
-
-		boolean matches(EntityCollation collation) {
-			return getEvents(collation).size() > 0;
-		}
 	}
 
 	public class QueryResult {
@@ -448,6 +448,15 @@ public class TransformCollation {
 				List<DomainTransformEvent> events) {
 			this.entityCollation = ec;
 			this.events = events;
+		}
+
+		private Set<String> ensurePropertyNames() {
+			if (propertyNames == null) {
+				propertyNames = events.stream()
+						.map(DomainTransformEvent::getPropertyName)
+						.filter(Objects::nonNull).collect(Collectors.toSet());
+			}
+			return propertyNames;
 		}
 
 		public <E extends Entity> E getEntity() {
@@ -526,15 +535,6 @@ public class TransformCollation {
 
 		public void removeTransformsFromRequest() {
 			TransformCollation.this.removeTransformsFromRequest(this);
-		}
-
-		private Set<String> ensurePropertyNames() {
-			if (propertyNames == null) {
-				propertyNames = events.stream()
-						.map(DomainTransformEvent::getPropertyName)
-						.filter(Objects::nonNull).collect(Collectors.toSet());
-			}
-			return propertyNames;
 		}
 	}
 }

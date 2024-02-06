@@ -64,6 +64,10 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup>
 		initWidget(container);
 	}
 
+	protected void createContainer() {
+		this.container = new FlowPanel();
+	}
+
 	public CriteriaGroup getValue() {
 		// noop
 		return null;
@@ -94,10 +98,6 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup>
 
 	public void setValue(CriteriaGroup value) {
 		// noop
-	}
-
-	protected void createContainer() {
-		this.container = new FlowPanel();
 	}
 
 	protected void updateRblVisibility() {

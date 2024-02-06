@@ -34,6 +34,8 @@ public abstract class CellFilter extends Composite implements KeyUpHandler {
 		textBox.addKeyUpHandler(this);
 	}
 
+	protected abstract void afterSeries();
+
 	public void focus() {
 		textBox.setFocus(true);
 	}
@@ -41,13 +43,6 @@ public abstract class CellFilter extends Composite implements KeyUpHandler {
 	public boolean hasFilteringText() {
 		return Ax.notBlank(textBox.getValue());
 	}
-
-	@Override
-	public void onKeyUp(KeyUpEvent event) {
-		seriesTimer.eventOccurred();
-	}
-
-	protected abstract void afterSeries();
 
 	@Override
 	protected void onAttach() {
@@ -60,6 +55,11 @@ public abstract class CellFilter extends Composite implements KeyUpHandler {
 				}
 			}.schedule(500);
 		}
+	}
+
+	@Override
+	public void onKeyUp(KeyUpEvent event) {
+		seriesTimer.eventOccurred();
 	}
 
 	protected abstract boolean shouldFocusOnAttach();

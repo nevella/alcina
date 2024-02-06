@@ -18,6 +18,32 @@ public class ClassNames {
 		}
 	}
 
+	/**
+	 * Returns the index of the first occurrence of name in a space-separated
+	 * list of names, or -1 if not found.
+	 *
+	 * @param nameList
+	 *            list of space delimited names
+	 * @param name
+	 *            a non-empty string. Should be already trimmed.
+	 */
+	public static int indexOfName(String nameList, String name) {
+		int idx = nameList.indexOf(name);
+		// Calculate matching index.
+		while (idx != -1) {
+			if (idx == 0 || nameList.charAt(idx - 1) == ' ') {
+				int last = idx + name.length();
+				int lastPos = nameList.length();
+				if ((last == lastPos) || ((last < lastPos)
+						&& (nameList.charAt(last) == ' '))) {
+					break;
+				}
+			}
+			idx = nameList.indexOf(name, idx + 1);
+		}
+		return idx;
+	}
+
 	public static String removeClassName(String existingClassNames,
 			String className) {
 		className = trimClassName(className);
@@ -49,31 +75,5 @@ public class ClassNames {
 		className = className.trim();
 		assert !className.isEmpty() : "Unexpectedly empty class name";
 		return className;
-	}
-
-	/**
-	 * Returns the index of the first occurrence of name in a space-separated
-	 * list of names, or -1 if not found.
-	 *
-	 * @param nameList
-	 *            list of space delimited names
-	 * @param name
-	 *            a non-empty string. Should be already trimmed.
-	 */
-	public static int indexOfName(String nameList, String name) {
-		int idx = nameList.indexOf(name);
-		// Calculate matching index.
-		while (idx != -1) {
-			if (idx == 0 || nameList.charAt(idx - 1) == ' ') {
-				int last = idx + name.length();
-				int lastPos = nameList.length();
-				if ((last == lastPos) || ((last < lastPos)
-						&& (nameList.charAt(last) == ' '))) {
-					break;
-				}
-			}
-			idx = nameList.indexOf(name, idx + 1);
-		}
-		return idx;
 	}
 }

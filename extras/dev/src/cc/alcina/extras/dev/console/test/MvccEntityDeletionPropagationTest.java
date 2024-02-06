@@ -45,6 +45,34 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 
 	transient private IU createdUser;
 
+	@Override
+	protected void notifyThreadException(Exception e) {
+		super.notifyThreadException(e);
+		txLatch.countDown();
+	}
+
+	@Override
+	protected void run1() throws Exception {
+		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
+		txLatch = new CountDownLatch(2);
+		tx1Latch1 = new CountDownLatch(1);
+		tx1Latch2 = new CountDownLatch(1);
+		tx2Latch1 = new CountDownLatch(1);
+		long suffix = System.currentTimeMillis();
+		createdGroup = Domain.create(groupClass);
+		createdUser = Domain.create(userClass);
+		createdGroup.setGroupName("testgroup-" + suffix);
+		createdUser.setUserName(username);
+		createdGroup.addMemberUser(createdUser);
+		Transaction.commit();
+		// HashSetExtension.debugInstance = (HashSetExtension) createdGroup
+		// .getMemberUsers();
+		initialSize = Domain.stream(userClass).count();
+		startTx1();
+		startTx2();
+		txLatch.await();
+	}
+
 	private void startTx1() {
 		new Thread("test-mvcc-1") {
 			@Override
@@ -148,33 +176,5 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 						"non-committed-tx2: userClass.count()!=initialSize");
 			}
 		}.start();
-	}
-
-	@Override
-	protected void notifyThreadException(Exception e) {
-		super.notifyThreadException(e);
-		txLatch.countDown();
-	}
-
-	@Override
-	protected void run1() throws Exception {
-		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
-		txLatch = new CountDownLatch(2);
-		tx1Latch1 = new CountDownLatch(1);
-		tx1Latch2 = new CountDownLatch(1);
-		tx2Latch1 = new CountDownLatch(1);
-		long suffix = System.currentTimeMillis();
-		createdGroup = Domain.create(groupClass);
-		createdUser = Domain.create(userClass);
-		createdGroup.setGroupName("testgroup-" + suffix);
-		createdUser.setUserName(username);
-		createdGroup.addMemberUser(createdUser);
-		Transaction.commit();
-		// HashSetExtension.debugInstance = (HashSetExtension) createdGroup
-		// .getMemberUsers();
-		initialSize = Domain.stream(userClass).count();
-		startTx1();
-		startTx2();
-		txLatch.await();
 	}
 }

@@ -8,6 +8,18 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 public class StandardModels {
+	public static class LabelText extends Model.All
+			implements Directed.NonClassTag {
+		public String label;
+
+		public String text;
+
+		public LabelText(String label, String text) {
+			this.label = label;
+			this.text = text;
+		}
+	}
+
 	@Registration.Singleton
 	public static class PageCssClass extends Bindable {
 		public static StandardModels.PageCssClass get() {
@@ -39,18 +51,6 @@ public class StandardModels {
 		public TextTitle(String text, String title) {
 			this.text = text;
 			this.title = title;
-		}
-	}
-
-	public static class LabelText extends Model.All
-			implements Directed.NonClassTag {
-		public String label;
-
-		public String text;
-
-		public LabelText(String label, String text) {
-			this.label = label;
-			this.text = text;
 		}
 	}
 }

@@ -25,11 +25,6 @@ public class BasicBindingAction<T extends BoundWidget<?>>
 		implements BindingAction<T>, HasBinding {
 	protected Binding binding = new Binding();
 
-	public BasicBindingAction withBinding(Binding binding) {
-		this.binding = binding;
-		return this;
-	}
-
 	protected boolean wasSet = false;
 
 	public void bind(T widget) {
@@ -43,6 +38,10 @@ public class BasicBindingAction<T extends BoundWidget<?>>
 		return this.binding;
 	}
 
+	protected boolean isSetLeftOnLaterSets() {
+		return false;
+	}
+
 	public void set(BoundWidget widget) {
 		if (wasSet) {
 			if (isSetLeftOnLaterSets()) {
@@ -54,15 +53,16 @@ public class BasicBindingAction<T extends BoundWidget<?>>
 		wasSet = true;
 	}
 
+	protected void set0(BoundWidget widget) {
+		binding.setLeft();
+	}
+
 	public void unbind(T widget) {
 		binding.unbind();
 	}
 
-	protected boolean isSetLeftOnLaterSets() {
-		return false;
-	}
-
-	protected void set0(BoundWidget widget) {
-		binding.setLeft();
+	public BasicBindingAction withBinding(Binding binding) {
+		this.binding = binding;
+		return this;
 	}
 }

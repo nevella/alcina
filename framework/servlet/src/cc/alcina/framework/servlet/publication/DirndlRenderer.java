@@ -55,16 +55,6 @@ public class DirndlRenderer {
 				.firstElement();
 	}
 
-	public DirndlRenderer withRenderable(Model renderable) {
-		this.renderable = renderable;
-		return this;
-	}
-
-	public DirndlRenderer withResolver(ContextResolver contextResolver) {
-		this.contextResolver = contextResolver;
-		return this;
-	}
-
 	private <T> T render(Supplier<T> supplier) {
 		try {
 			LooseContext.push();
@@ -100,6 +90,16 @@ public class DirndlRenderer {
 		// unbind listeners
 		layout.remove();
 		return element;
+	}
+
+	public DirndlRenderer withRenderable(Model renderable) {
+		this.renderable = renderable;
+		return this;
+	}
+
+	public DirndlRenderer withResolver(ContextResolver contextResolver) {
+		this.contextResolver = contextResolver;
+		return this;
 	}
 
 	static class StylePath {

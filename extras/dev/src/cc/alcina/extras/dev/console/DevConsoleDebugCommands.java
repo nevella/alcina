@@ -85,6 +85,11 @@ public class DevConsoleDebugCommands {
 			return true;
 		}
 
+		private List<ILogRecord> filterByComponent(List<ILogRecord> logRecords,
+				String componentKey) {
+			return getPeer().filterByComponent(logRecords, componentKey);
+		}
+
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "dxc" };
@@ -371,11 +376,6 @@ public class DevConsoleDebugCommands {
 			}
 			return "";
 		}
-
-		private List<ILogRecord> filterByComponent(List<ILogRecord> logRecords,
-				String componentKey) {
-			return getPeer().filterByComponent(logRecords, componentKey);
-		}
 	}
 
 	public static class CmdCountExceptionsByUser extends DevConsoleCommand {
@@ -452,63 +452,6 @@ public class DevConsoleDebugCommands {
 		@Override
 		public boolean clsBeforeRun() {
 			return true;
-		}
-
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "dxd" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "Drill down to exception - run with zero params for usage";
-		}
-
-		@Override
-		public String getUsage() {
-			return "dxd  {id} <-js> <-fn fname> <-o outputformat>";
-		}
-
-		public List<ClientLogRecord>
-				parseSerializedLogRecords(String serializedLogRecords) {
-			Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
-				@Override
-				public ClientLogRecords convert(String original) {
-					try {
-						return TransformManager.deserialize(original);
-					} catch (Exception e) {
-						System.out.format(
-								"problem deserializing clientlogrecord:\n%s\n",
-								original);
-						e.printStackTrace();
-						if (Configuration.is(CommonRemoteServiceServlet.class,
-								"throwLogClientRecordExceptions")) {
-							throw new WrappedRuntimeException(e);
-						}
-						return null;
-					}
-				}
-			};
-			List<String> lines = Arrays
-					.asList(serializedLogRecords.split("\n"));
-			List<ClientLogRecords> records = lines.stream().map(converter)
-					.filter(Objects::nonNull).collect(Collectors.toList());
-			List<ClientLogRecord> clrs = new ArrayList<ClientLogRecord>();
-			for (ClientLogRecords clientLogRecords : records) {
-				clrs.addAll(clientLogRecords.getLogRecords());
-			}
-			return clrs;
-		}
-
-		@Override
-		public void printUsage() {
-			System.out.println(getUsage());
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			console.clear();
-			return run0(argv);
 		}
 
 		private void deObfStacktrace(String text, String mn, Browser browser)
@@ -759,6 +702,11 @@ public class DevConsoleDebugCommands {
 			return CommonUtils.join(ris, "\n");
 		}
 
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "dxd" };
+		}
+
 		private StringMap getDefJsFunctionLines(String fn) throws Exception {
 			StringMap jsLines = new StringMap();
 			String rgxfn = fn.replace("$", "\\$");
@@ -787,6 +735,16 @@ public class DevConsoleDebugCommands {
 			return jsLines;
 		}
 
+		@Override
+		public String getDescription() {
+			return "Drill down to exception - run with zero params for usage";
+		}
+
+		@Override
+		public String getUsage() {
+			return "dxd  {id} <-js> <-fn fname> <-o outputformat>";
+		}
+
 		private void importViaRsync(String fromOriginal, File to,
 				DevConsoleDebugPaths paths, boolean module) throws Exception {
 			for (ModuleSymbolPaths tuple : paths.modulePaths) {
@@ -807,6 +765,48 @@ public class DevConsoleDebugCommands {
 					break;
 				}
 			}
+		}
+
+		public List<ClientLogRecord>
+				parseSerializedLogRecords(String serializedLogRecords) {
+			Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
+				@Override
+				public ClientLogRecords convert(String original) {
+					try {
+						return TransformManager.deserialize(original);
+					} catch (Exception e) {
+						System.out.format(
+								"problem deserializing clientlogrecord:\n%s\n",
+								original);
+						e.printStackTrace();
+						if (Configuration.is(CommonRemoteServiceServlet.class,
+								"throwLogClientRecordExceptions")) {
+							throw new WrappedRuntimeException(e);
+						}
+						return null;
+					}
+				}
+			};
+			List<String> lines = Arrays
+					.asList(serializedLogRecords.split("\n"));
+			List<ClientLogRecords> records = lines.stream().map(converter)
+					.filter(Objects::nonNull).collect(Collectors.toList());
+			List<ClientLogRecord> clrs = new ArrayList<ClientLogRecord>();
+			for (ClientLogRecords clientLogRecords : records) {
+				clrs.addAll(clientLogRecords.getLogRecords());
+			}
+			return clrs;
+		}
+
+		@Override
+		public void printUsage() {
+			System.out.println(getUsage());
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			console.clear();
+			return run0(argv);
 		}
 
 		String run0(String[] argv) throws Exception {
@@ -994,6 +994,10 @@ public class DevConsoleDebugCommands {
 			return "Download meaningful app exceptions for the last x days";
 		}
 
+		protected String getExceptionIgnoreClause() {
+			return getPeer().getExceptionIgnoreClause();
+		}
+
 		@Override
 		public String getUsage() {
 			return "dxg {days} <-a --all types> <-gtid id : log record id gt specified>";
@@ -1100,10 +1104,6 @@ public class DevConsoleDebugCommands {
 			} finally {
 				console.getProps().connection_useProduction = saveUseProd;
 			}
-		}
-
-		protected String getExceptionIgnoreClause() {
-			return getPeer().getExceptionIgnoreClause();
 		}
 	}
 

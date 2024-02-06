@@ -10,6 +10,12 @@ public class PatternMatcher extends LookaheadMatcher<Pattern> {
 		super(parserState);
 	}
 
+	@Override
+	protected MatchResult matchText(LocationMatcher locationMatcher,
+			CharSequence text) {
+		return new MatchResultImpl(locationMatcher, text);
+	}
+
 	class MatchResultImpl implements MatchResult {
 		Matcher matcher;
 
@@ -22,6 +28,11 @@ public class PatternMatcher extends LookaheadMatcher<Pattern> {
 		}
 
 		@Override
+		public int end() {
+			return matcher.end();
+		}
+
+		@Override
 		public boolean found() {
 			return found;
 		}
@@ -30,16 +41,5 @@ public class PatternMatcher extends LookaheadMatcher<Pattern> {
 		public int start() {
 			return matcher.start();
 		}
-
-		@Override
-		public int end() {
-			return matcher.end();
-		}
-	}
-
-	@Override
-	protected MatchResult matchText(LocationMatcher locationMatcher,
-			CharSequence text) {
-		return new MatchResultImpl(locationMatcher, text);
 	}
 }

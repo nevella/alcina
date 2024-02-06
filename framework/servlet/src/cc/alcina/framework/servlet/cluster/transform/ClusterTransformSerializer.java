@@ -85,8 +85,66 @@ public class ClusterTransformSerializer {
 		}
 	}
 
+	private KafkaPacket deserializePacket(byte[] data) {
+		try {
+			ByteArrayInputStream bais = new ByteArrayInputStream(data);
+			DataInputStream stream = new DataInputStream(bais);
+			KafkaPacket result = new KafkaPacket();
+			result.protocolVersion = stream.readInt();
+			result.sequenceIdx = stream.readUTF();
+			result.chunkIdx = stream.readInt();
+			result.chunkCount = stream.readInt();
+			result.dataLength = stream.readInt();
+			result.bytes = new byte[result.dataLength];
+			stream.read(result.bytes);
+			lastPacket = result;
+			return result;
+		} catch (Exception e) {
+			// application-fatal. how sad
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public String getLastPartialId() {
 		return Ax.format("%s::%s", lastPacket.sequenceIdx, lastPacket.chunkIdx);
+	}
+
+	/*
+	 * For subclasses, to handle multi-domain-store incoming requests
+	 */
+	protected InputStream preProcessJson(InputStream inputStream,
+			Class<? extends TransformCommitLog> requestorClass)
+			throws Exception {
+		return inputStream;
+	}
+
+	private DomainTransformRequestPersistent
+			projectRequest(DomainTransformRequestPersistent request) {
+		DomainTransformRequestPersistent result = Reflections
+				.newInstance(request.getClass());
+		result.setId(request.getId());
+		result.setEvents(
+				request.getEvents().stream().collect(Collectors.toList()));
+		result.setChunkUuidString(request.getChunkUuidString());
+		ClientInstance originalClientInstance = request.getClientInstance();
+		ClientInstance clientInstance = (ClientInstance) Reflections
+				.newInstance(originalClientInstance.entityClass());
+		clientInstance.setId(originalClientInstance.getId());
+		clientInstance.setAuth(originalClientInstance.getAuth());
+		result.setClientInstance(clientInstance);
+		AuthenticationSession originalAuthenticationSession = originalClientInstance
+				.getAuthenticationSession();
+		AuthenticationSession authenticationSession = (AuthenticationSession) Reflections
+				.newInstance(originalAuthenticationSession.entityClass());
+		authenticationSession.setId(originalAuthenticationSession.getId());
+		IUser originalUser = originalClientInstance.provideUser();
+		IUser user = (IUser) Reflections
+				.newInstance(((Entity) originalUser).entityClass());
+		user.setUserName(originalUser.getUserName());
+		user.setId(originalUser.getId());
+		authenticationSession.setUser(user);
+		clientInstance.setAuthenticationSession(authenticationSession);
+		return result;
 	}
 
 	public List<byte[]> serialize(DomainTransformRequestPersistent request,
@@ -159,64 +217,6 @@ public class ClusterTransformSerializer {
 			logger.warn("Issue serializing reques", e);
 		}
 		return result;
-	}
-
-	private KafkaPacket deserializePacket(byte[] data) {
-		try {
-			ByteArrayInputStream bais = new ByteArrayInputStream(data);
-			DataInputStream stream = new DataInputStream(bais);
-			KafkaPacket result = new KafkaPacket();
-			result.protocolVersion = stream.readInt();
-			result.sequenceIdx = stream.readUTF();
-			result.chunkIdx = stream.readInt();
-			result.chunkCount = stream.readInt();
-			result.dataLength = stream.readInt();
-			result.bytes = new byte[result.dataLength];
-			stream.read(result.bytes);
-			lastPacket = result;
-			return result;
-		} catch (Exception e) {
-			// application-fatal. how sad
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private DomainTransformRequestPersistent
-			projectRequest(DomainTransformRequestPersistent request) {
-		DomainTransformRequestPersistent result = Reflections
-				.newInstance(request.getClass());
-		result.setId(request.getId());
-		result.setEvents(
-				request.getEvents().stream().collect(Collectors.toList()));
-		result.setChunkUuidString(request.getChunkUuidString());
-		ClientInstance originalClientInstance = request.getClientInstance();
-		ClientInstance clientInstance = (ClientInstance) Reflections
-				.newInstance(originalClientInstance.entityClass());
-		clientInstance.setId(originalClientInstance.getId());
-		clientInstance.setAuth(originalClientInstance.getAuth());
-		result.setClientInstance(clientInstance);
-		AuthenticationSession originalAuthenticationSession = originalClientInstance
-				.getAuthenticationSession();
-		AuthenticationSession authenticationSession = (AuthenticationSession) Reflections
-				.newInstance(originalAuthenticationSession.entityClass());
-		authenticationSession.setId(originalAuthenticationSession.getId());
-		IUser originalUser = originalClientInstance.provideUser();
-		IUser user = (IUser) Reflections
-				.newInstance(((Entity) originalUser).entityClass());
-		user.setUserName(originalUser.getUserName());
-		user.setId(originalUser.getId());
-		authenticationSession.setUser(user);
-		clientInstance.setAuthenticationSession(authenticationSession);
-		return result;
-	}
-
-	/*
-	 * For subclasses, to handle multi-domain-store incoming requests
-	 */
-	protected InputStream preProcessJson(InputStream inputStream,
-			Class<? extends TransformCommitLog> requestorClass)
-			throws Exception {
-		return inputStream;
 	}
 
 	static class KafkaPacket {

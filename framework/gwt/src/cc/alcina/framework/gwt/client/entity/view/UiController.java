@@ -38,10 +38,6 @@ public class UiController {
 		return (VM) viewModels.get(clazz);
 	}
 
-	public void setSingleWidgetHolder(AcceptsOneWidget singleWidgetHolder) {
-		this.singleWidgetHolder = singleWidgetHolder;
-	}
-
 	protected IsWidget getWidgetForViewModel(ViewModel viewModel) {
 		Class<? extends ViewModel> clazz = viewModel.getClass();
 		if (viewModelViews.get(clazz) == null) {
@@ -51,5 +47,9 @@ public class UiController {
 		ViewModelView view = viewModelViews.get(clazz);
 		view.setModel(viewModel);
 		return view;
+	}
+
+	public void setSingleWidgetHolder(AcceptsOneWidget singleWidgetHolder) {
+		this.singleWidgetHolder = singleWidgetHolder;
 	}
 }

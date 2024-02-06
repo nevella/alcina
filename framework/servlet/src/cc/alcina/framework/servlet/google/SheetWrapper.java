@@ -54,6 +54,16 @@ public class SheetWrapper
 		batchUpdateRequest.setValueInputOption("USER_ENTERED");
 	}
 
+	protected void addUpdate(String key, Object value, Row row) {
+		ValueRange valueRange = row.getUpdateRange(key);
+		List<Object> cellValues = new ArrayList<>();
+		cellValues.add(value);
+		List<List<Object>> updateValues = new ArrayList<>();
+		updateValues.add(cellValues);
+		valueRange.setValues(updateValues);
+		batchUpdateRequest.getData().add(valueRange);
+	}
+
 	public void clearAfter(int rowCounter) {
 		rowIdx = rowCounter;
 		while (hasNext()) {
@@ -69,6 +79,10 @@ public class SheetWrapper
 	@Override
 	public boolean hasNext() {
 		return rowData.size() > rowIdx;
+	}
+
+	private int indexOf(String key) {
+		return keyLookup.get(key);
 	}
 
 	@Override
@@ -119,20 +133,6 @@ public class SheetWrapper
 		}
 	}
 
-	private int indexOf(String key) {
-		return keyLookup.get(key);
-	}
-
-	protected void addUpdate(String key, Object value, Row row) {
-		ValueRange valueRange = row.getUpdateRange(key);
-		List<Object> cellValues = new ArrayList<>();
-		cellValues.add(value);
-		List<List<Object>> updateValues = new ArrayList<>();
-		updateValues.add(cellValues);
-		valueRange.setValues(updateValues);
-		batchUpdateRequest.getData().add(valueRange);
-	}
-
 	public class Row {
 		public int idx;
 
@@ -149,6 +149,21 @@ public class SheetWrapper
 			for (String key : keyLookup.getMap().keySet()) {
 				addUpdate(key, "", this);
 			}
+		}
+
+		private CellData getCellData(String key) {
+			List<CellData> values = idx >= rowData.size() ? null
+					: rowData.get(idx).getValues();
+			if (values == null) {
+				return null;
+			}
+			int colIdx = indexOf(key);
+			CellData cellData = colIdx >= values.size() ? null
+					: values.get(colIdx);
+			if (cellData == null || cellData.getEffectiveValue() == null) {
+				return null;
+			}
+			return cellData;
 		}
 
 		public String getDateValue(String key) {
@@ -185,21 +200,6 @@ public class SheetWrapper
 				}
 				return value;
 			});
-		}
-
-		private CellData getCellData(String key) {
-			List<CellData> values = idx >= rowData.size() ? null
-					: rowData.get(idx).getValues();
-			if (values == null) {
-				return null;
-			}
-			int colIdx = indexOf(key);
-			CellData cellData = colIdx >= values.size() ? null
-					: values.get(colIdx);
-			if (cellData == null || cellData.getEffectiveValue() == null) {
-				return null;
-			}
-			return cellData;
 		}
 
 		private <T> T withCellData(String key, Function<CellData, T> mapper) {

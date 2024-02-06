@@ -145,6 +145,10 @@ public class Multimap<K, V extends List>
 		return copy;
 	}
 
+	private Map<K, V> createMap() {
+		return new LinkedHashMap<K, V>();
+	}
+
 	public boolean ensure(K key, Object item) {
 		V list = getAndEnsure(key);
 		if (list.contains(item)) {
@@ -326,9 +330,5 @@ public class Multimap<K, V extends List>
 	@Override
 	public Collection<V> values() {
 		return this.map.values();
-	}
-
-	private Map<K, V> createMap() {
-		return new LinkedHashMap<K, V>();
 	}
 }

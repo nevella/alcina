@@ -238,11 +238,26 @@ public class DomainStoreDataProvider<T extends Entity>
 		return this.useColumnSearchOrders;
 	}
 
+	private void maybeUpdateLoadingState(HasData<T> dd1,
+			LoadingState loadingState) {
+		if (dd1 instanceof DataGridWithScrollAccess) {
+			((DataGridWithScrollAccess) dd1)
+					.onLoadingStateChanged(loadingState);
+		}
+	}
+
 	@Override
 	public void onColumnSort(ColumnSortEvent event) {
 		lastSearchDefinition = null;
 		topicColumnSort.publish(event);
 		search();
+	}
+
+	@Override
+	protected void onRangeChanged(HasData<T> display) {
+		if (searchDefinition != null) {
+			search();
+		}
 	}
 
 	public void refresh() {
@@ -262,6 +277,13 @@ public class DomainStoreDataProvider<T extends Entity>
 	public void resetPageSize() {
 		pageSize = 0;
 		lastRange = null;
+	}
+
+	private void resultsDelta(int resultCount, int dataStart, boolean exact) {
+		updateRowCount(resultCount, exact);
+		// defer, otherwise the renderer can fail to erase rows
+		Scheduler.get()
+				.scheduleDeferred(() -> updateRowData(dataStart, results));
 	}
 
 	public void search() {
@@ -375,6 +397,15 @@ public class DomainStoreDataProvider<T extends Entity>
 		}
 	}
 
+	private void searching(SearchDefinition def, Range range) {
+		this.lastRange = range;
+		try {
+			lastSearchDefinition = def.cloneObject();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public void setColumnSortList(ColumnSortList columnSortList) {
 		this.columnSortList = columnSortList;
 	}
@@ -411,10 +442,63 @@ public class DomainStoreDataProvider<T extends Entity>
 		this.visibleRecordsSize = visibleRecordsSize;
 	}
 
+	private void sortOrFireGroupedResults(ColumnSortEvent event) {
+		if (event == null) {
+			groupedDataHandlerManager.fireEvent(new GroupedDataChangeEvent(
+					groupedResult, searchDefinition));
+			return;
+		} else {
+			EntitySearchDefinition next = searchDefinition.cloneObject();
+			next.getGroupingParameters().getColumnOrders().clear();
+			int size = event.getColumnSortList().size();
+			for (int idx = 0; idx < size; idx++) {
+				ColumnSortInfo columnSortInfo = event.getColumnSortList()
+						.get(idx);
+				ColumnSearchOrder searchOrder = new ColumnSearchOrder();
+				searchOrder.setAscending(columnSortInfo.isAscending());
+				searchOrder.setColumnName(
+						((SortableColumn) columnSortInfo.getColumn())
+								.getName());
+				next.getGroupingParameters().getColumnOrders().add(searchOrder);
+			}
+			AppController.get().doSearch(next);
+		}
+	}
+
 	public void tail() {
 		// nudge by changing the range
 		lastRange = new Range(0, 0);
 		search();
+	}
+
+	private void updateColumnSortListFromDefinitionOrders(HasData<T> hasData) {
+		if (searchDefinition == null || columnSortList == null
+				|| searchDefinition.getSearchOrders().isEmpty()
+				|| !(hasData instanceof AbstractCellTable)) {
+			return;
+		}
+		SearchOrders searchOrders = searchDefinition.getSearchOrders();
+		AbstractCellTable table = (AbstractCellTable) hasData;
+		List<SerializableSearchOrder> serializableSearchOrders = searchOrders
+				.getSerializableSearchOrders();
+		boolean cleared = false;
+		for (SerializableSearchOrder order : serializableSearchOrders) {
+			for (int idx = 0; idx < table.getColumnCount(); idx++) {
+				Column column = table.getColumn(idx);
+				if (column instanceof SortableColumn) {
+					SortableColumn sortableColumn = (SortableColumn) column;
+					if (sortableColumn.sortFunction() != null
+							&& sortableColumn.sortFunction().getClass()
+									.getName().equals(order.getKey())) {
+						if (!cleared) {
+							columnSortList.clear();
+						}
+						columnSortList.push(new ColumnSortInfo(column,
+								order.isAscending()));
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -452,95 +536,6 @@ public class DomainStoreDataProvider<T extends Entity>
 				new DataProviderChangeEvent<T>(toFireAsDcEvent)));
 	}
 
-	private void maybeUpdateLoadingState(HasData<T> dd1,
-			LoadingState loadingState) {
-		if (dd1 instanceof DataGridWithScrollAccess) {
-			((DataGridWithScrollAccess) dd1)
-					.onLoadingStateChanged(loadingState);
-		}
-	}
-
-	private void resultsDelta(int resultCount, int dataStart, boolean exact) {
-		updateRowCount(resultCount, exact);
-		// defer, otherwise the renderer can fail to erase rows
-		Scheduler.get()
-				.scheduleDeferred(() -> updateRowData(dataStart, results));
-	}
-
-	private void searching(SearchDefinition def, Range range) {
-		this.lastRange = range;
-		try {
-			lastSearchDefinition = def.cloneObject();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private void sortOrFireGroupedResults(ColumnSortEvent event) {
-		if (event == null) {
-			groupedDataHandlerManager.fireEvent(new GroupedDataChangeEvent(
-					groupedResult, searchDefinition));
-			return;
-		} else {
-			EntitySearchDefinition next = searchDefinition.cloneObject();
-			next.getGroupingParameters().getColumnOrders().clear();
-			int size = event.getColumnSortList().size();
-			for (int idx = 0; idx < size; idx++) {
-				ColumnSortInfo columnSortInfo = event.getColumnSortList()
-						.get(idx);
-				ColumnSearchOrder searchOrder = new ColumnSearchOrder();
-				searchOrder.setAscending(columnSortInfo.isAscending());
-				searchOrder.setColumnName(
-						((SortableColumn) columnSortInfo.getColumn())
-								.getName());
-				next.getGroupingParameters().getColumnOrders().add(searchOrder);
-			}
-			AppController.get().doSearch(next);
-		}
-	}
-
-	private void updateColumnSortListFromDefinitionOrders(HasData<T> hasData) {
-		if (searchDefinition == null || columnSortList == null
-				|| searchDefinition.getSearchOrders().isEmpty()
-				|| !(hasData instanceof AbstractCellTable)) {
-			return;
-		}
-		SearchOrders searchOrders = searchDefinition.getSearchOrders();
-		AbstractCellTable table = (AbstractCellTable) hasData;
-		List<SerializableSearchOrder> serializableSearchOrders = searchOrders
-				.getSerializableSearchOrders();
-		boolean cleared = false;
-		for (SerializableSearchOrder order : serializableSearchOrders) {
-			for (int idx = 0; idx < table.getColumnCount(); idx++) {
-				Column column = table.getColumn(idx);
-				if (column instanceof SortableColumn) {
-					SortableColumn sortableColumn = (SortableColumn) column;
-					if (sortableColumn.sortFunction() != null
-							&& sortableColumn.sortFunction().getClass()
-									.getName().equals(order.getKey())) {
-						if (!cleared) {
-							columnSortList.clear();
-						}
-						columnSortList.push(new ColumnSortInfo(column,
-								order.isAscending()));
-					}
-				}
-			}
-		}
-	}
-
-	@Override
-	protected void onRangeChanged(HasData<T> display) {
-		if (searchDefinition != null) {
-			search();
-		}
-	}
-
-	public interface SearchModelPerformer {
-		void searchModel(BindableSearchDefinition def,
-				AsyncCallback<ModelSearchResults> callback);
-	}
-
 	private class SearchCallback
 			extends CancellableAsyncCallback<ModelSearchResults> {
 		private final IntPair fSearchRange;
@@ -550,6 +545,11 @@ public class DomainStoreDataProvider<T extends Entity>
 		private SearchCallback(IntPair fSearchRange, HasData<T> dd1) {
 			this.fSearchRange = fSearchRange;
 			this.dd1 = dd1;
+		}
+
+		private void cleanup() {
+			activeCallback = null;
+			maybeUpdateLoadingState(dd1, LoadingState.LOADED);
 		}
 
 		@Override
@@ -577,10 +577,10 @@ public class DomainStoreDataProvider<T extends Entity>
 			groupedResult = result.getGroupedResult();
 			sortOrFireGroupedResults(null);
 		}
+	}
 
-		private void cleanup() {
-			activeCallback = null;
-			maybeUpdateLoadingState(dd1, LoadingState.LOADED);
-		}
+	public interface SearchModelPerformer {
+		void searchModel(BindableSearchDefinition def,
+				AsyncCallback<ModelSearchResults> callback);
 	}
 }

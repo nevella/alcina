@@ -39,17 +39,17 @@ public class VisibilityChangeEvent
 	}
 
 	@Override
+	protected void dispatch(Handler handler) {
+		handler.onVisiblityChange(this);
+	}
+
+	@Override
 	public Type<Handler> getAssociatedType() {
 		return TYPE;
 	}
 
 	public boolean isVisible() {
 		return this.visible;
-	}
-
-	@Override
-	protected void dispatch(Handler handler) {
-		handler.onVisiblityChange(this);
 	}
 
 	public interface Handler extends EventHandler {

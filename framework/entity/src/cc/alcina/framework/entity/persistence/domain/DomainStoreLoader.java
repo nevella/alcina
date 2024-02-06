@@ -9,6 +9,8 @@ public interface DomainStoreLoader {
 
 	boolean checkTransformRequestExists(long id);
 
+	void close();
+
 	LazyObjectLoader getLazyObjectLoader();
 
 	DomainTransformPersistenceQueue.Sequencer getTransformSequencer();
@@ -16,6 +18,4 @@ public interface DomainStoreLoader {
 	DomainTransformRequestPersistent loadTransformRequest(long id);
 
 	void warmup() throws Exception;
-
-	void close();
 }

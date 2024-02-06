@@ -238,6 +238,11 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		}
 
 		@Override
+		protected void initCaches() {
+			// delegates to parent caches
+		}
+
+		@Override
 		public void onBeforeRender(BeforeRender event) {
 			Node node = event.getContext().node;
 			// skip the transform node, bind the transform child to the
@@ -258,11 +263,6 @@ public class BridgingValueRenderer extends DirectedRenderer {
 				displayModel.bindings().addBinding(binding);
 				renderer.input = null;
 			}
-		}
-
-		@Override
-		protected void initCaches() {
-			// delegates to parent caches
 		}
 
 		class Context implements NodeEditorContext {

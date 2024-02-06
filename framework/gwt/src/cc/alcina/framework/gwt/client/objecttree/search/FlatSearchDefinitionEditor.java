@@ -30,6 +30,20 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 		render();
 	}
 
+	void addRow(FlatSearchable flatSearchable, SearchCriterion sc) {
+		FlatSearchRow row = new FlatSearchRow(this);
+		row.setSearchable(flatSearchable);
+		if (sc == null) {
+			sc = flatSearchable.createCriterionInstance();
+			def.addCriterionToSoleCriteriaGroup(sc, true);
+		}
+		row.setValue(sc);
+		row.setModel(def);
+		fp.add(row);
+		rows.put(sc, row);
+		checkDisableFirstRowRemove();
+	}
+
 	public void checkDisableFirstRowRemove() {
 		for (FlatSearchRow row : rows.values()) {
 			row.disableMinus(rows.size() == 1);
@@ -119,6 +133,19 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 		}
 	}
 
+	void removeRow(FlatSearchRow row, boolean hadValue) {
+		def.removeCriterion(row.getValue(), !hadValue);
+		rows.remove(row.getValue());
+		fp.remove(row);
+		checkDisableFirstRowRemove();
+	}
+
+	private void render() {
+		this.fp = new FlowPanel();
+		setAction(new FlatSearchDefinitionEditorAction());
+		initWidget(fp);
+	}
+
 	public Optional<FlatSearchable> searchableForCriterion(SearchCriterion sc) {
 		return searchables.stream()
 				.filter(s -> s.getCriterionClass() == sc.getClass())
@@ -161,33 +188,6 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 
 	@Override
 	public void setValue(Object value) {
-	}
-
-	private void render() {
-		this.fp = new FlowPanel();
-		setAction(new FlatSearchDefinitionEditorAction());
-		initWidget(fp);
-	}
-
-	void addRow(FlatSearchable flatSearchable, SearchCriterion sc) {
-		FlatSearchRow row = new FlatSearchRow(this);
-		row.setSearchable(flatSearchable);
-		if (sc == null) {
-			sc = flatSearchable.createCriterionInstance();
-			def.addCriterionToSoleCriteriaGroup(sc, true);
-		}
-		row.setValue(sc);
-		row.setModel(def);
-		fp.add(row);
-		rows.put(sc, row);
-		checkDisableFirstRowRemove();
-	}
-
-	void removeRow(FlatSearchRow row, boolean hadValue) {
-		def.removeCriterion(row.getValue(), !hadValue);
-		rows.remove(row.getValue());
-		fp.remove(row);
-		checkDisableFirstRowRemove();
 	}
 
 	class FlatSearchDefinitionEditorAction extends BasicBindingAction {

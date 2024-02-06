@@ -116,6 +116,10 @@ public class ClasspathScanner {
 		return classDataCache.classData.keySet();
 	}
 
+	protected String getPackage() {
+		return getPkg();
+	}
+
 	public String getPkg() {
 		return pkg;
 	}
@@ -136,33 +140,6 @@ public class ClasspathScanner {
 		}
 	}
 
-	public boolean isIgnoreJars() {
-		return ignoreJars;
-	}
-
-	public boolean isRecur() {
-		return recur;
-	}
-
-	public void scanDirectory(String path) throws Exception {
-		URL url = new File(path).toURI().toURL();
-		new DirectoryVisitor(this).enumerateClasses(url);
-	}
-
-	private void sanitizePackage(String pkgName) {
-		if ((pkgName == null) || (pkgName.trim().length() == 0))
-			throw new IllegalArgumentException("Base package cannot be null");
-		pkg = pkgName.replace('.', '/');
-		if (getPkg().endsWith("*"))
-			pkg = getPkg().substring(0, getPkg().length() - 1);
-		if (getPkg().endsWith("/"))
-			pkg = getPkg().substring(0, getPkg().length() - 1);
-	}
-
-	protected String getPackage() {
-		return getPkg();
-	}
-
 	protected URL invokeResolver(URL url) {
 		try {
 			for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
@@ -180,6 +157,29 @@ public class ClasspathScanner {
 		return url;
 	}
 
+	public boolean isIgnoreJars() {
+		return ignoreJars;
+	}
+
+	public boolean isRecur() {
+		return recur;
+	}
+
+	private void sanitizePackage(String pkgName) {
+		if ((pkgName == null) || (pkgName.trim().length() == 0))
+			throw new IllegalArgumentException("Base package cannot be null");
+		pkg = pkgName.replace('.', '/');
+		if (getPkg().endsWith("*"))
+			pkg = getPkg().substring(0, getPkg().length() - 1);
+		if (getPkg().endsWith("/"))
+			pkg = getPkg().substring(0, getPkg().length() - 1);
+	}
+
+	public void scanDirectory(String path) throws Exception {
+		URL url = new File(path).toURI().toURL();
+		new DirectoryVisitor(this).enumerateClasses(url);
+	}
+
 	public abstract static class ClasspathVisitor {
 		protected static final Object PROTOCOL_FILE = "file";
 
@@ -187,14 +187,6 @@ public class ClasspathScanner {
 
 		public ClasspathVisitor(ClasspathScanner scanner) {
 			this.scanner = scanner;
-		}
-
-		public abstract void enumerateClasses(URL url) throws Exception;
-
-		public abstract boolean handles(URL url);
-
-		public URL resolve(URL url) throws Exception {
-			return null;
 		}
 
 		protected synchronized void add(String relativeClassPath,
@@ -213,6 +205,14 @@ public class ClasspathScanner {
 					scanner.classDataCache.insert(item);
 				}
 			}
+		}
+
+		public abstract void enumerateClasses(URL url) throws Exception;
+
+		public abstract boolean handles(URL url);
+
+		public URL resolve(URL url) throws Exception {
+			return null;
 		}
 
 		protected String sanitizeFileURL(URL url) {
@@ -242,12 +242,6 @@ public class ClasspathScanner {
 			getClassesFromDirectory(file, file);
 		}
 
-		@Override
-		public boolean handles(URL url) {
-			return url.getProtocol().equals(PROTOCOL_FILE)
-					&& new File(url.getFile()).isDirectory();
-		}
-
 		private void getClassesFromDirectory(String path, String root) {
 			File directory = new File(path);
 			if (directory.exists()) {
@@ -267,6 +261,12 @@ public class ClasspathScanner {
 					}
 				}
 			}
+		}
+
+		@Override
+		public boolean handles(URL url) {
+			return url.getProtocol().equals(PROTOCOL_FILE)
+					&& new File(url.getFile()).isDirectory();
 		}
 	}
 

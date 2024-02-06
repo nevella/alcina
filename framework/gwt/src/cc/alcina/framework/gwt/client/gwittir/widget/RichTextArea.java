@@ -132,6 +132,10 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		return this.base.addKeyUpHandler(handler);
 	}
 
+	protected RichTextToolbar createToolbar() {
+		return new RichTextToolbar(base);
+	}
+
 	public com.google.gwt.user.client.ui.RichTextArea getBase() {
 		return this.base;
 	}
@@ -146,6 +150,12 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 
 	public String getValue() {
 		return base.getHTML();
+	}
+
+	@Override
+	protected void onDetach() {
+		changes.firePropertyChange("value", old, getValue());
+		super.onDetach();
 	}
 
 	public void setAccessKey(char key) {
@@ -170,16 +180,6 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 			base.setHTML(value);
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
-	}
-
-	protected RichTextToolbar createToolbar() {
-		return new RichTextToolbar(base);
-	}
-
-	@Override
-	protected void onDetach() {
-		changes.firePropertyChange("value", old, getValue());
-		super.onDetach();
 	}
 
 	protected native void styleBody(Element elem, String defaultFontSize) /*-{

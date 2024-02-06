@@ -82,6 +82,11 @@ public class ColumnSortEvent extends GwtEvent<ColumnSortEvent.Handler> {
 	}
 
 	@Override
+	protected void dispatch(Handler handler) {
+		handler.onColumnSort(this);
+	}
+
+	@Override
 	public Type<Handler> getAssociatedType() {
 		return TYPE;
 	}
@@ -114,11 +119,6 @@ public class ColumnSortEvent extends GwtEvent<ColumnSortEvent.Handler> {
 	public boolean isSortAscending() {
 		return (sortList == null || sortList.size() == 0) ? false
 				: sortList.get(0).isAscending();
-	}
-
-	@Override
-	protected void dispatch(Handler handler) {
-		handler.onColumnSort(this);
 	}
 
 	/**

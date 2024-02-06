@@ -60,6 +60,22 @@ public class StructuredTokenParserContext {
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
+	protected void closeOpenOutputWrappers(XmlStructuralJoin join) {
+		List<String> closed = new ArrayList<>();
+		for (Iterator<XmlStructuralJoin> itr = openJoins.iterator(); itr
+				.hasNext();) {
+			XmlStructuralJoin openNode = itr.next();
+			if (!openNode.sourceNode.isAncestorOf(join.sourceNode)
+					&& openNode.targetNode != null) {
+				String tag = openNode.targetNode.name();
+				closed.add(tag);
+				out.debug("close wrapper - %s", tag);
+				out.close(openNode, tag);
+				itr.remove();
+			}
+		}
+	}
+
 	public int count(XmlToken token) {
 		return matched.containsKey(token) ? matched.get(token).size() : 0;
 	}
@@ -159,70 +175,6 @@ public class StructuredTokenParserContext {
 		logger.debug("Matched token: {}", token);
 	}
 
-	public boolean outputOpen(XmlToken token) {
-		return outAncestors(null).nodeStream()
-				.anyMatch(xtn -> xtn.token == token);
-	}
-
-	public void propertyDelta(XmlStructuralJoin join, String key, boolean add) {
-		properties.setBooleanOrRemove(key, add);
-	}
-
-	public void pushWrapper(XmlStructuralJoin join) {
-		openJoins.push(join);
-		out.debug("open wrapper - %s - %s",
-				join.token.getOutputContext(join).getTag(), join.hashCode());
-	}
-
-	public void skip(DomNode node) {
-		stream.skip(node);
-	}
-
-	public void skipChildren() {
-		stream.skipChildren();
-	}
-
-	public void skipChildren(Predicate<DomNode> predicate) {
-		stream.skipChildren(predicate);
-	}
-
-	public void start() {
-	}
-
-	public void targetNodeMapped(XmlStructuralJoin join) {
-		nodeToken.put(join.targetNode, join);
-	}
-
-	public void wasMatched(XmlStructuralJoin join) {
-		matched.add(join.token, join.sourceNode);
-		nodeToken.put(join.sourceNode, join);
-	}
-
-	public NodeAncestorsContextProvider xmlInputContext(XmlStructuralJoin join,
-			Predicate<XmlStructuralJoin> stopNodes) {
-		return new NodeAncestors(join, stopNodes, NodeAncestorsTypes.SOURCE);
-	}
-
-	public NodeAncestorsContextProvider xmlOutputContext() {
-		return xmlOutputContext(null);
-	}
-
-	protected void closeOpenOutputWrappers(XmlStructuralJoin join) {
-		List<String> closed = new ArrayList<>();
-		for (Iterator<XmlStructuralJoin> itr = openJoins.iterator(); itr
-				.hasNext();) {
-			XmlStructuralJoin openNode = itr.next();
-			if (!openNode.sourceNode.isAncestorOf(join.sourceNode)
-					&& openNode.targetNode != null) {
-				String tag = openNode.targetNode.name();
-				closed.add(tag);
-				out.debug("close wrapper - %s", tag);
-				out.close(openNode, tag);
-				itr.remove();
-			}
-		}
-	}
-
 	protected void maybeOpenOutputWrapper(XmlStructuralJoin join) {
 		if (join.token.getOutputContext(join).hasTag()) {
 			out.open(join, join.token.getOutputContext(join).getTag(),
@@ -270,6 +222,54 @@ public class StructuredTokenParserContext {
 			outputContextRoots.put(node, root);
 		}
 		return (T) outputContextRoots.get(node);
+	}
+
+	public boolean outputOpen(XmlToken token) {
+		return outAncestors(null).nodeStream()
+				.anyMatch(xtn -> xtn.token == token);
+	}
+
+	public void propertyDelta(XmlStructuralJoin join, String key, boolean add) {
+		properties.setBooleanOrRemove(key, add);
+	}
+
+	public void pushWrapper(XmlStructuralJoin join) {
+		openJoins.push(join);
+		out.debug("open wrapper - %s - %s",
+				join.token.getOutputContext(join).getTag(), join.hashCode());
+	}
+
+	public void skip(DomNode node) {
+		stream.skip(node);
+	}
+
+	public void skipChildren() {
+		stream.skipChildren();
+	}
+
+	public void skipChildren(Predicate<DomNode> predicate) {
+		stream.skipChildren(predicate);
+	}
+
+	public void start() {
+	}
+
+	public void targetNodeMapped(XmlStructuralJoin join) {
+		nodeToken.put(join.targetNode, join);
+	}
+
+	public void wasMatched(XmlStructuralJoin join) {
+		matched.add(join.token, join.sourceNode);
+		nodeToken.put(join.sourceNode, join);
+	}
+
+	public NodeAncestorsContextProvider xmlInputContext(XmlStructuralJoin join,
+			Predicate<XmlStructuralJoin> stopNodes) {
+		return new NodeAncestors(join, stopNodes, NodeAncestorsTypes.SOURCE);
+	}
+
+	public NodeAncestorsContextProvider xmlOutputContext() {
+		return xmlOutputContext(null);
 	}
 
 	protected NodeAncestorsContextProvider
@@ -353,6 +353,10 @@ public class StructuredTokenParserContext {
 					.findFirst();
 		}
 
+		private boolean isTarget() {
+			return types.contains(NodeAncestorsTypes.TARGET);
+		}
+
 		public Iterable<XmlStructuralJoin> nodeIterable() {
 			return () -> nodeIterator();
 		}
@@ -369,10 +373,6 @@ public class StructuredTokenParserContext {
 			// last
 			return node == null ? null
 					: nodeStream().reduce((first, second) -> second).get();
-		}
-
-		private boolean isTarget() {
-			return types.contains(NodeAncestorsTypes.TARGET);
 		}
 	}
 
@@ -416,6 +416,16 @@ public class StructuredTokenParserContext {
 		public static boolean debug;
 
 		LinkedList<XmlStructuralJoin> joins = new LinkedList<>();
+
+		void debugRemove(XmlStructuralJoin join) {
+			if (!debug) {
+				return;
+			}
+			FormatBuilder format = new FormatBuilder();
+			format.append("<<");
+			format.appendPadLeft(joins.size() * 2, join.sourceNode.name());
+			Ax.err(format);
+		}
 
 		public XmlStructuralJoin first() {
 			return joins.get(0);
@@ -461,16 +471,6 @@ public class StructuredTokenParserContext {
 
 		public Stream<XmlStructuralJoin> stream() {
 			return joins.stream();
-		}
-
-		void debugRemove(XmlStructuralJoin join) {
-			if (!debug) {
-				return;
-			}
-			FormatBuilder format = new FormatBuilder();
-			format.append("<<");
-			format.appendPadLeft(joins.size() * 2, join.sourceNode.name());
-			Ax.err(format);
 		}
 
 		class WrappedIterator implements Iterator<XmlStructuralJoin> {

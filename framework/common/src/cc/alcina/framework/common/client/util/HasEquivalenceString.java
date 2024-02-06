@@ -19,12 +19,6 @@ import com.totsp.gwittir.client.beans.Converter;
 public interface HasEquivalenceString<T> extends HasEquivalence<T> {
 	String NULL = "<--null-->";
 
-	public static <T extends HasEquivalenceString> Map<String, T>
-			toEquivalanceStringMap(Stream<T> stream) {
-		return stream.collect(AlcinaCollectors
-				.toKeyMap(HasEquivalenceString::equivalenceString));
-	}
-
 	static <T> String collectionEquivalenceString(
 			Collection<? extends T> collection, Function<T, String> mapper) {
 		if (collection == null) {
@@ -47,6 +41,12 @@ public interface HasEquivalenceString<T> extends HasEquivalence<T> {
 			HasEquivalenceString hasEquivalenceString) {
 		return hasEquivalenceString == null ? HasEquivalenceString.NULL
 				: hasEquivalenceString.equivalenceString();
+	}
+
+	public static <T extends HasEquivalenceString> Map<String, T>
+			toEquivalanceStringMap(Stream<T> stream) {
+		return stream.collect(AlcinaCollectors
+				.toKeyMap(HasEquivalenceString::equivalenceString));
 	}
 
 	@Override

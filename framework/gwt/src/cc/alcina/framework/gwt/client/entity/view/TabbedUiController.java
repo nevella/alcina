@@ -10,6 +10,16 @@ import com.google.gwt.user.client.ui.IsWidget;
 public class TabbedUiController extends UiController {
 	private Map<Class<? extends Place>, PlaceTab> placeTabs = new LinkedHashMap<>();
 
+	PlaceTab getPlaceTab(Class<?> clazz) {
+		while (clazz != null) {
+			if (placeTabs.containsKey(clazz)) {
+				return placeTabs.get(clazz);
+			}
+			clazz = clazz.getSuperclass();
+		}
+		throw new UnsupportedOperationException();
+	}
+
 	@Override
 	public IsWidget getView(AcceptsOneWidget panel, ViewModel viewModel,
 			Place place) {
@@ -21,15 +31,5 @@ public class TabbedUiController extends UiController {
 
 	public void registerTab(PlaceTab tab) {
 		placeTabs.put(tab.getPlaceBaseClass(), tab);
-	}
-
-	PlaceTab getPlaceTab(Class<?> clazz) {
-		while (clazz != null) {
-			if (placeTabs.containsKey(clazz)) {
-				return placeTabs.get(clazz);
-			}
-			clazz = clazz.getSuperclass();
-		}
-		throw new UnsupportedOperationException();
 	}
 }

@@ -10,23 +10,6 @@ public class BaseMultilineRowEditor<T extends Entity>
 		extends MultilineRowEditor<T> implements BaseMultilineEditor<T> {
 	private BaseMultilineEditorCustomiser<T> customiser;
 
-	public BaseMultilineEditorCustomiser<T> getCustomiser() {
-		return this.customiser;
-	}
-
-	public List<T> provideSelected() {
-		return table.getSelected();
-	}
-
-	public void setCustomiser(BaseMultilineEditorCustomiser<T> customiser) {
-		this.customiser = customiser;
-	}
-
-	@Override
-	public void sortValues(List<T> values) {
-		customiser.sortValues(values);
-	}
-
 	@Override
 	protected void customiseActions(List<PermissibleAction> actions) {
 		customiser.customiseActions(actions);
@@ -53,6 +36,10 @@ public class BaseMultilineRowEditor<T extends Entity>
 		return customiser.filterVisibleValues(values);
 	}
 
+	public BaseMultilineEditorCustomiser<T> getCustomiser() {
+		return this.customiser;
+	}
+
 	@Override
 	protected Class<T> getItemClass() {
 		return customiser.getItemClass();
@@ -62,5 +49,18 @@ public class BaseMultilineRowEditor<T extends Entity>
 	protected boolean handleCustomAction(MultilineRowEditor editor,
 			PermissibleAction action) {
 		return customiser.handleCustomAction(this, action);
+	}
+
+	public List<T> provideSelected() {
+		return table.getSelected();
+	}
+
+	public void setCustomiser(BaseMultilineEditorCustomiser<T> customiser) {
+		this.customiser = customiser;
+	}
+
+	@Override
+	public void sortValues(List<T> values) {
+		customiser.sortValues(values);
 	}
 }

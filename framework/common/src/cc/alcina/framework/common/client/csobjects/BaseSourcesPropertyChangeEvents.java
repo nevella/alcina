@@ -174,6 +174,11 @@ public class BaseSourcesPropertyChangeEvents
 				() -> property.set(this, newValue));
 	}
 
+	protected <V> void set(PropertyEnum propertyName, V oldValue, V newValue,
+			Runnable setter) {
+		set(propertyName.name(), oldValue, newValue, setter);
+	}
+
 	/*
 	 * MVCC access - 'this' correctly refers to the version, *not*
 	 * domainIdentity()
@@ -184,11 +189,6 @@ public class BaseSourcesPropertyChangeEvents
 		Object oldValue = property.get(this);
 		set(propertyName, oldValue, newValue,
 				() -> property.set(this, newValue));
-	}
-
-	protected <V> void set(PropertyEnum propertyName, V oldValue, V newValue,
-			Runnable setter) {
-		set(propertyName.name(), oldValue, newValue, setter);
 	}
 
 	protected <V> void set(String propertyName, V oldValue, V newValue,

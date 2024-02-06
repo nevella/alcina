@@ -54,32 +54,13 @@ public class PermutationInfoLinker extends AbstractLinker {
 	public PermutationInfoLinker() {
 	}
 
-	@Override
-	public String getDescription() {
-		return "Permutation info linker";
-	}
-
-	@Override
-	public ArtifactSet link(TreeLogger logger, LinkerContext context,
-			ArtifactSet artifacts, boolean onePermutation)
-			throws UnableToCompleteException {
-		if (onePermutation) {
-			ArtifactSet toReturn = new ArtifactSet(artifacts);
-			ArtifactSet writableArtifacts = new ArtifactSet(artifacts);
-			for (CompilationResult compilation : artifacts
-					.find(CompilationResult.class)) {
-				// pass a writable set so that other stages can use this set for
-				// temporary storage
-				toReturn.addAll(doEmitCompilation(logger, context, compilation,
-						writableArtifacts));
-			}
-			return toReturn;
-		} else {
-			permutationsUtil.setupPermutationsMap(artifacts);
-			ArtifactSet toReturn = new ArtifactSet(artifacts);
-			maybeOutputPropertyMap(logger, context, toReturn);
-			return toReturn;
-		}
+	protected Collection<Artifact<?>> doEmitCompilation(TreeLogger logger,
+			LinkerContext context, CompilationResult result,
+			ArtifactSet artifacts) throws UnableToCompleteException {
+		Collection<Artifact<?>> toReturn = new ArrayList<Artifact<?>>();
+		toReturn.addAll(
+				emitSelectionInformation(result.getStrongName(), result));
+		return toReturn;
 	}
 
 	private List<Artifact<?>> emitSelectionInformation(String strongName,
@@ -110,13 +91,32 @@ public class PermutationInfoLinker extends AbstractLinker {
 		return emitted;
 	}
 
-	protected Collection<Artifact<?>> doEmitCompilation(TreeLogger logger,
-			LinkerContext context, CompilationResult result,
-			ArtifactSet artifacts) throws UnableToCompleteException {
-		Collection<Artifact<?>> toReturn = new ArrayList<Artifact<?>>();
-		toReturn.addAll(
-				emitSelectionInformation(result.getStrongName(), result));
-		return toReturn;
+	@Override
+	public String getDescription() {
+		return "Permutation info linker";
+	}
+
+	@Override
+	public ArtifactSet link(TreeLogger logger, LinkerContext context,
+			ArtifactSet artifacts, boolean onePermutation)
+			throws UnableToCompleteException {
+		if (onePermutation) {
+			ArtifactSet toReturn = new ArtifactSet(artifacts);
+			ArtifactSet writableArtifacts = new ArtifactSet(artifacts);
+			for (CompilationResult compilation : artifacts
+					.find(CompilationResult.class)) {
+				// pass a writable set so that other stages can use this set for
+				// temporary storage
+				toReturn.addAll(doEmitCompilation(logger, context, compilation,
+						writableArtifacts));
+			}
+			return toReturn;
+		} else {
+			permutationsUtil.setupPermutationsMap(artifacts);
+			ArtifactSet toReturn = new ArtifactSet(artifacts);
+			maybeOutputPropertyMap(logger, context, toReturn);
+			return toReturn;
+		}
 	}
 
 	// Output compilation-mappings.txt

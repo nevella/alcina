@@ -10,13 +10,13 @@ import cc.alcina.framework.servlet.example.traversal.recipe.RecipeParser.RecipeT
  * Normalises the input text
  */
 class NormalisationLayer extends Layer<RecipeParser.RecipeText> {
+	private String normaliseInput(String text) {
+		return text;
+	}
+
 	@Override
 	public void process(RecipeText selection) throws Exception {
 		select(new NormalisedText(selection, normaliseInput(selection.get())));
-	}
-
-	private String normaliseInput(String text) {
-		return text;
 	}
 
 	static class NormalisedText extends TextSelection

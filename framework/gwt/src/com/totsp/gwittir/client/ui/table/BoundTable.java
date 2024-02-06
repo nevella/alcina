@@ -410,432 +410,6 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 		}
 	}
 
-	@Override
-	public void addStyleName(String style) {
-		this.base.addStyleName(style);
-	}
-
-	public void addTableListener(TableListener listener) {
-		this.table.addTableListener(listener);
-	}
-
-	/**
-	 * Clears the table and cleans up all bindings and listeners.
-	 */
-	public void clear() {
-		this.topBinding.unbind();
-		this.topBinding.getChildren().clear();
-		if (this.rowHandles != null) {
-			this.rowHandles.clear();
-		}
-		for (Iterator it = this.focusListeners.entrySet().iterator(); it
-				.hasNext();) {
-			Entry entry = (Entry) it.next();
-			((HasFocus) entry.getKey())
-					.removeFocusListener((FocusListener) entry.getValue());
-		}
-		for (Iterator it = this.clickListeners.entrySet().iterator(); it
-				.hasNext();) {
-			Entry entry = (Entry) it.next();
-			((SourcesClickEvents) entry.getKey())
-					.removeClickListener((ClickListener) entry.getValue());
-		}
-		this.table.clear();
-		while (table.getRowCount() > 0) {
-			this.table.removeRow(0);
-		}
-		if (this.selectedRowStyles != null) {
-			this.selectedRowStyles.clear();
-		}
-		this.clearSelectedCol();
-		this.selectedCellLastStyle = BoundTable.DEFAULT_STYLE;
-		this.selectedColLastIndex = -1;
-		this.selectedColLastStyle = BoundTable.DEFAULT_STYLE;
-		this.selectedRowLastIndex = -1;
-		this.selectedRowLastStyle = BoundTable.DEFAULT_STYLE;
-		this.selectedCellRowLastIndex = -1;
-		this.cleanUpCaches.schedule(50);
-	}
-
-	/**
-	 * Causes the table to go to the first chunk of data, if a data provider is
-	 * used.
-	 */
-	public void first() {
-		this.currentChunk = 0;
-		this.provider.getChunk(this, this.getCurrentChunk());
-		this.inChunk = true;
-	}
-
-	public boolean getActive() {
-		return BoundTable.activeTable == this;
-	}
-
-	/**
-	 * Returns the Binding object used by this table.
-	 *
-	 * @return The Binding object for this table.
-	 */
-	public Binding getBinding() {
-		return this.topBinding;
-	}
-
-	public int getCellCount(int row) {
-		return this.table.getCellCount(row);
-	}
-
-	public HTMLTable.CellFormatter getCellFormatter() {
-		return this.table.getCellFormatter();
-	}
-
-	public int getCellPadding() {
-		return this.table.getCellPadding();
-	}
-
-	public int getCellSpacing() {
-		return this.table.getCellSpacing();
-	}
-
-	public HTMLTable.ColumnFormatter getColumnFormatter() {
-		return this.table.getColumnFormatter();
-	}
-
-	/**
-	 * Returns the Columns used in this table.
-	 *
-	 * @return Column[] used for rendering this table.
-	 */
-	public Field[] getColumns() {
-		Field[] ret = new Field[this.columns.length];
-		for (int i = 0; i < ret.length; i++) {
-			ret[i] = this.columns[i];
-		}
-		return columns;
-	}
-
-	/**
-	 * Returns the current fetched chunk from the data provider.
-	 *
-	 * @return int index of the current chunk.
-	 */
-	public int getCurrentChunk() {
-		return currentChunk;
-	}
-
-	public FlexTable.FlexCellFormatter getFlexCellFormatter() {
-		return this.table.getFlexCellFormatter();
-	}
-
-	public String getHTML(int row, int column) {
-		return this.table.getHTML(row, column);
-	}
-
-	/**
-	 * Returns the number of available chunks (passed in from the DataProvider)
-	 *
-	 * @return int number of chunks available from the DataProvider
-	 */
-	public int getNumberOfChunks() {
-		return numberOfChunks;
-	}
-
-	public int getRowCount() {
-		return this.table.getRowCount();
-	}
-
-	public HTMLTable.RowFormatter getRowFormatter() {
-		return this.table.getRowFormatter();
-	}
-
-	/**
-	 * Returns a List containing the current selected row objects.
-	 *
-	 * @return List of Bindables from the selected rows.
-	 */
-	public List getSelected() {
-		ArrayList selected = new ArrayList();
-		HashSet realIndexes = new HashSet();
-		if (this.selectedRowStyles != null) {
-			for (Iterator it = this.selectedRowStyles.keySet().iterator(); it
-					.hasNext();) {
-				realIndexes
-						.add(calculateRowToObjectOffset((Integer) it.next()));
-			}
-		} else if (this.selectedRowLastIndex != -1) {
-			realIndexes.add(calculateRowToObjectOffset(
-					Integer.valueOf(this.selectedRowLastIndex)));
-		}
-		int i = 0;
-		for (Iterator it = this.topBinding.getChildren().iterator(); it
-				.hasNext(); i++) {
-			if (realIndexes.contains(Integer.valueOf(i))) {
-				selected.add(
-						((Binding) ((Binding) it.next()).getChildren().get(0))
-								.getRight().object);
-			} else {
-				it.next();
-			}
-		}
-		return selected;
-	}
-
-	@Override
-	public String getStyleName() {
-		return this.base.getStyleName();
-	}
-
-	@Override
-	public String getTitle() {
-		return this.table.getTitle();
-	}
-
-	@Override
-	public Object getValue() {
-		return value;
-	}
-
-	public BoundWidget getWidget(int row, int col) {
-		return (BoundWidget) this.table.getWidget(row, col);
-	}
-
-	/**
-	 * Method called by the DataProvider to initialize the first chunk and pass
-	 * in the to total number of chunks available.
-	 *
-	 * @param c
-	 *            Data for Chunk index 0
-	 * @param numberOfChunks
-	 *            The total number of available chunks of data.
-	 */
-	@Override
-	public void init(Collection c, int numberOfChunks) {
-		this.numberOfChunks = numberOfChunks;
-		this.currentChunk = 0;
-		this.setValue(c);
-		this.inChunk = false;
-	}
-
-	/**
-	 * Causes the table to render the last chunk of data.
-	 */
-	public void last() {
-		if ((this.numberOfChunks - 1) >= 0) {
-			this.currentChunk = this.numberOfChunks - 1;
-			this.provider.getChunk(this, currentChunk);
-			this.inChunk = true;
-		}
-	}
-
-	/**
-	 * Causes the table to render the next chunk of data.
-	 */
-	public void next() {
-		// GWT.log("Next invoked. NOC: " + this.numberOfChunks, null);
-		if ((this.currentChunk + 1) < this.numberOfChunks) {
-			this.provider.getChunk(this, ++currentChunk);
-			this.inChunk = true;
-		}
-	}
-
-	/**
-	 * Causes teh table to render the previous chunk of data.
-	 */
-	public void previous() {
-		if ((this.getCurrentChunk() - 1) >= 0) {
-			this.provider.getChunk(this, --currentChunk);
-			inChunk = true;
-		}
-	}
-
-	public void setActive(boolean active) {
-		if ((BoundTable.activeTable == this) & !active) {
-			BoundTable.activeTable = null;
-			this.changes.firePropertyChange("active", true, false);
-		} else if (BoundTable.activeTable != this) {
-			if (BoundTable.activeTable != null) {
-				BoundTable.activeTable.setActive(false);
-			}
-			BoundTable.activeTable = this;
-			this.changes.firePropertyChange("active", false, true);
-		}
-	}
-
-	public void setBorderWidth(int width) {
-		this.table.setBorderWidth(width);
-	}
-
-	public void setCellPadding(int padding) {
-		this.table.setCellPadding(padding);
-	}
-
-	public void setCellSpacing(int spacing) {
-		this.table.setCellSpacing(spacing);
-	}
-
-	/**
-	 * Called by the DataProvider to pass in a requested chunk of data. THIS
-	 * METHOD MUST BE CALLED ASYNCRONOUSLY.
-	 *
-	 * @param c
-	 *            The next requested chunk of Bindable objects.
-	 */
-	@Override
-	public void setChunk(Collection c) {
-		if (!this.inChunk) {
-			throw new RuntimeException(
-					"This method MUST becalled asyncronously!");
-		}
-		if ((masks & BoundTable.SCROLL_MASK) > 0) {
-			this.add(c);
-		} else {
-			this.setValue(c);
-		}
-		if (((masks & BoundTable.SCROLL_MASK) > 0) && (this.scroll
-				.getScrollPosition() >= this.lastScrollPosition)) {
-			this.scroll.setScrollPosition(this.lastScrollPosition);
-		}
-		this.inChunk = false;
-	}
-
-	/**
-	 * Sets Column[] object for use on the table. Note, this will foce a re-init
-	 * of the table.
-	 *
-	 * @param columns
-	 *            Column[] to use to render the table.
-	 */
-	public void setColumns(Field[] columns) {
-		this.columns = new Field[columns.length];
-		for (int i = 0; i < columns.length; i++) {
-			this.columns[i] = columns[i];
-		}
-		if ((this.masks & BoundTable.SORT_MASK) > 0) {
-			this.ascending = new boolean[this.columns.length];
-		}
-		if (this.topBinding != null) { // Used to check that init() has fired.
-			this.renderAll();
-		}
-	}
-
-	public void setDataProvider(DataProvider provider) {
-		this.provider = provider;
-		this.provider.init(this);
-		this.inChunk = true;
-	}
-
-	@Override
-	public void setHeight(String height) {
-		this.base.setHeight(height);
-	}
-
-	@Override
-	public void setPixelSize(int width, int height) {
-		this.table.setPixelSize(width, height);
-	}
-
-	/**
-	 * Sets the indicated items in the list to "selected" state.
-	 *
-	 * @param selected
-	 *            A List of Bindables to set as the Selected value.
-	 */
-	public void setSelected(List selected) {
-		int i = 0;
-		this.clearSelectedRows();
-		for (Iterator it = this.topBinding.getChildren().iterator(); it
-				.hasNext(); i++) {
-			SourcesPropertyChangeEvents b = ((Binding) ((Binding) it.next())
-					.getChildren().get(0)).getRight().object;
-			if (selected.contains(b)) {
-				this.setSelectedRow(calculateObjectToRowOffset(i));
-				if (this.table.getWidget(calculateObjectToRowOffset(i),
-						0) instanceof HasFocus) {
-					((HasFocus) this.table
-							.getWidget(calculateObjectToRowOffset(i), 0))
-									.setFocus(true);
-				}
-			}
-		}
-	}
-
-	@Override
-	public void setSize(String width, String height) {
-		this.base.setSize(width, height);
-	}
-
-	@Override
-	public void setStyleName(String style) {
-		this.base.setStyleName(style);
-	}
-
-	@Override
-	public void setValue(Object value) {
-		Collection old = this.value;
-		this.value = (Collection) value;
-		this.changes.firePropertyChange("value", old, this.value);
-		if (this.isAttached()) {
-			boolean active = this.getActive();
-			this.setActive(false);
-			this.renderAll();
-			this.setActive(active);
-		}
-	}
-
-	@Override
-	public void setWidth(String width) {
-		this.base.setWidth(width);
-	}
-
-	/**
-	 * Sorts the table based on the value of the property in the specified
-	 * column index.
-	 *
-	 * If using a SortableDataProvider, this will throw a runtime exception if
-	 * the column denoted by the index is not a supported sortable column.
-	 *
-	 * @param index
-	 *            index of the column to sort the table on.
-	 */
-	public void sortColumn(int index) {
-		ascending[index] = !ascending[index];
-		if (this.provider == null) {
-			ArrayList sort = new ArrayList();
-			sort.addAll(value);
-			try {
-				ListSorter.sortOnProperty(sort,
-						columns[index].getPropertyName(), ascending[index]);
-			} catch (Exception e) {
-				logger.warn("Sort exception", e);
-			}
-			value.clear();
-			for (Iterator it = sort.iterator(); it.hasNext();) {
-				value.add(it.next());
-			}
-			setValue(value);
-		} else if (this.provider instanceof SortableDataProvider) {
-			SortableDataProvider sdp = (SortableDataProvider) this.provider;
-			boolean canSort = false;
-			String[] sortableProperties = sdp.getSortableProperties();
-			for (int i = 0; (i < sortableProperties.length) && !canSort; i++) {
-				if (sortableProperties[i]
-						.equals(this.columns[index].getPropertyName())) {
-					canSort = true;
-				}
-			}
-			if (!canSort) {
-				throw new RuntimeException(
-						"That is not a sortable field from this data provider.");
-			}
-			sdp.sortOnProperty(this, this.columns[index].getPropertyName(),
-					this.ascending[index]);
-		}
-		int startColumn = ((masks & BoundTable.ROW_HANDLE_MASK) > 0) ? 1 : 0;
-		if ((this.masks & BoundTable.HEADER_MASK) > 0) {
-			table.getCellFormatter().setStyleName(0, index + startColumn,
-					this.ascending[index] ? "ascending" : "descending");
-		}
-	}
-
 	private void addRow(final SourcesPropertyChangeEvents o) {
 		int row = table.getRowCount();
 		if (((((masks & BoundTable.HEADER_MASK) > 0) && (row >= 2))
@@ -980,6 +554,92 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 		};
 		widget.addFocusListener(l);
 		focusListeners.put(widget, l);
+	}
+
+	@Override
+	public void addStyleName(String style) {
+		this.base.addStyleName(style);
+	}
+
+	public void addTableListener(TableListener listener) {
+		this.table.addTableListener(listener);
+	}
+
+	protected int calculateObjectToRowOffset(int row) {
+		if ((masks & BoundTable.SPACER_ROW_MASK) > 0) {
+			row += row;
+		}
+		if ((masks & BoundTable.HEADER_MASK) > 0) {
+			row++;
+		}
+		// GWT.log( "Row before: "+ row, null);
+		if ((masks & BoundTable.INSERT_WIDGET_MASK) > 0) {
+			// if( (masks & BoundTable.MULTIROWSELECT_MASK) > 0){
+			// row += this.selectedRowsBeforeObjectRow(row);
+			// } else {
+			row += this.selectedRowsBeforeRow(row);
+			// }
+		}
+		// GWT.log( "Row after "+ row, null);
+		return row;
+	}
+
+	protected Integer calculateRowToObjectOffset(Integer rowNumber) {
+		int row = rowNumber.intValue();
+		if ((masks & BoundTable.HEADER_MASK) > 0) {
+			row -= 1;
+		}
+		if ((masks & BoundTable.SPACER_ROW_MASK) > 0) {
+			row -= (row / 2);
+		}
+		// GWT.log( "Selected rows before row "+row+" "+
+		// this.selectedRowsBeforeRow( row ), null );
+		if (((masks & BoundTable.INSERT_WIDGET_MASK) > 0)
+				&& ((masks & BoundTable.MULTIROWSELECT_MASK) > 0)) {
+			// GWT.log( "At"+ row+ " Removing:
+			// "+this.selectedRowsBeforeRow(row), null );
+			row -= this.selectedRowsBeforeRow(row);
+		}
+		// GWT.log( "Returning object instance index: "+row, null);
+		return Integer.valueOf(row);
+	}
+
+	/**
+	 * Clears the table and cleans up all bindings and listeners.
+	 */
+	public void clear() {
+		this.topBinding.unbind();
+		this.topBinding.getChildren().clear();
+		if (this.rowHandles != null) {
+			this.rowHandles.clear();
+		}
+		for (Iterator it = this.focusListeners.entrySet().iterator(); it
+				.hasNext();) {
+			Entry entry = (Entry) it.next();
+			((HasFocus) entry.getKey())
+					.removeFocusListener((FocusListener) entry.getValue());
+		}
+		for (Iterator it = this.clickListeners.entrySet().iterator(); it
+				.hasNext();) {
+			Entry entry = (Entry) it.next();
+			((SourcesClickEvents) entry.getKey())
+					.removeClickListener((ClickListener) entry.getValue());
+		}
+		this.table.clear();
+		while (table.getRowCount() > 0) {
+			this.table.removeRow(0);
+		}
+		if (this.selectedRowStyles != null) {
+			this.selectedRowStyles.clear();
+		}
+		this.clearSelectedCol();
+		this.selectedCellLastStyle = BoundTable.DEFAULT_STYLE;
+		this.selectedColLastIndex = -1;
+		this.selectedColLastStyle = BoundTable.DEFAULT_STYLE;
+		this.selectedRowLastIndex = -1;
+		this.selectedRowLastStyle = BoundTable.DEFAULT_STYLE;
+		this.selectedCellRowLastIndex = -1;
+		this.cleanUpCaches.schedule(50);
 	}
 
 	private void clearSelectedCell() {
@@ -1128,6 +788,151 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 		return p;
 	}
 
+	protected FlexTable createTableImpl() {
+		return new FlexTable();
+	}
+
+	/**
+	 * Causes the table to go to the first chunk of data, if a data provider is
+	 * used.
+	 */
+	public void first() {
+		this.currentChunk = 0;
+		this.provider.getChunk(this, this.getCurrentChunk());
+		this.inChunk = true;
+	}
+
+	public boolean getActive() {
+		return BoundTable.activeTable == this;
+	}
+
+	/**
+	 * Returns the Binding object used by this table.
+	 *
+	 * @return The Binding object for this table.
+	 */
+	public Binding getBinding() {
+		return this.topBinding;
+	}
+
+	public int getCellCount(int row) {
+		return this.table.getCellCount(row);
+	}
+
+	public HTMLTable.CellFormatter getCellFormatter() {
+		return this.table.getCellFormatter();
+	}
+
+	public int getCellPadding() {
+		return this.table.getCellPadding();
+	}
+
+	public int getCellSpacing() {
+		return this.table.getCellSpacing();
+	}
+
+	public HTMLTable.ColumnFormatter getColumnFormatter() {
+		return this.table.getColumnFormatter();
+	}
+
+	/**
+	 * Returns the Columns used in this table.
+	 *
+	 * @return Column[] used for rendering this table.
+	 */
+	public Field[] getColumns() {
+		Field[] ret = new Field[this.columns.length];
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = this.columns[i];
+		}
+		return columns;
+	}
+
+	/**
+	 * Returns the current fetched chunk from the data provider.
+	 *
+	 * @return int index of the current chunk.
+	 */
+	public int getCurrentChunk() {
+		return currentChunk;
+	}
+
+	public FlexTable.FlexCellFormatter getFlexCellFormatter() {
+		return this.table.getFlexCellFormatter();
+	}
+
+	public String getHTML(int row, int column) {
+		return this.table.getHTML(row, column);
+	}
+
+	/**
+	 * Returns the number of available chunks (passed in from the DataProvider)
+	 *
+	 * @return int number of chunks available from the DataProvider
+	 */
+	public int getNumberOfChunks() {
+		return numberOfChunks;
+	}
+
+	public int getRowCount() {
+		return this.table.getRowCount();
+	}
+
+	public HTMLTable.RowFormatter getRowFormatter() {
+		return this.table.getRowFormatter();
+	}
+
+	/**
+	 * Returns a List containing the current selected row objects.
+	 *
+	 * @return List of Bindables from the selected rows.
+	 */
+	public List getSelected() {
+		ArrayList selected = new ArrayList();
+		HashSet realIndexes = new HashSet();
+		if (this.selectedRowStyles != null) {
+			for (Iterator it = this.selectedRowStyles.keySet().iterator(); it
+					.hasNext();) {
+				realIndexes
+						.add(calculateRowToObjectOffset((Integer) it.next()));
+			}
+		} else if (this.selectedRowLastIndex != -1) {
+			realIndexes.add(calculateRowToObjectOffset(
+					Integer.valueOf(this.selectedRowLastIndex)));
+		}
+		int i = 0;
+		for (Iterator it = this.topBinding.getChildren().iterator(); it
+				.hasNext(); i++) {
+			if (realIndexes.contains(Integer.valueOf(i))) {
+				selected.add(
+						((Binding) ((Binding) it.next()).getChildren().get(0))
+								.getRight().object);
+			} else {
+				it.next();
+			}
+		}
+		return selected;
+	}
+
+	@Override
+	public String getStyleName() {
+		return this.base.getStyleName();
+	}
+
+	@Override
+	public String getTitle() {
+		return this.table.getTitle();
+	}
+
+	@Override
+	public Object getValue() {
+		return value;
+	}
+
+	public BoundWidget getWidget(int row, int col) {
+		return (BoundWidget) this.table.getWidget(row, col);
+	}
+
 	private void handleSelect(boolean toggleRow, int row, int col) {
 		int calcRow = row;
 		// GWT.log( "Toggle row "+ toggleRow, null );
@@ -1166,6 +971,23 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 			setSelectedCol(col);
 			this.selectedCellRowLastIndex = row;
 		}
+	}
+
+	/**
+	 * Method called by the DataProvider to initialize the first chunk and pass
+	 * in the to total number of chunks available.
+	 *
+	 * @param c
+	 *            Data for Chunk index 0
+	 * @param numberOfChunks
+	 *            The total number of available chunks of data.
+	 */
+	@Override
+	public void init(Collection c, int numberOfChunks) {
+		this.numberOfChunks = numberOfChunks;
+		this.currentChunk = 0;
+		this.setValue(c);
+		this.inChunk = false;
 	}
 
 	private void init(int masksValue) {
@@ -1312,6 +1134,17 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 		this.modifySelectedIndexes(row, +1);
 	}
 
+	/**
+	 * Causes the table to render the last chunk of data.
+	 */
+	public void last() {
+		if ((this.numberOfChunks - 1) >= 0) {
+			this.currentChunk = this.numberOfChunks - 1;
+			this.provider.getChunk(this, currentChunk);
+			this.inChunk = true;
+		}
+	}
+
 	private void modifySelectedIndexes(int fromRow, int modifier) {
 		if (this.selectedRowLastIndex > fromRow) {
 			this.selectedRowLastIndex += modifier;
@@ -1336,6 +1169,40 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 			}
 		}
 		this.selectedRowStyles = newSelectedRowStyles;
+	}
+
+	/**
+	 * Causes the table to render the next chunk of data.
+	 */
+	public void next() {
+		// GWT.log("Next invoked. NOC: " + this.numberOfChunks, null);
+		if ((this.currentChunk + 1) < this.numberOfChunks) {
+			this.provider.getChunk(this, ++currentChunk);
+			this.inChunk = true;
+		}
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		this.renderAll();
+	}
+
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+		this.clear();
+		this.setActive(false);
+	}
+
+	/**
+	 * Causes teh table to render the previous chunk of data.
+	 */
+	public void previous() {
+		if ((this.getCurrentChunk() - 1) >= 0) {
+			this.provider.getChunk(this, --currentChunk);
+			inChunk = true;
+		}
 	}
 
 	private void removeNestedWidget(int row) {
@@ -1389,6 +1256,117 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 			}
 		}
 		return count;
+	}
+
+	public void setActive(boolean active) {
+		if ((BoundTable.activeTable == this) & !active) {
+			BoundTable.activeTable = null;
+			this.changes.firePropertyChange("active", true, false);
+		} else if (BoundTable.activeTable != this) {
+			if (BoundTable.activeTable != null) {
+				BoundTable.activeTable.setActive(false);
+			}
+			BoundTable.activeTable = this;
+			this.changes.firePropertyChange("active", false, true);
+		}
+	}
+
+	public void setBorderWidth(int width) {
+		this.table.setBorderWidth(width);
+	}
+
+	public void setCellPadding(int padding) {
+		this.table.setCellPadding(padding);
+	}
+
+	public void setCellSpacing(int spacing) {
+		this.table.setCellSpacing(spacing);
+	}
+
+	/**
+	 * Called by the DataProvider to pass in a requested chunk of data. THIS
+	 * METHOD MUST BE CALLED ASYNCRONOUSLY.
+	 *
+	 * @param c
+	 *            The next requested chunk of Bindable objects.
+	 */
+	@Override
+	public void setChunk(Collection c) {
+		if (!this.inChunk) {
+			throw new RuntimeException(
+					"This method MUST becalled asyncronously!");
+		}
+		if ((masks & BoundTable.SCROLL_MASK) > 0) {
+			this.add(c);
+		} else {
+			this.setValue(c);
+		}
+		if (((masks & BoundTable.SCROLL_MASK) > 0) && (this.scroll
+				.getScrollPosition() >= this.lastScrollPosition)) {
+			this.scroll.setScrollPosition(this.lastScrollPosition);
+		}
+		this.inChunk = false;
+	}
+
+	/**
+	 * Sets Column[] object for use on the table. Note, this will foce a re-init
+	 * of the table.
+	 *
+	 * @param columns
+	 *            Column[] to use to render the table.
+	 */
+	public void setColumns(Field[] columns) {
+		this.columns = new Field[columns.length];
+		for (int i = 0; i < columns.length; i++) {
+			this.columns[i] = columns[i];
+		}
+		if ((this.masks & BoundTable.SORT_MASK) > 0) {
+			this.ascending = new boolean[this.columns.length];
+		}
+		if (this.topBinding != null) { // Used to check that init() has fired.
+			this.renderAll();
+		}
+	}
+
+	public void setDataProvider(DataProvider provider) {
+		this.provider = provider;
+		this.provider.init(this);
+		this.inChunk = true;
+	}
+
+	@Override
+	public void setHeight(String height) {
+		this.base.setHeight(height);
+	}
+
+	@Override
+	public void setPixelSize(int width, int height) {
+		this.table.setPixelSize(width, height);
+	}
+
+	/**
+	 * Sets the indicated items in the list to "selected" state.
+	 *
+	 * @param selected
+	 *            A List of Bindables to set as the Selected value.
+	 */
+	public void setSelected(List selected) {
+		int i = 0;
+		this.clearSelectedRows();
+		for (Iterator it = this.topBinding.getChildren().iterator(); it
+				.hasNext(); i++) {
+			SourcesPropertyChangeEvents b = ((Binding) ((Binding) it.next())
+					.getChildren().get(0)).getRight().object;
+			if (selected.contains(b)) {
+				this.setSelectedRow(calculateObjectToRowOffset(i));
+				if (this.table.getWidget(calculateObjectToRowOffset(i),
+						0) instanceof HasFocus) {
+					((HasFocus) this.table
+							.getWidget(calculateObjectToRowOffset(i), 0))
+									.setFocus(true);
+				}
+			}
+		}
 	}
 
 	private void setSelectedCell(int row, int col) {
@@ -1525,60 +1503,82 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 		return row;
 	}
 
-	protected int calculateObjectToRowOffset(int row) {
-		if ((masks & BoundTable.SPACER_ROW_MASK) > 0) {
-			row += row;
-		}
-		if ((masks & BoundTable.HEADER_MASK) > 0) {
-			row++;
-		}
-		// GWT.log( "Row before: "+ row, null);
-		if ((masks & BoundTable.INSERT_WIDGET_MASK) > 0) {
-			// if( (masks & BoundTable.MULTIROWSELECT_MASK) > 0){
-			// row += this.selectedRowsBeforeObjectRow(row);
-			// } else {
-			row += this.selectedRowsBeforeRow(row);
-			// }
-		}
-		// GWT.log( "Row after "+ row, null);
-		return row;
-	}
-
-	protected Integer calculateRowToObjectOffset(Integer rowNumber) {
-		int row = rowNumber.intValue();
-		if ((masks & BoundTable.HEADER_MASK) > 0) {
-			row -= 1;
-		}
-		if ((masks & BoundTable.SPACER_ROW_MASK) > 0) {
-			row -= (row / 2);
-		}
-		// GWT.log( "Selected rows before row "+row+" "+
-		// this.selectedRowsBeforeRow( row ), null );
-		if (((masks & BoundTable.INSERT_WIDGET_MASK) > 0)
-				&& ((masks & BoundTable.MULTIROWSELECT_MASK) > 0)) {
-			// GWT.log( "At"+ row+ " Removing:
-			// "+this.selectedRowsBeforeRow(row), null );
-			row -= this.selectedRowsBeforeRow(row);
-		}
-		// GWT.log( "Returning object instance index: "+row, null);
-		return Integer.valueOf(row);
-	}
-
-	protected FlexTable createTableImpl() {
-		return new FlexTable();
+	@Override
+	public void setSize(String width, String height) {
+		this.base.setSize(width, height);
 	}
 
 	@Override
-	protected void onAttach() {
-		super.onAttach();
-		this.renderAll();
+	public void setStyleName(String style) {
+		this.base.setStyleName(style);
 	}
 
 	@Override
-	protected void onDetach() {
-		super.onDetach();
-		this.clear();
-		this.setActive(false);
+	public void setValue(Object value) {
+		Collection old = this.value;
+		this.value = (Collection) value;
+		this.changes.firePropertyChange("value", old, this.value);
+		if (this.isAttached()) {
+			boolean active = this.getActive();
+			this.setActive(false);
+			this.renderAll();
+			this.setActive(active);
+		}
+	}
+
+	@Override
+	public void setWidth(String width) {
+		this.base.setWidth(width);
+	}
+
+	/**
+	 * Sorts the table based on the value of the property in the specified
+	 * column index.
+	 *
+	 * If using a SortableDataProvider, this will throw a runtime exception if
+	 * the column denoted by the index is not a supported sortable column.
+	 *
+	 * @param index
+	 *            index of the column to sort the table on.
+	 */
+	public void sortColumn(int index) {
+		ascending[index] = !ascending[index];
+		if (this.provider == null) {
+			ArrayList sort = new ArrayList();
+			sort.addAll(value);
+			try {
+				ListSorter.sortOnProperty(sort,
+						columns[index].getPropertyName(), ascending[index]);
+			} catch (Exception e) {
+				logger.warn("Sort exception", e);
+			}
+			value.clear();
+			for (Iterator it = sort.iterator(); it.hasNext();) {
+				value.add(it.next());
+			}
+			setValue(value);
+		} else if (this.provider instanceof SortableDataProvider) {
+			SortableDataProvider sdp = (SortableDataProvider) this.provider;
+			boolean canSort = false;
+			String[] sortableProperties = sdp.getSortableProperties();
+			for (int i = 0; (i < sortableProperties.length) && !canSort; i++) {
+				if (sortableProperties[i]
+						.equals(this.columns[index].getPropertyName())) {
+					canSort = true;
+				}
+			}
+			if (!canSort) {
+				throw new RuntimeException(
+						"That is not a sortable field from this data provider.");
+			}
+			sdp.sortOnProperty(this, this.columns[index].getPropertyName(),
+					this.ascending[index]);
+		}
+		int startColumn = ((masks & BoundTable.ROW_HANDLE_MASK) > 0) ? 1 : 0;
+		if ((this.masks & BoundTable.HEADER_MASK) > 0) {
+			table.getCellFormatter().setStyleName(0, index + startColumn,
+					this.ascending[index] ? "ascending" : "descending");
+		}
 	}
 
 	private class EventingSimplePanel extends SimplePanel {

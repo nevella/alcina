@@ -36,24 +36,6 @@ public abstract class AbstractTreeLogger extends TreeLogger
 		}
 	};
 
-	private static class UncommittedBranchData {
-		public final Throwable caught;
-
-		public final String message;
-
-		public final TreeLogger.Type type;
-
-		private final HelpInfo helpInfo;
-
-		public UncommittedBranchData(Type type, String message,
-				Throwable caught, HelpInfo helpInfo) {
-			this.caught = caught;
-			this.message = message;
-			this.type = type;
-			this.helpInfo = helpInfo;
-		}
-	}
-
 	// This message is package-protected so that the unit test can access it.
 	static final String OUT_OF_MEMORY_MSG = "Out of memory; to increase the "
 			+ "amount of memory, use the -Xmx flag at startup (java -Xmx128M ...)";
@@ -61,6 +43,13 @@ public abstract class AbstractTreeLogger extends TreeLogger
 	// This message is package-protected so that the unit test can access it.
 	static final String STACK_OVERFLOW_MSG = "Stack overflow; to increase the "
 			+ "stack size, use the -Xss flag at startup (java -Xss1M ...)";
+
+	protected static String getExceptionName(Throwable e) {
+		if (e == null || e instanceof UnableToCompleteException) {
+			return null;
+		}
+		return e.getClass().getSimpleName();
+	}
 
 	public static String getStackTraceAsString(Throwable e) {
 		// Show the exception info for anything other than "UnableToComplete".
@@ -92,13 +81,6 @@ public abstract class AbstractTreeLogger extends TreeLogger
 		return message.toString();
 	}
 
-	protected static String getExceptionName(Throwable e) {
-		if (e == null || e instanceof UnableToCompleteException) {
-			return null;
-		}
-		return e.getClass().getSimpleName();
-	}
-
 	protected TreeLogger.Type logLevel = TreeLogger.ALL;
 
 	protected AbstractTreeLogger parent;
@@ -121,6 +103,13 @@ public abstract class AbstractTreeLogger extends TreeLogger
 	 * The constructor used when creating a top-level logger.
 	 */
 	protected AbstractTreeLogger() {
+	}
+
+	protected int allocateNextChildIndex() {
+		synchronized (nextChildIndexLock) {
+			// postincrement because we want indices to start at 0
+			return nextChildIndex++;
+		}
 	}
 
 	/**
@@ -182,86 +171,26 @@ public abstract class AbstractTreeLogger extends TreeLogger
 	}
 
 	/**
-	 * Clears this logger's MetricMap. If the map was shared with the parent
-	 * logger, the parent's map will be unchanged and the new map will be
-	 * independent of its parent.
+	 * Scans <code>t</code> and its causes for {@link OutOfMemoryError} or
+	 * {@link StackOverflowError}.
+	 *
+	 * @param t
+	 *            a possibly null {@link Throwable}
+	 * @return true if {@link OutOfMemoryError} or {@link StackOverflowError}
+	 *         appears anywhere in the cause list or if <code>t</code> is an
+	 *         {@link OutOfMemoryError} or {@link StackOverflowError.
 	 */
-	public void resetMetricMap() {
-		metricMap = new MetricMap();
-	}
-
-	public final int getBranchedIndex() {
-		return indexWithinMyParent;
-	}
-
-	/**
-	 * Returns the MetricMap currently associated with this TreeLogger.
-	 */
-	public MetricMap getMetricMap() {
-		return metricMap;
-	}
-
-	public final synchronized TreeLogger.Type getMaxDetail() {
-		return logLevel;
-	}
-
-	public final AbstractTreeLogger getParentLogger() {
-		return parent;
-	}
-
-	@Override
-	public final synchronized boolean isLoggable(TreeLogger.Type type) {
-		return !type.isLowerPriorityThan(logLevel);
-	}
-
-	/**
-	 * Immediately logs or ignores the specified messages, based on the
-	 * specified message type and this logger's settings. If the message is
-	 * loggable, then parent branches may be lazily created before the log can
-	 * take place.
-	 */
-	@Override
-	public final synchronized void log(TreeLogger.Type type, String msg,
-			Throwable caught, HelpInfo helpInfo) {
-		if (msg == null) {
-			msg = "(Null log message)";
+	private String causedBySpecialError(Throwable t) {
+		while (t != null) {
+			if (t instanceof OutOfMemoryError) {
+				return OUT_OF_MEMORY_MSG;
+			} else if (t instanceof StackOverflowError) {
+				t.printStackTrace();
+				return STACK_OVERFLOW_MSG;
+			}
+			t = t.getCause();
 		}
-		// If this log message is caused by out of memory or stack overflow, we
-		// provide a little extra help by creating a child log message.
-		if (causedBySpecialError(caught) != null) {
-			branch(TreeLogger.ERROR, msg, caught);
-			return;
-		}
-		int childIndex = allocateNextChildIndex();
-		if (isLoggable(type)) {
-			commitMyBranchEntryInMyParentLogger();
-			doLog(childIndex, type, msg, caught, helpInfo);
-		}
-	}
-
-	/**
-	 * @param type
-	 *            the log type representing the most detailed level of logging
-	 *            that the caller is interested in, or <code>null</code> to
-	 *            choose the default level.
-	 */
-	public final synchronized void setMaxDetail(TreeLogger.Type type) {
-		if (type == null) {
-			type = TreeLogger.INFO;
-		}
-		logLevel = type;
-	}
-
-	@Override
-	public String toString() {
-		return getLoggerId();
-	}
-
-	protected int allocateNextChildIndex() {
-		synchronized (nextChildIndexLock) {
-			// postincrement because we want indices to start at 0
-			return nextChildIndex++;
-		}
+		return null;
 	}
 
 	/**
@@ -310,31 +239,8 @@ public abstract class AbstractTreeLogger extends TreeLogger
 			TreeLogger.Type type, String msg, Throwable caught,
 			HelpInfo helpInfo);
 
-	public void setAmount(MetricName name, long amount) {
-		metricMap.setAmount(name, amount);
-	}
-
-	/**
-	 * Scans <code>t</code> and its causes for {@link OutOfMemoryError} or
-	 * {@link StackOverflowError}.
-	 *
-	 * @param t
-	 *            a possibly null {@link Throwable}
-	 * @return true if {@link OutOfMemoryError} or {@link StackOverflowError}
-	 *         appears anywhere in the cause list or if <code>t</code> is an
-	 *         {@link OutOfMemoryError} or {@link StackOverflowError.
-	 */
-	private String causedBySpecialError(Throwable t) {
-		while (t != null) {
-			if (t instanceof OutOfMemoryError) {
-				return OUT_OF_MEMORY_MSG;
-			} else if (t instanceof StackOverflowError) {
-				t.printStackTrace();
-				return STACK_OVERFLOW_MSG;
-			}
-			t = t.getCause();
-		}
-		return null;
+	public final int getBranchedIndex() {
+		return indexWithinMyParent;
 	}
 
 	private String getLoggerId() {
@@ -349,6 +255,100 @@ public abstract class AbstractTreeLogger extends TreeLogger
 		} else {
 			// The root
 			return "#";
+		}
+	}
+
+	public final synchronized TreeLogger.Type getMaxDetail() {
+		return logLevel;
+	}
+
+	/**
+	 * Returns the MetricMap currently associated with this TreeLogger.
+	 */
+	public MetricMap getMetricMap() {
+		return metricMap;
+	}
+
+	public final AbstractTreeLogger getParentLogger() {
+		return parent;
+	}
+
+	@Override
+	public final synchronized boolean isLoggable(TreeLogger.Type type) {
+		return !type.isLowerPriorityThan(logLevel);
+	}
+
+	/**
+	 * Immediately logs or ignores the specified messages, based on the
+	 * specified message type and this logger's settings. If the message is
+	 * loggable, then parent branches may be lazily created before the log can
+	 * take place.
+	 */
+	@Override
+	public final synchronized void log(TreeLogger.Type type, String msg,
+			Throwable caught, HelpInfo helpInfo) {
+		if (msg == null) {
+			msg = "(Null log message)";
+		}
+		// If this log message is caused by out of memory or stack overflow, we
+		// provide a little extra help by creating a child log message.
+		if (causedBySpecialError(caught) != null) {
+			branch(TreeLogger.ERROR, msg, caught);
+			return;
+		}
+		int childIndex = allocateNextChildIndex();
+		if (isLoggable(type)) {
+			commitMyBranchEntryInMyParentLogger();
+			doLog(childIndex, type, msg, caught, helpInfo);
+		}
+	}
+
+	/**
+	 * Clears this logger's MetricMap. If the map was shared with the parent
+	 * logger, the parent's map will be unchanged and the new map will be
+	 * independent of its parent.
+	 */
+	public void resetMetricMap() {
+		metricMap = new MetricMap();
+	}
+
+	public void setAmount(MetricName name, long amount) {
+		metricMap.setAmount(name, amount);
+	}
+
+	/**
+	 * @param type
+	 *            the log type representing the most detailed level of logging
+	 *            that the caller is interested in, or <code>null</code> to
+	 *            choose the default level.
+	 */
+	public final synchronized void setMaxDetail(TreeLogger.Type type) {
+		if (type == null) {
+			type = TreeLogger.INFO;
+		}
+		logLevel = type;
+	}
+
+	@Override
+	public String toString() {
+		return getLoggerId();
+	}
+
+	private static class UncommittedBranchData {
+		public final Throwable caught;
+
+		public final String message;
+
+		public final TreeLogger.Type type;
+
+		private final HelpInfo helpInfo;
+
+		public UncommittedBranchData(Type type, String message,
+				Throwable caught, HelpInfo helpInfo) {
+			this.caught = caught;
+			this.message = message;
+			this.type = type;
+			this.helpInfo = helpInfo;
 		}
 	}
 }

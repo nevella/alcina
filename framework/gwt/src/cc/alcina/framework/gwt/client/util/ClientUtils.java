@@ -81,6 +81,10 @@ public class ClientUtils {
 
 	private static HandlerRegistration uiActionInterceptorRegistration;
 
+	private static void addHidden(Panel p, String key, String value) {
+		p.add(new Hidden(key, value));
+	}
+
 	public static EditContentViewWidgets createEditContentViewWidgets(
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, PaneWrapperWithObjects view, boolean noGlass,
@@ -286,6 +290,26 @@ public class ClientUtils {
 				true, null, null);
 	}
 
+	private static EditContentViewWidgets makeContentView(final Object model,
+			final PermissibleActionListener pal, String caption,
+			String messageHtml, final boolean hideOnClick, boolean editable,
+			boolean inDialog, boolean noButtons, Predicate<String> fieldFilter,
+			String okButtonName) {
+		ContentViewFactory cvf = new ContentViewFactory();
+		cvf.setNoCaption(true);
+		cvf.setNoButtons(noButtons);
+		cvf.setCancelButton(true);
+		cvf.okButtonName(okButtonName);
+		if (fieldFilter != null) {
+			cvf.fieldFilter(f -> fieldFilter.test(f.getPropertyName()));
+		}
+		PaneWrapperWithObjects view = cvf.createBeanView(model, editable, null,
+				false, true);
+		return createEditContentViewWidgets(pal, caption, messageHtml, view,
+				false, hideOnClick, inDialog, !editable && inDialog, false,
+				"OK", "Cancel", null);
+	}
+
 	public static EditContentViewWidgets makeContentViewWithButtons(
 			final Object model, boolean editable,
 			PermissibleActionListener pal) {
@@ -404,6 +428,15 @@ public class ClientUtils {
 			eltMulti.setAttribute("style", css);
 		}
 	}
+
+	private static native void setElementStyle0(Element eltMulti, String css) /*-{
+    var e = eltMulti.@com.google.gwt.dom.client.Element::jsoRemote()();
+    if (e.style && typeof (e.style.cssText) == "string") {
+      e.style.cssText = css;
+    } else {
+      e.style = css;
+    }
+	}-*/;
 
 	public static void setUiActionsEnabled(boolean enabled) {
 		if (enabled) {
@@ -564,39 +597,6 @@ public class ClientUtils {
 
 	public static native String wndString(String key)/*-{
     return $wnd[key];
-	}-*/;
-
-	private static void addHidden(Panel p, String key, String value) {
-		p.add(new Hidden(key, value));
-	}
-
-	private static EditContentViewWidgets makeContentView(final Object model,
-			final PermissibleActionListener pal, String caption,
-			String messageHtml, final boolean hideOnClick, boolean editable,
-			boolean inDialog, boolean noButtons, Predicate<String> fieldFilter,
-			String okButtonName) {
-		ContentViewFactory cvf = new ContentViewFactory();
-		cvf.setNoCaption(true);
-		cvf.setNoButtons(noButtons);
-		cvf.setCancelButton(true);
-		cvf.okButtonName(okButtonName);
-		if (fieldFilter != null) {
-			cvf.fieldFilter(f -> fieldFilter.test(f.getPropertyName()));
-		}
-		PaneWrapperWithObjects view = cvf.createBeanView(model, editable, null,
-				false, true);
-		return createEditContentViewWidgets(pal, caption, messageHtml, view,
-				false, hideOnClick, inDialog, !editable && inDialog, false,
-				"OK", "Cancel", null);
-	}
-
-	private static native void setElementStyle0(Element eltMulti, String css) /*-{
-    var e = eltMulti.@com.google.gwt.dom.client.Element::jsoRemote()();
-    if (e.style && typeof (e.style.cssText) == "string") {
-      e.style.cssText = css;
-    } else {
-      e.style = css;
-    }
 	}-*/;
 
 	public static class EditContentViewWidgets {

@@ -92,16 +92,16 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		return String.valueOf(getValue());
 	}
 
-	public <T extends EnumCriterion<E>> T withValue(E value) {
-		setValue(value);
-		return (T) this;
-	}
-
 	/**
 	 * If the enum is serialised in the db as a string, set to true
 	 */
 	protected boolean valueAsString() {
 		return false;
+	}
+
+	public <T extends EnumCriterion<E>> T withValue(E value) {
+		setValue(value);
+		return (T) this;
 	}
 
 	public static abstract class Searchable<E extends Enum, C extends EnumCriterion<E>>

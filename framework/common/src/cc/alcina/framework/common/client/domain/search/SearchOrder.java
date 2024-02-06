@@ -27,6 +27,15 @@ public abstract class SearchOrder<T, V extends Comparable>
 		return compare2(o1, o2);
 	}
 
+	protected int compare2(T o1, T o2) {
+		if (o1 instanceof Entity) {
+			return Entity.EntityComparator.INSTANCE.compare((Entity) o1,
+					(Entity) o2);
+		} else {
+			return 0;
+		}
+	}
+
 	@Override
 	public int equivalenceHash() {
 		return getClass().hashCode();
@@ -44,14 +53,5 @@ public abstract class SearchOrder<T, V extends Comparable>
 	@Override
 	public String toString() {
 		return getClass().getSimpleName();
-	}
-
-	protected int compare2(T o1, T o2) {
-		if (o1 instanceof Entity) {
-			return Entity.EntityComparator.INSTANCE.compare((Entity) o1,
-					(Entity) o2);
-		} else {
-			return 0;
-		}
 	}
 }

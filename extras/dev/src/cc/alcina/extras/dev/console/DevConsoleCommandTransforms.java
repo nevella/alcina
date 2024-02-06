@@ -78,6 +78,20 @@ public class DevConsoleCommandTransforms {
 		classRefsEnsured = true;
 	}
 
+	static class ClassRefNameFormatter implements ColumnFormatter {
+		@Override
+		public String format(ResultSet rs, int columnIndex)
+				throws SQLException {
+			long objRefId = rs.getLong(columnIndex);
+			ClassRef forId = ClassRef.forId(objRefId);
+			if (forId == null) {
+				return "unknown";
+			}
+			return forId.getRefClass() == null ? "<deleted class>"
+					: forId.getRefClass().getSimpleName();
+		}
+	}
+
 	public static class CmdListClientInstances extends DevConsoleCommand {
 		@Override
 		public boolean canUseProductionConn() {
@@ -152,6 +166,13 @@ public class DevConsoleCommandTransforms {
 		@Override
 		public String getUsage() {
 			return "trt {params or none for usage}";
+		}
+
+		private void printFullUsage() {
+			System.out.format(
+					"trt <-r:=rq ids only> <-wdtr: with dtr prefilter> <-t: as transforms> {[%s] value}+\n",
+					DevConsoleFilter
+							.describeFilters(CmdListTransformsFilter.class));
 		}
 
 		@Override
@@ -299,13 +320,6 @@ public class DevConsoleCommandTransforms {
 				ps.close();
 			}
 			return "";
-		}
-
-		private void printFullUsage() {
-			System.out.format(
-					"trt <-r:=rq ids only> <-wdtr: with dtr prefilter> <-t: as transforms> {[%s] value}+\n",
-					DevConsoleFilter
-							.describeFilters(CmdListTransformsFilter.class));
 		}
 
 		@Registration(CmdListTransformsFilter.class)
@@ -577,6 +591,30 @@ public class DevConsoleCommandTransforms {
 		}
 	}
 
+	static class DateTimeFormatter implements ColumnFormatter {
+		@Override
+		public String format(ResultSet rs, int columnIndex)
+				throws SQLException {
+			Timestamp ts = rs.getTimestamp(columnIndex);
+			return CommonUtils.formatDate(ts, DateStyle.AU_DATE_TIME_HUMAN);
+		}
+	}
+
+	static class EnumFormatter implements ColumnFormatter {
+		private Class<? extends Enum> clazz;
+
+		public EnumFormatter(Class<? extends Enum> clazz) {
+			this.clazz = clazz;
+		}
+
+		@Override
+		public String format(ResultSet rs, int columnIndex)
+				throws SQLException {
+			int i = rs.getInt(columnIndex);
+			return rs.wasNull() ? null : clazz.getEnumConstants()[i].toString();
+		}
+	}
+
 	public static class LogsToDtrs {
 		private static final Pattern NUMERIC_FN_PATTERN = Pattern
 				.compile("(\\d+)\\.(?:txt\\.gz|txt)");
@@ -718,44 +756,6 @@ public class DevConsoleCommandTransforms {
 				dte.setTransformType(tt);
 			}
 			return dtes;
-		}
-	}
-
-	static class ClassRefNameFormatter implements ColumnFormatter {
-		@Override
-		public String format(ResultSet rs, int columnIndex)
-				throws SQLException {
-			long objRefId = rs.getLong(columnIndex);
-			ClassRef forId = ClassRef.forId(objRefId);
-			if (forId == null) {
-				return "unknown";
-			}
-			return forId.getRefClass() == null ? "<deleted class>"
-					: forId.getRefClass().getSimpleName();
-		}
-	}
-
-	static class DateTimeFormatter implements ColumnFormatter {
-		@Override
-		public String format(ResultSet rs, int columnIndex)
-				throws SQLException {
-			Timestamp ts = rs.getTimestamp(columnIndex);
-			return CommonUtils.formatDate(ts, DateStyle.AU_DATE_TIME_HUMAN);
-		}
-	}
-
-	static class EnumFormatter implements ColumnFormatter {
-		private Class<? extends Enum> clazz;
-
-		public EnumFormatter(Class<? extends Enum> clazz) {
-			this.clazz = clazz;
-		}
-
-		@Override
-		public String format(ResultSet rs, int columnIndex)
-				throws SQLException {
-			int i = rs.getInt(columnIndex);
-			return rs.wasNull() ? null : clazz.getEnumConstants()[i].toString();
 		}
 	}
 

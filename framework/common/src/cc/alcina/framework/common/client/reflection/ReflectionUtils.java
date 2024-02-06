@@ -49,6 +49,13 @@ public class ReflectionUtils {
 			maxLength = property.getName().length();
 		}
 
+		void addValue(T t) {
+			Object value = property.get(t);
+			String string = value == null ? null : value.toString();
+			values.add(string);
+			maxLength = Math.max(maxLength, string.length());
+		}
+
 		private void write(StringBuilder sb, String string, boolean line) {
 			char spacer = line ? '-' : ' ';
 			sb.append("|");
@@ -58,13 +65,6 @@ public class ReflectionUtils {
 			for (int idx = string.length(); idx < maxLength + 2; idx++) {
 				sb.append(spacer);
 			}
-		}
-
-		void addValue(T t) {
-			Object value = property.get(t);
-			String string = value == null ? null : value.toString();
-			values.add(string);
-			maxLength = Math.max(maxLength, string.length());
 		}
 
 		void writeLine(StringBuilder sb) {

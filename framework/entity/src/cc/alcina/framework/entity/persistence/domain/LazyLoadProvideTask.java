@@ -47,9 +47,49 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		this.clazz = clazz;
 	}
 
+	protected abstract boolean checkShouldLazyLoad(List<T> toLoad);
+
 	@Override
 	public Class<T> forClazz() {
 		return this.clazz;
+	}
+
+	protected DetachedEntityCache getDomainCache() {
+		return domainStore.cache;
+	}
+
+	protected Object getLockObject() {
+		return this;
+	}
+
+	protected abstract void lazyLoad(Collection<T> objects) throws Exception;
+
+	protected void lllog(String template, Object... args) {
+		logger.debug(template.replace("%s", "{}"), args);
+	}
+
+	protected abstract void loadDependents(List<T> requireLoad)
+			throws Exception;
+
+	protected List<T> loadTable(Class clazz, String sqlFilter)
+			throws Exception {
+		return loadTable(clazz, sqlFilter, false);
+	}
+
+	protected List<T> loadTable(Class clazz, String sqlFilter,
+			boolean populateLazyPropertyValues) throws Exception {
+		Preconditions.checkState(
+				domainStore.loader instanceof DomainStoreLoaderDatabase);
+		Loader loader = ((DomainStoreLoaderDatabase) domainStore.loader)
+				.loader();
+		loader.withClazz(clazz).withSqlFilter(sqlFilter)
+				.withPopulateLazyPropertyValues(populateLazyPropertyValues)
+				.withResolveRefs(true).withReturnResults(true);
+		return loader.loadEntities();
+	}
+
+	protected void log(String template, Object... args) {
+		this.domainStore.sqlLogger.debug(template.replace("%s", "{}"), args);
 	}
 
 	public void metric(String key, boolean end) {
@@ -60,9 +100,26 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		}
 	}
 
+	private void registerLoaded(List<T> requireLoad) {
+		for (T t : requireLoad) {
+			idEvictionAge.put(t.getId(), System.currentTimeMillis());
+		}
+	}
+
 	@Override
 	public void registerStore(IDomainStore iDomainStore) {
 		this.domainStore = (DomainStore) iDomainStore;
+	}
+
+	protected synchronized List<T> requireLazyLoad(Collection<T> objects) {
+		List<T> result = new ArrayList<T>();
+		for (T t : objects) {
+			Long evictionAge = idEvictionAge.get(t.getId());
+			if (evictionAge == null) {
+				result.add(t);
+			}
+		}
+		return result;
 	}
 
 	@Override
@@ -104,63 +161,6 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		return wrapAll(stream);
 	}
 
-	private void registerLoaded(List<T> requireLoad) {
-		for (T t : requireLoad) {
-			idEvictionAge.put(t.getId(), System.currentTimeMillis());
-		}
-	}
-
-	protected abstract boolean checkShouldLazyLoad(List<T> toLoad);
-
-	protected DetachedEntityCache getDomainCache() {
-		return domainStore.cache;
-	}
-
-	protected Object getLockObject() {
-		return this;
-	}
-
-	protected abstract void lazyLoad(Collection<T> objects) throws Exception;
-
-	protected void lllog(String template, Object... args) {
-		logger.debug(template.replace("%s", "{}"), args);
-	}
-
-	protected abstract void loadDependents(List<T> requireLoad)
-			throws Exception;
-
-	protected List<T> loadTable(Class clazz, String sqlFilter)
-			throws Exception {
-		return loadTable(clazz, sqlFilter, false);
-	}
-
-	protected List<T> loadTable(Class clazz, String sqlFilter,
-			boolean populateLazyPropertyValues) throws Exception {
-		Preconditions.checkState(
-				domainStore.loader instanceof DomainStoreLoaderDatabase);
-		Loader loader = ((DomainStoreLoaderDatabase) domainStore.loader)
-				.loader();
-		loader.withClazz(clazz).withSqlFilter(sqlFilter)
-				.withPopulateLazyPropertyValues(populateLazyPropertyValues)
-				.withResolveRefs(true).withReturnResults(true);
-		return loader.loadEntities();
-	}
-
-	protected void log(String template, Object... args) {
-		this.domainStore.sqlLogger.debug(template.replace("%s", "{}"), args);
-	}
-
-	protected synchronized List<T> requireLazyLoad(Collection<T> objects) {
-		List<T> result = new ArrayList<T>();
-		for (T t : objects) {
-			Long evictionAge = idEvictionAge.get(t.getId());
-			if (evictionAge == null) {
-				result.add(t);
-			}
-		}
-		return result;
-	}
-
 	protected Stream<T> wrapAll(Stream<T> stream) {
 		List<T> list = stream.collect(Collectors.toList());
 		Preconditions.checkArgument(list.size() < 100000,
@@ -174,13 +174,6 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 	}
 
 	public static class SimpleLoaderTask extends LazyLoadProvideTask<Entity> {
-		public <V extends Entity> List<V> loadTableTyped(Class clazz,
-				String sqlFilter, boolean populateLazyPropertyValues)
-				throws Exception {
-			return (List) super.loadTable(clazz, sqlFilter,
-					populateLazyPropertyValues);
-		}
-
 		@Override
 		protected boolean checkShouldLazyLoad(List<Entity> toLoad) {
 			throw new UnsupportedOperationException();
@@ -194,6 +187,13 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		protected void loadDependents(List<Entity> requireLoad)
 				throws Exception {
 			throw new UnsupportedOperationException();
+		}
+
+		public <V extends Entity> List<V> loadTableTyped(Class clazz,
+				String sqlFilter, boolean populateLazyPropertyValues)
+				throws Exception {
+			return (List) super.loadTable(clazz, sqlFilter,
+					populateLazyPropertyValues);
 		}
 	}
 }

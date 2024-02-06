@@ -50,6 +50,15 @@ class Vacuum {
 				"domainstore-mvcc-vacuum");
 	}
 
+	void addVacuumable(Transaction transaction, Vacuumable vacuumable) {
+		vacuumables.computeIfAbsent(transaction, tx -> new ArrayList<>())
+				.add(vacuumable);
+	}
+
+	private void emitDebugEvent(String message) {
+		// noop - but there's support in the file history
+	}
+
 	public void enqueueVacuum(Transaction transaction) {
 		events.add(transaction);
 	}
@@ -58,8 +67,25 @@ class Vacuum {
 		return this.activeThread;
 	}
 
-	private void emitDebugEvent(String message) {
-		// noop - but there's support in the file history
+	long getVacuumStarted() {
+		return this.vacuumStarted;
+	}
+
+	void setActiveThread(Thread thread) {
+		activeThread = thread;
+		vacuumStarted = thread == null ? 0 : System.currentTimeMillis();
+		emitDebugEvent("active thread changed");
+	}
+
+	void shutdown() {
+		finished = true;
+		Transaction.ensureBegun();
+		// will trigger an event, which will terminate the thread
+		Transaction.end();
+	}
+
+	void start() {
+		vacuumThread.start();
 	}
 
 	/*
@@ -135,32 +161,6 @@ class Vacuum {
 			VacuumableTransactions vacuumableTransactions) {
 		logger.trace("would vacuum: {}", vacuumable);
 		vacuumable.vacuum(vacuumableTransactions);
-	}
-
-	void addVacuumable(Transaction transaction, Vacuumable vacuumable) {
-		vacuumables.computeIfAbsent(transaction, tx -> new ArrayList<>())
-				.add(vacuumable);
-	}
-
-	long getVacuumStarted() {
-		return this.vacuumStarted;
-	}
-
-	void setActiveThread(Thread thread) {
-		activeThread = thread;
-		vacuumStarted = thread == null ? 0 : System.currentTimeMillis();
-		emitDebugEvent("active thread changed");
-	}
-
-	void shutdown() {
-		finished = true;
-		Transaction.ensureBegun();
-		// will trigger an event, which will terminate the thread
-		Transaction.end();
-	}
-
-	void start() {
-		vacuumThread.start();
 	}
 
 	class EventHandler implements Runnable {

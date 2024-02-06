@@ -11,6 +11,20 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 	public static final String CONTEXT_FILTER = CmdAnalyseStackTrace.class
 			.getName() + ".CONTEXT_FILTER";
 
+	private String analyseStacktrace(String dump, String filter) {
+		try {
+			LooseContext.push();
+			if (!Ax.isBlank(filter)) {
+				LooseContext.set(CONTEXT_FILTER, filter);
+			}
+			AnalyseThreadDump.TdModel model = AnalyseThreadDump.TdModel
+					.parse(dump);
+			return model.dumpDistinct();
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
 	@Override
 	public boolean clsBeforeRun() {
 		return true;
@@ -56,19 +70,5 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 		Ax.out(analyseStacktrace(
 				Io.read().resource("res/sample-stack-trace.txt").asString(),
 				""));
-	}
-
-	private String analyseStacktrace(String dump, String filter) {
-		try {
-			LooseContext.push();
-			if (!Ax.isBlank(filter)) {
-				LooseContext.set(CONTEXT_FILTER, filter);
-			}
-			AnalyseThreadDump.TdModel model = AnalyseThreadDump.TdModel
-					.parse(dump);
-			return model.dumpDistinct();
-		} finally {
-			LooseContext.pop();
-		}
 	}
 }

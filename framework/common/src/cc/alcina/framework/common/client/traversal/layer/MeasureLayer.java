@@ -15,20 +15,6 @@ import cc.alcina.framework.common.client.util.Ax;
  */
 public abstract class MeasureLayer<S extends MeasureSelection>
 		extends Layer<S> {
-	protected <S1 extends MeasureSelection> Stream<S1>
-			measureSelections(Class<S1> clazz, Measure.Token token) {
-		return state.traversalState.getSelections(clazz).stream()
-				.filter(m -> m.get().token == token);
-	}
-
-	protected <S1 extends MeasureSelection> S1 measureSelection(Class<S1> clazz,
-			Measure.Token token) {
-		List<S1> list = measureSelections(clazz, token)
-				.collect(Collectors.toList());
-		Preconditions.checkState(list.size() == 1);
-		return Ax.first(list);
-	}
-
 	protected MeasureContainment measureContainment() {
 		Stream<MeasureSelection> filteredSelections = state.traversalState.selections
 				.get(MeasureSelection.class, true).stream()
@@ -42,5 +28,19 @@ public abstract class MeasureLayer<S extends MeasureSelection>
 						order.copy().withIgnoreNoPossibleChildren()))
 				.collect(Collectors.toList());
 		return new MeasureContainment(order, measures);
+	}
+
+	protected <S1 extends MeasureSelection> S1 measureSelection(Class<S1> clazz,
+			Measure.Token token) {
+		List<S1> list = measureSelections(clazz, token)
+				.collect(Collectors.toList());
+		Preconditions.checkState(list.size() == 1);
+		return Ax.first(list);
+	}
+
+	protected <S1 extends MeasureSelection> Stream<S1>
+			measureSelections(Class<S1> clazz, Measure.Token token) {
+		return state.traversalState.getSelections(clazz).stream()
+				.filter(m -> m.get().token == token);
 	}
 }

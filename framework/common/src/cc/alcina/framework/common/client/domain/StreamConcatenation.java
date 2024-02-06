@@ -353,6 +353,12 @@ public final class StreamConcatenation {
 			throw new IllegalStateException();
 		}
 
+		// invokes spliterator.trySplit() on the argument
+		abstract T_SPLITR invokeTrySplit(T_SPLITR spliterator);
+
+		// invokes our constructor with the same array but modified bounds
+		abstract T_SPLITR slice(int fromIndex, int toIndex);
+
 		@Override
 		public boolean tryAdvance(Consumer<? super T> action) {
 			Objects.requireNonNull(action);
@@ -396,12 +402,6 @@ public final class StreamConcatenation {
 			}
 			return slice(i, mid);
 		}
-
-		// invokes spliterator.trySplit() on the argument
-		abstract T_SPLITR invokeTrySplit(T_SPLITR spliterator);
-
-		// invokes our constructor with the same array but modified bounds
-		abstract T_SPLITR slice(int fromIndex, int toIndex);
 
 		static final class OfDouble extends
 				ConcatSpliterator.OfPrimitive<Double, DoubleConsumer, Spliterator.OfDouble>

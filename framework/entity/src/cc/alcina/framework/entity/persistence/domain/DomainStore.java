@@ -209,6 +209,12 @@ public class DomainStore implements IDomainStore {
 		return domainStores;
 	}
 
+	static Timestamp testSensitiveTimestamp(Date transactionCommitTime) {
+		return transactionCommitTime == null
+				? new Timestamp(System.currentTimeMillis())
+				: new Timestamp(transactionCommitTime.getTime());
+	}
+
 	public static void waitUntilCurrentRequestsProcessed() {
 		Transaction.ensureBegun();
 		writableStore().getPersistenceEvents().getQueue()
@@ -218,12 +224,6 @@ public class DomainStore implements IDomainStore {
 
 	public static DomainStore writableStore() {
 		return stores().writableStore();
-	}
-
-	static Timestamp testSensitiveTimestamp(Date transactionCommitTime) {
-		return transactionCommitTime == null
-				? new Timestamp(System.currentTimeMillis())
-				: new Timestamp(transactionCommitTime.getTime());
 	}
 
 	Topic<DomainTransformPersistenceEvent> topicBeforeDomainCommitted = Topic
@@ -295,16 +295,16 @@ public class DomainStore implements IDomainStore {
 
 	private ConcurrentHashMap<EntityLocator, Entity> promotedEntitiesByPrePromotion = new ConcurrentHashMap<>();
 
-	public DomainStore(DomainStoreDescriptor descriptor) {
-		this();
-		this.domainDescriptor = descriptor;
-	}
-
 	private DomainStore() {
 		persistenceListener = new DomainStorePersistenceListener();
 		this.persistenceEvents = new DomainTransformPersistenceEvents(this);
 		this.handler = new DomainStoreDomainHandler();
 		graphProjection = new GraphProjection();
+	}
+
+	public DomainStore(DomainStoreDescriptor descriptor) {
+		this();
+		this.domainDescriptor = descriptor;
 	}
 
 	@Override
@@ -316,202 +316,13 @@ public class DomainStore implements IDomainStore {
 		return self;
 	}
 
-	public void appShutdown() {
-		if (isWritable() && queryPool != null) {
-			queryPool.pool.shutdown();
-		}
-		domainDescriptor.onAppShutdown();
-		loader.appShutdown();
-		persistenceEvents.getQueue().appShutdown();
-	}
-
-	public boolean checkTransformRequestExists(long id) {
-		return loader.checkTransformRequestExists(id);
-	}
-
-	public void close() {
-		loader.close();
-	}
-
-	public void enableAndAddValues(DomainListener listener) {
-		listener.setEnabled(true);
-		addValues(listener);
-	}
-
-	public DetachedEntityCache getCache() {
-		return this.cache;
-	}
-
-	public DomainStoreDescriptor getDomainDescriptor() {
-		return this.domainDescriptor;
-	}
-
-	public List<Field> getFields(Class clazz) {
+	void addValues(DomainListener listener) {
 		try {
-			List<Field> fields = null;
-			synchronized (graphProjection) {
-				fields = graphProjection.getFieldsForClass(clazz, false);
-			}
-			return fields;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			listener.onAddValues(false);
+			cache.stream(listener.getListenedClass()).forEach(listener::insert);
+		} finally {
+			listener.onAddValues(true);
 		}
-	}
-
-	public DomainStoreHealth getHealth() {
-		return health;
-	}
-
-	public DomainLookup getLookupFor(Class clazz, String propertyName) {
-		return domainDescriptor.perClass.get(clazz).getLookupFor(propertyName);
-	}
-
-	public MemoryStat getMemoryStats(StatType type) {
-		MemoryStat top = new MemoryStat(this);
-		top.setObjectMemory(Registry.impl(ObjectMemory.class));
-		top.type = type;
-		/*
-		 * Add cache stats first (notionally it's the owner of the entities)
-		 */
-		cache.addMemoryStats(top);
-		getDomainDescriptor().addMemoryStats(top);
-		/*
-		 * Add self at end (only memory not reachable from
-		 * lookups/projections/entity cache)
-		 */
-		addMemoryStats(top);
-		return top;
-	}
-
-	public Mvcc getMvcc() {
-		return this.mvcc;
-	}
-
-	public DomainTransformPersistenceEvents getPersistenceEvents() {
-		return this.persistenceEvents;
-	}
-
-	public DomainStorePersistenceListener getPersistenceListener() {
-		return this.persistenceListener;
-	}
-
-	public DomainTransformCommitPosition getTransformCommitPosition() {
-		return getPersistenceEvents().getQueue().getTransformCommitPosition();
-	}
-
-	public DomainTransformPersistenceQueue.Sequencer getTransformSequencer() {
-		return loader.getTransformSequencer();
-	}
-
-	public boolean handlesAssociationsFor(Class clazz) {
-		return domainDescriptor.handlesAssociationsFor(clazz);
-	}
-
-	public boolean isCached(Class clazz) {
-		return domainDescriptor.perClass.containsKey(clazz);
-	}
-
-	public <T extends Entity> boolean isCached(Class<T> clazz, long id) {
-		return cache.contains(clazz, id);
-	}
-
-	public boolean isDebug() {
-		return this.debug;
-	}
-
-	public boolean isInitialised() {
-		return initialised;
-	}
-
-	public boolean isWritable() {
-		return this.writable;
-	}
-
-	public DomainTransformRequestPersistent loadTransformRequest(long id) {
-		return loader.loadTransformRequest(id);
-	}
-
-	public <T extends Entity> void onLocalObjectCreated(T newInstance) {
-		cache.put(newInstance);
-	}
-
-	public void putExternalLocal(Entity instance) {
-		cache.putExternalLocal(instance);
-	}
-
-	public void remove(Entity entity) {
-		cache.remove(entity);
-	}
-
-	public void setConnectionUrl(String newUrl) {
-		((DomainStoreLoaderDatabase) loader).setConnectionUrl(newUrl);
-	}
-
-	public void setDebug(boolean debug) {
-		this.debug = debug;
-	}
-
-	public void throwDomainStoreException(String message) {
-		health.domainStoreExceptionCount.incrementAndGet();
-		throw new DomainStoreException(message);
-	}
-
-	public Topic<DomainTransformPersistenceEvent> topicAfterDomainCommitted() {
-		return topicAfterDomainCommitted;
-	}
-
-	public Topic<DomainTransformPersistenceEvent> topicBeforeDomainCommitted() {
-		return topicBeforeDomainCommitted;
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format("Domain store: %s %s", name,
-				domainDescriptor.getClass().getSimpleName());
-	}
-
-	public void warmup() throws Exception {
-		new StatCategory_DomainStore.Warmup().emit(isWritable());
-		MetricLogging.get().start("domainStore.warmup");
-		initialised = false;
-		initialising = true;
-		getPersistenceEvents().addDomainTransformPersistenceListener(
-				getPersistenceListener());
-		transformManager = new SubgraphTransformManagerPostProcess();
-		lazyObjectLoader = loader.getLazyObjectLoader();
-		cache = (DomainStoreEntityCache) transformManager
-				.getDetachedEntityCache();
-		cache.setThrowOnExisting(AppPersistenceBase.isTestServer());
-		transformManager.getStore().setLazyObjectLoader(lazyObjectLoader);
-		domainDescriptor.initialise();
-		domainDescriptor.registerStore(this);
-		domainDescriptor.perClass.values().stream()
-				.forEach(this::prepareClassDescriptor);
-		new StatCategory_DomainStore.Warmup.InitialiseDescriptor()
-				.emit(isWritable());
-		mvcc = new Mvcc(this, domainDescriptor, cache,
-				reuseTransformerStore == null ? null
-						: reuseTransformerStore.mvcc);
-		MetricLogging.get().start("mvcc");
-		mvcc.init();
-		MetricLogging.get().end("mvcc");
-		new StatCategory_DomainStore.Warmup.Mvcc().emit(isWritable());
-		Transaction.beginDomainPreparing();
-		Transaction.current().setBaseTransaction(true);
-		domainDescriptor.perClass.keySet()
-				.forEach(clazz -> cache.initialiseMap(clazz));
-		domainDescriptor.perClass.values().stream().forEach(dcd -> {
-			dcd.initialise();
-		});
-		loader.warmup();
-		// loader responsible for this
-		// Transaction.current().toCommitted();
-		Transaction.end();
-		initialising = false;
-		initialised = true;
-		domainDescriptor.onWarmupComplete(this);
-		MetricLogging.get().end("domainStore.warmup");
-		new StatCategory_DomainStore.Warmup.End().emit(isWritable());
 	}
 
 	private <E extends Entity> void applyFilter(final Class clazz,
@@ -555,169 +366,26 @@ public class DomainStore implements IDomainStore {
 		token.appendFilter(filter.asPredicate());
 	}
 
-	private DomainTransformEventPersistent
-			filterForDomainStoreProperty(DomainTransformEventPersistent event) {
-		switch (event.getTransformType()) {
-		case CREATE_OBJECT:
-		case DELETE_OBJECT:
-		case ADD_REF_TO_COLLECTION:
-		case REMOVE_REF_FROM_COLLECTION:
-			return event;
+	public void appShutdown() {
+		if (isWritable() && queryPool != null) {
+			queryPool.pool.shutdown();
 		}
-		DomainStoreProperty ann = domainStoreProperties
-				.get(event.getObjectClass(), event.getPropertyName());
-		if (ann == null) {
-			return event;
-		}
-		switch (ann.loadType()) {
-		case EAGER:
-		case CUSTOM:
-		case LAZY:
-			// LAZY should be filtered by the persister's transformpropagation
-			// policy
-			return event;
-		case TRANSIENT:
-			return null;
-		default:
-			throw new UnsupportedOperationException();
-		}
+		domainDescriptor.onAppShutdown();
+		loader.appShutdown();
+		persistenceEvents.getQueue().appShutdown();
 	}
 
-	private ComplexFilter getComplexFilterFor(Class clazz,
-			DomainFilter... filters) {
-		return domainDescriptor.complexFilters.stream()
-				.filter(cf -> cf.handles(clazz, filters)).findFirst()
-				.orElse(null);
+	public boolean checkTransformRequestExists(long id) {
+		return loader.checkTransformRequestExists(id);
 	}
 
-	private IndexedValueProvider getValueProviderFor(Class clazz,
-			String propertyPath) {
-		if ("id".equals(propertyPath)) {
-			return new CacheIdProvider(clazz);
-		} else if (Ax.matches(propertyPath, "[^.]+\\.id")) {
-			String propertyName = propertyPath.replaceFirst("(.+)\\.id", "$1");
-			Association association = Reflections.at(clazz)
-					.property(propertyName).annotation(Association.class);
-			if (association != null) {
-				return new AssociationIdProvider(clazz, propertyName);
-			}
-		}
-		return getLookupFor(clazz, propertyPath);
+	public void close() {
+		loader.close();
 	}
 
-	private DomainFilter maybeConvertEntityToIdFilter(Class clazz,
-			DomainFilter filter) {
-		if (filter.getPropertyPath() != null
-				&& !filter.getPropertyPath().contains(".")
-				&& filter.getFilterOperator() == FilterOperator.EQ
-				&& filter.getPropertyValue() instanceof Entity) {
-			String idPath = filter.getPropertyPath() + ".id";
-			if (getValueProviderFor(clazz, idPath) != null) {
-				return new DomainFilter(idPath,
-						((Entity) filter.getPropertyValue()).getId());
-			} else {
-				return filter;
-			}
-		} else {
-			return filter;
-		}
-	}
-
-	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
-		try {
-			Class clazz = classDescriptor.clazz;
-			classDescriptor.setDomainDescriptor(domainDescriptor);
-			for (PropertyDescriptor pd : SEUtilities
-					.getPropertyDescriptorsSortedByName(clazz)) {
-				if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
-					continue;
-				}
-				Method rm = pd.getReadMethod();
-				Property property = Reflections.at(rm.getDeclaringClass())
-						.property(pd.getName());
-				DomainStoreProperty domainStorePropertyAnnotation = classDescriptor
-						.resolveDomainStoreProperty(
-								new AnnotationLocation(clazz, property));
-				if ((rm.getAnnotation(Transient.class) != null
-						&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
-						|| domainStorePropertyAnnotation != null) {
-					if (domainStorePropertyAnnotation != null) {
-						Field field = getField(clazz, pd.getName());
-						field.setAccessible(true);
-						domainStoreProperties.put(clazz, field.getName(),
-								domainStorePropertyAnnotation);
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private <T extends Entity> Stream<T> query0(Class<T> clazz,
-			DomainStoreQuery<T> query) {
-		boolean debugMetrics = isDebug()
-				&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
-		StringBuilder debugMetricBuilder = new StringBuilder();
-		int filterSize = query.getFilters().size();
-		QueryToken token = new QueryToken(query);
-		token.planner().optimiseFilters();
-		for (; token.idx < filterSize; token.idx++) {
-			int idx = token.idx;
-			long start = System.nanoTime();
-			DomainFilter cacheFilter = query.getFilters().get(idx);
-			DomainFilter nextFilter = idx == filterSize - 1 ? null
-					: query.getFilters().get(idx + 1);
-			applyFilter(clazz, cacheFilter, nextFilter, token);
-			if (debugMetrics) {
-				double ms = (double) (System.nanoTime() - start) / 1000000.0;
-				String filters = token.lastFilterString;
-				debugMetricBuilder.append(String.format("\t%.3f ms - %s\n", ms,
-						CommonUtils.trimToWsChars(filters, 100, true)));
-			}
-			if (token.isEmpty()) {
-				break;
-			}
-		}
-		if (debugMetrics && !token.hasIdQuery()) {
-			metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
-					debugMetricBuilder.toString());
-		}
-		Stream stream = token.applyEndOfStreamOperators();
-		List<PreProvideTask<T>> preProvideTasks = domainDescriptor
-				.getPreProvideTasks(clazz);
-		for (PreProvideTask<T> preProvideTask : preProvideTasks) {
-			stream = preProvideTask.wrap(stream);
-		}
-		return stream;
-	}
-
-	private List<DomainTransformEventPersistent> removeNonApplicableTransforms(
-			Collection<DomainTransformEventPersistent> events) {
-		return events.stream().filter(new InSubgraphFilter())
-				.filter(domainDescriptor::customFilterPostProcess)
-				.filter(event -> {
-					if (!isCached(event.getObjectClass())) {
-						return false;
-					}
-					if (event.getValueClass() != null && Entity.class
-							.isAssignableFrom(event.getValueClass())) {
-						if (!isCached(event.getValueClass())) {
-							return false;
-						}
-					}
-					return true;
-				}).map(event -> filterForDomainStoreProperty(event))
-				.filter(Objects::nonNull).collect(Collectors.toList());
-	}
-
-	void addValues(DomainListener listener) {
-		try {
-			listener.onAddValues(false);
-			cache.stream(listener.getListenedClass()).forEach(listener::insert);
-		} finally {
-			listener.onAddValues(true);
-		}
+	public void enableAndAddValues(DomainListener listener) {
+		listener.setEnabled(true);
+		addValues(listener);
 	}
 
 	Entity ensureEntity(Class<? extends Entity> clazz, long id, long localId) {
@@ -782,6 +450,34 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	private DomainTransformEventPersistent
+			filterForDomainStoreProperty(DomainTransformEventPersistent event) {
+		switch (event.getTransformType()) {
+		case CREATE_OBJECT:
+		case DELETE_OBJECT:
+		case ADD_REF_TO_COLLECTION:
+		case REMOVE_REF_FROM_COLLECTION:
+			return event;
+		}
+		DomainStoreProperty ann = domainStoreProperties
+				.get(event.getObjectClass(), event.getPropertyName());
+		if (ann == null) {
+			return event;
+		}
+		switch (ann.loadType()) {
+		case EAGER:
+		case CUSTOM:
+		case LAZY:
+			// LAZY should be filtered by the persister's transformpropagation
+			// policy
+			return event;
+		case TRANSIENT:
+			return null;
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	<T extends Entity> T find(Class<T> clazz, long id) {
 		T t = cache.get(clazz, id);
 		if (t == null) {
@@ -827,9 +523,24 @@ public class DomainStore implements IDomainStore {
 		return t;
 	}
 
+	public DetachedEntityCache getCache() {
+		return this.cache;
+	}
+
 	String getCanonicalPropertyPath(Class clazz, String propertyPath) {
 		return domainDescriptor.perClass.get(clazz)
 				.getCanonicalPropertyPath(propertyPath);
+	}
+
+	private ComplexFilter getComplexFilterFor(Class clazz,
+			DomainFilter... filters) {
+		return domainDescriptor.complexFilters.stream()
+				.filter(cf -> cf.handles(clazz, filters)).findFirst()
+				.orElse(null);
+	}
+
+	public DomainStoreDescriptor getDomainDescriptor() {
+		return this.domainDescriptor;
 	}
 
 	Field getField(Class clazz, String name) throws Exception {
@@ -843,8 +554,84 @@ public class DomainStore implements IDomainStore {
 		return field.get();
 	}
 
+	public List<Field> getFields(Class clazz) {
+		try {
+			List<Field> fields = null;
+			synchronized (graphProjection) {
+				fields = graphProjection.getFieldsForClass(clazz, false);
+			}
+			return fields;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public DomainStoreHealth getHealth() {
+		return health;
+	}
+
+	public DomainLookup getLookupFor(Class clazz, String propertyName) {
+		return domainDescriptor.perClass.get(clazz).getLookupFor(propertyName);
+	}
+
+	public MemoryStat getMemoryStats(StatType type) {
+		MemoryStat top = new MemoryStat(this);
+		top.setObjectMemory(Registry.impl(ObjectMemory.class));
+		top.type = type;
+		/*
+		 * Add cache stats first (notionally it's the owner of the entities)
+		 */
+		cache.addMemoryStats(top);
+		getDomainDescriptor().addMemoryStats(top);
+		/*
+		 * Add self at end (only memory not reachable from
+		 * lookups/projections/entity cache)
+		 */
+		addMemoryStats(top);
+		return top;
+	}
+
+	public Mvcc getMvcc() {
+		return this.mvcc;
+	}
+
+	public DomainTransformPersistenceEvents getPersistenceEvents() {
+		return this.persistenceEvents;
+	}
+
+	public DomainStorePersistenceListener getPersistenceListener() {
+		return this.persistenceListener;
+	}
+
 	ObjectStore getTmDomainObjects() {
 		return new DetachedCacheObjectStore(new DomainStoreEntityCache());
+	}
+
+	public DomainTransformCommitPosition getTransformCommitPosition() {
+		return getPersistenceEvents().getQueue().getTransformCommitPosition();
+	}
+
+	public DomainTransformPersistenceQueue.Sequencer getTransformSequencer() {
+		return loader.getTransformSequencer();
+	}
+
+	private IndexedValueProvider getValueProviderFor(Class clazz,
+			String propertyPath) {
+		if ("id".equals(propertyPath)) {
+			return new CacheIdProvider(clazz);
+		} else if (Ax.matches(propertyPath, "[^.]+\\.id")) {
+			String propertyName = propertyPath.replaceFirst("(.+)\\.id", "$1");
+			Association association = Reflections.at(clazz)
+					.property(propertyName).annotation(Association.class);
+			if (association != null) {
+				return new AssociationIdProvider(clazz, propertyName);
+			}
+		}
+		return getLookupFor(clazz, propertyPath);
+	}
+
+	public boolean handlesAssociationsFor(Class clazz) {
+		return domainDescriptor.handlesAssociationsFor(clazz);
 	}
 
 	void index(Entity entity, boolean add, EntityCollation entityCollation,
@@ -863,12 +650,58 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	public boolean isCached(Class clazz) {
+		return domainDescriptor.perClass.containsKey(clazz);
+	}
+
+	public <T extends Entity> boolean isCached(Class<T> clazz, long id) {
+		return cache.contains(clazz, id);
+	}
+
+	public boolean isDebug() {
+		return this.debug;
+	}
+
+	public boolean isInitialised() {
+		return initialised;
+	}
+
 	<V extends Entity> boolean isRawValue(V v) {
 		if (!Transaction.isInTransaction()) {
 			return v.getId() != 0 || v.getLocalId() != 0;
 		}
 		V existing = (V) cache.get(v.toLocator());
 		return existing == v;
+	}
+
+	public boolean isWritable() {
+		return this.writable;
+	}
+
+	public DomainTransformRequestPersistent loadTransformRequest(long id) {
+		return loader.loadTransformRequest(id);
+	}
+
+	private DomainFilter maybeConvertEntityToIdFilter(Class clazz,
+			DomainFilter filter) {
+		if (filter.getPropertyPath() != null
+				&& !filter.getPropertyPath().contains(".")
+				&& filter.getFilterOperator() == FilterOperator.EQ
+				&& filter.getPropertyValue() instanceof Entity) {
+			String idPath = filter.getPropertyPath() + ".id";
+			if (getValueProviderFor(clazz, idPath) != null) {
+				return new DomainFilter(idPath,
+						((Entity) filter.getPropertyValue()).getId());
+			} else {
+				return filter;
+			}
+		} else {
+			return filter;
+		}
+	}
+
+	public <T extends Entity> void onLocalObjectCreated(T newInstance) {
+		cache.put(newInstance);
 	}
 
 	// We only have one thread allowed here - but that doesn't block any
@@ -1078,6 +911,41 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
+		try {
+			Class clazz = classDescriptor.clazz;
+			classDescriptor.setDomainDescriptor(domainDescriptor);
+			for (PropertyDescriptor pd : SEUtilities
+					.getPropertyDescriptorsSortedByName(clazz)) {
+				if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
+					continue;
+				}
+				Method rm = pd.getReadMethod();
+				Property property = Reflections.at(rm.getDeclaringClass())
+						.property(pd.getName());
+				DomainStoreProperty domainStorePropertyAnnotation = classDescriptor
+						.resolveDomainStoreProperty(
+								new AnnotationLocation(clazz, property));
+				if ((rm.getAnnotation(Transient.class) != null
+						&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
+						|| domainStorePropertyAnnotation != null) {
+					if (domainStorePropertyAnnotation != null) {
+						Field field = getField(clazz, pd.getName());
+						field.setAccessible(true);
+						domainStoreProperties.put(clazz, field.getName(),
+								domainStorePropertyAnnotation);
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void putExternalLocal(Entity instance) {
+		cache.putExternalLocal(instance);
+	}
+
 	<T extends Entity> Stream<T> query(Class<T> clazz,
 			DomainStoreQuery<T> query) {
 		try {
@@ -1093,6 +961,180 @@ public class DomainStore implements IDomainStore {
 			return query0(clazz, query);
 		} finally {
 			LooseContext.pop();
+		}
+	}
+
+	private <T extends Entity> Stream<T> query0(Class<T> clazz,
+			DomainStoreQuery<T> query) {
+		boolean debugMetrics = isDebug()
+				&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
+		StringBuilder debugMetricBuilder = new StringBuilder();
+		int filterSize = query.getFilters().size();
+		QueryToken token = new QueryToken(query);
+		token.planner().optimiseFilters();
+		for (; token.idx < filterSize; token.idx++) {
+			int idx = token.idx;
+			long start = System.nanoTime();
+			DomainFilter cacheFilter = query.getFilters().get(idx);
+			DomainFilter nextFilter = idx == filterSize - 1 ? null
+					: query.getFilters().get(idx + 1);
+			applyFilter(clazz, cacheFilter, nextFilter, token);
+			if (debugMetrics) {
+				double ms = (double) (System.nanoTime() - start) / 1000000.0;
+				String filters = token.lastFilterString;
+				debugMetricBuilder.append(String.format("\t%.3f ms - %s\n", ms,
+						CommonUtils.trimToWsChars(filters, 100, true)));
+			}
+			if (token.isEmpty()) {
+				break;
+			}
+		}
+		if (debugMetrics && !token.hasIdQuery()) {
+			metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
+					debugMetricBuilder.toString());
+		}
+		Stream stream = token.applyEndOfStreamOperators();
+		List<PreProvideTask<T>> preProvideTasks = domainDescriptor
+				.getPreProvideTasks(clazz);
+		for (PreProvideTask<T> preProvideTask : preProvideTasks) {
+			stream = preProvideTask.wrap(stream);
+		}
+		return stream;
+	}
+
+	public void remove(Entity entity) {
+		cache.remove(entity);
+	}
+
+	private List<DomainTransformEventPersistent> removeNonApplicableTransforms(
+			Collection<DomainTransformEventPersistent> events) {
+		return events.stream().filter(new InSubgraphFilter())
+				.filter(domainDescriptor::customFilterPostProcess)
+				.filter(event -> {
+					if (!isCached(event.getObjectClass())) {
+						return false;
+					}
+					if (event.getValueClass() != null && Entity.class
+							.isAssignableFrom(event.getValueClass())) {
+						if (!isCached(event.getValueClass())) {
+							return false;
+						}
+					}
+					return true;
+				}).map(event -> filterForDomainStoreProperty(event))
+				.filter(Objects::nonNull).collect(Collectors.toList());
+	}
+
+	public void setConnectionUrl(String newUrl) {
+		((DomainStoreLoaderDatabase) loader).setConnectionUrl(newUrl);
+	}
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
+
+	public void throwDomainStoreException(String message) {
+		health.domainStoreExceptionCount.incrementAndGet();
+		throw new DomainStoreException(message);
+	}
+
+	public Topic<DomainTransformPersistenceEvent> topicAfterDomainCommitted() {
+		return topicAfterDomainCommitted;
+	}
+
+	public Topic<DomainTransformPersistenceEvent> topicBeforeDomainCommitted() {
+		return topicBeforeDomainCommitted;
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("Domain store: %s %s", name,
+				domainDescriptor.getClass().getSimpleName());
+	}
+
+	public void warmup() throws Exception {
+		new StatCategory_DomainStore.Warmup().emit(isWritable());
+		MetricLogging.get().start("domainStore.warmup");
+		initialised = false;
+		initialising = true;
+		getPersistenceEvents().addDomainTransformPersistenceListener(
+				getPersistenceListener());
+		transformManager = new SubgraphTransformManagerPostProcess();
+		lazyObjectLoader = loader.getLazyObjectLoader();
+		cache = (DomainStoreEntityCache) transformManager
+				.getDetachedEntityCache();
+		cache.setThrowOnExisting(AppPersistenceBase.isTestServer());
+		transformManager.getStore().setLazyObjectLoader(lazyObjectLoader);
+		domainDescriptor.initialise();
+		domainDescriptor.registerStore(this);
+		domainDescriptor.perClass.values().stream()
+				.forEach(this::prepareClassDescriptor);
+		new StatCategory_DomainStore.Warmup.InitialiseDescriptor()
+				.emit(isWritable());
+		mvcc = new Mvcc(this, domainDescriptor, cache,
+				reuseTransformerStore == null ? null
+						: reuseTransformerStore.mvcc);
+		MetricLogging.get().start("mvcc");
+		mvcc.init();
+		MetricLogging.get().end("mvcc");
+		new StatCategory_DomainStore.Warmup.Mvcc().emit(isWritable());
+		Transaction.beginDomainPreparing();
+		Transaction.current().setBaseTransaction(true);
+		domainDescriptor.perClass.keySet()
+				.forEach(clazz -> cache.initialiseMap(clazz));
+		domainDescriptor.perClass.values().stream().forEach(dcd -> {
+			dcd.initialise();
+		});
+		loader.warmup();
+		// loader responsible for this
+		// Transaction.current().toCommitted();
+		Transaction.end();
+		initialising = false;
+		initialised = true;
+		domainDescriptor.onWarmupComplete(this);
+		MetricLogging.get().end("domainStore.warmup");
+		new StatCategory_DomainStore.Warmup.End().emit(isWritable());
+	}
+
+	private class AssociationIdProvider implements IndexedValueProvider {
+		private Class clazz;
+
+		private String propertyName;
+
+		public AssociationIdProvider(Class clazz, String propertyName) {
+			this.clazz = clazz;
+			this.propertyName = propertyName;
+		}
+
+		@Override
+		public FilterCost estimateFilterCost(int entityCount,
+				DomainFilter... filters) {
+			return FilterCost.lookupProjectionCost();
+		}
+
+		@Override
+		public StreamOrSet getKeyMayBeCollection(Object value) {
+			Property property = Reflections.at(clazz).property(propertyName);
+			Association association = property.annotation(Association.class);
+			Class<? extends Entity> associationClass = association
+					.implementationClass();
+			Property associationProperty = Reflections.at(associationClass)
+					.property(association.propertyName());
+			Collection<Long> ids = CommonUtils.wrapInCollection(value);
+			Stream<Entity> stream = ids.stream()
+					.map(id -> (Entity) cache.get(associationClass, id))
+					.filter(Objects::nonNull);
+			boolean propertyIsSet = Set.class
+					.isAssignableFrom(associationProperty.getType());
+			if (propertyIsSet) {
+				stream = stream
+						.map(e -> ((Set<Entity>) associationProperty.get(e)))
+						.flatMap(Collection::stream);
+			} else {
+				stream = stream.map(e -> (Entity) associationProperty.get(e))
+						.filter(Objects::nonNull);
+			}
+			return new StreamOrSet<>(stream);
 		}
 	}
 
@@ -1167,6 +1209,149 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	private class CacheIdProvider implements IndexedValueProvider {
+		private final Class clazz;
+
+		private CacheIdProvider(Class clazz) {
+			this.clazz = clazz;
+		}
+
+		@Override
+		public FilterCost estimateFilterCost(int entityCount,
+				DomainFilter... filters) {
+			return FilterCost.lookupProjectionCost();
+		}
+
+		@Override
+		public StreamOrSet getKeyMayBeCollection(Object value) {
+			if (value instanceof Collection) {
+				return new StreamOrSet(((Collection<Long>) value).stream()
+						.map(id -> (Entity) cache.get(this.clazz, id))
+						.filter(Objects::nonNull));
+			} else {
+				long id = (long) value;
+				return new StreamOrSet(Stream.of(cache.get(this.clazz, id))
+						.filter(Objects::nonNull));
+			}
+		}
+	}
+
+	private class ComplexFilterContextImpl<E extends Entity>
+			implements ComplexFilterContext<E> {
+		private final Class clazz;
+
+		private final QueryToken<E> token;
+
+		private ComplexFilterContextImpl(Class clazz, QueryToken<E> token) {
+			this.clazz = clazz;
+			this.token = token;
+		}
+
+		@Override
+		public Stream<E> getEntitiesForIds(Set<Long> ids) {
+			return (Stream<E>) (Stream<?>) ids.stream()
+					.map(id -> cache.get(this.clazz, id))
+					.filter(Objects::nonNull);
+		}
+
+		@Override
+		public Stream<E> getIncomingStream() {
+			return this.token.stream;
+		}
+
+		@Override
+		public <E2 extends Entity> ComplexFilterContext<E2>
+				getOtherEntityFilterContext(Class<E2> otherEntityClass) {
+			return new ComplexFilterContextImpl(otherEntityClass, token);
+		}
+
+		@Override
+		public <E2 extends Entity> DomainLookup<String, E2>
+				getStringLookup(Class<E2> clazz, String propertyPath) {
+			return getLookupFor(clazz, propertyPath);
+		}
+	}
+
+	class DomainQueryPlanner<E extends Entity> {
+		private QueryToken<E> token;
+
+		public DomainQueryPlanner(QueryToken<E> queryToken) {
+			this.token = queryToken;
+		}
+
+		public void optimiseFilters() {
+			DomainQuery<E> query = token.query;
+			List<DomainFilter> filters = query.getFilters();
+			List<FilterCostTuple> filterCosts = new ArrayList<>();
+			Class<E> clazz = query.getEntityClass();
+			int entityCount = cache.size(clazz);
+			for (int idx = 0; idx < filters.size();) {
+				DomainFilter filter = query.getFilters().get(idx);
+				DomainFilter nextFilter = idx == filters.size() - 1 ? null
+						: query.getFilters().get(idx + 1);
+				ComplexFilter complexFilter = getComplexFilterFor(clazz, filter,
+						nextFilter);
+				List<DomainFilter> consumedFilters = Collections
+						.singletonList(filter);
+				FilterCost filterCost = null;
+				if (complexFilter != null) {
+					filterCost = complexFilter.estimateFilterCost(entityCount,
+							filter, nextFilter);
+					int filtersConsumed = complexFilter
+							.topLevelFiltersConsumed();
+					switch (filtersConsumed) {
+					case 1:
+						break;
+					case 2:
+						consumedFilters = Arrays.asList(filter, nextFilter);
+						break;
+					default:
+						throw new UnsupportedOperationException();
+					}
+					idx += filtersConsumed;
+				} else {
+					IndexedValueProvider valueProvider = getValueProviderFor(
+							clazz, filter.getPropertyPath());
+					if (valueProvider != null) {
+						switch (filter.getFilterOperator()) {
+						case EQ:
+						case IN:
+							filterCost = valueProvider
+									.estimateFilterCost(entityCount, filter);
+							break;
+						// all others non-optimised
+						default:
+							break;
+						}
+					}
+					if (filterCost == null) {
+						filterCost = FilterCost.evaluatorProjectionCost();
+					}
+					idx++;
+				}
+				filterCosts
+						.add(new FilterCostTuple(consumedFilters, filterCost));
+			}
+			Collections.sort(filterCosts,
+					Comparator.comparing(fc -> fc.filterCost.naiveOrdering()));
+			filters.clear();
+			filterCosts.stream().map(fct -> fct.filters)
+					.flatMap(Collection::stream).forEach(filters::add);
+		}
+
+		class FilterCostTuple {
+			List<DomainFilter> filters;
+
+			FilterCost filterCost;
+
+			public FilterCostTuple(List<DomainFilter> filters,
+					FilterCost filterCost) {
+				this.filters = filters;
+				this.filterCost = filterCost;
+			}
+		}
+	}
+
 	@Registration.Singleton(SizeProvider.class)
 	public static class DomainSizeProvider implements SizeProvider {
 		@Override
@@ -1182,6 +1367,143 @@ public class DomainStore implements IDomainStore {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+	}
+
+	class DomainStoreDomainHandler implements DomainHandler {
+		@Override
+		public <V extends Entity> void async(Class<V> clazz, long objectId,
+				boolean create, Consumer<V> resultConsumer) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <V extends Entity> V byProperty(Class<V> clazz,
+				String propertyName, Object value) {
+			return Domain.query(clazz).filter(propertyName, value).find();
+		}
+
+		@Override
+		public <V extends Entity> V detachedVersion(V v) {
+			return (V) Domain.query(v.entityClass()).filterById(v.getId())
+					.find();
+		}
+
+		@Override
+		public <V extends Entity> V find(Class clazz, long id) {
+			return (V) DomainStore.this.find(clazz, id);
+		}
+
+		@Override
+		public <V extends Entity> V find(EntityLocator locator) {
+			if (locator.id != 0) {
+				return find(locator.clazz, locator.id);
+			}
+			V entity = cache.get(locator);
+			if (entity == null) {
+				entity = (V) promotedEntitiesByPrePromotion.get(locator);
+				if (entity != null) {
+					logger.warn(
+							"Found entity {} for locator {} from promoted map",
+							entity.toLocator(), locator);
+				} else {
+					logger.warn(
+							"Did not find entity  for locator {} from promoted map",
+							locator);
+				}
+			}
+			if (entity == null) {
+				if (LooseContext
+						.is(CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS)) {
+					IgnoredLocalIdLocatorResolution.publish(locator);
+				} else {
+					ClientInstance clientInstance = AuthenticationPersistence
+							.get()
+							.getClientInstance(locator.getClientInstanceId());
+					if (clientInstance == null) {
+						logger.warn(
+								"Unable to find clientinstance for local find:\n\t locator: {}"
+										+ "\n\t Current user: {}"
+										+ "\n\t Current pm instance: {}"
+										+ "\n\t Service instance: {}",
+								locator, PermissionsManager.get().getUser(),
+								PermissionsManager.get().getClientInstance(),
+								EntityLayerObjects.get()
+										.getServerAsClientInstance());
+					} else {
+						EntityLocatorMap locatorMap = TransformCommit.get()
+								.getLocatorMapForClient(clientInstance,
+										Ax.isTest());
+						EntityLocator persistentLocator = locatorMap
+								.getForLocalId(locator.getLocalId());
+						if (persistentLocator != null) {
+							return find(persistentLocator);
+						}
+					}
+				}
+			}
+			return entity;
+		}
+
+		@Override
+		public <V extends Entity> V find(V v) {
+			if (!v.domain().wasPersisted()) {
+				if (v.getLocalId() == 0) {
+					return null;
+				}
+				/*
+				 * not yet persisted, tx-local
+				 */
+				return (V) cache.get(v.toLocator());
+			} else {
+				return (V) find(v.entityClass(), v.getId());
+			}
+		}
+
+		@Override
+		public <V extends Entity> boolean isDomainVersion(V v) {
+			return isRawValue(v);
+		}
+
+		@Override
+		public <V extends Entity> boolean isMvccObject(V v) {
+			return v == null ? false
+					: MvccObject.class.isAssignableFrom(v.getClass());
+		};
+
+		<T extends Entity> List<T> list(Class<T> clazz) {
+			return Domain.query(clazz).list();
+		}
+
+		@Override
+		public <V extends Entity> List<V> listByProperty(Class<V> clazz,
+				String propertyName, Object value) {
+			return Domain.query(clazz).filter(propertyName, value).list();
+		}
+
+		@Override
+		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
+			return new DomainStoreQuery<>(clazz, DomainStore.this);
+		}
+
+		@Override
+		public <V extends Entity> V resolve(V v) {
+			return Transactions.resolve(v, ResolvedVersionState.READ, false);
+		}
+
+		@Override
+		public <V extends Entity> int size(Class<V> clazz) {
+			return cache.size(clazz);
+		}
+
+		@Override
+		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
+			return Domain.query(clazz).stream();
+		}
+
+		@Override
+		public boolean wasRemoved(Entity entity) {
+			return !cache.contains(entity);
 		}
 	}
 
@@ -1269,6 +1591,28 @@ public class DomainStore implements IDomainStore {
 		void onException(DomainStoreUpdateException updateException) {
 			domainStoreExceptionCount.incrementAndGet();
 			lastException = updateException;
+		}
+	}
+
+	class DomainStorePersistenceListener
+			implements DomainTransformPersistenceListener {
+		@Override
+		public boolean isAllVmEventsListener() {
+			return true;
+		}
+
+		@Override
+		public void onDomainTransformRequestPersistence(
+				DomainTransformPersistenceEvent evt) {
+			switch (evt.getPersistenceEventType()) {
+			case PREPARE_COMMIT:
+				break;
+			case COMMIT_ERROR:
+				break;
+			case COMMIT_OK:
+				postProcess(evt);
+				break;
+			}
 		}
 	}
 
@@ -1444,17 +1788,6 @@ public class DomainStore implements IDomainStore {
 				return storeHandler(clazz).size(clazz);
 			}
 
-			@Override
-			public <V extends Entity> Stream<V> stream(Class<V> clazz) {
-				return storeHandler(clazz).stream(clazz);
-			}
-
-			@Override
-			public boolean wasRemoved(Entity entity) {
-				Class clazz = entity.entityClass();
-				return storeHandler(clazz).wasRemoved(entity);
-			}
-
 			DomainHandler storeHandler(Class clazz) {
 				DomainStore domainStore = classMap.get(clazz);
 				if (domainStore == null) {
@@ -1464,6 +1797,17 @@ public class DomainStore implements IDomainStore {
 					domainStore = writableStore;
 				}
 				return domainStore.handler;
+			}
+
+			@Override
+			public <V extends Entity> Stream<V> stream(Class<V> clazz) {
+				return storeHandler(clazz).stream(clazz);
+			}
+
+			@Override
+			public boolean wasRemoved(Entity entity) {
+				Class clazz = entity.entityClass();
+				return storeHandler(clazz).wasRemoved(entity);
 			}
 		}
 	}
@@ -1479,283 +1823,6 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	public static class QueryPool {
-		private final ForkJoinPool pool;
-
-		private volatile Transaction transaction;
-
-		private LooseContextInstance contextInstance;
-
-		QueryPool() {
-			pool = new ForkJoinPool(
-					Configuration.getInt(DomainStore.class, "queryPoolSize"),
-					new WorkerThreadFactory(), null, false);
-			try {
-				Field workerNamePrefix = ForkJoinPool.class
-						.getDeclaredField("workerNamePrefix");
-				workerNamePrefix.setAccessible(true);
-				workerNamePrefix.set(pool, "domainStore-queryPool");
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		/*
-		 * The use of a reference to the stream (rather than the stream) is so
-		 * that the actual stream used by the callable can be changed based on
-		 * the context and serial arguments
-		 */
-		public <T> T call(Callable<T> callable,
-				Ref<Stream<? extends Entity>> streamRef, boolean parallel) {
-			boolean runInPool = false;
-			parallel &= !LooseContext.is(CONTEXT_SERIAL_QUERY);
-			if (parallel) {
-				synchronized (this) {
-					Transaction current = Transaction.current();
-					if (transaction == null) {
-						runInPool = true;
-						transaction = current;
-						this.contextInstance = LooseContext.getContext()
-								.snapshot();
-					}
-				}
-			}
-			if (runInPool) {
-				try {
-					streamRef.set(streamRef.get().parallel());
-					return pool.submit(callable).get();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				} finally {
-					synchronized (this) {
-						contextInstance = null;
-						transaction = null;
-					}
-				}
-			} else {
-				streamRef.set(streamRef.get().sequential());
-				try {
-					return callable.call();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-
-		class WorkerThread extends ForkJoinWorkerThread {
-			protected WorkerThread(ForkJoinPool pool) {
-				super(pool);
-			}
-
-			@Override
-			public void run() {
-				Transaction.setSupplier(() -> transaction);
-				try {
-					LooseContext.push();
-					if (contextInstance != null) {
-						LooseContext.putSnapshotProperties(contextInstance);
-					}
-					super.run();
-				} finally {
-					LooseContext.pop();
-					Transaction.setSupplier(null);
-				}
-			}
-		}
-
-		class WorkerThreadFactory implements ForkJoinWorkerThreadFactory {
-			@Override
-			public final ForkJoinWorkerThread newThread(ForkJoinPool pool) {
-				return new WorkerThread(pool);
-			}
-		}
-	}
-
-	private class AssociationIdProvider implements IndexedValueProvider {
-		private Class clazz;
-
-		private String propertyName;
-
-		public AssociationIdProvider(Class clazz, String propertyName) {
-			this.clazz = clazz;
-			this.propertyName = propertyName;
-		}
-
-		@Override
-		public FilterCost estimateFilterCost(int entityCount,
-				DomainFilter... filters) {
-			return FilterCost.lookupProjectionCost();
-		}
-
-		@Override
-		public StreamOrSet getKeyMayBeCollection(Object value) {
-			Property property = Reflections.at(clazz).property(propertyName);
-			Association association = property.annotation(Association.class);
-			Class<? extends Entity> associationClass = association
-					.implementationClass();
-			Property associationProperty = Reflections.at(associationClass)
-					.property(association.propertyName());
-			Collection<Long> ids = CommonUtils.wrapInCollection(value);
-			Stream<Entity> stream = ids.stream()
-					.map(id -> (Entity) cache.get(associationClass, id))
-					.filter(Objects::nonNull);
-			boolean propertyIsSet = Set.class
-					.isAssignableFrom(associationProperty.getType());
-			if (propertyIsSet) {
-				stream = stream
-						.map(e -> ((Set<Entity>) associationProperty.get(e)))
-						.flatMap(Collection::stream);
-			} else {
-				stream = stream.map(e -> (Entity) associationProperty.get(e))
-						.filter(Objects::nonNull);
-			}
-			return new StreamOrSet<>(stream);
-		}
-	}
-
-	private class CacheIdProvider implements IndexedValueProvider {
-		private final Class clazz;
-
-		private CacheIdProvider(Class clazz) {
-			this.clazz = clazz;
-		}
-
-		@Override
-		public FilterCost estimateFilterCost(int entityCount,
-				DomainFilter... filters) {
-			return FilterCost.lookupProjectionCost();
-		}
-
-		@Override
-		public StreamOrSet getKeyMayBeCollection(Object value) {
-			if (value instanceof Collection) {
-				return new StreamOrSet(((Collection<Long>) value).stream()
-						.map(id -> (Entity) cache.get(this.clazz, id))
-						.filter(Objects::nonNull));
-			} else {
-				long id = (long) value;
-				return new StreamOrSet(Stream.of(cache.get(this.clazz, id))
-						.filter(Objects::nonNull));
-			}
-		}
-	}
-
-	private class ComplexFilterContextImpl<E extends Entity>
-			implements ComplexFilterContext<E> {
-		private final Class clazz;
-
-		private final QueryToken<E> token;
-
-		private ComplexFilterContextImpl(Class clazz, QueryToken<E> token) {
-			this.clazz = clazz;
-			this.token = token;
-		}
-
-		@Override
-		public Stream<E> getEntitiesForIds(Set<Long> ids) {
-			return (Stream<E>) (Stream<?>) ids.stream()
-					.map(id -> cache.get(this.clazz, id))
-					.filter(Objects::nonNull);
-		}
-
-		@Override
-		public Stream<E> getIncomingStream() {
-			return this.token.stream;
-		}
-
-		@Override
-		public <E2 extends Entity> ComplexFilterContext<E2>
-				getOtherEntityFilterContext(Class<E2> otherEntityClass) {
-			return new ComplexFilterContextImpl(otherEntityClass, token);
-		}
-
-		@Override
-		public <E2 extends Entity> DomainLookup<String, E2>
-				getStringLookup(Class<E2> clazz, String propertyPath) {
-			return getLookupFor(clazz, propertyPath);
-		}
-	}
-
-	class DomainQueryPlanner<E extends Entity> {
-		private QueryToken<E> token;
-
-		public DomainQueryPlanner(QueryToken<E> queryToken) {
-			this.token = queryToken;
-		}
-
-		public void optimiseFilters() {
-			DomainQuery<E> query = token.query;
-			List<DomainFilter> filters = query.getFilters();
-			List<FilterCostTuple> filterCosts = new ArrayList<>();
-			Class<E> clazz = query.getEntityClass();
-			int entityCount = cache.size(clazz);
-			for (int idx = 0; idx < filters.size();) {
-				DomainFilter filter = query.getFilters().get(idx);
-				DomainFilter nextFilter = idx == filters.size() - 1 ? null
-						: query.getFilters().get(idx + 1);
-				ComplexFilter complexFilter = getComplexFilterFor(clazz, filter,
-						nextFilter);
-				List<DomainFilter> consumedFilters = Collections
-						.singletonList(filter);
-				FilterCost filterCost = null;
-				if (complexFilter != null) {
-					filterCost = complexFilter.estimateFilterCost(entityCount,
-							filter, nextFilter);
-					int filtersConsumed = complexFilter
-							.topLevelFiltersConsumed();
-					switch (filtersConsumed) {
-					case 1:
-						break;
-					case 2:
-						consumedFilters = Arrays.asList(filter, nextFilter);
-						break;
-					default:
-						throw new UnsupportedOperationException();
-					}
-					idx += filtersConsumed;
-				} else {
-					IndexedValueProvider valueProvider = getValueProviderFor(
-							clazz, filter.getPropertyPath());
-					if (valueProvider != null) {
-						switch (filter.getFilterOperator()) {
-						case EQ:
-						case IN:
-							filterCost = valueProvider
-									.estimateFilterCost(entityCount, filter);
-							break;
-						// all others non-optimised
-						default:
-							break;
-						}
-					}
-					if (filterCost == null) {
-						filterCost = FilterCost.evaluatorProjectionCost();
-					}
-					idx++;
-				}
-				filterCosts
-						.add(new FilterCostTuple(consumedFilters, filterCost));
-			}
-			Collections.sort(filterCosts,
-					Comparator.comparing(fc -> fc.filterCost.naiveOrdering()));
-			filters.clear();
-			filterCosts.stream().map(fct -> fct.filters)
-					.flatMap(Collection::stream).forEach(filters::add);
-		}
-
-		class FilterCostTuple {
-			List<DomainFilter> filters;
-
-			FilterCost filterCost;
-
-			public FilterCostTuple(List<DomainFilter> filters,
-					FilterCost filterCost) {
-				this.filters = filters;
-				this.filterCost = filterCost;
-			}
-		}
-	}
-
 	public static class IgnoredLocalIdLocatorResolution
 			implements ProcessObservable {
 		public static void publish(EntityLocator locator) {
@@ -1767,165 +1834,6 @@ public class DomainStore implements IDomainStore {
 
 		IgnoredLocalIdLocatorResolution(EntityLocator locator) {
 			this.locator = locator;
-		}
-	}
-
-	class DomainStoreDomainHandler implements DomainHandler {
-		@Override
-		public <V extends Entity> void async(Class<V> clazz, long objectId,
-				boolean create, Consumer<V> resultConsumer) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public <V extends Entity> V byProperty(Class<V> clazz,
-				String propertyName, Object value) {
-			return Domain.query(clazz).filter(propertyName, value).find();
-		}
-
-		@Override
-		public <V extends Entity> V detachedVersion(V v) {
-			return (V) Domain.query(v.entityClass()).filterById(v.getId())
-					.find();
-		}
-
-		@Override
-		public <V extends Entity> V find(Class clazz, long id) {
-			return (V) DomainStore.this.find(clazz, id);
-		}
-
-		@Override
-		public <V extends Entity> V find(EntityLocator locator) {
-			if (locator.id != 0) {
-				return find(locator.clazz, locator.id);
-			}
-			V entity = cache.get(locator);
-			if (entity == null) {
-				entity = (V) promotedEntitiesByPrePromotion.get(locator);
-				if (entity != null) {
-					logger.warn(
-							"Found entity {} for locator {} from promoted map",
-							entity.toLocator(), locator);
-				} else {
-					logger.warn(
-							"Did not find entity  for locator {} from promoted map",
-							locator);
-				}
-			}
-			if (entity == null) {
-				if (LooseContext
-						.is(CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS)) {
-					IgnoredLocalIdLocatorResolution.publish(locator);
-				} else {
-					ClientInstance clientInstance = AuthenticationPersistence
-							.get()
-							.getClientInstance(locator.getClientInstanceId());
-					if (clientInstance == null) {
-						logger.warn(
-								"Unable to find clientinstance for local find:\n\t locator: {}"
-										+ "\n\t Current user: {}"
-										+ "\n\t Current pm instance: {}"
-										+ "\n\t Service instance: {}",
-								locator, PermissionsManager.get().getUser(),
-								PermissionsManager.get().getClientInstance(),
-								EntityLayerObjects.get()
-										.getServerAsClientInstance());
-					} else {
-						EntityLocatorMap locatorMap = TransformCommit.get()
-								.getLocatorMapForClient(clientInstance,
-										Ax.isTest());
-						EntityLocator persistentLocator = locatorMap
-								.getForLocalId(locator.getLocalId());
-						if (persistentLocator != null) {
-							return find(persistentLocator);
-						}
-					}
-				}
-			}
-			return entity;
-		}
-
-		@Override
-		public <V extends Entity> V find(V v) {
-			if (!v.domain().wasPersisted()) {
-				if (v.getLocalId() == 0) {
-					return null;
-				}
-				/*
-				 * not yet persisted, tx-local
-				 */
-				return (V) cache.get(v.toLocator());
-			} else {
-				return (V) find(v.entityClass(), v.getId());
-			}
-		}
-
-		@Override
-		public <V extends Entity> boolean isDomainVersion(V v) {
-			return isRawValue(v);
-		}
-
-		@Override
-		public <V extends Entity> boolean isMvccObject(V v) {
-			return v == null ? false
-					: MvccObject.class.isAssignableFrom(v.getClass());
-		};
-
-		@Override
-		public <V extends Entity> List<V> listByProperty(Class<V> clazz,
-				String propertyName, Object value) {
-			return Domain.query(clazz).filter(propertyName, value).list();
-		}
-
-		@Override
-		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
-			return new DomainStoreQuery<>(clazz, DomainStore.this);
-		}
-
-		@Override
-		public <V extends Entity> V resolve(V v) {
-			return Transactions.resolve(v, ResolvedVersionState.READ, false);
-		}
-
-		@Override
-		public <V extends Entity> int size(Class<V> clazz) {
-			return cache.size(clazz);
-		}
-
-		@Override
-		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
-			return Domain.query(clazz).stream();
-		}
-
-		@Override
-		public boolean wasRemoved(Entity entity) {
-			return !cache.contains(entity);
-		}
-
-		<T extends Entity> List<T> list(Class<T> clazz) {
-			return Domain.query(clazz).list();
-		}
-	}
-
-	class DomainStorePersistenceListener
-			implements DomainTransformPersistenceListener {
-		@Override
-		public boolean isAllVmEventsListener() {
-			return true;
-		}
-
-		@Override
-		public void onDomainTransformRequestPersistence(
-				DomainTransformPersistenceEvent evt) {
-			switch (evt.getPersistenceEventType()) {
-			case PREPARE_COMMIT:
-				break;
-			case COMMIT_ERROR:
-				break;
-			case COMMIT_OK:
-				postProcess(evt);
-				break;
-			}
 		}
 	}
 
@@ -2046,6 +1954,98 @@ public class DomainStore implements IDomainStore {
 			extends Function<Long, Entity> {
 	}
 
+	public static class QueryPool {
+		private final ForkJoinPool pool;
+
+		private volatile Transaction transaction;
+
+		private LooseContextInstance contextInstance;
+
+		QueryPool() {
+			pool = new ForkJoinPool(
+					Configuration.getInt(DomainStore.class, "queryPoolSize"),
+					new WorkerThreadFactory(), null, false);
+			try {
+				Field workerNamePrefix = ForkJoinPool.class
+						.getDeclaredField("workerNamePrefix");
+				workerNamePrefix.setAccessible(true);
+				workerNamePrefix.set(pool, "domainStore-queryPool");
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		/*
+		 * The use of a reference to the stream (rather than the stream) is so
+		 * that the actual stream used by the callable can be changed based on
+		 * the context and serial arguments
+		 */
+		public <T> T call(Callable<T> callable,
+				Ref<Stream<? extends Entity>> streamRef, boolean parallel) {
+			boolean runInPool = false;
+			parallel &= !LooseContext.is(CONTEXT_SERIAL_QUERY);
+			if (parallel) {
+				synchronized (this) {
+					Transaction current = Transaction.current();
+					if (transaction == null) {
+						runInPool = true;
+						transaction = current;
+						this.contextInstance = LooseContext.getContext()
+								.snapshot();
+					}
+				}
+			}
+			if (runInPool) {
+				try {
+					streamRef.set(streamRef.get().parallel());
+					return pool.submit(callable).get();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				} finally {
+					synchronized (this) {
+						contextInstance = null;
+						transaction = null;
+					}
+				}
+			} else {
+				streamRef.set(streamRef.get().sequential());
+				try {
+					return callable.call();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+
+		class WorkerThread extends ForkJoinWorkerThread {
+			protected WorkerThread(ForkJoinPool pool) {
+				super(pool);
+			}
+
+			@Override
+			public void run() {
+				Transaction.setSupplier(() -> transaction);
+				try {
+					LooseContext.push();
+					if (contextInstance != null) {
+						LooseContext.putSnapshotProperties(contextInstance);
+					}
+					super.run();
+				} finally {
+					LooseContext.pop();
+					Transaction.setSupplier(null);
+				}
+			}
+		}
+
+		class WorkerThreadFactory implements ForkJoinWorkerThreadFactory {
+			@Override
+			public final ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+				return new WorkerThread(pool);
+			}
+		}
+	}
+
 	class QueryToken<E extends Entity> {
 		boolean empty = false;
 
@@ -2110,6 +2110,10 @@ public class DomainStore implements IDomainStore {
 			return stream;
 		}
 
+		DomainStore getStore() {
+			return DomainStore.this;
+		}
+
 		public boolean hasIdQuery() {
 			return query.getFilters().stream()
 					.anyMatch(filter -> filter.getPropertyPath().equals("id"));
@@ -2129,13 +2133,22 @@ public class DomainStore implements IDomainStore {
 		private Stream<E> streamFromCacheValues() {
 			return cache.stream(query.getEntityClass());
 		}
-
-		DomainStore getStore() {
-			return DomainStore.this;
-		}
 	}
 
 	class SubgraphTransformManagerPostProcess extends SubgraphTransformManager {
+		@Override
+		protected void beforeDirectCollectionModification(Entity obj,
+				String propertyName, Object newTargetValue,
+				CollectionModificationType collectionModificationType) {
+			Transactions.resolve(obj, ResolvedVersionState.WRITE, false);
+		}
+
+		@Override
+		protected Entity getEntityForCreate(DomainTransformEvent event) {
+			return ensureEntity(event.getObjectClass(), event.getObjectId(),
+					event.getObjectLocalId());
+		}
+
 		@Override
 		public Entity getObject(DomainTransformEvent dte,
 				boolean ignoreSource) {
@@ -2152,8 +2165,24 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
+		protected void initObjectStore() {
+			store = (DetachedCacheObjectStore) getTmDomainObjects();
+			setObjectStore(store);
+		}
+
+		@Override
 		public boolean isIgnorePropertyChanges() {
 			return true;
+		}
+
+		@Override
+		protected boolean isZeroCreatedObjectLocalId(Class clazz) {
+			return true;
+		}
+
+		@Override
+		protected void performDeleteObject(Entity entity) {
+			super.performDeleteObject(entity);
 		}
 
 		public void registerClusterLocalObjectPromotion(
@@ -2165,35 +2194,6 @@ public class DomainStore implements IDomainStore {
 			locator.setClientInstanceId(clientInstance.getId());
 			locator.setClazz(promoted.entityClass());
 			promotedEntitiesByPrePromotion.put(locator, promoted);
-		}
-
-		@Override
-		protected void beforeDirectCollectionModification(Entity obj,
-				String propertyName, Object newTargetValue,
-				CollectionModificationType collectionModificationType) {
-			Transactions.resolve(obj, ResolvedVersionState.WRITE, false);
-		}
-
-		@Override
-		protected Entity getEntityForCreate(DomainTransformEvent event) {
-			return ensureEntity(event.getObjectClass(), event.getObjectId(),
-					event.getObjectLocalId());
-		}
-
-		@Override
-		protected void initObjectStore() {
-			store = (DetachedCacheObjectStore) getTmDomainObjects();
-			setObjectStore(store);
-		}
-
-		@Override
-		protected boolean isZeroCreatedObjectLocalId(Class clazz) {
-			return true;
-		}
-
-		@Override
-		protected void performDeleteObject(Entity entity) {
-			super.performDeleteObject(entity);
 		}
 	}
 }

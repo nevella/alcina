@@ -27,6 +27,22 @@ public class ColumnsBuilderRows {
 		return new AdditionalMapper();
 	}
 
+	private <T> void mapValue(ColumnsBuilder<T>.ColumnBuilder cm, Cell cell,
+			T rowModel) {
+		Object value = cm.provideValueFunction().apply(rowModel);
+		cell.rawValue = value;
+		if (value instanceof Number) {
+			cell.setNumericValue(((Number) value).doubleValue());
+		}
+		cell.setValue(CommonUtils.nullSafeToString(value));
+		if (cm.getTitleFunction() != null) {
+			cell.setTitle(cm.getTitleFunction().apply(rowModel));
+		}
+		if (cm.getHrefFunction() != null) {
+			cell.setHref(cm.getHrefFunction().apply(rowModel));
+		}
+	}
+
 	public GroupedResult toGroupedResult(GroupingMapperResult mapperResult,
 			String name) {
 		return toGroupedResult(mapperResult.rowModels,
@@ -104,22 +120,6 @@ public class ColumnsBuilderRows {
 				.asList(new RowModel_SingleCell(html));
 		return new ColumnsBuilderRows().toGroupedResult(model.stream(), mapper,
 				name, row -> row.asRowKey());
-	}
-
-	private <T> void mapValue(ColumnsBuilder<T>.ColumnBuilder cm, Cell cell,
-			T rowModel) {
-		Object value = cm.provideValueFunction().apply(rowModel);
-		cell.rawValue = value;
-		if (value instanceof Number) {
-			cell.setNumericValue(((Number) value).doubleValue());
-		}
-		cell.setValue(CommonUtils.nullSafeToString(value));
-		if (cm.getTitleFunction() != null) {
-			cell.setTitle(cm.getTitleFunction().apply(rowModel));
-		}
-		if (cm.getHrefFunction() != null) {
-			cell.setHref(cm.getHrefFunction().apply(rowModel));
-		}
 	}
 
 	static class AdditionalMapper

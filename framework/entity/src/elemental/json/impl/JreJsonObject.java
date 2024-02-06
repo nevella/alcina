@@ -162,6 +162,14 @@ public class JreJsonObject extends JreJsonValue implements JsonObject {
 		put(key, factory.create(value));
 	}
 
+	@com.google.gwt.core.shared.GwtIncompatible
+	private void readObject(ObjectInputStream stream)
+			throws IOException, ClassNotFoundException {
+		JreJsonObject instance = parseJson(stream);
+		this.factory = Json.instance();
+		this.map = instance.map;
+	}
+
 	@Override
 	public void remove(String key) {
 		map.remove(key);
@@ -206,14 +214,6 @@ public class JreJsonObject extends JreJsonValue implements JsonObject {
 			}
 		}
 		visitor.endVisit(this, ctx);
-	}
-
-	@com.google.gwt.core.shared.GwtIncompatible
-	private void readObject(ObjectInputStream stream)
-			throws IOException, ClassNotFoundException {
-		JreJsonObject instance = parseJson(stream);
-		this.factory = Json.instance();
-		this.map = instance.map;
 	}
 
 	@com.google.gwt.core.shared.GwtIncompatible

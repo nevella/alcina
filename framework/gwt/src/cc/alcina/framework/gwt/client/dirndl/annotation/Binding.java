@@ -87,19 +87,6 @@ public @interface Binding {
 		}
 	}
 
-	/*
-	 * FIXME - dirndl - don't use (since this doesn't unclear a display:none).
-	 * It will be prettier than the display:<empty-string> of DisplayBlankNone,
-	 * once fixed
-	 */
-	@Reflected
-	public static class DisplayNullNone implements ToStringFunction<Boolean> {
-		@Override
-		public String apply(Boolean t) {
-			return CommonUtils.bv(t) ? null : "none";
-		}
-	}
-
 	@Reflected
 	public static class DisplayFalseTrue implements ToStringFunction<Boolean> {
 		@Override
@@ -118,6 +105,19 @@ public @interface Binding {
 		@Override
 		public Function<String, Boolean> rightToLeft() {
 			return Boolean::parseBoolean;
+		}
+	}
+
+	/*
+	 * FIXME - dirndl - don't use (since this doesn't unclear a display:none).
+	 * It will be prettier than the display:<empty-string> of DisplayBlankNone,
+	 * once fixed
+	 */
+	@Reflected
+	public static class DisplayNullNone implements ToStringFunction<Boolean> {
+		@Override
+		public String apply(Boolean t) {
+			return CommonUtils.bv(t) ? null : "none";
 		}
 	}
 
@@ -152,9 +152,39 @@ public @interface Binding {
 			this.type = binding.type();
 		}
 
+		private String __stringValue(Object o) {
+			if (o instanceof Class) {
+				return ((Class) o).getSimpleName() + ".class";
+			}
+			if (o.getClass().isArray()) {
+				return "[" + java.util.Arrays.stream((Object[]) o)
+						.map(this::__stringValue).collect(
+								java.util.stream.Collectors.joining(","))
+						+ "]";
+			}
+			return o.toString();
+		}
+
 		@Override
 		public Class<? extends Annotation> annotationType() {
 			return Binding.class;
+		}
+
+		private void append(StringBuilder stringBuilder, String fieldName,
+				Function<Impl, ?> function, boolean elideDefaults) {
+			Object value = function.apply(this);
+			if (elideDefaults) {
+				Object defaultValue = function.apply(DEFAULT_INSTANCE);
+				if (Objects.deepEquals(value, defaultValue)) {
+					return;
+				}
+			}
+			if (stringBuilder.length() > 0) {
+				stringBuilder.append(',');
+			}
+			stringBuilder.append(fieldName);
+			stringBuilder.append('=');
+			stringBuilder.append(__stringValue(value));
 		}
 
 		@Override
@@ -198,6 +228,16 @@ public @interface Binding {
 			return toString(false);
 		}
 
+		String toString(boolean elideDefaults) {
+			StringBuilder stringBuilder = new StringBuilder();
+			append(stringBuilder, "from", Impl::from, elideDefaults);
+			append(stringBuilder, "literal", Impl::literal, elideDefaults);
+			append(stringBuilder, "to", Impl::to, elideDefaults);
+			append(stringBuilder, "transform", Impl::transform, elideDefaults);
+			append(stringBuilder, "type", Impl::type, elideDefaults);
+			return stringBuilder.toString();
+		}
+
 		public String toStringElideDefaults() {
 			return toString(true);
 		}
@@ -210,46 +250,6 @@ public @interface Binding {
 		@Override
 		public Type type() {
 			return type;
-		}
-
-		private String __stringValue(Object o) {
-			if (o instanceof Class) {
-				return ((Class) o).getSimpleName() + ".class";
-			}
-			if (o.getClass().isArray()) {
-				return "[" + java.util.Arrays.stream((Object[]) o)
-						.map(this::__stringValue).collect(
-								java.util.stream.Collectors.joining(","))
-						+ "]";
-			}
-			return o.toString();
-		}
-
-		private void append(StringBuilder stringBuilder, String fieldName,
-				Function<Impl, ?> function, boolean elideDefaults) {
-			Object value = function.apply(this);
-			if (elideDefaults) {
-				Object defaultValue = function.apply(DEFAULT_INSTANCE);
-				if (Objects.deepEquals(value, defaultValue)) {
-					return;
-				}
-			}
-			if (stringBuilder.length() > 0) {
-				stringBuilder.append(',');
-			}
-			stringBuilder.append(fieldName);
-			stringBuilder.append('=');
-			stringBuilder.append(__stringValue(value));
-		}
-
-		String toString(boolean elideDefaults) {
-			StringBuilder stringBuilder = new StringBuilder();
-			append(stringBuilder, "from", Impl::from, elideDefaults);
-			append(stringBuilder, "literal", Impl::literal, elideDefaults);
-			append(stringBuilder, "to", Impl::to, elideDefaults);
-			append(stringBuilder, "transform", Impl::transform, elideDefaults);
-			append(stringBuilder, "type", Impl::type, elideDefaults);
-			return stringBuilder.toString();
 		}
 	}
 

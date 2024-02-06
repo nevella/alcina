@@ -57,16 +57,6 @@ public class SyncMerger<T> {
 		}
 	};
 
-	public String getName() {
-		String simpleName = getClass().getSimpleName();
-		String regex = "([A-Z][a-z]+)([A-Z][a-z]+)([A-Z][a-z]+)Merger";
-		if (simpleName.matches(regex)) {
-			return simpleName.replaceFirst(regex, "$1 >> $2 :: $3");
-		} else {
-			return simpleName;
-		}
-	}
-
 	public static MergeFilter LEFT_IS_DEFINITIVE = new MergeFilter() {
 		@Override
 		public boolean allowLeftToRight(Object left, Object right,
@@ -117,93 +107,6 @@ public class SyncMerger<T> {
 		accessor = new PropertyPathAccessor();
 	}
 
-	public SyncMapping define(String propertyName) {
-		SyncMapping mapping = new SyncMapping(propertyName);
-		syncMappings.add(mapping);
-		return mapping;
-	}
-
-	public MatchStrategy<T> getMatchStrategy() {
-		return this.matchStrategy;
-	}
-
-	public Class<T> getMergedClass() {
-		return this.mergedClass;
-	}
-
-	public SyncLogger getSyncLogger() {
-		return this.syncLogger;
-	}
-
-	public void maybeRegister(Object left, Object right) {
-		// if you'd like to TM-record object modifications
-	}
-
-	public void merge(Collection<T> leftItems, Collection<T> rightItems,
-			SyncDeltaModel deltaModel, Logger logger) {
-		if (matchStrategy == null) {
-			matchStrategy = new KeyMatchStrategy<>(leftItems, rightItems,
-					keyProvider);
-		}
-		syncLogger = new SyncLogger();
-		this.deltaModel = deltaModel;
-		LinkedHashSet<T> unmatchedRight = new LinkedHashSet<T>(rightItems);
-		for (T left : leftItems) {
-			debugLeft(left);
-			SyncItemMatch<T> itemMatch = matchStrategy.getRight(left);
-			SyncPair pair = null;
-			if (itemMatch.currentSyncStatus == SyncItemLogStatus.CATEGORY_IGNORED) {
-				itemMatch.logMerge("ignore - category ignored");
-				syncLogger.log(itemMatch, null);
-			} else if (itemMatch.ambiguous) {
-				itemMatch.logMerge("ignore - ambiguous correspondent");
-				syncLogger.log(itemMatch, null);
-			} else {
-				T right = itemMatch.right;
-				if (right == null) {
-					pair = new SyncPair(left, right, keyProvider,
-							SyncPairAction.CREATE_RIGHT, itemMatch);
-					itemMatch.logMerge("create right - no right correspondent");
-				} else {
-					pair = new SyncPair(left, right, keyProvider,
-							SyncPairAction.MERGE, itemMatch);
-					itemMatch.logMerge("merge - matching correspondent");
-				}
-				mergePair(pair);
-				deltaModel.getDeltas().add(mergedClass, pair);
-				unmatchedRight.remove(right);
-				syncLogger.log(itemMatch, pair);
-			}
-		}
-		unmatchedRight.removeAll(matchStrategy.getAmbiguousRightElements());
-		for (T right : unmatchedRight) {
-			SyncItemMatch<T> itemMatch = new SyncItemMatch<>();
-			itemMatch.right = right;
-			SyncPair pair = new SyncPair(null, right, keyProvider,
-					SyncPairAction.CREATE_LEFT, itemMatch);
-			itemMatch.logMerge("create left - no right correspondent");
-			syncLogger.log(itemMatch, pair);
-			mergePair(pair);
-			deltaModel.getDeltas().add(mergedClass, pair);
-		}
-		matchStrategy.log(getIgnoreAmbiguityForReportingFilter(), logger,
-				mergedClass);
-	}
-
-	public void setMatchStrategy(MatchStrategy<T> matchStrategy) {
-		this.matchStrategy = matchStrategy;
-	}
-
-	public boolean validate(Collection<T> leftCollection,
-			Collection<T> rightCollection, Logger logger) {
-		return true;
-	}
-
-	public boolean wasIncomplete() {
-		return syncLogger.rows.stream().anyMatch(
-				slr -> slr.provideHadIssue(ignoreElementsWithAmbiguity()));
-	}
-
 	protected void debugLeft(T left) {
 	}
 
@@ -215,6 +118,12 @@ public class SyncMerger<T> {
 		} else {
 			return SyncPairAction.MERGE;
 		}
+	}
+
+	public SyncMapping define(String propertyName) {
+		SyncMapping mapping = new SyncMapping(propertyName);
+		syncMappings.add(mapping);
+		return mapping;
 	}
 
 	protected SyncMapping defineLeft(String propertyName) {
@@ -287,8 +196,85 @@ public class SyncMerger<T> {
 		return CommonUtils.predicateTrue();
 	}
 
+	public MatchStrategy<T> getMatchStrategy() {
+		return this.matchStrategy;
+	}
+
+	public Class<T> getMergedClass() {
+		return this.mergedClass;
+	}
+
+	public String getName() {
+		String simpleName = getClass().getSimpleName();
+		String regex = "([A-Z][a-z]+)([A-Z][a-z]+)([A-Z][a-z]+)Merger";
+		if (simpleName.matches(regex)) {
+			return simpleName.replaceFirst(regex, "$1 >> $2 :: $3");
+		} else {
+			return simpleName;
+		}
+	}
+
+	public SyncLogger getSyncLogger() {
+		return this.syncLogger;
+	}
+
 	protected boolean ignoreElementsWithAmbiguity() {
 		return false;
+	}
+
+	public void maybeRegister(Object left, Object right) {
+		// if you'd like to TM-record object modifications
+	}
+
+	public void merge(Collection<T> leftItems, Collection<T> rightItems,
+			SyncDeltaModel deltaModel, Logger logger) {
+		if (matchStrategy == null) {
+			matchStrategy = new KeyMatchStrategy<>(leftItems, rightItems,
+					keyProvider);
+		}
+		syncLogger = new SyncLogger();
+		this.deltaModel = deltaModel;
+		LinkedHashSet<T> unmatchedRight = new LinkedHashSet<T>(rightItems);
+		for (T left : leftItems) {
+			debugLeft(left);
+			SyncItemMatch<T> itemMatch = matchStrategy.getRight(left);
+			SyncPair pair = null;
+			if (itemMatch.currentSyncStatus == SyncItemLogStatus.CATEGORY_IGNORED) {
+				itemMatch.logMerge("ignore - category ignored");
+				syncLogger.log(itemMatch, null);
+			} else if (itemMatch.ambiguous) {
+				itemMatch.logMerge("ignore - ambiguous correspondent");
+				syncLogger.log(itemMatch, null);
+			} else {
+				T right = itemMatch.right;
+				if (right == null) {
+					pair = new SyncPair(left, right, keyProvider,
+							SyncPairAction.CREATE_RIGHT, itemMatch);
+					itemMatch.logMerge("create right - no right correspondent");
+				} else {
+					pair = new SyncPair(left, right, keyProvider,
+							SyncPairAction.MERGE, itemMatch);
+					itemMatch.logMerge("merge - matching correspondent");
+				}
+				mergePair(pair);
+				deltaModel.getDeltas().add(mergedClass, pair);
+				unmatchedRight.remove(right);
+				syncLogger.log(itemMatch, pair);
+			}
+		}
+		unmatchedRight.removeAll(matchStrategy.getAmbiguousRightElements());
+		for (T right : unmatchedRight) {
+			SyncItemMatch<T> itemMatch = new SyncItemMatch<>();
+			itemMatch.right = right;
+			SyncPair pair = new SyncPair(null, right, keyProvider,
+					SyncPairAction.CREATE_LEFT, itemMatch);
+			itemMatch.logMerge("create left - no right correspondent");
+			syncLogger.log(itemMatch, pair);
+			mergePair(pair);
+			deltaModel.getDeltas().add(mergedClass, pair);
+		}
+		matchStrategy.log(getIgnoreAmbiguityForReportingFilter(), logger,
+				mergedClass);
 	}
 
 	protected boolean mergePair(SyncPair<T> pair) {
@@ -357,8 +343,78 @@ public class SyncMerger<T> {
 	protected void postMerge(SyncPair<T> merged) {
 	}
 
+	public void setMatchStrategy(MatchStrategy<T> matchStrategy) {
+		this.matchStrategy = matchStrategy;
+	}
+
 	protected List<SyncMapping> syncMappings(SyncPair<T> pair) {
 		return syncMappings;
+	}
+
+	public boolean validate(Collection<T> leftCollection,
+			Collection<T> rightCollection, Logger logger) {
+		return true;
+	}
+
+	public boolean wasIncomplete() {
+		return syncLogger.rows.stream().anyMatch(
+				slr -> slr.provideHadIssue(ignoreElementsWithAmbiguity()));
+	}
+
+	protected abstract class CustomMergeFilter implements MergeFilter<T> {
+		@Override
+		public boolean allowLeftToRight(T left, T right, Object leftProp,
+				Object rightProp) {
+			return false;
+		}
+
+		@Override
+		public boolean allowRightToLeft(T left, T right, Object leftProp,
+				Object rightProp) {
+			return false;
+		}
+
+		@Override
+		public boolean isCustom() {
+			return true;
+		}
+
+		@Override
+		public abstract void mapCustom(T left, T right);
+	}
+
+	static class FirstAndAllLookup<T> {
+		Multimap<String, List<T>> firstKeyLookup = new Multimap<String, List<T>>();
+
+		Multimap<String, List<T>> allKeyLookup = new Multimap<String, List<T>>();
+
+		public FirstAndAllLookup(Collection<T> leftItems,
+				StringKeyProvider<T> keyProvider) {
+			for (T t : leftItems) {
+				firstKeyLookup.add(keyProvider.firstKey(t), t);
+				for (String key : keyProvider.allKeys(t)) {
+					allKeyLookup.add(key, t);
+				}
+			}
+		}
+
+		public String allLocators(List<String> allKeys) {
+			Collection forKeys = allKeyLookup.getForKeys(allKeys);
+			if (forKeys.size() > 5) {
+				int size = forKeys.size();
+				forKeys = new ArrayList(forKeys).subList(0, 5);
+				forKeys.add(String.format("...and %s more", size));
+			}
+			return CommonUtils.join(forKeys, "\n");
+		}
+
+		public boolean isMultipleAll(List<String> allKeys) {
+			return allKeyLookup.getForKeys(allKeys).size() > 1;
+		}
+
+		public boolean isMultipleFirst(String key) {
+			return firstKeyLookup.getAndEnsure(key).size() > 1;
+		}
 	}
 
 	public static interface MergeFilter<T> {
@@ -516,6 +572,13 @@ public class SyncMerger<T> {
 				this.items = items;
 			}
 
+			private String getMessage() {
+				String message = Ax.format(
+						"Property merge (left,right) %s %s -> %s", leftValue,
+						rightValue, value);
+				return message;
+			}
+
 			public void log() {
 				String message = getMessage();
 				// System.out.println(message);
@@ -526,69 +589,6 @@ public class SyncMerger<T> {
 				return String.format("%s\n%s", getMessage(),
 						CommonUtils.joinWithNewlineTab(items));
 			}
-
-			private String getMessage() {
-				String message = Ax.format(
-						"Property merge (left,right) %s %s -> %s", leftValue,
-						rightValue, value);
-				return message;
-			}
-		}
-	}
-
-	protected abstract class CustomMergeFilter implements MergeFilter<T> {
-		@Override
-		public boolean allowLeftToRight(T left, T right, Object leftProp,
-				Object rightProp) {
-			return false;
-		}
-
-		@Override
-		public boolean allowRightToLeft(T left, T right, Object leftProp,
-				Object rightProp) {
-			return false;
-		}
-
-		@Override
-		public boolean isCustom() {
-			return true;
-		}
-
-		@Override
-		public abstract void mapCustom(T left, T right);
-	}
-
-	static class FirstAndAllLookup<T> {
-		Multimap<String, List<T>> firstKeyLookup = new Multimap<String, List<T>>();
-
-		Multimap<String, List<T>> allKeyLookup = new Multimap<String, List<T>>();
-
-		public FirstAndAllLookup(Collection<T> leftItems,
-				StringKeyProvider<T> keyProvider) {
-			for (T t : leftItems) {
-				firstKeyLookup.add(keyProvider.firstKey(t), t);
-				for (String key : keyProvider.allKeys(t)) {
-					allKeyLookup.add(key, t);
-				}
-			}
-		}
-
-		public String allLocators(List<String> allKeys) {
-			Collection forKeys = allKeyLookup.getForKeys(allKeys);
-			if (forKeys.size() > 5) {
-				int size = forKeys.size();
-				forKeys = new ArrayList(forKeys).subList(0, 5);
-				forKeys.add(String.format("...and %s more", size));
-			}
-			return CommonUtils.join(forKeys, "\n");
-		}
-
-		public boolean isMultipleAll(List<String> allKeys) {
-			return allKeyLookup.getForKeys(allKeys).size() > 1;
-		}
-
-		public boolean isMultipleFirst(String key) {
-			return firstKeyLookup.getAndEnsure(key).size() > 1;
 		}
 	}
 }

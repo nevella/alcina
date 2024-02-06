@@ -90,79 +90,6 @@ class DOMImplMozilla extends DOMImplStandard {
 		return (geckoVersion != -1) && (geckoVersion < 2000000);
 	}
 
-	private native NativeEventJso createKeyEventImpl(DocumentJso doc,
-			String type, boolean canBubble, boolean cancelable, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
-			int charCode) /*-{
-    var evt = doc.createEvent('KeyboardEvent');
-    if (evt.initKeyEvent) {
-      // Gecko
-      evt.initKeyEvent(type, canBubble, cancelable, null, ctrlKey, altKey,
-          shiftKey, metaKey, keyCode, charCode);
-    } else {
-      // This happens to be IE11+ as of today
-      if ($wnd.console) {
-        $wnd.console
-            .error("Synthetic keyboard events are not supported in this browser");
-      }
-    }
-    return evt;
-	}-*/;
-
-	private native int getAbsoluteLeftImpl(Element viewportMultiplex,
-			Element elemMultiplex) /*-{
-    var elem = elemMultiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    var viewport = viewportMultiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
-    // so we use getBoundingClientRect() whenever possible (but it's not
-    // supported on older versions). If changing this code, make sure to check
-    // the museum entry for issue 1932.
-    // (x) | 0 is used to coerce the value to an integer
-    if (Element.prototype.getBoundingClientRect) {
-      return (elem.getBoundingClientRect().left + viewport.scrollLeft) | 0;
-    } else {
-      // We cannot use DOMImpl here because offsetLeft/Top return erroneous
-      // values when overflow is not visible.  We have to difference screenX
-      // here due to a change in getBoxObjectFor which causes inconsistencies
-      // on whether the calculations are inside or outside of the Element_Dom's
-      // border.
-      // If the Element_Dom is in a scrollable div, getBoxObjectFor(elem) can return
-      // a value that varies by 1 pixel.
-      var doc = elem.ownerDocument;
-      return doc.getBoxObjectFor(elem).screenX
-          - doc.getBoxObjectFor(doc.documentElement).screenX;
-    }
-	}-*/;
-
-	private native int getAbsoluteTopImpl(Element viewportMultiplex,
-			Element elemMultiplex) /*-{
-    var elem = elemMultiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    var viewport = viewportMultiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
-    // so we use getBoundingClientRect() whenever possible (but it's not
-    // supported on older versions). If changing this code, make sure to check
-    // the museum entry for issue 1932.
-    // (x) | 0 is used to coerce the value to an integer
-    if (Element.prototype.getBoundingClientRect) {
-      return (elem.getBoundingClientRect().top + viewport.scrollTop) | 0;
-    } else {
-      // We cannot use DOMImpl here because offsetLeft/Top return erroneous
-      // values when overflow is not visible.  We have to difference screenX
-      // here due to a change in getBoxObjectFor which causes inconsistencies
-      // on whether the calculations are inside or outside of the Element_Dom's
-      // border.
-      var doc = elem.ownerDocument;
-      return doc.getBoxObjectFor(elem).screenY
-          - doc.getBoxObjectFor(doc.documentElement).screenY;
-    }
-	}-*/;
-
-	private native boolean isRTL(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    var style = elem.ownerDocument.defaultView.getComputedStyle(elem, null);
-    return style.direction == 'rtl';
-	}-*/;
-
 	@Override
 	protected native void buttonClick(ElementJso button) /*-{
     var doc = button.ownerDocument;
@@ -191,6 +118,25 @@ class DOMImplMozilla extends DOMImplStandard {
 		return createKeyEventImpl(doc, type, canBubble, cancelable, ctrlKey,
 				altKey, shiftKey, metaKey, keyCode, charCode);
 	}
+
+	private native NativeEventJso createKeyEventImpl(DocumentJso doc,
+			String type, boolean canBubble, boolean cancelable, boolean ctrlKey,
+			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
+			int charCode) /*-{
+    var evt = doc.createEvent('KeyboardEvent');
+    if (evt.initKeyEvent) {
+      // Gecko
+      evt.initKeyEvent(type, canBubble, cancelable, null, ctrlKey, altKey,
+          shiftKey, metaKey, keyCode, charCode);
+    } else {
+      // This happens to be IE11+ as of today
+      if ($wnd.console) {
+        $wnd.console
+            .error("Synthetic keyboard events are not supported in this browser");
+      }
+    }
+    return evt;
+	}-*/;
 
 	@Override
 	protected NativeEventJso createKeyPressEvent(DocumentJso doc,
@@ -228,11 +174,59 @@ class DOMImplMozilla extends DOMImplStandard {
 				elem);
 	}
 
+	private native int getAbsoluteLeftImpl(Element viewportMultiplex,
+			Element elemMultiplex) /*-{
+    var elem = elemMultiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    var viewport = viewportMultiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
+    // so we use getBoundingClientRect() whenever possible (but it's not
+    // supported on older versions). If changing this code, make sure to check
+    // the museum entry for issue 1932.
+    // (x) | 0 is used to coerce the value to an integer
+    if (Element.prototype.getBoundingClientRect) {
+      return (elem.getBoundingClientRect().left + viewport.scrollLeft) | 0;
+    } else {
+      // We cannot use DOMImpl here because offsetLeft/Top return erroneous
+      // values when overflow is not visible.  We have to difference screenX
+      // here due to a change in getBoxObjectFor which causes inconsistencies
+      // on whether the calculations are inside or outside of the Element_Dom's
+      // border.
+      // If the Element_Dom is in a scrollable div, getBoxObjectFor(elem) can return
+      // a value that varies by 1 pixel.
+      var doc = elem.ownerDocument;
+      return doc.getBoxObjectFor(elem).screenX
+          - doc.getBoxObjectFor(doc.documentElement).screenX;
+    }
+	}-*/;
+
 	@Override
 	protected int getAbsoluteTop(Element elem) {
 		return getAbsoluteTopImpl(elem.getOwnerDocument().getViewportElement(),
 				elem);
 	}
+
+	private native int getAbsoluteTopImpl(Element viewportMultiplex,
+			Element elemMultiplex) /*-{
+    var elem = elemMultiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    var viewport = viewportMultiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    // Firefox 3 is actively throwing errors when getBoxObjectFor() is called,
+    // so we use getBoundingClientRect() whenever possible (but it's not
+    // supported on older versions). If changing this code, make sure to check
+    // the museum entry for issue 1932.
+    // (x) | 0 is used to coerce the value to an integer
+    if (Element.prototype.getBoundingClientRect) {
+      return (elem.getBoundingClientRect().top + viewport.scrollTop) | 0;
+    } else {
+      // We cannot use DOMImpl here because offsetLeft/Top return erroneous
+      // values when overflow is not visible.  We have to difference screenX
+      // here due to a change in getBoxObjectFor which causes inconsistencies
+      // on whether the calculations are inside or outside of the Element_Dom's
+      // border.
+      var doc = elem.ownerDocument;
+      return doc.getBoxObjectFor(elem).screenY
+          - doc.getBoxObjectFor(doc.documentElement).screenY;
+    }
+	}-*/;
 
 	@Override
 	protected native int getBodyOffsetLeft(DocumentJso doc) /*-{
@@ -283,6 +277,12 @@ class DOMImplMozilla extends DOMImplStandard {
     // For more information about compareDocumentPosition, see:
     // http://www.quirksmode.org/blog/archives/2006/01/contains_for_mo.html
     return (parent === child) || !!(parent.compareDocumentPosition(child) & 16);
+	}-*/;
+
+	private native boolean isRTL(Element multiplex) /*-{
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    var style = elem.ownerDocument.defaultView.getComputedStyle(elem, null);
+    return style.direction == 'rtl';
 	}-*/;
 
 	@Override

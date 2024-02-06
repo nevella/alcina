@@ -67,10 +67,30 @@ public abstract class AppPersistenceBase {
 	protected AppPersistenceBase() {
 	}
 
+	protected void createSystemGroupsAndUsers() {
+		// normally, override
+	}
+
+	protected abstract CommonPersistenceLocal getCommonPersistence();
+
+	protected abstract EntityManager getEntityManager();
+
+	protected abstract EntityManagerFactory getEntityManagerFactory();
+
 	public void init() throws Exception {
 		runDbUpdaters(true);
 		scanClassRefs();
 		initDb();
+	}
+
+	protected void initDb() throws Exception {
+		createSystemGroupsAndUsers();
+		populateEntities();
+	}
+
+	protected void populateEntities() throws Exception {
+		// override to populate initial entities -
+		// normally do a JVM property check to ensure only once per JVM creation
 	}
 
 	public void runDbUpdaters(boolean preCacheWarmup) throws Exception {
@@ -90,45 +110,6 @@ public abstract class AppPersistenceBase {
 		}
 	}
 
-	// Call this method this on an entity-manager-injected bean (so the
-	// registry is loaded for the ejb jar classloader)
-	public void scanRegistry() {
-		Logger mainLogger = Logger
-				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
-		try {
-			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
-					.muteClassloaderLogging(true);
-			ClassMetadataCache classInfo = new ServletClassMetadataCacheProvider()
-					.getClassInfo(mainLogger, true);
-			new RegistryScanner().scan(classInfo, null, "entity-layer");
-		} catch (Exception e) {
-			mainLogger.warn("", e);
-		} finally {
-			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
-					.muteClassloaderLogging(false);
-		}
-	}
-
-	protected void createSystemGroupsAndUsers() {
-		// normally, override
-	}
-
-	protected abstract CommonPersistenceLocal getCommonPersistence();
-
-	protected abstract EntityManager getEntityManager();
-
-	protected abstract EntityManagerFactory getEntityManagerFactory();
-
-	protected void initDb() throws Exception {
-		createSystemGroupsAndUsers();
-		populateEntities();
-	}
-
-	protected void populateEntities() throws Exception {
-		// override to populate initial entities -
-		// normally do a JVM property check to ensure only once per JVM creation
-	}
-
 	protected void scanClassRefs() {
 		Logger mainLogger = Logger
 				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
@@ -142,6 +123,25 @@ public abstract class AppPersistenceBase {
 			ClassMetadataCache classInfo = new ServletClassMetadataCacheProvider()
 					.getClassInfo(mainLogger, true);
 			classrefScanner.scan(classInfo, getEntityManager());
+		} catch (Exception e) {
+			mainLogger.warn("", e);
+		} finally {
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
+					.muteClassloaderLogging(false);
+		}
+	}
+
+	// Call this method this on an entity-manager-injected bean (so the
+	// registry is loaded for the ejb jar classloader)
+	public void scanRegistry() {
+		Logger mainLogger = Logger
+				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
+		try {
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
+					.muteClassloaderLogging(true);
+			ClassMetadataCache classInfo = new ServletClassMetadataCacheProvider()
+					.getClassInfo(mainLogger, true);
+			new RegistryScanner().scan(classInfo, null, "entity-layer");
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {

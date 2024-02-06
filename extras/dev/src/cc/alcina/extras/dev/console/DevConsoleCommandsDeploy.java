@@ -40,6 +40,25 @@ public class DevConsoleCommandsDeploy {
 			return true;
 		}
 
+		private void execRemote(String cmd) throws Exception {
+			String targetContainerName = Configuration
+					.get(DevConsoleCommandsDeploy.class, "targetContainerName");
+			String targetDockerHostName = Configuration.get(
+					DevConsoleCommandsDeploy.class, "targetDockerHostName");
+			String targetDockerHostSshUser = Configuration.get(
+					DevConsoleCommandsDeploy.class, "targetDockerHostSshUser");
+			String targetDockerHostSshPrivateKey = Configuration.get(
+					DevConsoleCommandsDeploy.class,
+					"targetDockerHostSshPrivateKey");
+			String script = Ax.format(
+					"ssh -i %s -o StrictHostKeyChecking=no -t %s@%s '%s'",
+					targetDockerHostSshPrivateKey, targetDockerHostSshUser,
+					targetDockerHostName, cmd);
+			Ax.out(script);
+			Output output = new Shell().runBashScript(script);
+			output.throwOnException();
+		}
+
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "deploy.cmd" };
@@ -96,25 +115,6 @@ public class DevConsoleCommandsDeploy {
 					targetContainerName, deployPackagePath, targetContainerName,
 					deployPackagePath, targetContainerName, deployPackagePath));
 			return "ok";
-		}
-
-		private void execRemote(String cmd) throws Exception {
-			String targetContainerName = Configuration
-					.get(DevConsoleCommandsDeploy.class, "targetContainerName");
-			String targetDockerHostName = Configuration.get(
-					DevConsoleCommandsDeploy.class, "targetDockerHostName");
-			String targetDockerHostSshUser = Configuration.get(
-					DevConsoleCommandsDeploy.class, "targetDockerHostSshUser");
-			String targetDockerHostSshPrivateKey = Configuration.get(
-					DevConsoleCommandsDeploy.class,
-					"targetDockerHostSshPrivateKey");
-			String script = Ax.format(
-					"ssh -i %s -o StrictHostKeyChecking=no -t %s@%s '%s'",
-					targetDockerHostSshPrivateKey, targetDockerHostSshUser,
-					targetDockerHostName, cmd);
-			Ax.out(script);
-			Output output = new Shell().runBashScript(script);
-			output.throwOnException();
 		}
 	}
 }

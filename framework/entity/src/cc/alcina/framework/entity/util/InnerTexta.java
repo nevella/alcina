@@ -52,113 +52,6 @@ public class InnerTexta {
 
 	private Predicate<Element> blockElementMatcher = XmlUtils::isBlockHTMLElement;
 
-	public Predicate<Element> getBlockElementMatcher() {
-		return this.blockElementMatcher;
-	}
-
-	public List<Integer> getNewLineInsertLocations() {
-		return this.newLineInsertLocations;
-	}
-
-	public String innerText(Node n) {
-		return innerText(n, 0);
-	}
-
-	public String innerText(Node n, int flags) {
-		newLineInsertLocations = new ArrayList<Integer>();
-		Document doc = n.getNodeType() == Node.DOCUMENT_NODE ? (Document) n
-				: n.getOwnerDocument();
-		TreeWalker walker = ((DocumentTraversal) doc).createTreeWalker(n,
-				NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, true);
-		StringBuilder result = new StringBuilder();
-		Node n2 = null;
-		Stack<Element> listParentStack = new Stack<Element>();
-		Map<Element, Integer> listIndicies = new HashMap<Element, Integer>();
-		boolean showNls = (flags & SHOW_NEWLINES) != 0;
-		boolean showLis = (flags & SHOW_LIST_ITEMS) != 0;
-		boolean showInvisible = (flags & INCLUDE_INVISIBLE_ELEMENTS) != 0;
-		boolean finished = false;
-		while (!finished && (n2 = walker.nextNode()) != null) {
-			if (n2.getNodeType() == Node.ELEMENT_NODE) {
-				Element elt = (Element) n2;
-				String tag = elt.getTagName().toLowerCase();
-				if (blockElementMatcher.test(elt)) {
-					markNewline(result, showNls);
-				}
-				if (isListElement(elt)) {
-					popForNonParent(elt, listParentStack);
-					listParentStack.push(elt);
-					listIndicies.put(elt, 1);
-				}
-				if (tag.equals("li")) {
-					popForNonParent(elt, listParentStack);
-					if (!listParentStack.isEmpty() && showLis) {
-						Element listElt = listParentStack.peek();
-						for (int i = 1; i < listParentStack.size(); i++) {
-							result.append(tabMarker);
-						}
-						Integer listIndex = listIndicies.get(listElt);
-						try {
-							listIndex = Integer
-									.parseInt(elt.getAttribute("value"));
-						} catch (Exception e) {
-						}
-						result.append(
-								(listElt.getTagName().equalsIgnoreCase("UL")
-										? "*"
-										: listIndex + ".") + " ");
-						listIndicies.put(listElt, listIndex + 1);
-					}
-				}
-				if (XmlUtils.isInvisibleContentElement(elt) && !showInvisible) {
-					boolean first = true;
-					while (true) {
-						n2 = walker.nextNode();
-						if (n2 == null && first) {
-							finished = true;
-						}
-						if (n2 == null || !XmlUtils.isAncestorOf(elt, n2)) {
-							walker.previousNode();
-							break;
-						}
-						first = false;
-					}
-				}
-			} else {
-				Node prSib = n2.getPreviousSibling();
-				if (prSib != null && prSib.getNodeType() == Node.ELEMENT_NODE
-						&& XmlUtils.isBlockHTMLElement((Element) prSib)) {
-					markNewline(result, showNls);
-				}
-				result.append(n2.getNodeValue());
-			}
-		}
-		String s = result.toString();
-		if ((flags & PRESERVE_WHITESPACE) != 0) {
-			return s;
-		}
-		s = SEUtilities.normalizeWhitespace(s).trim();
-		if (flags == 0) {
-			return s;
-		}
-		s = expandNewlinesAndTabs(s, (flags & PRESERVE_TRAILING_NEWLINES) != 0);
-		if ((flags & SHOW_NEWLINES_AS_DOUBLE) != 0) {
-			s = s.replace("\n", "\n\n");
-		}
-		return s;
-	}
-
-	public void setBlockElementMatcher(Predicate<Element> blockElementMatcher) {
-		this.blockElementMatcher = blockElementMatcher;
-	}
-
-	public void test() {
-		String repl = String.format("%sword 1%s%sline 2 %s %s", NL_MARKER,
-				NL_MARKER, NL_MARKER, NL_MARKER, NL_MARKER);
-		String expandNewlinesAndTabs = expandNewlinesAndTabs(repl, false);
-		System.out.println(expandNewlinesAndTabs);
-	}
-
 	private String expandNewlinesAndTabs(String s, boolean preserveTrailing) {
 		// s = s.replace(nlMarker, "\n");
 		// s = s.replace(tabMarker, "\t");
@@ -288,6 +181,102 @@ public class InnerTexta {
 		return s;
 	}
 
+	public Predicate<Element> getBlockElementMatcher() {
+		return this.blockElementMatcher;
+	}
+
+	public List<Integer> getNewLineInsertLocations() {
+		return this.newLineInsertLocations;
+	}
+
+	public String innerText(Node n) {
+		return innerText(n, 0);
+	}
+
+	public String innerText(Node n, int flags) {
+		newLineInsertLocations = new ArrayList<Integer>();
+		Document doc = n.getNodeType() == Node.DOCUMENT_NODE ? (Document) n
+				: n.getOwnerDocument();
+		TreeWalker walker = ((DocumentTraversal) doc).createTreeWalker(n,
+				NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, true);
+		StringBuilder result = new StringBuilder();
+		Node n2 = null;
+		Stack<Element> listParentStack = new Stack<Element>();
+		Map<Element, Integer> listIndicies = new HashMap<Element, Integer>();
+		boolean showNls = (flags & SHOW_NEWLINES) != 0;
+		boolean showLis = (flags & SHOW_LIST_ITEMS) != 0;
+		boolean showInvisible = (flags & INCLUDE_INVISIBLE_ELEMENTS) != 0;
+		boolean finished = false;
+		while (!finished && (n2 = walker.nextNode()) != null) {
+			if (n2.getNodeType() == Node.ELEMENT_NODE) {
+				Element elt = (Element) n2;
+				String tag = elt.getTagName().toLowerCase();
+				if (blockElementMatcher.test(elt)) {
+					markNewline(result, showNls);
+				}
+				if (isListElement(elt)) {
+					popForNonParent(elt, listParentStack);
+					listParentStack.push(elt);
+					listIndicies.put(elt, 1);
+				}
+				if (tag.equals("li")) {
+					popForNonParent(elt, listParentStack);
+					if (!listParentStack.isEmpty() && showLis) {
+						Element listElt = listParentStack.peek();
+						for (int i = 1; i < listParentStack.size(); i++) {
+							result.append(tabMarker);
+						}
+						Integer listIndex = listIndicies.get(listElt);
+						try {
+							listIndex = Integer
+									.parseInt(elt.getAttribute("value"));
+						} catch (Exception e) {
+						}
+						result.append(
+								(listElt.getTagName().equalsIgnoreCase("UL")
+										? "*"
+										: listIndex + ".") + " ");
+						listIndicies.put(listElt, listIndex + 1);
+					}
+				}
+				if (XmlUtils.isInvisibleContentElement(elt) && !showInvisible) {
+					boolean first = true;
+					while (true) {
+						n2 = walker.nextNode();
+						if (n2 == null && first) {
+							finished = true;
+						}
+						if (n2 == null || !XmlUtils.isAncestorOf(elt, n2)) {
+							walker.previousNode();
+							break;
+						}
+						first = false;
+					}
+				}
+			} else {
+				Node prSib = n2.getPreviousSibling();
+				if (prSib != null && prSib.getNodeType() == Node.ELEMENT_NODE
+						&& XmlUtils.isBlockHTMLElement((Element) prSib)) {
+					markNewline(result, showNls);
+				}
+				result.append(n2.getNodeValue());
+			}
+		}
+		String s = result.toString();
+		if ((flags & PRESERVE_WHITESPACE) != 0) {
+			return s;
+		}
+		s = SEUtilities.normalizeWhitespace(s).trim();
+		if (flags == 0) {
+			return s;
+		}
+		s = expandNewlinesAndTabs(s, (flags & PRESERVE_TRAILING_NEWLINES) != 0);
+		if ((flags & SHOW_NEWLINES_AS_DOUBLE) != 0) {
+			s = s.replace("\n", "\n\n");
+		}
+		return s;
+	}
+
 	private void markNewline(StringBuilder result, boolean showNls) {
 		newLineInsertLocations.add(result.length());
 		if (showNls) {
@@ -302,5 +291,16 @@ public class InnerTexta {
 			}
 			listParentStack.pop();
 		}
+	}
+
+	public void setBlockElementMatcher(Predicate<Element> blockElementMatcher) {
+		this.blockElementMatcher = blockElementMatcher;
+	}
+
+	public void test() {
+		String repl = String.format("%sword 1%s%sline 2 %s %s", NL_MARKER,
+				NL_MARKER, NL_MARKER, NL_MARKER, NL_MARKER);
+		String expandNewlinesAndTabs = expandNewlinesAndTabs(repl, false);
+		System.out.println(expandNewlinesAndTabs);
 	}
 }

@@ -20,6 +20,16 @@ public class MatcherIterator implements Iterator<String> {
 		this.group = group;
 	}
 
+	private void ensurePeeked() {
+		if (!peeked) {
+			peeked = true;
+			finished = !matcher.find();
+			if (!finished) {
+				nextMatch = matcher.group(group);
+			}
+		}
+	}
+
 	@Override
 	public boolean hasNext() {
 		ensurePeeked();
@@ -34,15 +44,5 @@ public class MatcherIterator implements Iterator<String> {
 		}
 		peeked = false;
 		return nextMatch;
-	}
-
-	private void ensurePeeked() {
-		if (!peeked) {
-			peeked = true;
-			finished = !matcher.find();
-			if (!finished) {
-				nextMatch = matcher.group(group);
-			}
-		}
 	}
 }

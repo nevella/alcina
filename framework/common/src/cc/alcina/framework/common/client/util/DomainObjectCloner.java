@@ -42,18 +42,6 @@ public class DomainObjectCloner extends CloneHelper {
 
 	private boolean createProvisionalObjects;
 
-	public List getProvisionalObjects() {
-		return this.provisionalObjects;
-	}
-
-	public boolean isCreateProvisionalObjects() {
-		return this.createProvisionalObjects;
-	}
-
-	public void setCreateProvisionalObjects(boolean createProvisionalObjects) {
-		this.createProvisionalObjects = createProvisionalObjects;
-	}
-
 	@Override
 	protected boolean deepProperty(Object o, String propertyName) {
 		Class clazz = o.getClass();
@@ -64,6 +52,10 @@ public class DomainObjectCloner extends CloneHelper {
 		DomainProperty dpi = classReflector.property(propertyName)
 				.annotation(DomainProperty.class);
 		return dpi == null ? false : dpi.cloneForDuplication();
+	}
+
+	public List getProvisionalObjects() {
+		return this.provisionalObjects;
 	}
 
 	@Override
@@ -83,6 +75,10 @@ public class DomainObjectCloner extends CloneHelper {
 				pp, obj, false);
 	}
 
+	public boolean isCreateProvisionalObjects() {
+		return this.createProvisionalObjects;
+	}
+
 	@Override
 	protected <T> T newInstance(T o) {
 		Class clazz = o.getClass();
@@ -99,5 +95,9 @@ public class DomainObjectCloner extends CloneHelper {
 		} else {
 			return super.newInstance(o);
 		}
+	}
+
+	public void setCreateProvisionalObjects(boolean createProvisionalObjects) {
+		this.createProvisionalObjects = createProvisionalObjects;
 	}
 }

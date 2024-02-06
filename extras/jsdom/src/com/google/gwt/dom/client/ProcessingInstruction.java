@@ -70,23 +70,6 @@ public class ProcessingInstruction extends Node implements
 	}
 
 	@Override
-	public Node node() {
-		return this;
-	}
-
-	@Override
-	public void setData(String data) {
-		ensureRemoteCheck();
-		local().setData(data);
-		sync(() -> remote().setData(data));
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format("<?%s %s?>", local().getTarget(), local().getData());
-	}
-
-	@Override
 	protected ProcessingInstructionJso jsoRemote() {
 		return (ProcessingInstructionJso) remote();
 	}
@@ -99,6 +82,11 @@ public class ProcessingInstruction extends Node implements
 	@Override
 	protected ProcessingInstructionLocal local() {
 		return local;
+	}
+
+	@Override
+	public Node node() {
+		return this;
 	}
 
 	@Override
@@ -115,6 +103,18 @@ public class ProcessingInstruction extends Node implements
 	@Override
 	protected void resetRemote0() {
 		this.remote = ProcessingInstructionNull.INSTANCE;
+	}
+
+	@Override
+	public void setData(String data) {
+		ensureRemoteCheck();
+		local().setData(data);
+		sync(() -> remote().setData(data));
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("<?%s %s?>", local().getTarget(), local().getData());
 	}
 
 	public class ProcessingInstructionImplAccess extends Node.ImplAccess {

@@ -98,6 +98,38 @@ public class TreePath<T> extends Model
 		return child;
 	}
 
+	private void addChildPath(int index, TreePath<T> child) {
+		child.setParent(this);
+		child.paths = paths;
+		paths.put(child);
+		if (index == children.size()) {
+			children.add(child);
+		} else {
+			children.add(index, child);
+		}
+	}
+
+	private String asSegment(Object object) {
+		String segment = asSegment0(object);
+		Preconditions.checkArgument(!segment.contains("."));
+		return segment;
+	}
+
+	private String asSegment0(Object object) {
+		if (object instanceof String) {
+			return (String) object;
+		}
+		if (object instanceof Entity) {
+			return ((Entity) object).toLocator().toClazzLocatableString();
+		} else {
+			return CommonUtils.friendlyConstant(object, "_").toLowerCase();
+		}
+	}
+
+	String childPath(Object segment) {
+		return toString() + "." + asSegment(segment);
+	}
+
 	public void clearNonRoot() {
 		paths.clearNonRoot();
 	}
@@ -150,6 +182,17 @@ public class TreePath<T> extends Model
 			Comparable segmentComparable) {
 		paths.segmentComparable = segmentComparable;
 		return ensureChildPath(segment);
+	}
+
+	private TreePath<T> ensureChildPath(Object segment) {
+		return ensurePath(childPath(segment));
+	}
+
+	private List<TreePath<T>> ensureChildren() {
+		if (children == null) {
+			children = paths.createChildList();
+		}
+		return children;
 	}
 
 	/*
@@ -290,8 +333,38 @@ public class TreePath<T> extends Model
 		paths.putTree(containingTree);
 	}
 
+	protected void recalculateCount() {
+		/*
+		 * inefficient (generally at worst n logn, unless we have a non-leaf
+		 * layer with high cardinality)) - but saves a lot of gallumphing with
+		 * phases
+		 */
+		selfAndDescendantCount = 1 + (onlyLeafChildren ? getChildren().size()
+				: getChildren().stream().collect(Collectors
+						.summingInt(TreePath::getSelfAndDescendantCount)));
+		if (parent != null) {
+			parent.onlyLeafChildren = false;
+			parent.recalculateCount();
+		}
+	}
+
 	public void removeFromParent() {
 		removeFromParent(true);
+	}
+
+	private void removeFromParent(boolean recalc) {
+		// concurrent dance
+		if (children != null) {
+			children.stream().collect(Collectors.toList())
+					//
+					.forEach(path -> path.removeFromParent(false));
+		}
+		paths.remove(toString());
+		parent.children.remove(this);
+		if (recalc) {
+			parent.recalculateCount();
+		}
+		parent = null;
 	}
 
 	public TreePath<T> rootPath() {
@@ -320,6 +393,23 @@ public class TreePath<T> extends Model
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
 	}
 
+	private int subtreeSize(Predicate<TreePath> treePredicate) {
+		int size = 0;
+		Stack<TreePath<?>> stack = new Stack<>();
+		stack.add(this);
+		while (stack.size() > 0) {
+			TreePath<?> path = stack.pop();
+			if (!treePredicate.test(path)) {
+				continue;
+			}
+			size++;
+			if (hasChildren()) {
+				path.getChildren().forEach(stack::add);
+			}
+		}
+		return size;
+	}
+
 	@Override
 	public String toString() {
 		if (cached == null) {
@@ -340,96 +430,6 @@ public class TreePath<T> extends Model
 	public TreePath withSegment(Object object) {
 		segment = asSegment(object);
 		return this;
-	}
-
-	private void addChildPath(int index, TreePath<T> child) {
-		child.setParent(this);
-		child.paths = paths;
-		paths.put(child);
-		if (index == children.size()) {
-			children.add(child);
-		} else {
-			children.add(index, child);
-		}
-	}
-
-	private String asSegment(Object object) {
-		String segment = asSegment0(object);
-		Preconditions.checkArgument(!segment.contains("."));
-		return segment;
-	}
-
-	private String asSegment0(Object object) {
-		if (object instanceof String) {
-			return (String) object;
-		}
-		if (object instanceof Entity) {
-			return ((Entity) object).toLocator().toClazzLocatableString();
-		} else {
-			return CommonUtils.friendlyConstant(object, "_").toLowerCase();
-		}
-	}
-
-	private TreePath<T> ensureChildPath(Object segment) {
-		return ensurePath(childPath(segment));
-	}
-
-	private List<TreePath<T>> ensureChildren() {
-		if (children == null) {
-			children = paths.createChildList();
-		}
-		return children;
-	}
-
-	private void removeFromParent(boolean recalc) {
-		// concurrent dance
-		if (children != null) {
-			children.stream().collect(Collectors.toList())
-					//
-					.forEach(path -> path.removeFromParent(false));
-		}
-		paths.remove(toString());
-		parent.children.remove(this);
-		if (recalc) {
-			parent.recalculateCount();
-		}
-		parent = null;
-	}
-
-	private int subtreeSize(Predicate<TreePath> treePredicate) {
-		int size = 0;
-		Stack<TreePath<?>> stack = new Stack<>();
-		stack.add(this);
-		while (stack.size() > 0) {
-			TreePath<?> path = stack.pop();
-			if (!treePredicate.test(path)) {
-				continue;
-			}
-			size++;
-			if (hasChildren()) {
-				path.getChildren().forEach(stack::add);
-			}
-		}
-		return size;
-	}
-
-	protected void recalculateCount() {
-		/*
-		 * inefficient (generally at worst n logn, unless we have a non-leaf
-		 * layer with high cardinality)) - but saves a lot of gallumphing with
-		 * phases
-		 */
-		selfAndDescendantCount = 1 + (onlyLeafChildren ? getChildren().size()
-				: getChildren().stream().collect(Collectors
-						.summingInt(TreePath::getSelfAndDescendantCount)));
-		if (parent != null) {
-			parent.onlyLeafChildren = false;
-			parent.recalculateCount();
-		}
-	}
-
-	String childPath(Object segment) {
-		return toString() + "." + asSegment(segment);
 	}
 
 	public static class DepthSegmentComparator
@@ -486,120 +486,6 @@ public class TreePath<T> extends Model
 				return 2;
 			default:
 				throw new UnsupportedOperationException();
-			}
-		}
-	}
-
-	public static class SegmentComparator implements Comparator<TreePath> {
-		static final SegmentComparator INSTANCE = new SegmentComparator();
-
-		@Override
-		public int compare(TreePath o1, TreePath o2) {
-			Preconditions.checkArgument(o1.parent == o2.parent);
-			// FIXME - dirndl 1x3 - the segmentcomparable (either side) may be
-			// null if the path was populated pre-transform - e.g. via being the
-			// start location of a place
-			//
-			// fix is to populate with the segment comparable wherever possible
-			// - fancy fix is to reorder on that population
-			return CommonUtils.compareWithNullMinusOne(o1.segmentComparable,
-					o2.segmentComparable);
-		}
-	}
-
-	public static class Walker<T> {
-		TreePath<T> current;
-
-		public Walker(TreePath<T> from) {
-			current = from;
-		}
-
-		public T current() {
-			return this.current.getValue();
-		}
-
-		public TreePath next() {
-			boolean tryDepth = true;
-			while (true) {
-				if (tryDepth && current.getChildren().size() > 0) {
-					current = current.getChildren().get(0);
-					return current;
-				} else {
-					if (current.getParent() == null) {
-						return null;
-					} else {
-						List<TreePath<T>> siblings = current.getParent()
-								.getChildren();
-						int idx = siblings.indexOf(current);
-						if (idx < siblings.size() - 1) {
-							current = siblings.get(idx + 1);
-							return current;
-						} else {
-							tryDepth = false;
-							current = current.getParent();
-						}
-					}
-				}
-			}
-		}
-
-		public TreePath previous() {
-			while (true) {
-				if (current.getParent() == null) {
-					return null;
-				} else {
-					List<TreePath<T>> siblings = current.getParent()
-							.getChildren();
-					if (siblings instanceof SortedChildren) {
-						current = ((SortedChildren) siblings).previous(current);
-						return current;
-					} else {
-						int idx = siblings.indexOf(current);
-						if (idx > 0) {
-							current = siblings.get(idx - 1);
-							while (current.getChildren().size() > 0) {
-								current = Ax.last(current.getChildren());
-							}
-							return current;
-						} else {
-							current = current.getParent();
-							return current;
-						}
-					}
-				}
-			}
-		}
-
-		public Stream<T> stream() {
-			return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
-					new IteratorImpl(), Spliterator.ORDERED), false);
-		}
-
-		private class IteratorImpl implements Iterator<T> {
-			boolean returnedCurrent = false;
-
-			boolean finished = false;
-
-			@Override
-			public boolean hasNext() {
-				checkCurrent();
-				return !finished;
-			}
-
-			@Override
-			public T next() {
-				if (!hasNext()) {
-					throw new NoSuchElementException();
-				}
-				returnedCurrent = true;
-				return current();
-			}
-
-			private void checkCurrent() {
-				if (returnedCurrent) {
-					finished = Walker.this.next() == null;
-					returnedCurrent = false;
-				}
 			}
 		}
 	}
@@ -699,6 +585,120 @@ public class TreePath<T> extends Model
 
 		void setChildListCreator(Supplier<List> childListCreator) {
 			this.childListCreator = childListCreator;
+		}
+	}
+
+	public static class SegmentComparator implements Comparator<TreePath> {
+		static final SegmentComparator INSTANCE = new SegmentComparator();
+
+		@Override
+		public int compare(TreePath o1, TreePath o2) {
+			Preconditions.checkArgument(o1.parent == o2.parent);
+			// FIXME - dirndl 1x3 - the segmentcomparable (either side) may be
+			// null if the path was populated pre-transform - e.g. via being the
+			// start location of a place
+			//
+			// fix is to populate with the segment comparable wherever possible
+			// - fancy fix is to reorder on that population
+			return CommonUtils.compareWithNullMinusOne(o1.segmentComparable,
+					o2.segmentComparable);
+		}
+	}
+
+	public static class Walker<T> {
+		TreePath<T> current;
+
+		public Walker(TreePath<T> from) {
+			current = from;
+		}
+
+		public T current() {
+			return this.current.getValue();
+		}
+
+		public TreePath next() {
+			boolean tryDepth = true;
+			while (true) {
+				if (tryDepth && current.getChildren().size() > 0) {
+					current = current.getChildren().get(0);
+					return current;
+				} else {
+					if (current.getParent() == null) {
+						return null;
+					} else {
+						List<TreePath<T>> siblings = current.getParent()
+								.getChildren();
+						int idx = siblings.indexOf(current);
+						if (idx < siblings.size() - 1) {
+							current = siblings.get(idx + 1);
+							return current;
+						} else {
+							tryDepth = false;
+							current = current.getParent();
+						}
+					}
+				}
+			}
+		}
+
+		public TreePath previous() {
+			while (true) {
+				if (current.getParent() == null) {
+					return null;
+				} else {
+					List<TreePath<T>> siblings = current.getParent()
+							.getChildren();
+					if (siblings instanceof SortedChildren) {
+						current = ((SortedChildren) siblings).previous(current);
+						return current;
+					} else {
+						int idx = siblings.indexOf(current);
+						if (idx > 0) {
+							current = siblings.get(idx - 1);
+							while (current.getChildren().size() > 0) {
+								current = Ax.last(current.getChildren());
+							}
+							return current;
+						} else {
+							current = current.getParent();
+							return current;
+						}
+					}
+				}
+			}
+		}
+
+		public Stream<T> stream() {
+			return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+					new IteratorImpl(), Spliterator.ORDERED), false);
+		}
+
+		private class IteratorImpl implements Iterator<T> {
+			boolean returnedCurrent = false;
+
+			boolean finished = false;
+
+			private void checkCurrent() {
+				if (returnedCurrent) {
+					finished = Walker.this.next() == null;
+					returnedCurrent = false;
+				}
+			}
+
+			@Override
+			public boolean hasNext() {
+				checkCurrent();
+				return !finished;
+			}
+
+			@Override
+			public T next() {
+				if (!hasNext()) {
+					throw new NoSuchElementException();
+				}
+				returnedCurrent = true;
+				return current();
+			}
 		}
 	}
 }

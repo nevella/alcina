@@ -41,6 +41,15 @@ public class LocalDomain {
 		return this.cache;
 	}
 
+	private synchronized void index(Entity obj, boolean add) {
+		Class<? extends Entity> clazz = obj.entityClass();
+		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
+				.get(clazz);
+		itemDescriptor.index(obj, add, true, null);
+		itemDescriptor.getDependentObjectsWithDerivedProjections(obj,
+				Collections.emptySet()).forEach(e -> index(e, add));
+	}
+
 	public void initialise() {
 		try {
 			LooseContext.pushWithTrue(
@@ -65,15 +74,6 @@ public class LocalDomain {
 
 	public <T> Stream<T> stream(Class<T> clazz) {
 		return cache.stream(clazz);
-	}
-
-	private synchronized void index(Entity obj, boolean add) {
-		Class<? extends Entity> clazz = obj.entityClass();
-		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
-				.get(clazz);
-		itemDescriptor.index(obj, add, true, null);
-		itemDescriptor.getDependentObjectsWithDerivedProjections(obj,
-				Collections.emptySet()).forEach(e -> index(e, add));
 	}
 
 	public static class LocalDomainQuery<T> {

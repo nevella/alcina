@@ -103,6 +103,10 @@ public class XmlTokenOutput implements DomNodeDebugSupport {
 		return this.lastTextNode;
 	}
 
+	XmlStructuralJoin getOutCursor() {
+		return debugMap.get(writeCursor).open;
+	}
+
 	public DomDocument getOutDoc() {
 		return this.outDoc;
 	}
@@ -115,6 +119,13 @@ public class XmlTokenOutput implements DomNodeDebugSupport {
 		return writeCursor.ancestors().orSelf().list().stream()
 				.anyMatch(c -> c.tagIs(tag)
 						&& (className == null || c.attrIs("class", className)));
+	}
+
+	protected String nameAndClass() {
+		return writeCursor.has("class")
+				? Ax.format("%s.%s", writeCursor.name(),
+						writeCursor.getClassName())
+				: writeCursor.name();
 	}
 
 	public void open(XmlStructuralJoin join, String tag) {
@@ -183,17 +194,6 @@ public class XmlTokenOutput implements DomNodeDebugSupport {
 		} else {
 			writeCursor.children.importFrom(documentElementNode);
 		}
-	}
-
-	protected String nameAndClass() {
-		return writeCursor.has("class")
-				? Ax.format("%s.%s", writeCursor.name(),
-						writeCursor.getClassName())
-				: writeCursor.name();
-	}
-
-	XmlStructuralJoin getOutCursor() {
-		return debugMap.get(writeCursor).open;
 	}
 
 	public static class DomNodeDebugInfo {

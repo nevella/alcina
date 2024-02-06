@@ -110,6 +110,45 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 		return false;
 	}
 
+	protected void createBaseLayer() {
+		Preconditions.checkState(base == null);
+		base = new Layer(Transaction.current());
+	}
+
+	protected <V1> Map<K, V1> createNonSynchronizedMap(Class<V1> valueClass) {
+		if (keyClass == Long.class) {
+			if (valueClass == Boolean.class) {
+				return (Map<K, V1>) new Long2BooleanLinkedOpenHashMap();
+			} else {
+				return (Map<K, V1>) new Long2ObjectLinkedOpenHashMap<>();
+			}
+		} else {
+			return (Map<K, V1>) new Object2ObjectLinkedOpenHashMap<>();
+		}
+	}
+
+	private TransactionalMapOld<K, V>.Layer ensureLayer() {
+		Transaction transaction = Transaction.current();
+		if (transaction.isBaseTransaction()) {
+			return base;
+		}
+		if (layers == null || !layers.nonMergedTransactionLayers
+				.containsKey(transaction)) {
+			// synchronize both to avoid double-initial-layers creation and
+			// conflict with vacuum swapping of the layers object
+			synchronized (this) {
+				if (layers == null) {
+					layers = new Layers();
+					layers.mergedLayerList.add(base);
+				}
+				layers.nonMergedTransactionLayers.put(transaction,
+						new Layer(transaction));
+				Transactions.get().onAddedVacuumable(transaction, this);
+			}
+		}
+		return layers.nonMergedTransactionLayers.get(transaction);
+	}
+
 	@Override
 	public Set<Entry<K, V>> entrySet() {
 		return new TransactionalEntrySet();
@@ -153,6 +192,10 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 		return hash;
 	}
 
+	protected void init() {
+		createBaseLayer();
+	}
+
 	/*
 	 * Signifies that the value, once set, will never be changed. This is not
 	 * checked explicitly
@@ -180,6 +223,14 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 		Layer layer = ensureLayer();
 		layer.put(key, value, containsKey(key));
 		return existing;
+	}
+
+	/*
+	 * Allow single-valued txsets to degenerate to txmaps
+	 */
+	void putInBaseLayer(Transaction baseTransaction, K key, V value) {
+		base.transaction = baseTransaction;
+		base.put(key, value, false);
 	}
 
 	@Override
@@ -263,28 +314,6 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	private TransactionalMapOld<K, V>.Layer ensureLayer() {
-		Transaction transaction = Transaction.current();
-		if (transaction.isBaseTransaction()) {
-			return base;
-		}
-		if (layers == null || !layers.nonMergedTransactionLayers
-				.containsKey(transaction)) {
-			// synchronize both to avoid double-initial-layers creation and
-			// conflict with vacuum swapping of the layers object
-			synchronized (this) {
-				if (layers == null) {
-					layers = new Layers();
-					layers.mergedLayerList.add(base);
-				}
-				layers.nonMergedTransactionLayers.put(transaction,
-						new Layer(transaction));
-				Transactions.get().onAddedVacuumable(transaction, this);
-			}
-		}
-		return layers.nonMergedTransactionLayers.get(transaction);
-	}
-
 	/*
 	 */
 	private List<Layer> visibleLayers() {
@@ -293,35 +322,6 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 		} else {
 			return layers.visibleToCurrentTx();
 		}
-	}
-
-	protected void createBaseLayer() {
-		Preconditions.checkState(base == null);
-		base = new Layer(Transaction.current());
-	}
-
-	protected <V1> Map<K, V1> createNonSynchronizedMap(Class<V1> valueClass) {
-		if (keyClass == Long.class) {
-			if (valueClass == Boolean.class) {
-				return (Map<K, V1>) new Long2BooleanLinkedOpenHashMap();
-			} else {
-				return (Map<K, V1>) new Long2ObjectLinkedOpenHashMap<>();
-			}
-		} else {
-			return (Map<K, V1>) new Object2ObjectLinkedOpenHashMap<>();
-		}
-	}
-
-	protected void init() {
-		createBaseLayer();
-	}
-
-	/*
-	 * Allow single-valued txsets to degenerate to txmaps
-	 */
-	void putInBaseLayer(Transaction baseTransaction, K key, V value) {
-		base.transaction = baseTransaction;
-		base.put(key, value, false);
 	}
 
 	private class KeySet extends AbstractSet<K> {
@@ -353,92 +353,6 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	private class Layers {
-		ConcurrentSkipListMap<Transaction, Layer> nonMergedTransactionLayers = new ConcurrentSkipListMap<>(
-				Collections.reverseOrder());
-
-		/*
-		 * Not changed for the lifetime of this Layers instance (vacuum computes
-		 * a new layers object and swaps TransactionalMapOld.layers)
-		 */
-		List<Layer> mergedLayerList = new ArrayList<>();
-
-		public int size() {
-			return nonMergedTransactionLayers.size() + mergedLayerList.size();
-		}
-
-		// FIXME - possibly cache this?
-		public List<Layer> visibleToCurrentTx() {
-			Transaction current = Transaction.current();
-			// currentLayer will only be non-null if this TxMap has been
-			// modified by the current tx
-			Layer currentLayer = nonMergedTransactionLayers.get(current);
-			// best case - no changes in this tx, and no visible unvacuumed txs
-			if (current.committedTransactions.isEmpty()
-					&& currentLayer == null) {
-				return mergedLayerList;
-			}
-			List<Transaction> visibleCommittedTransactions = current
-					.visibleCommittedTransactions(
-							nonMergedTransactionLayers.keySet());
-			if (visibleCommittedTransactions.isEmpty()
-					&& currentLayer == null) {
-				return mergedLayerList;
-			}
-			List<Layer> visibleLayers = new ArrayList<>();
-			visibleLayers.addAll(mergedLayerList);
-			Collections.reverse(visibleCommittedTransactions);
-			visibleCommittedTransactions.stream()
-					.map(nonMergedTransactionLayers::get)
-					.forEach(visibleLayers::add);
-			if (currentLayer != null) {
-				visibleLayers.add(currentLayer);
-			}
-			/*
-			 * et voila!
-			 */
-			return visibleLayers;
-		}
-	}
-
-	private class ValuesCollection extends AbstractCollection<V> {
-		private Set<Entry<K, V>> entrySet;
-
-		public ValuesCollection() {
-			this.entrySet = entrySet();
-		}
-
-		@Override
-		public Iterator<V> iterator() {
-			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
-					e -> e.getValue());
-		}
-
-		@Override
-		public int size() {
-			return entrySet.size();
-		}
-	}
-
-	private class ValuesSet extends AbstractSet<V> {
-		private Set<Entry<K, V>> entrySet;
-
-		public ValuesSet() {
-			this.entrySet = entrySet();
-		}
-
-		@Override
-		public Iterator<V> iterator() {
-			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
-					e -> e.getValue());
-		}
-
-		@Override
-		public int size() {
-			return entrySet.size();
-		}
-	}
-
 	/*
 	 * // trickiest thing about this class is actually keeping track of size a
 	 * la delta in this layer
@@ -462,8 +376,23 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 			this.transaction = transaction;
 		}
 
+		int combinedMapSize() {
+			return (removed == null ? 0 : removed.size()) + modified.size();
+		}
+
+		private Map<K, Boolean> ensureRemoved() {
+			if (removed == null) {
+				removed = createNonSynchronizedMap(Boolean.class);
+			}
+			return removed;
+		}
+
 		public V get(Object key) {
 			return modified.get(key);
+		}
+
+		private boolean hasRemoved() {
+			return removed != null;
 		}
 
 		/*
@@ -539,6 +468,11 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 			return merged;
 		}
 
+		Iterator<Entry<K, V>> modifiedEntrySetIterator() {
+			Iterator<Entry<K, V>> iterator = modified.entrySet().iterator();
+			return iterator;
+		}
+
 		public void put(K key, V value, boolean existing) {
 			modified.put(key, value);
 			if (!existing) {
@@ -581,25 +515,53 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 		public boolean wasRemoved(Object key) {
 			return removed != null && removed.containsKey(key);
 		}
+	}
 
-		private Map<K, Boolean> ensureRemoved() {
-			if (removed == null) {
-				removed = createNonSynchronizedMap(Boolean.class);
+	private class Layers {
+		ConcurrentSkipListMap<Transaction, Layer> nonMergedTransactionLayers = new ConcurrentSkipListMap<>(
+				Collections.reverseOrder());
+
+		/*
+		 * Not changed for the lifetime of this Layers instance (vacuum computes
+		 * a new layers object and swaps TransactionalMapOld.layers)
+		 */
+		List<Layer> mergedLayerList = new ArrayList<>();
+
+		public int size() {
+			return nonMergedTransactionLayers.size() + mergedLayerList.size();
+		}
+
+		// FIXME - possibly cache this?
+		public List<Layer> visibleToCurrentTx() {
+			Transaction current = Transaction.current();
+			// currentLayer will only be non-null if this TxMap has been
+			// modified by the current tx
+			Layer currentLayer = nonMergedTransactionLayers.get(current);
+			// best case - no changes in this tx, and no visible unvacuumed txs
+			if (current.committedTransactions.isEmpty()
+					&& currentLayer == null) {
+				return mergedLayerList;
 			}
-			return removed;
-		}
-
-		private boolean hasRemoved() {
-			return removed != null;
-		}
-
-		int combinedMapSize() {
-			return (removed == null ? 0 : removed.size()) + modified.size();
-		}
-
-		Iterator<Entry<K, V>> modifiedEntrySetIterator() {
-			Iterator<Entry<K, V>> iterator = modified.entrySet().iterator();
-			return iterator;
+			List<Transaction> visibleCommittedTransactions = current
+					.visibleCommittedTransactions(
+							nonMergedTransactionLayers.keySet());
+			if (visibleCommittedTransactions.isEmpty()
+					&& currentLayer == null) {
+				return mergedLayerList;
+			}
+			List<Layer> visibleLayers = new ArrayList<>();
+			visibleLayers.addAll(mergedLayerList);
+			Collections.reverse(visibleCommittedTransactions);
+			visibleCommittedTransactions.stream()
+					.map(nonMergedTransactionLayers::get)
+					.forEach(visibleLayers::add);
+			if (currentLayer != null) {
+				visibleLayers.add(currentLayer);
+			}
+			/*
+			 * et voila!
+			 */
+			return visibleLayers;
 		}
 	}
 
@@ -623,45 +585,15 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 			}
 		}
 
-		@Override
-		public void clear() {
-			super.clear();
-		}
-
-		@Override
-		public boolean contains(Object o) {
-			return containsKey(o);
-		}
-
-		@Override
-		/*
-		 * FIXME - mvcc.jobs.1a - in fact overly complex
-		 * 
-		 * Instead, traverse from the top down, retaining a collection of
-		 * visited/removed - except for the bottom layer
-		 * 
-		 * Because the final (bottom) layer is almost sure to be >> the size of
-		 * the others, memory effects will be limited and won't require multiple
-		 * traversals per iteration
-		 */
-		public Iterator<Entry<K, V>> iterator() {
-			return comparator == null ? new CrossTxItr(new LayerIterator())
-					: comparatorIterator();
-		}
-
-		@Override
-		//
-		public int size() {
-			if (size == -1) {
-				size = calculateSize();
-			}
-			return size;
-		}
-
 		private int calculateSize() {
 			return visibleLayers.stream()
 					.collect(Collectors.summingInt(layer -> layer.added
 							- (layer.hasRemoved() ? layer.removed.size() : 0)));
+		}
+
+		@Override
+		public void clear() {
+			super.clear();
 		}
 
 		Iterator<Entry<K, V>> comparatorIterator() {
@@ -696,6 +628,36 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 			};
 			return new CrossTxItr(
 					new FilteringIterator<>(layerIterator, notVisibleFilter));
+		}
+
+		@Override
+		public boolean contains(Object o) {
+			return containsKey(o);
+		}
+
+		@Override
+		/*
+		 * FIXME - mvcc.jobs.1a - in fact overly complex
+		 * 
+		 * Instead, traverse from the top down, retaining a collection of
+		 * visited/removed - except for the bottom layer
+		 * 
+		 * Because the final (bottom) layer is almost sure to be >> the size of
+		 * the others, memory effects will be limited and won't require multiple
+		 * traversals per iteration
+		 */
+		public Iterator<Entry<K, V>> iterator() {
+			return comparator == null ? new CrossTxItr(new LayerIterator())
+					: comparatorIterator();
+		}
+
+		@Override
+		//
+		public int size() {
+			if (size == -1) {
+				size = calculateSize();
+			}
+			return size;
 		}
 
 		private class CrossTxItr implements Iterator<Entry<K, V>> {
@@ -809,6 +771,44 @@ public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 			public Entry<K, V> next() {
 				return filteringIterator.next();
 			}
+		}
+	}
+
+	private class ValuesCollection extends AbstractCollection<V> {
+		private Set<Entry<K, V>> entrySet;
+
+		public ValuesCollection() {
+			this.entrySet = entrySet();
+		}
+
+		@Override
+		public Iterator<V> iterator() {
+			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
+					e -> e.getValue());
+		}
+
+		@Override
+		public int size() {
+			return entrySet.size();
+		}
+	}
+
+	private class ValuesSet extends AbstractSet<V> {
+		private Set<Entry<K, V>> entrySet;
+
+		public ValuesSet() {
+			this.entrySet = entrySet();
+		}
+
+		@Override
+		public Iterator<V> iterator() {
+			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
+					e -> e.getValue());
+		}
+
+		@Override
+		public int size() {
+			return entrySet.size();
 		}
 	}
 }

@@ -72,6 +72,38 @@ public class TransformCommitLog {
 	public TransformCommitLog() {
 	}
 
+	protected synchronized void checkPollTimeout() {
+		if (currentConsumerThread != null
+				&& !currentConsumerThread.cancelled.get()) {
+			long pollStartTime = currentConsumerThread.operationStartTime;
+			long pollWait = System.currentTimeMillis() - pollStartTime;
+			int multiplier = currentConsumerThread.connected() ? 1 : 4;
+			if (pollStartTime != 0 && pollWait > pollTimeout * multiplier) {
+				if (currentConsumerThread.currentOffset == -1) {
+					logger.warn(
+							"Restarting {} consumer - not started - ordinal {} ",
+							getClass().getSimpleName(),
+							consumerThreadCounter.get());
+				}
+				// can be caused by big gc pauses - but better safe than
+				// sorry...
+				long seek = currentConsumerThread.currentOffset;
+				if (seek == -1) {
+					seek = currentConsumerThread.previousConsumerCompletedOffset;
+				}
+				if (seek == -1) {
+					seek = highestSeekOffset;
+				}
+				logger.warn(
+						"Restarting {} consumer - poll timeout: {} - max {} - ordinal {} - seekTo {}",
+						getClass().getSimpleName(), pollWait, pollTimeout,
+						consumerThreadCounter.get(), seek);
+				currentConsumerThread.cancelled.set(true);
+				launchConsumerThread(seek);
+			}
+		}
+	}
+
 	public void consumer(TransformCommitLogHost commitLogHost,
 			Consumer<ClusterTransformRequest> payloadConsumer, String hostName,
 			long hostUid) {
@@ -103,6 +135,10 @@ public class TransformCommitLog {
 		}
 	}
 
+	private String datestampIfTest() {
+		return Ax.isTest() ? Ax.timestamp(new Date()) + " " : "";
+	}
+
 	public long getCommitPollReturned() {
 		return currentConsumerThread == null ? -1
 				: currentConsumerThread.operationEndTime;
@@ -111,6 +147,30 @@ public class TransformCommitLog {
 	public long getCommitPosition() {
 		return currentConsumerThread == null ? -1
 				: currentConsumerThread.currentOffset;
+	}
+
+	protected String getTopic() {
+		return commitLogHost.getTopic();
+	}
+
+	private void launchConsumerThread(long offset) {
+		ClassLoader classLoader = EntityLayerObjects.get()
+				.getServletLayerClassLoader();
+		String tName = Ax.format("kafka-consumer-%s-%s",
+				getClass().getSimpleName(),
+				consumerThreadCounter.incrementAndGet());
+		CountDownLatch checkCurrentPositionLatch = null;
+		if (currentConsumerThread != null) {
+			checkCurrentPositionLatch = currentConsumerThread.checkCurrentPositionLatch;
+			logger.info("Restarting consumer with existing position latch");
+		}
+		currentConsumerThread = new TransformCommitLogThread(classLoader, tName,
+				offset);
+		currentConsumerThread.checkCurrentPositionLatch = checkCurrentPositionLatch;
+		currentConsumerThread.start();
+	}
+
+	protected void logAcceptRecord(ClusterTransformRequest value) {
 	}
 
 	public Producer<Void, byte[]> producer() {
@@ -144,37 +204,6 @@ public class TransformCommitLog {
 		return sendTransformPublishedMessages0(request, state);
 	}
 
-	public void shutdown() {
-		stopped.set(true);
-		if (producer != null) {
-			producer.close();
-		}
-		if (timeoutChecker != null) {
-			timeoutChecker.cancel();
-		}
-	}
-
-	private String datestampIfTest() {
-		return Ax.isTest() ? Ax.timestamp(new Date()) + " " : "";
-	}
-
-	private void launchConsumerThread(long offset) {
-		ClassLoader classLoader = EntityLayerObjects.get()
-				.getServletLayerClassLoader();
-		String tName = Ax.format("kafka-consumer-%s-%s",
-				getClass().getSimpleName(),
-				consumerThreadCounter.incrementAndGet());
-		CountDownLatch checkCurrentPositionLatch = null;
-		if (currentConsumerThread != null) {
-			checkCurrentPositionLatch = currentConsumerThread.checkCurrentPositionLatch;
-			logger.info("Restarting consumer with existing position latch");
-		}
-		currentConsumerThread = new TransformCommitLogThread(classLoader, tName,
-				offset);
-		currentConsumerThread.checkCurrentPositionLatch = checkCurrentPositionLatch;
-		currentConsumerThread.start();
-	}
-
 	private List<Future<RecordMetadata>> sendTransformPublishedMessages0(
 			DomainTransformRequestPersistent request, State state) {
 		if (producer() == null) {
@@ -194,43 +223,14 @@ public class TransformCommitLog {
 				.serialize(request, state);
 	}
 
-	protected synchronized void checkPollTimeout() {
-		if (currentConsumerThread != null
-				&& !currentConsumerThread.cancelled.get()) {
-			long pollStartTime = currentConsumerThread.operationStartTime;
-			long pollWait = System.currentTimeMillis() - pollStartTime;
-			int multiplier = currentConsumerThread.connected() ? 1 : 4;
-			if (pollStartTime != 0 && pollWait > pollTimeout * multiplier) {
-				if (currentConsumerThread.currentOffset == -1) {
-					logger.warn(
-							"Restarting {} consumer - not started - ordinal {} ",
-							getClass().getSimpleName(),
-							consumerThreadCounter.get());
-				}
-				// can be caused by big gc pauses - but better safe than
-				// sorry...
-				long seek = currentConsumerThread.currentOffset;
-				if (seek == -1) {
-					seek = currentConsumerThread.previousConsumerCompletedOffset;
-				}
-				if (seek == -1) {
-					seek = highestSeekOffset;
-				}
-				logger.warn(
-						"Restarting {} consumer - poll timeout: {} - max {} - ordinal {} - seekTo {}",
-						getClass().getSimpleName(), pollWait, pollTimeout,
-						consumerThreadCounter.get(), seek);
-				currentConsumerThread.cancelled.set(true);
-				launchConsumerThread(seek);
-			}
+	public void shutdown() {
+		stopped.set(true);
+		if (producer != null) {
+			producer.close();
 		}
-	}
-
-	protected String getTopic() {
-		return commitLogHost.getTopic();
-	}
-
-	protected void logAcceptRecord(ClusterTransformRequest value) {
+		if (timeoutChecker != null) {
+			timeoutChecker.cancel();
+		}
 	}
 
 	private final class TransformCommitLogThread extends Thread {
@@ -278,6 +278,28 @@ public class TransformCommitLog {
 
 		public boolean connected() {
 			return currentOffset != -1;
+		}
+
+		private <V> V performOperation(Callable<V> callable) {
+			try {
+				operationStartTime = System.currentTimeMillis();
+				operationEndTime = 0;
+				V result = callable.call();
+				operationEndTime = System.currentTimeMillis();
+				return result;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			} finally {
+				operationStartTime = 0;
+			}
+		}
+
+		private void performOperation(ThrowingRunnable runnable) {
+			Callable<Object> callable = () -> {
+				runnable.run();
+				return null;
+			};
+			performOperation(callable);
 		}
 
 		@Override
@@ -419,28 +441,6 @@ public class TransformCommitLog {
 			}
 			logger.warn("Exiting consumer thread {} -  {}",
 					getClass().getSimpleName(), getName());
-		}
-
-		private <V> V performOperation(Callable<V> callable) {
-			try {
-				operationStartTime = System.currentTimeMillis();
-				operationEndTime = 0;
-				V result = callable.call();
-				operationEndTime = System.currentTimeMillis();
-				return result;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			} finally {
-				operationStartTime = 0;
-			}
-		}
-
-		private void performOperation(ThrowingRunnable runnable) {
-			Callable<Object> callable = () -> {
-				runnable.run();
-				return null;
-			};
-			performOperation(callable);
 		}
 	}
 }

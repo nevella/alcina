@@ -143,6 +143,25 @@ public class TransformConflicts {
 			implements TopicListener<TransformConflictEvent> {
 		StringBuilder builder = new StringBuilder();
 
+		private void add(TransformConflictEventMember member) {
+			Object persistentRequestId = member.request instanceof DomainTransformRequestPersistent
+					? ((DomainTransformRequestPersistent) member.request)
+							.getId()
+					: "--";
+			Date date = member.event instanceof DomainTransformEventPersistent
+					? ((DomainTransformEventPersistent) member.event)
+							.getServerCommitDate()
+					: member.event.getUtcDate();
+			builder.append(String.format(
+					"Client instance: %s\n" + "Request: %s [%s]\n"
+							+ "Date: %s\n" + "Object version: %s\n\n"
+							+ "%s\n\n",
+					member.request.getClientInstance().getId(),
+					member.request.getRequestId(), persistentRequestId, date,
+					member.event.getObjectVersionNumber(),
+					member.event.toString()));
+		}
+
 		@Override
 		public void topicPublished(TransformConflictEvent event) {
 			builder.append(
@@ -161,25 +180,6 @@ public class TransformConflicts {
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence();
 			cpl.log(message, LogMessageType.TRANSFORM_CONFLICT.toString());
-		}
-
-		private void add(TransformConflictEventMember member) {
-			Object persistentRequestId = member.request instanceof DomainTransformRequestPersistent
-					? ((DomainTransformRequestPersistent) member.request)
-							.getId()
-					: "--";
-			Date date = member.event instanceof DomainTransformEventPersistent
-					? ((DomainTransformEventPersistent) member.event)
-							.getServerCommitDate()
-					: member.event.getUtcDate();
-			builder.append(String.format(
-					"Client instance: %s\n" + "Request: %s [%s]\n"
-							+ "Date: %s\n" + "Object version: %s\n\n"
-							+ "%s\n\n",
-					member.request.getClientInstance().getId(),
-					member.request.getRequestId(), persistentRequestId, date,
-					member.event.getObjectVersionNumber(),
-					member.event.toString()));
 		}
 	}
 

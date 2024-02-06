@@ -44,6 +44,11 @@ public class EnumeratedBindingSupport {
 		}
 	}
 
+	private Optional<EnumeratedBinding> bindingForPath(String propertyName) {
+		return Arrays.asList(bindings).stream()
+				.filter(eb -> eb.getPath().equals(propertyName)).findFirst();
+	}
+
 	public <T> T get(EnumeratedBinding enumeratedBinding) {
 		Object related = source
 				.provideRelatedObject(enumeratedBinding.getBoundClass());
@@ -82,11 +87,6 @@ public class EnumeratedBindingSupport {
 		}
 		Reflections.at(related).property(enumeratedBinding.getBoundPath())
 				.set(related, value);
-	}
-
-	private Optional<EnumeratedBinding> bindingForPath(String propertyName) {
-		return Arrays.asList(bindings).stream()
-				.filter(eb -> eb.getPath().equals(propertyName)).findFirst();
 	}
 
 	class LinkedListener implements PropertyChangeListener {

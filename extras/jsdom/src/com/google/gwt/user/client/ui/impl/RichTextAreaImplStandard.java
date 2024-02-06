@@ -62,10 +62,40 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 	 */
 	private boolean isReady;
 
+	// @Override
+	// public native Element createElement() /*-{
+	// return $doc.createElement('iframe');
+	// }-*/;
+	@Override
+	protected Element createElement() {
+		return Document.get().createIFrameElement();
+	}
+
 	@Override
 	public void createLink(String url) {
 		execCommand("CreateLink", url);
 	}
+
+	void execCommand(String cmd, String param) {
+		assert isReady : INACTIVE_MESSAGE;
+		if (isReady) {
+			// When executing a command, focus the iframe first, since some
+			// commands
+			// don't take properly when it's not focused.
+			setFocus(true);
+			try {
+				execCommandAssumingFocus(cmd, param);
+			} catch (JavaScriptException e) {
+				// In mozilla, editing throws a JS exception if the iframe is
+				// *hidden, but attached*.
+			}
+		}
+	}
+
+	native void execCommandAssumingFocus(String cmd, String param) /*-{
+    this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document
+        .execCommand(cmd, false, param);
+	}-*/;
 
 	@Override
 	public String getBackColor() {
@@ -83,11 +113,61 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 				: beforeInitPlaceholder.getInnerHTML();
 	}
 
+	protected native String getHTMLImpl() /*-{
+    return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.innerHTML;
+	}-*/;
+
 	@Override
 	public final String getText() {
 		return beforeInitPlaceholder == null ? getTextImpl()
 				: beforeInitPlaceholder.getInnerText();
 	}
+
+	protected native String getTextImpl() /*-{
+    return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.textContent;
+	}-*/;
+
+	@Override
+	protected native void hookEvents() /*-{
+    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
+    var wnd = elem.contentWindow;
+
+    elem.__gwt_handler = $entry(function(evtJso) {
+      var evt = @com.google.gwt.user.client.Event::new(Lcom/google/gwt/dom/client/NativeEventJso;)(evtJso);
+      @com.google.gwt.user.client.DOM::dispatchEvent(Lcom/google/gwt/user/client/Event;Lcom/google/gwt/dom/client/Element;)(evt, elem);
+    });
+
+    elem.__gwt_focusHandler = function(evt) {
+      if (elem.__gwt_isFocused) {
+        return;
+      }
+
+      elem.__gwt_isFocused = true;
+      elem.__gwt_handler(evt);
+    };
+
+    elem.__gwt_blurHandler = function(evt) {
+      if (!elem.__gwt_isFocused) {
+        return;
+      }
+
+      elem.__gwt_isFocused = false;
+      elem.__gwt_handler(evt);
+    };
+
+    wnd.addEventListener('keydown', elem.__gwt_handler, true);
+    wnd.addEventListener('keyup', elem.__gwt_handler, true);
+    wnd.addEventListener('keypress', elem.__gwt_handler, true);
+    wnd.addEventListener('mousedown', elem.__gwt_handler, true);
+    wnd.addEventListener('mouseup', elem.__gwt_handler, true);
+    wnd.addEventListener('mousemove', elem.__gwt_handler, true);
+    wnd.addEventListener('mouseover', elem.__gwt_handler, true);
+    wnd.addEventListener('mouseout', elem.__gwt_handler, true);
+    wnd.addEventListener('click', elem.__gwt_handler, true);
+
+    wnd.addEventListener('focus', elem.__gwt_focusHandler, true);
+    wnd.addEventListener('blur', elem.__gwt_blurHandler, true);
+	}-*/;
 
 	@Override
 	public native void initElement() /*-{
@@ -147,6 +227,11 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 				: !beforeInitPlaceholder.getPropertyBoolean("disabled");
 	}
 
+	protected native boolean isEnabledImpl() /*-{
+    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
+    return elem.contentWindow.document.designMode.toUpperCase() == 'ON';
+	}-*/;
+
 	@Override
 	public boolean isItalic() {
 		return queryCommandState("Italic");
@@ -178,229 +263,6 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 	}
 
 	@Override
-	public void redo() {
-		execCommand("Redo", "false");
-	}
-
-	@Override
-	public void removeFormat() {
-		execCommand("RemoveFormat", null);
-	}
-
-	@Override
-	public void removeLink() {
-		execCommand("Unlink", "false");
-	}
-
-	@Override
-	public void rightIndent() {
-		execCommand("Indent", null);
-	}
-
-	@Override
-	public void selectAll() {
-		execCommand("SelectAll", null);
-	}
-
-	@Override
-	public void setBackColor(String color) {
-		execCommand("BackColor", color);
-	}
-
-	@Override
-	public void setEnabled(boolean enabled) {
-		if (beforeInitPlaceholder == null) {
-			setEnabledImpl(enabled);
-		} else {
-			beforeInitPlaceholder.setPropertyBoolean("disabled", !enabled);
-		}
-	}
-
-	@Override
-	public void setFocus(boolean focused) {
-		if (initializing) {
-			// Issue 3503: if we focus before the iframe is in design mode, the
-			// text
-			// caret will not appear.
-			isPendingFocus = focused;
-		} else {
-			setFocusImpl(focused);
-		}
-	}
-
-	@Override
-	public void setFontName(String name) {
-		execCommand("FontName", name);
-	}
-
-	@Override
-	public void setFontSize(FontSize fontSize) {
-		execCommand("FontSize", Integer.toString(fontSize.getNumber()));
-	}
-
-	@Override
-	public void setForeColor(String color) {
-		execCommand("ForeColor", color);
-	}
-
-	@Override
-	public final void setHTML(@IsSafeHtml
-	String html) {
-		if (beforeInitPlaceholder == null) {
-			setHTMLImpl(html);
-		} else {
-			beforeInitPlaceholder.setInnerHTML(html);
-		}
-	}
-
-	@Override
-	public void setJustification(Justification justification) {
-		if (justification == Justification.CENTER) {
-			execCommand("JustifyCenter", null);
-		} else if (justification == Justification.FULL) {
-			execCommand("JustifyFull", null);
-		} else if (justification == Justification.LEFT) {
-			execCommand("JustifyLeft", null);
-		} else if (justification == Justification.RIGHT) {
-			execCommand("JustifyRight", null);
-		}
-	}
-
-	@Override
-	public final void setText(String text) {
-		if (beforeInitPlaceholder == null) {
-			setTextImpl(text);
-		} else {
-			beforeInitPlaceholder.setInnerText(text);
-		}
-	}
-
-	@Override
-	public void toggleBold() {
-		execCommand("Bold", "false");
-	}
-
-	@Override
-	public void toggleItalic() {
-		execCommand("Italic", "false");
-	}
-
-	@Override
-	public void toggleStrikethrough() {
-		execCommand("Strikethrough", "false");
-	}
-
-	@Override
-	public void toggleSubscript() {
-		execCommand("Subscript", "false");
-	}
-
-	@Override
-	public void toggleSuperscript() {
-		execCommand("Superscript", "false");
-	}
-
-	@Override
-	public void toggleUnderline() {
-		execCommand("Underline", "False");
-	}
-
-	@Override
-	public void undo() {
-		execCommand("Undo", "false");
-	}
-
-	@Override
-	@SuppressIsSafeHtmlCastCheck
-	public void uninitElement() {
-		isReady = false;
-		// Issue 1897: initElement uses a timeout, so its possible to call this
-		// method after calling initElement, but before the event system is in
-		// place.
-		if (initializing) {
-			initializing = false;
-			return;
-		}
-		// Unhook all custom event handlers when the element is detached.
-		unhookEvents();
-		// Recreate the placeholder element and store the iframe's contents and
-		// the
-		// enabled status in it. This is necessary because some browsers will
-		// wipe
-		// the iframe's contents when it is removed from the DOM.
-		@IsSafeHtml
-		String html = getHTML(); // TODO: mXSS
-		boolean enabled = isEnabled();
-		beforeInitPlaceholder = DOM.createDiv();
-		beforeInitPlaceholder.setInnerHTML(html);
-		setEnabled(enabled);
-	}
-
-	// @Override
-	// public native Element createElement() /*-{
-	// return $doc.createElement('iframe');
-	// }-*/;
-	@Override
-	protected Element createElement() {
-		return Document.get().createIFrameElement();
-	}
-
-	protected native String getHTMLImpl() /*-{
-    return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.innerHTML;
-	}-*/;
-
-	protected native String getTextImpl() /*-{
-    return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.textContent;
-	}-*/;
-
-	@Override
-	protected native void hookEvents() /*-{
-    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
-    var wnd = elem.contentWindow;
-
-    elem.__gwt_handler = $entry(function(evtJso) {
-      var evt = @com.google.gwt.user.client.Event::new(Lcom/google/gwt/dom/client/NativeEventJso;)(evtJso);
-      @com.google.gwt.user.client.DOM::dispatchEvent(Lcom/google/gwt/user/client/Event;Lcom/google/gwt/dom/client/Element;)(evt, elem);
-    });
-
-    elem.__gwt_focusHandler = function(evt) {
-      if (elem.__gwt_isFocused) {
-        return;
-      }
-
-      elem.__gwt_isFocused = true;
-      elem.__gwt_handler(evt);
-    };
-
-    elem.__gwt_blurHandler = function(evt) {
-      if (!elem.__gwt_isFocused) {
-        return;
-      }
-
-      elem.__gwt_isFocused = false;
-      elem.__gwt_handler(evt);
-    };
-
-    wnd.addEventListener('keydown', elem.__gwt_handler, true);
-    wnd.addEventListener('keyup', elem.__gwt_handler, true);
-    wnd.addEventListener('keypress', elem.__gwt_handler, true);
-    wnd.addEventListener('mousedown', elem.__gwt_handler, true);
-    wnd.addEventListener('mouseup', elem.__gwt_handler, true);
-    wnd.addEventListener('mousemove', elem.__gwt_handler, true);
-    wnd.addEventListener('mouseover', elem.__gwt_handler, true);
-    wnd.addEventListener('mouseout', elem.__gwt_handler, true);
-    wnd.addEventListener('click', elem.__gwt_handler, true);
-
-    wnd.addEventListener('focus', elem.__gwt_focusHandler, true);
-    wnd.addEventListener('blur', elem.__gwt_blurHandler, true);
-	}-*/;
-
-	protected native boolean isEnabledImpl() /*-{
-    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
-    return elem.contentWindow.document.designMode.toUpperCase() == 'ON';
-	}-*/;
-
-	@Override
 	@SuppressIsSafeHtmlCastCheck
 	protected void onElementInitialized() {
 		// Issue 1897: This method is called after a timeout, during which time
@@ -429,73 +291,6 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 		initializing = true;
 		isPendingFocus = false;
 	}
-
-	protected native void setEnabledImpl(boolean enabled) /*-{
-    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
-    elem.contentWindow.document.designMode = enabled ? 'On' : 'Off';
-	}-*/;
-
-	protected native void setFocusImpl(boolean focused) /*-{
-    if (focused) {
-      this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow
-          .focus();
-    } else {
-      this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow
-          .blur();
-    }
-	}-*/;
-
-	protected native void setHTMLImpl(@IsSafeHtml
-	String html) /*-{
-    this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.innerHTML = html;
-	}-*/;
-
-	protected native void setTextImpl(String text) /*-{
-    this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.textContent = text;
-	}-*/;
-
-	protected native void unhookEvents() /*-{
-    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
-    var wnd = elem.contentWindow;
-
-    wnd.removeEventListener('keydown', elem.__gwt_handler, true);
-    wnd.removeEventListener('keyup', elem.__gwt_handler, true);
-    wnd.removeEventListener('keypress', elem.__gwt_handler, true);
-    wnd.removeEventListener('mousedown', elem.__gwt_handler, true);
-    wnd.removeEventListener('mouseup', elem.__gwt_handler, true);
-    wnd.removeEventListener('mousemove', elem.__gwt_handler, true);
-    wnd.removeEventListener('mouseover', elem.__gwt_handler, true);
-    wnd.removeEventListener('mouseout', elem.__gwt_handler, true);
-    wnd.removeEventListener('click', elem.__gwt_handler, true);
-
-    wnd.removeEventListener('focus', elem.__gwt_focusHandler, true);
-    wnd.removeEventListener('blur', elem.__gwt_blurHandler, true);
-
-    elem.__gwt_handler = null;
-    elem.__gwt_focusHandler = null;
-    elem.__gwt_blurHandler = null;
-	}-*/;
-
-	void execCommand(String cmd, String param) {
-		assert isReady : INACTIVE_MESSAGE;
-		if (isReady) {
-			// When executing a command, focus the iframe first, since some
-			// commands
-			// don't take properly when it's not focused.
-			setFocus(true);
-			try {
-				execCommandAssumingFocus(cmd, param);
-			} catch (JavaScriptException e) {
-				// In mozilla, editing throws a JS exception if the iframe is
-				// *hidden, but attached*.
-			}
-		}
-	}
-
-	native void execCommandAssumingFocus(String cmd, String param) /*-{
-    this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document
-        .execCommand(cmd, false, param);
-	}-*/;
 
 	boolean queryCommandState(String cmd) {
 		if (isReady) {
@@ -536,4 +331,209 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
     return this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document
         .queryCommandValue(cmd);
 	}-*/;
+
+	@Override
+	public void redo() {
+		execCommand("Redo", "false");
+	}
+
+	@Override
+	public void removeFormat() {
+		execCommand("RemoveFormat", null);
+	}
+
+	@Override
+	public void removeLink() {
+		execCommand("Unlink", "false");
+	}
+
+	@Override
+	public void rightIndent() {
+		execCommand("Indent", null);
+	}
+
+	@Override
+	public void selectAll() {
+		execCommand("SelectAll", null);
+	}
+
+	@Override
+	public void setBackColor(String color) {
+		execCommand("BackColor", color);
+	}
+
+	@Override
+	public void setEnabled(boolean enabled) {
+		if (beforeInitPlaceholder == null) {
+			setEnabledImpl(enabled);
+		} else {
+			beforeInitPlaceholder.setPropertyBoolean("disabled", !enabled);
+		}
+	}
+
+	protected native void setEnabledImpl(boolean enabled) /*-{
+    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
+    elem.contentWindow.document.designMode = enabled ? 'On' : 'Off';
+	}-*/;
+
+	@Override
+	public void setFocus(boolean focused) {
+		if (initializing) {
+			// Issue 3503: if we focus before the iframe is in design mode, the
+			// text
+			// caret will not appear.
+			isPendingFocus = focused;
+		} else {
+			setFocusImpl(focused);
+		}
+	}
+
+	protected native void setFocusImpl(boolean focused) /*-{
+    if (focused) {
+      this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow
+          .focus();
+    } else {
+      this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow
+          .blur();
+    }
+	}-*/;
+
+	@Override
+	public void setFontName(String name) {
+		execCommand("FontName", name);
+	}
+
+	@Override
+	public void setFontSize(FontSize fontSize) {
+		execCommand("FontSize", Integer.toString(fontSize.getNumber()));
+	}
+
+	@Override
+	public void setForeColor(String color) {
+		execCommand("ForeColor", color);
+	}
+
+	@Override
+	public final void setHTML(@IsSafeHtml
+	String html) {
+		if (beforeInitPlaceholder == null) {
+			setHTMLImpl(html);
+		} else {
+			beforeInitPlaceholder.setInnerHTML(html);
+		}
+	}
+
+	protected native void setHTMLImpl(@IsSafeHtml
+	String html) /*-{
+    this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.innerHTML = html;
+	}-*/;
+
+	@Override
+	public void setJustification(Justification justification) {
+		if (justification == Justification.CENTER) {
+			execCommand("JustifyCenter", null);
+		} else if (justification == Justification.FULL) {
+			execCommand("JustifyFull", null);
+		} else if (justification == Justification.LEFT) {
+			execCommand("JustifyLeft", null);
+		} else if (justification == Justification.RIGHT) {
+			execCommand("JustifyRight", null);
+		}
+	}
+
+	@Override
+	public final void setText(String text) {
+		if (beforeInitPlaceholder == null) {
+			setTextImpl(text);
+		} else {
+			beforeInitPlaceholder.setInnerText(text);
+		}
+	}
+
+	protected native void setTextImpl(String text) /*-{
+    this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.textContent = text;
+	}-*/;
+
+	@Override
+	public void toggleBold() {
+		execCommand("Bold", "false");
+	}
+
+	@Override
+	public void toggleItalic() {
+		execCommand("Italic", "false");
+	}
+
+	@Override
+	public void toggleStrikethrough() {
+		execCommand("Strikethrough", "false");
+	}
+
+	@Override
+	public void toggleSubscript() {
+		execCommand("Subscript", "false");
+	}
+
+	@Override
+	public void toggleSuperscript() {
+		execCommand("Superscript", "false");
+	}
+
+	@Override
+	public void toggleUnderline() {
+		execCommand("Underline", "False");
+	}
+
+	@Override
+	public void undo() {
+		execCommand("Undo", "false");
+	}
+
+	protected native void unhookEvents() /*-{
+    var elem = this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem;
+    var wnd = elem.contentWindow;
+
+    wnd.removeEventListener('keydown', elem.__gwt_handler, true);
+    wnd.removeEventListener('keyup', elem.__gwt_handler, true);
+    wnd.removeEventListener('keypress', elem.__gwt_handler, true);
+    wnd.removeEventListener('mousedown', elem.__gwt_handler, true);
+    wnd.removeEventListener('mouseup', elem.__gwt_handler, true);
+    wnd.removeEventListener('mousemove', elem.__gwt_handler, true);
+    wnd.removeEventListener('mouseover', elem.__gwt_handler, true);
+    wnd.removeEventListener('mouseout', elem.__gwt_handler, true);
+    wnd.removeEventListener('click', elem.__gwt_handler, true);
+
+    wnd.removeEventListener('focus', elem.__gwt_focusHandler, true);
+    wnd.removeEventListener('blur', elem.__gwt_blurHandler, true);
+
+    elem.__gwt_handler = null;
+    elem.__gwt_focusHandler = null;
+    elem.__gwt_blurHandler = null;
+	}-*/;
+
+	@Override
+	@SuppressIsSafeHtmlCastCheck
+	public void uninitElement() {
+		isReady = false;
+		// Issue 1897: initElement uses a timeout, so its possible to call this
+		// method after calling initElement, but before the event system is in
+		// place.
+		if (initializing) {
+			initializing = false;
+			return;
+		}
+		// Unhook all custom event handlers when the element is detached.
+		unhookEvents();
+		// Recreate the placeholder element and store the iframe's contents and
+		// the
+		// enabled status in it. This is necessary because some browsers will
+		// wipe
+		// the iframe's contents when it is removed from the DOM.
+		@IsSafeHtml
+		String html = getHTML(); // TODO: mXSS
+		boolean enabled = isEnabled();
+		beforeInitPlaceholder = DOM.createDiv();
+		beforeInitPlaceholder.setInnerHTML(html);
+		setEnabled(enabled);
+	}
 }

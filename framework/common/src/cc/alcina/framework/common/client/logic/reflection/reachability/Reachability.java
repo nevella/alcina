@@ -11,15 +11,8 @@ import java.lang.annotation.Target;
  * peer.
  */
 public class Reachability {
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE })
-	public @interface Rule {
-		Action action();
-
-		String reason() default "";
-
-		Condition condition();
+	public enum Action {
+		INCLUDE, EXCLUDE
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
@@ -30,13 +23,20 @@ public class Reachability {
 
 		String packageName() default "";
 
-		Class[] subtypes() default {};
-
 		Class<? extends RuleSet> ruleSet() default RuleSet.Empty.class;
+
+		Class[] subtypes() default {};
 	}
 
-	public enum Action {
-		INCLUDE, EXCLUDE
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE })
+	public @interface Rule {
+		Action action();
+
+		Condition condition();
+
+		String reason() default "";
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)

@@ -52,6 +52,11 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 
 		boolean deferred;
 
+		public QueuedEvent deferred() {
+			deferred = true;
+			return this;
+		}
+
 		public void dispatch() {
 			Preconditions.checkState(topic != null ^ runnable != null);
 			if (distinct) {
@@ -85,13 +90,19 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 					model)).dispatch();
 		}
 
-		public QueuedEvent distinct() {
-			distinct = true;
-			return this;
+		void dispatchSync() {
+			if (distinct) {
+				distinctQueue.remove(this);
+			}
+			if (runnable != null) {
+				runnable.run();
+			} else {
+				topic.publish(message);
+			}
 		}
 
-		public QueuedEvent deferred() {
-			deferred = true;
+		public QueuedEvent distinct() {
+			distinct = true;
 			return this;
 		}
 
@@ -137,17 +148,6 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 			this.topic = topic;
 			this.message = message;
 			return this;
-		}
-
-		void dispatchSync() {
-			if (distinct) {
-				distinctQueue.remove(this);
-			}
-			if (runnable != null) {
-				runnable.run();
-			} else {
-				topic.publish(message);
-			}
 		}
 	}
 }

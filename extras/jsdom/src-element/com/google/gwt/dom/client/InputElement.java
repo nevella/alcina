@@ -83,6 +83,15 @@ public class InputElement extends Element {
 	}
 
 	/**
+	 * Simulate a mouse-click. For INPUT elements whose type attribute has one
+	 * of the following values: "button", "checkbox", "radio", "reset", or
+	 * "submit".
+	 */
+	private native void click0(ElementJso elt) /*-{
+													elt.click();
+													}-*/;
+
+	/**
 	 * A comma-separated list of content types that a server processing this
 	 * form will handle correctly.
 	 * 
@@ -274,6 +283,14 @@ public class InputElement extends Element {
 	public final void select() {
 		select0(jsoRemote());
 	}
+
+	/**
+	 * Select the contents of the text area. For INPUT elements whose type
+	 * attribute has one of the following values: "text", "file", or "password".
+	 */
+	private native void select0(ElementJso elt) /*-{
+													elt.select();
+													}-*/;
 
 	/**
 	 * A comma-separated list of content types that a server processing this
@@ -478,21 +495,4 @@ public class InputElement extends Element {
 	public final boolean useMap() {
 		return getPropertyBoolean("useMap");
 	}
-
-	/**
-	 * Simulate a mouse-click. For INPUT elements whose type attribute has one
-	 * of the following values: "button", "checkbox", "radio", "reset", or
-	 * "submit".
-	 */
-	private native void click0(ElementJso elt) /*-{
-													elt.click();
-													}-*/;
-
-	/**
-	 * Select the contents of the text area. For INPUT elements whose type
-	 * attribute has one of the following values: "text", "file", or "password".
-	 */
-	private native void select0(ElementJso elt) /*-{
-													elt.select();
-													}-*/;
 }

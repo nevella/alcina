@@ -121,6 +121,18 @@ public class FilterableTree extends Tree
 		}
 	}
 
+	private void expandAll(TreeItem ti, int depth) {
+		if (shouldExpandCallback != null && !shouldExpandCallback.test(ti)) {
+			return;
+		}
+		ti.setState(true);
+		if (depth > 0) {
+			for (int i = 0; i < ti.getChildCount(); i++) {
+				expandAll(ti.getChild(i), depth - 1);
+			}
+		}
+	}
+
 	public void expandAllAsync(Callback<Void> callback, int depth) {
 		Scheduler.get().scheduleIncremental(new ExpandCommand(callback, depth));
 	}
@@ -161,6 +173,29 @@ public class FilterableTree extends Tree
 		return b;
 	}
 
+	private TreeItem findDeepestOpenChild(TreeItem item) {
+		if (!item.getState() || item.getChildCount() == 0) {
+			return item;
+		}
+		return findDeepestOpenChild(item.getChild(item.getChildCount() - 1));
+	}
+
+	private TreeItem findVisibleChild(TreeItem item, int direction) {
+		TreeItem parent = item.getParentItem();
+		if (parent == null) {
+			return null;
+		}
+		while (true) {
+			item = getNextNode(item, false, direction);
+			if (item == null) {
+				return null;
+			}
+			if (item.isVisible()) {
+				return item;
+			}
+		}
+	}
+
 	public String getLastFilteredText() {
 		return this.lastFilteredText;
 	}
@@ -195,6 +230,28 @@ public class FilterableTree extends Tree
 
 	public Predicate getShouldExpandCallback() {
 		return this.shouldExpandCallback;
+	}
+
+	private void keyboardNavigation(Event event) {
+		// Handle keyboard events if keyboard navigation is enabled
+		resetKeyMemory();
+		TreeItem curSelection = getSelectedItem();
+		if (isKeyboardNavigationEnabled(curSelection)) {
+			int code = event.getKeyCode();
+			switch (standardizeKeycode(code)) {
+			case KeyCodes.KEY_UP: {
+				lastKeyWasUp = true;
+				break;
+			}
+			case KeyCodes.KEY_DOWN: {
+				lastKeyWasDown = true;
+				break;
+			}
+			default: {
+				return;
+			}
+			}
+		}
 	}
 
 	@Override
@@ -269,67 +326,6 @@ public class FilterableTree extends Tree
 		}
 	}
 
-	public void setShouldExpandCallback(Predicate shouldExpandCallback) {
-		this.shouldExpandCallback = shouldExpandCallback;
-	}
-
-	private void expandAll(TreeItem ti, int depth) {
-		if (shouldExpandCallback != null && !shouldExpandCallback.test(ti)) {
-			return;
-		}
-		ti.setState(true);
-		if (depth > 0) {
-			for (int i = 0; i < ti.getChildCount(); i++) {
-				expandAll(ti.getChild(i), depth - 1);
-			}
-		}
-	}
-
-	private TreeItem findDeepestOpenChild(TreeItem item) {
-		if (!item.getState() || item.getChildCount() == 0) {
-			return item;
-		}
-		return findDeepestOpenChild(item.getChild(item.getChildCount() - 1));
-	}
-
-	private TreeItem findVisibleChild(TreeItem item, int direction) {
-		TreeItem parent = item.getParentItem();
-		if (parent == null) {
-			return null;
-		}
-		while (true) {
-			item = getNextNode(item, false, direction);
-			if (item == null) {
-				return null;
-			}
-			if (item.isVisible()) {
-				return item;
-			}
-		}
-	}
-
-	private void keyboardNavigation(Event event) {
-		// Handle keyboard events if keyboard navigation is enabled
-		resetKeyMemory();
-		TreeItem curSelection = getSelectedItem();
-		if (isKeyboardNavigationEnabled(curSelection)) {
-			int code = event.getKeyCode();
-			switch (standardizeKeycode(code)) {
-			case KeyCodes.KEY_UP: {
-				lastKeyWasUp = true;
-				break;
-			}
-			case KeyCodes.KEY_DOWN: {
-				lastKeyWasDown = true;
-				break;
-			}
-			default: {
-				return;
-			}
-			}
-		}
-	}
-
 	private void resetKeyMemory() {
 		lastKeyWasUp = false;
 		lastKeyWasDown = false;
@@ -345,6 +341,10 @@ public class FilterableTree extends Tree
 		setSelectedItem(item);
 		setFocus(true);
 		return true;
+	}
+
+	public void setShouldExpandCallback(Predicate shouldExpandCallback) {
+		this.shouldExpandCallback = shouldExpandCallback;
 	}
 
 	class ExpandCommand implements RepeatingCommand {
@@ -375,6 +375,14 @@ public class FilterableTree extends Tree
 			return true;
 		}
 
+		private int getDepth(TreeItem item) {
+			int pDepth = 1;
+			while (((item = item.getParentItem())) != null) {
+				pDepth++;
+			}
+			return pDepth;
+		}
+
 		public void walk() {
 			while (!items.isEmpty()) {
 				TreeItem pop = items.pop();
@@ -389,14 +397,6 @@ public class FilterableTree extends Tree
 					break;
 				}
 			}
-		}
-
-		private int getDepth(TreeItem item) {
-			int pDepth = 1;
-			while (((item = item.getParentItem())) != null) {
-				pDepth++;
-			}
-			return pDepth;
 		}
 	}
 }

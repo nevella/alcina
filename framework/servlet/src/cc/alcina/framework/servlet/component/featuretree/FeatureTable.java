@@ -67,11 +67,6 @@ class FeatureTable extends Model.Fields {
 				this.feature = feature;
 			}
 
-			@Override
-			public int compareTo(Entry o) {
-				return treeName().compareTo(o.treeName());
-			}
-
 			void addToParent() {
 				Class<? extends Feature> parentClass = parentClass();
 				if (parentClass == null) {
@@ -80,6 +75,11 @@ class FeatureTable extends Model.Fields {
 					this.parent = parent;
 					parent.children.add(this);
 				}
+			}
+
+			@Override
+			public int compareTo(Entry o) {
+				return treeName().compareTo(o.treeName());
 			}
 
 			int depth() {

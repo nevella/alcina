@@ -89,18 +89,6 @@ public class ControlServlet extends AlcinaServlet {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	public void writeAndCloseHtml(String s, HttpServletRequest req,
-			HttpServletResponse resp) throws IOException {
-		resp.setContentType("text/html");
-		String host = req.getRequestURL().toString()
-				.replaceFirst("https?://(.+?)/.+", "$1");
-		String html = String.format(
-				"<html><head><style>body{font-family:courier;white-space:pre;font-size:13px}</style><title>%s control servlet</title></head><body>%s</body></html>",
-				host, StringEscapeUtils.escapeHtml(s));
-		resp.getWriter().write(html);
-		resp.getWriter().close();
-	}
-
 	private void authenticate(HttpServletRequest req, String reqApiKey,
 			String appApiKey) throws Exception {
 		if (appApiKey.isEmpty()) {
@@ -184,6 +172,19 @@ public class ControlServlet extends AlcinaServlet {
 			}
 			break;
 		}
+		}
+	}
+
+	@Override
+	protected void handleRequest(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		try {
+			handle0(request, response);
+		} catch (Exception e) {
+			if (e instanceof InformException) {
+				writeAndClose(e.getMessage(), response);
+			}
+			throw new ServletException(e);
 		}
 	}
 
@@ -289,17 +290,16 @@ public class ControlServlet extends AlcinaServlet {
 		return emailAddress;
 	}
 
-	@Override
-	protected void handleRequest(HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
-		try {
-			handle0(request, response);
-		} catch (Exception e) {
-			if (e instanceof InformException) {
-				writeAndClose(e.getMessage(), response);
-			}
-			throw new ServletException(e);
-		}
+	public void writeAndCloseHtml(String s, HttpServletRequest req,
+			HttpServletResponse resp) throws IOException {
+		resp.setContentType("text/html");
+		String host = req.getRequestURL().toString()
+				.replaceFirst("https?://(.+?)/.+", "$1");
+		String html = String.format(
+				"<html><head><style>body{font-family:courier;white-space:pre;font-size:13px}</style><title>%s control servlet</title></head><body>%s</body></html>",
+				host, StringEscapeUtils.escapeHtml(s));
+		resp.getWriter().write(html);
+		resp.getWriter().close();
 	}
 
 	public class InformException extends Exception {

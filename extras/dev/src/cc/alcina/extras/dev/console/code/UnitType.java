@@ -96,6 +96,10 @@ public class UnitType {
 		return Reflections.forName(qualifiedBinaryName);
 	}
 
+	private CompilationUnits compUnits() {
+		return LooseContext.get(CompilationUnits.CONTEXT_COMP_UNITS);
+	}
+
 	/**
 	 * Call *before* modification
 	 */
@@ -244,9 +248,5 @@ public class UnitType {
 
 	public <T> T typedInstance() {
 		return (T) Reflections.newInstance(clazz());
-	}
-
-	private CompilationUnits compUnits() {
-		return LooseContext.get(CompilationUnits.CONTEXT_COMP_UNITS);
 	}
 }

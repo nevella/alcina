@@ -127,6 +127,17 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		}
 	}
 
+	private void fireChangeListeners() {
+		for (Iterator<ChangeListener> it = this.changeListeners.iterator(); it
+				.hasNext();) {
+			ChangeListener l = it.next();
+			l.onChange(this);
+		}
+		if (this.getAction() != null) {
+			this.getAction().execute(this);
+		}
+	}
+
 	@Override
 	public int getAbsoluteLeft() {
 		int retValue;
@@ -379,17 +390,6 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 	@Override
 	public void setWidth(final String width) {
 		this.base.setWidth(width);
-	}
-
-	private void fireChangeListeners() {
-		for (Iterator<ChangeListener> it = this.changeListeners.iterator(); it
-				.hasNext();) {
-			ChangeListener l = it.next();
-			l.onChange(this);
-		}
-		if (this.getAction() != null) {
-			this.getAction().execute(this);
-		}
 	}
 
 	private void update() {

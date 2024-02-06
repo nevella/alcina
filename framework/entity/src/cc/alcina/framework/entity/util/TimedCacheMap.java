@@ -64,25 +64,28 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 		this.evictionTimer = new Timer();
 	}
 
-	@Override
-	public V put(K key, V value) {
-		// Wrap value in a TimedCacheValue to track time of entry and insert
-		TimedCacheValue<V> old = delegate.put(key,
-				new TimedCacheValue<V>(value));
-		// Ensure the eviction timer is running
-		ensureTimerRunning();
-		// Unwrap and return old value
-		return old != null ? old.value : null;
+	/**
+	 * Check all delegate map entries for expiration, and remove if expired
+	 */
+	private void checkEntries() {
+		// Iterate over all keys
+		for (K key : keySet()) {
+			// Check the creation time of each entry
+			TimedCacheValue<V> tcv = delegate.get(key);
+			if ((new Date().getTime() - tcv.created.getTime()) > expiry) {
+				// If the creation time is past expected expiry, evict the entry
+				remove(key);
+				LOGGER.debug("Evicted entry: {map={}, key={}}", this, key);
+			}
+		}
 	}
 
 	@Override
-	public int size() {
-		return delegate.size();
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return delegate.isEmpty();
+	public void clear() {
+		// Clear the delegate map
+		delegate.clear();
+		// Cancel the eviction timer
+		ensureTimerStopped();
 	}
 
 	@Override
@@ -110,42 +113,6 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 		return false;
 	}
 
-	@Override
-	public V get(Object key) {
-		// Get wrapped value from the delegate map
-		TimedCacheValue<V> tce = delegate.get(key);
-		// Unwrap and return
-		return tce != null ? tce.value : null;
-	}
-
-	@Override
-	public V remove(Object key) {
-		// Remove from delegate map
-		TimedCacheValue<V> tce = delegate.remove(key);
-		// If the map is now empty, cancel the eviction timer
-		if (isEmpty()) {
-			ensureTimerStopped();
-		}
-		// Unwrap and return
-		return tce != null ? tce.value : null;
-	}
-
-	@Override
-	public void putAll(Map<? extends K, ? extends V> m) {
-		// Call put with all elements of the set
-		for (Map.Entry<? extends K, ? extends V> entry : m.entrySet()) {
-			put(entry.getKey(), entry.getValue());
-		}
-	}
-
-	@Override
-	public void clear() {
-		// Clear the delegate map
-		delegate.clear();
-		// Cancel the eviction timer
-		ensureTimerStopped();
-	}
-
 	/**
 	 * Dereference the underlying map and cancel the internal eviction timer,
 	 * releasing the held timer thread
@@ -154,43 +121,6 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 		delegate.clear();
 		delegate = null;
 		evictionTimer.cancel();
-	}
-
-	@Override
-	public Set<K> keySet() {
-		return delegate.keySet();
-	}
-
-	@Override
-	public Collection<V> values() {
-		// Map all delegate map values to their unwrapped form
-		return delegate.values().stream().map(v -> v.value)
-				.collect(Collectors.toList());
-	}
-
-	@Override
-	public Set<Map.Entry<K, V>> entrySet() {
-		// Map all delegate map entries to TimedCacheEntry's with the unwrapped
-		// value
-		return delegate.entrySet().stream()
-				.map(es -> new TimedCacheEntry<K, V>(es))
-				.collect(Collectors.toSet());
-	}
-
-	/**
-	 * Check all delegate map entries for expiration, and remove if expired
-	 */
-	private void checkEntries() {
-		// Iterate over all keys
-		for (K key : keySet()) {
-			// Check the creation time of each entry
-			TimedCacheValue<V> tcv = delegate.get(key);
-			if ((new Date().getTime() - tcv.created.getTime()) > expiry) {
-				// If the creation time is past expected expiry, evict the entry
-				remove(key);
-				LOGGER.debug("Evicted entry: {map={}, key={}}", this, key);
-			}
-		}
 	}
 
 	/**
@@ -227,18 +157,74 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 		}
 	}
 
-	/**
-	 * Wrapped cache values with the time of creation
-	 */
-	static class TimedCacheValue<V> {
-		Date created;
+	@Override
+	public Set<Map.Entry<K, V>> entrySet() {
+		// Map all delegate map entries to TimedCacheEntry's with the unwrapped
+		// value
+		return delegate.entrySet().stream()
+				.map(es -> new TimedCacheEntry<K, V>(es))
+				.collect(Collectors.toSet());
+	}
 
-		V value;
+	@Override
+	public V get(Object key) {
+		// Get wrapped value from the delegate map
+		TimedCacheValue<V> tce = delegate.get(key);
+		// Unwrap and return
+		return tce != null ? tce.value : null;
+	}
 
-		TimedCacheValue(V value) {
-			this.created = new Date();
-			this.value = value;
+	@Override
+	public boolean isEmpty() {
+		return delegate.isEmpty();
+	}
+
+	@Override
+	public Set<K> keySet() {
+		return delegate.keySet();
+	}
+
+	@Override
+	public V put(K key, V value) {
+		// Wrap value in a TimedCacheValue to track time of entry and insert
+		TimedCacheValue<V> old = delegate.put(key,
+				new TimedCacheValue<V>(value));
+		// Ensure the eviction timer is running
+		ensureTimerRunning();
+		// Unwrap and return old value
+		return old != null ? old.value : null;
+	}
+
+	@Override
+	public void putAll(Map<? extends K, ? extends V> m) {
+		// Call put with all elements of the set
+		for (Map.Entry<? extends K, ? extends V> entry : m.entrySet()) {
+			put(entry.getKey(), entry.getValue());
 		}
+	}
+
+	@Override
+	public V remove(Object key) {
+		// Remove from delegate map
+		TimedCacheValue<V> tce = delegate.remove(key);
+		// If the map is now empty, cancel the eviction timer
+		if (isEmpty()) {
+			ensureTimerStopped();
+		}
+		// Unwrap and return
+		return tce != null ? tce.value : null;
+	}
+
+	@Override
+	public int size() {
+		return delegate.size();
+	}
+
+	@Override
+	public Collection<V> values() {
+		// Map all delegate map values to their unwrapped form
+		return delegate.values().stream().map(v -> v.value)
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -269,6 +255,20 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 					.setValue(new TimedCacheValue<V>(value));
 			// Return the old value unwrapped if present
 			return old != null ? old.value : null;
+		}
+	}
+
+	/**
+	 * Wrapped cache values with the time of creation
+	 */
+	static class TimedCacheValue<V> {
+		Date created;
+
+		V value;
+
+		TimedCacheValue(V value) {
+			this.created = new Date();
+			this.value = value;
 		}
 	}
 }

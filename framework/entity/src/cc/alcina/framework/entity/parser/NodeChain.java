@@ -166,6 +166,10 @@ public class NodeChain {
 		return chain.get(idx);
 	}
 
+	private Node getBlockAncestor() {
+		return null;// XmlUtils.getContainingBlock(fromChild);
+	}
+
 	public boolean isSameBlock(NodeChain otherChain) {
 		Node blockAncestor = getBlockAncestor();
 		Node otherBlockAncestor = otherChain.getBlockAncestor();
@@ -179,6 +183,14 @@ public class NodeChain {
 	public NodeChain removeFromNode() {
 		chain.remove(fromChild);
 		return this;
+	}
+
+	private String tagNameAt(int idx) {
+		Node n = chain.get(idx);
+		if (n.getNodeType() == Node.ELEMENT_NODE) {
+			return ((Element) n).getTagName();
+		}
+		return null;
 	}
 
 	@Override
@@ -196,18 +208,6 @@ public class NodeChain {
 			}
 			return n.toString();
 		}).collect(Collectors.joining("\n")));
-	}
-
-	private Node getBlockAncestor() {
-		return null;// XmlUtils.getContainingBlock(fromChild);
-	}
-
-	private String tagNameAt(int idx) {
-		Node n = chain.get(idx);
-		if (n.getNodeType() == Node.ELEMENT_NODE) {
-			return ((Element) n).getTagName();
-		}
-		return null;
 	}
 
 	public static class NodeChainContext {

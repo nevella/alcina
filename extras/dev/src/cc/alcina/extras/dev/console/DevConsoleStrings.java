@@ -40,16 +40,16 @@ public class DevConsoleStrings {
 		return tags;
 	}
 
-	public void remove(final String name) {
-		strings.removeIf(o -> o.name.toLowerCase().startsWith(name));
-		remap();
-	}
-
 	private void remap() {
 		tags.clear();
 		for (DevConsoleString s : strings) {
 			tags.addAll(s.tags);
 		}
+	}
+
+	public void remove(final String name) {
+		strings.removeIf(o -> o.name.toLowerCase().startsWith(name));
+		remap();
 	}
 
 	public static class DevConsoleString {

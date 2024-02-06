@@ -59,6 +59,11 @@ public class ModalResolver extends ContextResolver implements FormModel.Has {
 				&& ((ModalResolver) obj).mode == mode;
 	}
 
+	private <T> T getFirst(T[] array) {
+		Preconditions.checkArgument(array.length <= 1);
+		return array.length == 0 ? null : array[0];
+	}
+
 	@Override
 	public FormModel getFormModel() {
 		return this.formModel;
@@ -132,10 +137,5 @@ public class ModalResolver extends ContextResolver implements FormModel.Has {
 
 	public void setTableModel(TableModel tableModel) {
 		this.tableModel = tableModel;
-	}
-
-	private <T> T getFirst(T[] array) {
-		Preconditions.checkArgument(array.length <= 1);
-		return array.length == 0 ? null : array[0];
 	}
 }

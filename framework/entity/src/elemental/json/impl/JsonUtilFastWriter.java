@@ -22,6 +22,15 @@ import elemental.json.JsonValue;
 @SuppressWarnings("deprecation")
 class JsonUtilFastWriter {
 	/**
+	 * Turn a single unicode character into a 32-bit unicode hex literal.
+	 */
+	private static String escapeCharAsUnicode(char toEscape) {
+		String hexValue = Integer.toString(toEscape, 16);
+		int padding = 4 - hexValue.length();
+		return "\\u" + ("0000".substring(0, padding)) + hexValue;
+	}
+
+	/**
 	 * Convert special control characters into unicode escape format.
 	 */
 	public static String escapeControlChars(String text) {
@@ -37,6 +46,17 @@ class JsonUtilFastWriter {
 		return toReturn.toString();
 	}
 
+	private static boolean isControlChar(char c) {
+		return (c >= 0x00 && c <= 0x1f) || (c >= 0x7f && c <= 0x9f)
+				|| c == '\u00ad' || c == '\u070f' || c == '\u17b4'
+				|| c == '\u17b5' || c == '\ufeff'
+				|| (c >= '\u0600' && c <= '\u0604')
+				|| (c >= '\u200c' && c <= '\u200f')
+				|| (c >= '\u2028' && c <= '\u202f')
+				|| (c >= '\u2060' && c <= '\u206f')
+				|| (c >= '\ufff0' && c <= '\uffff');
+	}
+
 	/**
 	 * Converts a Json object to Json formatted String.
 	 *
@@ -50,31 +70,17 @@ class JsonUtilFastWriter {
 		return builder.toString();
 	}
 
-	/**
-	 * Turn a single unicode character into a 32-bit unicode hex literal.
-	 */
-	private static String escapeCharAsUnicode(char toEscape) {
-		String hexValue = Integer.toString(toEscape, 16);
-		int padding = 4 - hexValue.length();
-		return "\\u" + ("0000".substring(0, padding)) + hexValue;
-	}
-
-	private static boolean isControlChar(char c) {
-		return (c >= 0x00 && c <= 0x1f) || (c >= 0x7f && c <= 0x9f)
-				|| c == '\u00ad' || c == '\u070f' || c == '\u17b4'
-				|| c == '\u17b5' || c == '\ufeff'
-				|| (c >= '\u0600' && c <= '\u0604')
-				|| (c >= '\u200c' && c <= '\u200f')
-				|| (c >= '\u2028' && c <= '\u202f')
-				|| (c >= '\u2060' && c <= '\u206f')
-				|| (c >= '\ufff0' && c <= '\uffff');
-	}
-
 	private static class Visitor extends JsonVisitor {
 		private final StringBuilder builder;
 
 		private Visitor(StringBuilder builder) {
 			this.builder = builder;
+		}
+
+		private void commaIfNotFirst(JsonContext ctx) {
+			if (!ctx.isFirst()) {
+				builder.append(',');
+			}
 		}
 
 		@Override
@@ -85,62 +91,6 @@ class JsonUtilFastWriter {
 		@Override
 		public void endVisit(JsonObject object, JsonContext ctx) {
 			builder.append('}');
-		}
-
-		@Override
-		public void visit(boolean bool, JsonContext ctx) {
-			builder.append(bool);
-		}
-
-		@Override
-		public void visit(double number, JsonContext ctx) {
-			builder.append(
-					Double.isInfinite(number) || Double.isNaN(number) ? "null"
-							: format(number));
-		}
-
-		@Override
-		public boolean visit(JsonArray array, JsonContext ctx) {
-			builder.append('[');
-			return true;
-		}
-
-		@Override
-		public boolean visit(JsonObject object, JsonContext ctx) {
-			builder.append('{');
-			return true;
-		}
-
-		@Override
-		public void visit(String string, JsonContext ctx) {
-			quote(string);
-		}
-
-		@Override
-		public boolean visitIndex(int index, JsonContext ctx) {
-			commaIfNotFirst(ctx);
-			return true;
-		}
-
-		@Override
-		public boolean visitKey(String key, JsonContext ctx) {
-			commaIfNotFirst(ctx);
-			// key is a java identifier, so do not quote
-			builder.append("\"");
-			builder.append(key);
-			builder.append("\":");
-			return true;
-		}
-
-		@Override
-		public void visitNull(JsonContext ctx) {
-			builder.append("null");
-		}
-
-		private void commaIfNotFirst(JsonContext ctx) {
-			if (!ctx.isFirst()) {
-				builder.append(',');
-			}
 		}
 
 		private String format(double number) {
@@ -199,6 +149,56 @@ class JsonUtilFastWriter {
 				builder.append(toAppend);
 			}
 			builder.append('"');
+		}
+
+		@Override
+		public void visit(boolean bool, JsonContext ctx) {
+			builder.append(bool);
+		}
+
+		@Override
+		public void visit(double number, JsonContext ctx) {
+			builder.append(
+					Double.isInfinite(number) || Double.isNaN(number) ? "null"
+							: format(number));
+		}
+
+		@Override
+		public boolean visit(JsonArray array, JsonContext ctx) {
+			builder.append('[');
+			return true;
+		}
+
+		@Override
+		public boolean visit(JsonObject object, JsonContext ctx) {
+			builder.append('{');
+			return true;
+		}
+
+		@Override
+		public void visit(String string, JsonContext ctx) {
+			quote(string);
+		}
+
+		@Override
+		public boolean visitIndex(int index, JsonContext ctx) {
+			commaIfNotFirst(ctx);
+			return true;
+		}
+
+		@Override
+		public boolean visitKey(String key, JsonContext ctx) {
+			commaIfNotFirst(ctx);
+			// key is a java identifier, so do not quote
+			builder.append("\"");
+			builder.append(key);
+			builder.append("\":");
+			return true;
+		}
+
+		@Override
+		public void visitNull(JsonContext ctx) {
+			builder.append("null");
 		}
 	}
 }

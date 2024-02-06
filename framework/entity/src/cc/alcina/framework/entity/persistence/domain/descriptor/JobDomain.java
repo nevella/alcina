@@ -207,6 +207,12 @@ public class JobDomain {
 	private Set<AllocationQueue> queuesWithBufferedEvents = Collections
 			.synchronizedSet(new LinkedHashSet<>());
 
+	private void cleanupQueues() {
+		queues.entrySet().removeIf(e -> e.getValue().job.domain().wasRemoved()
+				|| e.getValue().job.resolveState() == JobState.ABORTED
+				|| e.getValue().job.resolveState() == JobState.CANCELLED);
+	}
+
 	public void configureDescriptor(DomainDescriptor descriptor) {
 		jobImplClass = PersistentImpl.getImplementation(Job.class);
 		jobDescriptor = new JobDescriptor();
@@ -338,6 +344,11 @@ public class JobDomain {
 				.stream();
 	}
 
+	private Stream<AllocationQueue> getVisibleQueues() {
+		return queues.values().stream()
+				.filter(q -> !q.job.domain().wasRemoved());
+	}
+
 	public void onAppShutdown() {
 		stateMessageEventHandler.finished = true;
 		stateMessageEventQueue.add(new ArrayList<>());
@@ -364,17 +375,6 @@ public class JobDomain {
 
 	public void removeAllocationQueue(Job job) {
 		AllocationQueue queue = queues.remove(job);
-	}
-
-	private void cleanupQueues() {
-		queues.entrySet().removeIf(e -> e.getValue().job.domain().wasRemoved()
-				|| e.getValue().job.resolveState() == JobState.ABORTED
-				|| e.getValue().job.resolveState() == JobState.CANCELLED);
-	}
-
-	private Stream<AllocationQueue> getVisibleQueues() {
-		return queues.values().stream()
-				.filter(q -> !q.job.domain().wasRemoved());
 	}
 
 	/*
@@ -457,6 +457,25 @@ public class JobDomain {
 			}
 		}
 
+		private void checkFireToProcessing(Job job) {
+			if (job == this.job && !firedToProcessing) {
+				try {
+					switch (job.resolveState()) {
+					case PROCESSING:
+					case COMPLETED:
+						firedToProcessing = true;
+						publish(EventType.TO_PROCESSING);
+						break;
+					}
+				} catch (Exception e) {
+					logger.warn(
+							"DEVEX-0 - Fire to processing of (probably) non-visible job - {}",
+							job.getId());
+					e.printStackTrace();
+				}
+			}
+		}
+
 		public void clearIncompleteAllocatedJobs() {
 			/*
 			 * Deliberately throws an exception (because the sets have no
@@ -484,6 +503,11 @@ public class JobDomain {
 				parentQueue = queues.get(job.provideParent().get());
 			}
 			return parentQueue;
+		}
+
+		void fireInitialCreationEvents() {
+			publish(EventType.CREATED);
+			checkFireToProcessing(job);
 		}
 
 		public void flushBufferedEvents() {
@@ -536,99 +560,6 @@ public class JobDomain {
 			return job.hashCode();
 		}
 
-		public void incrementPhase() {
-			currentPhase = SubqueuePhase.values()[currentPhase.ordinal() + 1];
-		}
-
-		public void insert(Job job) {
-			// logger.info("subqueue/insert - {} - {} - {}",
-			// this.job.toStringEntity(), subqueues.project(job), job);
-			subqueues.insert(job);
-			publish(EventType.RELATED_MODIFICATION);
-			checkFireToProcessing(job);
-		}
-
-		public boolean isNoPendingJobsInPhase() {
-			if (getIncompleteJobCountForCurrentPhase() == 0) {
-				// double-check ? for the moment should be no need since
-				// persisting (on performer) before reaching here
-				return true;
-			}
-			return false;
-		}
-
-		public SubqueuePhase provideAllocationKey(Job job) {
-			if (job == this.job) {
-				return SubqueuePhase.Self;
-			}
-			if (job.provideFirstInSequence() == this.job) {
-				return SubqueuePhase.Sequence;
-			}
-			if (job.provideParentOrSelf() == this.job) {
-				return SubqueuePhase.Child;
-			}
-			throw new UnsupportedOperationException();
-		}
-
-		// / ahhhhhh....we need to buffer events if in "todomaincommitting",
-		// / otherwise we may hit the allocators before the commit is finished
-		public void publish(EventType type) {
-			Event event = new Event(type);
-			if (TransactionEnvironment.get().isToDomainCommitting()) {
-				bufferedEvents.add(event);
-				queuesWithBufferedEvents.add(this);
-			} else {
-				publish0(event);
-			}
-		}
-
-		public void refreshProjection() {
-			// TODO Auto-generated method stub
-		}
-
-		public void remove(Job job) {
-			// logger.info("subqueue/remove - {} - {} - {}",
-			// this.job.toStringEntity(), subqueues.project(job), job);
-			subqueues.remove(job);
-		}
-
-		public String toDisplayName() {
-			return job == null ? "<no-job>" : job.toDisplayName();
-		}
-
-		@Override
-		public String toString() {
-			List<String> phaseStates = new ArrayList<>();
-			for (SubqueuePhase type : SubqueuePhase.values()) {
-				phaseStates.add(Ax.format("%s - (%s)", type,
-						incompleteAllocatableStatesChild.stream()
-								.map(state -> subQueueJobs(type, state).size())
-								.map(String::valueOf)
-								.collect(Collectors.joining("/"))));
-			}
-			return Ax.format("Allocation Queue - %s - %s\n\t%s", job,
-					currentPhase, CommonUtils.joinWithNewlineTab(phaseStates));
-		}
-
-		private void checkFireToProcessing(Job job) {
-			if (job == this.job && !firedToProcessing) {
-				try {
-					switch (job.resolveState()) {
-					case PROCESSING:
-					case COMPLETED:
-						firedToProcessing = true;
-						publish(EventType.TO_PROCESSING);
-						break;
-					}
-				} catch (Exception e) {
-					logger.warn(
-							"DEVEX-0 - Fire to processing of (probably) non-visible job - {}",
-							job.getId());
-					e.printStackTrace();
-				}
-			}
-		}
-
 		/*
 		 * Child completion must wait for any sequential jobs triggered by the
 		 * child
@@ -642,6 +573,18 @@ public class JobDomain {
 			}
 		}
 
+		public void incrementPhase() {
+			currentPhase = SubqueuePhase.values()[currentPhase.ordinal() + 1];
+		}
+
+		public void insert(Job job) {
+			// logger.info("subqueue/insert - {} - {} - {}",
+			// this.job.toStringEntity(), subqueues.project(job), job);
+			subqueues.insert(job);
+			publish(EventType.RELATED_MODIFICATION);
+			checkFireToProcessing(job);
+		}
+
 		private boolean isComplete() {
 			for (SubqueuePhase subqueuePhase : SubqueuePhase.values()) {
 				for (JobState state : incompleteStates(subqueuePhase)) {
@@ -651,6 +594,15 @@ public class JobDomain {
 				}
 			}
 			return true;
+		}
+
+		public boolean isNoPendingJobsInPhase() {
+			if (getIncompleteJobCountForCurrentPhase() == 0) {
+				// double-check ? for the moment should be no need since
+				// persisting (on performer) before reaching here
+				return true;
+			}
+			return false;
 		}
 
 		private long perPhaseJobCount(JobState... states) {
@@ -693,6 +645,48 @@ public class JobDomain {
 							.flatMap(Collection::stream));
 		}
 
+		public SubqueuePhase provideAllocationKey(Job job) {
+			if (job == this.job) {
+				return SubqueuePhase.Self;
+			}
+			if (job.provideFirstInSequence() == this.job) {
+				return SubqueuePhase.Sequence;
+			}
+			if (job.provideParentOrSelf() == this.job) {
+				return SubqueuePhase.Child;
+			}
+			throw new UnsupportedOperationException();
+		}
+
+		// / ahhhhhh....we need to buffer events if in "todomaincommitting",
+		// / otherwise we may hit the allocators before the commit is finished
+		public void publish(EventType type) {
+			Event event = new Event(type);
+			if (TransactionEnvironment.get().isToDomainCommitting()) {
+				bufferedEvents.add(event);
+				queuesWithBufferedEvents.add(this);
+			} else {
+				publish0(event);
+			}
+		}
+
+		void publish0(Event event) {
+			events.publish(event);
+			if (event.type.isPublishToGlobalQueue()) {
+				queueEvents.publish(event);
+			}
+		}
+
+		public void refreshProjection() {
+			// TODO Auto-generated method stub
+		}
+
+		public void remove(Job job) {
+			// logger.info("subqueue/remove - {} - {} - {}",
+			// this.job.toStringEntity(), subqueues.project(job), job);
+			subqueues.remove(job);
+		}
+
 		private Set<? extends Job> subQueueJobs(SubqueuePhase type,
 				JobState state) {
 			try {
@@ -706,16 +700,22 @@ public class JobDomain {
 			}
 		}
 
-		void fireInitialCreationEvents() {
-			publish(EventType.CREATED);
-			checkFireToProcessing(job);
+		public String toDisplayName() {
+			return job == null ? "<no-job>" : job.toDisplayName();
 		}
 
-		void publish0(Event event) {
-			events.publish(event);
-			if (event.type.isPublishToGlobalQueue()) {
-				queueEvents.publish(event);
+		@Override
+		public String toString() {
+			List<String> phaseStates = new ArrayList<>();
+			for (SubqueuePhase type : SubqueuePhase.values()) {
+				phaseStates.add(Ax.format("%s - (%s)", type,
+						incompleteAllocatableStatesChild.stream()
+								.map(state -> subQueueJobs(type, state).size())
+								.map(String::valueOf)
+								.collect(Collectors.joining("/"))));
 			}
+			return Ax.format("Allocation Queue - %s - %s\n\t%s", job,
+					currentPhase, CommonUtils.joinWithNewlineTab(phaseStates));
 		}
 
 		public class Event {
@@ -764,13 +764,13 @@ public class JobDomain {
 			}
 
 			@Override
-			public Class<? extends Job> getListenedClass() {
-				return jobImplClass;
+			protected int getDepth() {
+				return 3;
 			}
 
 			@Override
-			protected int getDepth() {
-				return 3;
+			public Class<? extends Job> getListenedClass() {
+				return jobImplClass;
 			}
 
 			@Override
@@ -785,76 +785,6 @@ public class JobDomain {
 	 * don't need (only needed pre-completion for execution constraints). So
 	 * filter appropriately
 	 */
-
-	@Registration.Singleton(ClientInstanceLoadOracle.class)
-	public static class ClientInstanceLoadOracleImpl
-			extends ClientInstanceLoadOracle {
-		@Override
-		public boolean shouldLoad(Job job, boolean duringWarmup) {
-			if (duringWarmup) {
-				return !job.provideIsComplete();
-			} else {
-				return true;
-			}
-		}
-	}
-
-	public enum DefaultConsistencyPriorities {
-		high, medium, _default, low
-	}
-
-	public enum EventType {
-		CREATED, DELETED, RELATED_MODIFICATION, WAKEUP, TO_AWAITING_CHILDREN,
-		TO_PROCESSING;
-
-		public boolean isPublishToGlobalQueue() {
-			switch (this) {
-			case CREATED:
-			case DELETED:
-				return true;
-			default:
-				return false;
-			}
-		}
-	}
-
-	public static class RelatedJobCompletion {
-		public Job job;
-
-		public List<Job> related;
-
-		public RelatedJobCompletion(Job job, List<Job> related) {
-			this.job = job;
-			this.related = related;
-		}
-	}
-
-	public static enum SubqueuePhase {
-		Self, Child, Sequence, Complete
-	}
-
-	private final class StateMessageEventHandler implements Runnable {
-		volatile boolean finished = false;
-
-		@Override
-		public void run() {
-			while (!finished) {
-				try {
-					List<JobStateMessage> messages = stateMessageEventQueue
-							.take();
-					if (!messages.isEmpty()) {
-						Transaction.ensureBegun();
-						stateMessageEvents.publish(messages);
-						Transaction.commit();
-					}
-				} catch (Throwable t) {
-					t.printStackTrace();
-				} finally {
-					Transaction.ensureEnded();
-				}
-			}
-		}
-	}
 
 	class AllocationQueueProjection implements DomainProjection<Job> {
 		private Multiset<Class, Set<Job>> futuresByTask = Registry
@@ -894,81 +824,6 @@ public class JobDomain {
 					.sorted(new Job.RunAtComparator()).findFirst();
 		}
 
-		@Override
-		public Class<? extends Job> getListenedClass() {
-			return jobImplClass;
-		}
-
-		@Override
-		public /*
-				 * Doesn't try to track result of insertion (i.e. returns null
-				 * whether or not the job is present in the projection)
-				 */
-		void insert(Job job) {
-			if (LazyPropertyLoadTask.inLazyPropertyLoad()) {
-				// will not affect allocation queues (and wreaks havoc with
-				// locking)
-				return;
-			}
-			/*
-			 * avoid deserializing if possible - hence the try/catch
-			 */
-			try {
-				insert0(job);
-			} catch (RuntimeException e) {
-				if (!job.provideCanDeserializeTask()) {
-					undeserializableJobs.add(job);
-				} else {
-					throw e;
-				}
-			}
-		}
-
-		@Override
-		public boolean isCommitOnly() {
-			return true;
-		}
-
-		@Override
-		public boolean isEnabled() {
-			return true;
-		}
-
-		public void releaseModificationLocks() {
-			ensuredQueues.forEach(queue -> queue.lock.writeLock().unlock());
-			ensuredQueues.clear();
-		}
-
-		@Override
-		public /*
-				 * Doesn't try to track result of removal (i.e. returns null
-				 * whether or not the job is present in the projection)
-				 */
-		void remove(Job job) {
-			if (LazyPropertyLoadTask.inLazyPropertyLoad()) {
-				// will not affect allocation queues (and wreaks havoc with
-				// locking)
-				return;
-			}
-			/*
-			 * avoid deserializing if possible - hence the try/catch
-			 */
-			try {
-				remove0(job);
-			} catch (RuntimeException e) {
-				if (!job.provideCanDeserializeTask()) {
-					undeserializableJobs.add(job);
-					return;
-				} else {
-					throw e;
-				}
-			}
-		}
-
-		@Override
-		public void setEnabled(boolean enabled) {
-		}
-
 		private AllocationQueue ensureQueue(Job job, AllocationQueue queue) {
 			queue = ensureQueue0(job, queue);
 			if (TransactionEnvironment.get()
@@ -996,6 +851,36 @@ public class JobDomain {
 					queue.publish(EventType.CREATED);
 				}
 				return queue;
+			}
+		}
+
+		@Override
+		public Class<? extends Job> getListenedClass() {
+			return jobImplClass;
+		}
+
+		@Override
+		public /*
+				 * Doesn't try to track result of insertion (i.e. returns null
+				 * whether or not the job is present in the projection)
+				 */
+		void insert(Job job) {
+			if (LazyPropertyLoadTask.inLazyPropertyLoad()) {
+				// will not affect allocation queues (and wreaks havoc with
+				// locking)
+				return;
+			}
+			/*
+			 * avoid deserializing if possible - hence the try/catch
+			 */
+			try {
+				insert0(job);
+			} catch (RuntimeException e) {
+				if (!job.provideCanDeserializeTask()) {
+					undeserializableJobs.add(job);
+				} else {
+					throw e;
+				}
 			}
 		}
 
@@ -1059,6 +944,47 @@ public class JobDomain {
 			queue.insert(job);
 		}
 
+		@Override
+		public boolean isCommitOnly() {
+			return true;
+		}
+
+		@Override
+		public boolean isEnabled() {
+			return true;
+		}
+
+		public void releaseModificationLocks() {
+			ensuredQueues.forEach(queue -> queue.lock.writeLock().unlock());
+			ensuredQueues.clear();
+		}
+
+		@Override
+		public /*
+				 * Doesn't try to track result of removal (i.e. returns null
+				 * whether or not the job is present in the projection)
+				 */
+		void remove(Job job) {
+			if (LazyPropertyLoadTask.inLazyPropertyLoad()) {
+				// will not affect allocation queues (and wreaks havoc with
+				// locking)
+				return;
+			}
+			/*
+			 * avoid deserializing if possible - hence the try/catch
+			 */
+			try {
+				remove0(job);
+			} catch (RuntimeException e) {
+				if (!job.provideCanDeserializeTask()) {
+					undeserializableJobs.add(job);
+					return;
+				} else {
+					throw e;
+				}
+			}
+		}
+
 		private void remove0(Job job) {
 			if (job.getTaskClassName() == null) {
 				return;
@@ -1107,6 +1033,42 @@ public class JobDomain {
 			}
 			queue = ensureQueue(relatedQueueOwner, queue);
 			queue.remove(job);
+		}
+
+		@Override
+		public void setEnabled(boolean enabled) {
+		}
+	}
+
+	@Registration.Singleton(ClientInstanceLoadOracle.class)
+	public static class ClientInstanceLoadOracleImpl
+			extends ClientInstanceLoadOracle {
+		@Override
+		public boolean shouldLoad(Job job, boolean duringWarmup) {
+			if (duringWarmup) {
+				return !job.provideIsComplete();
+			} else {
+				return true;
+			}
+		}
+	}
+
+	public enum DefaultConsistencyPriorities {
+		high, medium, _default, low
+	}
+
+	public enum EventType {
+		CREATED, DELETED, RELATED_MODIFICATION, WAKEUP, TO_AWAITING_CHILDREN,
+		TO_PROCESSING;
+
+		public boolean isPublishToGlobalQueue() {
+			switch (this) {
+			case CREATED:
+			case DELETED:
+				return true;
+			default:
+				return false;
+			}
 		}
 	}
 
@@ -1160,6 +1122,11 @@ public class JobDomain {
 			}
 
 			@Override
+			protected Date getDate(Job job) {
+				return job.getEndTime();
+			}
+
+			@Override
 			public Class<? extends Job> getListenedClass() {
 				return jobImplClass;
 			}
@@ -1195,11 +1162,6 @@ public class JobDomain {
 				}
 				super.remove(t);
 			}
-
-			@Override
-			protected Date getDate(Job job) {
-				return job.getEndTime();
-			}
 		}
 
 		/**
@@ -1227,6 +1189,26 @@ public class JobDomain {
 			private FutureConsistencyPriorityProjection() {
 				super(String.class,
 						new Class[] { Long.class, (Class<Job>) jobImplClass });
+			}
+
+			@Override
+			protected MultikeyMap<Job> createLookup() {
+				return new BaseProjectionLookupBuilder(this)
+						.withMapCreators(new CollectionCreators.MapCreator[] {
+								Registry.impl(
+										CollectionCreators.TreeMapCreator.class)
+										.withTypes(Arrays.asList(String.class,
+												Object.class)),
+								new TreeMapCreatorImpl()
+										.withPureTransactional(true)
+										.withTypes(Arrays.asList(Long.class,
+												Object.class)) })
+						.createMultikeyMap();
+			}
+
+			@Override
+			protected int getDepth() {
+				return 2;
 			}
 
 			public Stream<Job> getJobs() {
@@ -1276,6 +1258,12 @@ public class JobDomain {
 				}
 			}
 
+			@Override
+			protected Object[] project(Job job) {
+				return new Object[] { job.provideConsistencyPriority(),
+						job.getId(), job };
+			}
+
 			private Collection valueCollection(String consistencyPriority) {
 				return getLookup().asMapEnsure(true, consistencyPriority)
 						.delegate().values();
@@ -1285,32 +1273,6 @@ public class JobDomain {
 				return getLookup().typedKeySet(String.class).stream()
 						.sorted(new QueuePriorityComparator())
 						.map(s -> getLookup().asMap(s).delegate().values());
-			}
-
-			@Override
-			protected MultikeyMap<Job> createLookup() {
-				return new BaseProjectionLookupBuilder(this)
-						.withMapCreators(new CollectionCreators.MapCreator[] {
-								Registry.impl(
-										CollectionCreators.TreeMapCreator.class)
-										.withTypes(Arrays.asList(String.class,
-												Object.class)),
-								new TreeMapCreatorImpl()
-										.withPureTransactional(true)
-										.withTypes(Arrays.asList(Long.class,
-												Object.class)) })
-						.createMultikeyMap();
-			}
-
-			@Override
-			protected int getDepth() {
-				return 2;
-			}
-
-			@Override
-			protected Object[] project(Job job) {
-				return new Object[] { job.provideConsistencyPriority(),
-						job.getId(), job };
 			}
 
 			class QueuePriorityComparator implements Comparator<String> {
@@ -1344,6 +1306,11 @@ public class JobDomain {
 			private FutureConsistencyTaskProjection() {
 				super(String.class, new Class[] { String.class, Long.class,
 						(Class<Job>) jobImplClass });
+			}
+
+			@Override
+			protected int getDepth() {
+				return 3;
 			}
 
 			public Stream<Job> getEquivalentTo(Task task) {
@@ -1383,11 +1350,6 @@ public class JobDomain {
 			}
 
 			@Override
-			protected int getDepth() {
-				return 3;
-			}
-
-			@Override
 			protected Object[] project(Job job) {
 				return new Object[] { job.getTaskClassName(),
 						job.getTaskSerialized(), job.getId(), job };
@@ -1405,5 +1367,43 @@ public class JobDomain {
 				return result;
 			}
 		}
+	}
+
+	public static class RelatedJobCompletion {
+		public Job job;
+
+		public List<Job> related;
+
+		public RelatedJobCompletion(Job job, List<Job> related) {
+			this.job = job;
+			this.related = related;
+		}
+	}
+
+	private final class StateMessageEventHandler implements Runnable {
+		volatile boolean finished = false;
+
+		@Override
+		public void run() {
+			while (!finished) {
+				try {
+					List<JobStateMessage> messages = stateMessageEventQueue
+							.take();
+					if (!messages.isEmpty()) {
+						Transaction.ensureBegun();
+						stateMessageEvents.publish(messages);
+						Transaction.commit();
+					}
+				} catch (Throwable t) {
+					t.printStackTrace();
+				} finally {
+					Transaction.ensureEnded();
+				}
+			}
+		}
+	}
+
+	public static enum SubqueuePhase {
+		Self, Child, Sequence, Complete
 	}
 }

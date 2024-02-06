@@ -43,6 +43,19 @@ public class NodeListJso<T extends Node> extends JavaScriptObject
 	}
 
 	/**
+	 * Returns the indexth item in the collection. If index is greater than or
+	 * equal to the number of nodes in the list, this returns null.
+	 *
+	 * @param index
+	 *            Index into the collection
+	 * @return the node at the indexth position in the NodeList, or null if that
+	 *         is not a valid index.
+	 */
+	final native NodeJso getItem0(int index) /*-{
+    return this[index];
+	}-*/;
+
+	/**
 	 * The number of nodes in the list. The range of valid child node indices is
 	 * 0 to length-1 inclusive.
 	 */
@@ -55,19 +68,6 @@ public class NodeListJso<T extends Node> extends JavaScriptObject
 	public final Stream<T> stream() {
 		return ClientDomNodeListStatic.stream0(this);
 	}
-
-	/**
-	 * Returns the indexth item in the collection. If index is greater than or
-	 * equal to the number of nodes in the list, this returns null.
-	 *
-	 * @param index
-	 *            Index into the collection
-	 * @return the node at the indexth position in the NodeList, or null if that
-	 *         is not a valid index.
-	 */
-	final native NodeJso getItem0(int index) /*-{
-    return this[index];
-	}-*/;
 
 	final Stream<NodeJso> streamRemote() {
 		List<NodeJso> list = new ArrayList<>();

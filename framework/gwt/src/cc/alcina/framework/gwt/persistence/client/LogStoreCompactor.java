@@ -52,6 +52,11 @@ public class LogStoreCompactor extends Consort<Phase> {
 		listenerDelta(TopicChannel.ERROR, consortEndListener, true);
 	}
 
+	void finished(String cause) {
+		System.out.println(cause);
+		finished();
+	}
+
 	public void install() {
 		LogStore.topicPersisted.add(logPersistedListener);
 	}
@@ -64,11 +69,6 @@ public class LogStoreCompactor extends Consort<Phase> {
 				new ClientLogRecordKeepNonCriticalPrecedingContextFilter());
 		return (hasException || !hasNonCritical)
 				&& records.size > RemoteLogPersister.PREFERRED_MAX_PUSH_SIZE;
-	}
-
-	void finished(String cause) {
-		System.out.println(cause);
-		finished();
 	}
 
 	class Compactor_GET_ID_RANGE
@@ -118,14 +118,14 @@ public class LogStoreCompactor extends Consort<Phase> {
 		}
 
 		@Override
-		protected int getInitialMinimumRecordId() {
-			return mergeFromId + 1;
-		}
-
-		@Override
 		void foundUnMerged(ClientLogRecords records) {
 			mergeCheck = records;
 			mergeCheckId = recordId;
+		}
+
+		@Override
+		protected int getInitialMinimumRecordId() {
+			return mergeFromId + 1;
 		}
 	}
 
@@ -136,14 +136,14 @@ public class LogStoreCompactor extends Consort<Phase> {
 		}
 
 		@Override
-		protected int getInitialMinimumRecordId() {
-			return minNonCompactedLogRecordId + 1;
-		}
-
-		@Override
 		void foundUnMerged(ClientLogRecords records) {
 			mergeFrom = records;
 			mergeFromId = recordId;
+		}
+
+		@Override
+		protected int getInitialMinimumRecordId() {
+			return minNonCompactedLogRecordId + 1;
 		}
 	}
 
@@ -154,14 +154,14 @@ public class LogStoreCompactor extends Consort<Phase> {
 		}
 
 		@Override
-		protected int getInitialMinimumRecordId() {
-			return minNonCompactedLogRecordId;
-		}
-
-		@Override
 		void foundUnMerged(ClientLogRecords records) {
 			mergeTo = records;
 			minNonCompactedLogRecordId = recordId;
+		}
+
+		@Override
+		protected int getInitialMinimumRecordId() {
+			return minNonCompactedLogRecordId;
 		}
 	}
 
@@ -174,10 +174,22 @@ public class LogStoreCompactor extends Consort<Phase> {
 			super(phase);
 		}
 
+		protected boolean continueIfCompacted() {
+			return true;
+		}
+
 		@Override
 		public String describeLoop() {
 			return "increment until we find a compactable or otherwise worthwhile record chunk";
 		}
+
+		protected void eof() {
+			finished("eof");
+		}
+
+		abstract void foundUnMerged(ClientLogRecords records);
+
+		protected abstract int getInitialMinimumRecordId();
 
 		@Override
 		public void loop() {
@@ -225,18 +237,6 @@ public class LogStoreCompactor extends Consort<Phase> {
 		public void setConsort(Consort<Phase> consort) {
 			super.setConsort(consort);
 		}
-
-		protected boolean continueIfCompacted() {
-			return true;
-		}
-
-		protected void eof() {
-			finished("eof");
-		}
-
-		protected abstract int getInitialMinimumRecordId();
-
-		abstract void foundUnMerged(ClientLogRecords records);
 	}
 
 	class Compactor_MERGE_AND_PERSIST_FROM

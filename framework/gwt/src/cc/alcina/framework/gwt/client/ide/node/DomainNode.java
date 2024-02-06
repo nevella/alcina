@@ -54,8 +54,22 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 	}
 
 	@Override
+	protected String getText0() {
+		return displayName;
+	}
+
+	@Override
 	public T getUserObject() {
 		return (T) super.getUserObject();
+	}
+
+	protected String imageItemHTML(AbstractImagePrototype imageProto,
+			String title) {
+		if (((DataTree) getTree()).isUseNodeImages()) {
+			return imageProto.getHTML() + " " + title;
+		} else {
+			return title;
+		}
 	}
 
 	@Override
@@ -92,20 +106,6 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 	public void removeListeners() {
 		T object = getUserObject();
 		object.removePropertyChangeListener(this);
-	}
-
-	@Override
-	protected String getText0() {
-		return displayName;
-	}
-
-	protected String imageItemHTML(AbstractImagePrototype imageProto,
-			String title) {
-		if (((DataTree) getTree()).isUseNodeImages()) {
-			return imageProto.getHTML() + " " + title;
-		} else {
-			return title;
-		}
 	}
 
 	@Override

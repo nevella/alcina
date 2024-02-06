@@ -39,41 +39,6 @@ public class SubwidgetActivitySupport
 		assert display != null;
 	}
 
-	public void goToWhere() {
-		Place where = Client.get().getPlaceController().getWhere();
-		Activity activity = activityMapper.getActivity(where);
-		if (activity != null) {
-			activity.start(display, null);
-		}
-	}
-
-	public void installAttachHandler() {
-		this.activateOnInitialAttach = true;
-		installAttachHandler0();
-	}
-
-	public void installVisibleHandler() {
-		installAttachHandler0();
-		((HasVisibilityChangeHandlers) widget).addVisibilityChangeHandler(this);
-	}
-
-	@Override
-	public void onAttachOrDetach(AttachEvent event) {
-		if (activityManager == null && !activateOnInitialAttach) {
-			return;
-		}
-		activate(event.isAttached());
-	}
-
-	@Override
-	public void onVisiblityChange(VisibilityChangeEvent event) {
-		activate(event.isVisible());
-	}
-
-	private void installAttachHandler0() {
-		widget.addAttachHandler(this);
-	}
-
 	protected void activate(boolean activate) {
 		if (activate) {
 			if (activityManager == null) {
@@ -92,5 +57,40 @@ public class SubwidgetActivitySupport
 				activityManager.setDisplay(null);
 			}
 		}
+	}
+
+	public void goToWhere() {
+		Place where = Client.get().getPlaceController().getWhere();
+		Activity activity = activityMapper.getActivity(where);
+		if (activity != null) {
+			activity.start(display, null);
+		}
+	}
+
+	public void installAttachHandler() {
+		this.activateOnInitialAttach = true;
+		installAttachHandler0();
+	}
+
+	private void installAttachHandler0() {
+		widget.addAttachHandler(this);
+	}
+
+	public void installVisibleHandler() {
+		installAttachHandler0();
+		((HasVisibilityChangeHandlers) widget).addVisibilityChangeHandler(this);
+	}
+
+	@Override
+	public void onAttachOrDetach(AttachEvent event) {
+		if (activityManager == null && !activateOnInitialAttach) {
+			return;
+		}
+		activate(event.isAttached());
+	}
+
+	@Override
+	public void onVisiblityChange(VisibilityChangeEvent event) {
+		activate(event.isVisible());
 	}
 }

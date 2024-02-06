@@ -372,6 +372,44 @@ public enum Browser {
 		}
 	}
 
+	private Browser checkUserAgent(String agentString) {
+		if (this.isInUserAgentString(agentString)) {
+			if (this.children.size() > 0) {
+				for (Browser childBrowser : this.children) {
+					Browser match = childBrowser.checkUserAgent(agentString);
+					if (match != null) {
+						return match;
+					}
+				}
+			}
+			// if children didn't match we continue checking the current to
+			// prevent false positives
+			if (!this.containsExcludeToken(agentString)) {
+				return this;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Checks if the given user-agent does not contain one of the tokens which
+	 * should not match. In most cases there are no excluding tokens, so the
+	 * impact should be small.
+	 * 
+	 * @param agentString
+	 * @return
+	 */
+	private boolean containsExcludeToken(String agentString) {
+		if (excludeList != null) {
+			for (String exclude : excludeList) {
+				if (agentString.toLowerCase()
+						.indexOf(exclude.toLowerCase()) != -1)
+					return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * @return the browserType
 	 */
@@ -436,6 +474,16 @@ public enum Browser {
 		return null;
 	}
 
+	private Pattern getVersionRegEx() {
+		if (this.versionRegEx == null) {
+			if (this.getGroup() != this)
+				return this.getGroup().getVersionRegEx();
+			else
+				return null;
+		}
+		return this.versionRegEx;
+	}
+
 	/*
 	 * Checks if the given user-agent string matches to the browser. Only checks
 	 * for one specific browser.
@@ -446,53 +494,5 @@ public enum Browser {
 				return true;
 		}
 		return false;
-	}
-
-	private Browser checkUserAgent(String agentString) {
-		if (this.isInUserAgentString(agentString)) {
-			if (this.children.size() > 0) {
-				for (Browser childBrowser : this.children) {
-					Browser match = childBrowser.checkUserAgent(agentString);
-					if (match != null) {
-						return match;
-					}
-				}
-			}
-			// if children didn't match we continue checking the current to
-			// prevent false positives
-			if (!this.containsExcludeToken(agentString)) {
-				return this;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Checks if the given user-agent does not contain one of the tokens which
-	 * should not match. In most cases there are no excluding tokens, so the
-	 * impact should be small.
-	 * 
-	 * @param agentString
-	 * @return
-	 */
-	private boolean containsExcludeToken(String agentString) {
-		if (excludeList != null) {
-			for (String exclude : excludeList) {
-				if (agentString.toLowerCase()
-						.indexOf(exclude.toLowerCase()) != -1)
-					return true;
-			}
-		}
-		return false;
-	}
-
-	private Pattern getVersionRegEx() {
-		if (this.versionRegEx == null) {
-			if (this.getGroup() != this)
-				return this.getGroup().getVersionRegEx();
-			else
-				return null;
-		}
-		return this.versionRegEx;
 	}
 }

@@ -135,6 +135,31 @@ public class PathMapper {
 			return this;
 		}
 
+		void map(Object left, Object right) {
+			if (applyToRightFilter != null && !applyToRightFilter.test(left)) {
+				return;
+			}
+			try {
+				// If mapped field is not required, and either left object is
+				// null or
+				// the property key is not available on the left object
+				if (!required && (left == null || !mapper.leftAccessor
+						.hasPropertyKey(left, leftName))) {
+					return;
+				}
+				Object value = mapper.leftAccessor.getPropertyValue(left,
+						leftName);
+				if (leftToRightConverter != null) {
+					value = leftToRightConverter.convert(value);
+				}
+				mapper.rightAccessor.setPropertyValue(right, rightName, value);
+			} catch (NoSuchVariantPropertyException e) {
+				if (required) {
+					throw e;
+				}
+			}
+		}
+
 		public void required() {
 			required = true;
 		}
@@ -161,31 +186,6 @@ public class PathMapper {
 			return Ax.format("propertyMapping: %s ->%s (custom: %s)", leftName,
 					rightName, leftToRightConverter != null
 							|| rightToLeftConverter != null);
-		}
-
-		void map(Object left, Object right) {
-			if (applyToRightFilter != null && !applyToRightFilter.test(left)) {
-				return;
-			}
-			try {
-				// If mapped field is not required, and either left object is
-				// null or
-				// the property key is not available on the left object
-				if (!required && (left == null || !mapper.leftAccessor
-						.hasPropertyKey(left, leftName))) {
-					return;
-				}
-				Object value = mapper.leftAccessor.getPropertyValue(left,
-						leftName);
-				if (leftToRightConverter != null) {
-					value = leftToRightConverter.convert(value);
-				}
-				mapper.rightAccessor.setPropertyValue(right, rightName, value);
-			} catch (NoSuchVariantPropertyException e) {
-				if (required) {
-					throw e;
-				}
-			}
 		}
 	}
 }

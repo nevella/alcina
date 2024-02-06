@@ -39,6 +39,11 @@ public class PublicationResult extends Model implements TreeSerializable {
 		return publicationUid;
 	}
 
+	/* Server-only */
+	public void log() {
+		Registry.impl(ResultLogger.class).log(this);
+	}
+
 	public void setContent(String content) {
 		this.content = content;
 	}
@@ -57,11 +62,6 @@ public class PublicationResult extends Model implements TreeSerializable {
 
 	public void setPublicationUid(String publicationUid) {
 		this.publicationUid = publicationUid;
-	}
-
-	/* Server-only */
-	public void log() {
-		Registry.impl(ResultLogger.class).log(this);
 	}
 
 	public interface ResultLogger {

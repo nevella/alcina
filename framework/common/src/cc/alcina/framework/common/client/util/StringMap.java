@@ -189,12 +189,26 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return CommonUtils.getEnumValueOrNull(clazz, get(key), true, null);
 	}
 
+	private String escapeListString(String string) {
+		char[] from = { '\n', '\r', '\\' };
+		String[] to = { "\\n", "\\r", "\\\\" };
+		return new Escaper().escape(string, from, to);
+	}
+
 	public boolean existsAndIsBooleanFalse(String key) {
 		return containsKey(key) && !is(key);
 	}
 
 	public String firstKey() {
 		return size() == 0 ? null : keySet().iterator().next();
+	}
+
+	public int getInt(String key) {
+		return Integer.parseInt(get(key));
+	}
+
+	public boolean has(String key, String value) {
+		return Objects.equals(get(key), value);
 	}
 
 	public boolean is(String key) {
@@ -308,12 +322,6 @@ public class StringMap extends LinkedHashMap<String, String> {
 			sb.append(new Escaper().escape(value, from, to));
 		}
 		return sb.toString();
-	}
-
-	private String escapeListString(String string) {
-		char[] from = { '\n', '\r', '\\' };
-		String[] to = { "\\n", "\\r", "\\\\" };
-		return new Escaper().escape(string, from, to);
 	}
 
 	/**
@@ -431,13 +439,5 @@ public class StringMap extends LinkedHashMap<String, String> {
 			}
 			return sb.toString();
 		}
-	}
-
-	public int getInt(String key) {
-		return Integer.parseInt(get(key));
-	}
-
-	public boolean has(String key, String value) {
-		return Objects.equals(get(key), value);
 	}
 }

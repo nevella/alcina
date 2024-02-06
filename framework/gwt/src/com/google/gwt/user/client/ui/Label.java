@@ -137,6 +137,18 @@ public class Label extends LabelBase<String>
 	}
 
 	/**
+	 * This constructor may be used by subclasses to explicitly use an existing
+	 * element. This element must be either a &lt;div&gt; or &lt;span&gt;
+	 * element.
+	 *
+	 * @param element
+	 *            the element to be used
+	 */
+	protected Label(Element element) {
+		super(element);
+	}
+
+	/**
 	 * Creates a label with the specified text.
 	 *
 	 * @param text
@@ -190,18 +202,6 @@ public class Label extends LabelBase<String>
 		this();
 		setDirectionEstimator(directionEstimator);
 		setText(text);
-	}
-
-	/**
-	 * This constructor may be used by subclasses to explicitly use an existing
-	 * element. This element must be either a &lt;div&gt; or &lt;span&gt;
-	 * element.
-	 *
-	 * @param element
-	 *            the element to be used
-	 */
-	protected Label(Element element) {
-		super(element);
 	}
 
 	@Override

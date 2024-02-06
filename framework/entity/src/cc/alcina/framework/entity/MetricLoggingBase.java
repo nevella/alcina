@@ -77,6 +77,33 @@ public class MetricLoggingBase {
 		return end(key, extraInfo, null);
 	}
 
+	private synchronized long end(String key, String extraInfo,
+			Logger overrideLogger) {
+		key = keyWithParents(key, true);
+		if (!metricStart.containsKey(key) && !ticksSum.containsKey(key)) {
+			System.out.println("Warning - metric end without start - " + key);
+			return -1;
+		}
+		long delta = ticksSum.containsKey(key) ? ticksSum.get(key) / 1000000
+				: System.currentTimeMillis() - metricStart.get(key);
+		ticksSum.remove(key);
+		String units = "ms";
+		String message = Ax.format("Metric: %s - %s %s%s", key, delta, units,
+				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
+		if (!muted) {
+			Logger out = overrideLogger == null ? logger : overrideLogger;
+			out.debug(message);
+		}
+		if (!averageCount.containsKey(key)) {
+			averageCount.put(key, 0L);
+			sum.put(key, 0L);
+		}
+		averageCount.put(key, averageCount.get(key) + 1);
+		sum.put(key, sum.get(key) + delta);
+		terminated.add(key);
+		return delta;
+	}
+
 	public void endTicks(String key) {
 		long cn = System.nanoTime();
 		key = keyWithParents(key, false);
@@ -89,8 +116,30 @@ public class MetricLoggingBase {
 		ticksSum.put(key, ticksSum.get(key) + (cn - ticks.get(key)));
 	}
 
+	private Long getCurrentThreadId() {
+		return Thread.currentThread().getId();
+	}
+
 	public boolean isMuted() {
 		return muted;
+	}
+
+	private synchronized String keyWithParents(String key, boolean end) {
+		if (end) {
+			return keyToKeyWithParents.get(key);
+		}
+		String withParents = "";
+		for (String parentKey : metricStart.keySet()) {
+			Long tid = metricStartThreadIds.get(parentKey);
+			if (!terminated.contains(parentKey)
+					&& (tid.equals(thisLoggerThreadId)
+							|| tid.equals(getCurrentThreadId()))) {
+				withParents = parentKey + "/";
+			}
+		}
+		withParents += key;
+		keyToKeyWithParents.put(key, withParents);
+		return withParents;
 	}
 
 	public synchronized void reset() {
@@ -126,54 +175,5 @@ public class MetricLoggingBase {
 	public void startTicks(String key) {
 		key = keyWithParents(key, false);
 		ticks.put(key, System.nanoTime());
-	}
-
-	private synchronized long end(String key, String extraInfo,
-			Logger overrideLogger) {
-		key = keyWithParents(key, true);
-		if (!metricStart.containsKey(key) && !ticksSum.containsKey(key)) {
-			System.out.println("Warning - metric end without start - " + key);
-			return -1;
-		}
-		long delta = ticksSum.containsKey(key) ? ticksSum.get(key) / 1000000
-				: System.currentTimeMillis() - metricStart.get(key);
-		ticksSum.remove(key);
-		String units = "ms";
-		String message = Ax.format("Metric: %s - %s %s%s", key, delta, units,
-				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
-		if (!muted) {
-			Logger out = overrideLogger == null ? logger : overrideLogger;
-			out.debug(message);
-		}
-		if (!averageCount.containsKey(key)) {
-			averageCount.put(key, 0L);
-			sum.put(key, 0L);
-		}
-		averageCount.put(key, averageCount.get(key) + 1);
-		sum.put(key, sum.get(key) + delta);
-		terminated.add(key);
-		return delta;
-	}
-
-	private Long getCurrentThreadId() {
-		return Thread.currentThread().getId();
-	}
-
-	private synchronized String keyWithParents(String key, boolean end) {
-		if (end) {
-			return keyToKeyWithParents.get(key);
-		}
-		String withParents = "";
-		for (String parentKey : metricStart.keySet()) {
-			Long tid = metricStartThreadIds.get(parentKey);
-			if (!terminated.contains(parentKey)
-					&& (tid.equals(thisLoggerThreadId)
-							|| tid.equals(getCurrentThreadId()))) {
-				withParents = parentKey + "/";
-			}
-		}
-		withParents += key;
-		keyToKeyWithParents.put(key, withParents);
-		return withParents;
 	}
 }

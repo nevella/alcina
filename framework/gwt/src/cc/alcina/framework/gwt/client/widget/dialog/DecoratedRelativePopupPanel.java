@@ -186,37 +186,6 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 	}
 
 	@Override
-	public Widget getWidget() {
-		return decPanel.getWidget();
-	}
-
-	public void insertDecoratorHtml(String selector, String className) {
-		Element elt = (Element) WidgetUtils.getElementForSelector(getElement(),
-				selector);
-		if (elt != null) {
-			DivElement div = Document.get().createDivElement();
-			div.setClassName(className);
-			elt.appendChild(div);
-		}
-	}
-
-	@Override
-	public Iterator<Widget> iterator() {
-		return decPanel.iterator();
-	}
-
-	@Override
-	public boolean remove(Widget w) {
-		return decPanel.remove(w);
-	}
-
-	@Override
-	public void setWidget(Widget w) {
-		decPanel.setWidget(w);
-		maybeUpdateSize();
-	}
-
-	@Override
 	protected void doAttachChildren() {
 		// See comment in doDetachChildren for an explanation of this call
 		decPanel.onAttach();
@@ -249,5 +218,36 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 	 */
 	protected Element getCellElement(int row, int cell) {
 		return decPanel.getCellElement(row, cell);
+	}
+
+	@Override
+	public Widget getWidget() {
+		return decPanel.getWidget();
+	}
+
+	public void insertDecoratorHtml(String selector, String className) {
+		Element elt = (Element) WidgetUtils.getElementForSelector(getElement(),
+				selector);
+		if (elt != null) {
+			DivElement div = Document.get().createDivElement();
+			div.setClassName(className);
+			elt.appendChild(div);
+		}
+	}
+
+	@Override
+	public Iterator<Widget> iterator() {
+		return decPanel.iterator();
+	}
+
+	@Override
+	public boolean remove(Widget w) {
+		return decPanel.remove(w);
+	}
+
+	@Override
+	public void setWidget(Widget w) {
+		decPanel.setWidget(w);
+		maybeUpdateSize();
 	}
 }

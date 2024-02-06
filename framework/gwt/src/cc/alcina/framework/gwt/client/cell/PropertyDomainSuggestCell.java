@@ -138,26 +138,6 @@ public class PropertyDomainSuggestCell<T> extends AbstractEditableCell<T, T> {
 	}
 
 	@Override
-	public void render(Context context, T value, SafeHtmlBuilder sb) {
-		// Get the view data.
-		Object key = context.getKey();
-		T viewData = getViewData(key);
-		if (viewData != null && viewData.equals(value)) {
-			clearViewData(key);
-			viewData = null;
-		}
-		String s = null;
-		if (viewData != null) {
-			s = toStringMapper.apply(viewData);
-		} else if (value != null) {
-			s = toStringMapper.apply(value);
-		}
-		if (s != null) {
-			sb.append(renderer.render(s));
-		}
-	}
-
-	@Override
 	protected void onEnterKeyDown(Context context, Element parent, T value,
 			NativeEvent event, ValueUpdater<T> valueUpdater) {
 		this.lastKey = context.getKey();
@@ -177,5 +157,25 @@ public class PropertyDomainSuggestCell<T> extends AbstractEditableCell<T, T> {
 				suggestor.setFilterText(lastFilterText);
 			}
 		});
+	}
+
+	@Override
+	public void render(Context context, T value, SafeHtmlBuilder sb) {
+		// Get the view data.
+		Object key = context.getKey();
+		T viewData = getViewData(key);
+		if (viewData != null && viewData.equals(value)) {
+			clearViewData(key);
+			viewData = null;
+		}
+		String s = null;
+		if (viewData != null) {
+			s = toStringMapper.apply(viewData);
+		} else if (value != null) {
+			s = toStringMapper.apply(value);
+		}
+		if (s != null) {
+			sb.append(renderer.render(s));
+		}
 	}
 }

@@ -76,6 +76,15 @@ public @interface Resolution {
 	}
 
 	public interface MergeStrategy<A extends Annotation> {
+		// will be annotation values so guaranteed non-null
+		private static boolean areEqual(Object o1, Object o2) {
+			if (o1.getClass().isArray()) {
+				return Arrays.equals((Object[]) o1, (Object[]) o2);
+			} else {
+				return o1.equals(o2);
+			}
+		}
+
 		public static <O, V> V mergeValues(O lessSpecific, O moreSpecific,
 				O defaultsInstance, Function<O, V> mapping) {
 			V defaultValue = mapping.apply(defaultsInstance);
@@ -108,15 +117,6 @@ public @interface Resolution {
 							moreSpecificArray.length, lessSpecificArray.length);
 					return (V) result;
 				}
-			}
-		}
-
-		// will be annotation values so guaranteed non-null
-		private static boolean areEqual(Object o1, Object o2) {
-			if (o1.getClass().isArray()) {
-				return Arrays.equals((Object[]) o1, (Object[]) o2);
-			} else {
-				return o1.equals(o2);
 			}
 		}
 

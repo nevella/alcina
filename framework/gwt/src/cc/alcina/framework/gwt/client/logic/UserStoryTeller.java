@@ -50,6 +50,8 @@ public abstract class UserStoryTeller
 		super();
 	}
 
+	protected abstract IUserStory createUserStory();
+
 	public void ensureListening() {
 		if (!listening) {
 			listening = true;
@@ -62,23 +64,6 @@ public abstract class UserStoryTeller
 		}
 	}
 
-	public IUserStory getStory() {
-		return this.story;
-	}
-
-	public native void registerWithJs();
-
-	public void tell(String trigger) {
-		ensureListening();
-		ensurePublishing(trigger);
-	}
-
-	@Override
-	public void topicPublished(ClientLogRecord message) {
-		persistLocal();
-		seriesTimer.eventOccurred(message);
-	}
-
 	private void ensurePublishing(String trigger) {
 		if (!publishing) {
 			publishing = true;
@@ -88,10 +73,12 @@ public abstract class UserStoryTeller
 		}
 	}
 
-	protected abstract IUserStory createUserStory();
-
 	protected int getMaxCumulativeCharCount() {
 		return 300000;
+	}
+
+	public IUserStory getStory() {
+		return this.story;
 	}
 
 	protected void persistLocal() {
@@ -115,5 +102,18 @@ public abstract class UserStoryTeller
 		story.obfuscateClientEvents();
 		persistRemote();
 		Ax.out("persisted user story");
+	}
+
+	public native void registerWithJs();
+
+	public void tell(String trigger) {
+		ensureListening();
+		ensurePublishing(trigger);
+	}
+
+	@Override
+	public void topicPublished(ClientLogRecord message) {
+		persistLocal();
+		seriesTimer.eventOccurred(message);
 	}
 }

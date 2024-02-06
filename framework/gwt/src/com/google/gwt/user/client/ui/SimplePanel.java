@@ -35,17 +35,6 @@ public class SimplePanel extends Panel implements HasOneWidget {
 	}
 
 	/**
-	 * Create a panel with the specified child widget.
-	 *
-	 * @param child
-	 *            the child to add to the panel
-	 */
-	public SimplePanel(Widget child) {
-		this();
-		setWidget(child);
-	}
-
-	/**
 	 * Creates an empty panel that uses the specified browser element for its
 	 * contents.
 	 *
@@ -54,6 +43,17 @@ public class SimplePanel extends Panel implements HasOneWidget {
 	 */
 	protected SimplePanel(Element elem) {
 		setElement(elem);
+	}
+
+	/**
+	 * Create a panel with the specified child widget.
+	 *
+	 * @param child
+	 *            the child to add to the panel
+	 */
+	public SimplePanel(Widget child) {
+		this();
+		setWidget(child);
 	}
 
 	/**
@@ -70,6 +70,21 @@ public class SimplePanel extends Panel implements HasOneWidget {
 					"SimplePanel can only contain one child widget");
 		}
 		setWidget(w);
+	}
+
+	/**
+	 * Override this method to specify that an element other than the root
+	 * element be the container for the panel's child widget. This can be useful
+	 * when you want to create a simple panel that decorates its contents.
+	 *
+	 * Note that this method continues to return the
+	 * {@link com.google.gwt.user.client.Element} class defined in the
+	 * <code>User</code> module to maintain backwards compatibility.
+	 *
+	 * @return the element to be used as the panel's container
+	 */
+	protected Element getContainerElement() {
+		return getElement();
 	}
 
 	/**
@@ -158,20 +173,5 @@ public class SimplePanel extends Panel implements HasOneWidget {
 			DOM.appendChild(getContainerElement(), widget.getElement());
 			adopt(w);
 		}
-	}
-
-	/**
-	 * Override this method to specify that an element other than the root
-	 * element be the container for the panel's child widget. This can be useful
-	 * when you want to create a simple panel that decorates its contents.
-	 *
-	 * Note that this method continues to return the
-	 * {@link com.google.gwt.user.client.Element} class defined in the
-	 * <code>User</code> module to maintain backwards compatibility.
-	 *
-	 * @return the element to be used as the panel's container
-	 */
-	protected Element getContainerElement() {
-		return getElement();
 	}
 }

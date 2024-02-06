@@ -45,6 +45,10 @@ public class SystemLogHandler extends Handler {
 		// No action needed
 	}
 
+	private boolean isSupported() {
+		return !GWT.isScript();
+	}
+
 	@Override
 	public void publish(LogRecord record) {
 		if (!isSupported() || !isLoggable(record)) {
@@ -57,9 +61,5 @@ public class SystemLogHandler extends Handler {
 		} else {
 			System.err.println(msg);
 		}
-	}
-
-	private boolean isSupported() {
-		return !GWT.isScript();
 	}
 }

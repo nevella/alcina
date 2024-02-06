@@ -55,9 +55,32 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		executeSql(Ax.format("Delete from %s", tableName), callback);
 	}
 
+	private void close(Statement stmt) {
+		try {
+			stmt.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	public void drop(final AsyncCallback<Void> callback) {
 		executeSql(Ax.format("DROP TABLE %s", tableName), callback);
+	}
+
+	private void ensureTable() {
+		try {
+			Statement stmt = conn.createStatement();
+			stmt.executeQuery(Ax.format("select min(id) from %s", tableName));
+			postInitCallback.onSuccess(null);
+		} catch (Exception e) {
+			String createSql = "CREATE TABLE  " + "%s"
+					+ " (id INT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1,\n"
+					+ " INCREMENT BY 1) ,\n"
+					+ " key_ varchar(255), value_ CLOB)  ";
+			String sql = Ax.format(createSql, tableName);
+			executeSql(sql, postInitCallback);
+		}
 	}
 
 	public void executeSql(final String sql, final AsyncCallback callback) {
@@ -110,6 +133,27 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		return this.tableName;
 	}
 
+	protected String getValueClob(ResultSet rs)
+			throws SQLException, IOException {
+		String value = null;
+		Clob clob = rs.getClob("value_");
+		if (clob != null) {
+			Reader reader = clob.getCharacterStream();
+			char[] cbuf = new char[8192];
+			StringBuilder sb = new StringBuilder((int) clob.length());
+			while (true) {
+				int read = reader.read(cbuf);
+				if (read == -1) {
+					break;
+				}
+				sb.append(new String(cbuf, 0, read));
+			}
+			reader.close();
+			value = sb.toString();
+		}
+		return value;
+	}
+
 	@Override
 	public void put(int id, String value, AsyncCallback<Void> idCallback) {
 		new PutHandler().put(StringMap.property(null, value),
@@ -147,50 +191,6 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 			AsyncCallback<Void> completedCallback) {
 		new RemoveRangeHandler().removeRange(range.i1, range.i2,
 				completedCallback);
-	}
-
-	private void close(Statement stmt) {
-		try {
-			stmt.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void ensureTable() {
-		try {
-			Statement stmt = conn.createStatement();
-			stmt.executeQuery(Ax.format("select min(id) from %s", tableName));
-			postInitCallback.onSuccess(null);
-		} catch (Exception e) {
-			String createSql = "CREATE TABLE  " + "%s"
-					+ " (id INT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1,\n"
-					+ " INCREMENT BY 1) ,\n"
-					+ " key_ varchar(255), value_ CLOB)  ";
-			String sql = Ax.format(createSql, tableName);
-			executeSql(sql, postInitCallback);
-		}
-	}
-
-	protected String getValueClob(ResultSet rs)
-			throws SQLException, IOException {
-		String value = null;
-		Clob clob = rs.getClob("value_");
-		if (clob != null) {
-			Reader reader = clob.getCharacterStream();
-			char[] cbuf = new char[8192];
-			StringBuilder sb = new StringBuilder((int) clob.length());
-			while (true) {
-				int read = reader.read(cbuf);
-				if (read == -1) {
-					break;
-				}
-				sb.append(new String(cbuf, 0, read));
-			}
-			reader.close();
-			value = sb.toString();
-		}
-		return value;
 	}
 
 	class GetHandler {

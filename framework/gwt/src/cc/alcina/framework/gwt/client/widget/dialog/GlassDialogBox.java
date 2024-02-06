@@ -75,6 +75,16 @@ public class GlassDialogBox extends DialogBox {
 		super.center();
 	}
 
+	private void forgetScrollback() {
+		if (handlerRegistration != null) {
+			handlerRegistration.removeHandler();
+			handlerRegistration = null;
+		}
+		if (scrollBackTimer != null) {
+			scrollBackTimer.cancel();
+		}
+	};
+
 	public GlassDisplayer getGlass() {
 		return this.glass;
 	};
@@ -87,10 +97,29 @@ public class GlassDialogBox extends DialogBox {
 		super.hide();
 		forgetScrollback();
 		glass.show(false);
-	};
+	}
 
 	public boolean isGlassHidden() {
 		return this.glassHidden;
+	}
+
+	protected void onDetach() {
+		super.onDetach();
+		forgetScrollback();
+	}
+
+	@Override
+	protected void onPreviewNativeEvent(NativePreviewEvent event) {
+		if (event.isFirstHandler()) {
+			Event as = Event.as(event.getNativeEvent());
+			int typeInt = as.getTypeInt();
+			if ((typeInt & Event.KEYEVENTS) > 0) {
+				if (as.getCtrlKey() || as.getMetaKey() || as.getAltKey()) {
+					event.consume();
+				}
+			}
+		}
+		super.onPreviewNativeEvent(event);
 	}
 
 	public void setGlassHidden(boolean glassHidden) {
@@ -112,34 +141,5 @@ public class GlassDialogBox extends DialogBox {
 					.addWindowScrollHandler(scrollHandler);
 		}
 		super.show();
-	}
-
-	private void forgetScrollback() {
-		if (handlerRegistration != null) {
-			handlerRegistration.removeHandler();
-			handlerRegistration = null;
-		}
-		if (scrollBackTimer != null) {
-			scrollBackTimer.cancel();
-		}
-	}
-
-	protected void onDetach() {
-		super.onDetach();
-		forgetScrollback();
-	}
-
-	@Override
-	protected void onPreviewNativeEvent(NativePreviewEvent event) {
-		if (event.isFirstHandler()) {
-			Event as = Event.as(event.getNativeEvent());
-			int typeInt = as.getTypeInt();
-			if ((typeInt & Event.KEYEVENTS) > 0) {
-				if (as.getCtrlKey() || as.getMetaKey() || as.getAltKey()) {
-					event.consume();
-				}
-			}
-		}
-		super.onPreviewNativeEvent(event);
 	}
 }

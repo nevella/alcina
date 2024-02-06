@@ -77,6 +77,31 @@ public abstract class Entity<T extends Entity> extends Bindable
 	@GwtTransient
 	volatile long localId;
 
+	protected int _compareTo(Entity o) {
+		o = Domain.resolve(o);
+		String s1 = comparisonString();
+		String s2 = o.comparisonString();
+		if (s1 != null && s2 != null) {
+			int i = s1.compareTo(s2);
+			if (i != 0) {
+				return i;
+			}
+		} else {
+			if (s1 != null) {
+				return 1;
+			}
+			if (s2 != null) {
+				return -1;
+			}
+		}
+		return CommonUtils.compareLongs(getId(), o.getId());
+	}
+
+	protected String comparisonString() {
+		throw new RuntimeException(
+				"no display name available, and using comparator");
+	}
+
 	public void delete() {
 		Domain.delete(domainIdentity());
 	}
@@ -287,31 +312,6 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return Ax.format("Unable to return locator - class %s - id %s",
 					getClass().getSimpleName(), id);
 		}
-	}
-
-	protected int _compareTo(Entity o) {
-		o = Domain.resolve(o);
-		String s1 = comparisonString();
-		String s2 = o.comparisonString();
-		if (s1 != null && s2 != null) {
-			int i = s1.compareTo(s2);
-			if (i != 0) {
-				return i;
-			}
-		} else {
-			if (s1 != null) {
-				return 1;
-			}
-			if (s2 != null) {
-				return -1;
-			}
-		}
-		return CommonUtils.compareLongs(getId(), o.getId());
-	}
-
-	protected String comparisonString() {
-		throw new RuntimeException(
-				"no display name available, and using comparator");
 	}
 
 	public class DomainSupport {

@@ -80,6 +80,12 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 		return createEditor();
 	}
 
+	HandlerManager ensureHandlers() {
+		return handlerManager == null
+				? handlerManager = new HandlerManager(this)
+				: handlerManager;
+	}
+
 	@Override
 	public void fireEvent(GwtEvent<?> event) {
 		if (handlerManager != null) {
@@ -152,15 +158,11 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 		return this;
 	}
 
-	HandlerManager ensureHandlers() {
-		return handlerManager == null
-				? handlerManager = new HandlerManager(this)
-				: handlerManager;
-	}
-
 	@Registration.NonGenericSubtypes(HasSearchables.class)
 	public static abstract class HasSearchables<B extends Bindable> {
 		private Map<Class<? extends SearchCriterion>, FlatSearchable> searchables;
+
+		protected abstract List<FlatSearchable> createSearchables();
 
 		public String criterionDisplayName(SearchCriterion criterion) {
 			if (criterion instanceof TruncatedObjectCriterion) {
@@ -176,12 +178,6 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 			return criterion.provideValueAsRenderableText();
 		}
 
-		public List<FlatSearchable> getSearchables() {
-			ensureSearchables();
-			return this.searchables.values().stream()
-					.collect(Collectors.toList());
-		}
-
 		private void ensureSearchables() {
 			if (searchables == null) {
 				searchables = createSearchables().stream()
@@ -190,13 +186,17 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 			}
 		}
 
+		public List<FlatSearchable> getSearchables() {
+			ensureSearchables();
+			return this.searchables.values().stream()
+					.collect(Collectors.toList());
+		}
+
 		private Optional<FlatSearchable>
 				searchableForCriterion(SearchCriterion criterion) {
 			ensureSearchables();
 			return Optional.ofNullable(searchables.get(criterion.getClass()));
 		}
-
-		protected abstract List<FlatSearchable> createSearchables();
 
 		public static class Bindables extends HasSearchables<Bindable> {
 			@Override

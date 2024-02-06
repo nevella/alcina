@@ -37,6 +37,9 @@ public class AlcinaHistoryItem {
 
 	protected Map<String, String> params = new HashMap<String, String>();
 
+	protected void addToToken(Map<String, Object> params) {
+	}
+
 	public <T extends AlcinaHistoryItem> T copy() {
 		AlcinaHistoryItem item = AlcinaHistory.get().createHistoryInfo();
 		item.params.putAll(params);
@@ -88,6 +91,16 @@ public class AlcinaHistoryItem {
 
 	public String getLocation() {
 		return getStringParameter(LOCATION_KEY);
+	}
+
+	protected String getLocationPart(int idx) {
+		List<String> parts = getLocationParts();
+		return idx < parts.size() ? parts.get(idx) : null;
+	}
+
+	private List<String> getLocationParts() {
+		String[] locs = CommonUtils.nullToEmpty(getLocation()).split("\\*");
+		return new ArrayList<String>(Arrays.asList(locs));
 	}
 
 	public long getLongParameter(String key) {
@@ -165,6 +178,22 @@ public class AlcinaHistoryItem {
 
 	public void setLocation(String location) {
 		setParameter(LOCATION_KEY, location);
+	}
+
+	protected void setLocationPart(int idx, String name) {
+		List<String> parts = getLocationParts();
+		for (int i = 0; i <= idx; i++) {
+			if (i == parts.size()) {
+				parts.add(i, "");// clearer semantics
+			}
+		}
+		parts.set(idx, name);
+		for (int i = parts.size() - 1; i >= 0; i--) {
+			if (CommonUtils.isNullOrEmpty(parts.get(i))) {
+				parts.remove(i);
+			}
+		}
+		setLocation(CommonUtils.join(parts, "*"));
 	}
 
 	public void setLocationParts(String... parts) {
@@ -271,34 +300,5 @@ public class AlcinaHistoryItem {
 
 	public String toTokenString() {
 		return AlcinaHistory.toHash(params);
-	}
-
-	private List<String> getLocationParts() {
-		String[] locs = CommonUtils.nullToEmpty(getLocation()).split("\\*");
-		return new ArrayList<String>(Arrays.asList(locs));
-	}
-
-	protected void addToToken(Map<String, Object> params) {
-	}
-
-	protected String getLocationPart(int idx) {
-		List<String> parts = getLocationParts();
-		return idx < parts.size() ? parts.get(idx) : null;
-	}
-
-	protected void setLocationPart(int idx, String name) {
-		List<String> parts = getLocationParts();
-		for (int i = 0; i <= idx; i++) {
-			if (i == parts.size()) {
-				parts.add(i, "");// clearer semantics
-			}
-		}
-		parts.set(idx, name);
-		for (int i = parts.size() - 1; i >= 0; i--) {
-			if (CommonUtils.isNullOrEmpty(parts.get(i))) {
-				parts.remove(i);
-			}
-		}
-		setLocation(CommonUtils.join(parts, "*"));
 	}
 }

@@ -122,6 +122,31 @@ public abstract class KnownStatusRuleHandler
 
 	public static class KnownStatusRuleHandler_Run_By
 			extends KnownStatusRuleHandler {
+		private KnownTagAlcina checkDateTime(KnownStatusRule rule,
+				Date lastOkDate) {
+			KnownTagAlcina status = KnownTagAlcina.Status_Ok;
+			LocalDateTime now = LocalDateTime.now();
+			LocalDateTime lastOkLt = LocalDateTime
+					.ofInstant(lastOkDate.toInstant(), ZoneId.systemDefault());
+			long daysPassed = ChronoUnit.DAYS.between(lastOkLt, now);
+			// Warn if not run by HOUR_OF_DAY(rule.warnValue()) the day after
+			// last run
+			if (daysPassed == 1 && now.getHour() >= rule.warnValue()) {
+				status = KnownTagAlcina.Status_Warn;
+			}
+			// Err if not run by HOUR_OF_DAY(rule.errorValue()) the day after
+			// last run
+			if (daysPassed == 1 && now.getHour() >= rule.errorValue()) {
+				status = KnownTagAlcina.Status_Error;
+			}
+			// Err if not run on the same day and the expected run time has
+			// passed
+			if (daysPassed > 1) {
+				status = KnownTagAlcina.Status_Error;
+			}
+			return status;
+		}
+
 		@Override
 		public KnownStatusRuleName getRuleName() {
 			return KnownStatusRuleName.Run_By;
@@ -158,31 +183,6 @@ public abstract class KnownStatusRuleHandler
 			if (status != null) {
 				node.getTags().add(status);
 			}
-		}
-
-		private KnownTagAlcina checkDateTime(KnownStatusRule rule,
-				Date lastOkDate) {
-			KnownTagAlcina status = KnownTagAlcina.Status_Ok;
-			LocalDateTime now = LocalDateTime.now();
-			LocalDateTime lastOkLt = LocalDateTime
-					.ofInstant(lastOkDate.toInstant(), ZoneId.systemDefault());
-			long daysPassed = ChronoUnit.DAYS.between(lastOkLt, now);
-			// Warn if not run by HOUR_OF_DAY(rule.warnValue()) the day after
-			// last run
-			if (daysPassed == 1 && now.getHour() >= rule.warnValue()) {
-				status = KnownTagAlcina.Status_Warn;
-			}
-			// Err if not run by HOUR_OF_DAY(rule.errorValue()) the day after
-			// last run
-			if (daysPassed == 1 && now.getHour() >= rule.errorValue()) {
-				status = KnownTagAlcina.Status_Error;
-			}
-			// Err if not run on the same day and the expected run time has
-			// passed
-			if (daysPassed > 1) {
-				status = KnownTagAlcina.Status_Error;
-			}
-			return status;
 		}
 
 		private KnownTagAlcina testRule(OpStatus opStatus, KnownStatusRule rule,

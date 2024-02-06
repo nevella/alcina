@@ -8,15 +8,15 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 		implements MvccObject<TransactionalTrieEntry> {
 	MvccObjectVersions<TransactionalTrieEntry> __mvccObjectVersions__;
 
+	// for copying
+	TransactionalTrieEntry() {
+	}
+
 	protected TransactionalTrieEntry(K key, V value, int bitIndex) {
 		super(key, value, bitIndex);
 		if (!Transaction.current().isBaseTransaction()) {
 			Transactions.resolve(this, true);
 		}
-	}
-
-	// for copying
-	TransactionalTrieEntry() {
 	}
 
 	@Override
@@ -52,6 +52,20 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	}
 
 	@Override
+	protected int getBitIndex() {
+		if (__mvccObjectVersions__ == null) {
+			return super.getBitIndex();
+		}
+		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
+				false);
+		if (__instance__ == this) {
+			return super.getBitIndex();
+		} else {
+			return __instance__.getBitIndex();
+		}
+	}
+
+	@Override
 	public K getKey() {
 		if (__mvccObjectVersions__ == null) {
 			return super.getKey();
@@ -62,6 +76,62 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.getKey();
 		} else {
 			return __instance__.getKey();
+		}
+	}
+
+	@Override
+	protected TrieEntry<K, V> getLeft() {
+		if (__mvccObjectVersions__ == null) {
+			return super.getLeft();
+		}
+		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
+				false);
+		if (__instance__ == this) {
+			return super.getLeft();
+		} else {
+			return __instance__.getLeft();
+		}
+	}
+
+	@Override
+	protected TrieEntry<K, V> getParent() {
+		if (__mvccObjectVersions__ == null) {
+			return super.getParent();
+		}
+		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
+				false);
+		if (__instance__ == this) {
+			return super.getParent();
+		} else {
+			return __instance__.getParent();
+		}
+	}
+
+	@Override
+	protected TrieEntry<K, V> getPredecessor() {
+		if (__mvccObjectVersions__ == null) {
+			return super.getPredecessor();
+		}
+		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
+				false);
+		if (__instance__ == this) {
+			return super.getPredecessor();
+		} else {
+			return __instance__.getPredecessor();
+		}
+	}
+
+	@Override
+	protected TrieEntry<K, V> getRight() {
+		if (__mvccObjectVersions__ == null) {
+			return super.getRight();
+		}
+		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
+				false);
+		if (__instance__ == this) {
+			return super.getRight();
+		} else {
+			return __instance__.getRight();
 		}
 	}
 
@@ -136,112 +206,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	}
 
 	@Override
-	public V setKeyValue(K key, V value) {
-		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
-				true);
-		if (__instance__ == this) {
-			return super.setKeyValue(key, value);
-		} else {
-			return __instance__.setKeyValue(key, value);
-		}
-	}
-
-	@Override
-	public V setValue(V value) {
-		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
-				true);
-		if (__instance__ == this) {
-			return super.setValue(value);
-		} else {
-			return __instance__.setValue(value);
-		}
-	}
-
-	@Override
-	public String toString() {
-		if (__mvccObjectVersions__ == null) {
-			return super.toString();
-		}
-		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
-				false);
-		if (__instance__ == this) {
-			return super.toString();
-		} else {
-			return __instance__.toString();
-		}
-	}
-
-	@Override
-	protected int getBitIndex() {
-		if (__mvccObjectVersions__ == null) {
-			return super.getBitIndex();
-		}
-		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
-				false);
-		if (__instance__ == this) {
-			return super.getBitIndex();
-		} else {
-			return __instance__.getBitIndex();
-		}
-	}
-
-	@Override
-	protected TrieEntry<K, V> getLeft() {
-		if (__mvccObjectVersions__ == null) {
-			return super.getLeft();
-		}
-		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
-				false);
-		if (__instance__ == this) {
-			return super.getLeft();
-		} else {
-			return __instance__.getLeft();
-		}
-	}
-
-	@Override
-	protected TrieEntry<K, V> getParent() {
-		if (__mvccObjectVersions__ == null) {
-			return super.getParent();
-		}
-		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
-				false);
-		if (__instance__ == this) {
-			return super.getParent();
-		} else {
-			return __instance__.getParent();
-		}
-	}
-
-	@Override
-	protected TrieEntry<K, V> getPredecessor() {
-		if (__mvccObjectVersions__ == null) {
-			return super.getPredecessor();
-		}
-		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
-				false);
-		if (__instance__ == this) {
-			return super.getPredecessor();
-		} else {
-			return __instance__.getPredecessor();
-		}
-	}
-
-	@Override
-	protected TrieEntry<K, V> getRight() {
-		if (__mvccObjectVersions__ == null) {
-			return super.getRight();
-		}
-		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
-				false);
-		if (__instance__ == this) {
-			return super.getRight();
-		} else {
-			return __instance__.getRight();
-		}
-	}
-
-	@Override
 	protected void setBitIndex(int bitIndex) {
 		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
 				true);
@@ -264,6 +228,17 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 		} else {
 			__instance__.setKey(key);
 			return;
+		}
+	}
+
+	@Override
+	public V setKeyValue(K key, V value) {
+		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
+				true);
+		if (__instance__ == this) {
+			return super.setKeyValue(key, value);
+		} else {
+			return __instance__.setKeyValue(key, value);
 		}
 	}
 
@@ -316,6 +291,31 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 		} else {
 			__instance__.setRight(right);
 			return;
+		}
+	}
+
+	@Override
+	public V setValue(V value) {
+		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
+				true);
+		if (__instance__ == this) {
+			return super.setValue(value);
+		} else {
+			return __instance__.setValue(value);
+		}
+	}
+
+	@Override
+	public String toString() {
+		if (__mvccObjectVersions__ == null) {
+			return super.toString();
+		}
+		TransactionalTrieEntry<K, V> __instance__ = Transactions.resolve(this,
+				false);
+		if (__instance__ == this) {
+			return super.toString();
+		} else {
+			return __instance__.toString();
 		}
 	}
 }

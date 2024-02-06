@@ -28,12 +28,12 @@ public class TourState {
 		return stepIdx;
 	}
 
-	public List<? extends Tour.Step> getSteps() {
-		return tour.getSteps();
-	}
-
 	String getName() {
 		return tour.getName();
+	}
+
+	public List<? extends Tour.Step> getSteps() {
+		return tour.getSteps();
 	}
 
 	void gotoStep(int idx) {

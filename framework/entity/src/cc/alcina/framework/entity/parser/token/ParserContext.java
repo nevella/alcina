@@ -151,6 +151,10 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		return new ParserContextChecker();
 	}
 
+	protected boolean checkLongBlankString() {
+		return true;
+	}
+
 	public void clearNodes() {
 		allTexts.clear();
 		nonEmphasisTexts.clear();
@@ -565,10 +569,6 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 				content);
 	}
 
-	protected boolean checkLongBlankString() {
-		return true;
-	}
-
 	public class ParserContextChecker {
 		private String[] tags;
 
@@ -643,6 +643,17 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			return true;
 		}
 
+		private T lastTokenWithCategory() {
+			for (int idx = matched.size() - 1; idx >= 0; idx--) {
+				S slice = matched.get(idx);
+				T token = slice.getToken();
+				if (token.getCategory() != null) {
+					return token;
+				}
+			}
+			return null;
+		}
+
 		public ParserContextChecker tags(String... tags) {
 			this.tags = tags;
 			return this;
@@ -657,16 +668,47 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			this.tokens = tokens;
 			return this;
 		}
+	}
 
-		private T lastTokenWithCategory() {
-			for (int idx = matched.size() - 1; idx >= 0; idx--) {
-				S slice = matched.get(idx);
-				T token = slice.getToken();
-				if (token.getCategory() != null) {
-					return token;
+	private class ReversedNonIgnoreableIterator implements Iterator<T> {
+		int cursor = matched.size() - 1;
+
+		T value = null;
+
+		private ParserContext context;
+
+		private boolean finished;
+
+		public ReversedNonIgnoreableIterator(ParserContext context) {
+			this.context = context;
+			peek();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return !finished;
+		}
+
+		@Override
+		public T next() {
+			if (finished) {
+				throw new NoSuchElementException();
+			}
+			T value = this.value;
+			peek();
+			return value;
+		}
+
+		private void peek() {
+			while (cursor >= 0) {
+				value = matched.get(cursor--).getToken();
+				if (value.isIgnoreable(context)) {
+					continue;
+				} else {
+					return;
 				}
 			}
-			return null;
+			finished = true;
 		}
 	}
 
@@ -713,48 +755,6 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			return String.format("(%s) (%s%s) %s", offset,
 					(emphasised ? "emph" : "not-emph"),
 					(superscript ? ":super" : ""), textContent);
-		}
-	}
-
-	private class ReversedNonIgnoreableIterator implements Iterator<T> {
-		int cursor = matched.size() - 1;
-
-		T value = null;
-
-		private ParserContext context;
-
-		private boolean finished;
-
-		public ReversedNonIgnoreableIterator(ParserContext context) {
-			this.context = context;
-			peek();
-		}
-
-		@Override
-		public boolean hasNext() {
-			return !finished;
-		}
-
-		@Override
-		public T next() {
-			if (finished) {
-				throw new NoSuchElementException();
-			}
-			T value = this.value;
-			peek();
-			return value;
-		}
-
-		private void peek() {
-			while (cursor >= 0) {
-				value = matched.get(cursor--).getToken();
-				if (value.isIgnoreable(context)) {
-					continue;
-				} else {
-					return;
-				}
-			}
-			finished = true;
 		}
 	}
 }

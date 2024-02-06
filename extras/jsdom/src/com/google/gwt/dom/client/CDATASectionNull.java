@@ -7,6 +7,10 @@ public class CDATASectionNull extends NodeLocalNull
 	CDATASectionNull() {
 	}
 
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		throw new UnsupportedOperationException();
+	}
+
 	@Override
 	public Node cloneNode(boolean deep) {
 		throw new UnsupportedOperationException();
@@ -69,10 +73,6 @@ public class CDATASectionNull extends NodeLocalNull
 
 	@Override
 	public Text splitText(int offset) {
-		throw new UnsupportedOperationException();
-	}
-
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
 		throw new UnsupportedOperationException();
 	}
 }

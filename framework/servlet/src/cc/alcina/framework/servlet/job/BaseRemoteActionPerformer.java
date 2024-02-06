@@ -15,18 +15,6 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 
 	protected transient Logger logger = LoggerFactory.getLogger(getClass());
 
-	public synchronized void updateJob(String message) {
-		updateJob(message, 1);
-	}
-
-	public void updateJob(String message, int completedDelta) {
-		if (JobContext.has()) {
-			JobContext.get().updateJob(message, completedDelta);
-		} else {
-			logger.info("Update job: {} {}", message, completedDelta);
-		}
-	}
-
 	protected void finishJob() {
 	}
 
@@ -55,6 +43,18 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 			JobContext.setResultMessage(message);
 		} else {
 			logger.info("Job OK: {} {}", message);
+		}
+	}
+
+	public synchronized void updateJob(String message) {
+		updateJob(message, 1);
+	}
+
+	public void updateJob(String message, int completedDelta) {
+		if (JobContext.has()) {
+			JobContext.get().updateJob(message, completedDelta);
+		} else {
+			logger.info("Update job: {} {}", message, completedDelta);
 		}
 	}
 }

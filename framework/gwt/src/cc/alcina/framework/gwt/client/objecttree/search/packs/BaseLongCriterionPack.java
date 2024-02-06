@@ -17,8 +17,6 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 public class BaseLongCriterionPack {
 	public interface BaseLongCriterionHandler<SC extends LongCriterion, T>
 			extends DomainCriterionFilter<SC> {
-		public boolean test(T t, Long value);
-
 		@Override
 		default DomainFilter getFilter(SC sc) {
 			Long value = sc.getValue();
@@ -33,6 +31,8 @@ public class BaseLongCriterionPack {
 			}).invertIf(sc
 					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
 		}
+
+		public boolean test(T t, Long value);
 	}
 
 	public static abstract class BaseLongCriterionSearchable

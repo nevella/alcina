@@ -9,6 +9,11 @@ public class KnownPlace extends BasePlace implements OmniPlace {
 
 	public KnownNavigationType navigationType = KnownNavigationType.List;
 
+	@Override
+	public String getOmniString() {
+		return "Show knowns (cluster facts)";
+	}
+
 	public enum KnownNavigationType {
 		List, Tree
 	}
@@ -37,10 +42,5 @@ public class KnownPlace extends BasePlace implements OmniPlace {
 				addTokenPart(place.navigationType);
 			}
 		}
-	}
-
-	@Override
-	public String getOmniString() {
-		return "Show knowns (cluster facts)";
 	}
 }

@@ -21,6 +21,8 @@ public abstract class TypedModelActivity<P extends Place, VM extends ViewModel>
 		super(place);
 	}
 
+	protected abstract Class<VM> getModelClass();
+
 	@Override
 	public void onStop() {
 		model.setActive(false);
@@ -35,8 +37,6 @@ public abstract class TypedModelActivity<P extends Place, VM extends ViewModel>
 		updateModel();
 		panel.setWidget(view);
 	}
-
-	protected abstract Class<VM> getModelClass();
 
 	protected void updateModel() {
 		model.setActive(true);

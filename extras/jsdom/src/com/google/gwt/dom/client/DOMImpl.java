@@ -37,96 +37,6 @@ abstract class DOMImpl {
     return val | 0;
 	}-*/;
 
-	private Element ensureDocumentScrollingElement(DocumentJso document) {
-		// In some case (e.g SVG document and old Webkit browsers),
-		// getDocumentScrollingElement can
-		// return null. In this case, default to documentElement.
-		Element scrollingElement = getDocumentScrollingElement(document);
-		return scrollingElement != null ? scrollingElement
-				: document.getDocumentElement();
-	}
-
-	private native JavaScriptObject eventGetNativeTarget(NativeEventJso event) /*-{
-    return event.currentTarget;
-	}-*/;
-
-	private native double eventGetSubPixelClientX(NativeEventJso evt) /*-{
-    return evt.clientX || 0;
-	}-*/;
-
-	private native double eventGetSubPixelClientY(NativeEventJso evt) /*-{
-    return evt.clientY || 0;
-	}-*/;
-
-	private native double eventGetSubPixelScreenX(NativeEventJso evt) /*-{
-    return evt.screenX || 0;
-	}-*/;
-
-	private native double eventGetSubPixelScreenY(NativeEventJso evt) /*-{
-    return evt.screenY || 0;
-	}-*/;
-
-	private native double getSubPixelAbsoluteLeft(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    var left = 0;
-    var curr = elem;
-    // This intentionally excludes body which has a null offsetParent.
-    while (curr.offsetParent) {
-      left -= curr.scrollLeft;
-      curr = curr.parentNode;
-    }
-    while (elem) {
-      left += elem.offsetLeft;
-      elem = elem.offsetParent;
-    }
-    return left;
-	}-*/;
-
-	private native double getSubPixelAbsoluteTop(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    var top = 0;
-    var curr = elem;
-    // This intentionally excludes body which has a null offsetParent.
-    while (curr.offsetParent) {
-      top -= curr.scrollTop;
-      curr = curr.parentNode;
-    }
-    while (elem) {
-      top += elem.offsetTop;
-      elem = elem.offsetParent;
-    }
-    return top;
-	}-*/;
-
-	private native double getSubPixelScrollLeft(Element multiplex) /*-{
-    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
-    return elem.scrollLeft || 0;
-	}-*/;
-
-	private native double touchGetSubPixelClientX(Touch touch) /*-{
-    return touch.clientX || 0;
-	}-*/;
-
-	private native double touchGetSubPixelClientY(Touch touch) /*-{
-    return touch.clientY || 0;
-	}-*/;
-
-	private native double touchGetSubPixelPageX(Touch touch) /*-{
-    return touch.pageX || 0;
-	}-*/;
-
-	private native double touchGetSubPixelPageY(Touch touch) /*-{
-    return touch.pageY || 0;
-	}-*/;
-
-	private native double touchGetSubPixelScreenX(Touch touch) /*-{
-    return touch.screenX || 0;
-	}-*/;
-
-	private native double touchGetSubPixelScreenY(Touch touch) /*-{
-    return touch.screenY || 0;
-	}-*/;
-
 	protected native void buttonClick(ElementJso button) /*-{
     button.click();
 	}-*/;
@@ -206,6 +116,15 @@ abstract class DOMImpl {
 	protected abstract void dispatchEvent(ElementJso target,
 			NativeEventJso evt);
 
+	private Element ensureDocumentScrollingElement(DocumentJso document) {
+		// In some case (e.g SVG document and old Webkit browsers),
+		// getDocumentScrollingElement can
+		// return null. In this case, default to documentElement.
+		Element scrollingElement = getDocumentScrollingElement(document);
+		return scrollingElement != null ? scrollingElement
+				: document.getDocumentElement();
+	}
+
 	protected native boolean eventGetAltKey(NativeEventJso evt) /*-{
     return !!evt.altKey;
 	}-*/;
@@ -243,6 +162,10 @@ abstract class DOMImpl {
 
 	protected abstract int eventGetMouseWheelVelocityY(NativeEventJso evt);
 
+	private native JavaScriptObject eventGetNativeTarget(NativeEventJso event) /*-{
+    return event.currentTarget;
+	}-*/;
+
 	protected abstract EventTarget
 			eventGetRelatedTarget(NativeEventJso nativeEvent);
 
@@ -264,6 +187,22 @@ abstract class DOMImpl {
 
 	protected native boolean eventGetShiftKey(NativeEventJso evt) /*-{
     return !!evt.shiftKey;
+	}-*/;
+
+	private native double eventGetSubPixelClientX(NativeEventJso evt) /*-{
+    return evt.clientX || 0;
+	}-*/;
+
+	private native double eventGetSubPixelClientY(NativeEventJso evt) /*-{
+    return evt.clientY || 0;
+	}-*/;
+
+	private native double eventGetSubPixelScreenX(NativeEventJso evt) /*-{
+    return evt.screenX || 0;
+	}-*/;
+
+	private native double eventGetSubPixelScreenY(NativeEventJso evt) /*-{
+    return evt.screenY || 0;
 	}-*/;
 
 	protected abstract EventTarget eventGetTarget(NativeEventJso evt);
@@ -307,6 +246,10 @@ abstract class DOMImpl {
 	protected native JsArray<Touch> getChangedTouches(NativeEventJso evt) /*-{
     return evt.changedTouches;
 	}-*/;
+
+	Element getDocumentScrollingElement(DocumentJso doc) {
+		return doc.getViewportElement();
+	}
 
 	protected native ElementJso getFirstChildElement(ElementJso elem) /*-{
     var child = elem.firstChild;
@@ -383,6 +326,43 @@ abstract class DOMImpl {
 
 	protected native String getStyleProperty(StyleRemote style, String name) /*-{
     return style[name];
+	}-*/;
+
+	private native double getSubPixelAbsoluteLeft(Element multiplex) /*-{
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    var left = 0;
+    var curr = elem;
+    // This intentionally excludes body which has a null offsetParent.
+    while (curr.offsetParent) {
+      left -= curr.scrollLeft;
+      curr = curr.parentNode;
+    }
+    while (elem) {
+      left += elem.offsetLeft;
+      elem = elem.offsetParent;
+    }
+    return left;
+	}-*/;
+
+	private native double getSubPixelAbsoluteTop(Element multiplex) /*-{
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    var top = 0;
+    var curr = elem;
+    // This intentionally excludes body which has a null offsetParent.
+    while (curr.offsetParent) {
+      top -= curr.scrollTop;
+      curr = curr.parentNode;
+    }
+    while (elem) {
+      top += elem.offsetTop;
+      elem = elem.offsetParent;
+    }
+    return top;
+	}-*/;
+
+	private native double getSubPixelScrollLeft(Element multiplex) /*-{
+    var elem = multiplex.@com.google.gwt.dom.client.Element::jsoRemote()();
+    return elem.scrollLeft || 0;
 	}-*/;
 
 	protected native int getTabIndex(ElementJso elem) /*-{
@@ -534,15 +514,35 @@ abstract class DOMImpl {
 		return toInt32(touchGetSubPixelScreenY(touch));
 	}
 
+	private native double touchGetSubPixelClientX(Touch touch) /*-{
+    return touch.clientX || 0;
+	}-*/;
+
+	private native double touchGetSubPixelClientY(Touch touch) /*-{
+    return touch.clientY || 0;
+	}-*/;
+
+	private native double touchGetSubPixelPageX(Touch touch) /*-{
+    return touch.pageX || 0;
+	}-*/;
+
+	private native double touchGetSubPixelPageY(Touch touch) /*-{
+    return touch.pageY || 0;
+	}-*/;
+
+	private native double touchGetSubPixelScreenX(Touch touch) /*-{
+    return touch.screenX || 0;
+	}-*/;
+
+	private native double touchGetSubPixelScreenY(Touch touch) /*-{
+    return touch.screenY || 0;
+	}-*/;
+
 	protected native EventTarget touchGetTarget(Touch touch) /*-{
     return touch.target;
 	}-*/;
 
 	protected String yeah() {
 		return "";
-	}
-
-	Element getDocumentScrollingElement(DocumentJso doc) {
-		return doc.getViewportElement();
 	}
 }

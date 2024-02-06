@@ -45,10 +45,6 @@ public final class ViewerServiceTreeLogger extends AbstractTreeLogger {
 		this.viewerServiceClient = viewerServiceClient;
 	}
 
-	private boolean isSent() {
-		return logHandle >= 0;
-	}
-
 	/**
 	 * Creates a new logger for a branch. Note that the logger's handle has not
 	 * been set as yet; it will only be set once the branch is committed.
@@ -100,6 +96,10 @@ public final class ViewerServiceTreeLogger extends AbstractTreeLogger {
 			item.send();
 		}
 		pending = null;
+	}
+
+	private boolean isSent() {
+		return logHandle >= 0;
 	}
 
 	void sendBranch(final ViewerServiceTreeLogger branch, Type type, String msg,

@@ -32,11 +32,11 @@ public class SimpleAtomModel {
 			this.name = cellName();
 		}
 
+		protected abstract void accumulate(AC cell);
+
 		public void addMember(T member) {
 			cellMembers.add(member);
 		}
-
-		protected abstract void accumulate(AC cell);
 
 		protected String cellName() {
 			return cellKey instanceof HasDisplayName
@@ -101,6 +101,9 @@ public class SimpleAtomModel {
 			cellsByKey.put(cell.cellKey, cell);
 		}
 
+		protected void ensureCells() {
+		}
+
 		public void generateRowTotal() {
 			if (cells.size() == 0) {
 				return;
@@ -121,9 +124,6 @@ public class SimpleAtomModel {
 
 		public C getCell(CK cellKey) {
 			return cellsByKey.get(cellKey);
-		}
-
-		protected void ensureCells() {
 		}
 	}
 

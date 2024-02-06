@@ -28,17 +28,6 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFactory;
 
 public class TaskReapJobs extends PerformerTask {
-	class IgnoredLocalIdLocatorResolutionObserver
-			implements ProcessObserver<IgnoredLocalIdLocatorResolution> {
-		@Override
-		public void topicPublished(IgnoredLocalIdLocatorResolution observable) {
-			Ax.out("IgnoredLocalIdLocatorResolution: %s %s %s %s",
-					observable.locator, currentJob.toLocator(),
-					currentJob.getTaskClassName(),
-					currentJob.getTaskSerialized());
-		}
-	}
-
 	transient Job currentJob;
 
 	@Override
@@ -113,6 +102,17 @@ public class TaskReapJobs extends PerformerTask {
 		});
 		Transaction.commit();
 		logger.info("Reaped {} jobs", reaped.get());
+	}
+
+	class IgnoredLocalIdLocatorResolutionObserver
+			implements ProcessObserver<IgnoredLocalIdLocatorResolution> {
+		@Override
+		public void topicPublished(IgnoredLocalIdLocatorResolution observable) {
+			Ax.out("IgnoredLocalIdLocatorResolution: %s %s %s %s",
+					observable.locator, currentJob.toLocator(),
+					currentJob.getTaskClassName(),
+					currentJob.getTaskSerialized());
+		}
 	}
 
 	@Registration(

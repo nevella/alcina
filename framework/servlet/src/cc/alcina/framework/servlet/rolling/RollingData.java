@@ -26,6 +26,10 @@ public abstract class RollingData<K extends Comparable, V> {
 		this.typeKey = typeKey;
 	}
 
+	protected abstract Function<String, List<V>> deserializer();
+
+	protected abstract List<V> getData(K from);
+
 	public SortedMap<K, V> getValues(K earliestKey) {
 		synchronized (getClass()) {
 			return getValues0(earliestKey);
@@ -86,10 +90,6 @@ public abstract class RollingData<K extends Comparable, V> {
 		}
 		return map;
 	}
-
-	protected abstract Function<String, List<V>> deserializer();
-
-	protected abstract List<V> getData(K from);
 
 	protected abstract Function<String, K> keyDeserializer();
 

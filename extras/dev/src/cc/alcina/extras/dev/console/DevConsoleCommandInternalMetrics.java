@@ -87,9 +87,151 @@ public class DevConsoleCommandInternalMetrics {
 	public static class CmdListMetrics extends DevConsoleCommand {
 		private boolean ignoreables;
 
+		private long adjustForTz(long time, Date relTo) {
+			if (time == 0) {
+				return 0;
+			}
+			long diff = time - relTo.getTime();
+			if (diff < 0) {
+				diff = -(diff % TimeConstants.ONE_HOUR_MS);
+				if (diff > TimeConstants.ONE_HOUR_MS - diff) {
+					diff = TimeConstants.ONE_HOUR_MS - diff;
+				}
+			}
+			return diff;
+		}
+
 		@Override
 		public boolean canUseProductionConn() {
 			return true;
+		}
+
+		private void dumpMetric(InternalMetric internalMetric,
+				boolean outputArgs) {
+			Ax.out(GraphProjection.fieldwiseToString(internalMetric, false,
+					false, 30, "obfuscatedArgs", "sliceJson", "versionNumber",
+					"localId"));
+			String args = internalMetric.getObfuscatedArgs();
+			try {
+				Matcher matcher = Pattern
+						.compile("(?s)((?:.+?)Parameters:)(.+)").matcher(args);
+				matcher.matches();
+				args = matcher.group(1)
+						+ new JSONArray(matcher.group(2)).toString(2);
+			} catch (Exception e) {
+				// iignore
+			}
+			if (outputArgs) {
+				Ax.out("-----------\n%s\n", args);
+			}
+			ThreadHistory history = internalMetric.getThreadHistory();
+			CachingMap<Long, WaitStatLockTimeTuple> waitStatTimes = new CachingMap<>(
+					WaitStatLockTimeTuple::new);
+			history.elements.forEach(thhe -> {
+				ThreadInfoSer threadInfo = thhe.threadInfo;
+				if (ignoreables) {
+					String joined = CommonUtils
+							.joinWithNewlines(threadInfo.stackTrace);
+					if (threadInfo.lock != null) {
+						joined = Ax.format("Waiting for lock: %s\n",
+								threadInfo.lock, joined);
+					}
+					if (AnalyseThreadDump.ignoreableStackTrace(joined)) {
+						return;
+					}
+				}
+				Ax.out("Elapsed: %s", adjustForTz(thhe.date.getTime(),
+						internalMetric.getStartTime()));
+				if (thhe.domainCacheLockTime != 0
+						|| thhe.domainCacheWaitTime != 0) {
+					Ax.out("Domain cache:\n\tActive time: %s\n\tWait time: %s\n\tLock state: %s",
+							adjustForTz(thhe.domainCacheLockTime, thhe.date),
+							adjustForTz(thhe.domainCacheWaitTime, thhe.date),
+							thhe.lockState);
+				}
+				if (threadInfo.lockedMonitors.size() > 0) {
+					Ax.out("Locked monitors:\n\t%s", CommonUtils
+							.joinWithNewlineTab(threadInfo.lockedMonitors));
+				}
+				if (threadInfo.lockedSynchronizers.size() > 0) {
+					Ax.out("Locked synchronizers:\n\t%s",
+							CommonUtils.joinWithNewlineTab(
+									threadInfo.lockedSynchronizers));
+				}
+				thhe.waitStats.waitingOnLockStats
+						.forEach(stat -> waitStatTimes.get(stat.bestId())
+								.add(stat, thhe.domainCacheWaitTime));
+				if (threadInfo.lock != null) {
+					Ax.out("Waiting for lock: %s", threadInfo.lock);
+				}
+				Ax.out("Trace:\n\t%s", CommonUtils.joinWithNewlineTab(
+						filterTrace(threadInfo.stackTrace)));
+			});
+			Ax.out("-----------\nContended locks:\n%s\n%s",
+					WaitStatLockTimeTuple.toHeader(),
+					waitStatTimes.values().stream()
+							.sorted(Comparator.comparing(
+									WaitStatLockTimeTuple::sliceCount))
+							.map(Object::toString)
+							.collect(Collectors.joining("\n")));
+			if (outputArgs) {
+				Ax.out("-----------\n%s\n", args);
+			}
+		}
+
+		private boolean elide(FilteredTrace last, StackTraceElement element,
+				ElideState elideState) {
+			if (last == null) {
+				return false;
+			}
+			StackTraceElement lastElement = last.element;
+			if (lastElement.getClassName()
+					.equals("com.google.gwt.user.server.rpc.RPC")) {
+				return true;
+			}
+			if (lastElement.getClassName()
+					.equals("au.com.barnet.jade.server.JadeRemoteServiceImpl")
+					&& element.getClassName().matches(
+							"sun.reflect.NativeMethodAccessorImpl|sun.reflect.DelegatingMethodAccessorImpl|java.lang.reflect.Method")) {
+				return true;
+			}
+			if (lastElement.getClassName().matches(
+					".*(CollectionProjection|GraphProjection|CacheProjection).*")
+					&& element.getClassName().matches(
+							".*(CollectionProjection|GraphProjection|CacheProjection).*")) {
+				return true;
+			}
+			if (lastElement.getClassName().equals(
+					"org.jboss.as.ee.component.ManagedReferenceMethodInterceptor")) {
+				elideState.inJbossEjbCall = true;
+			}
+			if (element.getClassName().equals(
+					"org.jboss.as.ee.component.ProxyInvocationHandler")) {
+				elideState.inJbossEjbCall = false;
+			}
+			return elideState.inJbossEjbCall;
+		}
+
+		private List<FilteredTrace>
+				filterTrace(List<StackTraceElement> stackTrace) {
+			List<FilteredTrace> result = new ArrayList<>();
+			int index = 0;
+			boolean elided = false;
+			ElideState elideState = new ElideState();
+			for (StackTraceElement element : stackTrace) {
+				if (elide(CommonUtils.last(result), element, elideState)) {
+					elided = true;
+				} else {
+					FilteredTrace trace = new FilteredTrace();
+					result.add(trace);
+					trace.element = element;
+					trace.frameIndex = index;
+					trace.elided = elided;
+					elided = false;
+				}
+				index++;
+			}
+			return result;
 		}
 
 		@Override
@@ -105,6 +247,12 @@ public class DevConsoleCommandInternalMetrics {
 		@Override
 		public String getUsage() {
 			return "ims filters:{host|args|call|threadName|age|nearDate|duration|withend|from|to} modifiers:{tz|format|ignoreables}";
+		}
+
+		private void printFullUsage() {
+			Ax.out(getUsage());
+			// System.out.format("im {} \n", DevConsoleFilter
+			// .describeFilters(CmdListTransformsFilter.class));
 		}
 
 		@Override
@@ -266,154 +414,6 @@ public class DevConsoleCommandInternalMetrics {
 			return "";
 		}
 
-		private long adjustForTz(long time, Date relTo) {
-			if (time == 0) {
-				return 0;
-			}
-			long diff = time - relTo.getTime();
-			if (diff < 0) {
-				diff = -(diff % TimeConstants.ONE_HOUR_MS);
-				if (diff > TimeConstants.ONE_HOUR_MS - diff) {
-					diff = TimeConstants.ONE_HOUR_MS - diff;
-				}
-			}
-			return diff;
-		}
-
-		private void dumpMetric(InternalMetric internalMetric,
-				boolean outputArgs) {
-			Ax.out(GraphProjection.fieldwiseToString(internalMetric, false,
-					false, 30, "obfuscatedArgs", "sliceJson", "versionNumber",
-					"localId"));
-			String args = internalMetric.getObfuscatedArgs();
-			try {
-				Matcher matcher = Pattern
-						.compile("(?s)((?:.+?)Parameters:)(.+)").matcher(args);
-				matcher.matches();
-				args = matcher.group(1)
-						+ new JSONArray(matcher.group(2)).toString(2);
-			} catch (Exception e) {
-				// iignore
-			}
-			if (outputArgs) {
-				Ax.out("-----------\n%s\n", args);
-			}
-			ThreadHistory history = internalMetric.getThreadHistory();
-			CachingMap<Long, WaitStatLockTimeTuple> waitStatTimes = new CachingMap<>(
-					WaitStatLockTimeTuple::new);
-			history.elements.forEach(thhe -> {
-				ThreadInfoSer threadInfo = thhe.threadInfo;
-				if (ignoreables) {
-					String joined = CommonUtils
-							.joinWithNewlines(threadInfo.stackTrace);
-					if (threadInfo.lock != null) {
-						joined = Ax.format("Waiting for lock: %s\n",
-								threadInfo.lock, joined);
-					}
-					if (AnalyseThreadDump.ignoreableStackTrace(joined)) {
-						return;
-					}
-				}
-				Ax.out("Elapsed: %s", adjustForTz(thhe.date.getTime(),
-						internalMetric.getStartTime()));
-				if (thhe.domainCacheLockTime != 0
-						|| thhe.domainCacheWaitTime != 0) {
-					Ax.out("Domain cache:\n\tActive time: %s\n\tWait time: %s\n\tLock state: %s",
-							adjustForTz(thhe.domainCacheLockTime, thhe.date),
-							adjustForTz(thhe.domainCacheWaitTime, thhe.date),
-							thhe.lockState);
-				}
-				if (threadInfo.lockedMonitors.size() > 0) {
-					Ax.out("Locked monitors:\n\t%s", CommonUtils
-							.joinWithNewlineTab(threadInfo.lockedMonitors));
-				}
-				if (threadInfo.lockedSynchronizers.size() > 0) {
-					Ax.out("Locked synchronizers:\n\t%s",
-							CommonUtils.joinWithNewlineTab(
-									threadInfo.lockedSynchronizers));
-				}
-				thhe.waitStats.waitingOnLockStats
-						.forEach(stat -> waitStatTimes.get(stat.bestId())
-								.add(stat, thhe.domainCacheWaitTime));
-				if (threadInfo.lock != null) {
-					Ax.out("Waiting for lock: %s", threadInfo.lock);
-				}
-				Ax.out("Trace:\n\t%s", CommonUtils.joinWithNewlineTab(
-						filterTrace(threadInfo.stackTrace)));
-			});
-			Ax.out("-----------\nContended locks:\n%s\n%s",
-					WaitStatLockTimeTuple.toHeader(),
-					waitStatTimes.values().stream()
-							.sorted(Comparator.comparing(
-									WaitStatLockTimeTuple::sliceCount))
-							.map(Object::toString)
-							.collect(Collectors.joining("\n")));
-			if (outputArgs) {
-				Ax.out("-----------\n%s\n", args);
-			}
-		}
-
-		private boolean elide(FilteredTrace last, StackTraceElement element,
-				ElideState elideState) {
-			if (last == null) {
-				return false;
-			}
-			StackTraceElement lastElement = last.element;
-			if (lastElement.getClassName()
-					.equals("com.google.gwt.user.server.rpc.RPC")) {
-				return true;
-			}
-			if (lastElement.getClassName()
-					.equals("au.com.barnet.jade.server.JadeRemoteServiceImpl")
-					&& element.getClassName().matches(
-							"sun.reflect.NativeMethodAccessorImpl|sun.reflect.DelegatingMethodAccessorImpl|java.lang.reflect.Method")) {
-				return true;
-			}
-			if (lastElement.getClassName().matches(
-					".*(CollectionProjection|GraphProjection|CacheProjection).*")
-					&& element.getClassName().matches(
-							".*(CollectionProjection|GraphProjection|CacheProjection).*")) {
-				return true;
-			}
-			if (lastElement.getClassName().equals(
-					"org.jboss.as.ee.component.ManagedReferenceMethodInterceptor")) {
-				elideState.inJbossEjbCall = true;
-			}
-			if (element.getClassName().equals(
-					"org.jboss.as.ee.component.ProxyInvocationHandler")) {
-				elideState.inJbossEjbCall = false;
-			}
-			return elideState.inJbossEjbCall;
-		}
-
-		private List<FilteredTrace>
-				filterTrace(List<StackTraceElement> stackTrace) {
-			List<FilteredTrace> result = new ArrayList<>();
-			int index = 0;
-			boolean elided = false;
-			ElideState elideState = new ElideState();
-			for (StackTraceElement element : stackTrace) {
-				if (elide(CommonUtils.last(result), element, elideState)) {
-					elided = true;
-				} else {
-					FilteredTrace trace = new FilteredTrace();
-					result.add(trace);
-					trace.element = element;
-					trace.frameIndex = index;
-					trace.elided = elided;
-					elided = false;
-				}
-				index++;
-			}
-			return result;
-		}
-
-		private void printFullUsage() {
-			Ax.out(getUsage());
-			// System.out.format("im {} \n", DevConsoleFilter
-			// .describeFilters(CmdListTransformsFilter.class));
-		}
-
 		class ElideState {
 			boolean inJbossEjbCall = false;
 		}
@@ -466,15 +466,15 @@ public class DevConsoleCommandInternalMetrics {
 				lastDomainCacheWaitTime = domainCacheWaitTime;
 			}
 
+			int sliceCount() {
+				return stats.size();
+			}
+
 			@Override
 			public String toString() {
 				DomainStoreWaitOnLockStat stat = stats.get(0);
 				return String.format(template, stat.threadName, id,
 						stats.size(), cumulativeTime);
-			}
-
-			int sliceCount() {
-				return stats.size();
 			}
 		}
 	}

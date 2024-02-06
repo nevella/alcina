@@ -37,6 +37,13 @@ public class XpathHelper {
 		return evaluator;
 	}
 
+	private XPath createXpath() {
+		XPathFactory factory = XPathFactory.newInstance();
+		XPath xpath = factory.newXPath();
+		ext.configureXpath(xpath);
+		return xpath;
+	}
+
 	public Element element(String xpathStr) {
 		return getElementByXpathDoc(primaryDoc, xpathStr, primaryDoc);
 	}
@@ -113,6 +120,10 @@ public class XpathHelper {
 		}
 	}
 
+	private XPath getXpath(Document doc) {
+		return docXpathMap.get(doc).xPath;
+	}
+
 	public boolean isFor(Document ownerDocument) {
 		return primaryDoc == ownerDocument;
 	}
@@ -129,6 +140,13 @@ public class XpathHelper {
 		return XmlUtils.ownerDocumentOrSelf(node);
 	}
 
+	private void register(Document doc) {
+		if (docXpathMap.containsKey(doc)) {
+			throw new RuntimeException("Doc already registered");
+		}
+		docXpathMap.put(doc, new XpathAndExpressionCache(createXpath()));
+	}
+
 	public void registerPrimary(Document doc) {
 		this.primaryDoc = doc;
 		register(doc);
@@ -139,24 +157,6 @@ public class XpathHelper {
 		for (Node node : nodes) {
 			XmlUtils.removeNode(node);
 		}
-	}
-
-	private XPath createXpath() {
-		XPathFactory factory = XPathFactory.newInstance();
-		XPath xpath = factory.newXPath();
-		ext.configureXpath(xpath);
-		return xpath;
-	}
-
-	private XPath getXpath(Document doc) {
-		return docXpathMap.get(doc).xPath;
-	}
-
-	private void register(Document doc) {
-		if (docXpathMap.containsKey(doc)) {
-			throw new RuntimeException("Doc already registered");
-		}
-		docXpathMap.put(doc, new XpathAndExpressionCache(createXpath()));
 	}
 
 	public static interface XpathHelperExt {

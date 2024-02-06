@@ -65,30 +65,22 @@ public class TableModel extends Model implements NodeEditorContext {
 
 	protected List<TableRow> rows = new ArrayList<>();
 
-	public void setRows(List<TableRow> rows) {
-		set("rows", this.rows, rows, () -> this.rows = rows);
-	}
-
 	protected List<Link> actions = new ArrayList<>();
 
 	private Model emptyResults;
 
 	private Attributes attributes;
 
-	@Directed
-	public Model getEmptyResults() {
-		return emptyResults;
-	}
-
-	public void setEmptyResults(Model emptyResults) {
-		this.emptyResults = emptyResults;
-	}
-
 	public TableModel() {
 	}
 
 	public List<Link> getActions() {
 		return this.actions;
+	}
+
+	@Directed
+	public Model getEmptyResults() {
+		return emptyResults;
 	}
 
 	public TableHeader getHeader() {
@@ -99,6 +91,20 @@ public class TableModel extends Model implements NodeEditorContext {
 		return this.rows;
 	}
 
+	ModalResolver init(Node node) {
+		ModalResolver resolver = ModalResolver.multiple(node, true);
+		resolver.setTableModel(this);
+		node.setResolver(resolver);
+		attributes = new Attributes();
+		BeanViewModifiers args = node.annotation(BeanViewModifiers.class);
+		if (args != null) {
+			attributes.adjunct = args.adjunct();
+			attributes.nodeEditors = args.nodeEditors();
+			attributes.editable = args.editable();
+		}
+		return resolver;
+	}
+
 	@Override
 	public boolean isEditable() {
 		return attributes.editable;
@@ -107,6 +113,22 @@ public class TableModel extends Model implements NodeEditorContext {
 	@Override
 	public boolean isRenderAsNodeEditors() {
 		return attributes.nodeEditors;
+	}
+
+	public void setEmptyResults(Model emptyResults) {
+		this.emptyResults = emptyResults;
+	}
+
+	public void setRows(List<TableRow> rows) {
+		set("rows", this.rows, rows, () -> this.rows = rows);
+	}
+
+	static class Attributes {
+		boolean nodeEditors = true;
+
+		boolean editable;
+
+		boolean adjunct;
 	}
 
 	public static class DirectedCategoriesActivityTransformer extends
@@ -170,38 +192,6 @@ public class TableModel extends Model implements NodeEditorContext {
 
 	public static class DirectedEntitySearchActivityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableContainer> {
-		@Directed.Delegating
-		public class TableContainer extends Model.All
-				implements TableEvents.SortTable.Handler {
-			TableModel tableModel;
-
-			TableContainer(TableModel tableModel) {
-				this.tableModel = tableModel;
-			}
-
-			@Override
-			public void onSortTable(SortTable event) {
-				TableColumn column = event.getModel();
-				Place rawPlace = Client.currentPlace();
-				if (!(rawPlace instanceof BindablePlace)) {
-					return;
-				}
-				BindablePlace<?> place = Client.currentPlace();
-				place = place.copy();
-				DisplaySearchOrder order = new DisplaySearchOrder();
-				order.setFieldName(column.getField().getPropertyName());
-				SearchOrders searchOrders = place.def.getSearchOrders();
-				Optional<SearchOrder> firstOrder = searchOrders.getFirstOrder();
-				if (firstOrder.isPresent()
-						&& firstOrder.get().equivalentTo(order)) {
-					searchOrders.toggleFirstOrder();
-				} else {
-					searchOrders.putFirstOrder(order);
-				}
-				place.go();
-			}
-		}
-
 		@Override
 		public TableContainer apply(
 				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
@@ -240,6 +230,38 @@ public class TableModel extends Model implements NodeEditorContext {
 			}
 			// add actions if editable and adjunct
 			return tableContainer;
+		}
+
+		@Directed.Delegating
+		public class TableContainer extends Model.All
+				implements TableEvents.SortTable.Handler {
+			TableModel tableModel;
+
+			TableContainer(TableModel tableModel) {
+				this.tableModel = tableModel;
+			}
+
+			@Override
+			public void onSortTable(SortTable event) {
+				TableColumn column = event.getModel();
+				Place rawPlace = Client.currentPlace();
+				if (!(rawPlace instanceof BindablePlace)) {
+					return;
+				}
+				BindablePlace<?> place = Client.currentPlace();
+				place = place.copy();
+				DisplaySearchOrder order = new DisplaySearchOrder();
+				order.setFieldName(column.getField().getPropertyName());
+				SearchOrders searchOrders = place.def.getSearchOrders();
+				Optional<SearchOrder> firstOrder = searchOrders.getFirstOrder();
+				if (firstOrder.isPresent()
+						&& firstOrder.get().equivalentTo(order)) {
+					searchOrders.toggleFirstOrder();
+				} else {
+					searchOrders.putFirstOrder(order);
+				}
+				place.go();
+			}
 		}
 	}
 
@@ -387,10 +409,6 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		private Bindable bindable;
 
-		public Bindable getBindable() {
-			return bindable;
-		}
-
 		public TableRow() {
 		}
 
@@ -399,6 +417,10 @@ public class TableModel extends Model implements NodeEditorContext {
 			model.header.columns.stream()
 					.map(column -> new TableCell(column, this))
 					.forEach(cells::add);
+		}
+
+		public Bindable getBindable() {
+			return bindable;
 		}
 
 		@Directed
@@ -435,27 +457,5 @@ public class TableModel extends Model implements NodeEditorContext {
 		public String getGroupName() {
 			return null;
 		}
-	}
-
-	ModalResolver init(Node node) {
-		ModalResolver resolver = ModalResolver.multiple(node, true);
-		resolver.setTableModel(this);
-		node.setResolver(resolver);
-		attributes = new Attributes();
-		BeanViewModifiers args = node.annotation(BeanViewModifiers.class);
-		if (args != null) {
-			attributes.adjunct = args.adjunct();
-			attributes.nodeEditors = args.nodeEditors();
-			attributes.editable = args.editable();
-		}
-		return resolver;
-	}
-
-	static class Attributes {
-		boolean nodeEditors = true;
-
-		boolean editable;
-
-		boolean adjunct;
 	}
 }

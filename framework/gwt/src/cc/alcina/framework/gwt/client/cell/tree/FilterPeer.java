@@ -27,8 +27,6 @@ public abstract class FilterPeer<T> {
 		return filter0(elements);
 	}
 
-	public abstract boolean satisfiesFilter(T t);
-
 	private List<T> filter0(List<T> elements) {
 		List<T> result = new ArrayList<T>();
 		for (T t : elements) {
@@ -51,6 +49,8 @@ public abstract class FilterPeer<T> {
 		}
 		return result;
 	}
+
+	public abstract boolean satisfiesFilter(T t);
 
 	public abstract static class BasicFilterPeer<T> extends FilterPeer<T> {
 		public BasicFilterPeer(Predicate<T> additionalFilter) {

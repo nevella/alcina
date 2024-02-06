@@ -73,34 +73,6 @@ public class Publisher {
 
 	private InputStream convertedContent;
 
-	public PublicationContext getContext() {
-		return this.context;
-	}
-
-	public PublicationResult publish(ContentDefinition contentDefinition,
-			DeliveryModel deliveryModel) throws Exception {
-		return publish(contentDefinition, deliveryModel, null);
-	}
-
-	public PublicationResult publish(ContentDefinition contentDefinition,
-			DeliveryModel deliveryModel, Publication original)
-			throws Exception {
-		int depth = LooseContext.depth();
-		try {
-			context = PublicationContext.setupContext(contentDefinition,
-					deliveryModel);
-			LooseContext.pushWithKey(
-					PublicationContext.CONTEXT_PUBLICATION_CONTEXT, context);
-			return publish0(contentDefinition, deliveryModel, original);
-		} catch (Exception e) {
-			context.logPublicationException(e);
-			throw e;
-		} finally {
-			LooseContext.pop();
-			LooseContext.confirmDepth(depth);
-		}
-	}
-
 	private boolean exitPreDelivery() {
 		if (context.deliveryModel
 				.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
@@ -108,6 +80,10 @@ public class Publisher {
 		} else {
 			return false;
 		}
+	}
+
+	public PublicationContext getContext() {
+		return this.context;
 	}
 
 	private void persist(ContentDefinition contentDefinition,
@@ -162,6 +138,30 @@ public class Publisher {
 				|| LooseContext.is(CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT))) {
 			result.setContent(
 					Base64Utils.toBase64(contentWrapper.wrappedBytes));
+		}
+	}
+
+	public PublicationResult publish(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel) throws Exception {
+		return publish(contentDefinition, deliveryModel, null);
+	}
+
+	public PublicationResult publish(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel, Publication original)
+			throws Exception {
+		int depth = LooseContext.depth();
+		try {
+			context = PublicationContext.setupContext(contentDefinition,
+					deliveryModel);
+			LooseContext.pushWithKey(
+					PublicationContext.CONTEXT_PUBLICATION_CONTEXT, context);
+			return publish0(contentDefinition, deliveryModel, original);
+		} catch (Exception e) {
+			context.logPublicationException(e);
+			throw e;
+		} finally {
+			LooseContext.pop();
+			LooseContext.confirmDepth(depth);
 		}
 	}
 

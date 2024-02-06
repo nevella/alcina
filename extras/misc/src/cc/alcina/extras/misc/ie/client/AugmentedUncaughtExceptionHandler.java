@@ -33,6 +33,10 @@ import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 	private static UncaughtExceptionHandler handler;
 
+	private static native List<Throwable> getLastThrowables() /*-{
+    return $wnd.__com_google_gwt_core_client_impl_Impl_ieThrowables;
+	}-*/;
+
 	public static void throwToHandler(String message) {
 		List<Throwable> lastGwtThrowables = getLastThrowables();
 		String gwtExceptionMessage = "";
@@ -53,8 +57,13 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 				Ax.format("%s%s", message, gwtExceptionMessage)));
 	}
 
-	private static native List<Throwable> getLastThrowables() /*-{
-    return $wnd.__com_google_gwt_core_client_impl_Impl_ieThrowables;
+	private native void deregisterWindowErrorListener() /*-{
+    $wnd.onerror = null;
+    window.onerror = null;
+	}-*/;
+
+	private native void disableEventBusExceptionCatch() /*-{
+    $wnd.__com_google_web_bindery_event_shared_SimpleEventBus_disableEventBusExceptionCatch = true;
 	}-*/;
 
 	@Override
@@ -65,6 +74,17 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 	public void onWindowClosed() {
 		deregisterWindowErrorListener();
 	}
+
+	private native void registerIEWindowErrorListener() /*-{
+    function AugmentedUncaughtExceptionHandler_windowErrorHandler(sMsg, sUrl,
+        sLine) {
+      var message = "\n\nMessage: " + sMsg + "\nLine: " + sLine + "\nUrl: "
+          + sUrl;
+      @cc.alcina.extras.misc.ie.client.AugmentedUncaughtExceptionHandler::throwToHandler(Ljava/lang/String;)(message);
+    }
+    $wnd.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
+    window.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
+	}-*/;
 
 	public void
 			registerUncaughtExceptionHandler(UncaughtExceptionHandler handler) {
@@ -78,24 +98,4 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 			GWT.setUncaughtExceptionHandler(handler);
 		}
 	}
-
-	private native void deregisterWindowErrorListener() /*-{
-    $wnd.onerror = null;
-    window.onerror = null;
-	}-*/;
-
-	private native void disableEventBusExceptionCatch() /*-{
-    $wnd.__com_google_web_bindery_event_shared_SimpleEventBus_disableEventBusExceptionCatch = true;
-	}-*/;
-
-	private native void registerIEWindowErrorListener() /*-{
-    function AugmentedUncaughtExceptionHandler_windowErrorHandler(sMsg, sUrl,
-        sLine) {
-      var message = "\n\nMessage: " + sMsg + "\nLine: " + sLine + "\nUrl: "
-          + sUrl;
-      @cc.alcina.extras.misc.ie.client.AugmentedUncaughtExceptionHandler::throwToHandler(Ljava/lang/String;)(message);
-    }
-    $wnd.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
-    window.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
-	}-*/;
 }

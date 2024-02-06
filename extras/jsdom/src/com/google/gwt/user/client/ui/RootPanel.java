@@ -133,6 +133,28 @@ public class RootPanel extends AbsolutePanel {
 		widgetsToDetach.add(widget);
 	}
 
+	// Package-protected for use by unit tests. Do not call this method
+	// directly.
+	static void detachWidgets() {
+		// When the window is closing, detach all widgets that need to be
+		// cleaned up. This will cause all of their event listeners
+		// to be unhooked, which will avoid potential memory leaks.
+		try {
+			AttachDetachException.tryCommand(widgetsToDetach,
+					maybeDetachCommand);
+		} finally {
+			widgetsToDetach.clear();
+			// Clear the RootPanel cache, since we've "detached" all RootPanels
+			// at
+			// this point. This would be pointless, since it only happens on
+			// unload,
+			// but it is very helpful for unit tests, because it allows
+			// RootPanel.get() to work properly even after a synthesized
+			// "unload".
+			rootPanels.clear();
+		}
+	}
+
 	/**
 	 * Gets the default root panel. This panel wraps the body of the browser's
 	 * document. This root panel can contain any number of widgets, which will
@@ -211,17 +233,6 @@ public class RootPanel extends AbsolutePanel {
 	}
 
 	/**
-	 * Determines whether the given widget is in the detach list.
-	 *
-	 * @param widget
-	 *            the widget to be checked
-	 * @return <code>true</code> if the widget is in the detach list
-	 */
-	public static boolean isInDetachList(Widget widget) {
-		return widgetsToDetach.contains(widget);
-	}
-
-	/**
 	 * Convenience method for getting the document's root (<html>) element.
 	 *
 	 * @return the document's root element
@@ -267,26 +278,15 @@ public class RootPanel extends AbsolutePanel {
 		return false;
 	}
 
-	// Package-protected for use by unit tests. Do not call this method
-	// directly.
-	static void detachWidgets() {
-		// When the window is closing, detach all widgets that need to be
-		// cleaned up. This will cause all of their event listeners
-		// to be unhooked, which will avoid potential memory leaks.
-		try {
-			AttachDetachException.tryCommand(widgetsToDetach,
-					maybeDetachCommand);
-		} finally {
-			widgetsToDetach.clear();
-			// Clear the RootPanel cache, since we've "detached" all RootPanels
-			// at
-			// this point. This would be pointless, since it only happens on
-			// unload,
-			// but it is very helpful for unit tests, because it allows
-			// RootPanel.get() to work properly even after a synthesized
-			// "unload".
-			rootPanels.clear();
-		}
+	/**
+	 * Determines whether the given widget is in the detach list.
+	 *
+	 * @param widget
+	 *            the widget to be checked
+	 * @return <code>true</code> if the widget is in the detach list
+	 */
+	public static boolean isInDetachList(Widget widget) {
+		return widgetsToDetach.contains(widget);
 	}
 
 	private RootPanel(Element elem) {

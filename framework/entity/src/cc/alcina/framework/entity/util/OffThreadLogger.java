@@ -80,6 +80,28 @@ public class OffThreadLogger implements InvocationHandler {
 		proxyDelegate.put(proxy, delegate);
 	}
 
+	static class Event {
+		String threadName;
+
+		Method method;
+
+		Object[] args;
+
+		Logger delegate;
+
+		public Event() {
+			// Used for queue termination
+		}
+
+		public Event(Thread thread, Method method, Object[] args,
+				Logger delegate) {
+			this.threadName = thread.getName();
+			this.method = method;
+			this.args = args;
+			this.delegate = delegate;
+		}
+	}
+
 	private class LoggerThread extends Thread {
 		@Override
 		public void run() {
@@ -114,28 +136,6 @@ public class OffThreadLogger implements InvocationHandler {
 					Transaction.ensureEnded();
 				}
 			}
-		}
-	}
-
-	static class Event {
-		String threadName;
-
-		Method method;
-
-		Object[] args;
-
-		Logger delegate;
-
-		public Event() {
-			// Used for queue termination
-		}
-
-		public Event(Thread thread, Method method, Object[] args,
-				Logger delegate) {
-			this.threadName = thread.getName();
-			this.method = method;
-			this.args = args;
-			this.delegate = delegate;
 		}
 	}
 }

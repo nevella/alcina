@@ -155,6 +155,18 @@ public class Grid extends HTMLTable {
 	}
 
 	/**
+	 * Creates a new, empty cell.
+	 */
+	@Override
+	protected Element createCell() {
+		Element td = super.createCell();
+		// Add a non-breaking space to the TD. This ensures that the cell is
+		// displayed.
+		td.setInnerHTML("&nbsp;");
+		return DOM.asOld(td);
+	}
+
+	/**
 	 * Return number of columns. For grid, row argument is ignored as all grids
 	 * are rectangular.
 	 */
@@ -200,6 +212,75 @@ public class Grid extends HTMLTable {
 			insertCell(index, i);
 		}
 		return index;
+	}
+
+	/**
+	 * Checks that a cell is a valid cell in the table.
+	 * 
+	 * @param row
+	 *            the cell's row
+	 * @param column
+	 *            the cell's column
+	 * @throws IndexOutOfBoundsException
+	 */
+	@Override
+	protected void prepareCell(int row, int column) {
+		// Ensure that the indices are not negative.
+		prepareRow(row);
+		if (column < 0) {
+			throw new IndexOutOfBoundsException(
+					"Cannot access a column with a negative index: " + column);
+		}
+		if (column >= numColumns) {
+			throw new IndexOutOfBoundsException(
+					"Column index: " + column + ", Column size: " + numColumns);
+		}
+	}
+
+	/**
+	 * Checks that the column index is valid.
+	 * 
+	 * @param column
+	 *            The column index to be checked
+	 * @throws IndexOutOfBoundsException
+	 *             if the column is negative
+	 */
+	@Override
+	protected void prepareColumn(int column) {
+		super.prepareColumn(column);
+		/**
+		 * Grid does not lazily create cells, so simply ensure that the
+		 * requested column and column are valid
+		 */
+		if (column >= numColumns) {
+			throw new IndexOutOfBoundsException(
+					"Column index: " + column + ", Column size: " + numColumns);
+		}
+	}
+
+	/**
+	 * Checks that the row index is valid.
+	 * 
+	 * @param row
+	 *            The row index to be checked
+	 * @throws IndexOutOfBoundsException
+	 *             if the row is negative
+	 */
+	@Override
+	protected void prepareRow(int row) {
+		// Ensure that the indices are not negative.
+		if (row < 0) {
+			throw new IndexOutOfBoundsException(
+					"Cannot access a row with a negative index: " + row);
+		}
+		/**
+		 * Grid does not lazily create cells, so simply ensure that the
+		 * requested row and column are valid
+		 */
+		if (row >= numRows) {
+			throw new IndexOutOfBoundsException(
+					"Row index: " + row + ", Row size: " + numRows);
+		}
 	}
 
 	@Override
@@ -280,87 +361,6 @@ public class Grid extends HTMLTable {
 				// Fewer rows. Remove extraneous ones.
 				removeRow(numRows - 1);
 			}
-		}
-	}
-
-	/**
-	 * Creates a new, empty cell.
-	 */
-	@Override
-	protected Element createCell() {
-		Element td = super.createCell();
-		// Add a non-breaking space to the TD. This ensures that the cell is
-		// displayed.
-		td.setInnerHTML("&nbsp;");
-		return DOM.asOld(td);
-	}
-
-	/**
-	 * Checks that a cell is a valid cell in the table.
-	 * 
-	 * @param row
-	 *            the cell's row
-	 * @param column
-	 *            the cell's column
-	 * @throws IndexOutOfBoundsException
-	 */
-	@Override
-	protected void prepareCell(int row, int column) {
-		// Ensure that the indices are not negative.
-		prepareRow(row);
-		if (column < 0) {
-			throw new IndexOutOfBoundsException(
-					"Cannot access a column with a negative index: " + column);
-		}
-		if (column >= numColumns) {
-			throw new IndexOutOfBoundsException(
-					"Column index: " + column + ", Column size: " + numColumns);
-		}
-	}
-
-	/**
-	 * Checks that the column index is valid.
-	 * 
-	 * @param column
-	 *            The column index to be checked
-	 * @throws IndexOutOfBoundsException
-	 *             if the column is negative
-	 */
-	@Override
-	protected void prepareColumn(int column) {
-		super.prepareColumn(column);
-		/**
-		 * Grid does not lazily create cells, so simply ensure that the
-		 * requested column and column are valid
-		 */
-		if (column >= numColumns) {
-			throw new IndexOutOfBoundsException(
-					"Column index: " + column + ", Column size: " + numColumns);
-		}
-	}
-
-	/**
-	 * Checks that the row index is valid.
-	 * 
-	 * @param row
-	 *            The row index to be checked
-	 * @throws IndexOutOfBoundsException
-	 *             if the row is negative
-	 */
-	@Override
-	protected void prepareRow(int row) {
-		// Ensure that the indices are not negative.
-		if (row < 0) {
-			throw new IndexOutOfBoundsException(
-					"Cannot access a row with a negative index: " + row);
-		}
-		/**
-		 * Grid does not lazily create cells, so simply ensure that the
-		 * requested row and column are valid
-		 */
-		if (row >= numRows) {
-			throw new IndexOutOfBoundsException(
-					"Row index: " + row + ", Row size: " + numRows);
 		}
 	}
 }

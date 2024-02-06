@@ -44,36 +44,6 @@ abstract class AbstractTrie<K, V> extends AbstractMap<K, V>
 		this.keyAnalyzer = Tries.notNull(keyAnalyzer, "keyAnalyzer");
 	}
 
-	/**
-	 * Returns the {@link KeyAnalyzer} that constructed the {@link Trie}.
-	 */
-	public KeyAnalyzer<? super K> getKeyAnalyzer() {
-		return keyAnalyzer;
-	}
-
-	@Override
-	public K selectKey(K key) {
-		Map.Entry<K, V> entry = select(key);
-		return entry != null ? entry.getKey() : null;
-	}
-
-	@Override
-	public V selectValue(K key) {
-		Map.Entry<K, V> entry = select(key);
-		return entry != null ? entry.getValue() : null;
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder buffer = new StringBuilder();
-		buffer.append("Trie[").append(size()).append("]={\n");
-		for (Map.Entry<K, V> entry : entrySet()) {
-			buffer.append("  ").append(entry).append("\n");
-		}
-		buffer.append("}\n");
-		return buffer.toString();
-	}
-
 	private int bitIndex(K key) {
 		int lengthInBits = lengthInBits(key);
 		for (int i = 0; i < lengthInBits; i++) {
@@ -111,6 +81,13 @@ abstract class AbstractTrie<K, V> extends AbstractMap<K, V>
 	}
 
 	/**
+	 * Returns the {@link KeyAnalyzer} that constructed the {@link Trie}.
+	 */
+	public KeyAnalyzer<? super K> getKeyAnalyzer() {
+		return keyAnalyzer;
+	}
+
+	/**
 	 * Returns whether or not the given bit on the key is set or false if the
 	 * key is null.
 	 * 
@@ -133,5 +110,28 @@ abstract class AbstractTrie<K, V> extends AbstractMap<K, V>
 			return 0;
 		}
 		return keyAnalyzer.lengthInBits(key);
+	}
+
+	@Override
+	public K selectKey(K key) {
+		Map.Entry<K, V> entry = select(key);
+		return entry != null ? entry.getKey() : null;
+	}
+
+	@Override
+	public V selectValue(K key) {
+		Map.Entry<K, V> entry = select(key);
+		return entry != null ? entry.getValue() : null;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder buffer = new StringBuilder();
+		buffer.append("Trie[").append(size()).append("]={\n");
+		for (Map.Entry<K, V> entry : entrySet()) {
+			buffer.append("  ").append(entry).append("\n");
+		}
+		buffer.append("}\n");
+		return buffer.toString();
 	}
 }

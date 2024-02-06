@@ -225,40 +225,6 @@ public class FlatTreeSerializer {
 		return deserialize(null, value);
 	}
 
-	public static String normalizeEnumString(Object value) {
-		return value.toString().replace("_", "-").toLowerCase();
-	}
-
-	public static String serialize(TreeSerializable object) {
-		return serialize(object, new SerializerOptions()
-				.withTopLevelTypeInfo(true).withShortPaths(true));
-	}
-
-	public static String serialize(TreeSerializable object,
-			SerializerOptions options) {
-		try {
-			LooseContext.pushWithTrue(Serializers.CONTEXT_SERIALIZING);
-			// the deserialize static builders supply a state - easier not to
-			// for serialization
-			return new FlatTreeSerializer(null).serialize0(object, options);
-		} finally {
-			LooseContext.pop();
-		}
-	}
-
-	public static String serializeElided(TreeSerializable object) {
-		return serialize(object,
-				new SerializerOptions().withTopLevelTypeInfo(true)
-						.withShortPaths(true).withElideDefaults(true));
-	}
-
-	public static String serializeSingleLine(TreeSerializable object) {
-		return serialize(object,
-				new SerializerOptions().withTopLevelTypeInfo(false)
-						.withShortPaths(true).withElideDefaults(true)
-						.withSingleLine(true));
-	}
-
 	private static boolean isCollection(Class clazz) {
 		return Reflections.isAssignableFrom(Collection.class, clazz);
 	}
@@ -316,6 +282,40 @@ public class FlatTreeSerializer {
 			return true;
 		}
 		return false;
+	}
+
+	public static String normalizeEnumString(Object value) {
+		return value.toString().replace("_", "-").toLowerCase();
+	}
+
+	public static String serialize(TreeSerializable object) {
+		return serialize(object, new SerializerOptions()
+				.withTopLevelTypeInfo(true).withShortPaths(true));
+	}
+
+	public static String serialize(TreeSerializable object,
+			SerializerOptions options) {
+		try {
+			LooseContext.pushWithTrue(Serializers.CONTEXT_SERIALIZING);
+			// the deserialize static builders supply a state - easier not to
+			// for serialization
+			return new FlatTreeSerializer(null).serialize0(object, options);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	public static String serializeElided(TreeSerializable object) {
+		return serialize(object,
+				new SerializerOptions().withTopLevelTypeInfo(true)
+						.withShortPaths(true).withElideDefaults(true));
+	}
+
+	public static String serializeSingleLine(TreeSerializable object) {
+		return serialize(object,
+				new SerializerOptions().withTopLevelTypeInfo(false)
+						.withShortPaths(true).withElideDefaults(true)
+						.withSingleLine(true));
 	}
 
 	State state;
@@ -1054,6 +1054,97 @@ public class FlatTreeSerializer {
 		}
 	}
 
+	private static class CollectionIndex {
+		Class clazz;
+
+		int index;
+
+		boolean leafValue = false;
+
+		private List<Object> list;
+
+		public CollectionIndex(Class clazz, List<Object> list, int index,
+				boolean leafValue) {
+			this.clazz = clazz;
+			this.list = list;
+			this.index = index;
+			this.leafValue = leafValue;
+		}
+
+		private String pad() {
+			int value = index - 1;
+			String valString = String.valueOf(value);
+			if (list != null && list.size() > 9) {
+				int maxValue = list.size() - 1;
+				StringBuilder sb = new StringBuilder();
+				int pad = String.valueOf(maxValue).length()
+						- valString.length();
+				for (int idx = 0; idx < pad; idx++) {
+					sb.append('0');
+				}
+				sb.append(valString);
+				return sb.toString();
+			} else {
+				return valString;
+			}
+		}
+
+		@Override
+		public String toString() {
+			return toStringFull(false);
+		}
+
+		String toStringFull(boolean mergeLeafValuePaths) {
+			if (leafValue) {
+				return index == 1 || mergeLeafValuePaths ? ""
+						: String.valueOf(index - 1);
+			}
+			String leafIndex = index == 1 ? "" : "-" + (index - 1);
+			return clazz.getName().replace(".", "_") + leafIndex;
+		}
+
+		public String toStringShort(Path path, boolean mergeLeafValuePaths) {
+			if (leafValue) {
+				return index == 1 || mergeLeafValuePaths ? "" : pad();
+			}
+			String strIndex = index == 1 ? "" : "-" + pad();
+			String shortenedClassName = null;
+			if (path != null) {
+				if (path.parent.propertySerialization != null) {
+					PropertySerialization propertySerialization = path.parent.propertySerialization;
+					if (propertySerialization.types().length == 1
+							&& propertySerialization.types()[0] == clazz) {
+						shortenedClassName = "";
+					}
+				}
+			}
+			if (shortenedClassName == null) {
+				TypeSerialization typeSerialization = Annotations.resolve(clazz,
+						TypeSerialization.class);
+				if (typeSerialization != null
+						&& typeSerialization.value().length() > 0) {
+					shortenedClassName = typeSerialization.value();
+				} else {
+					shortenedClassName = clazz.getName().replace(".", "_");
+				}
+			}
+			return shortenedClassName + strIndex;
+		}
+	}
+
+	private static class Counter {
+		Multimap<Class, List<Object>> indicies = new Multimap<Class, List<Object>>();
+
+		CollectionIndex getAndIncrement(Object childValue) {
+			Class clazz = childValue == null ? void.class
+					: childValue.getClass();
+			indicies.add(clazz, childValue);
+			List<Object> list = indicies.get(clazz);
+			return new CollectionIndex(clazz, list, list.size(),
+					isLeafValue(childValue));
+		}
+	}
+
 	public static class DeserializerOptions {
 		boolean shortPaths;
 
@@ -1134,240 +1225,6 @@ public class FlatTreeSerializer {
 		}
 	}
 
-	public static abstract class SerializerFlat extends Serializer {
-		private transient static Logger logger = LoggerFactory
-				.getLogger(SerializerFlat.class);
-
-		public static String transformRefactored(String serialized) {
-			if (serialized == null) {
-				return serialized;
-			}
-			if (serialized.contains("TxtCriterion")) {
-				serialized = serialized.replace(
-						"cc.alcina.framework.common.client.search.TxtCriterion",
-						"cc.alcina.framework.common.client.search.TextCriterion");
-			}
-			return serialized;
-		}
-
-		public String beanSerialize(Object object,
-				boolean hasClassNameProperty) {
-			return super.serialize(object, hasClassNameProperty);
-		}
-
-		@Override
-		public <V> V deserialize(String serialized, Class<V> clazz) {
-			if (serialized == null) {
-				return null;
-			}
-			if ((clazz != null && !serialized.startsWith("{")
-					&& !serialized.startsWith("["))
-					|| serialized.contains("class$=")) {
-				FlatTreeSerializer.DeserializerOptions options = new FlatTreeSerializer.DeserializerOptions()
-						.withShortPaths(true);
-				Class<? extends TreeSerializable> tsClazz = (Class<? extends TreeSerializable>) clazz;
-				return (V) FlatTreeSerializer.deserialize(tsClazz, serialized,
-						options);
-			} else {
-				return super.deserialize(serialized, clazz);
-			}
-		}
-
-		@Override
-		public String serialize(Object object, boolean hasClassNameProperty) {
-			if (object == null) {
-				return null;
-			}
-			TypeSerialization typeSerialization = Annotations
-					.resolve(object.getClass(), TypeSerialization.class);
-			boolean useFlat = object instanceof TreeSerializable
-					&& (typeSerialization == null
-							|| typeSerialization.flatSerializable());
-			if (useFlat) {
-				FlatTreeSerializer.SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
-						.withShortPaths(true)
-						.withTopLevelTypeInfo(!hasClassNameProperty)
-						.withTestSerialized(true).withElideDefaults(true);
-				try {
-					return FlatTreeSerializer
-							.serialize((TreeSerializable) object, options);
-				} catch (Exception e) {
-					if (LooseContext
-							.is(CONTEXT_THROW_ON_SERIALIZATION_FAILURE)) {
-						throw new WrappedRuntimeException(e);
-					}
-					String jsonSerialized = super.serialize(object,
-							hasClassNameProperty);
-					logger.warn("SerializerFlat exception: {}", jsonSerialized);
-					return jsonSerialized;
-				}
-			} else {
-				return beanSerialize(object, hasClassNameProperty);
-			}
-		}
-	}
-
-	public static class SerializerOptions {
-		boolean elideDefaults;
-
-		boolean shortPaths;
-
-		boolean topLevelTypeInfo;
-
-		boolean singleLine;
-
-		boolean testSerialized;
-
-		boolean testSerializedPopulateAllPaths;
-
-		boolean readableTime = false;
-
-		Reachables reachables;
-
-		public SerializerOptions withElideDefaults(boolean elideDefaults) {
-			this.elideDefaults = elideDefaults;
-			return this;
-		}
-
-		public SerializerOptions withReadableTime(boolean readableTime) {
-			this.readableTime = readableTime;
-			return this;
-		}
-
-		public SerializerOptions withShortPaths(boolean shortPaths) {
-			this.shortPaths = shortPaths;
-			return this;
-		}
-
-		public SerializerOptions withSingleLine(boolean singleLine) {
-			this.singleLine = singleLine;
-			return this;
-		}
-
-		public SerializerOptions withTestSerialized(boolean testSerialized) {
-			this.testSerialized = testSerialized;
-			return this;
-		}
-
-		public SerializerOptions
-				withTestSerializedReachables(Reachables reachables) {
-			this.testSerializedPopulateAllPaths = true;
-			this.reachables = reachables;
-			return this;
-		}
-
-		public SerializerOptions
-				withTopLevelTypeInfo(boolean topLevelTypeInfo) {
-			this.topLevelTypeInfo = topLevelTypeInfo;
-			return this;
-		}
-
-		public static class Reachables {
-			public Set<Class<? extends TreeSerializable>> traversed = new LinkedHashSet<>();
-
-			public Set<Class<? extends TreeSerializable>> pending = new LinkedHashSet<>();
-
-			// Given the implicit requirement that TreeSerializables can't form
-			// containment loops, no need to add root types
-			public void add(Class<? extends TreeSerializable> clazz) {
-				if (!traversed.contains(clazz)) {
-					pending.add(clazz);
-				}
-			}
-		}
-	}
-
-	private static class CollectionIndex {
-		Class clazz;
-
-		int index;
-
-		boolean leafValue = false;
-
-		private List<Object> list;
-
-		public CollectionIndex(Class clazz, List<Object> list, int index,
-				boolean leafValue) {
-			this.clazz = clazz;
-			this.list = list;
-			this.index = index;
-			this.leafValue = leafValue;
-		}
-
-		@Override
-		public String toString() {
-			return toStringFull(false);
-		}
-
-		public String toStringShort(Path path, boolean mergeLeafValuePaths) {
-			if (leafValue) {
-				return index == 1 || mergeLeafValuePaths ? "" : pad();
-			}
-			String strIndex = index == 1 ? "" : "-" + pad();
-			String shortenedClassName = null;
-			if (path != null) {
-				if (path.parent.propertySerialization != null) {
-					PropertySerialization propertySerialization = path.parent.propertySerialization;
-					if (propertySerialization.types().length == 1
-							&& propertySerialization.types()[0] == clazz) {
-						shortenedClassName = "";
-					}
-				}
-			}
-			if (shortenedClassName == null) {
-				TypeSerialization typeSerialization = Annotations.resolve(clazz,
-						TypeSerialization.class);
-				if (typeSerialization != null
-						&& typeSerialization.value().length() > 0) {
-					shortenedClassName = typeSerialization.value();
-				} else {
-					shortenedClassName = clazz.getName().replace(".", "_");
-				}
-			}
-			return shortenedClassName + strIndex;
-		}
-
-		private String pad() {
-			int value = index - 1;
-			String valString = String.valueOf(value);
-			if (list != null && list.size() > 9) {
-				int maxValue = list.size() - 1;
-				StringBuilder sb = new StringBuilder();
-				int pad = String.valueOf(maxValue).length()
-						- valString.length();
-				for (int idx = 0; idx < pad; idx++) {
-					sb.append('0');
-				}
-				sb.append(valString);
-				return sb.toString();
-			} else {
-				return valString;
-			}
-		}
-
-		String toStringFull(boolean mergeLeafValuePaths) {
-			if (leafValue) {
-				return index == 1 || mergeLeafValuePaths ? ""
-						: String.valueOf(index - 1);
-			}
-			String leafIndex = index == 1 ? "" : "-" + (index - 1);
-			return clazz.getName().replace(".", "_") + leafIndex;
-		}
-	}
-
-	private static class Counter {
-		Multimap<Class, List<Object>> indicies = new Multimap<Class, List<Object>>();
-
-		CollectionIndex getAndIncrement(Object childValue) {
-			Class clazz = childValue == null ? void.class
-					: childValue.getClass();
-			indicies.add(clazz, childValue);
-			List<Object> list = indicies.get(clazz);
-			return new CollectionIndex(clazz, list, list.size(),
-					isLeafValue(childValue));
-		}
-	}
-
 	class Node {
 		private static final String VALUE_SEPARATOR = ",";
 
@@ -1389,89 +1246,6 @@ public class FlatTreeSerializer {
 			this.defaultValue = defaultValue;
 		}
 
-		public boolean isMultipleTypes() {
-			return path.isMultipleTypes();
-		}
-
-		public boolean isPutDefaultValue() {
-			return path.isPutDefaultValue(value);
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s=%s", path, value);
-		}
-
-		@SuppressWarnings("deprecation")
-		private String readableTime(long time) {
-			Date date = new Date(time);
-			FormatBuilder format = new FormatBuilder();
-			format.appendZeroesLeft(4, date.getYear() + 1900);
-			format.appendZeroesLeft(2, date.getMonth() + 1);
-			format.appendZeroesLeft(2, date.getDate());
-			format.append("T");
-			format.appendZeroesLeft(2, date.getHours());
-			format.appendZeroesLeft(2, date.getMinutes());
-			format.appendZeroesLeft(2, date.getSeconds());
-			format.appendZeroesLeft(3, (int) (time % 1000));
-			int tzOffset = date.getTimezoneOffset();
-			int tzOffsetHours = tzOffset / 60;
-			int tzOffsetMinutes = tzOffset % 60;
-			String tzDirection = tzOffset <= 0 ? "+" : "-";
-			format.append(tzDirection);
-			format.appendZeroesLeft(2, Math.abs(tzOffsetHours));
-			format.appendZeroesLeft(2, tzOffsetMinutes);
-			return format.toString();
-		}
-
-		private String toStringValue0() {
-			if (path.serializer != null) {
-				return path.serializer.serializeValue(value);
-			}
-			if (value instanceof Date) {
-				if (state.serializerOptions.readableTime) {
-					return readableTime(((Date) value).getTime());
-				} else {
-					return String.valueOf(((Date) value).getTime());
-				}
-			} else if (value instanceof String) {
-				String escapedValue = escapeValue(value.toString());
-				return escapeValue(value.toString());
-			} else if (value instanceof Entity) {
-				Entity entity = (Entity) value;
-				if (entity.domain().wasPersisted()) {
-					return String.valueOf(entity.getId());
-				} else {
-					Preconditions.checkArgument(entity.domain().isLocal());
-					return EntityLocator.instanceLocator(entity)
-							.toRecoverableNumericString();
-				}
-			} else if (CommonUtils.isEnumish(value)) {
-				return normalizeEnumString(value);
-			} else if (value instanceof ExtensibleEnum) {
-				// same data as
-				// cc.alcina.framework.common.client.serializer.ReflectiveSerializers.ValueSerializerExtensibleEnum
-				Class<? extends ExtensibleEnum> registryPoint = ExtensibleEnum
-						.registryPoint((Class<? extends ExtensibleEnum>) value
-								.getClass());
-				if (registryPoint == path.property.getType()) {
-					return value.toString();
-				} else {
-					return Ax.format("%s,%s", registryPoint.getName(),
-							value.toString());
-				}
-			} else if (value.getClass().isArray()
-					&& value.getClass().getComponentType() == byte.class) {
-				return Base64.encodeBytes((byte[]) value);
-			} else if (value instanceof Class) {
-				return ((Class) value).getName();
-			} else if (value instanceof BasePlace) {
-				return ((BasePlace) value).toTokenString();
-			} else {
-				return value.toString();
-			}
-		}
-
 		String escapeValue(String str) {
 			return TextUtils.Encoder.encodeURIComponentEsque(str);
 		}
@@ -1490,6 +1264,14 @@ public class FlatTreeSerializer {
 						&& isValueType(path.propertySerialization.types()[0]);
 			}
 			return true;
+		}
+
+		public boolean isMultipleTypes() {
+			return path.isMultipleTypes();
+		}
+
+		public boolean isPutDefaultValue() {
+			return path.isPutDefaultValue(value);
 		}
 
 		Object parseStringValue(Class valueClass, String stringValue) {
@@ -1649,6 +1431,33 @@ public class FlatTreeSerializer {
 			}
 		}
 
+		@SuppressWarnings("deprecation")
+		private String readableTime(long time) {
+			Date date = new Date(time);
+			FormatBuilder format = new FormatBuilder();
+			format.appendZeroesLeft(4, date.getYear() + 1900);
+			format.appendZeroesLeft(2, date.getMonth() + 1);
+			format.appendZeroesLeft(2, date.getDate());
+			format.append("T");
+			format.appendZeroesLeft(2, date.getHours());
+			format.appendZeroesLeft(2, date.getMinutes());
+			format.appendZeroesLeft(2, date.getSeconds());
+			format.appendZeroesLeft(3, (int) (time % 1000));
+			int tzOffset = date.getTimezoneOffset();
+			int tzOffsetHours = tzOffset / 60;
+			int tzOffsetMinutes = tzOffset % 60;
+			String tzDirection = tzOffset <= 0 ? "+" : "-";
+			format.append(tzDirection);
+			format.appendZeroesLeft(2, Math.abs(tzOffsetHours));
+			format.appendZeroesLeft(2, tzOffsetMinutes);
+			return format.toString();
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s=%s", path, value);
+		}
+
 		String toStringValue() {
 			if (value == null) {
 				if (FlatTreeSerializer.isCollection(path.property.getType())) {
@@ -1663,6 +1472,54 @@ public class FlatTreeSerializer {
 				} else {
 					return stringValue0;
 				}
+			}
+		}
+
+		private String toStringValue0() {
+			if (path.serializer != null) {
+				return path.serializer.serializeValue(value);
+			}
+			if (value instanceof Date) {
+				if (state.serializerOptions.readableTime) {
+					return readableTime(((Date) value).getTime());
+				} else {
+					return String.valueOf(((Date) value).getTime());
+				}
+			} else if (value instanceof String) {
+				String escapedValue = escapeValue(value.toString());
+				return escapeValue(value.toString());
+			} else if (value instanceof Entity) {
+				Entity entity = (Entity) value;
+				if (entity.domain().wasPersisted()) {
+					return String.valueOf(entity.getId());
+				} else {
+					Preconditions.checkArgument(entity.domain().isLocal());
+					return EntityLocator.instanceLocator(entity)
+							.toRecoverableNumericString();
+				}
+			} else if (CommonUtils.isEnumish(value)) {
+				return normalizeEnumString(value);
+			} else if (value instanceof ExtensibleEnum) {
+				// same data as
+				// cc.alcina.framework.common.client.serializer.ReflectiveSerializers.ValueSerializerExtensibleEnum
+				Class<? extends ExtensibleEnum> registryPoint = ExtensibleEnum
+						.registryPoint((Class<? extends ExtensibleEnum>) value
+								.getClass());
+				if (registryPoint == path.property.getType()) {
+					return value.toString();
+				} else {
+					return Ax.format("%s,%s", registryPoint.getName(),
+							value.toString());
+				}
+			} else if (value.getClass().isArray()
+					&& value.getClass().getComponentType() == byte.class) {
+				return Base64.encodeBytes((byte[]) value);
+			} else if (value instanceof Class) {
+				return ((Class) value).getName();
+			} else if (value instanceof BasePlace) {
+				return ((BasePlace) value).toTokenString();
+			} else {
+				return value.toString();
 			}
 		}
 	}
@@ -1691,8 +1548,31 @@ public class FlatTreeSerializer {
 			this.parent = parent;
 		}
 
+		private void addMaybeWithoutSeparator(FormatBuilder fb, String path) {
+			if (path.startsWith("-")) {
+				// tricky bit of defaulting here - for searchdefinitions.
+				// FIXME - reflection - think about doing this better (although
+				// it
+				// works as-is)
+				fb.separator("");
+			}
+			fb.appendIfNotBlank(path);
+			fb.separator(".");
+		}
+
 		public boolean canMergeTo(Path other) {
 			return toStringShort(true).equals(other.toStringShort(true));
+		}
+
+		boolean ignoreForSerialization() {
+			return propertySerialization != null
+					&& ((!propertySerialization.fromClient() && GWT.isClient())
+							|| propertySerialization.ignoreFlat());
+		}
+
+		boolean isMultipleTypes() {
+			return propertySerialization != null
+					&& propertySerialization.types().length > 1;
 		}
 
 		public boolean isPutDefaultValue(Object value) {
@@ -1730,39 +1610,6 @@ public class FlatTreeSerializer {
 		@Override
 		public String toString() {
 			return toString(false, false);
-		}
-
-		public void verifyProvidesElementTypeInfo() {
-			boolean valid = propertySerialization != null
-					&& propertySerialization.types().length > 0;
-			if (!valid) {
-				throw new MissingElementTypeException(Ax.format(
-						"Unable to determine element type for collection property %s.%s",
-						parent.type.getSimpleName(), property.getName()));
-			}
-		}
-
-		private void addMaybeWithoutSeparator(FormatBuilder fb, String path) {
-			if (path.startsWith("-")) {
-				// tricky bit of defaulting here - for searchdefinitions.
-				// FIXME - reflection - think about doing this better (although
-				// it
-				// works as-is)
-				fb.separator("");
-			}
-			fb.appendIfNotBlank(path);
-			fb.separator(".");
-		}
-
-		boolean ignoreForSerialization() {
-			return propertySerialization != null
-					&& ((!propertySerialization.fromClient() && GWT.isClient())
-							|| propertySerialization.ignoreFlat());
-		}
-
-		boolean isMultipleTypes() {
-			return propertySerialization != null
-					&& propertySerialization.types().length > 1;
 		}
 
 		String toString(boolean shortPaths, boolean mergeLeafValuePaths) {
@@ -1822,6 +1669,16 @@ public class FlatTreeSerializer {
 				shortPath = fb.toString();
 			}
 			return shortPath;
+		}
+
+		public void verifyProvidesElementTypeInfo() {
+			boolean valid = propertySerialization != null
+					&& propertySerialization.types().length > 0;
+			if (!valid) {
+				throw new MissingElementTypeException(Ax.format(
+						"Unable to determine element type for collection property %s.%s",
+						parent.type.getSimpleName(), property.getName()));
+			}
 		}
 	}
 
@@ -1897,6 +1754,149 @@ public class FlatTreeSerializer {
 		@Override
 		public String toString() {
 			return Ax.format("%s:%s", segment, index);
+		}
+	}
+
+	public static abstract class SerializerFlat extends Serializer {
+		private transient static Logger logger = LoggerFactory
+				.getLogger(SerializerFlat.class);
+
+		public static String transformRefactored(String serialized) {
+			if (serialized == null) {
+				return serialized;
+			}
+			if (serialized.contains("TxtCriterion")) {
+				serialized = serialized.replace(
+						"cc.alcina.framework.common.client.search.TxtCriterion",
+						"cc.alcina.framework.common.client.search.TextCriterion");
+			}
+			return serialized;
+		}
+
+		public String beanSerialize(Object object,
+				boolean hasClassNameProperty) {
+			return super.serialize(object, hasClassNameProperty);
+		}
+
+		@Override
+		public <V> V deserialize(String serialized, Class<V> clazz) {
+			if (serialized == null) {
+				return null;
+			}
+			if ((clazz != null && !serialized.startsWith("{")
+					&& !serialized.startsWith("["))
+					|| serialized.contains("class$=")) {
+				FlatTreeSerializer.DeserializerOptions options = new FlatTreeSerializer.DeserializerOptions()
+						.withShortPaths(true);
+				Class<? extends TreeSerializable> tsClazz = (Class<? extends TreeSerializable>) clazz;
+				return (V) FlatTreeSerializer.deserialize(tsClazz, serialized,
+						options);
+			} else {
+				return super.deserialize(serialized, clazz);
+			}
+		}
+
+		@Override
+		public String serialize(Object object, boolean hasClassNameProperty) {
+			if (object == null) {
+				return null;
+			}
+			TypeSerialization typeSerialization = Annotations
+					.resolve(object.getClass(), TypeSerialization.class);
+			boolean useFlat = object instanceof TreeSerializable
+					&& (typeSerialization == null
+							|| typeSerialization.flatSerializable());
+			if (useFlat) {
+				FlatTreeSerializer.SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
+						.withShortPaths(true)
+						.withTopLevelTypeInfo(!hasClassNameProperty)
+						.withTestSerialized(true).withElideDefaults(true);
+				try {
+					return FlatTreeSerializer
+							.serialize((TreeSerializable) object, options);
+				} catch (Exception e) {
+					if (LooseContext
+							.is(CONTEXT_THROW_ON_SERIALIZATION_FAILURE)) {
+						throw new WrappedRuntimeException(e);
+					}
+					String jsonSerialized = super.serialize(object,
+							hasClassNameProperty);
+					logger.warn("SerializerFlat exception: {}", jsonSerialized);
+					return jsonSerialized;
+				}
+			} else {
+				return beanSerialize(object, hasClassNameProperty);
+			}
+		}
+	}
+
+	public static class SerializerOptions {
+		boolean elideDefaults;
+
+		boolean shortPaths;
+
+		boolean topLevelTypeInfo;
+
+		boolean singleLine;
+
+		boolean testSerialized;
+
+		boolean testSerializedPopulateAllPaths;
+
+		boolean readableTime = false;
+
+		Reachables reachables;
+
+		public SerializerOptions withElideDefaults(boolean elideDefaults) {
+			this.elideDefaults = elideDefaults;
+			return this;
+		}
+
+		public SerializerOptions withReadableTime(boolean readableTime) {
+			this.readableTime = readableTime;
+			return this;
+		}
+
+		public SerializerOptions withShortPaths(boolean shortPaths) {
+			this.shortPaths = shortPaths;
+			return this;
+		}
+
+		public SerializerOptions withSingleLine(boolean singleLine) {
+			this.singleLine = singleLine;
+			return this;
+		}
+
+		public SerializerOptions withTestSerialized(boolean testSerialized) {
+			this.testSerialized = testSerialized;
+			return this;
+		}
+
+		public SerializerOptions
+				withTestSerializedReachables(Reachables reachables) {
+			this.testSerializedPopulateAllPaths = true;
+			this.reachables = reachables;
+			return this;
+		}
+
+		public SerializerOptions
+				withTopLevelTypeInfo(boolean topLevelTypeInfo) {
+			this.topLevelTypeInfo = topLevelTypeInfo;
+			return this;
+		}
+
+		public static class Reachables {
+			public Set<Class<? extends TreeSerializable>> traversed = new LinkedHashSet<>();
+
+			public Set<Class<? extends TreeSerializable>> pending = new LinkedHashSet<>();
+
+			// Given the implicit requirement that TreeSerializables can't form
+			// containment loops, no need to add root types
+			public void add(Class<? extends TreeSerializable> clazz) {
+				if (!traversed.contains(clazz)) {
+					pending.add(clazz);
+				}
+			}
 		}
 	}
 

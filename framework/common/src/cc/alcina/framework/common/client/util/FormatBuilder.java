@@ -114,6 +114,12 @@ public class FormatBuilder {
 		}
 	}
 
+	public <T> void appendIfNonNull(T t, Function<T, ?> nonNullMapper) {
+		if (t != null) {
+			append(nonNullMapper.apply(t));
+		}
+	}
+
 	/**
 	 * Append all strings in a Collection only if they are not blank
 	 *
@@ -276,6 +282,16 @@ public class FormatBuilder {
 	}
 
 	/**
+	 * If an indent is present, ensure the current line is indented
+	 */
+	private void ensureIndent() {
+		if (!indented && indent != 0) {
+			indented = true;
+			sb.append(CommonUtils.padStringLeft("", indent, ' '));
+		}
+	}
+
+	/**
 	 * Fill the current line with a fill string, `width` times
 	 *
 	 * @param width
@@ -369,6 +385,17 @@ public class FormatBuilder {
 	}
 
 	/**
+	 * Add a separator if the buffer is not empty and a separator is set
+	 */
+	private void maybeAppendSeparator() {
+		if (sb.length() > 0 && separator.length() > 0
+				&& !(prefix != null && prefix.length() == sb.length())) {
+			ensureIndent();
+			sb.append(separator);
+		}
+	}
+
+	/**
 	 * Append a new line
 	 *
 	 * @return This FormatBuilder
@@ -421,32 +448,5 @@ public class FormatBuilder {
 	@Override
 	public String toString() {
 		return sb.toString();
-	}
-
-	/**
-	 * If an indent is present, ensure the current line is indented
-	 */
-	private void ensureIndent() {
-		if (!indented && indent != 0) {
-			indented = true;
-			sb.append(CommonUtils.padStringLeft("", indent, ' '));
-		}
-	}
-
-	/**
-	 * Add a separator if the buffer is not empty and a separator is set
-	 */
-	private void maybeAppendSeparator() {
-		if (sb.length() > 0 && separator.length() > 0
-				&& !(prefix != null && prefix.length() == sb.length())) {
-			ensureIndent();
-			sb.append(separator);
-		}
-	}
-
-	public <T> void appendIfNonNull(T t, Function<T, ?> nonNullMapper) {
-		if (t != null) {
-			append(nonNullMapper.apply(t));
-		}
 	}
 }

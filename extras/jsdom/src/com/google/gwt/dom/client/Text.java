@@ -97,8 +97,34 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	}
 
 	@Override
+	protected TextJso jsoRemote() {
+		return (TextJso) remote();
+	}
+
+	@Override
+	protected boolean linkedToRemote() {
+		return remote != TextNull.INSTANCE;
+	}
+
+	@Override
+	protected TextLocal local() {
+		return local;
+	}
+
+	@Override
 	public Node node() {
 		return this;
+	}
+
+	@Override
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
+		Preconditions.checkState(wasSynced() == resolved);
+		this.remote = (ClientDomText) remote;
+	}
+
+	@Override
+	protected ClientDomText remote() {
+		return remote;
 	}
 
 	@Override
@@ -111,6 +137,11 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	@Override
 	public org.w3c.dom.Text replaceWholeText(String arg0) throws DOMException {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void resetRemote0() {
+		this.remote = TextNull.INSTANCE;
 	}
 
 	@Override
@@ -133,37 +164,6 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	@Override
 	public String toString() {
 		return Ax.format("#TEXT[%s]", local().getData());
-	}
-
-	@Override
-	protected boolean linkedToRemote() {
-		return remote != TextNull.INSTANCE;
-	}
-
-	@Override
-	protected TextLocal local() {
-		return local;
-	}
-
-	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasSynced() == resolved);
-		this.remote = (ClientDomText) remote;
-	}
-
-	@Override
-	protected ClientDomText remote() {
-		return remote;
-	}
-
-	@Override
-	protected void resetRemote0() {
-		this.remote = TextNull.INSTANCE;
-	}
-
-	@Override
-	protected TextJso jsoRemote() {
-		return (TextJso) remote();
 	}
 
 	public class TextImplAccess extends Node.ImplAccess {

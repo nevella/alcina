@@ -36,6 +36,16 @@ public class CookieUtils {
 		response.addCookie(cookie);
 	}
 
+	private static List<Cookie> getAddedCookies(HttpServletRequest request) {
+		List<Cookie> addedCookies = (List<Cookie>) request
+				.getAttribute(ADDED_COOKIES_ATTR);
+		if (addedCookies == null) {
+			addedCookies = new ArrayList<Cookie>();
+			request.setAttribute(ADDED_COOKIES_ATTR, addedCookies);
+		}
+		return addedCookies;
+	}
+
 	public static String getCookieValueByName(HttpServletRequest request,
 			String name) {
 		// Try added cookies first
@@ -56,16 +66,6 @@ public class CookieUtils {
 			}
 		}
 		return null;
-	}
-
-	private static List<Cookie> getAddedCookies(HttpServletRequest request) {
-		List<Cookie> addedCookies = (List<Cookie>) request
-				.getAttribute(ADDED_COOKIES_ATTR);
-		if (addedCookies == null) {
-			addedCookies = new ArrayList<Cookie>();
-			request.setAttribute(ADDED_COOKIES_ATTR, addedCookies);
-		}
-		return addedCookies;
 	}
 
 	public void clearRemembermeCookie(HttpServletRequest request,

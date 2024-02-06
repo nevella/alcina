@@ -111,26 +111,6 @@ public class RegExp_Jvm implements IRegExp {
 		return new RegExp(new RegExp_Jvm(pattern, javaPattern, globalFlag));
 	}
 
-	/**
-	 * Returns a literal pattern <code>String</code> for the specified
-	 * <code>String</code>.
-	 *
-	 * <p>
-	 * This method produces a <code>String</code> that can be used to create a
-	 * <code>RegExp</code> that would match the string <code>s</code> as if it
-	 * were a literal pattern.
-	 * </p>
-	 * Metacharacters or escape sequences in the input sequence will be given no
-	 * special meaning.
-	 *
-	 * @param input
-	 *            The string to be literalized
-	 * @return A literal string replacement
-	 */
-	public static String quote(String input) {
-		return Pattern.quote(input);
-	}
-
 	private static synchronized Pattern getPattern(String pattern,
 			int javaPatternFlags) {
 		StringPair key = new StringPair(pattern,
@@ -162,6 +142,26 @@ public class RegExp_Jvm implements IRegExp {
 			}
 		}
 		return flagsSet;
+	}
+
+	/**
+	 * Returns a literal pattern <code>String</code> for the specified
+	 * <code>String</code>.
+	 *
+	 * <p>
+	 * This method produces a <code>String</code> that can be used to create a
+	 * <code>RegExp</code> that would match the string <code>s</code> as if it
+	 * were a literal pattern.
+	 * </p>
+	 * Metacharacters or escape sequences in the input sequence will be given no
+	 * special meaning.
+	 *
+	 * @param input
+	 *            The string to be literalized
+	 * @return A literal string replacement
+	 */
+	public static String quote(String input) {
+		return Pattern.quote(input);
 	}
 
 	private final boolean globalFlag;

@@ -130,6 +130,55 @@ public class TransformPersisterInPersistenceContext {
 		return this.entityManager;
 	}
 
+	protected void persistEvent(ThreadlocalTransformManager tlTransformManager,
+			TransformPersistenceToken token,
+			DelayedEntityPersister delayedEntityPersister,
+			DomainTransformEvent event) throws DomainTransformException {
+		try {
+			tlTransformManager.setIgnorePropertyChanges(true);
+			if (event.getNewStringValue() != null
+					&& event.getNewStringValue().contains("\u0000")) {
+				logger.warn("Removed unicode 0x0 from event {}/{}/{}",
+						event.toObjectLocator(), event.getTransformType(),
+						event.getPropertyName());
+				// pg will not accept 0x0
+				event.setNewStringValue(
+						event.getNewStringValue().replace("\u0000", ""));
+				// and must blank this too
+				event.setNewValue(null);
+			}
+			tlTransformManager.fireDomainTransform(event);
+			if (delayedEntityPersister.checkPersistEntity(event)) {
+			} else {
+				delayedEntityPersister.checkUpdateVersions(tlTransformManager,
+						token, event);
+			}
+		} finally {
+			tlTransformManager.setIgnorePropertyChanges(false);
+		}
+	}
+
+	private void possiblyAddSilentSkips(TransformPersistenceToken token,
+			DomainTransformException transformException) {
+		DomainTransformEvent event = transformException.getEvent();
+		List<DomainTransformEvent> allTransforms = token.getRequest()
+				.allTransforms();
+		int i = allTransforms.indexOf(event) - 1;
+		int addPos = token.getTransformExceptions().size() - 1;
+		for (; i >= 0; i--) {
+			DomainTransformEvent itrEvent = allTransforms.get(i);
+			if (!event.related(itrEvent)) {
+				break;
+			} else {
+				token.getIgnoreInExceptionPass().add(itrEvent);
+				DomainTransformException silentSkip = new DomainTransformException(
+						itrEvent, transformException.getType());
+				silentSkip.setSilent(true);
+				token.getTransformExceptions().add(addPos, silentSkip);
+			}
+		}
+	}
+
 	public boolean removeProcessedRequests(
 			CommonPersistenceBase commonPersistenceBase,
 			TransformPersistenceToken token) {
@@ -541,27 +590,6 @@ public class TransformPersisterInPersistenceContext {
 		}
 	}
 
-	private void possiblyAddSilentSkips(TransformPersistenceToken token,
-			DomainTransformException transformException) {
-		DomainTransformEvent event = transformException.getEvent();
-		List<DomainTransformEvent> allTransforms = token.getRequest()
-				.allTransforms();
-		int i = allTransforms.indexOf(event) - 1;
-		int addPos = token.getTransformExceptions().size() - 1;
-		for (; i >= 0; i--) {
-			DomainTransformEvent itrEvent = allTransforms.get(i);
-			if (!event.related(itrEvent)) {
-				break;
-			} else {
-				token.getIgnoreInExceptionPass().add(itrEvent);
-				DomainTransformException silentSkip = new DomainTransformException(
-						itrEvent, transformException.getType());
-				silentSkip.setSilent(true);
-				token.getTransformExceptions().add(addPos, silentSkip);
-			}
-		}
-	}
-
 	private void undoLocatorMapDeltas(EntityLocatorMap locatorMap,
 			List<DomainTransformRequest> transformRequests) {
 		transformRequests.stream().map(DomainTransformRequest::getEvents)
@@ -571,182 +599,44 @@ public class TransformPersisterInPersistenceContext {
 				.forEach(locator -> locatorMap.remove(locator));
 	}
 
-	protected void persistEvent(ThreadlocalTransformManager tlTransformManager,
-			TransformPersistenceToken token,
-			DelayedEntityPersister delayedEntityPersister,
-			DomainTransformEvent event) throws DomainTransformException {
-		try {
-			tlTransformManager.setIgnorePropertyChanges(true);
-			if (event.getNewStringValue() != null
-					&& event.getNewStringValue().contains("\u0000")) {
-				logger.warn("Removed unicode 0x0 from event {}/{}/{}",
-						event.toObjectLocator(), event.getTransformType(),
-						event.getPropertyName());
-				// pg will not accept 0x0
-				event.setNewStringValue(
-						event.getNewStringValue().replace("\u0000", ""));
-				// and must blank this too
-				event.setNewValue(null);
-			}
-			tlTransformManager.fireDomainTransform(event);
-			if (delayedEntityPersister.checkPersistEntity(event)) {
-			} else {
-				delayedEntityPersister.checkUpdateVersions(tlTransformManager,
-						token, event);
-			}
-		} finally {
-			tlTransformManager.setIgnorePropertyChanges(false);
-		}
-	}
-
-	@Registration.Singleton
-	/*
-	 * Because 'onFlushDirty' is called well before batch exceptions occur, the
-	 * correct approach was a small change to hibernate and insertion of the
-	 * exceptionConsumer. So 'lastFlushData' etc is unused.
-	 *
-	 * Buuttt...even more optimal would be
-	 */
-	public static class ThreadData {
-		public static ThreadData get() {
-			return Registry.impl(ThreadData.class);
-		}
-
-		BiConsumer<RuntimeException, PreparedStatement> exceptionConsumer = (re,
-				ps) -> this.consumeException(re, ps);
-
-		private ConcurrentMap<Thread, FlushData> lastFlushData = new ConcurrentHashMap<>();
-
-		private ConcurrentMap<Thread, Boolean> observingFlushData = new ConcurrentHashMap<>();
-
-		Logger logger = LoggerFactory.getLogger(getClass());
-
-		private Class logFlushDataOfClass;
-
-		public ThreadData() {
-			// reflection-based
-			if (!Ax.isTest()) {
-				Registry.impl(JPAImplementation.class)
-						.registerBatchExceptionConsumer(exceptionConsumer);
-			}
-		}
-
-		public void afterTransactionCompletion() {
-			//
-			// because we may only learn about the exception (in client code)
-			// after tx completion, use client observing call to evict rather
-			// than here
-		}
-
-		public void logFlushDataOfClass(Class logFlushDataOfClass) {
-			this.logFlushDataOfClass = logFlushDataOfClass;
-		}
-
-		public void logLastFlushData() {
-			Thread currentThread = Thread.currentThread();
-			FlushData flushData = lastFlushData.get(currentThread);
-			if (flushData != null) {
-				logger.info("Last entity flush data");
-				logger.info(flushData.toString());
-			}
-		}
-
-		public void onFlushDirty(Object entity, Serializable id,
-				Object[] currentState, Object[] previousState,
-				String[] propertyNames, Object[] types) {
-			Thread currentThread = Thread.currentThread();
-			if (!observingFlushData.containsKey(currentThread)) {
-				return;
-			}
-			FlushData flushData = new FlushData(entity, id, currentState,
-					previousState, propertyNames, types);
-			if (entity.getClass() == logFlushDataOfClass) {
-				logger.info("Logging flush data: {} - {}/{}\n{}", entity,
-						entity.getClass().getSimpleName(), id,
-						flushData.toDelta());
-			}
-			lastFlushData.put(currentThread, flushData);
-		}
-
-		void consumeException(RuntimeException re, PreparedStatement ps) {
-			try {
-				if (ps.getClass().getName().equals(
-						"org.jboss.jca.adapters.jdbc.jdk8.WrappedPreparedStatementJDK8")) {
-					Field wrappedField = SEUtilities
-							.getFieldByName(ps.getClass(), "s");
-					wrappedField.setAccessible(true);
-					ps = (PreparedStatement) wrappedField.get(ps);
-				}
-				logger.warn("(Prepared) statement causing issue");
-				logger.warn(ps.toString());
-			} catch (Exception e) {
-				throw WrappedRuntimeException.wrap(e);
-			}
-		}
-
-		void observingFlushData(boolean observing) {
-			Thread currentThread = Thread.currentThread();
-			if (observing) {
-				observingFlushData.put(currentThread, true);
-			} else {
-				lastFlushData.remove(currentThread);
-				observingFlushData.remove(currentThread);
-			}
-		}
-
-		@SuppressWarnings("unused")
-		static class FlushData {
-			private Object entity;
-
-			private Serializable id;
-
-			private Object[] currentState;
-
-			private Object[] previousState;
-
-			private String[] propertyNames;
-
-			private Object[] types;
-
-			FlushData(Object entity, Serializable id, Object[] currentState,
-					Object[] previousState, String[] propertyNames,
-					Object[] types) {
-				this.entity = entity;
-				this.id = id;
-				this.currentState = currentState;
-				this.previousState = previousState;
-				this.propertyNames = propertyNames;
-				this.types = types;
-			}
-
-			public String toDelta() {
-				FormatBuilder fb = new FormatBuilder();
-				for (int idx = 0; idx < currentState.length; idx++) {
-					Object p = previousState[idx];
-					Object c = currentState[idx];
-					Object n = propertyNames[idx];
-					if (!Objects.equals(p, c)) {
-						fb.line("%s :: %s => %s", n, p, c);
-					}
-				}
-				return fb.toString();
-			}
-
-			@Override
-			public String toString() {
-				FormatBuilder fb = new FormatBuilder();
-				fb.line("Entity: %s", entity);
-				fb.line("Id: %s", id);
-				return fb.toString();
-			}
-		}
-	}
-
 	private class DelayedEntityPersister {
 		DomainTransformEvent lastCreationEvent = null;
 
 		Set<Long> persistedLocals = new LongOpenHashSet(
 				Hash.DEFAULT_INITIAL_SIZE, Hash.VERY_FAST_LOAD_FACTOR);
+
+		/*
+		 * Most insertion transform patterns will be
+		 * "create - modify modify modify - next entity" - this persister
+		 * optimises (by only writing when required) and prevents ensures
+		 * entities are persisted before (incoming) association with other
+		 * entities
+		 */
+		boolean checkPersistEntity(DomainTransformEvent event) {
+			boolean updatedVersions = false;
+			if (lastCreationEvent != null
+					&& (event == null || event.getObjectId() != 0
+							|| event.getObjectLocalId() != lastCreationEvent
+									.getObjectLocalId())) {
+				Entity entity = ThreadlocalTransformManager.cast()
+						.getLocalIdToEntityMap()
+						.get(lastCreationEvent.getObjectLocalId());
+				updateVersions(entity);
+				getEntityManager().persist(entity);
+				persistedLocals.add(lastCreationEvent.getObjectLocalId());
+				lastCreationEvent.setGeneratedServerId(entity.getId());
+				ThreadlocalTransformManager.cast().getClientInstanceEntityMap()
+						.putToLookups(entity.toLocator());
+				lastCreationEvent = null;
+				updatedVersions = true;
+			}
+			if (event != null
+					&& event.getTransformType() == TransformType.CREATE_OBJECT
+					&& !persistedLocals.contains(event.getObjectLocalId())) {
+				lastCreationEvent = event;
+			}
+			return updatedVersions;
+		}
 
 		/*
 		 * Only update version metadata if entity has a db property (i.e.
@@ -806,41 +696,151 @@ public class TransformPersisterInPersistenceContext {
 				}
 			}
 		}
-
-		/*
-		 * Most insertion transform patterns will be
-		 * "create - modify modify modify - next entity" - this persister
-		 * optimises (by only writing when required) and prevents ensures
-		 * entities are persisted before (incoming) association with other
-		 * entities
-		 */
-		boolean checkPersistEntity(DomainTransformEvent event) {
-			boolean updatedVersions = false;
-			if (lastCreationEvent != null
-					&& (event == null || event.getObjectId() != 0
-							|| event.getObjectLocalId() != lastCreationEvent
-									.getObjectLocalId())) {
-				Entity entity = ThreadlocalTransformManager.cast()
-						.getLocalIdToEntityMap()
-						.get(lastCreationEvent.getObjectLocalId());
-				updateVersions(entity);
-				getEntityManager().persist(entity);
-				persistedLocals.add(lastCreationEvent.getObjectLocalId());
-				lastCreationEvent.setGeneratedServerId(entity.getId());
-				ThreadlocalTransformManager.cast().getClientInstanceEntityMap()
-						.putToLookups(entity.toLocator());
-				lastCreationEvent = null;
-				updatedVersions = true;
-			}
-			if (event != null
-					&& event.getTransformType() == TransformType.CREATE_OBJECT
-					&& !persistedLocals.contains(event.getObjectLocalId())) {
-				lastCreationEvent = event;
-			}
-			return updatedVersions;
-		}
 	}
 
 	static class DeliberatelyThrownWrapperException extends RuntimeException {
+	}
+
+	@Registration.Singleton
+	/*
+	 * Because 'onFlushDirty' is called well before batch exceptions occur, the
+	 * correct approach was a small change to hibernate and insertion of the
+	 * exceptionConsumer. So 'lastFlushData' etc is unused.
+	 *
+	 * Buuttt...even more optimal would be
+	 */
+	public static class ThreadData {
+		public static ThreadData get() {
+			return Registry.impl(ThreadData.class);
+		}
+
+		BiConsumer<RuntimeException, PreparedStatement> exceptionConsumer = (re,
+				ps) -> this.consumeException(re, ps);
+
+		private ConcurrentMap<Thread, FlushData> lastFlushData = new ConcurrentHashMap<>();
+
+		private ConcurrentMap<Thread, Boolean> observingFlushData = new ConcurrentHashMap<>();
+
+		Logger logger = LoggerFactory.getLogger(getClass());
+
+		private Class logFlushDataOfClass;
+
+		public ThreadData() {
+			// reflection-based
+			if (!Ax.isTest()) {
+				Registry.impl(JPAImplementation.class)
+						.registerBatchExceptionConsumer(exceptionConsumer);
+			}
+		}
+
+		public void afterTransactionCompletion() {
+			//
+			// because we may only learn about the exception (in client code)
+			// after tx completion, use client observing call to evict rather
+			// than here
+		}
+
+		void consumeException(RuntimeException re, PreparedStatement ps) {
+			try {
+				if (ps.getClass().getName().equals(
+						"org.jboss.jca.adapters.jdbc.jdk8.WrappedPreparedStatementJDK8")) {
+					Field wrappedField = SEUtilities
+							.getFieldByName(ps.getClass(), "s");
+					wrappedField.setAccessible(true);
+					ps = (PreparedStatement) wrappedField.get(ps);
+				}
+				logger.warn("(Prepared) statement causing issue");
+				logger.warn(ps.toString());
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		public void logFlushDataOfClass(Class logFlushDataOfClass) {
+			this.logFlushDataOfClass = logFlushDataOfClass;
+		}
+
+		public void logLastFlushData() {
+			Thread currentThread = Thread.currentThread();
+			FlushData flushData = lastFlushData.get(currentThread);
+			if (flushData != null) {
+				logger.info("Last entity flush data");
+				logger.info(flushData.toString());
+			}
+		}
+
+		void observingFlushData(boolean observing) {
+			Thread currentThread = Thread.currentThread();
+			if (observing) {
+				observingFlushData.put(currentThread, true);
+			} else {
+				lastFlushData.remove(currentThread);
+				observingFlushData.remove(currentThread);
+			}
+		}
+
+		public void onFlushDirty(Object entity, Serializable id,
+				Object[] currentState, Object[] previousState,
+				String[] propertyNames, Object[] types) {
+			Thread currentThread = Thread.currentThread();
+			if (!observingFlushData.containsKey(currentThread)) {
+				return;
+			}
+			FlushData flushData = new FlushData(entity, id, currentState,
+					previousState, propertyNames, types);
+			if (entity.getClass() == logFlushDataOfClass) {
+				logger.info("Logging flush data: {} - {}/{}\n{}", entity,
+						entity.getClass().getSimpleName(), id,
+						flushData.toDelta());
+			}
+			lastFlushData.put(currentThread, flushData);
+		}
+
+		@SuppressWarnings("unused")
+		static class FlushData {
+			private Object entity;
+
+			private Serializable id;
+
+			private Object[] currentState;
+
+			private Object[] previousState;
+
+			private String[] propertyNames;
+
+			private Object[] types;
+
+			FlushData(Object entity, Serializable id, Object[] currentState,
+					Object[] previousState, String[] propertyNames,
+					Object[] types) {
+				this.entity = entity;
+				this.id = id;
+				this.currentState = currentState;
+				this.previousState = previousState;
+				this.propertyNames = propertyNames;
+				this.types = types;
+			}
+
+			public String toDelta() {
+				FormatBuilder fb = new FormatBuilder();
+				for (int idx = 0; idx < currentState.length; idx++) {
+					Object p = previousState[idx];
+					Object c = currentState[idx];
+					Object n = propertyNames[idx];
+					if (!Objects.equals(p, c)) {
+						fb.line("%s :: %s => %s", n, p, c);
+					}
+				}
+				return fb.toString();
+			}
+
+			@Override
+			public String toString() {
+				FormatBuilder fb = new FormatBuilder();
+				fb.line("Entity: %s", entity);
+				fb.line("Id: %s", id);
+				return fb.toString();
+			}
+		}
 	}
 }

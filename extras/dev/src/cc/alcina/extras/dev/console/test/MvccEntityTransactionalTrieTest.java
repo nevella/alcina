@@ -37,6 +37,21 @@ public class MvccEntityTransactionalTrieTest<IU extends Entity & IUser, IG exten
 
 	transient private long initialCount;
 
+	@Override
+	protected void run1() throws Exception {
+		projection = Registry.impl(TestSupport.class).getTrieProjection();
+		key = "jajajamoew" + System.currentTimeMillis() + "@nodomain.com";
+		testKey = "moew";
+		initialCount = projection.getSubstringMatches(testKey).count();
+		txLatch = new CountDownLatch(2);
+		tx1Latch1 = new CountDownLatch(1);
+		tx1Latch2 = new CountDownLatch(1);
+		tx2Latch1 = new CountDownLatch(1);
+		startTx1();
+		startTx2();
+		txLatch.await();
+	}
+
 	private void startTx1() {
 		new Thread("test-mvcc-1") {
 			@Override
@@ -98,20 +113,5 @@ public class MvccEntityTransactionalTrieTest<IU extends Entity & IUser, IG exten
 				}
 			}
 		}.start();
-	}
-
-	@Override
-	protected void run1() throws Exception {
-		projection = Registry.impl(TestSupport.class).getTrieProjection();
-		key = "jajajamoew" + System.currentTimeMillis() + "@nodomain.com";
-		testKey = "moew";
-		initialCount = projection.getSubstringMatches(testKey).count();
-		txLatch = new CountDownLatch(2);
-		tx1Latch1 = new CountDownLatch(1);
-		tx1Latch2 = new CountDownLatch(1);
-		tx2Latch1 = new CountDownLatch(1);
-		startTx1();
-		startTx2();
-		txLatch.await();
 	}
 }

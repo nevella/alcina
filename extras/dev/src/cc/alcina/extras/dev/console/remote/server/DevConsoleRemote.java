@@ -72,10 +72,29 @@ public class DevConsoleRemote {
 		addRecord(record);
 	}
 
+	synchronized void addRecord(ConsoleRecord record) {
+		records.add(record);
+		if (notifyTask != null) {
+			return;
+		}
+		notifyTask = new TimerTask() {
+			@Override
+			public void run() {
+				synchronized (outputReadyNotifier) {
+					outputReadyNotifier.notifyAll();
+				}
+			}
+		};
+		timer.scheduleAtFixedRate(notifyTask, 50, 50);
+	}
+
 	public void addSetCommandLineEvent(String text) {
 		ConsoleRecord record = new ConsoleRecord();
 		record.commandText = text;
 		addRecord(record);
+	}
+
+	protected void addSubclassHandlers(HandlerCollection handlers) {
 	}
 
 	public void doCommandHistoryDelta(int delta) {
@@ -119,29 +138,22 @@ public class DevConsoleRemote {
 		devConsole.performCommand(commandString);
 	}
 
-	public void setDevConsole(DevConsole devConsole) {
-		this.devConsole = devConsole;
-	}
-
-	public void setOverridePort(Integer overridePort) {
-		this.overridePort = overridePort;
-	}
-
-	public void start() throws Exception {
-		if (!Configuration.is("serve")) {
-			return;
+	/*
+	 * FIXME - romcom - add + implement eviction policy
+	 */
+	void registerRemoteComponent(RemoteComponent component) {
+		{
+			ContextHandler protocolHandler = new ContextHandler(handlers,
+					component.getPath());
+			protocolHandler.setAllowNullPathInfo(true);
+			protocolHandler.setHandler(
+					new RemoteComponentProtocolServer.ServerHandler(component));
 		}
-		hasRemote = true;
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					run0();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			};
-		}.start();
+	}
+
+	protected void registerRemoteComponents(HandlerCollection handlers) {
+		Registry.query(RemoteComponent.class).implementations()
+				.forEach(this::registerRemoteComponent);
 	}
 
 	private void run0() throws Exception {
@@ -222,41 +234,29 @@ public class DevConsoleRemote {
 		server.join();
 	}
 
-	protected void addSubclassHandlers(HandlerCollection handlers) {
+	public void setDevConsole(DevConsole devConsole) {
+		this.devConsole = devConsole;
 	}
 
-	protected void registerRemoteComponents(HandlerCollection handlers) {
-		Registry.query(RemoteComponent.class).implementations()
-				.forEach(this::registerRemoteComponent);
+	public void setOverridePort(Integer overridePort) {
+		this.overridePort = overridePort;
 	}
 
-	synchronized void addRecord(ConsoleRecord record) {
-		records.add(record);
-		if (notifyTask != null) {
+	public void start() throws Exception {
+		if (!Configuration.is("serve")) {
 			return;
 		}
-		notifyTask = new TimerTask() {
+		hasRemote = true;
+		new Thread() {
 			@Override
 			public void run() {
-				synchronized (outputReadyNotifier) {
-					outputReadyNotifier.notifyAll();
+				try {
+					run0();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
 				}
-			}
-		};
-		timer.scheduleAtFixedRate(notifyTask, 50, 50);
-	}
-
-	/*
-	 * FIXME - romcom - add + implement eviction policy
-	 */
-	void registerRemoteComponent(RemoteComponent component) {
-		{
-			ContextHandler protocolHandler = new ContextHandler(handlers,
-					component.getPath());
-			protocolHandler.setAllowNullPathInfo(true);
-			protocolHandler.setHandler(
-					new RemoteComponentProtocolServer.ServerHandler(component));
-		}
+			};
+		}.start();
 	}
 
 	synchronized List<ConsoleRecord> takeRecords(String clientInstanceUid) {
@@ -319,14 +319,14 @@ public class DevConsoleRemote {
 					.equals(callerClientInstanceUid, clientInstanceUid);
 		}
 
-		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToStringOneLine(this);
-		}
-
 		private void putCallerId() {
 			this.callerClientInstanceUid = LooseContext
 					.get(CONTEXT_CALLER_CLIENT_INSTANCE_UID);
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToStringOneLine(this);
 		}
 	}
 

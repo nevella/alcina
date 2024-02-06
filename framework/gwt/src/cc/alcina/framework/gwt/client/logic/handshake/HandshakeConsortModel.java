@@ -97,8 +97,16 @@ public class HandshakeConsortModel {
 		return this.deltasToApply;
 	}
 
+	private DomainModelDeltaMetadata getDomainObjectsMetadata() {
+		return DeltaStore.get().getDomainObjectsMetadata();
+	}
+
 	public List<String> getExistingSignatures() {
 		return this.existingSignatures;
+	}
+
+	private Long getLastUserId() {
+		return DeltaStore.get().getUserId();
 	}
 
 	public LoadObjectsRequest getLoadObjectsRequest() {
@@ -239,14 +247,6 @@ public class HandshakeConsortModel {
 
 	public void setPriorRemoteConnections(boolean priorRemoteConnections) {
 		this.priorRemoteConnections = priorRemoteConnections;
-	}
-
-	private DomainModelDeltaMetadata getDomainObjectsMetadata() {
-		return DeltaStore.get().getDomainObjectsMetadata();
-	}
-
-	private Long getLastUserId() {
-		return DeltaStore.get().getUserId();
 	}
 
 	public class TransportToDeltaConverter implements

@@ -35,6 +35,8 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 public class WorkspaceDefaultActionHandlers {
 	public static abstract class BaseViewActionHandler
 			extends WorkspaceDefaultActionHandlerBase {
+		protected abstract boolean editView();
+
 		public void performAction(PermissibleActionEvent event, Object node,
 				Object object, Workspace workspace, Class nodeObjectClass) {
 			Widget view = null;
@@ -56,8 +58,6 @@ public class WorkspaceDefaultActionHandlers {
 			workspace.getVisualiser().setContentWidget(view);
 			workspace.fireVetoableActionEvent(event);
 		}
-
-		protected abstract boolean editView();
 	}
 
 	@Registration(CloneActionHandler.class)
@@ -179,16 +179,6 @@ public class WorkspaceDefaultActionHandlers {
 			@Override
 			public void ok() {
 				AsyncCallback deleteObjectCallback = new AsyncCallback<Void>() {
-					@Override
-					public void onFailure(Throwable caught) {
-						finish();
-					}
-
-					@Override
-					public void onSuccess(Void result) {
-						finish();
-					}
-
 					private void finish() {
 						entity.delete();
 						if (workspace != null) {
@@ -198,6 +188,16 @@ public class WorkspaceDefaultActionHandlers {
 									new PermissibleActionEvent(entity,
 											event.getAction()));
 						}
+					}
+
+					@Override
+					public void onFailure(Throwable caught) {
+						finish();
+					}
+
+					@Override
+					public void onSuccess(Void result) {
+						finish();
 					}
 				};
 				deleteObjectCallback.onSuccess(null);

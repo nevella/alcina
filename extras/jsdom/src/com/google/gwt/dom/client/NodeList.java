@@ -70,6 +70,11 @@ public class NodeList<T extends Node>
 	}
 
 	@Override
+	public Node item(int arg0) {
+		return getItem(arg0);
+	}
+
+	@Override
 	public Iterator<T> iterator() {
 		return new NodeListIterator();
 	}
@@ -94,10 +99,5 @@ public class NodeList<T extends Node>
 			}
 			return getItem(cursor++);
 		}
-	}
-
-	@Override
-	public Node item(int arg0) {
-		return getItem(arg0);
 	}
 }

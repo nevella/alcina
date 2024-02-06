@@ -42,6 +42,14 @@ public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 
 	public abstract List<CNP> getNamedPlaces();
 
+	protected List<CNP> getNamedPlaces(Class targetClass) {
+		return (List) Registry.query(PermissibleAction.class)
+				.addKeys(targetClass).implementations()
+				.sorted(Comparator.comparing(a -> a.provideId()))
+				.map(action -> namedPlaceForAction(getClass(), action))
+				.collect(Collectors.toList());
+	}
+
 	public String provideCategoryString() {
 		return CommonUtils.pluralise(super.toTitleString(), 0, false);
 	}
@@ -62,14 +70,6 @@ public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 		} else {
 			return Ax.format("%s - %s", provideCategoryString(), nodeName);
 		}
-	}
-
-	protected List<CNP> getNamedPlaces(Class targetClass) {
-		return (List) Registry.query(PermissibleAction.class)
-				.addKeys(targetClass).implementations()
-				.sorted(Comparator.comparing(a -> a.provideId()))
-				.map(action -> namedPlaceForAction(getClass(), action))
-				.collect(Collectors.toList());
 	}
 
 	public static abstract class CategoryNamePlaceTokenizer<CNP extends CategoryNamePlace>

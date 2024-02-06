@@ -133,6 +133,18 @@ public class XmlUtils {
 	private static CachingMap<String, TransformerPool> transformersPool = new CachingConcurrentMap<>(
 			key -> new TransformerPool(true), 10);
 
+	private static void _streamXML(Node n, Writer w, OutputStream s)
+			throws Exception {
+		transformDoc(new DOMSource(n), null,
+				w == null ? new StreamResult(s) : new StreamResult(w),
+				TRANSFORMER_CACHE_MARKER_STREAM_XML, null);
+	}
+
+	public static String addHtmlSchema(String html) {
+		return html.replace("<html>",
+				"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">");
+	}
+
 	public static List<Node> allChildren(Node node) {
 		Stack<Node> nodes = new Stack<Node>();
 		nodes.push(node);
@@ -1398,37 +1410,6 @@ public class XmlUtils {
 		transformDoc(xmlSource, xsltSource, sr, null, null);
 	}
 
-	public static String transformDocToString(Source dataSource,
-			Source trSource) throws Exception {
-		return transformDocToString(dataSource, trSource, null, null);
-	}
-
-	public static String transformDocToString(Source dataSource,
-			Source trSource, String marker) throws Exception {
-		return transformDocToString(dataSource, trSource, marker, null);
-	}
-
-	public static String transformDocToString(Source dataSource,
-			Source trSource, String marker,
-			TransformerFactoryConfigurator configurator) throws Exception {
-		StringWriter wr = new StringWriter();
-		StreamResult streamResult = new StreamResult(wr);
-		transformDoc(dataSource, trSource, streamResult, marker, configurator);
-		return wr.toString();
-	}
-
-	public static void wrapContentIn(Element elt, Element newElt) {
-		moveKids(elt, newElt);
-		elt.appendChild(newElt);
-	}
-
-	private static void _streamXML(Node n, Writer w, OutputStream s)
-			throws Exception {
-		transformDoc(new DOMSource(n), null,
-				w == null ? new StreamResult(s) : new StreamResult(w),
-				TRANSFORMER_CACHE_MARKER_STREAM_XML, null);
-	}
-
 	private static void transformDoc(Source xmlSource, Source xsltSource,
 			StreamResult sr, String cacheMarker,
 			TransformerFactoryConfigurator configurator) throws Exception {
@@ -1454,6 +1435,25 @@ public class XmlUtils {
 		}
 	}
 
+	public static String transformDocToString(Source dataSource,
+			Source trSource) throws Exception {
+		return transformDocToString(dataSource, trSource, null, null);
+	}
+
+	public static String transformDocToString(Source dataSource,
+			Source trSource, String marker) throws Exception {
+		return transformDocToString(dataSource, trSource, marker, null);
+	}
+
+	public static String transformDocToString(Source dataSource,
+			Source trSource, String marker,
+			TransformerFactoryConfigurator configurator) throws Exception {
+		StringWriter wr = new StringWriter();
+		StreamResult streamResult = new StreamResult(wr);
+		transformDoc(dataSource, trSource, streamResult, marker, configurator);
+		return wr.toString();
+	}
+
 	private static String trimAndNormaliseWrappingNewlines(
 			boolean parentIsTextNode, String text) {
 		if (parentIsTextNode) {
@@ -1461,6 +1461,11 @@ public class XmlUtils {
 		} else {
 			return text.replaceFirst("(?s)^[ \t\n]*(.+?)[ \t\n]*$", "$1");
 		}
+	}
+
+	public static void wrapContentIn(Element elt, Element newElt) {
+		moveKids(elt, newElt);
+		elt.appendChild(newElt);
 	}
 
 	public static class DOMLocation {
@@ -1523,6 +1528,18 @@ public class XmlUtils {
 
 	public interface IsInlinePredicate {
 		boolean isInline(Element e);
+	}
+
+	private static class MutableDomLocation {
+		public Node node;
+
+		public int characterOffset;
+
+		public int nodeIndex;
+
+		public DOMLocation toDomLocation() {
+			return new DOMLocation(node, characterOffset, nodeIndex);
+		}
 	}
 
 	public static class NodeComparator implements Comparator<Node> {
@@ -1658,6 +1675,97 @@ public class XmlUtils {
 		public void configure(TransformerFactory transformerFactory);
 	}
 
+	static class TransformerPool {
+		private GenericObjectPool<Transformer> objectPool;
+
+		private TransformerObjectFactory factory;
+
+		private Source xsltSource;
+
+		private TransformerFactoryConfigurator configurator;
+
+		public TransformerPool(boolean withPool) {
+			factory = new TransformerObjectFactory();
+			if (withPool) {
+				objectPool = new GenericObjectPool<Transformer>(factory);
+				objectPool.setMaxTotal(10);
+			}
+		}
+
+		synchronized Transformer borrow(Source xsltSource,
+				TransformerFactoryConfigurator configurator) {
+			this.xsltSource = xsltSource;
+			this.configurator = configurator;
+			try {
+				if (objectPool == null) {
+					return factory.create();
+				} else {
+					return objectPool.borrowObject();
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		public void returnObject(Transformer transformer) {
+			if (objectPool != null) {
+				objectPool.returnObject(transformer);
+			}
+		}
+
+		class TransformerObjectFactory
+				extends BasePooledObjectFactory<Transformer> {
+			@Override
+			public Transformer create() throws Exception {
+				TransformerFactory transformerFactory = TransformerFactory
+						.newInstance();
+				if (configurator != null) {
+					configurator.configure(transformerFactory);
+				}
+				return xsltSource == null ? transformerFactory.newTransformer()
+						: transformerFactory.newTransformer(xsltSource);
+			}
+
+			@Override
+			public PooledObject<Transformer> wrap(Transformer transformer) {
+				return new DefaultPooledObject<Transformer>(transformer);
+			}
+		}
+	}
+
+	static class XmlErrHandler implements ErrorHandler {
+		/**
+		 * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
+		 */
+		@Override
+		public void error(SAXParseException exception) throws SAXException {
+			log(exception);
+		}
+
+		/**
+		 * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
+		 */
+		@Override
+		public void fatalError(SAXParseException exception)
+				throws SAXException {
+			log(exception);
+		}
+
+		private void log(SAXParseException exception) {
+			if (!LooseContext.is(CONTEXT_MUTE_XML_SAX_EXCEPTIONS)) {
+				exception.printStackTrace();
+			}
+		}
+
+		/**
+		 * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
+		 */
+		@Override
+		public void warning(SAXParseException exception) throws SAXException {
+			log(exception);
+		}
+	}
+
 	public static class XmlInsertionCursor {
 		public Node node;
 
@@ -1752,113 +1860,5 @@ public class XmlUtils {
 			Collections.reverse(parts);
 			return CommonUtils.join(parts, "/");
 		}
-	}
-
-	private static class MutableDomLocation {
-		public Node node;
-
-		public int characterOffset;
-
-		public int nodeIndex;
-
-		public DOMLocation toDomLocation() {
-			return new DOMLocation(node, characterOffset, nodeIndex);
-		}
-	}
-
-	static class TransformerPool {
-		private GenericObjectPool<Transformer> objectPool;
-
-		private TransformerObjectFactory factory;
-
-		private Source xsltSource;
-
-		private TransformerFactoryConfigurator configurator;
-
-		public TransformerPool(boolean withPool) {
-			factory = new TransformerObjectFactory();
-			if (withPool) {
-				objectPool = new GenericObjectPool<Transformer>(factory);
-				objectPool.setMaxTotal(10);
-			}
-		}
-
-		public void returnObject(Transformer transformer) {
-			if (objectPool != null) {
-				objectPool.returnObject(transformer);
-			}
-		}
-
-		synchronized Transformer borrow(Source xsltSource,
-				TransformerFactoryConfigurator configurator) {
-			this.xsltSource = xsltSource;
-			this.configurator = configurator;
-			try {
-				if (objectPool == null) {
-					return factory.create();
-				} else {
-					return objectPool.borrowObject();
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		class TransformerObjectFactory
-				extends BasePooledObjectFactory<Transformer> {
-			@Override
-			public Transformer create() throws Exception {
-				TransformerFactory transformerFactory = TransformerFactory
-						.newInstance();
-				if (configurator != null) {
-					configurator.configure(transformerFactory);
-				}
-				return xsltSource == null ? transformerFactory.newTransformer()
-						: transformerFactory.newTransformer(xsltSource);
-			}
-
-			@Override
-			public PooledObject<Transformer> wrap(Transformer transformer) {
-				return new DefaultPooledObject<Transformer>(transformer);
-			}
-		}
-	}
-
-	static class XmlErrHandler implements ErrorHandler {
-		/**
-		 * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
-		 */
-		@Override
-		public void error(SAXParseException exception) throws SAXException {
-			log(exception);
-		}
-
-		/**
-		 * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
-		 */
-		@Override
-		public void fatalError(SAXParseException exception)
-				throws SAXException {
-			log(exception);
-		}
-
-		/**
-		 * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
-		 */
-		@Override
-		public void warning(SAXParseException exception) throws SAXException {
-			log(exception);
-		}
-
-		private void log(SAXParseException exception) {
-			if (!LooseContext.is(CONTEXT_MUTE_XML_SAX_EXCEPTIONS)) {
-				exception.printStackTrace();
-			}
-		}
-	}
-
-	public static String addHtmlSchema(String html) {
-		return html.replace("<html>",
-				"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">");
 	}
 }

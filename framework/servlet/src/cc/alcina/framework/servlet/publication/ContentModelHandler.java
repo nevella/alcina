@@ -35,6 +35,8 @@ public abstract class ContentModelHandler<D extends ContentDefinition, M extends
 		return this.hasResults;
 	}
 
+	protected abstract void prepareContent() throws Exception;
+
 	public boolean prepareContent(D contentDefinition, V deliveryModel)
 			throws Exception {
 		this.contentDefinition = contentDefinition;
@@ -46,6 +48,4 @@ public abstract class ContentModelHandler<D extends ContentDefinition, M extends
 	public void setHasResults(boolean hasResults) {
 		this.hasResults = hasResults;
 	}
-
-	protected abstract void prepareContent() throws Exception;
 }

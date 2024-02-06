@@ -31,6 +31,23 @@ public class WsTcpSession {
 		this.websocketSession = websocketSession;
 	}
 
+	void close() {
+		try {
+			socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void initSocket() throws Exception {
+		String gwtCodesvr = websocketSession.getUpgradeRequest()
+				.getParameterMap().get("gwt.codesvr").get(0);
+		socketPort = Integer
+				.parseInt(gwtCodesvr.replaceFirst(".+:(\\d+)", "$1"));
+		socket = new Socket(Configuration.get("host"), socketPort);
+		client = new JsCodeserverTcpClientJava(socket);
+	}
+
 	public String sendPacketToCodeServer(String payload) throws Exception {
 		if (socket == null) {
 			initSocket();
@@ -47,22 +64,5 @@ public class WsTcpSession {
 		}
 		messageId++;
 		return Base64.getEncoder().encodeToString(responseBytes);
-	}
-
-	private void initSocket() throws Exception {
-		String gwtCodesvr = websocketSession.getUpgradeRequest()
-				.getParameterMap().get("gwt.codesvr").get(0);
-		socketPort = Integer
-				.parseInt(gwtCodesvr.replaceFirst(".+:(\\d+)", "$1"));
-		socket = new Socket(Configuration.get("host"), socketPort);
-		client = new JsCodeserverTcpClientJava(socket);
-	}
-
-	void close() {
-		try {
-			socket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 }

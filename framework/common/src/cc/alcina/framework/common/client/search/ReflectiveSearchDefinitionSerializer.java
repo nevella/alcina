@@ -107,6 +107,11 @@ public class ReflectiveSearchDefinitionSerializer
 	public ReflectiveSearchDefinitionSerializer() {
 	}
 
+	protected boolean
+			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
+		return Reflections.at(defClass).has(TypeSerialization.class);
+	}
+
 	@Override
 	public <SD extends SearchDefinition> SD deserialize(
 			Class<? extends SearchDefinition> clazz, String serializedDef) {
@@ -154,27 +159,6 @@ public class ReflectiveSearchDefinitionSerializer
 		}
 	}
 
-	@Override
-	public synchronized String serialize(SearchDefinition def) {
-		if (lastDef == def) {
-			if (LooseContext.is(CONTEXT_GUARANTEE_LAST_DEF_NOT_CHANGED)) {
-				return lastStringDef;
-			} else {
-				lastDefCount++;
-				if (lastDefCount == 10) {
-					logger.warn(
-							"Possibly need to run with context guarantee - {}",
-							lastDef);
-				}
-			}
-		} else {
-			lastDef = def;
-			lastDefCount = 0;
-		}
-		lastStringDef = serialize0(lastDef);
-		return lastStringDef;
-	}
-
 	private void ensureLookups() {
 		if (abbrevLookup.isEmpty()) {
 			Registry.query().addKeys(SearchDefinitionSerializationInfo.class)
@@ -194,6 +178,27 @@ public class ReflectiveSearchDefinitionSerializer
 						reverseAbbrevLookup.put(clazz, info.value());
 					});
 		}
+	}
+
+	@Override
+	public synchronized String serialize(SearchDefinition def) {
+		if (lastDef == def) {
+			if (LooseContext.is(CONTEXT_GUARANTEE_LAST_DEF_NOT_CHANGED)) {
+				return lastStringDef;
+			} else {
+				lastDefCount++;
+				if (lastDefCount == 10) {
+					logger.warn(
+							"Possibly need to run with context guarantee - {}",
+							lastDef);
+				}
+			}
+		} else {
+			lastDef = def;
+			lastDefCount = 0;
+		}
+		lastStringDef = serialize0(lastDef);
+		return lastStringDef;
 	}
 
 	private String serialize0(SearchDefinition def) {
@@ -245,10 +250,5 @@ public class ReflectiveSearchDefinitionSerializer
 			flatTreeException.printStackTrace();
 		}
 		return RS0 + escapeJsonForUrl(str);
-	}
-
-	protected boolean
-			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
-		return Reflections.at(defClass).has(TypeSerialization.class);
 	}
 }

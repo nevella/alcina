@@ -104,6 +104,12 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 
 	private static final PopupImpl impl = GWT.create(PopupImpl.class);
 
+	static int showingCount = 0;
+
+	public static int getShowingCount() {
+		return showingCount;
+	}
+
 	/**
 	 * Window resize handler used to keep the glass the proper size.
 	 */
@@ -264,6 +270,19 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	}
 
 	/**
+	 * Remove focus from an Element.
+	 * 
+	 * @param elt
+	 *            The Element on which <code>blur()</code> will be invoked
+	 */
+	private native void blur(Element elt) /*-{
+    // Issue 2390: blurring the body causes IE to disappear to the background
+    if (elt.blur && elt != $doc.body) {
+      elt.blur();
+    }
+	}-*/;
+
+	/**
 	 * Centers the popup in the browser window and shows it. If the popup was
 	 * already showing, then the popup is centered.
 	 */
@@ -292,6 +311,58 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 				setVisible(true);
 			}
 		}
+	}
+
+	/**
+	 * Does the event target one of the partner elements?
+	 * 
+	 * @param event
+	 *            the native event
+	 * @return true if the event targets a partner
+	 */
+	private boolean eventTargetsPartner(NativeEvent event) {
+		if (autoHidePartners == null) {
+			return false;
+		}
+		EventTarget target = event.getEventTarget();
+		if (Element.is(target)) {
+			for (Element elem : autoHidePartners) {
+				if (elem.isOrHasChild(Element.as(target))) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Does the event target this popup?
+	 * 
+	 * @param event
+	 *            the native event
+	 * @return true if the event targets the popup
+	 */
+	private boolean eventTargetsPopup(NativeEvent event) {
+		EventTarget target = event.getEventTarget();
+		if (Element.is(target)) {
+			return getElement().isOrHasChild(Element.as(target));
+		}
+		return false;
+	}
+
+	@Override
+	protected Element getContainerElement() {
+		return impl.getContainerElement(getPopupImplElement()).cast();
+	}
+
+	/**
+	 * Get the glass element used by this {@link PopupPanel}. The element is not
+	 * created until it is enabled via {@link #setGlassEnabled(boolean)}.
+	 * 
+	 * @return the glass element, or null if not created
+	 */
+	protected Element getGlassElement() {
+		return glass;
 	}
 
 	/**
@@ -329,6 +400,19 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	}
 
 	/**
+	 * Get the element that {@link PopupImpl} uses. PopupImpl creates an element
+	 * that goes inside of the outer element, so all methods in PopupImpl are
+	 * relative to the first child of the outer element, not the outer element
+	 * itself.
+	 * 
+	 * @return the Element that {@link PopupImpl} creates and expects
+	 */
+	private Element getPopupImplElement() {
+		Element firstChild = DOM.getFirstChild(super.getContainerElement());
+		return firstChild;
+	}
+
+	/**
 	 * Gets the popup's left position relative to the browser's client area.
 	 * 
 	 * @return the popup's left position
@@ -344,6 +428,11 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 */
 	public int getPopupTop() {
 		return DOM.getAbsoluteTop(getElement());
+	}
+
+	@Override
+	protected Element getStyleElement() {
+		return impl.getStyleElement(getPopupImplElement()).cast();
 	}
 
 	@Override
@@ -459,6 +548,33 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	}
 
 	/**
+	 * We control size by setting our child widget's size. However, if we don't
+	 * currently have a child, we record the size the user wanted so that when
+	 * we do get a child, we can set it correctly. Until size is explicitly
+	 * cleared, any child put into the popup will be given that size.
+	 */
+	void maybeUpdateSize() {
+		// For subclasses of PopupPanel, we want the default behavior of
+		// setWidth
+		// and setHeight to change the dimensions of PopupPanel's child widget.
+		// We do this because PopupPanel's child widget is the first widget in
+		// the hierarchy which provides structure to the panel. DialogBox is
+		// an example of this. We want to set the dimensions on DialogBox's
+		// FlexTable, which is PopupPanel's child widget. However, it is not
+		// DialogBox's child widget. To make sure that we are actually getting
+		// PopupPanel's child widget, we have to use super.getWidget().
+		Widget w = super.getWidget();
+		if (w != null) {
+			if (desiredHeight != null) {
+				w.setHeight(desiredHeight);
+			}
+			if (desiredWidth != null) {
+				w.setWidth(desiredWidth);
+			}
+		}
+	}
+
+	/**
 	 * @deprecated Use {@link #onPreviewNativeEvent} instead
 	 */
 	@Override
@@ -518,6 +634,279 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		return true;
 	}
 
+	protected void onPreviewNativeEvent(NativePreviewEvent event) {
+		// Cancel the event based on the deprecated onEventPreview() method
+		if (event.isFirstHandler()
+				&& !onEventPreview(Event.as(event.getNativeEvent()))) {
+			event.cancel();
+		}
+	}
+
+	@Override
+	protected void onUnload() {
+		super.onUnload();
+		// Just to be sure, we perform cleanup when the popup is unloaded (i.e.
+		// removed from the DOM). This is normally taken care of in hide(), but
+		// it
+		// can be missed if someone removes the popup directly from the
+		// RootPanel.
+		if (isShowing()) {
+			resizeAnimation.setState(false, true);
+		}
+	}
+
+	/**
+	 * Positions the popup, called after the offset width and height of the
+	 * popup are known.
+	 * 
+	 * @param relativeObject
+	 *            the ui object to position relative to
+	 * @param offsetWidth
+	 *            the drop down's offset width
+	 * @param offsetHeight
+	 *            the drop down's offset height
+	 */
+	void position(final UIObject relativeObject, int offsetWidth,
+			int offsetHeight) {
+		// Calculate left position for the popup. The computation for
+		// the left position is bidi-sensitive.
+		int textBoxOffsetWidth = relativeObject.getOffsetWidth();
+		// Compute the difference between the popup's width and the
+		// textbox's width
+		int offsetWidthDiff = offsetWidth - textBoxOffsetWidth;
+		int left;
+		if (LocaleInfo.getCurrentLocale().isRTL()) { // RTL case
+			int textBoxAbsoluteLeft = relativeObject.getAbsoluteLeft();
+			// Right-align the popup. Note that this computation is
+			// valid in the case where offsetWidthDiff is negative.
+			left = textBoxAbsoluteLeft - offsetWidthDiff;
+			// If the suggestion popup is not as wide as the text box, always
+			// align to the right edge of the text box. Otherwise, figure out
+			// whether
+			// to right-align or left-align the popup.
+			if (offsetWidthDiff > 0) {
+				// Make sure scrolling is taken into account, since
+				// box.getAbsoluteLeft() takes scrolling into account.
+				int windowRight = Window.getClientWidth()
+						+ Window.getScrollLeft();
+				int windowLeft = Window.getScrollLeft();
+				// Compute the left value for the right edge of the textbox
+				int textBoxLeftValForRightEdge = textBoxAbsoluteLeft
+						+ textBoxOffsetWidth;
+				// Distance from the right edge of the text box to the right
+				// edge
+				// of the window
+				int distanceToWindowRight = windowRight
+						- textBoxLeftValForRightEdge;
+				// Distance from the right edge of the text box to the left edge
+				// of the
+				// window
+				int distanceFromWindowLeft = textBoxLeftValForRightEdge
+						- windowLeft;
+				// If there is not enough space for the overflow of the popup's
+				// width to the right of the text box and there IS enough space
+				// for the
+				// overflow to the right of the text box, then left-align the
+				// popup.
+				// However, if there is not enough space on either side, stick
+				// with
+				// right-alignment.
+				if (distanceFromWindowLeft < offsetWidth
+						&& distanceToWindowRight >= offsetWidthDiff) {
+					// Align with the left edge of the text box.
+					left = textBoxAbsoluteLeft;
+				}
+			}
+		} else { // LTR case
+			// Left-align the popup.
+			left = relativeObject.getAbsoluteLeft();
+			// If the suggestion popup is not as wide as the text box, always
+			// align to
+			// the left edge of the text box. Otherwise, figure out whether to
+			// left-align or right-align the popup.
+			if (offsetWidthDiff > 0) {
+				// Make sure scrolling is taken into account, since
+				// box.getAbsoluteLeft() takes scrolling into account.
+				int windowRight = Window.getClientWidth()
+						+ Window.getScrollLeft();
+				int windowLeft = Window.getScrollLeft();
+				// Distance from the left edge of the text box to the right edge
+				// of the window
+				int distanceToWindowRight = windowRight - left;
+				// Distance from the left edge of the text box to the left edge
+				// of the
+				// window
+				int distanceFromWindowLeft = left - windowLeft;
+				// If there is not enough space for the overflow of the popup's
+				// width to the right of hte text box, and there IS enough space
+				// for the
+				// overflow to the left of the text box, then right-align the
+				// popup.
+				// However, if there is not enough space on either side, then
+				// stick with
+				// left-alignment.
+				if (distanceToWindowRight < offsetWidth
+						&& distanceFromWindowLeft >= offsetWidthDiff) {
+					// Align with the right edge of the text box.
+					left -= offsetWidthDiff;
+				}
+			}
+		}
+		// Calculate top position for the popup
+		int top = relativeObject.getAbsoluteTop();
+		// Make sure scrolling is taken into account, since
+		// box.getAbsoluteTop() takes scrolling into account.
+		int windowTop = Window.getScrollTop();
+		int windowBottom = Window.getScrollTop() + Window.getClientHeight();
+		// Distance from the top edge of the window to the top edge of the
+		// text box
+		int distanceFromWindowTop = top - windowTop;
+		// Distance from the bottom edge of the window to the bottom edge of
+		// the text box
+		int distanceToWindowBottom = windowBottom
+				- (top + relativeObject.getOffsetHeight());
+		// If there is not enough space for the popup's height below the text
+		// box and there IS enough space for the popup's height above the text
+		// box, then then position the popup above the text box. However, if
+		// there
+		// is not enough space on either side, then stick with displaying the
+		// popup below the text box.
+		if (distanceToWindowBottom < offsetHeight
+				&& distanceFromWindowTop >= offsetHeight) {
+			top -= offsetHeight;
+		} else {
+			// Position above the text box
+			top += relativeObject.getOffsetHeight();
+		}
+		setPopupPosition(left, top);
+	}
+
+	/**
+	 * Preview the {@link NativePreviewEvent}.
+	 * 
+	 * @param event
+	 *            the {@link NativePreviewEvent}
+	 */
+	private void previewNativeEvent(NativePreviewEvent event) {
+		Event nativeEvent = Event.as(event.getNativeEvent());
+		boolean keyEvent = false;
+		switch (nativeEvent.getType()) {
+		case BrowserEvents.KEYDOWN:
+		case BrowserEvents.KEYPRESS:
+		case BrowserEvents.KEYUP:
+			EventTarget eventTarget2 = nativeEvent.getEventTarget();
+			keyEvent = true;
+			break;
+		}
+		// If the event has been canceled or consumed, ignore it
+		if (event.isCanceled() || (!previewAllNativeEvents && !keyEvent
+				&& event.isConsumed())) {
+			// We need to ensure that we cancel the event even if its been
+			// consumed so
+			// that popups lower on the stack do not auto hide
+			if (modal) {
+				event.cancel();
+			}
+			return;
+		}
+		// Fire the event hook and return if the event is canceled
+		onPreviewNativeEvent(event);
+		if (event.isCanceled()) {
+			return;
+		}
+		// If the event targets the popup or the partner, consume it
+		boolean eventTargetsPopupOrPartner = eventTargetsPopup(nativeEvent)
+				|| eventTargetsPartner(nativeEvent);
+		EventTarget eTarget = nativeEvent.getEventTarget();
+		boolean eventTargetsScrollBar = Element.is(eTarget)
+				&& Element.as(eTarget).getTagName().equalsIgnoreCase("html");
+		if (cachedIsMobile == null) {
+			cachedIsMobile = BrowserMod.isMobile();
+		}
+		boolean wasTouchMaybeDrag = cachedIsMobile && (BrowserEvents.TOUCHSTART
+				.equals(nativeEvent.getType())
+				|| BrowserEvents.TOUCHEND.equals(nativeEvent.getType())
+				|| BrowserEvents.TOUCHMOVE.equals(nativeEvent.getType())
+				|| BrowserEvents.GESTURECHANGE.equals(nativeEvent.getType())
+				|| BrowserEvents.GESTUREEND.equals(nativeEvent.getType())
+				|| BrowserEvents.GESTURESTART.equals(nativeEvent.getType())
+				|| BrowserEvents.SCROLL.equals(nativeEvent.getType()));
+		if (eventTargetsPopupOrPartner || eventTargetsScrollBar
+				|| wasTouchMaybeDrag) {
+			event.consume();
+		}
+		// Cancel the event if it doesn't target the modal popup. Note that the
+		// event can be both canceled and consumed.
+		if (modal && !keyEvent) {
+			event.cancel();
+		}
+		// Switch on the event type
+		int type = nativeEvent.getTypeInt();
+		switch (type) {
+		case Event.ONKEYDOWN: {
+			if (!onKeyDownPreview((char) nativeEvent.getKeyCode(),
+					KeyboardListenerCollection
+							.getKeyboardModifiers(nativeEvent))) {
+				event.cancel();
+			}
+			return;
+		}
+		case Event.ONKEYUP: {
+			if (!onKeyUpPreview((char) nativeEvent.getKeyCode(),
+					KeyboardListenerCollection
+							.getKeyboardModifiers(nativeEvent))) {
+				event.cancel();
+			}
+			return;
+		}
+		case Event.ONKEYPRESS: {
+			if (!onKeyPressPreview((char) nativeEvent.getKeyCode(),
+					KeyboardListenerCollection
+							.getKeyboardModifiers(nativeEvent))) {
+				event.cancel();
+			}
+			return;
+		}
+		case Event.ONMOUSEDOWN:
+		case Event.ONTOUCHSTART:
+			// Don't eat events if event capture is enabled, as this can
+			// interfere with dialog dragging, for example.
+			if (DOM.getCaptureElement() != null) {
+				event.consume();
+				return;
+			}
+			if (!eventTargetsPopupOrPartner && autoHide) {
+				hide(true);
+				return;
+			}
+			break;
+		case Event.ONMOUSEUP:
+		case Event.ONMOUSEMOVE:
+		case Event.ONCLICK:
+		case Event.ONDBLCLICK: {
+			// Don't eat events if event capture is enabled, as this can
+			// interfere with dialog dragging, for example.
+			if (DOM.getCaptureElement() != null) {
+				event.consume();
+				return;
+			}
+			break;
+		}
+		case Event.ONFOCUS: {
+			EventTarget eventTarget = nativeEvent.getEventTarget();
+			if (Element.is(eventTarget)) {
+				Element target = eventTarget.cast();
+				if (modal && !eventTargetsPopupOrPartner && (target != null)) {
+					blur(target);
+					event.cancel();
+					return;
+				}
+			}
+			break;
+		}
+		}
+	}
+
 	/**
 	 * Remove an autoHide partner.
 	 * 
@@ -541,9 +930,31 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		ListenerWrapper.WrappedPopupListener.remove(this, listener);
 	}
 
+	/**
+	 * Sets the animation used to animate this popup. Used by gwt-incubator to
+	 * allow DropDownPanel to override the default popup animation. Not
+	 * protected because the exact API may change in gwt 1.6.
+	 * 
+	 * @param animation
+	 *            the animation to use for this popup
+	 */
+	void setAnimation(ResizeAnimation animation) {
+		resizeAnimation = animation;
+	}
+
 	@Override
 	public void setAnimationEnabled(boolean enable) {
 		isAnimationEnabled = enable;
+	}
+
+	/**
+	 * Enable or disable animation of the {@link PopupPanel}.
+	 * 
+	 * @param type
+	 *            the type of animation to use
+	 */
+	void setAnimationType(AnimationType type) {
+		animType = type;
 	}
 
 	/**
@@ -815,195 +1226,6 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	}
 
 	/**
-	 * Remove focus from an Element.
-	 * 
-	 * @param elt
-	 *            The Element on which <code>blur()</code> will be invoked
-	 */
-	private native void blur(Element elt) /*-{
-    // Issue 2390: blurring the body causes IE to disappear to the background
-    if (elt.blur && elt != $doc.body) {
-      elt.blur();
-    }
-	}-*/;
-
-	/**
-	 * Does the event target one of the partner elements?
-	 * 
-	 * @param event
-	 *            the native event
-	 * @return true if the event targets a partner
-	 */
-	private boolean eventTargetsPartner(NativeEvent event) {
-		if (autoHidePartners == null) {
-			return false;
-		}
-		EventTarget target = event.getEventTarget();
-		if (Element.is(target)) {
-			for (Element elem : autoHidePartners) {
-				if (elem.isOrHasChild(Element.as(target))) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Does the event target this popup?
-	 * 
-	 * @param event
-	 *            the native event
-	 * @return true if the event targets the popup
-	 */
-	private boolean eventTargetsPopup(NativeEvent event) {
-		EventTarget target = event.getEventTarget();
-		if (Element.is(target)) {
-			return getElement().isOrHasChild(Element.as(target));
-		}
-		return false;
-	}
-
-	/**
-	 * Get the element that {@link PopupImpl} uses. PopupImpl creates an element
-	 * that goes inside of the outer element, so all methods in PopupImpl are
-	 * relative to the first child of the outer element, not the outer element
-	 * itself.
-	 * 
-	 * @return the Element that {@link PopupImpl} creates and expects
-	 */
-	private Element getPopupImplElement() {
-		Element firstChild = DOM.getFirstChild(super.getContainerElement());
-		return firstChild;
-	}
-
-	/**
-	 * Preview the {@link NativePreviewEvent}.
-	 * 
-	 * @param event
-	 *            the {@link NativePreviewEvent}
-	 */
-	private void previewNativeEvent(NativePreviewEvent event) {
-		Event nativeEvent = Event.as(event.getNativeEvent());
-		boolean keyEvent = false;
-		switch (nativeEvent.getType()) {
-		case BrowserEvents.KEYDOWN:
-		case BrowserEvents.KEYPRESS:
-		case BrowserEvents.KEYUP:
-			EventTarget eventTarget2 = nativeEvent.getEventTarget();
-			keyEvent = true;
-			break;
-		}
-		// If the event has been canceled or consumed, ignore it
-		if (event.isCanceled() || (!previewAllNativeEvents && !keyEvent
-				&& event.isConsumed())) {
-			// We need to ensure that we cancel the event even if its been
-			// consumed so
-			// that popups lower on the stack do not auto hide
-			if (modal) {
-				event.cancel();
-			}
-			return;
-		}
-		// Fire the event hook and return if the event is canceled
-		onPreviewNativeEvent(event);
-		if (event.isCanceled()) {
-			return;
-		}
-		// If the event targets the popup or the partner, consume it
-		boolean eventTargetsPopupOrPartner = eventTargetsPopup(nativeEvent)
-				|| eventTargetsPartner(nativeEvent);
-		EventTarget eTarget = nativeEvent.getEventTarget();
-		boolean eventTargetsScrollBar = Element.is(eTarget)
-				&& Element.as(eTarget).getTagName().equalsIgnoreCase("html");
-		if (cachedIsMobile == null) {
-			cachedIsMobile = BrowserMod.isMobile();
-		}
-		boolean wasTouchMaybeDrag = cachedIsMobile && (BrowserEvents.TOUCHSTART
-				.equals(nativeEvent.getType())
-				|| BrowserEvents.TOUCHEND.equals(nativeEvent.getType())
-				|| BrowserEvents.TOUCHMOVE.equals(nativeEvent.getType())
-				|| BrowserEvents.GESTURECHANGE.equals(nativeEvent.getType())
-				|| BrowserEvents.GESTUREEND.equals(nativeEvent.getType())
-				|| BrowserEvents.GESTURESTART.equals(nativeEvent.getType())
-				|| BrowserEvents.SCROLL.equals(nativeEvent.getType()));
-		if (eventTargetsPopupOrPartner || eventTargetsScrollBar
-				|| wasTouchMaybeDrag) {
-			event.consume();
-		}
-		// Cancel the event if it doesn't target the modal popup. Note that the
-		// event can be both canceled and consumed.
-		if (modal && !keyEvent) {
-			event.cancel();
-		}
-		// Switch on the event type
-		int type = nativeEvent.getTypeInt();
-		switch (type) {
-		case Event.ONKEYDOWN: {
-			if (!onKeyDownPreview((char) nativeEvent.getKeyCode(),
-					KeyboardListenerCollection
-							.getKeyboardModifiers(nativeEvent))) {
-				event.cancel();
-			}
-			return;
-		}
-		case Event.ONKEYUP: {
-			if (!onKeyUpPreview((char) nativeEvent.getKeyCode(),
-					KeyboardListenerCollection
-							.getKeyboardModifiers(nativeEvent))) {
-				event.cancel();
-			}
-			return;
-		}
-		case Event.ONKEYPRESS: {
-			if (!onKeyPressPreview((char) nativeEvent.getKeyCode(),
-					KeyboardListenerCollection
-							.getKeyboardModifiers(nativeEvent))) {
-				event.cancel();
-			}
-			return;
-		}
-		case Event.ONMOUSEDOWN:
-		case Event.ONTOUCHSTART:
-			// Don't eat events if event capture is enabled, as this can
-			// interfere with dialog dragging, for example.
-			if (DOM.getCaptureElement() != null) {
-				event.consume();
-				return;
-			}
-			if (!eventTargetsPopupOrPartner && autoHide) {
-				hide(true);
-				return;
-			}
-			break;
-		case Event.ONMOUSEUP:
-		case Event.ONMOUSEMOVE:
-		case Event.ONCLICK:
-		case Event.ONDBLCLICK: {
-			// Don't eat events if event capture is enabled, as this can
-			// interfere with dialog dragging, for example.
-			if (DOM.getCaptureElement() != null) {
-				event.consume();
-				return;
-			}
-			break;
-		}
-		case Event.ONFOCUS: {
-			EventTarget eventTarget = nativeEvent.getEventTarget();
-			if (Element.is(eventTarget)) {
-				Element target = eventTarget.cast();
-				if (modal && !eventTargetsPopupOrPartner && (target != null)) {
-					blur(target);
-					event.cancel();
-					return;
-				}
-			}
-			break;
-		}
-		}
-	}
-
-	/**
 	 * Register or unregister the handlers used by {@link PopupPanel}.
 	 */
 	private void updateHandlers() {
@@ -1039,220 +1261,17 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		}
 	}
 
-	@Override
-	protected Element getContainerElement() {
-		return impl.getContainerElement(getPopupImplElement()).cast();
-	}
-
 	/**
-	 * Get the glass element used by this {@link PopupPanel}. The element is not
-	 * created until it is enabled via {@link #setGlassEnabled(boolean)}.
+	 * The type of animation to use when opening the popup.
 	 * 
-	 * @return the glass element, or null if not created
+	 * <ul>
+	 * <li>CENTER - Expand from the center of the popup</li>
+	 * <li>ONE_WAY_CORNER - Expand from the top left corner, do not animate
+	 * hiding</li>
+	 * </ul>
 	 */
-	protected Element getGlassElement() {
-		return glass;
-	}
-
-	@Override
-	protected Element getStyleElement() {
-		return impl.getStyleElement(getPopupImplElement()).cast();
-	}
-
-	protected void onPreviewNativeEvent(NativePreviewEvent event) {
-		// Cancel the event based on the deprecated onEventPreview() method
-		if (event.isFirstHandler()
-				&& !onEventPreview(Event.as(event.getNativeEvent()))) {
-			event.cancel();
-		}
-	}
-
-	@Override
-	protected void onUnload() {
-		super.onUnload();
-		// Just to be sure, we perform cleanup when the popup is unloaded (i.e.
-		// removed from the DOM). This is normally taken care of in hide(), but
-		// it
-		// can be missed if someone removes the popup directly from the
-		// RootPanel.
-		if (isShowing()) {
-			resizeAnimation.setState(false, true);
-		}
-	}
-
-	/**
-	 * We control size by setting our child widget's size. However, if we don't
-	 * currently have a child, we record the size the user wanted so that when
-	 * we do get a child, we can set it correctly. Until size is explicitly
-	 * cleared, any child put into the popup will be given that size.
-	 */
-	void maybeUpdateSize() {
-		// For subclasses of PopupPanel, we want the default behavior of
-		// setWidth
-		// and setHeight to change the dimensions of PopupPanel's child widget.
-		// We do this because PopupPanel's child widget is the first widget in
-		// the hierarchy which provides structure to the panel. DialogBox is
-		// an example of this. We want to set the dimensions on DialogBox's
-		// FlexTable, which is PopupPanel's child widget. However, it is not
-		// DialogBox's child widget. To make sure that we are actually getting
-		// PopupPanel's child widget, we have to use super.getWidget().
-		Widget w = super.getWidget();
-		if (w != null) {
-			if (desiredHeight != null) {
-				w.setHeight(desiredHeight);
-			}
-			if (desiredWidth != null) {
-				w.setWidth(desiredWidth);
-			}
-		}
-	}
-
-	/**
-	 * Positions the popup, called after the offset width and height of the
-	 * popup are known.
-	 * 
-	 * @param relativeObject
-	 *            the ui object to position relative to
-	 * @param offsetWidth
-	 *            the drop down's offset width
-	 * @param offsetHeight
-	 *            the drop down's offset height
-	 */
-	void position(final UIObject relativeObject, int offsetWidth,
-			int offsetHeight) {
-		// Calculate left position for the popup. The computation for
-		// the left position is bidi-sensitive.
-		int textBoxOffsetWidth = relativeObject.getOffsetWidth();
-		// Compute the difference between the popup's width and the
-		// textbox's width
-		int offsetWidthDiff = offsetWidth - textBoxOffsetWidth;
-		int left;
-		if (LocaleInfo.getCurrentLocale().isRTL()) { // RTL case
-			int textBoxAbsoluteLeft = relativeObject.getAbsoluteLeft();
-			// Right-align the popup. Note that this computation is
-			// valid in the case where offsetWidthDiff is negative.
-			left = textBoxAbsoluteLeft - offsetWidthDiff;
-			// If the suggestion popup is not as wide as the text box, always
-			// align to the right edge of the text box. Otherwise, figure out
-			// whether
-			// to right-align or left-align the popup.
-			if (offsetWidthDiff > 0) {
-				// Make sure scrolling is taken into account, since
-				// box.getAbsoluteLeft() takes scrolling into account.
-				int windowRight = Window.getClientWidth()
-						+ Window.getScrollLeft();
-				int windowLeft = Window.getScrollLeft();
-				// Compute the left value for the right edge of the textbox
-				int textBoxLeftValForRightEdge = textBoxAbsoluteLeft
-						+ textBoxOffsetWidth;
-				// Distance from the right edge of the text box to the right
-				// edge
-				// of the window
-				int distanceToWindowRight = windowRight
-						- textBoxLeftValForRightEdge;
-				// Distance from the right edge of the text box to the left edge
-				// of the
-				// window
-				int distanceFromWindowLeft = textBoxLeftValForRightEdge
-						- windowLeft;
-				// If there is not enough space for the overflow of the popup's
-				// width to the right of the text box and there IS enough space
-				// for the
-				// overflow to the right of the text box, then left-align the
-				// popup.
-				// However, if there is not enough space on either side, stick
-				// with
-				// right-alignment.
-				if (distanceFromWindowLeft < offsetWidth
-						&& distanceToWindowRight >= offsetWidthDiff) {
-					// Align with the left edge of the text box.
-					left = textBoxAbsoluteLeft;
-				}
-			}
-		} else { // LTR case
-			// Left-align the popup.
-			left = relativeObject.getAbsoluteLeft();
-			// If the suggestion popup is not as wide as the text box, always
-			// align to
-			// the left edge of the text box. Otherwise, figure out whether to
-			// left-align or right-align the popup.
-			if (offsetWidthDiff > 0) {
-				// Make sure scrolling is taken into account, since
-				// box.getAbsoluteLeft() takes scrolling into account.
-				int windowRight = Window.getClientWidth()
-						+ Window.getScrollLeft();
-				int windowLeft = Window.getScrollLeft();
-				// Distance from the left edge of the text box to the right edge
-				// of the window
-				int distanceToWindowRight = windowRight - left;
-				// Distance from the left edge of the text box to the left edge
-				// of the
-				// window
-				int distanceFromWindowLeft = left - windowLeft;
-				// If there is not enough space for the overflow of the popup's
-				// width to the right of hte text box, and there IS enough space
-				// for the
-				// overflow to the left of the text box, then right-align the
-				// popup.
-				// However, if there is not enough space on either side, then
-				// stick with
-				// left-alignment.
-				if (distanceToWindowRight < offsetWidth
-						&& distanceFromWindowLeft >= offsetWidthDiff) {
-					// Align with the right edge of the text box.
-					left -= offsetWidthDiff;
-				}
-			}
-		}
-		// Calculate top position for the popup
-		int top = relativeObject.getAbsoluteTop();
-		// Make sure scrolling is taken into account, since
-		// box.getAbsoluteTop() takes scrolling into account.
-		int windowTop = Window.getScrollTop();
-		int windowBottom = Window.getScrollTop() + Window.getClientHeight();
-		// Distance from the top edge of the window to the top edge of the
-		// text box
-		int distanceFromWindowTop = top - windowTop;
-		// Distance from the bottom edge of the window to the bottom edge of
-		// the text box
-		int distanceToWindowBottom = windowBottom
-				- (top + relativeObject.getOffsetHeight());
-		// If there is not enough space for the popup's height below the text
-		// box and there IS enough space for the popup's height above the text
-		// box, then then position the popup above the text box. However, if
-		// there
-		// is not enough space on either side, then stick with displaying the
-		// popup below the text box.
-		if (distanceToWindowBottom < offsetHeight
-				&& distanceFromWindowTop >= offsetHeight) {
-			top -= offsetHeight;
-		} else {
-			// Position above the text box
-			top += relativeObject.getOffsetHeight();
-		}
-		setPopupPosition(left, top);
-	}
-
-	/**
-	 * Sets the animation used to animate this popup. Used by gwt-incubator to
-	 * allow DropDownPanel to override the default popup animation. Not
-	 * protected because the exact API may change in gwt 1.6.
-	 * 
-	 * @param animation
-	 *            the animation to use for this popup
-	 */
-	void setAnimation(ResizeAnimation animation) {
-		resizeAnimation = animation;
-	}
-
-	/**
-	 * Enable or disable animation of the {@link PopupPanel}.
-	 * 
-	 * @param type
-	 *            the type of animation to use
-	 */
-	void setAnimationType(AnimationType type) {
-		animType = type;
+	static enum AnimationType {
+		CENTER, ONE_WAY_CORNER, ROLL_DOWN
 	}
 
 	/**
@@ -1273,25 +1292,6 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		 * @see PopupPanel#setPopupPositionAndShow(PositionCallback)
 		 */
 		void setPosition(int offsetWidth, int offsetHeight);
-	}
-
-	/**
-	 * The type of animation to use when opening the popup.
-	 * 
-	 * <ul>
-	 * <li>CENTER - Expand from the center of the popup</li>
-	 * <li>ONE_WAY_CORNER - Expand from the top left corner, do not animate
-	 * hiding</li>
-	 * </ul>
-	 */
-	static enum AnimationType {
-		CENTER, ONE_WAY_CORNER, ROLL_DOWN
-	}
-
-	static int showingCount = 0;
-
-	public static int getShowingCount() {
-		return showingCount;
 	}
 
 	/**
@@ -1340,6 +1340,112 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		 */
 		public ResizeAnimation(PopupPanel panel) {
 			this.curPanel = panel;
+		}
+
+		/**
+		 * Returns a rect string.
+		 */
+		private String getRectString(int top, int right, int bottom, int left) {
+			return "rect(" + top + "px, " + right + "px, " + bottom + "px, "
+					+ left + "px)";
+		}
+
+		/**
+		 * Show or hide the glass.
+		 */
+		private void maybeShowGlass() {
+			if (showing) {
+				if (curPanel.isGlassEnabled) {
+					Document.get().getBody().appendChild(curPanel.glass);
+					resizeRegistration = Window
+							.addResizeHandler(curPanel.glassResizer);
+					curPanel.glassResizer.onResize(null);
+					glassShowing = true;
+				}
+			} else if (glassShowing) {
+				Document.get().getBody().removeChild(curPanel.glass);
+				resizeRegistration.removeHandler();
+				resizeRegistration = null;
+				glassShowing = false;
+			}
+		}
+
+		@Override
+		protected void onComplete() {
+			if (!showing) {
+				maybeShowGlass();
+				if (!isUnloading) {
+					RootPanel.get().remove(curPanel);
+				}
+			}
+			impl.setClip(curPanel.getElement(), "rect(auto, auto, auto, auto)");
+			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
+		}
+
+		private void onInstantaneousRun() {
+			maybeShowGlass();
+			if (showing) {
+				// Set the position attribute, and then attach to the DOM.
+				// Otherwise,
+				// the PopupPanel will appear to 'jump' from its static/relative
+				// position to its absolute position (issue #1231).
+				DOM.setStyleAttribute(curPanel.getElement(), "position",
+						"absolute");
+				if (curPanel.topPosition != -1) {
+					curPanel.setPopupPosition(curPanel.leftPosition,
+							curPanel.topPosition);
+				}
+				RootPanel.get().add(curPanel);
+			} else {
+				if (!isUnloading) {
+					RootPanel.get().remove(curPanel);
+				}
+			}
+			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
+		}
+
+		@Override
+		protected void onStart() {
+			offsetHeight = curPanel.getOffsetHeight();
+			offsetWidth = curPanel.getOffsetWidth();
+			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "hidden");
+			super.onStart();
+		}
+
+		@Override
+		protected void onUpdate(double progress) {
+			if (!showing) {
+				progress = 1.0 - progress;
+			}
+			// Determine the clipping size
+			int top = 0;
+			int left = 0;
+			int right = 0;
+			int bottom = 0;
+			int height = (int) (progress * offsetHeight);
+			int width = (int) (progress * offsetWidth);
+			switch (curPanel.animType) {
+			case ROLL_DOWN:
+				right = offsetWidth;
+				bottom = height;
+				break;
+			case CENTER:
+				top = (offsetHeight - height) >> 1;
+				left = (offsetWidth - width) >> 1;
+				right = left + width;
+				bottom = top + height;
+				break;
+			case ONE_WAY_CORNER:
+				if (LocaleInfo.getCurrentLocale().isRTL()) {
+					left = offsetWidth - width;
+				}
+				right = left + width;
+				bottom = top + height;
+				break;
+			}
+			// Set the rect clipping
+			impl.setClip(curPanel.getElement(),
+					getRectString(top, right, bottom, left));
 		}
 
 		/**
@@ -1414,112 +1520,6 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 			} else {
 				onInstantaneousRun();
 			}
-		}
-
-		/**
-		 * Returns a rect string.
-		 */
-		private String getRectString(int top, int right, int bottom, int left) {
-			return "rect(" + top + "px, " + right + "px, " + bottom + "px, "
-					+ left + "px)";
-		}
-
-		/**
-		 * Show or hide the glass.
-		 */
-		private void maybeShowGlass() {
-			if (showing) {
-				if (curPanel.isGlassEnabled) {
-					Document.get().getBody().appendChild(curPanel.glass);
-					resizeRegistration = Window
-							.addResizeHandler(curPanel.glassResizer);
-					curPanel.glassResizer.onResize(null);
-					glassShowing = true;
-				}
-			} else if (glassShowing) {
-				Document.get().getBody().removeChild(curPanel.glass);
-				resizeRegistration.removeHandler();
-				resizeRegistration = null;
-				glassShowing = false;
-			}
-		}
-
-		private void onInstantaneousRun() {
-			maybeShowGlass();
-			if (showing) {
-				// Set the position attribute, and then attach to the DOM.
-				// Otherwise,
-				// the PopupPanel will appear to 'jump' from its static/relative
-				// position to its absolute position (issue #1231).
-				DOM.setStyleAttribute(curPanel.getElement(), "position",
-						"absolute");
-				if (curPanel.topPosition != -1) {
-					curPanel.setPopupPosition(curPanel.leftPosition,
-							curPanel.topPosition);
-				}
-				RootPanel.get().add(curPanel);
-			} else {
-				if (!isUnloading) {
-					RootPanel.get().remove(curPanel);
-				}
-			}
-			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
-		}
-
-		@Override
-		protected void onComplete() {
-			if (!showing) {
-				maybeShowGlass();
-				if (!isUnloading) {
-					RootPanel.get().remove(curPanel);
-				}
-			}
-			impl.setClip(curPanel.getElement(), "rect(auto, auto, auto, auto)");
-			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
-		}
-
-		@Override
-		protected void onStart() {
-			offsetHeight = curPanel.getOffsetHeight();
-			offsetWidth = curPanel.getOffsetWidth();
-			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "hidden");
-			super.onStart();
-		}
-
-		@Override
-		protected void onUpdate(double progress) {
-			if (!showing) {
-				progress = 1.0 - progress;
-			}
-			// Determine the clipping size
-			int top = 0;
-			int left = 0;
-			int right = 0;
-			int bottom = 0;
-			int height = (int) (progress * offsetHeight);
-			int width = (int) (progress * offsetWidth);
-			switch (curPanel.animType) {
-			case ROLL_DOWN:
-				right = offsetWidth;
-				bottom = height;
-				break;
-			case CENTER:
-				top = (offsetHeight - height) >> 1;
-				left = (offsetWidth - width) >> 1;
-				right = left + width;
-				bottom = top + height;
-				break;
-			case ONE_WAY_CORNER:
-				if (LocaleInfo.getCurrentLocale().isRTL()) {
-					left = offsetWidth - width;
-				}
-				right = left + width;
-				bottom = top + height;
-				break;
-			}
-			// Set the rect clipping
-			impl.setClip(curPanel.getElement(),
-					getRectString(top, right, bottom, left));
 		}
 	}
 }

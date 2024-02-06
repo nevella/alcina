@@ -20,13 +20,6 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	private int segmentCounter = -1;
 
-	public int ensureSegmentCounter() {
-		if (segmentCounter == -1) {
-			segmentCounter = Integer.parseInt(pathSegment);
-		}
-		return segmentCounter;
-	}
-
 	public AbstractSelection(Node parentNode, T value, String pathSegment) {
 		if (!(this instanceof HasNullValue)) {
 			Preconditions.checkNotNull(value);
@@ -39,7 +32,8 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 		setPathSegment(pathSegment);
 	}
 
-	public interface HasNullValue {
+	public AbstractSelection(Selection parent, T value) {
+		this(parent.processNode(), value, null);
 	}
 
 	/*
@@ -51,8 +45,20 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 		this(parent.processNode(), value, pathSegment);
 	}
 
-	public AbstractSelection(Selection parent, T value) {
-		this(parent.processNode(), value, null);
+	protected String contentsToString() {
+		T t = get();
+		if (t instanceof DomNode) {
+			return "[DomNode]";
+		} else {
+			return t.toString();
+		}
+	}
+
+	public int ensureSegmentCounter() {
+		if (segmentCounter == -1) {
+			segmentCounter = Integer.parseInt(pathSegment);
+		}
+		return segmentCounter;
 	}
 
 	@Override
@@ -93,13 +99,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 				get() == null ? null : Ax.trim(contentsToString(), 150));
 	}
 
-	protected String contentsToString() {
-		T t = get();
-		if (t instanceof DomNode) {
-			return "[DomNode]";
-		} else {
-			return t.toString();
-		}
+	public interface HasNullValue {
 	}
 
 	static class View implements Selection.View<AbstractSelection> {

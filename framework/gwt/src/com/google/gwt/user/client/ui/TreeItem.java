@@ -125,6 +125,17 @@ public class TreeItem extends UIObject
 	}
 
 	/**
+	 * Creates an empty tree item.
+	 * 
+	 * @param isRoot
+	 *            true if this item is the root of a tree
+	 */
+	TreeItem(boolean isRoot) {
+		this.isRoot = isRoot;
+		ensureElements(isRoot);
+	}
+
+	/**
 	 * Constructs a tree item with the given HTML.
 	 * 
 	 * @param html
@@ -154,17 +165,6 @@ public class TreeItem extends UIObject
 	public TreeItem(Widget widget) {
 		this();
 		setWidget(widget);
-	}
-
-	/**
-	 * Creates an empty tree item.
-	 * 
-	 * @param isRoot
-	 *            true if this item is the root of a tree
-	 */
-	TreeItem(boolean isRoot) {
-		this.isRoot = isRoot;
-		ensureElements(isRoot);
 	}
 
 	/**
@@ -249,9 +249,42 @@ public class TreeItem extends UIObject
 		return ret;
 	}
 
+	void addTreeItems(List<TreeItem> accum) {
+		int size = getChildCount();
+		for (int i = 0; i < size; i++) {
+			TreeItem item = children.get(i);
+			accum.add(item);
+			item.addTreeItems(accum);
+		}
+	}
+
 	@Override
 	public TreeItem asTreeItem() {
 		return this;
+	}
+
+	private void convertToFullNode() {
+		impl.convertToFullNode(this);
+	}
+
+	protected void ensureElements() {
+		if (contentElem != null) {
+			return;
+		}
+		Element elem = Document.get().createDivElement();
+		elem.ensureId();
+		setElement(elem);
+		contentElem = Document.get().createDivElement();
+		contentElem.ensureId();
+		// The root item always has children.
+		if (isRoot) {
+			initChildren();
+			impl.ensureState(this, PotentialState.INSTANTIATED);
+		}
+	}
+
+	protected void ensureElements(boolean isRoot) {
+		ensureElements();
 	}
 
 	/**
@@ -294,9 +327,78 @@ public class TreeItem extends UIObject
 		return children.indexOf(child);
 	}
 
+	ArrayList<TreeItem> getChildren() {
+		return children;
+	}
+
+	Element getContentElem() {
+		return contentElem;
+	}
+
+	AbstractImagePrototype getCurrentImagePrototype(Element child) {
+		return currentImagePrototypesData.get(child);
+	}
+
+	/**
+	 * Returns a suggested {@link Focusable} instance to use when this tree item
+	 * is selected. The tree maintains focus if this method returns null. By
+	 * default, if the tree item contains a focusable widget, that widget is
+	 * returned.
+	 * 
+	 * Note, the {@link Tree} will ignore this value if the user clicked on an
+	 * input element such as a button or text area when selecting this item.
+	 * 
+	 * @return the focusable item
+	 */
+	protected Focusable getFocusable() {
+		Focusable focus = getFocusableWidget();
+		if (focus == null) {
+			Widget w = getWidget();
+			if (w instanceof Focusable) {
+				focus = (Focusable) w;
+			}
+		}
+		return focus;
+	}
+
+	/**
+	 * Returns the widget, if any, that should be focused on if this TreeItem is
+	 * selected.
+	 * 
+	 * @return widget to be focused.
+	 * @deprecated use {@link #getFocusable()} instead
+	 */
+	@Deprecated
+	protected HasFocus getFocusableWidget() {
+		Widget w = getWidget();
+		if (w instanceof HasFocus) {
+			return (HasFocus) w;
+		} else {
+			return null;
+		}
+	}
+
 	@Override
 	public String getHTML() {
 		return DOM.getInnerHTML(contentElem);
+	}
+
+	Element getImageElement() {
+		return DOM.getFirstChild(getImageHolderElement());
+	}
+
+	Element getImageHolderElement() {
+		if (!isFullNode()) {
+			convertToFullNode();
+		}
+		return imageHolder;
+	}
+
+	@SuppressWarnings("unused")
+	private List<Integer> getIndex() {
+		ArrayList<Integer> list = new ArrayList<>();
+		populateIndex(list);
+		return list;
 	}
 
 	/**
@@ -351,6 +453,17 @@ public class TreeItem extends UIObject
 	 */
 	public Widget getWidget() {
 		return widget;
+	}
+
+	void initChildren() {
+		// convertToFullNode();
+		children = new ArrayList<TreeItem>();
+	}
+
+	void initChildSpanElement() {
+		childSpanElem = DOM.createDiv();
+		DOM.appendChild(getElement(), childSpanElem);
+		DOM.setStyleAttribute(childSpanElem, "whiteSpace", "nowrap");
 	}
 
 	/**
@@ -456,6 +569,10 @@ public class TreeItem extends UIObject
 		return ret;
 	}
 
+	boolean isFullNode() {
+		return imageHolder != null;
+	}
+
 	/**
 	 * Determines whether this item is currently selected.
 	 * 
@@ -463,6 +580,60 @@ public class TreeItem extends UIObject
 	 */
 	public boolean isSelected() {
 		return selected;
+	}
+
+	protected boolean isUnrendered() {
+		return contentElem == null;
+	}
+
+	protected void maybeLazilyRender() {
+	}
+
+	/**
+	 * Remove a tree item from its parent if it has one.
+	 * 
+	 * @param item
+	 *            the tree item to remove from its parent
+	 */
+	void maybeRemoveItemFromParent(TreeItem item) {
+		if ((item.getParentItem() != null) || (item.getTree() != null)) {
+			item.remove();
+		}
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-content = The text or {@link Widget} next to the image.</li>
+	 * <li>-child# = The child at the specified index.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+		ensureDebugId(contentElem, baseID, "content");
+		if (imageHolder != null) {
+			// The image itself may or may not exist.
+			ensureDebugId(imageHolder, baseID, "image");
+		}
+		if (children != null) {
+			int childCount = 0;
+			for (TreeItem child : children) {
+				child.ensureDebugId(baseID + "-child" + childCount);
+				childCount++;
+			}
+		}
+	}
+
+	private void populateIndex(List<Integer> list) {
+		if (getParentItem() == null) {
+			list.add(0, 0);
+			return;
+		}
+		list.add(0, getParentItem().getChildIndex(this));
+		getParentItem().populateIndex(list);
 	}
 
 	/**
@@ -535,6 +706,22 @@ public class TreeItem extends UIObject
 		}
 	}
 
+	@SuppressWarnings("unused")
+	private Element resolve(Element elem) {
+		if (PotentialElement.isPotential(elem)) {
+			Element replacer = Document.get().createElement(elem.getTagName())
+					.cast();
+			replacer.setInnerHTML(elem.getInnerHTML());
+			return replacer;
+		}
+		return elem;
+	}
+
+	void setCurrentImagePrototype(Element child,
+			AbstractImagePrototype prototype) {
+		currentImagePrototypesData.put(child, prototype);
+	}
+
 	@Override
 	public void setHTML(SafeHtml html) {
 		setHTML(html.asString());
@@ -544,6 +731,14 @@ public class TreeItem extends UIObject
 	public void setHTML(String html) {
 		setWidget(null);
 		DOM.setInnerHTML(contentElem, html);
+	}
+
+	void setParentItem(TreeItem parent) {
+		this.parent = parent;
+		if (parent != null
+				&& parent.potentialState == PotentialState.INSTANTIATED) {
+			impl.ensureState(this, PotentialState.POTENTIAL_CHILDREN);
+		}
 	}
 
 	/**
@@ -607,6 +802,33 @@ public class TreeItem extends UIObject
 		DOM.setInnerText(contentElem, text);
 	}
 
+	void setTree(Tree newTree) {
+		// Early out.
+		if (tree == newTree) {
+			return;
+		}
+		// Remove this item from existing tree.
+		if (tree != null) {
+			if (tree.getSelectedItem() == this) {
+				tree.setSelectedItem(null);
+			}
+			if (widget != null) {
+				tree.orphan(widget);
+			}
+		}
+		tree = newTree;
+		for (int i = 0, n = getChildCount(); i < n; ++i) {
+			children.get(i).setTree(newTree);
+		}
+		updateState(false, true);
+		if (newTree != null) {
+			if (widget != null) {
+				// Add my widget to the new tree.
+				newTree.adopt(widget, this);
+			}
+		}
+	}
+
 	/**
 	 * Sets the user-defined object associated with this item.
 	 * 
@@ -663,235 +885,6 @@ public class TreeItem extends UIObject
 		}
 	}
 
-	private void convertToFullNode() {
-		impl.convertToFullNode(this);
-	}
-
-	@SuppressWarnings("unused")
-	private List<Integer> getIndex() {
-		ArrayList<Integer> list = new ArrayList<>();
-		populateIndex(list);
-		return list;
-	}
-
-	private void populateIndex(List<Integer> list) {
-		if (getParentItem() == null) {
-			list.add(0, 0);
-			return;
-		}
-		list.add(0, getParentItem().getChildIndex(this));
-		getParentItem().populateIndex(list);
-	}
-
-	@SuppressWarnings("unused")
-	private Element resolve(Element elem) {
-		if (PotentialElement.isPotential(elem)) {
-			Element replacer = Document.get().createElement(elem.getTagName())
-					.cast();
-			replacer.setInnerHTML(elem.getInnerHTML());
-			return replacer;
-		}
-		return elem;
-	}
-
-	private void updateStateRecursiveHelper() {
-		updateState(false, false);
-		for (int i = 0, n = getChildCount(); i < n; ++i) {
-			children.get(i).updateStateRecursiveHelper();
-		}
-	}
-
-	protected void ensureElements() {
-		if (contentElem != null) {
-			return;
-		}
-		Element elem = Document.get().createDivElement();
-		elem.ensureId();
-		setElement(elem);
-		contentElem = Document.get().createDivElement();
-		contentElem.ensureId();
-		// The root item always has children.
-		if (isRoot) {
-			initChildren();
-			impl.ensureState(this, PotentialState.INSTANTIATED);
-		}
-	}
-
-	protected void ensureElements(boolean isRoot) {
-		ensureElements();
-	}
-
-	/**
-	 * Returns a suggested {@link Focusable} instance to use when this tree item
-	 * is selected. The tree maintains focus if this method returns null. By
-	 * default, if the tree item contains a focusable widget, that widget is
-	 * returned.
-	 * 
-	 * Note, the {@link Tree} will ignore this value if the user clicked on an
-	 * input element such as a button or text area when selecting this item.
-	 * 
-	 * @return the focusable item
-	 */
-	protected Focusable getFocusable() {
-		Focusable focus = getFocusableWidget();
-		if (focus == null) {
-			Widget w = getWidget();
-			if (w instanceof Focusable) {
-				focus = (Focusable) w;
-			}
-		}
-		return focus;
-	}
-
-	/**
-	 * Returns the widget, if any, that should be focused on if this TreeItem is
-	 * selected.
-	 * 
-	 * @return widget to be focused.
-	 * @deprecated use {@link #getFocusable()} instead
-	 */
-	@Deprecated
-	protected HasFocus getFocusableWidget() {
-		Widget w = getWidget();
-		if (w instanceof HasFocus) {
-			return (HasFocus) w;
-		} else {
-			return null;
-		}
-	}
-
-	protected boolean isUnrendered() {
-		return contentElem == null;
-	}
-
-	protected void maybeLazilyRender() {
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-content = The text or {@link Widget} next to the image.</li>
-	 * <li>-child# = The child at the specified index.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-		ensureDebugId(contentElem, baseID, "content");
-		if (imageHolder != null) {
-			// The image itself may or may not exist.
-			ensureDebugId(imageHolder, baseID, "image");
-		}
-		if (children != null) {
-			int childCount = 0;
-			for (TreeItem child : children) {
-				child.ensureDebugId(baseID + "-child" + childCount);
-				childCount++;
-			}
-		}
-	}
-
-	void addTreeItems(List<TreeItem> accum) {
-		int size = getChildCount();
-		for (int i = 0; i < size; i++) {
-			TreeItem item = children.get(i);
-			accum.add(item);
-			item.addTreeItems(accum);
-		}
-	}
-
-	ArrayList<TreeItem> getChildren() {
-		return children;
-	}
-
-	Element getContentElem() {
-		return contentElem;
-	}
-
-	AbstractImagePrototype getCurrentImagePrototype(Element child) {
-		return currentImagePrototypesData.get(child);
-	}
-
-	Element getImageElement() {
-		return DOM.getFirstChild(getImageHolderElement());
-	}
-
-	Element getImageHolderElement() {
-		if (!isFullNode()) {
-			convertToFullNode();
-		}
-		return imageHolder;
-	}
-
-	void initChildren() {
-		// convertToFullNode();
-		children = new ArrayList<TreeItem>();
-	}
-
-	void initChildSpanElement() {
-		childSpanElem = DOM.createDiv();
-		DOM.appendChild(getElement(), childSpanElem);
-		DOM.setStyleAttribute(childSpanElem, "whiteSpace", "nowrap");
-	}
-
-	boolean isFullNode() {
-		return imageHolder != null;
-	}
-
-	/**
-	 * Remove a tree item from its parent if it has one.
-	 * 
-	 * @param item
-	 *            the tree item to remove from its parent
-	 */
-	void maybeRemoveItemFromParent(TreeItem item) {
-		if ((item.getParentItem() != null) || (item.getTree() != null)) {
-			item.remove();
-		}
-	}
-
-	void setCurrentImagePrototype(Element child,
-			AbstractImagePrototype prototype) {
-		currentImagePrototypesData.put(child, prototype);
-	}
-
-	void setParentItem(TreeItem parent) {
-		this.parent = parent;
-		if (parent != null
-				&& parent.potentialState == PotentialState.INSTANTIATED) {
-			impl.ensureState(this, PotentialState.POTENTIAL_CHILDREN);
-		}
-	}
-
-	void setTree(Tree newTree) {
-		// Early out.
-		if (tree == newTree) {
-			return;
-		}
-		// Remove this item from existing tree.
-		if (tree != null) {
-			if (tree.getSelectedItem() == this) {
-				tree.setSelectedItem(null);
-			}
-			if (widget != null) {
-				tree.orphan(widget);
-			}
-		}
-		tree = newTree;
-		for (int i = 0, n = getChildCount(); i < n; ++i) {
-			children.get(i).setTree(newTree);
-		}
-		updateState(false, true);
-		if (newTree != null) {
-			if (widget != null) {
-				// Add my widget to the new tree.
-				newTree.adopt(widget, this);
-			}
-		}
-	}
-
 	void updateState(boolean animate, boolean updateTreeSelection) {
 		// If the tree hasn't been set, there is no visual state to update.
 		// If the tree is not attached, then update will be called on attach.
@@ -943,23 +936,132 @@ public class TreeItem extends UIObject
 		tree.maybeUpdateSelection(this, this.open);
 	}
 
+	private void updateStateRecursiveHelper() {
+		updateState(false, false);
+		for (int i = 0, n = getChildCount(); i < n; ++i) {
+			children.get(i).updateStateRecursiveHelper();
+		}
+	}
+
+	enum PotentialState {
+		POTENTIAL, POTENTIAL_CHILDREN, INSTANTIATED
+	}
+
+	/**
+	 * An {@link Animation} used to open the child elements. If a
+	 * {@link TreeItem} is in the process of opening, it will immediately be
+	 * opened and the new {@link TreeItem} will use this animation.
+	 */
+	private static class TreeItemAnimation extends Animation {
+		/**
+		 * The {@link TreeItem} currently being affected.
+		 */
+		private TreeItem curItem = null;
+
+		/**
+		 * Whether the item is being opened or closed.
+		 */
+		private boolean opening = true;
+
+		/**
+		 * The target height of the child items.
+		 */
+		private int scrollHeight = 0;
+
+		@Override
+		protected void onComplete() {
+			if (curItem != null) {
+				if (opening) {
+					UIObject.setVisible(curItem.childSpanElem, true);
+					onUpdate(1.0);
+					DOM.setStyleAttribute(curItem.childSpanElem, "height",
+							"auto");
+				} else {
+					UIObject.setVisible(curItem.childSpanElem, false);
+				}
+				DOM.setStyleAttribute(curItem.childSpanElem, "overflow",
+						"visible");
+				DOM.setStyleAttribute(curItem.childSpanElem, "width", "auto");
+				curItem = null;
+			}
+		}
+
+		@Override
+		protected void onStart() {
+			scrollHeight = 0;
+			// If the TreeItem is already open, we can get its scrollHeight
+			// immediately.
+			if (!opening) {
+				scrollHeight = curItem.childSpanElem.getScrollHeight();
+			}
+			DOM.setStyleAttribute(curItem.childSpanElem, "overflow", "hidden");
+			// If the TreeItem is already open, onStart will set its height to
+			// its
+			// natural height. If the TreeItem is currently closed, onStart will
+			// set
+			// its height to 1px (see onUpdate below), and then we make the
+			// TreeItem
+			// visible so we can get its correct scrollHeight.
+			super.onStart();
+			// If the TreeItem is currently closed, we need to make it visible
+			// before
+			// we can get its height.
+			if (opening) {
+				UIObject.setVisible(curItem.childSpanElem, true);
+				scrollHeight = curItem.childSpanElem.getScrollHeight();
+			}
+		}
+
+		@Override
+		protected void onUpdate(double progress) {
+			int height = (int) (progress * scrollHeight);
+			if (!opening) {
+				height = scrollHeight - height;
+			}
+			// Issue 2338: If the height is 0px, IE7 will display all of the
+			// children
+			// instead of hiding them completely.
+			height = Math.max(height, 1);
+			DOM.setStyleAttribute(curItem.childSpanElem, "height",
+					height + "px");
+			// We need to set the width explicitly of the item might be cropped
+			int scrollWidth = DOM.getElementPropertyInt(curItem.childSpanElem,
+					"scrollWidth");
+			DOM.setStyleAttribute(curItem.childSpanElem, "width",
+					scrollWidth + "px");
+		}
+
+		/**
+		 * Open the specified {@link TreeItem}.
+		 * 
+		 * @param item
+		 *            the {@link TreeItem} to open
+		 * @param animate
+		 *            true to animate, false to open instantly
+		 */
+		public void setItemState(TreeItem item, boolean animate) {
+			// Immediately complete previous open
+			cancel();
+			// Open the new item
+			if (animate) {
+				curItem = item;
+				opening = item.open;
+				run(Math.min(ANIMATION_DURATION,
+						ANIMATION_DURATION_PER_ITEM * curItem.getChildCount()));
+			} else {
+				if (item.potentialState == PotentialState.INSTANTIATED) {
+					UIObject.setVisible(item.childSpanElem, item.open);
+				}
+			}
+		}
+	}
+
 	/**
 	 * Implementation class for {@link TreeItem}.
 	 */
 	public static class TreeItemImpl {
 		public TreeItemImpl() {
 			initializeClonableElements();
-		}
-
-		public void ensureMargin(TreeItem item, TreeItem parent) {
-			// Set the margin.
-			// Use no margin on top-most items.
-			double margin = parent.isRoot ? 0.0 : CHILD_MARGIN;
-			if (LocaleInfo.getCurrentLocale().isRTL()) {
-				item.getElement().getStyle().setMarginRight(margin, Unit.PX);
-			} else {
-				item.getElement().getStyle().setMarginLeft(margin, Unit.PX);
-			}
 		}
 
 		void convertToFullNode(TreeItem item) {
@@ -973,6 +1075,17 @@ public class TreeItem extends UIObject
 				DOM.setStyleAttribute(item.getElement(), "padding", "0px");
 				DOM.appendChild(contentHolder, item.contentElem);
 				item.imageHolder = imgHolder;
+			}
+		}
+
+		public void ensureMargin(TreeItem item, TreeItem parent) {
+			// Set the margin.
+			// Use no margin on top-most items.
+			double margin = parent.isRoot ? 0.0 : CHILD_MARGIN;
+			if (LocaleInfo.getCurrentLocale().isRTL()) {
+				item.getElement().getStyle().setMarginRight(margin, Unit.PX);
+			} else {
+				item.getElement().getStyle().setMarginLeft(margin, Unit.PX);
 			}
 		}
 
@@ -1039,118 +1152,5 @@ public class TreeItem extends UIObject
 			super.convertToFullNode(item);
 			item.getElement().getStyle().setProperty("marginBottom", "0px");
 		}
-	}
-
-	/**
-	 * An {@link Animation} used to open the child elements. If a
-	 * {@link TreeItem} is in the process of opening, it will immediately be
-	 * opened and the new {@link TreeItem} will use this animation.
-	 */
-	private static class TreeItemAnimation extends Animation {
-		/**
-		 * The {@link TreeItem} currently being affected.
-		 */
-		private TreeItem curItem = null;
-
-		/**
-		 * Whether the item is being opened or closed.
-		 */
-		private boolean opening = true;
-
-		/**
-		 * The target height of the child items.
-		 */
-		private int scrollHeight = 0;
-
-		/**
-		 * Open the specified {@link TreeItem}.
-		 * 
-		 * @param item
-		 *            the {@link TreeItem} to open
-		 * @param animate
-		 *            true to animate, false to open instantly
-		 */
-		public void setItemState(TreeItem item, boolean animate) {
-			// Immediately complete previous open
-			cancel();
-			// Open the new item
-			if (animate) {
-				curItem = item;
-				opening = item.open;
-				run(Math.min(ANIMATION_DURATION,
-						ANIMATION_DURATION_PER_ITEM * curItem.getChildCount()));
-			} else {
-				if (item.potentialState == PotentialState.INSTANTIATED) {
-					UIObject.setVisible(item.childSpanElem, item.open);
-				}
-			}
-		}
-
-		@Override
-		protected void onComplete() {
-			if (curItem != null) {
-				if (opening) {
-					UIObject.setVisible(curItem.childSpanElem, true);
-					onUpdate(1.0);
-					DOM.setStyleAttribute(curItem.childSpanElem, "height",
-							"auto");
-				} else {
-					UIObject.setVisible(curItem.childSpanElem, false);
-				}
-				DOM.setStyleAttribute(curItem.childSpanElem, "overflow",
-						"visible");
-				DOM.setStyleAttribute(curItem.childSpanElem, "width", "auto");
-				curItem = null;
-			}
-		}
-
-		@Override
-		protected void onStart() {
-			scrollHeight = 0;
-			// If the TreeItem is already open, we can get its scrollHeight
-			// immediately.
-			if (!opening) {
-				scrollHeight = curItem.childSpanElem.getScrollHeight();
-			}
-			DOM.setStyleAttribute(curItem.childSpanElem, "overflow", "hidden");
-			// If the TreeItem is already open, onStart will set its height to
-			// its
-			// natural height. If the TreeItem is currently closed, onStart will
-			// set
-			// its height to 1px (see onUpdate below), and then we make the
-			// TreeItem
-			// visible so we can get its correct scrollHeight.
-			super.onStart();
-			// If the TreeItem is currently closed, we need to make it visible
-			// before
-			// we can get its height.
-			if (opening) {
-				UIObject.setVisible(curItem.childSpanElem, true);
-				scrollHeight = curItem.childSpanElem.getScrollHeight();
-			}
-		}
-
-		@Override
-		protected void onUpdate(double progress) {
-			int height = (int) (progress * scrollHeight);
-			if (!opening) {
-				height = scrollHeight - height;
-			}
-			// Issue 2338: If the height is 0px, IE7 will display all of the
-			// children
-			// instead of hiding them completely.
-			height = Math.max(height, 1);
-			DOM.setStyleAttribute(curItem.childSpanElem, "height",
-					height + "px");
-			// We need to set the width explicitly of the item might be cropped
-			int scrollWidth = DOM.getElementPropertyInt(curItem.childSpanElem,
-					"scrollWidth");
-			DOM.setStyleAttribute(curItem.childSpanElem, "width",
-					scrollWidth + "px");
-		}
-	}
-
-	enum PotentialState {
-		POTENTIAL, POTENTIAL_CHILDREN, INSTANTIATED
 	}
 }

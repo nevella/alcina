@@ -37,6 +37,10 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 		return this.type;
 	}
 
+	public boolean provideIsSequential() {
+		return type.isSequential();
+	}
+
 	public abstract void setFrom(Job from);
 
 	@Override
@@ -50,10 +54,6 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 		JobRelationType old_type = this.type;
 		this.type = type;
 		propertyChangeSupport().firePropertyChange("type", old_type, type);
-	}
-
-	public boolean provideIsSequential() {
-		return type.isSequential();
 	}
 
 	@Override

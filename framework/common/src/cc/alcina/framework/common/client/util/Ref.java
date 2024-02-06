@@ -11,18 +11,18 @@ public class Ref<T> {
 		return ref;
 	}
 
-	public boolean isPresent() {
-		return t != null;
+	private T t;
+
+	public T get() {
+		return this.t;
 	}
 
 	public boolean isEmpty() {
 		return t == null;
 	}
 
-	private T t;
-
-	public T get() {
-		return this.t;
+	public boolean isPresent() {
+		return t != null;
 	}
 
 	public void set(T t) {

@@ -99,6 +99,10 @@ public class TextProvider {
 		return o.toString();
 	}
 
+	protected TextProvider getT() {
+		return null;
+	}
+
 	public String getUiObjectText(Class clazz, String key,
 			String defaultValue) {
 		return defaultValue;
@@ -122,9 +126,5 @@ public class TextProvider {
 
 	public void setTrimmed(boolean trimmed) {
 		this.trimmed = trimmed;
-	}
-
-	protected TextProvider getT() {
-		return null;
 	}
 }

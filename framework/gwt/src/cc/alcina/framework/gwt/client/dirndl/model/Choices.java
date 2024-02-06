@@ -330,10 +330,6 @@ public abstract class Choices<T> extends Model
 			this(new ArrayList<>());
 		}
 
-		public Single(T[] values) {
-			this(List.of(values));
-		}
-
 		public Single(List<T> values) {
 			super(values);
 			indexedSelection = new IndexedSelection(
@@ -341,6 +337,10 @@ public abstract class Choices<T> extends Model
 			indexedSelection.topicIndexChanged
 					.add(this::onIndexedSelectionChange);
 			updateIndexSelected(indexedSelection.getIndexSelected(), true);
+		}
+
+		public Single(T[] values) {
+			this(List.of(values));
 		}
 
 		public T getProvisionalValue() {
@@ -358,6 +358,11 @@ public abstract class Choices<T> extends Model
 
 		public boolean isDeselectIfSelectedClicked() {
 			return this.deselectIfSelectedClicked;
+		}
+
+		void onIndexedSelectionChange(IndexedSelection.Change change) {
+			updateIndexSelected(change.oldIndexSelected, false);
+			updateIndexSelected(change.newIndexSelected, true);
 		}
 
 		@Override
@@ -435,11 +440,6 @@ public abstract class Choices<T> extends Model
 			} else {
 				setSelectedValue(choice.getValue());
 			}
-		}
-
-		void onIndexedSelectionChange(IndexedSelection.Change change) {
-			updateIndexSelected(change.oldIndexSelected, false);
-			updateIndexSelected(change.newIndexSelected, true);
 		}
 
 		void updateIndexSelected(int index, boolean indexSelected) {

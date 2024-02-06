@@ -14,11 +14,11 @@ public class EntityLayerUtils {
 
 	private static Pattern botUa;
 
+	public static final Timer timer = new Timer("alcina-jvm-timer", true);
+
 	public static String getApplicationHostName() {
 		return Configuration.get("applicationHostName");
 	}
-
-	public static final Timer timer = new Timer("alcina-jvm-timer", true);
 
 	public static String getLocalHostName() {
 		try {
@@ -57,20 +57,20 @@ public class EntityLayerUtils {
 				|| EntityLayerUtils.isBotExtraUserAgent(userAgent);
 	}
 
-	public static boolean isTestOrTestServer() {
-		return Ax.isTest() || AppPersistenceBase.isTestServer();
-	}
-
-	public static boolean isTestServer() {
-		return AppPersistenceBase.isTestServer();
-	}
-
 	public static boolean isProduction() {
 		return !isTestOrTestServer();
 	}
 
 	public static boolean isTest() {
 		return AppPersistenceBase.isTest();
+	}
+
+	public static boolean isTestOrTestServer() {
+		return Ax.isTest() || AppPersistenceBase.isTestServer();
+	}
+
+	public static boolean isTestServer() {
+		return AppPersistenceBase.isTestServer();
 	}
 
 	public static void setTestServer(boolean testServer) {

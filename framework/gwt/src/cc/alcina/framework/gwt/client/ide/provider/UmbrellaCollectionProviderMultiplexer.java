@@ -89,11 +89,6 @@ public class UmbrellaCollectionProviderMultiplexer<T>
 		TransformManager.get().removeCollectionModificationListener(this);
 	}
 
-	public void setPredicate(Predicate<T> predicate) {
-		this.predicate = predicate;
-		collectionModification(new CollectionModificationEvent(this));
-	}
-
 	private void remap(CollectionModificationEvent simpleEvent) {
 		umbrellaProvider.forCollection(collection, predicate);
 		Stack<UmbrellaCollectionProvider> providerStack = new Stack<UmbrellaCollectionProvider>();
@@ -130,6 +125,11 @@ public class UmbrellaCollectionProviderMultiplexer<T>
 			current.childProviders.add(child);
 			providerStack.push(child);
 		}
+	}
+
+	public void setPredicate(Predicate<T> predicate) {
+		this.predicate = predicate;
+		collectionModification(new CollectionModificationEvent(this));
 	}
 
 	public class UmbrellaCollectionProvider implements

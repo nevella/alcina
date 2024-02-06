@@ -39,6 +39,14 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 
 	private boolean test;
 
+	private void ensureAnnotations() {
+		compUnits.declarations.values().stream().filter(
+				dec -> dec.hasFlag(Type.PropertySerializationAnnotation))
+				.forEach(dec -> SourceMods
+						.removeRedundantPropertySerializationAnnotations(dec));
+		compUnits.writeDirty(isTest());
+	}
+
 	public Action getAction() {
 		return this.action;
 	}
@@ -102,14 +110,6 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 		this.test = test;
 	}
 
-	private void ensureAnnotations() {
-		compUnits.declarations.values().stream().filter(
-				dec -> dec.hasFlag(Type.PropertySerializationAnnotation))
-				.forEach(dec -> SourceMods
-						.removeRedundantPropertySerializationAnnotations(dec));
-		compUnits.writeDirty(isTest());
-	}
-
 	public enum Action {
 		LIST_INTERESTING, UPDATE_ANNOTATIONS;
 	}
@@ -118,6 +118,10 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 		public DeclarationVisitor(CompilationUnits units,
 				CompilationUnitWrapper compUnit) {
 			super(units, compUnit);
+		}
+
+		boolean hasAnnotation(NodeWithAnnotations decl) {
+			return decl.isAnnotationPresent(PropertySerialization.class);
 		}
 
 		@Override
@@ -143,26 +147,11 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 			}
 			super.visit(node, arg);
 		}
-
-		boolean hasAnnotation(NodeWithAnnotations decl) {
-			return decl.isAnnotationPresent(PropertySerialization.class);
-		}
 	}
 
 	static class SourceMods {
 		static Logger logger = LoggerFactory
 				.getLogger(TaskFlatSerializerMetadata.class);
-
-		public static void removeRedundantPropertySerializationAnnotations(
-				UnitType type) {
-			ClassOrInterfaceDeclaration declaration = type
-					.getDeclaration();
-			declaration.getMethods().forEach(m -> {
-				Optional<AnnotationExpr> annotation = m
-						.getAnnotationByClass(PropertySerialization.class);
-				cleanIfRedundant(type, annotation, m);
-			});
-		}
 
 		private static void cleanIfRedundant(
 				UnitType type,
@@ -205,6 +194,17 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 			}
 			type.dirty();
 			expr.remove();
+		}
+
+		public static void removeRedundantPropertySerializationAnnotations(
+				UnitType type) {
+			ClassOrInterfaceDeclaration declaration = type
+					.getDeclaration();
+			declaration.getMethods().forEach(m -> {
+				Optional<AnnotationExpr> annotation = m
+						.getAnnotationByClass(PropertySerialization.class);
+				cleanIfRedundant(type, annotation, m);
+			});
 		}
 	}
 

@@ -34,12 +34,12 @@ public class FocusinEvent extends DomEvent<FocusinHandler> {
 	}
 
 	@Override
-	public final Type<FocusinHandler> getAssociatedType() {
-		return TYPE;
+	protected void dispatch(FocusinHandler handler) {
+		handler.onFocusin(this);
 	}
 
 	@Override
-	protected void dispatch(FocusinHandler handler) {
-		handler.onFocusin(this);
+	public final Type<FocusinHandler> getAssociatedType() {
+		return TYPE;
 	}
 }

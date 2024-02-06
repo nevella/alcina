@@ -50,22 +50,6 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 		this.showUnselectedOnPopupClose = true;
 	}
 
-	public void setModel(Object model) {
-		this.criteriaGroup = (C) model;
-		addPropertyChangeListener("value", pcl);
-		Set values = new HashSet();
-		SC templateCriterion = newCriterion(null);
-		for (Object sc : criteriaGroup.getCriteria()) {
-			// allows for potentially multiple criteria types in the cg
-			if (sc.getClass() == templateCriterion.getClass()) {
-				values.add(getSearchCriterionDisplayObject((SC) sc));
-			}
-		}
-		renderSelects();
-		setValue(values);
-		redrawGrid();
-	}
-
 	@Override
 	protected abstract Map createObjectMap();
 
@@ -89,4 +73,20 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 	 * note must allow obj==null
 	 */
 	protected abstract SC newCriterion(O obj);
+
+	public void setModel(Object model) {
+		this.criteriaGroup = (C) model;
+		addPropertyChangeListener("value", pcl);
+		Set values = new HashSet();
+		SC templateCriterion = newCriterion(null);
+		for (Object sc : criteriaGroup.getCriteria()) {
+			// allows for potentially multiple criteria types in the cg
+			if (sc.getClass() == templateCriterion.getClass()) {
+				values.add(getSearchCriterionDisplayObject((SC) sc));
+			}
+		}
+		renderSelects();
+		setValue(values);
+		redrawGrid();
+	}
 }

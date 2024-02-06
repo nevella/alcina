@@ -27,10 +27,6 @@ class SelectionLayers extends Model.Fields {
 		render();
 	}
 
-	public void setLayers(List<LayerSelections> layers) {
-		set("layers", this.layers, layers, () -> this.layers = layers);
-	}
-
 	void render() {
 		if (page.history == null) {
 			return;
@@ -44,5 +40,9 @@ class SelectionLayers extends Model.Fields {
 		layers.removeIf(layer -> !Settings.get().showContainerLayers
 				&& layer.outputCount() == 0);
 		setLayers(layers);
+	}
+
+	public void setLayers(List<LayerSelections> layers) {
+		set("layers", this.layers, layers, () -> this.layers = layers);
 	}
 }

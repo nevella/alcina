@@ -23,8 +23,21 @@ public class SubgraphTransformManager extends TransformManager {
 		initObjectStore();
 	}
 
+	@Override
+	protected Object ensureEndpointInTransformGraph(Object object) {
+		if (object instanceof Entity) {
+			return getObject((Entity) object);
+		}
+		return object;
+	}
+
 	public DetachedEntityCache getDetachedEntityCache() {
 		return store.getCache();
+	}
+
+	@Override
+	protected Entity getEntityForCreate(DomainTransformEvent event) {
+		return null;
 	}
 
 	public DetachedCacheObjectStore getStore() {
@@ -35,18 +48,5 @@ public class SubgraphTransformManager extends TransformManager {
 	protected void initObjectStore() {
 		store = new DetachedCacheObjectStore(new DomainStoreEntityCache());
 		setObjectStore(store);
-	}
-
-	@Override
-	protected Object ensureEndpointInTransformGraph(Object object) {
-		if (object instanceof Entity) {
-			return getObject((Entity) object);
-		}
-		return object;
-	}
-
-	@Override
-	protected Entity getEntityForCreate(DomainTransformEvent event) {
-		return null;
 	}
 }

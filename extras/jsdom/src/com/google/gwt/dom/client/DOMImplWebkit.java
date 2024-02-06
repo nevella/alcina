@@ -51,6 +51,12 @@ class DOMImplWebkit extends DOMImplStandardBase {
     return wrapped;
 	}-*/;
 
+	@Override
+	Element getLegacyDocumentScrollingElement(DocumentJso doc) {
+		// Old WebKit needs body.scrollLeft in both quirks mode and strict mode.
+		return doc.getBody();
+	}
+
 	/**
 	 * Webkit based browsers require that we set the webkit-user-drag style
 	 * attribute to make an Element_Dom draggable.
@@ -63,11 +69,5 @@ class DOMImplWebkit extends DOMImplStandardBase {
 		} else {
 			elem.getStyle().clearProperty("webkitUserDrag");
 		}
-	}
-
-	@Override
-	Element getLegacyDocumentScrollingElement(DocumentJso doc) {
-		// Old WebKit needs body.scrollLeft in both quirks mode and strict mode.
-		return doc.getBody();
 	}
 }

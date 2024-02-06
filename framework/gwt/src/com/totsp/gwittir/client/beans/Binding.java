@@ -225,6 +225,58 @@ public class Binding {
 		this.bound = true;
 	}
 
+	BindingInstance createBindingInstance(SourcesPropertyChangeEvents object,
+			String propertyName) {
+		int dotIndex = propertyName.indexOf(".");
+		BindingInstance instance = new BindingInstance();
+		NestedPropertyChangeListener rtpcl = (dotIndex == -1) ? null
+				: new NestedPropertyChangeListener(instance, object,
+						propertyName);
+		ArrayList parents = new ArrayList();
+		ArrayList propertyNames = new ArrayList();
+		while (dotIndex != -1) {
+			String pname = propertyName.substring(0, dotIndex);
+			propertyName = propertyName.substring(dotIndex + 1);
+			parents.add(object);
+			try {
+				propertyNames.add(pname);
+				object = (SourcesPropertyChangeEvents) Reflections.at(object)
+						.property(pname).get(object);
+			} catch (ClassCastException cce) {
+				throw new RuntimeException(
+						"Nonbindable sub property: " + object + " . " + pname,
+						cce);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			dotIndex = propertyName.indexOf(".");
+		}
+		if (rtpcl != null) {
+			rtpcl.parents = new SourcesPropertyChangeEvents[parents.size()];
+			parents.toArray(rtpcl.parents);
+			rtpcl.propertyNames = new String[propertyNames.size()];
+			propertyNames.toArray(rtpcl.propertyNames);
+		}
+		instance.object = object;
+		try {
+			if (object instanceof DefinesProperties) {
+				instance.property = ((DefinesProperties) object)
+						.provideProperty(propertyName);
+			} else {
+				instance.property = Reflections.at(object)
+						.property(propertyName);
+			}
+			if (instance.property == null) {
+				throw new NullPointerException("Property Not Found.");
+			}
+		} catch (NullPointerException e) {
+			throw new RuntimeException(
+					"Exception getting property " + propertyName, e);
+		}
+		instance.nestedListener = rtpcl;
+		return instance;
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null) {
@@ -321,6 +373,16 @@ public class Binding {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	protected boolean leftObjectIsHiddenWidget() {
+		if (left.object instanceof Widget) {
+			if (!GwtDomUtils.isVisibleAncestorChain(
+					((Widget) left.object).getElement())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public List<Binding> provideAllBindings(List<Binding> list) {
@@ -502,68 +564,6 @@ public class Binding {
 		return valid;
 	}
 
-	protected boolean leftObjectIsHiddenWidget() {
-		if (left.object instanceof Widget) {
-			if (!GwtDomUtils.isVisibleAncestorChain(
-					((Widget) left.object).getElement())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	BindingInstance createBindingInstance(SourcesPropertyChangeEvents object,
-			String propertyName) {
-		int dotIndex = propertyName.indexOf(".");
-		BindingInstance instance = new BindingInstance();
-		NestedPropertyChangeListener rtpcl = (dotIndex == -1) ? null
-				: new NestedPropertyChangeListener(instance, object,
-						propertyName);
-		ArrayList parents = new ArrayList();
-		ArrayList propertyNames = new ArrayList();
-		while (dotIndex != -1) {
-			String pname = propertyName.substring(0, dotIndex);
-			propertyName = propertyName.substring(dotIndex + 1);
-			parents.add(object);
-			try {
-				propertyNames.add(pname);
-				object = (SourcesPropertyChangeEvents) Reflections.at(object)
-						.property(pname).get(object);
-			} catch (ClassCastException cce) {
-				throw new RuntimeException(
-						"Nonbindable sub property: " + object + " . " + pname,
-						cce);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-			dotIndex = propertyName.indexOf(".");
-		}
-		if (rtpcl != null) {
-			rtpcl.parents = new SourcesPropertyChangeEvents[parents.size()];
-			parents.toArray(rtpcl.parents);
-			rtpcl.propertyNames = new String[propertyNames.size()];
-			propertyNames.toArray(rtpcl.propertyNames);
-		}
-		instance.object = object;
-		try {
-			if (object instanceof DefinesProperties) {
-				instance.property = ((DefinesProperties) object)
-						.provideProperty(propertyName);
-			} else {
-				instance.property = Reflections.at(object)
-						.property(propertyName);
-			}
-			if (instance.property == null) {
-				throw new NullPointerException("Property Not Found.");
-			}
-		} catch (NullPointerException e) {
-			throw new RuntimeException(
-					"Exception getting property " + propertyName, e);
-		}
-		instance.nestedListener = rtpcl;
-		return instance;
-	}
-
 	/**
 	 * A data class containing the relevant data for one half of a binding
 	 * relationship.
@@ -600,69 +600,6 @@ public class Binding {
 
 		private BindingInstance() {
 			super();
-		}
-	}
-
-	public interface DefinesProperties {
-		public Property provideProperty(String propertyName);
-	}
-
-	public interface PropertyMap {
-	}
-
-	private class NestedPropertyChangeListener
-			implements PropertyChangeListener {
-		SourcesPropertyChangeEvents sourceObject;
-
-		BindingInstance target;
-
-		String propertyName;
-
-		SourcesPropertyChangeEvents[] parents;
-
-		String[] propertyNames;
-
-		NestedPropertyChangeListener(BindingInstance target,
-				SourcesPropertyChangeEvents sourceObject, String propertyName) {
-			this.target = target;
-			this.sourceObject = sourceObject;
-			this.propertyName = propertyName;
-		}
-
-		public void cleanup() {
-			for (int i = 0; i < parents.length; i++) {
-				parents[i].removePropertyChangeListener(this.propertyNames[i],
-						this);
-			}
-		}
-
-		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-			if (bound) {
-				unbind();
-				bound = true;
-			}
-			BindingInstance newInstance = createBindingInstance(sourceObject,
-					propertyName);
-			target.object = newInstance.object;
-			target.nestedListener = newInstance.nestedListener;
-			target.nestedListener.target = target;
-			target.property = newInstance.property;
-			if (lastSet == Boolean.TRUE) {
-				setLeft();
-			} else if (lastSet == Boolean.FALSE) {
-				setRight();
-			}
-			if (bound) {
-				bind();
-			}
-		}
-
-		public void setup() {
-			for (int i = 0; i < parents.length; i++) {
-				parents[i].addPropertyChangeListener(this.propertyNames[i],
-						this);
-			}
 		}
 	}
 
@@ -735,5 +672,68 @@ public class Binding {
 		public String toString() {
 			return "[Listener on : " + this.instance.object + " ] ";
 		}
+	}
+
+	public interface DefinesProperties {
+		public Property provideProperty(String propertyName);
+	}
+
+	private class NestedPropertyChangeListener
+			implements PropertyChangeListener {
+		SourcesPropertyChangeEvents sourceObject;
+
+		BindingInstance target;
+
+		String propertyName;
+
+		SourcesPropertyChangeEvents[] parents;
+
+		String[] propertyNames;
+
+		NestedPropertyChangeListener(BindingInstance target,
+				SourcesPropertyChangeEvents sourceObject, String propertyName) {
+			this.target = target;
+			this.sourceObject = sourceObject;
+			this.propertyName = propertyName;
+		}
+
+		public void cleanup() {
+			for (int i = 0; i < parents.length; i++) {
+				parents[i].removePropertyChangeListener(this.propertyNames[i],
+						this);
+			}
+		}
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (bound) {
+				unbind();
+				bound = true;
+			}
+			BindingInstance newInstance = createBindingInstance(sourceObject,
+					propertyName);
+			target.object = newInstance.object;
+			target.nestedListener = newInstance.nestedListener;
+			target.nestedListener.target = target;
+			target.property = newInstance.property;
+			if (lastSet == Boolean.TRUE) {
+				setLeft();
+			} else if (lastSet == Boolean.FALSE) {
+				setRight();
+			}
+			if (bound) {
+				bind();
+			}
+		}
+
+		public void setup() {
+			for (int i = 0; i < parents.length; i++) {
+				parents[i].addPropertyChangeListener(this.propertyNames[i],
+						this);
+			}
+		}
+	}
+
+	public interface PropertyMap {
 	}
 }

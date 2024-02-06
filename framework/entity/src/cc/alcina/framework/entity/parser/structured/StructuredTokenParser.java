@@ -20,48 +20,6 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 
 	Stack<DomNode> openNodes;
 
-	public XmlTokenOutput parse(Class<?> tokenClass, DomTokenStream stream,
-			C context) {
-		return parse(tokenClass, stream, context, () -> true,
-				getTokens(tokenClass));
-	}
-
-	public XmlTokenOutput parse(Class<?> tokenClass, DomTokenStream stream,
-			C context, Supplier<Boolean> shouldContinue,
-			List<XmlToken> tokens) {
-		try {
-			LooseContext.push();
-			openNodes = new Stack<>();
-			this.tokens = tokens;
-			DomDocument outDoc = DomDocument.from("<root/>");
-			XmlTokenOutput out = new XmlTokenOutput(outDoc);
-			LooseContext.set(DomNode.CONTEXT_DEBUG_SUPPORT, out);
-			context.out = out;
-			out.context = context;
-			context.stream = stream;
-			context.parser = this;
-			context.start();
-			int counter = 0;
-			int all = (int) stream.getDoc().descendants().count();
-			while (stream.hasNext()) {
-				DomNode node = stream.next();
-				closeOpenNodes(node, context);
-				handleNode(node, context);
-				if (!shouldContinue.get()) {
-					break;
-				}
-				if (all > 30000 && counter++ % 5000 == 0) {
-					Ax.out("%s/%s", counter, all);
-				}
-			}
-			closeOpenNodes(null, context);
-			context.end();
-			return out;
-		} finally {
-			LooseContext.pop();
-		}
-	}
-
 	private void closeOpenNodes(DomNode node, C context) {
 		while (openNodes.size() > 0) {
 			DomNode openNode = openNodes.pop();
@@ -107,6 +65,48 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 				}
 			}
 			throw e;
+		}
+	}
+
+	public XmlTokenOutput parse(Class<?> tokenClass, DomTokenStream stream,
+			C context) {
+		return parse(tokenClass, stream, context, () -> true,
+				getTokens(tokenClass));
+	}
+
+	public XmlTokenOutput parse(Class<?> tokenClass, DomTokenStream stream,
+			C context, Supplier<Boolean> shouldContinue,
+			List<XmlToken> tokens) {
+		try {
+			LooseContext.push();
+			openNodes = new Stack<>();
+			this.tokens = tokens;
+			DomDocument outDoc = DomDocument.from("<root/>");
+			XmlTokenOutput out = new XmlTokenOutput(outDoc);
+			LooseContext.set(DomNode.CONTEXT_DEBUG_SUPPORT, out);
+			context.out = out;
+			out.context = context;
+			context.stream = stream;
+			context.parser = this;
+			context.start();
+			int counter = 0;
+			int all = (int) stream.getDoc().descendants().count();
+			while (stream.hasNext()) {
+				DomNode node = stream.next();
+				closeOpenNodes(node, context);
+				handleNode(node, context);
+				if (!shouldContinue.get()) {
+					break;
+				}
+				if (all > 30000 && counter++ % 5000 == 0) {
+					Ax.out("%s/%s", counter, all);
+				}
+			}
+			closeOpenNodes(null, context);
+			context.end();
+			return out;
+		} finally {
+			LooseContext.pop();
 		}
 	}
 }

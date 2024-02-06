@@ -29,6 +29,32 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
+	protected T copyObject(T mostRecentObject) {
+		T result = super.copyObject(mostRecentObject);
+		if (mostRecentObject == null) {
+			// id is always correct for domainIdentity version
+			result.setId(domainIdentity.getId());
+		}
+		return result;
+	}
+
+	@Override
+	protected void copyObject(T fromObject, T baseObject) {
+		Transactions.copyObjectFields(fromObject, baseObject);
+	}
+
+	@Override
+	protected void debugNotResolved() {
+		FormatBuilder fb = new FormatBuilder();
+		fb.line("visibleAllTransactions: %s",
+				EntityLocator.instanceLocator(visibleAllTransactions));
+		fb.line("domainIdentity: %s",
+				EntityLocator.instanceLocator(domainIdentity));
+		logger.warn(fb.toString());
+		super.debugNotResolved();
+	}
+
+	@Override
 	/*
 	 * FIXME - jdk9 - check performance and maybe remove
 	 */
@@ -59,6 +85,24 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
+	protected void onResolveNull(boolean write) {
+		if (notifyResolveNullCount > 0) {
+			logger.warn("onResolveNull - {}/{}", domainIdentity.getId(),
+					domainIdentity.getClass().getSimpleName());
+		}
+		super.onResolveNull(write);
+	}
+
+	@Override
+	protected void onVersionCreation(ObjectVersion<T> version) {
+		super.onVersionCreation(version);
+		if (version.writeable) {
+			ThreadlocalTransformManager.cast()
+					.registerDomainObject(version.object, true);
+		}
+	}
+
+	@Override
 	public synchronized String toString() {
 		try {
 			T object = domainIdentity;
@@ -82,50 +126,6 @@ public class MvccObjectVersionsEntity<T extends Entity>
 					transaction == null ? transaction : "base");
 		} catch (Exception e) {
 			return "exception..";
-		}
-	}
-
-	@Override
-	protected T copyObject(T mostRecentObject) {
-		T result = super.copyObject(mostRecentObject);
-		if (mostRecentObject == null) {
-			// id is always correct for domainIdentity version
-			result.setId(domainIdentity.getId());
-		}
-		return result;
-	}
-
-	@Override
-	protected void copyObject(T fromObject, T baseObject) {
-		Transactions.copyObjectFields(fromObject, baseObject);
-	}
-
-	@Override
-	protected void debugNotResolved() {
-		FormatBuilder fb = new FormatBuilder();
-		fb.line("visibleAllTransactions: %s",
-				EntityLocator.instanceLocator(visibleAllTransactions));
-		fb.line("domainIdentity: %s",
-				EntityLocator.instanceLocator(domainIdentity));
-		logger.warn(fb.toString());
-		super.debugNotResolved();
-	}
-
-	@Override
-	protected void onResolveNull(boolean write) {
-		if (notifyResolveNullCount > 0) {
-			logger.warn("onResolveNull - {}/{}", domainIdentity.getId(),
-					domainIdentity.getClass().getSimpleName());
-		}
-		super.onResolveNull(write);
-	}
-
-	@Override
-	protected void onVersionCreation(ObjectVersion<T> version) {
-		super.onVersionCreation(version);
-		if (version.writeable) {
-			ThreadlocalTransformManager.cast()
-					.registerDomainObject(version.object, true);
 		}
 	}
 }

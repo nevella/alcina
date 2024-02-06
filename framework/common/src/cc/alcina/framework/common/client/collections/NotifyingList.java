@@ -32,24 +32,136 @@ public class NotifyingList<T> implements List<T> {
 		this.delegate = delegate;
 	}
 
-	public void forEach(Consumer<? super T> action) {
-		delegate.forEach(action);
+	public void add(int index, T element) {
+		withMutating(() -> delegate.add(index, element), element, true);
 	}
 
-	public int size() {
-		return delegate.size();
+	public boolean add(T e) {
+		return withMutating(() -> delegate.add(e), e, true, null);
 	}
 
-	public boolean isEmpty() {
-		return delegate.isEmpty();
+	public boolean addAll(Collection<? extends T> c) {
+		if (c.isEmpty()) {
+			return false;
+		}
+		c.forEach(this::add);
+		return true;
+	}
+
+	public boolean addAll(int index, Collection<? extends T> c) {
+		throw new UnsupportedOperationException();
+	}
+
+	public void clear() {
+		throw new UnsupportedOperationException();
 	}
 
 	public boolean contains(Object o) {
 		return delegate.contains(o);
 	}
 
+	public boolean containsAll(Collection<?> c) {
+		return delegate.containsAll(c);
+	}
+
+	public boolean equals(Object o) {
+		return delegate.equals(o);
+	}
+
+	public void forEach(Consumer<? super T> action) {
+		delegate.forEach(action);
+	}
+
+	public T get(int index) {
+		return delegate.get(index);
+	}
+
+	public int hashCode() {
+		return delegate.hashCode();
+	}
+
+	public int indexOf(Object o) {
+		return delegate.indexOf(o);
+	}
+
+	public boolean isEmpty() {
+		return delegate.isEmpty();
+	}
+
 	public Iterator<T> iterator() {
 		return delegate.iterator();
+	}
+
+	public int lastIndexOf(Object o) {
+		return delegate.lastIndexOf(o);
+	}
+
+	public ListIterator<T> listIterator() {
+		return delegate.listIterator();
+	}
+
+	public ListIterator<T> listIterator(int index) {
+		return delegate.listIterator(index);
+	}
+
+	public Stream<T> parallelStream() {
+		return delegate.parallelStream();
+	}
+
+	public T remove(int index) {
+		T element = get(index);
+		return withMutating(() -> delegate.remove(index), element, false,
+				v -> (boolean) v);
+	}
+
+	public boolean remove(Object o) {
+		return withMutating(() -> delegate.remove(o), (T) o, false,
+				v -> (boolean) v);
+	}
+
+	public boolean removeAll(Collection<?> c) {
+		boolean delta = false;
+		for (Object o : c) {
+			delta |= remove(o);
+		}
+		return delta;
+	}
+
+	public boolean removeIf(Predicate<? super T> filter) {
+		throw new UnsupportedOperationException();
+	}
+
+	public void replaceAll(UnaryOperator<T> operator) {
+		throw new UnsupportedOperationException();
+	}
+
+	public boolean retainAll(Collection<?> c) {
+		throw new UnsupportedOperationException();
+	}
+
+	public T set(int index, T element) {
+		return withMutating(() -> delegate.set(index, element), element, true,
+				null);
+	}
+
+	public int size() {
+		return delegate.size();
+	}
+
+	public void sort(Comparator<? super T> c) {
+		throw new UnsupportedOperationException();
+	}
+
+	public Spliterator<T> spliterator() {
+		return delegate.spliterator();
+	}
+
+	public Stream<T> stream() {
+		return delegate.stream();
+	}
+
+	public List<T> subList(int fromIndex, int toIndex) {
+		return delegate.subList(fromIndex, toIndex);
 	}
 
 	public Object[] toArray() {
@@ -58,14 +170,6 @@ public class NotifyingList<T> implements List<T> {
 
 	public <E> E[] toArray(E[] a) {
 		return delegate.toArray(a);
-	}
-
-	public boolean add(T e) {
-		return withMutating(() -> delegate.add(e), e, true, null);
-	}
-
-	void withMutating(Runnable runnable, T delta, boolean add) {
-		withMutating(new RunnableCallable(runnable), delta, add, null);
 	}
 
 	<V> V withMutating(Callable<V> callable, T delta, boolean add,
@@ -82,112 +186,8 @@ public class NotifyingList<T> implements List<T> {
 		}
 	}
 
-	public boolean remove(Object o) {
-		return withMutating(() -> delegate.remove(o), (T) o, false,
-				v -> (boolean) v);
-	}
-
-	public boolean containsAll(Collection<?> c) {
-		return delegate.containsAll(c);
-	}
-
-	public boolean addAll(Collection<? extends T> c) {
-		if (c.isEmpty()) {
-			return false;
-		}
-		c.forEach(this::add);
-		return true;
-	}
-
-	public boolean addAll(int index, Collection<? extends T> c) {
-		throw new UnsupportedOperationException();
-	}
-
-	public boolean removeAll(Collection<?> c) {
-		boolean delta = false;
-		for (Object o : c) {
-			delta |= remove(o);
-		}
-		return delta;
-	}
-
-	public boolean retainAll(Collection<?> c) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void replaceAll(UnaryOperator<T> operator) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void sort(Comparator<? super T> c) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void clear() {
-		throw new UnsupportedOperationException();
-	}
-
-	public boolean equals(Object o) {
-		return delegate.equals(o);
-	}
-
-	public int hashCode() {
-		return delegate.hashCode();
-	}
-
-	public T get(int index) {
-		return delegate.get(index);
-	}
-
-	public T set(int index, T element) {
-		return withMutating(() -> delegate.set(index, element), element, true,
-				null);
-	}
-
-	public void add(int index, T element) {
-		withMutating(() -> delegate.add(index, element), element, true);
-	}
-
-	public boolean removeIf(Predicate<? super T> filter) {
-		throw new UnsupportedOperationException();
-	}
-
-	public T remove(int index) {
-		T element = get(index);
-		return withMutating(() -> delegate.remove(index), element, false,
-				v -> (boolean) v);
-	}
-
-	public int indexOf(Object o) {
-		return delegate.indexOf(o);
-	}
-
-	public int lastIndexOf(Object o) {
-		return delegate.lastIndexOf(o);
-	}
-
-	public ListIterator<T> listIterator() {
-		return delegate.listIterator();
-	}
-
-	public ListIterator<T> listIterator(int index) {
-		return delegate.listIterator(index);
-	}
-
-	public List<T> subList(int fromIndex, int toIndex) {
-		return delegate.subList(fromIndex, toIndex);
-	}
-
-	public Spliterator<T> spliterator() {
-		return delegate.spliterator();
-	}
-
-	public Stream<T> stream() {
-		return delegate.stream();
-	}
-
-	public Stream<T> parallelStream() {
-		return delegate.parallelStream();
+	void withMutating(Runnable runnable, T delta, boolean add) {
+		withMutating(new RunnableCallable(runnable), delta, add, null);
 	}
 
 	public class Notification {

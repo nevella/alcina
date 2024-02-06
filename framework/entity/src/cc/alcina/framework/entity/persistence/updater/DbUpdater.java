@@ -19,18 +19,6 @@ public abstract class DbUpdater implements Comparable<DbUpdater> {
 		return getUpdateNumber().compareTo(o.getUpdateNumber());
 	}
 
-	public abstract Integer getUpdateNumber();
-
-	public abstract void run(EntityManager em) throws Exception;
-
-	public boolean runAsync() {
-		return false;
-	}
-
-	public boolean runPreCache() {
-		return false;
-	}
-
 	protected void ex(Statement stmt, String sql) throws Exception {
 		ex(stmt, sql, false);
 	}
@@ -84,5 +72,17 @@ public abstract class DbUpdater implements Comparable<DbUpdater> {
 				System.out.println(e.getMessage());
 			}
 		}
+	}
+
+	public abstract Integer getUpdateNumber();
+
+	public abstract void run(EntityManager em) throws Exception;
+
+	public boolean runAsync() {
+		return false;
+	}
+
+	public boolean runPreCache() {
+		return false;
 	}
 }

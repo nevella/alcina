@@ -13,16 +13,6 @@ import cc.alcina.framework.common.client.util.TextUtils;
  *
  */
 class ClientDomNodeStatic {
-	public static String shortLog(List<? extends ClientDomNode> list) {
-		int idx = 0;
-		StringBuilder stringBuilder = new StringBuilder();
-		for (ClientDomNode domNode : list) {
-			stringBuilder.append(Ax.format("%s%s\n", CommonUtils.padTwo(idx++),
-					shortLog(domNode)));
-		}
-		return stringBuilder.toString();
-	}
-
 	static void callMethod(ClientDomNode domNode, String methodName) {
 		throw new UnsupportedOperationException();
 	}
@@ -104,5 +94,15 @@ class ClientDomNodeStatic {
 								.trimToWsChars(TextUtils.normalizeWhitespace(
 										node.getNodeValue()), 50, true)
 								: "");
+	}
+
+	public static String shortLog(List<? extends ClientDomNode> list) {
+		int idx = 0;
+		StringBuilder stringBuilder = new StringBuilder();
+		for (ClientDomNode domNode : list) {
+			stringBuilder.append(Ax.format("%s%s\n", CommonUtils.padTwo(idx++),
+					shortLog(domNode)));
+		}
+		return stringBuilder.toString();
 	}
 }

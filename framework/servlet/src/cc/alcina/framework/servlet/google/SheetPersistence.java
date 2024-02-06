@@ -49,6 +49,39 @@ public class SheetPersistence {
 		this.sheetAccess = sheetAccess;
 	}
 
+	private void ensureFields()
+			throws IllegalArgumentException, IllegalAccessException {
+		if (listField == null) {
+			listField = Arrays.stream(persistent.getClass().getDeclaredFields())
+					.filter(f -> f.getType() == List.class
+							&& !Modifier.isTransient(f.getModifiers()))
+					.findFirst().get();
+			listField.setAccessible(true);
+			Type pt = GraphProjection.getGenericType(listField);
+			Type genericType = ((ParameterizedType) pt)
+					.getActualTypeArguments()[0];
+			valueType = (Class) genericType;
+			Arrays.stream(valueType.getConstructors())
+					.forEach(c -> c.setAccessible(true));
+			valueTypeFields = Arrays.stream(valueType.getDeclaredFields())
+					.filter(f -> !Modifier.isTransient(f.getModifiers()))
+					.peek(f -> f.setAccessible(true))
+					.collect(Collectors.toList());
+			list = (List) listField.get(persistent);
+		}
+	}
+
+	private File getPersistentFile() {
+		DataFolderProvider.get().getSubFolder("sheetPersistence").mkdirs();
+		return DataFolderProvider.get()
+				.getChildFile(Ax.format("sheetPersistence/%s.dat",
+						persistent.getClass().getSimpleName()));
+	}
+
+	protected boolean isSortBeforeSave() {
+		return true;
+	}
+
 	public void load(boolean useLocalCached) {
 		try {
 			ensureFields();
@@ -172,46 +205,13 @@ public class SheetPersistence {
 		}
 	}
 
-	private void ensureFields()
-			throws IllegalArgumentException, IllegalAccessException {
-		if (listField == null) {
-			listField = Arrays.stream(persistent.getClass().getDeclaredFields())
-					.filter(f -> f.getType() == List.class
-							&& !Modifier.isTransient(f.getModifiers()))
-					.findFirst().get();
-			listField.setAccessible(true);
-			Type pt = GraphProjection.getGenericType(listField);
-			Type genericType = ((ParameterizedType) pt)
-					.getActualTypeArguments()[0];
-			valueType = (Class) genericType;
-			Arrays.stream(valueType.getConstructors())
-					.forEach(c -> c.setAccessible(true));
-			valueTypeFields = Arrays.stream(valueType.getDeclaredFields())
-					.filter(f -> !Modifier.isTransient(f.getModifiers()))
-					.peek(f -> f.setAccessible(true))
-					.collect(Collectors.toList());
-			list = (List) listField.get(persistent);
-		}
-	}
-
-	private File getPersistentFile() {
-		DataFolderProvider.get().getSubFolder("sheetPersistence").mkdirs();
-		return DataFolderProvider.get()
-				.getChildFile(Ax.format("sheetPersistence/%s.dat",
-						persistent.getClass().getSimpleName()));
-	}
-
-	protected boolean isSortBeforeSave() {
-		return true;
-	}
-
-	protected String translateFieldName(Field f) {
-		return f.getName().replace("_", " ");
-	}
-
 	SheetWrapper sheetWrapper() {
 		this.sheetAccesor = new SheetAccessor().withSheetAccess(sheetAccess);
 		return new SheetWrapper(
 				sheetAccesor.getSheet(sheetAccesor.sheetAccess.getSheetName()));
+	}
+
+	protected String translateFieldName(Field f) {
+		return f.getName().replace("_", " ");
 	}
 }

@@ -28,11 +28,6 @@ public class SearchHandlers {
 
 	static Map<Class, DomainDefinitionHandler> definitionHandlers = new LinkedHashMap<>();
 
-	private static DomainCriterionHandler
-			getCriterionHandler(SearchDefinition def, SearchCriterion sc) {
-		return SearchHandlers.handlers.get(def.getClass(), sc.getClass());
-	}
-
 	static synchronized void ensureHandlers() {
 		Logger logger = LoggerFactory.getLogger(DomainSearcher.class);
 		if (handlers.isEmpty()) {
@@ -65,6 +60,11 @@ public class SearchHandlers {
 										.getSimpleName());
 			}
 		}
+	}
+
+	private static DomainCriterionHandler
+			getCriterionHandler(SearchDefinition def, SearchCriterion sc) {
+		return SearchHandlers.handlers.get(def.getClass(), sc.getClass());
 	}
 
 	static void processDefinitionHandler(SearchDefinition def,
