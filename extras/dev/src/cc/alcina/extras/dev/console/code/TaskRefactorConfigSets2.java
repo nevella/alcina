@@ -53,58 +53,6 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 
 	private String collisionsHash;
 
-	public String getAppSetsTsv() {
-		return this.appSetsTsv;
-	}
-
-	public String getCollisionsHash() {
-		return this.collisionsHash;
-	}
-
-	public String getNonStandardSetsTsv() {
-		return this.nonStandardSetsTsv;
-	}
-
-	public String getPropertiesCsv() {
-		return this.propertiesCsv;
-	}
-
-	public String getSetPathsTsv() {
-		return this.setPathsTsv;
-	}
-
-	@Override
-	public void run() throws Exception {
-		parse();
-		checkSets();
-		generateOutputSets();
-		generatePackageBundles();
-		checkOutputSetCollisions();
-		writeOutputSets();
-		writePackageBundles();
-		writeAppConfigFiles();
-	}
-
-	public void setAppSetsTsv(String appSetsTsv) {
-		this.appSetsTsv = appSetsTsv;
-	}
-
-	public void setCollisionsHash(String collisionsHash) {
-		this.collisionsHash = collisionsHash;
-	}
-
-	public void setNonStandardSetsTsv(String nonStandardSetsTsv) {
-		this.nonStandardSetsTsv = nonStandardSetsTsv;
-	}
-
-	public void setPropertiesCsv(String propertiesCsv) {
-		this.propertiesCsv = propertiesCsv;
-	}
-
-	public void setSetPathsTsv(String setPathsTsv) {
-		this.setPathsTsv = setPathsTsv;
-	}
-
 	private void checkOutputSetCollisions() {
 		// check - for each app - that the key collisions are all verified
 		FormatBuilder collisionBuilder = new FormatBuilder();
@@ -168,27 +116,91 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 				});
 	}
 
+	public String getAppSetsTsv() {
+		return this.appSetsTsv;
+	}
+
+	public String getCollisionsHash() {
+		return this.collisionsHash;
+	}
+
+	public String getNonStandardSetsTsv() {
+		return this.nonStandardSetsTsv;
+	}
+
+	public String getPropertiesCsv() {
+		return this.propertiesCsv;
+	}
+
+	public String getSetPathsTsv() {
+		return this.setPathsTsv;
+	}
+
+	String normalise(String string) {
+		string = Ax.blankToEmpty(string);
+		switch (string) {
+		case "TRUE":
+			return "true";
+		case "FALSE":
+			return "false";
+		default:
+			return string;
+		}
+	}
+
 	private void parse() {
 		{
-			Csv cols = Csv.parseCsv(propertiesCsv);
-			propertyRows = cols.stream().map(PropertyRow::new)
+			Csv csv = Csv.parseCsv(propertiesCsv);
+			propertyRows = csv.stream().map(PropertyRow::new)
 					.collect(Collectors.toList());
 		}
 		{
-			Csv cols = Csv.parseTsv(appSetsTsv);
-			appSets = cols.stream().map(AppSets::new)
+			Csv csv = Csv.parseTsv(appSetsTsv);
+			appSets = csv.stream().map(AppSets::new)
 					.collect(Collectors.toList());
 		}
 		{
-			Csv cols = Csv.parseTsv(nonStandardSetsTsv);
-			nonStandardSets = cols.stream().map(NonStandardSet::new)
+			Csv csv = Csv.parseTsv(nonStandardSetsTsv);
+			nonStandardSets = csv.stream().map(NonStandardSet::new)
 					.collect(Collectors.toList());
 		}
 		{
-			Csv cols = Csv.parseTsv(setPathsTsv);
-			setPaths = cols.stream().map(SetPath::new)
+			Csv csv = Csv.parseTsv(setPathsTsv);
+			setPaths = csv.stream().map(SetPath::new)
 					.collect(Collectors.toList());
 		}
+	}
+
+	@Override
+	public void run() throws Exception {
+		parse();
+		checkSets();
+		generateOutputSets();
+		generatePackageBundles();
+		checkOutputSetCollisions();
+		writeOutputSets();
+		writePackageBundles();
+		writeAppConfigFiles();
+	}
+
+	public void setAppSetsTsv(String appSetsTsv) {
+		this.appSetsTsv = appSetsTsv;
+	}
+
+	public void setCollisionsHash(String collisionsHash) {
+		this.collisionsHash = collisionsHash;
+	}
+
+	public void setNonStandardSetsTsv(String nonStandardSetsTsv) {
+		this.nonStandardSetsTsv = nonStandardSetsTsv;
+	}
+
+	public void setPropertiesCsv(String propertiesCsv) {
+		this.propertiesCsv = propertiesCsv;
+	}
+
+	public void setSetPathsTsv(String setPathsTsv) {
+		this.setPathsTsv = setPathsTsv;
 	}
 
 	private void writeAppConfigFiles() {
@@ -210,18 +222,6 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 			Io.write().string(bundle.computeOutputString())
 					.toPath(bundle.computeOutputPath());
 		});
-	}
-
-	String normalise(String string) {
-		string = Ax.blankToEmpty(string);
-		switch (string) {
-		case "TRUE":
-			return "true";
-		case "FALSE":
-			return "false";
-		default:
-			return string;
-		}
 	}
 
 	class AppSetMatchResult implements Comparable<AppSetMatchResult> {
@@ -312,11 +312,6 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 			this.packageName = packageName;
 		}
 
-		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToStringOneLine(this);
-		}
-
 		String computeOutputPath() {
 			return path.replace("Bundle.properties",
 					"configuration.properties");
@@ -324,6 +319,11 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 
 		String computeOutputString() {
 			return map.toPropertyString();
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToStringOneLine(this);
 		}
 	}
 
@@ -336,10 +336,19 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 			this.name = name;
 		}
 
+		void add(PropertyRow row) {
+			outputPackages.computeIfAbsent(row.packageName, OutputPackage::new)
+					.add(row);
+		}
+
 		public StringMap allProperties() {
 			StringMap result = new StringMap();
 			outputPackages.values().forEach(pkg -> result.putAll(pkg.map));
 			return result;
+		}
+
+		String computeFilename() {
+			return Ax.format("configuration_%s.properties", name);
 		}
 
 		public String computeOutputPath() {
@@ -380,15 +389,6 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 			return name;
 		}
 
-		void add(PropertyRow row) {
-			outputPackages.computeIfAbsent(row.packageName, OutputPackage::new)
-					.add(row);
-		}
-
-		String computeFilename() {
-			return Ax.format("configuration_%s.properties", name);
-		}
-
 		class OutputPackage {
 			String packageName;
 
@@ -398,6 +398,11 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 				this.packageName = packageName;
 			}
 
+			void add(PropertyRow row) {
+				Preconditions.checkState(!map.containsKey(row.key));
+				map.put(row.key, normalise(row.value));
+			}
+
 			public String providePackageName() {
 				return Ax.blankTo(packageName, " (no package)");
 			}
@@ -405,11 +410,6 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 			@Override
 			public String toString() {
 				return GraphProjection.fieldwiseToStringOneLine(this);
-			}
-
-			void add(PropertyRow row) {
-				Preconditions.checkState(!map.containsKey(row.key));
-				map.put(row.key, normalise(row.value));
 			}
 		}
 	}
@@ -450,15 +450,6 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 			checkValid();
 		}
 
-		public String getOutputSet() {
-			return this.outputSet;
-		}
-
-		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToStringOneLine(this);
-		}
-
 		private void checkValid() {
 			if (Ax.notBlank(inputSet) && Ax.isBlank(outputSet)) {
 				throw Ax.runtimeException("input/outputset mismatch - row %s",
@@ -466,9 +457,18 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 			}
 		}
 
+		public String getOutputSet() {
+			return this.outputSet;
+		}
+
 		boolean hasInterestingOutputSet() {
 			return Ax.notBlank(outputSet) && !outputSet.equals("omit")
 					&& !outputSet.equals("app");
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToStringOneLine(this);
 		}
 	}
 

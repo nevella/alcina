@@ -275,6 +275,28 @@ public class SEUtilities {
 		return false;
 	}
 
+	private static int copyDirectory(File in, File out,
+			boolean replaceExistingDirectories) throws IOException {
+		int fc = 0;
+		if (out.exists()) {
+			if (out.isDirectory()) {
+				if (replaceExistingDirectories) {
+					deleteDirectory(out);
+				}
+			} else {
+				out.delete();
+			}
+		}
+		out.mkdirs();
+		File[] files = in.listFiles();
+		for (File subIn : files) {
+			File subOut = new File(
+					out.getPath() + File.separator + subIn.getName());
+			fc += copyFile(subIn, subOut);
+		}
+		return fc;
+	}
+
 	// FIXME - reflection - remove (cleanup seutilities)
 	public static int copyFile(File in, File out) throws IOException {
 		return copyFile(in, out, true, false);
@@ -418,6 +440,59 @@ public class SEUtilities {
 		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
 	}
 
+	private static String doWhitespace(String input, boolean returnNullIfNonWs,
+			char replace) {
+		StringBuilder sb = null;
+		int sct = 0;
+		int nsct = 0;
+		boolean escaped = false;
+		boolean strip = replace == '-';
+		int maxSpaceCount = strip ? 0 : 1;
+		for (int i = 0; i < input.length(); i++) {
+			char c = input.charAt(i);
+			switch (c) {
+			case '\u0009':
+			case '\n':
+			case '\u000B':
+			case '\f':
+			case '\r':
+			case '\u00A0':
+			case '\u0085':
+			case '\u2000':
+			case '\u2001':
+			case '\u2002':
+			case '\u2003':
+				nsct++;
+				break;
+			case ' ':
+				sct++;
+				break;
+			default:
+				nsct = 0;
+				sct = 0;
+				escaped = false;
+				if (sb != null) {
+					sb.append(c);
+				}
+				if (returnNullIfNonWs) {
+					return null;
+				}
+			}
+			if (!returnNullIfNonWs && sb == null
+					&& (nsct > 0 || sct > maxSpaceCount)) {
+				sb = new StringBuilder(input.length());
+				sb.append(input.substring(0, i - (sct + nsct - 1)));
+			}
+			if (sb != null && !escaped && (sct > 0 || nsct > 0)) {
+				if (replace != '-') {
+					sb.append(' ');
+				}
+				escaped = true;
+			}
+		}
+		return sb == null ? input : sb.toString();
+	}
+
 	public static void dump(List list) {
 		System.out.println("List:");
 		for (Object object : list) {
@@ -538,6 +613,23 @@ public class SEUtilities {
 		}
 	}
 
+	protected static void ensureDescriptorLookup(Class clazz0) {
+		propertyDescriptorLookup.computeIfAbsent(clazz0, clazz -> {
+			try {
+				Map<String, PropertyDescriptor> map = new LinkedHashMap<>();
+				PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
+						.getPropertyDescriptors();
+				for (PropertyDescriptor pd : pds) {
+					map.put(pd.getName(), new PropertyDescriptorWrapper(pd));
+				}
+				return map;
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new WrappedRuntimeException(e);
+			}
+		});
+	}
+
 	public static void ensureLogFolder() {
 		new File("/tmp/log").mkdirs();
 	}
@@ -584,6 +676,24 @@ public class SEUtilities {
 		TreeNode root = (TreeNode) tree.getModel().getRoot();
 		// Traverse tree from root
 		expandAll(tree, new TreePath(root), expand);
+	}
+
+	private static void expandAll(JTree tree, TreePath parent, boolean expand) {
+		// Traverse children
+		TreeNode node = (TreeNode) parent.getLastPathComponent();
+		if (node.getChildCount() >= 0) {
+			for (Enumeration e = node.children(); e.hasMoreElements();) {
+				TreeNode n = (TreeNode) e.nextElement();
+				TreePath path = parent.pathByAddingChild(n);
+				expandAll(tree, path, expand);
+			}
+		}
+		// Expansion or collapse must be done bottom-up
+		if (expand) {
+			tree.expandPath(parent);
+		} else {
+			tree.collapsePath(parent);
+		}
 	}
 
 	public static boolean filesAreEqual(File file1, File file2)
@@ -1512,116 +1622,6 @@ public class SEUtilities {
 		return result;
 	}
 
-	private static int copyDirectory(File in, File out,
-			boolean replaceExistingDirectories) throws IOException {
-		int fc = 0;
-		if (out.exists()) {
-			if (out.isDirectory()) {
-				if (replaceExistingDirectories) {
-					deleteDirectory(out);
-				}
-			} else {
-				out.delete();
-			}
-		}
-		out.mkdirs();
-		File[] files = in.listFiles();
-		for (File subIn : files) {
-			File subOut = new File(
-					out.getPath() + File.separator + subIn.getName());
-			fc += copyFile(subIn, subOut);
-		}
-		return fc;
-	}
-
-	private static String doWhitespace(String input, boolean returnNullIfNonWs,
-			char replace) {
-		StringBuilder sb = null;
-		int sct = 0;
-		int nsct = 0;
-		boolean escaped = false;
-		boolean strip = replace == '-';
-		int maxSpaceCount = strip ? 0 : 1;
-		for (int i = 0; i < input.length(); i++) {
-			char c = input.charAt(i);
-			switch (c) {
-			case '\u0009':
-			case '\n':
-			case '\u000B':
-			case '\f':
-			case '\r':
-			case '\u00A0':
-			case '\u0085':
-			case '\u2000':
-			case '\u2001':
-			case '\u2002':
-			case '\u2003':
-				nsct++;
-				break;
-			case ' ':
-				sct++;
-				break;
-			default:
-				nsct = 0;
-				sct = 0;
-				escaped = false;
-				if (sb != null) {
-					sb.append(c);
-				}
-				if (returnNullIfNonWs) {
-					return null;
-				}
-			}
-			if (!returnNullIfNonWs && sb == null
-					&& (nsct > 0 || sct > maxSpaceCount)) {
-				sb = new StringBuilder(input.length());
-				sb.append(input.substring(0, i - (sct + nsct - 1)));
-			}
-			if (sb != null && !escaped && (sct > 0 || nsct > 0)) {
-				if (replace != '-') {
-					sb.append(' ');
-				}
-				escaped = true;
-			}
-		}
-		return sb == null ? input : sb.toString();
-	}
-
-	private static void expandAll(JTree tree, TreePath parent, boolean expand) {
-		// Traverse children
-		TreeNode node = (TreeNode) parent.getLastPathComponent();
-		if (node.getChildCount() >= 0) {
-			for (Enumeration e = node.children(); e.hasMoreElements();) {
-				TreeNode n = (TreeNode) e.nextElement();
-				TreePath path = parent.pathByAddingChild(n);
-				expandAll(tree, path, expand);
-			}
-		}
-		// Expansion or collapse must be done bottom-up
-		if (expand) {
-			tree.expandPath(parent);
-		} else {
-			tree.collapsePath(parent);
-		}
-	}
-
-	protected static void ensureDescriptorLookup(Class clazz0) {
-		propertyDescriptorLookup.computeIfAbsent(clazz0, clazz -> {
-			try {
-				Map<String, PropertyDescriptor> map = new LinkedHashMap<>();
-				PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-						.getPropertyDescriptors();
-				for (PropertyDescriptor pd : pds) {
-					map.put(pd.getName(), new PropertyDescriptorWrapper(pd));
-				}
-				return map;
-			} catch (Exception e) {
-				e.printStackTrace();
-				throw new WrappedRuntimeException(e);
-			}
-		});
-	}
-
 	public static class Bytes {
 		public static int indexOf(byte[] src, byte[] toFind) {
 			return indexOf(src, toFind, 0);
@@ -1672,6 +1672,57 @@ public class SEUtilities {
 				x = y + toFind.length;
 			}
 			return result;
+		}
+	}
+
+	static class ComparatorDebug {
+		public <T> void debug(List<T> list, Comparator<T> comparator) {
+			int rndSize = 100000;
+			int initialSize = list.size();
+			list.removeIf(e -> Math.random() * initialSize / rndSize > 1.0);
+			SystemoutCounter counter = new SystemoutCounter(5, 10, list.size(),
+					true);
+			Ax.out("Debug comparator - sample %s of %s", rndSize, initialSize);
+			int[][] cache = new int[list.size()][list.size()];
+			for (int idx0 = 0; idx0 < list.size(); idx0++) {
+				for (int idx1 = 0; idx1 < list.size(); idx1++) {
+					cache[idx0][idx1] = kroenecker(
+							comparator.compare(list.get(idx0), list.get(idx1)));
+				}
+				counter.tick();
+			}
+			counter = new SystemoutCounter(5, 10, list.size(), true);
+			for (int idx0 = 0; idx0 < list.size(); idx0++) {
+				for (int idx1 = 0; idx1 < list.size(); idx1++) {
+					int dir1 = cache[idx0][idx1];
+					if (dir1 != 0) {
+						for (int idx2 = 0; idx2 < list.size(); idx2++) {
+							int dir2 = cache[idx1][idx2];
+							if (dir2 != 0 && dir2 != dir1) {
+								int dirTrans = cache[idx0][idx2];
+								if (dirTrans != dir1) {
+									T e0 = list.get(idx0);
+									T e1 = list.get(idx1);
+									T e2 = list.get(idx2);
+									Ax.out("%s\n%s\n%s", e0, e1, e2);
+									throw new IllegalArgumentException();
+								}
+							}
+						}
+					}
+				}
+				counter.tick();
+			}
+		}
+
+		private int kroenecker(int compare) {
+			if (compare < 0) {
+				return -1;
+			}
+			if (compare > 1) {
+				return -1;
+			}
+			return 0;
 		}
 	}
 
@@ -1737,12 +1788,12 @@ public class SEUtilities {
 		value = NestedName.class,
 		priority = Priority.PREFERRED_LIBRARY)
 	public static class NestedNameProviderJvm extends NestedName {
-		Map<Class, String> map = CollectionCreators.Bootstrap
-				.createConcurrentClassMap();
-
 		public static NestedName get() {
 			return Registry.impl(NestedName.class);
 		}
+
+		Map<Class, String> map = CollectionCreators.Bootstrap
+				.createConcurrentClassMap();
 
 		@Override
 		public String getNestedSimpleName(Class clazz) {
@@ -2031,57 +2082,6 @@ public class SEUtilities {
 		public synchronized int getYear(Date d) {
 			calendar.setTime(d);
 			return calendar.get(Calendar.YEAR);
-		}
-	}
-
-	static class ComparatorDebug {
-		public <T> void debug(List<T> list, Comparator<T> comparator) {
-			int rndSize = 100000;
-			int initialSize = list.size();
-			list.removeIf(e -> Math.random() * initialSize / rndSize > 1.0);
-			SystemoutCounter counter = new SystemoutCounter(5, 10, list.size(),
-					true);
-			Ax.out("Debug comparator - sample %s of %s", rndSize, initialSize);
-			int[][] cache = new int[list.size()][list.size()];
-			for (int idx0 = 0; idx0 < list.size(); idx0++) {
-				for (int idx1 = 0; idx1 < list.size(); idx1++) {
-					cache[idx0][idx1] = kroenecker(
-							comparator.compare(list.get(idx0), list.get(idx1)));
-				}
-				counter.tick();
-			}
-			counter = new SystemoutCounter(5, 10, list.size(), true);
-			for (int idx0 = 0; idx0 < list.size(); idx0++) {
-				for (int idx1 = 0; idx1 < list.size(); idx1++) {
-					int dir1 = cache[idx0][idx1];
-					if (dir1 != 0) {
-						for (int idx2 = 0; idx2 < list.size(); idx2++) {
-							int dir2 = cache[idx1][idx2];
-							if (dir2 != 0 && dir2 != dir1) {
-								int dirTrans = cache[idx0][idx2];
-								if (dirTrans != dir1) {
-									T e0 = list.get(idx0);
-									T e1 = list.get(idx1);
-									T e2 = list.get(idx2);
-									Ax.out("%s\n%s\n%s", e0, e1, e2);
-									throw new IllegalArgumentException();
-								}
-							}
-						}
-					}
-				}
-				counter.tick();
-			}
-		}
-
-		private int kroenecker(int compare) {
-			if (compare < 0) {
-				return -1;
-			}
-			if (compare > 1) {
-				return -1;
-			}
-			return 0;
 		}
 	}
 }

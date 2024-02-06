@@ -153,10 +153,10 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 	public static class Row {
 		private int rowIdx;
 
-		private Csv csvCols;
+		private Csv csv;
 
-		public Row(Csv csvCols, int idx) {
-			this.csvCols = csvCols;
+		public Row(Csv csv, int idx) {
+			this.csv = csv;
 			this.rowIdx = idx;
 		}
 
@@ -169,7 +169,7 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 		}
 
 		public String get(String key) {
-			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
+			return csv.grid.get(rowIdx).get(getColumnIndex(key));
 		}
 
 		public boolean getBoolean(String key) {
@@ -177,15 +177,15 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 		}
 
 		private int getColumnIndex(String key) {
-			Integer index = csvCols.colLookup.get(key);
+			Integer index = csv.colLookup.get(key);
 			if (index != null) {
 				return index;
 			}
-			index = csvCols.colLcLookup.get(key.toLowerCase());
+			index = csv.colLcLookup.get(key.toLowerCase());
 			if (index != null) {
 				return index;
 			}
-			index = csvCols.colLcLookup.get(key.toLowerCase().replace(' ', '_'));
+			index = csv.colLcLookup.get(key.toLowerCase().replace(' ', '_'));
 			if (index != null) {
 				return index;
 			}
@@ -207,7 +207,7 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 
 		public Map<String, String> map() {
 			StringMap map = new StringMap();
-			for (String header : csvCols.headers()) {
+			for (String header : csv.headers()) {
 				map.put(header, get(header));
 			}
 			return map;
@@ -218,8 +218,7 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 		}
 
 		public String set(String key, Object value) {
-			ArrayList<String> list = (ArrayList<String>) csvCols.grid
-					.get(rowIdx);
+			ArrayList<String> list = (ArrayList<String>) csv.grid.get(rowIdx);
 			int columnIndex = getColumnIndex(key);
 			for (; list.size() <= columnIndex;) {
 				list.add("");

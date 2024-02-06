@@ -202,6 +202,8 @@ public class BeanFields {
 
 	private static boolean renderDatesWithTimezoneTitle;
 
+	private static DateRendererProvider dateRendererProvider = new DateRendererProvider();
+
 	public static BoundWidget createWidget(Binding parent, Field field,
 			SourcesPropertyChangeEvents target, Object model) {
 		final BoundWidget widget;
@@ -275,6 +277,11 @@ public class BeanFields {
 		return new BeanFields().new FieldQuery();
 	}
 
+	public static void
+			setDateRendererProvider(DateRendererProvider dateRendererProvider) {
+		BeanFields.dateRendererProvider = dateRendererProvider;
+	}
+
 	public static void setRenderDatesWithTimezoneTitle(
 			boolean renderDatesWithTimezoneTitle) {
 		BeanFields.renderDatesWithTimezoneTitle = renderDatesWithTimezoneTitle;
@@ -291,8 +298,6 @@ public class BeanFields {
 		validatorMap.put(Date.class, ShortDateValidator.INSTANCE);
 	}
 
-	private GwittirDateRendererProvider dateRendererProvider = new GwittirDateRendererProvider();
-
 	BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory();
 
 	private BeanFields() {
@@ -308,36 +313,6 @@ public class BeanFields {
 			}
 		}
 		return null;
-	}
-
-	public GwittirDateRendererProvider getDateRendererProvider() {
-		return this.dateRendererProvider;
-	}
-
-	public List<Field> listFields(FieldQuery query) {
-		query.validationFeedbackProvider = query.validationFeedbackProvider != null
-				? query.validationFeedbackProvider
-				: ValidationFeedback.Support.DEFAULT_PROVIDER;
-		ClassReflector<? extends Object> classReflector = Reflections
-				.at(query.clazz);
-		return classReflector.properties().stream().map(property -> {
-			String propertyName = property.getName();
-			if (query.propertyName != null
-					&& !(query.propertyName.equals(propertyName))) {
-				return null;
-			}
-			boolean editableField = query.editable
-					&& query.editableNamePredicate.test(propertyName);
-			FieldQuery perFieldQuery = query.clone().asEditable(editableField)
-					.forPropertyName(propertyName);
-			return getField(perFieldQuery);
-		}).filter(Objects::nonNull).sorted(new FieldOrdering(classReflector))
-				.collect(Collectors.toList());
-	}
-
-	public void setDateRendererProvider(
-			GwittirDateRendererProvider dateRendererProvider) {
-		this.dateRendererProvider = dateRendererProvider;
 	}
 
 	Field getField(FieldQuery query) {
@@ -586,11 +561,48 @@ public class BeanFields {
 		}
 	}
 
+	public List<Field> listFields(FieldQuery query) {
+		query.validationFeedbackProvider = query.validationFeedbackProvider != null
+				? query.validationFeedbackProvider
+				: ValidationFeedback.Support.DEFAULT_PROVIDER;
+		ClassReflector<? extends Object> classReflector = Reflections
+				.at(query.clazz);
+		return classReflector.properties().stream().map(property -> {
+			String propertyName = property.getName();
+			if (query.propertyName != null
+					&& !(query.propertyName.equals(propertyName))) {
+				return null;
+			}
+			boolean editableField = query.editable
+					&& query.editableNamePredicate.test(propertyName);
+			FieldQuery perFieldQuery = query.clone().asEditable(editableField)
+					.forPropertyName(propertyName);
+			return getField(perFieldQuery);
+		}).filter(Objects::nonNull).sorted(new FieldOrdering(classReflector))
+				.collect(Collectors.toList());
+	}
+
 	public static class BoundWidgetProviderTextBox
 			implements BoundWidgetProvider {
 		@Override
 		public TextBox get() {
 			return new TextBox();
+		}
+	}
+
+	public static class DateRendererProvider {
+		public BoundWidgetProvider getRenderer(Display display) {
+			String rendererHint = display.rendererHint();
+			switch (display.rendererHint()) {
+			case HINT_DATE_WITH_TIME_TITLE:
+				return AU_DATE_TIME_TITLE_PROVIDER;
+			case HINT_DATE_WITH_TIME_TITLE_TZ:
+				return AU_DATE_TIME_TITLE_PROVIDER_TZ;
+			default:
+				return renderDatesWithTimezoneTitle
+						? AU_DATE_TIME_TITLE_PROVIDER_TZ
+						: AU_DATE_PROVIDER;
+			}
 		}
 	}
 
@@ -762,22 +774,6 @@ public class BeanFields {
 				ValidationFeedback.Provider validationFeedbackProvider) {
 			this.validationFeedbackProvider = validationFeedbackProvider;
 			return this;
-		}
-	}
-
-	public static class GwittirDateRendererProvider {
-		public BoundWidgetProvider getRenderer(Display display) {
-			String rendererHint = display.rendererHint();
-			switch (display.rendererHint()) {
-			case HINT_DATE_WITH_TIME_TITLE:
-				return AU_DATE_TIME_TITLE_PROVIDER;
-			case HINT_DATE_WITH_TIME_TITLE_TZ:
-				return AU_DATE_TIME_TITLE_PROVIDER_TZ;
-			default:
-				return renderDatesWithTimezoneTitle
-						? AU_DATE_TIME_TITLE_PROVIDER_TZ
-						: AU_DATE_PROVIDER;
-			}
 		}
 	}
 }
