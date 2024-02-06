@@ -163,9 +163,8 @@ public class BasicGridPublisher {
 				results.htmlContent = fb.toString();
 			} else if (deliveryModel
 					.provideTargetFormat() == FormatConversionTarget.CSV) {
-				Csv csvCols = new Csv((List) exporter.getCellList());
-				results.bytes = csvCols.toCsv()
-						.getBytes(StandardCharsets.UTF_8);
+				Csv csv = new Csv((List) exporter.getCellList());
+				results.bytes = csv.toCsv().getBytes(StandardCharsets.UTF_8);
 			} else if (deliveryModel
 					.provideTargetFormat() == FormatConversionTarget.JSON) {
 				List<List> cellList = exporter.getCellList();

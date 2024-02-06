@@ -134,6 +134,12 @@ public class Configuration {
 		return Long.parseLong(get(clazz, key));
 	}
 
+	static Class getStacktraceCallingClass() {
+		StackTraceElement[] stackTrace = new Exception().getStackTrace();
+		StackTraceElement caller = stackTrace[2];
+		return Reflections.forName(caller.getClassName());
+	}
+
 	public static boolean has(Class clazz, String keyPart) {
 		return new Key(clazz, keyPart).has();
 	}
@@ -169,12 +175,6 @@ public class Configuration {
 					.getCallerClass();
 		}
 		return new Key(clazz, keyPart);
-	}
-
-	static Class getStacktraceCallingClass() {
-		StackTraceElement[] stackTrace = new Exception().getStackTrace();
-		StackTraceElement caller = stackTrace[2];
-		return Reflections.forName(caller.getClassName());
 	}
 
 	public static class ConfigurationFile {
@@ -219,6 +219,10 @@ public class Configuration {
 			return this.set;
 		}
 
+		private void load() {
+			contents = Io.read().url(url).asString();
+		}
+
 		public boolean provideContainsNonNamespaced() {
 			List<String> keys = StringMap.fromPropertyString(contents).keySet()
 					.stream().filter(k -> !k.contains("."))
@@ -242,10 +246,6 @@ public class Configuration {
 		public String toString() {
 			return Ax.format("%s -\n\t%s", packageName, path);
 		}
-
-		private void load() {
-			contents = Io.read().url(url).asString();
-		}
 	}
 
 	/*
@@ -266,6 +266,10 @@ public class Configuration {
 
 		String stringRepresentation;
 
+		Key(Class clazz, String keyPart) {
+			this(clazz, keyPart, false);
+		}
+
 		private Key(Class clazz, String keyPart, boolean allowNullClass) {
 			Preconditions.checkState(clazz != null || allowNullClass);
 			this.clazz = clazz;
@@ -273,10 +277,6 @@ public class Configuration {
 			stringRepresentation = clazz == null ? keyPart
 					: Ax.format("%s.%s", GraphProjection.classSimpleName(clazz),
 							keyPart);
-		}
-
-		Key(Class clazz, String keyPart) {
-			this(clazz, keyPart, false);
 		}
 
 		public boolean definedAndIs() {
@@ -397,6 +397,15 @@ public class Configuration {
 			immutableCustomProperties.put(key, new Object());
 		}
 
+		void addSet(SystemSet systemSet) {
+			Preconditions.checkArgument(getSet(systemSet).isEmpty());
+			PropertySet set = new PropertySet(systemSet);
+			orderedSets.add(set);
+			if (systemSet == SystemSet.base) {
+				base = set;
+			}
+		}
+
 		public String asString(boolean flat) {
 			Map<String, String> map = keyValues.keySet().stream().sorted()
 					.collect(AlcinaCollectors.toLinkedHashMap(k -> k,
@@ -413,157 +422,12 @@ public class Configuration {
 			Ax.out(asString(true));
 		}
 
-		// use Configuration.get() where possible
-		public String get(String key) {
-			PropertyValues propertyValues = keyValues.get(key);
-			return propertyValues == null ? null : propertyValues.resolvedValue;
-		}
-
-		public ClassLoader getClassLoader() {
-			return this.classLoader;
-		}
-
-		public boolean has(String key) {
-			return keyValues.containsKey(key);
-		}
-
-		public boolean isUseSets() {
-			return this.useSets;
-		}
-
-		public Stream<String> keys() {
-			return keyValues.keySet().stream();
-		}
-
-		public synchronized void load(Runnable runnable) {
-			keyValues.clear();
-			orderedSets.forEach(PropertySet::clear);
-			runnable.run();
-		}
-
-		public void loadSystemPropertiesFromConfigurationProperties() {
-			keyValues.forEach((k, v) -> {
-				if (k.startsWith("system.property.")) {
-					k = k.substring("system.property.".length());
-					System.setProperty(k, v.resolvedValue);
-				}
-			});
-		}
-
-		public void register(String propertiesString) {
-			register0(propertiesString);
-			invalidate();
-		}
-
-		public String set(Class clazz, String key, String value) {
-			return set(new Key(clazz, key).stringRepresentation, value);
-		}
-
-		public String set(String key, String value) {
-			String prior = set0(key, value);
-			invalidate();
-			return prior;
-		}
-
-		public void setClassLoader(ClassLoader classLoader) {
-			this.classLoader = classLoader;
-		}
-
-		public void setUseSets(boolean useSets) {
-			this.useSets = useSets;
-		}
-
 		private void ensureBundles(Key key) {
 			String packageName = key.clazz.getPackage().getName();
 			if (!packageBundles.containsKey(packageName)) {
 				PackageBundle bundles = new PackageBundle(key.clazz);
 				packageBundles.put(packageName, bundles);
 				bundles.load();
-			}
-		}
-
-		private synchronized void invalidate() {
-			Set<String> keys = new LinkedHashSet<>();
-			orderedSets.forEach(set -> set.populateKeys(keys));
-			keyValues.clear();
-			keys.stream().map(Key::stringKey).forEach(this::ensureValues);
-			topicInvalidated.signal();
-		}
-
-		private boolean processInclude(String line) {
-			Matcher matcher = includePattern.matcher(line);
-			if (matcher.matches()) {
-				String type = matcher.group(1);
-				String path = matcher.group(2);
-				String contents = null;
-				switch (type) {
-				case "resource": {
-					// trim leading slash, required for
-					// classloader.getResourceAsStream() (but not
-					// class.getResourceAsStream
-					//
-					// trace with jvm property
-					// -Dcc.alcina.framework.entity.Configuration.Properties.logResourceLoad=true
-					String trimmedPath = path.substring(1);
-					if (logResourceLoad) {
-						Ax.out("Loading config path: %s", trimmedPath);
-					}
-					contents = Io.read()
-							.fromStream(provideClassLoader()
-									.getResourceAsStream(trimmedPath))
-							.asString();
-					break;
-				}
-				case "file": {
-					contents = Io.read().path(path).asString();
-					break;
-				}
-				default:
-					throw new UnsupportedOperationException();
-				}
-				register0(contents);
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		private ClassLoader provideClassLoader() {
-			return classLoader != null ? classLoader
-					: getClass().getClassLoader();
-		}
-
-		private void register0(String propertiesString) {
-			FormatBuilder nonIncludeBuilder = new FormatBuilder();
-			// expand includes
-			Arrays.stream(propertiesString.split("\n")).forEach(line -> {
-				if (processInclude(line)) {
-					//
-				} else {
-					nonIncludeBuilder.line(line);
-				}
-			});
-			// register non-includes
-			StringMap map = StringMap
-					.fromPropertyString(nonIncludeBuilder.toString());
-			map.forEach((key, value) -> {
-				set0(key, value);
-			});
-		}
-
-		// threadsafe - the put is a copy-on-write
-		private String set0(String key, String value) {
-			Preconditions
-					.checkState(!immutableCustomProperties.containsKey(key));
-			return getSet(SystemSet.custom).get().put(key, value);
-		}
-
-		void addSet(SystemSet systemSet) {
-			Preconditions.checkArgument(getSet(systemSet).isEmpty());
-			PropertySet set = new PropertySet(systemSet);
-			orderedSets.add(set);
-			if (systemSet == SystemSet.base) {
-				base = set;
 			}
 		}
 
@@ -617,6 +481,16 @@ public class Configuration {
 			return ensureValues(key).resolvedValue;
 		}
 
+		// use Configuration.get() where possible
+		public String get(String key) {
+			PropertyValues propertyValues = keyValues.get(key);
+			return propertyValues == null ? null : propertyValues.resolvedValue;
+		}
+
+		public ClassLoader getClassLoader() {
+			return this.classLoader;
+		}
+
 		Optional<PropertySet> getSet(Object key) {
 			String setKey = key.toString();
 			return orderedSets.stream().filter(s -> s.key.equals(setKey))
@@ -625,6 +499,132 @@ public class Configuration {
 
 		boolean has(Key key) {
 			return ensureValues(key).exists();
+		}
+
+		public boolean has(String key) {
+			return keyValues.containsKey(key);
+		}
+
+		private synchronized void invalidate() {
+			Set<String> keys = new LinkedHashSet<>();
+			orderedSets.forEach(set -> set.populateKeys(keys));
+			keyValues.clear();
+			keys.stream().map(Key::stringKey).forEach(this::ensureValues);
+			topicInvalidated.signal();
+		}
+
+		public boolean isUseSets() {
+			return this.useSets;
+		}
+
+		public Stream<String> keys() {
+			return keyValues.keySet().stream();
+		}
+
+		public synchronized void load(Runnable runnable) {
+			keyValues.clear();
+			orderedSets.forEach(PropertySet::clear);
+			runnable.run();
+		}
+
+		public void loadSystemPropertiesFromConfigurationProperties() {
+			keyValues.forEach((k, v) -> {
+				if (k.startsWith("system.property.")) {
+					k = k.substring("system.property.".length());
+					System.setProperty(k, v.resolvedValue);
+				}
+			});
+		}
+
+		private boolean processInclude(String line) {
+			Matcher matcher = includePattern.matcher(line);
+			if (matcher.matches()) {
+				String type = matcher.group(1);
+				String path = matcher.group(2);
+				String contents = null;
+				switch (type) {
+				case "resource": {
+					// trim leading slash, required for
+					// classloader.getResourceAsStream() (but not
+					// class.getResourceAsStream
+					//
+					// trace with jvm property
+					// -Dcc.alcina.framework.entity.Configuration.Properties.logResourceLoad=true
+					String trimmedPath = path.substring(1);
+					if (logResourceLoad) {
+						Ax.out("Loading config path: %s", trimmedPath);
+					}
+					contents = Io.read()
+							.fromStream(provideClassLoader()
+									.getResourceAsStream(trimmedPath))
+							.asString();
+					break;
+				}
+				case "file": {
+					contents = Io.read().path(path).asString();
+					break;
+				}
+				default:
+					throw new UnsupportedOperationException();
+				}
+				register0(contents);
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		private ClassLoader provideClassLoader() {
+			return classLoader != null ? classLoader
+					: getClass().getClassLoader();
+		}
+
+		public void register(String propertiesString) {
+			register0(propertiesString);
+			invalidate();
+		}
+
+		private void register0(String propertiesString) {
+			FormatBuilder nonIncludeBuilder = new FormatBuilder();
+			// expand includes
+			Arrays.stream(propertiesString.split("\n")).forEach(line -> {
+				if (processInclude(line)) {
+					//
+				} else {
+					nonIncludeBuilder.line(line);
+				}
+			});
+			// register non-includes
+			StringMap map = StringMap
+					.fromPropertyString(nonIncludeBuilder.toString());
+			map.forEach((key, value) -> {
+				set0(key, value);
+			});
+		}
+
+		public String set(Class clazz, String key, String value) {
+			return set(new Key(clazz, key).stringRepresentation, value);
+		}
+
+		public String set(String key, String value) {
+			String prior = set0(key, value);
+			invalidate();
+			return prior;
+		}
+
+		// threadsafe - the put is a copy-on-write
+		private String set0(String key, String value) {
+			Preconditions
+					.checkState(!immutableCustomProperties.containsKey(key));
+			return getSet(SystemSet.custom).get().put(key, value);
+		}
+
+		public void setClassLoader(ClassLoader classLoader) {
+			this.classLoader = classLoader;
+		}
+
+		public void setUseSets(boolean useSets) {
+			this.useSets = useSets;
 		}
 
 		class PackageBundle {
@@ -675,6 +675,12 @@ public class Configuration {
 
 			StringMap map;
 
+			PropertySet(String key) {
+				this.key = key;
+				// non-system-set sets do not resolve (they're compacted
+				// (package bundles) onto the base systemset)
+			}
+
 			public PropertySet(SystemSet set) {
 				this.key = set.name();
 				this.systemSet = set;
@@ -684,14 +690,26 @@ public class Configuration {
 				}
 			}
 
-			PropertySet(String key) {
-				this.key = key;
-				// non-system-set sets do not resolve (they're compacted
-				// (package bundles) onto the base systemset)
+			void clear() {
+				if (map != null) {
+					map.clear();
+				}
 			}
 
 			public boolean isRequired() {
 				return systemSet == SystemSet.base;
+			}
+
+			void populateKeys(Set<String> keys) {
+				if (!resolves()) {
+					return;
+				}
+				if (usesBundles()) {
+					packageBundles.values()
+							.forEach(bundle -> keys.addAll(bundle.keys()));
+				} else {
+					keys.addAll(map.keySet());
+				}
 			}
 
 			public String put(String key, String value) {
@@ -714,6 +732,10 @@ public class Configuration {
 				return result.filter(Objects::nonNull);
 			}
 
+			private boolean resolves() {
+				return systemSet != null;
+			}
+
 			public String specifier() {
 				return systemSet == SystemSet.base ? "" : "_" + key;
 			}
@@ -724,28 +746,6 @@ public class Configuration {
 				format.format("PropertySet: %s", key);
 				format.appendIfNotBlankKv("Map", map);
 				return format.toString();
-			}
-
-			private boolean resolves() {
-				return systemSet != null;
-			}
-
-			void clear() {
-				if (map != null) {
-					map.clear();
-				}
-			}
-
-			void populateKeys(Set<String> keys) {
-				if (!resolves()) {
-					return;
-				}
-				if (usesBundles()) {
-					packageBundles.values()
-							.forEach(bundle -> keys.addAll(bundle.keys()));
-				} else {
-					keys.addAll(map.keySet());
-				}
 			}
 
 			boolean usesBundles() {
@@ -891,11 +891,11 @@ public class Configuration {
 			List<PropertyNode> nodes = getRoot().depthFirst();
 			nodes.stream().collect(Collectors.toList())
 					.forEach(PropertyNode::sortChildren);
-			Csv cols = new Csv("");
+			Csv csv = new Csv("");
 			nodes = getRoot().depthFirst();
-			Stream.of(Header.values()).forEach(cols::addColumn);
-			nodes.stream().forEach(node -> node.addTo(cols));
-			return cols.toCsv();
+			Stream.of(Header.values()).forEach(csv::addColumn);
+			nodes.stream().forEach(node -> node.addTo(csv));
+			return csv.toCsv();
 		}
 
 		public StringMap asMap() {
@@ -906,13 +906,6 @@ public class Configuration {
 			nodes.stream().filter(n -> Ax.notBlank(n.key))
 					.forEach(n -> result.put(n.key, n.lastValue()));
 			return result;
-		}
-
-		public void removeKeys(Set<String> remove) {
-			List<PropertyNode> nodes = getRoot().depthFirst();
-			nodes.forEach(n -> n.removeKeys(remove));
-			nodes.stream().filter(PropertyNode::canRemove)
-					.forEach(PropertyNode::removeFromParent);
 		}
 
 		private PropertyNode ensurePackageNode(String packageName) {
@@ -932,6 +925,28 @@ public class Configuration {
 			return cursor;
 		}
 
+		public void removeKeys(Set<String> remove) {
+			List<PropertyNode> nodes = getRoot().depthFirst();
+			nodes.forEach(n -> n.removeKeys(remove));
+			nodes.stream().filter(PropertyNode::canRemove)
+					.forEach(PropertyNode::removeFromParent);
+		}
+
+		static class FileValue {
+			ConfigurationFile file;
+
+			String value;
+
+			FileValue(ConfigurationFile file, String value) {
+				this.file = file;
+				this.value = value;
+			}
+		}
+
+		enum Header {
+			Package, Key, File, Value, Comment, InputSet, OutputSet;
+		}
+
 		public class PropertyNode extends Tree.TreeNode<PropertyNode>
 				implements Comparable<PropertyNode> {
 			String packageSegment;
@@ -949,8 +964,34 @@ public class Configuration {
 				this.key = key;
 			}
 
+			void addTo(Csv csv) {
+				Row row = csv.addRow();
+				if (key == null) {
+					row.set(Header.Package, packageName());
+				} else {
+					row.set(Header.Key, key);
+					int idx = 0;
+					for (FileValue value : values) {
+						if (idx++ > 0) {
+							row = csv.addRow();
+						}
+						row.set(Header.File, value.file.path);
+						row.set(Header.Value, value.value);
+						row.set(Header.InputSet, value.file.set);
+					}
+				}
+			}
+
+			void addValue(ConfigurationFile file, String value) {
+				values.add(new FileValue(file, value));
+			}
+
 			public void addValues(ConfigurationFile file, StringMap map) {
 				map.forEach((k, v) -> ensureKeyChild(k).addValue(file, v));
+			}
+
+			boolean canRemove() {
+				return values.isEmpty() && getChildren().isEmpty();
 			}
 
 			@Override
@@ -968,15 +1009,12 @@ public class Configuration {
 				}
 			}
 
-			public void removeKeys(Set<String> remove) {
-				if (Ax.notBlank(key) && remove.contains(key)) {
-					values.clear();
-				}
-			}
-
-			@Override
-			public String toString() {
-				return Ax.notBlank(packageSegment) ? packageSegment : key;
+			List<PropertyNode> depthFirst() {
+				Function<PropertyNode, List<PropertyNode>> childSupplier = n -> (List) n
+						.getChildren();
+				DepthFirstTraversal<PropertyNode> traversal = new DepthFirstTraversal<PropertyNode>(
+						this, childSupplier);
+				return traversal.stream().collect(Collectors.toList());
 			}
 
 			private PropertyNode ensureKeyChild(String key) {
@@ -988,51 +1026,6 @@ public class Configuration {
 					getChildren().add(child);
 					return child;
 				}
-			}
-
-			private String packageName() {
-				PropertyNode cursor = this;
-				List<String> segments = new ArrayList<>();
-				while (cursor != null) {
-					segments.add(0, cursor.packageSegment);
-					cursor = cursor.parent;
-				}
-				return segments.stream().filter(Ax::notBlank)
-						.collect(Collectors.joining("."));
-			}
-
-			void addTo(Csv cols) {
-				Row row = cols.addRow();
-				if (key == null) {
-					row.set(Header.Package, packageName());
-				} else {
-					row.set(Header.Key, key);
-					int idx = 0;
-					for (FileValue value : values) {
-						if (idx++ > 0) {
-							row = cols.addRow();
-						}
-						row.set(Header.File, value.file.path);
-						row.set(Header.Value, value.value);
-						row.set(Header.InputSet, value.file.set);
-					}
-				}
-			}
-
-			void addValue(ConfigurationFile file, String value) {
-				values.add(new FileValue(file, value));
-			}
-
-			boolean canRemove() {
-				return values.isEmpty() && getChildren().isEmpty();
-			}
-
-			List<PropertyNode> depthFirst() {
-				Function<PropertyNode, List<PropertyNode>> childSupplier = n -> (List) n
-						.getChildren();
-				DepthFirstTraversal<PropertyNode> traversal = new DepthFirstTraversal<PropertyNode>(
-						this, childSupplier);
-				return traversal.stream().collect(Collectors.toList());
 			}
 
 			PropertyNode getKeyChild(String key) {
@@ -1051,24 +1044,31 @@ public class Configuration {
 				return Ax.last(values).value;
 			}
 
+			private String packageName() {
+				PropertyNode cursor = this;
+				List<String> segments = new ArrayList<>();
+				while (cursor != null) {
+					segments.add(0, cursor.packageSegment);
+					cursor = cursor.parent;
+				}
+				return segments.stream().filter(Ax::notBlank)
+						.collect(Collectors.joining("."));
+			}
+
 			void removeFromParent() {
 				parent.getChildren().remove(this);
 			}
-		}
 
-		static class FileValue {
-			ConfigurationFile file;
-
-			String value;
-
-			FileValue(ConfigurationFile file, String value) {
-				this.file = file;
-				this.value = value;
+			public void removeKeys(Set<String> remove) {
+				if (Ax.notBlank(key) && remove.contains(key)) {
+					values.clear();
+				}
 			}
-		}
 
-		enum Header {
-			Package, Key, File, Value, Comment, InputSet, OutputSet;
+			@Override
+			public String toString() {
+				return Ax.notBlank(packageSegment) ? packageSegment : key;
+			}
 		}
 	}
 }

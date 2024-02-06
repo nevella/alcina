@@ -61,12 +61,24 @@ public class TaskRefactorConfigSets3 extends PerformerTask {
 		return this.propertiesCsv;
 	}
 
+	String normalise(String string) {
+		string = Ax.blankToEmpty(string);
+		switch (string) {
+		case "TRUE":
+			return "true";
+		case "FALSE":
+			return "false";
+		default:
+			return string;
+		}
+	}
+
 	@Override
 	public void run() throws Exception {
 		StringMap keysByPackage = new StringMap();
 		{
-			Csv cols = Csv.parseCsv(propertiesCsv);
-			propertyRows = cols.stream().map(PropertyRow::new)
+			Csv csv = Csv.parseCsv(propertiesCsv);
+			propertyRows = csv.stream().map(PropertyRow::new)
 					.collect(Collectors.toList());
 			propertyRows.stream().filter(
 					pr -> Ax.notBlank(pr.key) && Ax.isBlank(pr.inputSet))
@@ -95,18 +107,6 @@ public class TaskRefactorConfigSets3 extends PerformerTask {
 
 	public void setPropertiesCsv(String propertiesCsv) {
 		this.propertiesCsv = propertiesCsv;
-	}
-
-	String normalise(String string) {
-		string = Ax.blankToEmpty(string);
-		switch (string) {
-		case "TRUE":
-			return "true";
-		case "FALSE":
-			return "false";
-		default:
-			return string;
-		}
 	}
 
 	enum Header {
@@ -149,22 +149,22 @@ public class TaskRefactorConfigSets3 extends PerformerTask {
 			checkValid();
 		}
 
-		public String getOutputSet() {
-			return this.outputSet;
-		}
-
-		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToStringOneLine(this);
-		}
-
 		private void checkValid() {
 			// NOOP
+		}
+
+		public String getOutputSet() {
+			return this.outputSet;
 		}
 
 		boolean hasInterestingOutputSet() {
 			return Ax.notBlank(outputSet) && !outputSet.equals("omit")
 					&& !outputSet.equals("app");
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToStringOneLine(this);
 		}
 	}
 }

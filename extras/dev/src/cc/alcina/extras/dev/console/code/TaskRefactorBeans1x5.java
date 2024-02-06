@@ -189,7 +189,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 	}
 
 	void removeDefaultPropertyMethods(UnitType type) {
-		// Ax.out("Removing methods: %s", NestedNameProvider.get(type.clazz()));
+		// Ax.out("Removing methods: %s", NestedName.get(type.clazz()));
 		ClassOrInterfaceDeclaration decl = type.getDeclaration();
 		List<Property> properties = Reflections.at(type.clazz()).properties();
 		List<String> warns = new ArrayList<>();

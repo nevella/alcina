@@ -22,8 +22,8 @@ public class FormatConverterCsv
 			ExcelExporter ee = new ExcelExporter();
 			Document doc = ee.getTemplate();
 			ee.addCollectionToBook(fcm.rows, doc, "results");
-			Csv csvCols = new Csv((List) ee.getCellList());
-			fcm.bytes = csvCols.toCsv().getBytes(StandardCharsets.UTF_8);
+			Csv csv = new Csv((List) ee.getCellList());
+			fcm.bytes = csv.toCsv().getBytes(StandardCharsets.UTF_8);
 		}
 		return new ByteArrayInputStream(fcm.bytes);
 	}
