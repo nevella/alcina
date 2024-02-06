@@ -253,6 +253,15 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 		Set<S> submitted = new LinkedHashSet<>();
 
+		Set<String> emittedWarnings = new LinkedHashSet<>();
+
+		public void warnOnce(String template, Object... args) {
+			String message = Ax.format(template, args);
+			if (emittedWarnings.add(message)) {
+				Ax.err(message);
+			}
+		}
+
 		public State(SelectionTraversal.State traversalState) {
 			this.traversalState = traversalState;
 		}
