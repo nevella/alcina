@@ -210,10 +210,9 @@ public class DomDocument extends DomNode {
 		if (byTag == null) {
 			byTag = new Multimap<>();
 			byId = new Multimap<>();
-			byTag = getDocumentElementNode().descendants()
+			byTag = getDocumentElementNode().stream()
 					.collect(AlcinaCollectors.toKeyMultimap(DomNode::name));
-			byId = getDocumentElementNode().descendants()
-					.filter(n -> n.has("id"))
+			byId = getDocumentElementNode().stream().filter(n -> n.has("id"))
 					.collect(AlcinaCollectors.toKeyMultimap(n -> n.attr("id")));
 		}
 	}
@@ -800,6 +799,18 @@ public class DomDocument extends DomNode {
 		public String getSubsequentText(Location location, int chars) {
 			return contents.substring(location.index,
 					Math.min(contents.length(), location.index + chars));
+		}
+
+		@Override
+		public int toValidIndex(int idx) {
+			ensureByLookups();
+			if (idx < 0) {
+				return 0;
+			}
+			if (idx > contents.length()) {
+				idx = contents.length();
+			}
+			return idx;
 		}
 	}
 

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="com.gwtplugins.gdt.eclipse.suite.webapp">
     <stringAttribute key="bad_container_name" value="/opsol_server"/>
-    <booleanAttribute key="com.gwtplugins.gdt.eclipse.core.RUN_SERVER" value="false"/>
+    <booleanAttribute key="com.gwtplugins.gdt.eclipse.core.AUTO_PORT_SELECTION" value="true"/>
     <stringAttribute key="com.gwtplugins.gdt.eclipse.suiteMainTypeProcessor.PREVIOUSLY_SET_MAIN_TYPE_NAME" value="com.google.gwt.dev.DevMode"/>
     <listAttribute key="com.gwtplugins.gwt.eclipse.core.ENTRY_POINT_MODULES">
+        <listEntry value="cc.alcina.extras.dev.console.remote.RemoteConsoleClient"/>
         <listEntry value="cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient"/>
     </listAttribute>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">

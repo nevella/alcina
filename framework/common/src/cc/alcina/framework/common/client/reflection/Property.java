@@ -201,4 +201,8 @@ public class Property implements HasAnnotations {
 	@ClientVisible
 	public @interface Not {
 	}
+
+	public Method getMethod(boolean get) {
+		return get ? getter : setter;
+	}
 }

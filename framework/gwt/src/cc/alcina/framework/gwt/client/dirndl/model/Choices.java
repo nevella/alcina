@@ -330,6 +330,10 @@ public abstract class Choices<T> extends Model
 			this(new ArrayList<>());
 		}
 
+		public Single(T[] values) {
+			this(List.of(values));
+		}
+
 		public Single(List<T> values) {
 			super(values);
 			indexedSelection = new IndexedSelection(

@@ -382,9 +382,11 @@ public abstract class FragmentNode extends Model.Fields
 		}
 
 		public void replaceWith(FragmentNode other) {
+			// get a ref before removing
+			FragmentModel modelRef = fragmentModel();
 			withMutating(() -> provideParentNode()
 					.replaceChild(FragmentNode.this, other));
-			fragmentModel().register(other);
+			modelRef.register(other);
 		}
 
 		public void insertAsFirstChild(FragmentNode child) {

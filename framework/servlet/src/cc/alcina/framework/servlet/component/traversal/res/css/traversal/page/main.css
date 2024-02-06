@@ -304,6 +304,16 @@ body > page > header {
   line-height: 100%;
   font-size: 120%;
   grid-area: header;
+  gap: 4rem;
+}
+body > page > header > input {
+  line-height: 24px;
+  font-size: 16px;
+  border-radius: 3px;
+  border: solid 1px #ccc;
+  padding: 4px 6px;
+  color: #444;
+  width: 15rem;
 }
 body > page > layers {
   display: block;
@@ -360,6 +370,19 @@ body > page > properties {
   display: block;
   grid-area: props;
   overflow: scroll;
+}
+body > page > properties > choices {
+  width: 100%;
+  justify-content: center;
+  margin: 1rem 0;
+  display: flex;
+  gap: 2rem;
+}
+body > page > properties > choices > choice[_selected], body > page > properties > choices > choice:hover {
+  text-decoration: underline;
+}
+body > page > properties > choices > choice {
+  text-transform: lowercase;
 }
 body > page > properties bean-editor {
   padding: 1rem;

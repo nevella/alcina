@@ -1,6 +1,10 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
+import cc.alcina.framework.common.client.traversal.DetachedRootSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.Ax;
@@ -34,9 +38,8 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		return 0;
 	}
 
-	public boolean contains(MeasureSelection o, Token.Order order,
-			boolean indexOnly) {
-		return get().contains(o.get(), order, indexOnly);
+	public boolean contains(MeasureSelection o, Token.Order order) {
+		return get().contains(o.get(), order);
 	}
 
 	/*
@@ -96,5 +99,44 @@ public class MeasureSelection extends AbstractSelection<Measure>
 
 	// Not intended for final output
 	public interface Intermediate {
+	}
+
+	@Override
+	public String toDebugString() {
+		return Ax.format("%s :: %s :: %s", super.toString(), get().getData(),
+				Ax.ntrim(get().text(), 40));
+	}
+
+	public void toDebugOut() {
+		Ax.out(toDebugString());
+	}
+
+	public String text() {
+		return get().text();
+	}
+
+	public String markup() {
+		return get().markup();
+	}
+
+	/*
+	 * Utility to allow usage of measurecontainment etc from non-selection
+	 * measures
+	 */
+	public static List<MeasureSelection> fromMeasures(List<Measure> measures) {
+		DetachedRootSelection root = new DetachedRootSelection();
+		IntPair union = IntPair
+				.unionOf(measures.stream().map(Measure::toIntPair).toList());
+		Stream<Measure> stream = measures.stream();
+		if (measures.stream().map(Measure::toIntPair)
+				.noneMatch(p -> p.equals(union))) {
+			Measure unionMeasure = Measure
+					.fromRange(
+							measures.iterator().next()
+									.truncateAbsolute(union.i1, union.i2),
+							Measure.Token.Generic.TYPE);
+			stream = Stream.concat(stream, Stream.of(unionMeasure));
+		}
+		return stream.map(m -> new MeasureSelection(root, m)).toList();
 	}
 }

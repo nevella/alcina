@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.place.shared.Place;
@@ -9,6 +10,8 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
@@ -20,15 +23,22 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
+import cc.alcina.framework.gwt.client.util.Async;
+import cc.alcina.framework.gwt.client.util.GlobalKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableHistory;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
+import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
-@Directed
-class Page extends Model.All implements
-		TraversalEvents.SelectionSelected.Handler, DomEvents.KeyDown.Handler {
+@Directed(
+	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
+class Page extends Model.All
+		implements TraversalEvents.SelectionSelected.Handler,
+		TraversalEvents.SelectionTypeSelected.Handler,
+		DomEvents.KeyDown.Handler {
 	class Header extends Model.All
 			implements DomEvents.Click.Handler, ModelEvents.Change.Handler {
 		// FIXME - cmp - scheduler
@@ -47,13 +57,6 @@ class Page extends Model.All implements
 			set("name", this.name, name, () -> this.name = name);
 		}
 
-		String computeName(ObservableHistory history) {
-			FormatBuilder format = new FormatBuilder().separator(" - ");
-			format.append(TraversalProcessView.Ui.get().getMainCaption());
-			format.appendIfNonNull(history, ObservableHistory::displayName);
-			return format.toString();
-		}
-
 		@Override
 		public void onClick(Click event) {
 			new TraversalPlace().go();
@@ -63,10 +66,22 @@ class Page extends Model.All implements
 		public void onChange(Change event) {
 			new TraversalPlace().withTextFilter((String) event.getModel()).go();
 		}
+
+		String computeName(ObservableHistory history) {
+			FormatBuilder format = new FormatBuilder().separator(" - ");
+			format.append(TraversalProcessView.Ui.get().getMainCaption());
+			format.appendIfNonNull(history, ObservableHistory::displayName);
+			return format.toString();
+		}
 	}
 
 	enum Property implements PropertyEnum {
 		history, place
+	}
+
+	// FIXME - traversal - resolver/descendant event
+	public static TraversalPlace traversalPlace() {
+		return Ui.get().page.place;
 	}
 
 	Header header;
@@ -86,11 +101,6 @@ class Page extends Model.All implements
 
 	@Directed.Exclude
 	TraversalPlace place;
-
-	// FIXME - traversal - resolver/descendant event
-	public static TraversalPlace traversalPlace() {
-		return Ui.get().page.place;
-	}
 
 	Page() {
 		header = new Header();
@@ -115,6 +125,9 @@ class Page extends Model.All implements
 		bindings().from(this).on(Property.history)
 				.map(o -> new RenderedSelections(this, false))
 				.accept(this::setOutput);
+		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
+				.map(TraversalPlace::getTextFilter).to(header.filter)
+				.on("value").oneWay();
 		PlaceChangeEvent.Handler handler = evt -> {
 			if (evt.getNewPlace() instanceof TraversalPlace) {
 				setPlace((TraversalPlace) evt.getNewPlace());
@@ -162,13 +175,7 @@ class Page extends Model.All implements
 
 	@Override
 	public void onSelectionSelected(SelectionSelected event) {
-		place.<TraversalPlace> copy().withSelection(event.getModel()).go();
-	}
-
-	void setHistory(
-			RemoteComponentObservables<SelectionTraversal>.ObservableHistory history) {
-		set(Property.history, this.history, history,
-				() -> this.history = history);
+		goPreserveScrollPosition(place.copy().withSelection(event.getModel()));
 	}
 
 	// FIXME - not hooked up?
@@ -176,10 +183,50 @@ class Page extends Model.All implements
 	public void onKeyDown(KeyDown event) {
 		Context context = event.getContext();
 		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
+		if (GlobalKeyboardShortcuts.eventFiredFromInputish(
+				domEvent.getNativeEvent().getEventTarget())) {
+			return;
+		}
+		TraversalPlace to = null;
 		switch (domEvent.getNativeKeyCode()) {
 		case KeyCodes.KEY_ESCAPE:
-			new TraversalPlace().go();
+			to = new TraversalPlace();
+			break;
+		case KeyCodes.KEY_ONE:
+			to = place.copy().withSelectionType(SelectionType.VIEW);
+			break;
+		case KeyCodes.KEY_TWO:
+			to = place.copy().withSelectionType(SelectionType.CONTAINMENT);
+			break;
+		case KeyCodes.KEY_THREE:
+			to = place.withSelectionType(SelectionType.DESCENT);
 			break;
 		}
+		if (to != null) {
+			goPreserveScrollPosition(to);
+		}
+	}
+
+	void goPreserveScrollPosition(TraversalPlace place) {
+		Element scrollableLayers = layers.provideElement().getChildElement(1);
+		scrollableLayers.async()
+				.getScrollTop(Async.<Integer> callbackBuilder().success(top -> {
+					place.go();
+					layers.provideElement().getChildElement(1).async()
+							.setScrollTop(Async.nullCallback(), top);
+				}).build());
+	}
+
+	@Override
+	public void onSelectionTypeSelected(SelectionTypeSelected event) {
+		TraversalPlace to = place.copy()
+				.withSelectionType(event.getSelectionType());
+		goPreserveScrollPosition(to);
+	}
+
+	void setHistory(
+			RemoteComponentObservables<SelectionTraversal>.ObservableHistory history) {
+		set(Property.history, this.history, history,
+				() -> this.history = history);
 	}
 }

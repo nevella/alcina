@@ -376,7 +376,11 @@ public class Element extends Node implements ClientDomElement,
 
 	// FIXME - dom - completablefuture
 	public void getBoundingClientRectAsync(AsyncCallback<DomRect> callback) {
-		pathrefRemote().getBoundingClientRectAsync(callback);
+		async().getBoundingClientRect(callback);
+	}
+
+	public ElementPathref.Async async() {
+		return pathrefRemote().async();
 	}
 
 	@Override

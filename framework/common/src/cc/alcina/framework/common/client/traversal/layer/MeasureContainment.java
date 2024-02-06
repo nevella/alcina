@@ -15,7 +15,9 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token.Order;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * Models (at a point in time - a stage in traersal, so this is a model of a
@@ -28,6 +30,10 @@ import cc.alcina.framework.common.client.util.IntPair;
 public class MeasureContainment {
 	public class Containment implements Comparable<Containment> {
 		public MeasureSelection selection;
+
+		public <S extends MeasureSelection> S typedSelection() {
+			return (S) selection;
+		}
 
 		// generate a list of contained ranges derived from parent
 		// non-intersection [union of children]. It will be unsorted. It will
@@ -80,6 +86,10 @@ public class MeasureContainment {
 			return descendants(false)
 					.filter(c -> c.selection.get().token == token).findFirst()
 					.get().selection;
+		}
+
+		public Containment parent() {
+			return ancestors(false).findFirst().orElse(null);
 		}
 
 		Stream<Containment> ancestors(boolean includeSelf) {
@@ -153,7 +163,7 @@ public class MeasureContainment {
 				return null;
 			}
 			MeasureSelection containing = null;
-			ensureImmediateChildren();
+			ensureImmediateChildSelections();
 			int index = Collections.binarySearch(immediateChildren, contained,
 					Comparator.naturalOrder());
 			if (index >= 0) {
@@ -171,24 +181,38 @@ public class MeasureContainment {
 			return containments.get(containing);
 		}
 
-		void ensureImmediateChildren() {
+		void ensureImmediateChildSelections() {
 			if (immediateChildren == null) {
 				immediateChildren = descendants.stream()
 						.filter(this::isImmediateChild).sorted().toList();
-				if (descendants.size() > 0 && immediateChildren.isEmpty()) {
-					List<Containment> list = containments
-							.get(descendants.get(0)).ancestors(false).toList();
-					List<Containment> list2 = containments
-							.get(descendants.get(1)).ancestors(false).toList();
-					int debug = 3;
-				}
 			}
+		}
+
+		public List<Containment> getChildContainments() {
+			ensureImmediateChildSelections();
+			return immediateChildren.stream().map(containments::get).toList();
 		}
 
 		@Override
 		public String toString() {
 			return Ax.format("Containment: %s", selection);
 		}
+
+		public int depth() {
+			return (int) ancestors(false).count();
+		}
+	}
+
+	public void dump() {
+		FormatBuilder format = new FormatBuilder();
+		DepthFirstTraversal<Containment> traversal = new DepthFirstTraversal<>(
+				root, Containment::getChildContainments);
+		traversal.forEach(c -> {
+			format.indent(2 * c.depth());
+			format.line("%s :: %s", c.selection,
+					Ax.trim(Ax.ntrim(c.selection.get().text()), 25));
+		});
+		Ax.out(format);
 	}
 
 	public static class ContainmentMap<T extends MeasureSelection> {
@@ -200,6 +224,10 @@ public class MeasureContainment {
 				Collection<T> selections) {
 			this.order = order;
 			this.containment = new MeasureContainment(order, selections);
+		}
+
+		public void dump() {
+			containment.dump();
 		}
 
 		/**
@@ -214,14 +242,18 @@ public class MeasureContainment {
 		 */
 		public T getLowestContainingMeasure(MeasureSelection contained,
 				boolean includeSelf) {
+			return (T) getLowestContainment(contained, includeSelf).selection;
+		}
+
+		public Containment getLowestContainment(MeasureSelection contained,
+				boolean includeSelf) {
 			Containment cursor = containment.root;
 			while (true) {
 				Containment next = cursor
 						.getImmediateChildContaining(contained);
 				if (next == null
 						|| (next.selection == contained && !includeSelf)) {
-					T result = (T) cursor.selection;
-					return result;
+					return cursor;
 				} else {
 					cursor = next;
 				}
@@ -246,6 +278,11 @@ public class MeasureContainment {
 		int length() {
 			return intersection.length();
 		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Overlap :: %s :: %s :: %s", intersection, s1, s2);
+		}
 	}
 
 	class ContainmentComputation {
@@ -258,8 +295,11 @@ public class MeasureContainment {
 		}
 
 		/*
-		 * Relies on the initial ordering of the selections - an overlap being
-		 * [A,B] :: [C,D] where A<C, B>C,B<D
+		 * Overlap computation relies on the initial ordering of the selections
+		 * - an overlap being [A,B] :: [C,D] where A<C, B>C,B<D
+		 * 
+		 * Note that openSelections will not always be in strict containment
+		 * order
 		 */
 		void compute() {
 			for (MeasureSelection cursor : selections) {
@@ -270,11 +310,15 @@ public class MeasureContainment {
 					MeasureSelection open = openItr.next();
 					IntPair openRange = open.get().toIntPair();
 					IntPair cursorRange = cursor.get().toIntPair();
+					Containment openContainment = containments.get(open);
 					if (openRange.contains(cursorRange)) {
 						containment.containers.add(open);
-						containments.get(open).descendants.add(cursor);
-					}
-					if (cursorRange.intersectsWithNonPoint(openRange)) {
+						openContainment.descendants.add(cursor);
+					} else if (cursorRange
+							.containsExAtLeastOneBoundary(openRange)) {
+						containment.descendants.add(open);
+						openContainment.containers.add(cursor);
+					} else if (cursorRange.intersectsWithNonPoint(openRange)) {
 						if (cursorRange.overlapsWith(openRange)) {
 							overlaps.add(new Overlap(open, cursor));
 						}
@@ -307,7 +351,8 @@ public class MeasureContainment {
 		ContainmentComputation computation = new ContainmentComputation(
 				measures);
 		computation.compute();
-		root = containments.values().iterator().next();
+		root = containments.values().stream().filter(c -> c.parent() == null)
+				.findFirst().get();
 	}
 
 	public Stream<Containment> containments() {

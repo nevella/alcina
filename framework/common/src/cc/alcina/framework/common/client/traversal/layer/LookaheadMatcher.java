@@ -36,6 +36,8 @@ public abstract class LookaheadMatcher<C> {
 
 	public interface EmphasisOracle {
 		boolean isEmphasis(Location location);
+
+		boolean isUnderline(Location start);
 	}
 
 	/*

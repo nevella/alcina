@@ -622,11 +622,18 @@ public class BranchingParser {
 					match = Measure.fromRange(range, matchToken);
 				}
 				if (parent == null) {
-					conditionalLogger.debug(
-							"Emitted sentence match : {} - '{}'",
-							() -> new Object[] { match,
-									toResult().root.match.toTextString() });
-					state.matchedSentenceBranches.add(this);
+					if (peer.confirmSentenceBranch(this)) {
+						conditionalLogger.debug(
+								"Emitted sentence match : {} - '{}'",
+								() -> new Object[] { match,
+										toResult().root.match.toTextString() });
+						state.matchedSentenceBranches.add(this);
+					} else {
+						conditionalLogger.debug(
+								"Did not sentence match (lookahead/behind): {} - '{}'",
+								() -> new Object[] { match,
+										toResult().root.match.toTextString() });
+					}
 				} else {
 					parent.onChildSatisfied(this);
 				}

@@ -301,14 +301,17 @@ public class Environment {
 		public void invoke(NodePathref node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
 				AsyncCallback<?> callback) {
+			// always emit mutations before proxy invoke
+			emitMutations();
 			runInClientFrame(() -> {
 				Message.Invoke invoke = new Message.Invoke();
 				invoke.path = node == null ? null
 						: Pathref.forNode(node.node());
 				invoke.id = ++invokeCounter;
 				invoke.methodName = methodName;
-				invoke.argumentTypes = argumentTypes;
-				invoke.arguments = arguments;
+				invoke.argumentTypes = argumentTypes == null ? List.of()
+						: argumentTypes;
+				invoke.arguments = arguments == null ? List.of() : arguments;
 				callbacks.put(invoke.id, callback);
 				queue.send(invoke);
 			});
@@ -359,6 +362,6 @@ public class Environment {
 	}
 
 	public void onInvokeResponse(InvokeResponse response) {
-		invokeProxy.onInvokeResponse(response);
+		runInClientFrame(() -> invokeProxy.onInvokeResponse(response));
 	}
 }

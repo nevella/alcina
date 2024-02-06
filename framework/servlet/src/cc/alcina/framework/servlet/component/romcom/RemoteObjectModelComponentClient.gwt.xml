@@ -18,5 +18,4 @@
 	<set-configuration-property name="ClientReflectionGenerator.FilterPeer.className" value="cc.alcina.framework.servlet.component.romcom.rebind.RemoteComponentReflectionFilterPeer" />
 	<set-configuration-property name="ClientReflectionGenerator.LinkerPeer.className" value="cc.alcina.framework.servlet.component.romcom.rebind.RemoteComponentReflectionLinkerPeer" />
 	<entry-point class='cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient' />
-	cc/alcina/framework/servlet/component/romcom/RemoteObjectModelComponentClient.gwt.xml
 </module>

@@ -81,9 +81,12 @@ public interface LocationContext {
 
 	String getSubsequentText(Location location, int chars);
 
+	int toValidIndex(int idx);
+
 	default String textContent(int from, int to) {
-		Location start = new Location(-1, from, false, null, this);
-		Location end = new Location(-1, to, true, null, this);
+		Location start = new Location(-1, toValidIndex(from), false, null,
+				this);
+		Location end = new Location(-1, toValidIndex(to), true, null, this);
 		return new Range(start, end).text();
 	}
 }

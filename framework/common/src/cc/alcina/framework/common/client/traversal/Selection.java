@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasFilterableString;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
@@ -158,7 +159,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		}
 
 		default String getText(S selection) {
-			return selection.get().toString();
+			return HasFilterableString.filterableString(selection.get());
 		}
 
 		default String getDiscriminator(S selection) {
@@ -167,6 +168,10 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 		default String getMarkup(S selection) {
 			return "";
+		}
+
+		default String getTreePath(Selection selection) {
+			return selection.processNode().treePath();
 		}
 	}
 

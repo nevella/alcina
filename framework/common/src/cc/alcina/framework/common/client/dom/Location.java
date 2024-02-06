@@ -107,6 +107,10 @@ public class Location implements Comparable<Location> {
 			return textContent.substring(startOffset + relativeOffset,
 					endOffset + relativeOffset);
 		}
+
+		public String absoluteString(int from, int to) {
+			return locationContext.textContent(from, to);
+		}
 	}
 
 	public static class Range implements Comparable<Range> {
@@ -255,6 +259,10 @@ public class Location implements Comparable<Location> {
 				textContent = start.locationContext.textContent(this);
 			}
 			return textContent;
+		}
+
+		public String ntc() {
+			return Ax.ntrim(textContent);
 		}
 
 		public String markup() {

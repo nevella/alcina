@@ -103,17 +103,17 @@ public class Measure extends Location.Range {
 	 * if order == null, containment will be true if the measure ranges are
 	 * equal ( A contains B and B contains A)
 	 */
-	public boolean contains(Measure o, Token.Order order, boolean indexOnly) {
+	public boolean contains(Measure o, Token.Order order) {
 		boolean nonEquivalent = false;
 		{
-			int cmp = start.compareTo(o.start, indexOnly);
+			int cmp = start.compareTo(o.start, false);
 			if (cmp > 0) {
 				return false;
 			}
 			nonEquivalent |= cmp < 0;
 		}
 		{
-			int cmp = end.compareTo(o.end, indexOnly);
+			int cmp = end.compareTo(o.end, false);
 			if (cmp < 0) {
 				// later end (and same start) implies this contains o - so order
 				// before
@@ -124,7 +124,8 @@ public class Measure extends Location.Range {
 		if (nonEquivalent) {
 			return true;
 		}
-		return order == null || order.compare(token, o.token) < 0;
+		// this allows measures of the same token type to contain each other
+		return order.compare(token, o.token) <= 0;
 	}
 
 	public Object getData() {
@@ -169,7 +170,7 @@ public class Measure extends Location.Range {
 			return Ax.format("%s-%s :: %s", start.index, end.index,
 					tokenString);
 		} else {
-			return Ax.format("%s-%s :: %s", start.toLocationString(),
+			return Ax.format("[%s =>  %s] :: %s", start.toLocationString(),
 					end.toLocationString(), tokenString);
 		}
 	}

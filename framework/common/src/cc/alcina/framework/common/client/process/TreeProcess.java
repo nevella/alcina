@@ -34,6 +34,10 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *
  */
 public class TreeProcess {
+	public static TreeProcess detachedSelectionProcess() {
+		return new TreeProcess(TreeProcess.class);
+	}
+
 	Node root;
 
 	List<Integer> levelSizes = new ArrayList<>();

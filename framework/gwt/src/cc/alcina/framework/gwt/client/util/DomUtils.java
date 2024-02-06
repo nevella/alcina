@@ -1099,7 +1099,7 @@ public class DomUtils implements NodeFromXpathProvider {
 							.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
 					String currentEltWrapId = e
 							.getAttribute(ATTR_WRAP_EXPANDO_ID);
-					if (e.getAttribute("id").startsWith("bnj_")) {
+					if (isBnjIdAnchor(DomNode.from(e))) {
 						continue;
 					}
 					if (Ax.notBlank(currentEltWrapId)) {
@@ -1111,7 +1111,8 @@ public class DomUtils implements NodeFromXpathProvider {
 							DomNode domNode = DomNode.from(e);
 							List<DomNode> nonProcesingInstructionChildren = domNode
 									.descendants()
-									.filter(n2 -> !n2.isProcessingInstruction())
+									.filter(n2 -> !n2.isProcessingInstruction()
+											&& !isBnjIdAnchor(n2))
 									.collect(Collectors.toList());
 							Preconditions
 									.checkState(nonProcesingInstructionChildren
@@ -1145,6 +1146,10 @@ public class DomUtils implements NodeFromXpathProvider {
 				}
 			}
 			flushToUnwrap();
+		}
+
+		private boolean isBnjIdAnchor(DomNode n) {
+			return n.isElement() && n.attrMatches("id", "bnj_.*");
 		}
 
 		public final Node getItem(int index) {

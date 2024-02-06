@@ -104,6 +104,7 @@ public class KryoUtils {
 				() -> new ByteArrayInputStream(bytes));
 	}
 
+	@SuppressWarnings("resource")
 	public static <T> T deserializeFromFile(File file, Class<T> knownType) {
 		try {
 			return deserializeFromStream(

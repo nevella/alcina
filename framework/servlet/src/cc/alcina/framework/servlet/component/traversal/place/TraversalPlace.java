@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
@@ -26,6 +27,10 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		private transient boolean selectionFromPathAttempted;
 
 		public SelectionType type;
+
+		public SelectionType type() {
+			return type;
+		}
 
 		boolean isFilter() {
 			return type == SelectionType.CONTAINMENT
@@ -51,14 +56,15 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		Selection selection() {
 			if (selection == null && !selectionFromPathAttempted) {
 				if (path != null
-						&& TraversalProcessView.Ui.get().getHistory() != null
-						&& TraversalProcessView.Ui.get().getHistory().observable
-								.getRootSelection() != null) {
-					selection = (Selection) TraversalProcessView.Ui.get()
-							.getHistory().observable.getRootSelection()
-									.processNode().nodeForTreePath(path)
-									.map(Node::getValue).orElse(null);
-					selectionFromPathAttempted = true;
+						&& TraversalProcessView.Ui.get().getHistory() != null) {
+					SelectionTraversal observable = TraversalProcessView.Ui
+							.get().getHistory().observable;
+					if (observable.getRootSelection() != null) {
+						selection = (Selection) observable.getRootSelection()
+								.processNode().nodeForTreePath(path)
+								.map(Node::getValue).orElse(null);
+						selectionFromPathAttempted = true;
+					}
 				}
 			}
 			return selection;
@@ -66,7 +72,11 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	}
 
 	public enum SelectionType {
-		VIEW, DESCENT, CONTAINMENT
+		VIEW,
+		// is selection B descended from A (via selection ancestry)
+		DESCENT,
+		// is selection B contained in A (i.e. via document range containment)
+		CONTAINMENT
 	}
 
 	public static class Tokenizer extends BasePlaceTokenizer<TraversalPlace> {
@@ -92,7 +102,19 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		}
 	}
 
+	@Override
+	public TraversalPlace copy() {
+		return super.copy();
+	}
+
 	static class Data extends Bindable.Fields implements TreeSerializable {
+		public static TreeSerializable from(TraversalPlace place) {
+			Data data = new Data();
+			data.textFilter = place.textFilter;
+			data.paths = place.paths;
+			return data;
+		}
+
 		String textFilter;
 
 		List<SelectionPath> paths = new ArrayList<>();
@@ -101,22 +123,18 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			place.textFilter = textFilter;
 			place.paths = paths;
 		}
-
-		public static TreeSerializable from(TraversalPlace place) {
-			Data data = new Data();
-			data.textFilter = place.textFilter;
-			data.paths = place.paths;
-			return data;
-		}
 	}
 
 	String textFilter;
 
 	List<SelectionPath> paths = new ArrayList<>();
 
+	public String getTextFilter() {
+		return textFilter;
+	}
+
 	public TraversalPlace
 			withSelection(TraversalPlace.SelectionPath selectionPath) {
-		textFilter = null;
 		// descent/containment earlier in list than view
 		switch (selectionPath.type) {
 		case DESCENT:
@@ -144,8 +162,14 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 				.map(sp -> sp.type).orElse(null);
 	}
 
+	public SelectionType firstSelectionType() {
+		return paths.stream().findFirst().map(SelectionPath::type)
+				.orElse(SelectionType.VIEW);
+	}
+
 	public boolean test(Selection selection) {
-		if (Ax.notBlank(textFilter)) {
+		if (Ax.notBlank(textFilter)
+				&& firstSelectionType() == SelectionType.VIEW) {
 			return selection.matchesText(textFilter);
 		} else {
 			return paths.stream().filter(p -> p.isFilter()).findFirst()
@@ -156,6 +180,12 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	public TraversalPlace withTextFilter(String textFilter) {
 		this.textFilter = textFilter;
 		return this;
+	}
+
+	public TraversalPlace withSelectionType(SelectionType type) {
+		SelectionPath to = Ax.last(paths).copy();
+		to.type = type;
+		return withSelection(to);
 	}
 
 	SelectionPath ensurePath(SelectionType type) {

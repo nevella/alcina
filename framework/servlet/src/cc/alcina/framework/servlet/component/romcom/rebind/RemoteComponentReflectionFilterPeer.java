@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom.rebind;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JType;
 
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilterPeer;
 
@@ -17,5 +18,15 @@ public class RemoteComponentReflectionFilterPeer
 			return true;
 		}
 		return ClientReflectionFilterPeer.super.emitType(type, moduleName);
+	}
+
+	@Override
+	public boolean isVisibleType(JType type) {
+		// allow invoke on element bean methods
+		if (type.getQualifiedSourceName()
+				.equals("com.google.gwt.dom.client.Element")) {
+			return true;
+		}
+		return ClientReflectionFilterPeer.super.isVisibleType(type);
 	}
 }
